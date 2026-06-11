@@ -9,11 +9,19 @@ export const DEFAULT_CONFIG = {
   // Maks antall aktive forslag totalt i pensum
   maxTotal: 80,
 
-  // Maks antall aktive forslag per tiår
+  // Standard maks per tiår — brukes som utgangspunkt og for tiår uten egen verdi
   maxPerDecade: 8,
 
-  // Maks antall aktive forslag per sjanger
+  // Standard maks per sjanger — brukes for sjangre uten egen verdi
   maxPerGenre: 16,
+
+  // Individuelle grenser per tiår, f.eks. { "1920": 10, "2010": 4 }.
+  // Tiår som ikke står her bruker maxPerDecade.
+  decadeLimits: {},
+
+  // Individuelle grenser per sjanger, f.eks. { "Jazz": 20 }.
+  // Sjangre som ikke står her bruker maxPerGenre.
+  genreLimits: {},
 
   // Hvor mange "ikke relevant"-stemmer som skal til før et forslag fjernes
   voteOutThreshold: 8,
@@ -51,6 +59,18 @@ export function activeArtists(artists) {
   return artists.filter((a) => a.status === "active");
 }
 
+// Grensen for ett bestemt tiår: egen verdi hvis satt, ellers standarden.
+export function limitForDecade(config, decade) {
+  const v = config.decadeLimits?.[decade];
+  return Number.isFinite(v) ? v : config.maxPerDecade;
+}
+
+// Grensen for én bestemt sjanger: egen verdi hvis satt, ellers standarden.
+export function limitForGenre(config, genre) {
+  const v = config.genreLimits?.[genre];
+  return Number.isFinite(v) ? v : config.maxPerGenre;
+}
+
 function countBy(list, key) {
   const map = {};
   for (const item of list) {
@@ -83,18 +103,20 @@ export function checkCanAdd(artists, config, candidate) {
   }
 
   const decadeCount = counts.perDecade[candidate.decade] || 0;
-  if (decadeCount >= config.maxPerDecade) {
+  const decadeMax = limitForDecade(config, candidate.decade);
+  if (decadeCount >= decadeMax) {
     reasons.push(
       `Tiåret ${candidate.decade}-tallet er fullt ` +
-        `(${decadeCount}/${config.maxPerDecade}).`
+        `(${decadeCount}/${decadeMax}).`
     );
   }
 
   const genreCount = counts.perGenre[candidate.genre] || 0;
-  if (genreCount >= config.maxPerGenre) {
+  const genreMax = limitForGenre(config, candidate.genre);
+  if (genreCount >= genreMax) {
     reasons.push(
       `Sjangeren «${candidate.genre}» er full ` +
-        `(${genreCount}/${config.maxPerGenre}).`
+        `(${genreCount}/${genreMax}).`
     );
   }
 

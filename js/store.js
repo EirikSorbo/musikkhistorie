@@ -189,7 +189,8 @@ export async function teacherDelete(artistId) {
   return deleteDoc(doc(db, "artists", artistId));
 }
 
-// Lærer oppdaterer grensene/konfigurasjonen
-export async function updateConfig(partial) {
-  return setDoc(configRef, partial, { merge: true });
+// Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
+// per-tiår/per-sjanger-grenser ikke blir liggende igjen).
+export async function updateConfig(config) {
+  return setDoc(configRef, config);
 }

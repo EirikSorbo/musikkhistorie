@@ -51,21 +51,34 @@
           <label>Maks totalt
             <input type="number" id="cfg-total" min="1" />
           </label>
-          <label>Maks per tiår
-            <input type="number" id="cfg-decade" min="1" />
-          </label>
-          <label>Maks per sjanger
-            <input type="number" id="cfg-genre" min="1" />
-          </label>
           <label>Stemmer for utstemming
             <input type="number" id="cfg-threshold" min="1" />
           </label>
+          <label>Standard per tiår
+            <input type="number" id="cfg-decade" min="1" />
+          </label>
+          <label>Standard per sjanger
+            <input type="number" id="cfg-genre" min="1" />
+          </label>
+
           <label class="full">Sjangre (kommaseparert)
             <input type="text" id="cfg-genres" />
           </label>
           <label class="full">Tiår (kommaseparert, f.eks. 1900, 1910 …)
             <input type="text" id="cfg-decades" />
           </label>
+
+          <div class="full">
+            <span class="field-label">Grense per tiår</span>
+            <p class="hint">Sett antall for hvert tiår. Tomt felt = standarden over.</p>
+            <div id="decade-limits" class="limit-inputs"></div>
+          </div>
+          <div class="full">
+            <span class="field-label">Grense per sjanger</span>
+            <p class="hint">Sett antall for hver sjanger. Tomt felt = standarden over.</p>
+            <div id="genre-limits" class="limit-inputs"></div>
+          </div>
+
           <div class="full admin-actions">
             <button type="submit" class="btn primary">Lagre grenser</button>
             <span id="admin-msg" class="form-msg ok"></span>

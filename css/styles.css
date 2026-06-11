@@ -294,6 +294,16 @@ textarea { resize: vertical; }
 .link-row .link-url { flex: 1.4; }
 
 .add-actions, .admin-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+/* Per-tiår / per-sjanger grensefelt */
+.hint { margin: 2px 0 10px; font-size: 0.78rem; color: var(--muted-2); }
+.limit-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.limit-input { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+.limit-input input { padding: 7px 10px; }
 .form-msg { font-size: 0.88rem; font-weight: 500; }
 .form-msg.error { color: var(--danger); }
 .form-msg.ok { color: var(--ok); }

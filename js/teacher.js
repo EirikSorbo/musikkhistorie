@@ -15,6 +15,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
+import { escapeHtml } from "./ui.js";
 import { renderDashboard, renderLimits, renderArtists, fillSelect } from "./ui.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
@@ -133,21 +134,28 @@ function setupFilters() {
 }
 
 function setupAdmin() {
+  // Bygg per-tiår/per-sjanger-feltene på nytt når listene eller standardene endres
+  ["#cfg-decades", "#cfg-genres", "#cfg-decade", "#cfg-genre"].forEach((sel) =>
+    $(sel).addEventListener("input", buildLimitInputs)
+  );
+
   $("#admin-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const partial = {
+    const config = {
       maxTotal: int($("#cfg-total").value, state.config.maxTotal),
       maxPerDecade: int($("#cfg-decade").value, state.config.maxPerDecade),
       maxPerGenre: int($("#cfg-genre").value, state.config.maxPerGenre),
       voteOutThreshold: int($("#cfg-threshold").value, state.config.voteOutThreshold),
       genres: splitList($("#cfg-genres").value, state.config.genres),
       decades: splitList($("#cfg-decades").value, state.config.decades).map(Number),
+      decadeLimits: collectLimitMap("#decade-limits", "data-decade"),
+      genreLimits: collectLimitMap("#genre-limits", "data-genre"),
     };
     if (!CONFIGURED) {
       $("#admin-msg").textContent = "Firebase ikke koblet til – lagres ikke.";
       return;
     }
-    await updateConfig(partial);
+    await updateConfig(config);
     $("#admin-msg").textContent = "Grenser lagret ✓";
     setTimeout(() => ($("#admin-msg").textContent = ""), 2500);
   });
@@ -161,6 +169,70 @@ function fillAdminForm() {
   $("#cfg-threshold").value = c.voteOutThreshold;
   $("#cfg-genres").value = c.genres.join(", ");
   $("#cfg-decades").value = c.decades.join(", ");
+  buildLimitInputs();
+}
+
+// Bygger ett tallfelt per tiår og per sjanger. Tomt felt = standardverdien.
+function buildLimitInputs() {
+  const decades = splitList($("#cfg-decades").value, state.config.decades).map(Number);
+  const genres = splitList($("#cfg-genres").value, state.config.genres);
+  const defDecade = int($("#cfg-decade").value, state.config.maxPerDecade);
+  const defGenre = int($("#cfg-genre").value, state.config.maxPerGenre);
+
+  renderLimitInputs(
+    $("#decade-limits"),
+    "data-decade",
+    decades.map((d) => ({
+      key: d,
+      label: `${d}-tallet`,
+      explicit: state.config.decadeLimits?.[d],
+    })),
+    defDecade
+  );
+  renderLimitInputs(
+    $("#genre-limits"),
+    "data-genre",
+    genres.map((g) => ({
+      key: g,
+      label: g,
+      explicit: state.config.genreLimits?.[g],
+    })),
+    defGenre
+  );
+}
+
+function renderLimitInputs(container, attr, items, placeholder) {
+  // Bevar verdier brukeren allerede har tastet inn ved ombygging
+  const prev = {};
+  container.querySelectorAll("input").forEach((inp) => {
+    if (inp.value !== "") prev[inp.getAttribute(attr)] = inp.value;
+  });
+
+  container.innerHTML = items
+    .map((it) => {
+      const stored = Number.isFinite(it.explicit) ? it.explicit : "";
+      const value = prev[it.key] ?? stored;
+      return `
+        <label class="limit-input">
+          <span>${escapeHtml(it.label)}</span>
+          <input type="number" min="1" ${attr}="${escapeHtml(it.key)}"
+                 placeholder="${placeholder}" value="${value}">
+        </label>`;
+    })
+    .join("");
+}
+
+// Samler tallfeltene til et kart { nøkkel: antall }. Tomme felt utelates.
+function collectLimitMap(containerSel, attr) {
+  const map = {};
+  $(containerSel)
+    .querySelectorAll(`input[${attr}]`)
+    .forEach((inp) => {
+      const key = inp.getAttribute(attr);
+      const val = parseInt(inp.value, 10);
+      if (Number.isFinite(val) && val >= 1) map[key] = val;
+    });
+  return map;
 }
 
 // ----------------------------------------------------------------------------

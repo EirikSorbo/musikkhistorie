@@ -9,6 +9,8 @@ import {
   computeCounts,
   genderDistribution,
   activeArtists,
+  limitForDecade,
+  limitForGenre,
   GENDERS,
 } from "./limits.js";
 
@@ -103,22 +105,22 @@ export function renderLimits(el, { artists, config }) {
 
   const decadeRows = config.decades
     .map((d) =>
-      limitRow(`${d}-tallet`, counts.perDecade[d] || 0, config.maxPerDecade)
+      limitRow(`${d}-tallet`, counts.perDecade[d] || 0, limitForDecade(config, d))
     )
     .join("");
 
   const genreRows = config.genres
-    .map((g) => limitRow(g, counts.perGenre[g] || 0, config.maxPerGenre))
+    .map((g) => limitRow(g, counts.perGenre[g] || 0, limitForGenre(config, g)))
     .join("");
 
   el.innerHTML = `
     <div class="limits-cols">
       <div>
-        <h3>Per tiår <span class="muted">(maks ${config.maxPerDecade})</span></h3>
+        <h3>Per tiår</h3>
         <div class="limit-list">${decadeRows}</div>
       </div>
       <div>
-        <h3>Per sjanger <span class="muted">(maks ${config.maxPerGenre})</span></h3>
+        <h3>Per sjanger</h3>
         <div class="limit-list">${genreRows}</div>
       </div>
     </div>
