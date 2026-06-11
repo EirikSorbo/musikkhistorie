@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pensumforslag – Populærmusikkhistorie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <h1>🎼 Pensumforslag</h1>
+        <p class="subtitle">Populærmusikkhistorie ca. 1900–i dag · USA</p>
+      </a>
+      <nav class="nav">
+        <a href="index.html" class="active">Forside</a>
+        <a href="student.html">Foreslå</a>
+        <a href="teacher.html">Lærer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="banner" class="banner"></div>
+
+    <section class="hero">
+      <h2>Bygg pensum sammen</h2>
+      <p>
+        Foreslå artister og musikere du mener hører hjemme i
+        populærmusikkhistorien – med begrunnelse, sentrale verk og lytteeksempler.
+        Klassen former pensum sammen, innenfor tydelige rammer.
+      </p>
+      <div class="cta-grid">
+        <a class="cta-card" href="student.html">
+          <div class="cta-emoji">🎤</div>
+          <h3>For studenter</h3>
+          <p>Foreslå artist, legg til informasjon og stem på forslag.</p>
+        </a>
+        <a class="cta-card" href="teacher.html">
+          <div class="cta-emoji">🎓</div>
+          <h3>For lærer</h3>
+          <p>Juster grenser, gjennomgå og administrer forslagene.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Oversikt</h2>
+      <div id="dashboard"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Fyllingsgrad</h2>
+      <div id="limits"></div>
+    </section>
+  </main>
+
+  <footer class="sitefoot wrap">
+    <p class="muted">Bygd for klassen · data lagres i sanntid via Firebase</p>
+  </footer>
+
+  <script type="module" src="js/landing.js"></script>
+</body>
+</html>

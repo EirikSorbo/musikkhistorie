@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foreslå artist – Pensumforslag</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <h1>🎼 Pensumforslag</h1>
+        <p class="subtitle">Populærmusikkhistorie ca. 1900–i dag · USA</p>
+      </a>
+      <nav class="nav">
+        <a href="index.html">Forside</a>
+        <a href="student.html" class="active">Foreslå</a>
+        <a href="teacher.html">Lærer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="banner" class="banner"></div>
+
+    <!-- Legg inn forslag -->
+    <section class="panel">
+      <h2>➕ Foreslå en artist / musiker</h2>
+      <form id="add-form" class="add-grid">
+        <label>Navn *
+          <input type="text" id="in-name" required placeholder="f.eks. Robert Johnson" />
+        </label>
+        <label>Fødselsår
+          <input type="number" id="in-birthyear" min="1800" max="2025" placeholder="1911" />
+        </label>
+        <label>Kjønn *
+          <select id="in-gender" required></select>
+        </label>
+        <label>Sjanger *
+          <select id="in-genre" required></select>
+        </label>
+        <label>Tiår *
+          <select id="in-decade" required></select>
+        </label>
+        <label>Geografisk tilhørighet
+          <input type="text" id="in-geo" placeholder="f.eks. Mississippi Delta" />
+        </label>
+        <label class="full">Begrunnelse / hvorfor relevant
+          <textarea id="in-desc" rows="2" placeholder="Kort om musikkhistorisk betydning …"></textarea>
+        </label>
+        <label class="full">Sentrale verk / album
+          <input type="text" id="in-works" placeholder="f.eks. «Cross Road Blues», «Hellhound on My Trail»" />
+        </label>
+
+        <div class="full">
+          <span class="field-label">Lenker til musikkeksempler</span>
+          <div id="link-rows"></div>
+          <button type="button" id="add-link" class="btn ghost small">+ Legg til lenke</button>
+        </div>
+
+        <label class="full">Ditt navn (valgfritt)
+          <input type="text" id="in-by" placeholder="Anonym" />
+        </label>
+
+        <div class="full add-actions">
+          <button type="submit" class="btn primary">Legg til forslag</button>
+          <span id="form-msg" class="form-msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Oversikt -->
+    <section class="panel">
+      <h2>Oversikt</h2>
+      <div id="dashboard"></div>
+    </section>
+
+    <!-- Fyllingsgrad -->
+    <section class="panel">
+      <h2>Fyllingsgrad</h2>
+      <div id="limits"></div>
+    </section>
+
+    <!-- Liste -->
+    <section class="panel">
+      <div class="list-head">
+        <h2>Forslag</h2>
+        <div class="filters">
+          <input type="search" id="f-search" placeholder="Søk navn/sted …" />
+          <select id="f-genre"></select>
+          <select id="f-decade"></select>
+        </div>
+      </div>
+      <div id="artist-list" class="artist-list"></div>
+    </section>
+  </main>
+
+  <footer class="sitefoot wrap">
+    <p class="muted">Bygd for klassen · data lagres i sanntid via Firebase</p>
+  </footer>
+
+  <script type="module" src="js/student.js"></script>
+</body>
+</html>

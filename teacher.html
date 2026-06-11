@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lærer – Pensumforslag</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <h1>🎼 Pensumforslag</h1>
+        <p class="subtitle">Populærmusikkhistorie ca. 1900–i dag · USA</p>
+      </a>
+      <nav class="nav">
+        <a href="index.html">Forside</a>
+        <a href="student.html">Foreslå</a>
+        <a href="teacher.html" class="active">Lærer</a>
+        <button id="logout" class="btn ghost small teacher-only">Logg ut</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- Innloggingsport (vises til en godkjent lærerkonto er logget inn) -->
+    <section id="gate" class="gate">
+      <div class="gate-card">
+        <h2>🎓 Lærerinnlogging</h2>
+        <p>Logg inn med Google-kontoen din for å administrere pensumforslagene.</p>
+        <button id="google-signin" class="btn primary">Logg inn med Google</button>
+        <p id="gate-msg" class="form-msg error"></p>
+      </div>
+    </section>
+
+    <!-- Lærerverktøy (vises etter innlogging) -->
+    <div id="teacher-app">
+      <div id="banner" class="banner"></div>
+
+      <!-- Juster grenser -->
+      <section class="panel" id="admin-panel">
+        <h2>⚙️ Juster grenser</h2>
+        <form id="admin-form" class="admin-grid">
+          <label>Maks totalt
+            <input type="number" id="cfg-total" min="1" />
+          </label>
+          <label>Maks per tiår
+            <input type="number" id="cfg-decade" min="1" />
+          </label>
+          <label>Maks per sjanger
+            <input type="number" id="cfg-genre" min="1" />
+          </label>
+          <label>Stemmer for utstemming
+            <input type="number" id="cfg-threshold" min="1" />
+          </label>
+          <label class="full">Sjangre (kommaseparert)
+            <input type="text" id="cfg-genres" />
+          </label>
+          <label class="full">Tiår (kommaseparert, f.eks. 1900, 1910 …)
+            <input type="text" id="cfg-decades" />
+          </label>
+          <div class="full admin-actions">
+            <button type="submit" class="btn primary">Lagre grenser</button>
+            <span id="admin-msg" class="form-msg ok"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Oversikt -->
+      <section class="panel">
+        <h2>Oversikt</h2>
+        <div id="dashboard"></div>
+      </section>
+
+      <!-- Fyllingsgrad -->
+      <section class="panel">
+        <h2>Fyllingsgrad</h2>
+        <div id="limits"></div>
+      </section>
+
+      <!-- Liste med lærerkontroller -->
+      <section class="panel">
+        <div class="list-head">
+          <h2>Forslag</h2>
+          <div class="filters">
+            <input type="search" id="f-search" placeholder="Søk navn/sted …" />
+            <select id="f-genre"></select>
+            <select id="f-decade"></select>
+            <label class="show-removed">
+              <input type="checkbox" id="f-show-removed" /> Vis fjernede
+            </label>
+          </div>
+        </div>
+        <div id="artist-list" class="artist-list"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="sitefoot wrap">
+    <p class="muted">Bygd for klassen · data lagres i sanntid via Firebase</p>
+  </footer>
+
+  <script type="module" src="js/teacher.js"></script>
+</body>
+</html>

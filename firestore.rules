@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// ============================================================================
+//  Firestore-sikkerhetsregler
+// ----------------------------------------------------------------------------
+//  Studenter trenger IKKE innlogging: alle med lenken kan lese, foreslå og
+//  stemme. Lærerhandlinger (veto, gjenopprett, slett, endre grenser) krever
+//  innlogging med en godkjent Google-konto.
+//
+//  VIKTIG: Sett din(e) lærer-e-post(er) i isTeacher() under – den SAMME listen
+//  som i js/firebase-config.js (TEACHER_EMAILS). Husk å trykke «Publish» etter
+//  endring.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Godkjente lærerkontoer (må matche TEACHER_EMAILS i firebase-config.js)
+    function isTeacher() {
+      return request.auth != null &&
+        request.auth.token.email in [
+          "eirik.sorbo@gmail.com"
+        ];
+    }
+
+    // ---- Forslag (artister) ----
+    match /artists/{id} {
+      allow read: if true;
+
+      // Hvem som helst kan opprette et forslag, men feltene må være gyldige
+      allow create: if
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 120 &&
+        request.resource.data.genre is string &&
+        request.resource.data.decade is number &&
+        request.resource.data.status == "active" &&
+        request.resource.data.votedOutBy.size() == 0;
+
+      // Oppdatering:
+      //  • Lærer kan endre alt.
+      //  • Student (uten innlogging) kan KUN stemme: endre votedOutBy/status/
+      //    removedBy, ikke røre lærer-beskyttelse, og ikke sette removedBy til
+      //    "teacher".
+      allow update: if isTeacher() || (
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["votedOutBy", "status", "removedBy"]) &&
+        request.resource.data.teacherProtected == resource.data.teacherProtected &&
+        (request.resource.data.removedBy == null ||
+         request.resource.data.removedBy == "votes")
+      );
+
+      // Bare lærer kan slette permanent
+      allow delete: if isTeacher();
+    }
+
+    // ---- Konfigurasjon / grenser ----
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+  }
+}
