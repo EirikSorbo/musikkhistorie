@@ -117,6 +117,7 @@ export async function addArtist(data) {
     removedBy: null,
     teacherProtected: false,
     votedOutBy: [],
+    addedYear: new Date().getFullYear(),
     createdAt: serverTimestamp(),
   });
 }

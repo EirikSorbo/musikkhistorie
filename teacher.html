@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lærer – Pensumforslag</title>
+  <title>Lærer – Afroamerikansk musikkhistorie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -29,71 +29,39 @@
 
   <main class="wrap">
 
-    <!-- Innloggingsport (vises til en godkjent lærerkonto er logget inn) -->
+    <!-- Innloggingsport -->
     <section id="gate" class="gate">
       <div class="gate-card">
-        <h2>🎓 Lærerinnlogging</h2>
+        <h2>Lærerinnlogging</h2>
         <p>Logg inn med Google-kontoen din for å administrere pensumforslagene.</p>
         <button id="google-signin" class="btn primary">Logg inn med Google</button>
         <p id="gate-msg" class="form-msg error"></p>
       </div>
     </section>
 
-    <!-- Lærerverktøy (vises etter innlogging) -->
+    <!-- Lærerverktøy -->
     <div id="teacher-app">
       <div id="banner" class="banner"></div>
 
-      <!-- Juster grenser -->
+      <!-- Innstillinger-strip -->
       <section class="panel" id="admin-panel">
-        <h2>⚙️ Juster grenser</h2>
-        <form id="admin-form" class="admin-grid">
+        <h2>Innstillinger</h2>
+        <div class="settings-strip">
           <label>Maks totalt
             <input type="number" id="cfg-total" min="1" />
           </label>
-          <label>Stemmer for utstemming
+          <label>Terskel utstemming
             <input type="number" id="cfg-threshold" min="1" />
           </label>
-          <label>Standard per tiår
-            <input type="number" id="cfg-decade" min="1" />
-          </label>
-          <label>Standard per sjanger
-            <input type="number" id="cfg-genre" min="1" />
-          </label>
-          <label>Standard per instrument
-            <input type="number" id="cfg-instrument" min="1" />
-          </label>
-
-          <label class="full">Sjangre (kommaseparert)
-            <input type="text" id="cfg-genres" />
-          </label>
-          <label class="full">Instrumenter (kommaseparert)
-            <input type="text" id="cfg-instruments" />
-          </label>
-          <label class="full">Tiår (kommaseparert, f.eks. 1900, 1910 …)
-            <input type="text" id="cfg-decades" />
-          </label>
-
-          <div class="full">
-            <span class="field-label">Grense per tiår</span>
-            <p class="hint">Sett antall for hvert tiår. Tomt felt = standarden over.</p>
-            <div id="decade-limits" class="limit-inputs"></div>
-          </div>
-          <div class="full">
-            <span class="field-label">Grense per sjanger</span>
-            <p class="hint">Sett antall for hver sjanger. Tomt felt = standarden over.</p>
-            <div id="genre-limits" class="limit-inputs"></div>
-          </div>
-          <div class="full">
-            <span class="field-label">Grense per instrument</span>
-            <p class="hint">Sett antall for hvert instrument. Tomt felt = standarden over.</p>
-            <div id="instrument-limits" class="limit-inputs"></div>
-          </div>
-
-          <div class="full admin-actions">
-            <button type="submit" class="btn primary">Lagre grenser</button>
-            <span id="admin-msg" class="form-msg ok"></span>
-          </div>
-        </form>
+          <div class="strip-sep"></div>
+          <button type="button" class="btn ghost" data-open-modal="modal-decade">Grense per tiår</button>
+          <button type="button" class="btn ghost" data-open-modal="modal-genre">Grense per sjanger</button>
+          <button type="button" class="btn ghost" data-open-modal="modal-instrument">Grense per instrument</button>
+          <div class="strip-sep"></div>
+          <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
+          <button type="button" id="save-general" class="btn primary">Lagre</button>
+          <span id="msg-general" class="form-msg ok"></span>
+        </div>
       </section>
 
       <!-- Oversikt -->
@@ -102,13 +70,7 @@
         <div id="dashboard"></div>
       </section>
 
-      <!-- Fyllingsgrad -->
-      <section class="panel">
-        <h2>Fyllingsgrad</h2>
-        <div id="limits"></div>
-      </section>
-
-      <!-- Liste med lærerkontroller -->
+      <!-- Forslagsliste -->
       <section class="panel">
         <div class="list-head">
           <h2>Forslag</h2>
@@ -131,6 +93,100 @@
   <footer class="sitefoot wrap">
     <p class="muted">Bygd for klassen · data lagres i sanntid via Firebase</p>
   </footer>
+
+  <!-- ===== MODALER ===== -->
+
+  <!-- Tiår -->
+  <div class="modal-backdrop" id="modal-decade">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Grense per tiår</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="admin-grid">
+        <label>Standard per tiår
+          <input type="number" id="mdec-default" min="1" />
+        </label>
+        <label class="full">Tiår (kommaseparert, f.eks. 1900, 1910 …)
+          <input type="text" id="mdec-decades" />
+        </label>
+        <div class="full">
+          <span class="field-label">Individuelle grenser</span>
+          <p class="hint">Tomt felt = standarden over.</p>
+          <div id="mdec-limits" class="limit-inputs"></div>
+        </div>
+        <div class="full admin-actions">
+          <button type="button" id="save-decade" class="btn primary">Lagre</button>
+          <span id="msg-decade" class="form-msg ok"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sjanger -->
+  <div class="modal-backdrop" id="modal-genre">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Grense per sjanger</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="admin-grid">
+        <label>Standard per sjanger
+          <input type="number" id="mgen-default" min="1" />
+        </label>
+        <label class="full">Sjangre (kommaseparert)
+          <input type="text" id="mgen-genres" />
+        </label>
+        <div class="full">
+          <span class="field-label">Individuelle grenser</span>
+          <p class="hint">Tomt felt = standarden over.</p>
+          <div id="mgen-limits" class="limit-inputs"></div>
+        </div>
+        <div class="full admin-actions">
+          <button type="button" id="save-genre" class="btn primary">Lagre</button>
+          <span id="msg-genre" class="form-msg ok"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instrument -->
+  <div class="modal-backdrop" id="modal-instrument">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Grense per instrument</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="admin-grid">
+        <label>Standard per instrument
+          <input type="number" id="minstr-default" min="1" />
+        </label>
+        <label class="full">Instrumenter (kommaseparert)
+          <input type="text" id="minstr-instruments" />
+        </label>
+        <div class="full">
+          <span class="field-label">Individuelle grenser</span>
+          <p class="hint">Tomt felt = standarden over.</p>
+          <div id="minstr-limits" class="limit-inputs"></div>
+        </div>
+        <div class="full admin-actions">
+          <button type="button" id="save-instrument" class="btn primary">Lagre</button>
+          <span id="msg-instrument" class="form-msg ok"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fyllingsgrad -->
+  <div class="modal-backdrop" id="modal-fyllingsgrad">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Fyllingsgrad</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="modal-limits"></div>
+    </div>
+  </div>
 
   <script type="module" src="js/teacher.js"></script>
 </body>

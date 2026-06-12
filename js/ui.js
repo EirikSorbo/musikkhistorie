@@ -155,6 +155,45 @@ function limitRow(label, count, max) {
 //  Forslagsliste
 // ----------------------------------------------------------------------------
 
+// Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
+export function renderSpotlightCards(el, artists, config) {
+  if (!artists.length) {
+    el.innerHTML = `<p class="muted empty" style="grid-column:1/-1">Ingen forslag matcher filteret ennå.</p>`;
+    return;
+  }
+  el.innerHTML = artists.map((a) => spotlightCard(a, config)).join("");
+}
+
+function spotlightCard(a, config) {
+  const links = (a.links || [])
+    .map(
+      (l) =>
+        `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
+          🎵 ${escapeHtml(l.label || "Lytt")}
+        </a>`
+    )
+    .join("");
+
+  return `
+    <article class="card">
+      <header class="card-head">
+        <h3>${escapeHtml(a.name)}</h3>
+        <div class="meta">
+          <span class="tag">${escapeHtml(a.genre)}</span>
+          ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+          ${periodTag(a)}
+          ${a.birthYear ? `<span class="tag">f. ${a.birthYear}</span>` : ""}
+          <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
+          ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+        </div>
+      </header>
+      ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
+      ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
+      ${links ? `<div class="links">${links}</div>` : ""}
+    </article>
+  `;
+}
+
 export function renderArtists(el, state) {
   const { artists, filters, isTeacher, clientId, config, handlers } = state;
 
