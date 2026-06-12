@@ -4,16 +4,16 @@
 
 :root {
   /* Flater */
-  --bg: #f6f7fb;
+  --bg: #f4f9f5;
   --surface: #ffffff;
-  --surface-2: #f3f4f9;
-  --line: #e7e8f0;
-  --line-strong: #d8dae6;
+  --surface-2: #edf5ef;
+  --line: #ddeae1;
+  --line-strong: #ccddd2;
 
   /* Tekst */
-  --text: #14152a;
-  --muted: #6a6f86;
-  --muted-2: #9498ad;
+  --text: #101a13;
+  --muted: #4e6657;
+  --muted-2: #7d9885;
 
   /* Aksent (grønn → emerald → teal) */
   --accent: #16a34a;
