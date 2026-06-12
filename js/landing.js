@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange, GENDERS } from "./limits.js";
-import { renderDashboard, renderLimits, renderSpotlightCards, fillSelect } from "./ui.js";
+import { renderSpotlightCards, fillSelect } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
@@ -68,8 +68,6 @@ function setupFilters() {
 
 function renderAll() {
   if (!state.config) return;
-  renderDashboard($("#dashboard"), state);
-  renderLimits($("#limits"), state);
   renderSpotlight();
 }
 
