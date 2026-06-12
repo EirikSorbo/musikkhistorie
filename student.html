@@ -46,11 +46,17 @@
         <label>Sjanger *
           <select id="in-genre" required></select>
         </label>
-        <label>Tiår *
-          <select id="in-decade" required></select>
+        <label>Instrument
+          <select id="in-instrument"></select>
         </label>
         <label>Geografisk tilhørighet
           <input type="text" id="in-geo" placeholder="f.eks. Mississippi Delta" />
+        </label>
+        <label>Innflytelse fra (år) *
+          <input type="number" id="in-start" min="1800" max="2030" required placeholder="f.eks. 1955" />
+        </label>
+        <label>Innflytelse til (år)
+          <input type="number" id="in-end" min="1800" max="2030" placeholder="f.eks. 1972" />
         </label>
         <label class="full">Begrunnelse / hvorfor relevant
           <textarea id="in-desc" rows="2" placeholder="Kort om musikkhistorisk betydning …"></textarea>
@@ -96,6 +102,7 @@
           <input type="search" id="f-search" placeholder="Søk navn/sted …" />
           <select id="f-genre"></select>
           <select id="f-decade"></select>
+          <select id="f-instrument"></select>
         </div>
       </div>
       <div id="artist-list" class="artist-list"></div>

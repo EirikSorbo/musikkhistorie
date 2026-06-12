@@ -23,7 +23,7 @@ import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 const state = {
   artists: [],
   config: null,
-  filters: { genre: "", decade: "", search: "", showRemoved: true },
+  filters: { genre: "", decade: "", instrument: "", search: "", showRemoved: true },
   isTeacher: true, // alt på denne siden er lærer
   clientId: getClientId(),
   started: false,
@@ -106,6 +106,7 @@ function refreshControls() {
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Alle tiår" }
   );
+  fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
 }
 
 // ----------------------------------------------------------------------------
@@ -119,6 +120,10 @@ function setupFilters() {
   });
   $("#f-decade").addEventListener("change", (e) => {
     state.filters.decade = e.target.value;
+    renderList();
+  });
+  $("#f-instrument").addEventListener("change", (e) => {
+    state.filters.instrument = e.target.value;
     renderList();
   });
   $("#f-search").addEventListener("input", (e) => {
@@ -135,7 +140,7 @@ function setupFilters() {
 
 function setupAdmin() {
   // Bygg per-tiår/per-sjanger-feltene på nytt når listene eller standardene endres
-  ["#cfg-decades", "#cfg-genres", "#cfg-decade", "#cfg-genre"].forEach((sel) =>
+  ["#cfg-decades", "#cfg-genres", "#cfg-instruments", "#cfg-decade", "#cfg-genre", "#cfg-instrument"].forEach((sel) =>
     $(sel).addEventListener("input", buildLimitInputs)
   );
 
@@ -145,11 +150,14 @@ function setupAdmin() {
       maxTotal: int($("#cfg-total").value, state.config.maxTotal),
       maxPerDecade: int($("#cfg-decade").value, state.config.maxPerDecade),
       maxPerGenre: int($("#cfg-genre").value, state.config.maxPerGenre),
+      maxPerInstrument: int($("#cfg-instrument").value, state.config.maxPerInstrument),
       voteOutThreshold: int($("#cfg-threshold").value, state.config.voteOutThreshold),
       genres: splitList($("#cfg-genres").value, state.config.genres),
+      instruments: splitList($("#cfg-instruments").value, state.config.instruments || []),
       decades: splitList($("#cfg-decades").value, state.config.decades).map(Number),
       decadeLimits: collectLimitMap("#decade-limits", "data-decade"),
       genreLimits: collectLimitMap("#genre-limits", "data-genre"),
+      instrumentLimits: collectLimitMap("#instrument-limits", "data-instrument"),
     };
     if (!CONFIGURED) {
       $("#admin-msg").textContent = "Firebase ikke koblet til – lagres ikke.";
@@ -166,8 +174,10 @@ function fillAdminForm() {
   $("#cfg-total").value = c.maxTotal;
   $("#cfg-decade").value = c.maxPerDecade;
   $("#cfg-genre").value = c.maxPerGenre;
+  $("#cfg-instrument").value = c.maxPerInstrument;
   $("#cfg-threshold").value = c.voteOutThreshold;
   $("#cfg-genres").value = c.genres.join(", ");
+  $("#cfg-instruments").value = (c.instruments || []).join(", ");
   $("#cfg-decades").value = c.decades.join(", ");
   buildLimitInputs();
 }
@@ -176,8 +186,10 @@ function fillAdminForm() {
 function buildLimitInputs() {
   const decades = splitList($("#cfg-decades").value, state.config.decades).map(Number);
   const genres = splitList($("#cfg-genres").value, state.config.genres);
+  const instruments = splitList($("#cfg-instruments").value, state.config.instruments || []);
   const defDecade = int($("#cfg-decade").value, state.config.maxPerDecade);
   const defGenre = int($("#cfg-genre").value, state.config.maxPerGenre);
+  const defInstrument = int($("#cfg-instrument").value, state.config.maxPerInstrument);
 
   renderLimitInputs(
     $("#decade-limits"),
@@ -198,6 +210,16 @@ function buildLimitInputs() {
       explicit: state.config.genreLimits?.[g],
     })),
     defGenre
+  );
+  renderLimitInputs(
+    $("#instrument-limits"),
+    "data-instrument",
+    instruments.map((i) => ({
+      key: i,
+      label: i,
+      explicit: state.config.instrumentLimits?.[i],
+    })),
+    defInstrument
   );
 }
 

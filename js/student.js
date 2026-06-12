@@ -10,14 +10,14 @@ import {
   undoVoteOut,
   getClientId,
 } from "./store.js";
-import { checkCanAdd, decadeFromYear, GENDERS, DEFAULT_CONFIG } from "./limits.js";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
 import { renderDashboard, renderLimits, renderArtists, fillSelect } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
   artists: [],
   config: null,
-  filters: { genre: "", decade: "", search: "", showRemoved: false },
+  filters: { genre: "", decade: "", instrument: "", search: "", showRemoved: false },
   isTeacher: false,
   clientId: getClientId(),
 };
@@ -50,10 +50,16 @@ function refreshControls() {
     { placeholder: "Alle tiår" }
   );
   fillSelect($("#in-genre"), config.genres, { placeholder: "Velg sjanger …" });
+  fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
   fillSelect(
-    $("#in-decade"),
+    $("#f-instrument"),
+    config.instruments || [],
+    { placeholder: "Alle instrumenter" }
+  );
+  fillSelect(
+    $("#f-decade"),
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
-    { placeholder: "Velg tiår …" }
+    { placeholder: "Alle tiår" }
   );
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }
@@ -65,14 +71,6 @@ function refreshControls() {
 function setupForm() {
   const form = $("#add-form");
   const msg = $("#form-msg");
-
-  $("#in-birthyear").addEventListener("change", (e) => {
-    const year = parseInt(e.target.value, 10);
-    const dec = decadeFromYear(year);
-    if (dec && state.config.decades.includes(dec) && !$("#in-decade").value) {
-      $("#in-decade").value = dec;
-    }
-  });
 
   $("#add-link").addEventListener("click", () => addLinkRow());
 
@@ -86,7 +84,9 @@ function setupForm() {
       birthYear: parseInt($("#in-birthyear").value, 10) || null,
       gender: $("#in-gender").value,
       genre: $("#in-genre").value,
-      decade: parseInt($("#in-decade").value, 10),
+      instrument: $("#in-instrument").value,
+      influenceStart: parseInt($("#in-start").value, 10) || null,
+      influenceEnd: parseInt($("#in-end").value, 10) || null,
       description: $("#in-desc").value.trim(),
       keyWorks: $("#in-works").value.trim(),
       geography: $("#in-geo").value.trim(),
@@ -94,12 +94,9 @@ function setupForm() {
       links: collectLinks(),
     };
 
-    if (!candidate.name || !candidate.genre || !candidate.decade || !candidate.gender) {
-      return showMsg(msg, "Fyll inn navn, kjønn, sjanger og tiår.", "error");
+    if (!candidate.name || !candidate.genre || !candidate.influenceStart || !candidate.gender) {
+      return showMsg(msg, "Fyll inn navn, kjønn, sjanger og startår for innflytelse.", "error");
     }
-
-    const check = checkCanAdd(state.artists, state.config, candidate);
-    if (!check.ok) return showMsg(msg, check.reasons.join(" "), "error");
 
     if (!CONFIGURED) {
       return showMsg(
@@ -109,11 +106,18 @@ function setupForm() {
       );
     }
 
+    const { warnings } = checkWarnings(state.artists, state.config, candidate);
+
     try {
       await addArtist(candidate);
       form.reset();
       resetLinkRows();
-      showMsg(msg, `«${candidate.name}» er lagt til i pensumforslagene ✓`, "ok");
+      const base = `«${candidate.name}» er lagt til i pensumforslagene ✓`;
+      if (warnings.length) {
+        showMsg(msg, `${base} NB: ${warnings.join(" ")}`, "warn");
+      } else {
+        showMsg(msg, base, "ok");
+      }
     } catch (err) {
       showMsg(msg, "Noe gikk galt: " + err.message, "error");
     }
@@ -156,6 +160,10 @@ function setupFilters() {
   });
   $("#f-decade").addEventListener("change", (e) => {
     state.filters.decade = e.target.value;
+    renderList();
+  });
+  $("#f-instrument").addEventListener("change", (e) => {
+    state.filters.instrument = e.target.value;
     renderList();
   });
   $("#f-search").addEventListener("input", (e) => {

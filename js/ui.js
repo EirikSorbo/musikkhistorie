@@ -11,6 +11,8 @@ import {
   activeArtists,
   limitForDecade,
   limitForGenre,
+  limitForInstrument,
+  decadesForRange,
   GENDERS,
 } from "./limits.js";
 
@@ -113,6 +115,10 @@ export function renderLimits(el, { artists, config }) {
     .map((g) => limitRow(g, counts.perGenre[g] || 0, limitForGenre(config, g)))
     .join("");
 
+  const instrumentRows = (config.instruments || [])
+    .map((i) => limitRow(i, counts.perInstrument[i] || 0, limitForInstrument(config, i)))
+    .join("");
+
   el.innerHTML = `
     <div class="limits-cols">
       <div>
@@ -122,6 +128,10 @@ export function renderLimits(el, { artists, config }) {
       <div>
         <h3>Per sjanger</h3>
         <div class="limit-list">${genreRows}</div>
+      </div>
+      <div>
+        <h3>Per instrument</h3>
+        <div class="limit-list">${instrumentRows}</div>
       </div>
     </div>
   `;
@@ -150,13 +160,15 @@ export function renderArtists(el, state) {
 
   let list = [...artists];
 
-  // Skjul fjernede med mindre lærer har huket av "vis fjernede"
   if (!filters.showRemoved) {
     list = list.filter((a) => a.status === "active");
   }
   if (filters.genre) list = list.filter((a) => a.genre === filters.genre);
-  if (filters.decade)
-    list = list.filter((a) => String(a.decade) === String(filters.decade));
+  if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
+  if (filters.decade) {
+    const fd = Number(filters.decade);
+    list = list.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(fd));
+  }
   if (filters.search) {
     const q = filters.search.toLowerCase();
     list = list.filter(
@@ -166,8 +178,7 @@ export function renderArtists(el, state) {
     );
   }
 
-  // Sortering: tiår, så navn
-  list.sort((a, b) => a.decade - b.decade || a.name.localeCompare(b.name, "no"));
+  list.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   if (list.length === 0) {
     el.innerHTML = `<p class="muted empty">Ingen forslag matcher filteret ennå.</p>`;
@@ -240,7 +251,8 @@ function artistCard(a, { isTeacher, clientId, config }) {
           <h3>${escapeHtml(a.name)} ${removedBadge} ${protectedBadge}</h3>
           <div class="meta">
             <span class="tag">${escapeHtml(a.genre)}</span>
-            <span class="tag">${a.decade}-tallet</span>
+            ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+            ${periodTag(a)}
             ${a.birthYear ? `<span class="tag">f. ${a.birthYear}</span>` : ""}
             <span class="tag gender-${a.gender}">${
     GENDER_LABEL[a.gender] || "Ukjent"
@@ -293,6 +305,14 @@ export function fillSelect(select, values, { placeholder } = {}) {
       })
       .join("");
   if (current) select.value = current;
+}
+
+function periodTag(a) {
+  if (!a.influenceStart) return "";
+  if (!a.influenceEnd || a.influenceEnd === a.influenceStart) {
+    return `<span class="tag">ca. ${a.influenceStart}</span>`;
+  }
+  return `<span class="tag">${a.influenceStart}–${a.influenceEnd}</span>`;
 }
 
 function pct(n, max) {

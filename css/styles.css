@@ -244,7 +244,7 @@ body.is-teacher .show-removed { display: inline-flex; }
 /* ----- Grenser ----- */
 .limits-cols {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 32px;
 }
 .limit-list { display: flex; flex-direction: column; gap: 11px; }
@@ -307,6 +307,7 @@ textarea { resize: vertical; }
 .form-msg { font-size: 0.88rem; font-weight: 500; }
 .form-msg.error { color: var(--danger); }
 .form-msg.ok { color: var(--ok); }
+.form-msg.warn { color: var(--warn); }
 
 /* ----- Listehode + filtre ----- */
 .list-head {
@@ -419,11 +420,12 @@ textarea { resize: vertical; }
 @media (max-width: 760px) {
   .add-grid { grid-template-columns: 1fr 1fr; }
   .admin-grid { grid-template-columns: 1fr 1fr; }
-  .limits-cols { grid-template-columns: 1fr; gap: 22px; }
+  .limits-cols { grid-template-columns: 1fr 1fr; gap: 22px; }
   .artist-list { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
   .add-grid, .admin-grid { grid-template-columns: 1fr; }
+  .limits-cols { grid-template-columns: 1fr; }
   .brand h1 { font-size: 1.25rem; }
   .panel { padding: 20px; }
 }

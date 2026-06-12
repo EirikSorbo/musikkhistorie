@@ -60,9 +60,15 @@
           <label>Standard per sjanger
             <input type="number" id="cfg-genre" min="1" />
           </label>
+          <label>Standard per instrument
+            <input type="number" id="cfg-instrument" min="1" />
+          </label>
 
           <label class="full">Sjangre (kommaseparert)
             <input type="text" id="cfg-genres" />
+          </label>
+          <label class="full">Instrumenter (kommaseparert)
+            <input type="text" id="cfg-instruments" />
           </label>
           <label class="full">Tiår (kommaseparert, f.eks. 1900, 1910 …)
             <input type="text" id="cfg-decades" />
@@ -77,6 +83,11 @@
             <span class="field-label">Grense per sjanger</span>
             <p class="hint">Sett antall for hver sjanger. Tomt felt = standarden over.</p>
             <div id="genre-limits" class="limit-inputs"></div>
+          </div>
+          <div class="full">
+            <span class="field-label">Grense per instrument</span>
+            <p class="hint">Sett antall for hvert instrument. Tomt felt = standarden over.</p>
+            <div id="instrument-limits" class="limit-inputs"></div>
           </div>
 
           <div class="full admin-actions">
@@ -106,6 +117,7 @@
             <input type="search" id="f-search" placeholder="Søk navn/sted …" />
             <select id="f-genre"></select>
             <select id="f-decade"></select>
+            <select id="f-instrument"></select>
             <label class="show-removed">
               <input type="checkbox" id="f-show-removed" /> Vis fjernede
             </label>
