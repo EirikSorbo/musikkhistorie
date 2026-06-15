@@ -1,10 +1,12 @@
 import {
   subscribeArtists,
   subscribeConfig,
+  addArtist,
   teacherRemove,
   teacherRestore,
   teacherDelete,
   updateConfig,
+  updateArtistFields,
   getClientId,
   onAuthChange,
   signInWithGoogle,
@@ -292,6 +294,7 @@ function startApp() {
   state.started = true;
   setupFilters();
   setupAdmin();
+  setupDataButtons();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
@@ -312,6 +315,199 @@ function startApp() {
     state.artists = artists;
     renderAll();
   });
+}
+
+// ----------------------------------------------------------------------------
+//  Import / Eksport / Merge
+// ----------------------------------------------------------------------------
+
+const EXPORT_FIELDS = [
+  "name", "birthYear", "deathYear", "gender", "genre", "instrument",
+  "subgenres", "influenceStart", "influenceEnd", "geography",
+  "description", "keyWorks", "links", "proposedBy",
+];
+
+const MERGE_LABELS = {
+  birthYear: "Fødselsår", deathYear: "Dødsår", gender: "Kjønn",
+  genre: "Sjanger", instrument: "Instrument", subgenres: "Undersjangre",
+  influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
+  geography: "Geografi", description: "Beskrivelse",
+  keyWorks: "Sentrale verk", links: "Lenker",
+};
+
+const COMPARE_FIELDS = Object.keys(MERGE_LABELS);
+
+const mergeState = { queue: [], newArtists: [], index: 0 };
+
+function setupDataButtons() {
+  $("#btn-export").addEventListener("click", handleExport);
+
+  const importInput = $("#input-import");
+  const mergeInput  = $("#input-merge");
+
+  $("#btn-import").addEventListener("click", () => { importInput.value = ""; importInput.click(); });
+  $("#btn-merge").addEventListener("click",  () => { mergeInput.value  = ""; mergeInput.click(); });
+
+  importInput.addEventListener("change", (e) => handleImportFile(e.target.files[0]));
+  mergeInput.addEventListener("change",  (e) => handleMergeFile(e.target.files[0]));
+
+  $("#merge-keep-all").addEventListener("click", () => bulkMerge("existing"));
+  $("#merge-use-all").addEventListener("click",  () => bulkMerge("imported"));
+  $("#merge-next").addEventListener("click", advanceMerge);
+}
+
+// --- Eksport ---
+
+function handleExport() {
+  const data = state.artists
+    .filter((a) => a.status === "active")
+    .map((a) => Object.fromEntries(EXPORT_FIELDS.map((f) => [f, a[f] ?? null])));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href     = url;
+  link.download = `musikkhistorie-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- Import (uten sjekk for duplikater) ---
+
+async function handleImportFile(file) {
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
+  if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
+
+  let added = 0;
+  for (const a of data) {
+    if (!a.name) continue;
+    await addArtist({ proposedBy: "Import", ...a });
+    added++;
+  }
+  alert(`${added} artister lagt til.`);
+}
+
+// --- Merge (sjekker duplikater, viser konflikter) ---
+
+async function handleMergeFile(file) {
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
+  if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
+
+  mergeState.queue      = [];
+  mergeState.newArtists = [];
+  mergeState.index      = 0;
+
+  for (const imp of data) {
+    if (!imp.name) continue;
+    const existing = state.artists.find(
+      (a) => a.status === "active" &&
+              a.name.trim().toLowerCase() === imp.name.trim().toLowerCase()
+    );
+    if (!existing) { mergeState.newArtists.push(imp); continue; }
+
+    const conflicts = COMPARE_FIELDS
+      .filter((f) => JSON.stringify(existing[f] ?? null) !== JSON.stringify(imp[f] ?? null))
+      .map((f) => ({ field: f, existing: existing[f], imported: imp[f] }));
+
+    if (conflicts.length) mergeState.queue.push({ existing, imported: imp, conflicts, resolved: {} });
+  }
+
+  if (!mergeState.queue.length && !mergeState.newArtists.length) {
+    alert("Ingen endringer å flette inn."); return;
+  }
+  if (!mergeState.queue.length) { await finishMerge(); return; }
+
+  openModal("modal-merge");
+  renderMergeConflict();
+}
+
+function renderMergeConflict() {
+  const { queue, index } = mergeState;
+  const item = queue[index];
+
+  $("#merge-title").textContent    = item.existing.name;
+  $("#merge-progress").textContent = `Konflikt ${index + 1} av ${queue.length}`;
+
+  $("#merge-fields").innerHTML = item.conflicts.map((c) => {
+    const n = `cf-${c.field}`;
+    return `
+      <div class="conflict-row">
+        <div class="conflict-field-name">${MERGE_LABELS[c.field] || c.field}</div>
+        <label class="conflict-opt">
+          <input type="radio" name="${n}" value="existing" checked>
+          <span class="conflict-val"><strong>Behold:</strong> ${escapeHtml(fmtVal(c.existing))}</span>
+        </label>
+        <label class="conflict-opt">
+          <input type="radio" name="${n}" value="imported">
+          <span class="conflict-val new"><strong>Importer:</strong> ${escapeHtml(fmtVal(c.imported))}</span>
+        </label>
+      </div>`;
+  }).join("");
+
+  $("#merge-next").textContent = index === queue.length - 1 ? "Fullfør" : "Neste →";
+}
+
+function fmtVal(v) {
+  if (v === null || v === undefined) return "(tom)";
+  if (Array.isArray(v)) {
+    if (!v.length) return "(tom)";
+    return v.map((i) => (typeof i === "object" ? i.label || JSON.stringify(i) : i)).join(", ");
+  }
+  return String(v);
+}
+
+function collectCurrentChoices() {
+  const item = mergeState.queue[mergeState.index];
+  item.conflicts.forEach((c) => {
+    const radio = document.querySelector(`input[name="cf-${c.field}"]:checked`);
+    item.resolved[c.field] = radio?.value === "imported" ? c.imported : c.existing;
+  });
+}
+
+async function advanceMerge() {
+  collectCurrentChoices();
+  if (mergeState.index < mergeState.queue.length - 1) {
+    mergeState.index++;
+    renderMergeConflict();
+  } else {
+    await finishMerge();
+  }
+}
+
+async function bulkMerge(choice) {
+  collectCurrentChoices();
+  for (let i = mergeState.index; i < mergeState.queue.length; i++) {
+    const item = mergeState.queue[i];
+    item.conflicts.forEach((c) => {
+      item.resolved[c.field] = choice === "imported" ? c.imported : c.existing;
+    });
+  }
+  await finishMerge();
+}
+
+async function finishMerge() {
+  closeModal("modal-merge");
+  let added = 0, updated = 0;
+
+  for (const a of mergeState.newArtists) {
+    await addArtist({ proposedBy: "Import", ...a });
+    added++;
+  }
+  for (const item of mergeState.queue) {
+    if (Object.keys(item.resolved).length) {
+      await updateArtistFields(item.existing.id, item.resolved);
+      updated++;
+    }
+  }
+
+  const parts = [];
+  if (added)   parts.push(`${added} nye artister lagt til`);
+  if (updated) parts.push(`${updated} artister oppdatert`);
+  if (parts.length) alert(parts.join(", ") + ".");
 }
 
 setupGate();

@@ -488,6 +488,18 @@ textarea { resize: vertical; }
   margin: 0 4px;
 }
 
+/* ----- Merge-konflikt ----- */
+.merge-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; max-height: 55vh; overflow-y: auto; }
+.conflict-row { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.conflict-field-name { font-size: 0.78rem; font-weight: 600; color: var(--muted); padding: 6px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.conflict-opt { display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background 0.1s; }
+.conflict-opt:hover { background: var(--surface-2); }
+.conflict-opt + .conflict-opt { border-top: 1px solid var(--line); }
+.conflict-opt input[type="radio"] { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.conflict-val { font-size: 0.87rem; line-height: 1.45; }
+.conflict-val.new { color: var(--accent-2); }
+.merge-foot { display: flex; gap: 10px; align-items: center; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+
 /* ----- Spotlight (forside) ----- */
 .spotlight-grid {
   display: grid;

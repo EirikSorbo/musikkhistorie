@@ -194,6 +194,11 @@ export async function teacherDelete(artistId) {
   return deleteDoc(doc(db, "artists", artistId));
 }
 
+// Oppdater enkeltfelt på en artist (brukt av merge)
+export async function updateArtistFields(artistId, fields) {
+  return setDoc(doc(db, "artists", artistId), fields, { merge: true });
+}
+
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
 // per-tiår/per-sjanger-grenser ikke blir liggende igjen).
 export async function updateConfig(config) {

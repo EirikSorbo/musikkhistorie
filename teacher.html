@@ -61,6 +61,12 @@
           <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
           <button type="button" id="save-general" class="btn primary">Lagre</button>
           <span id="msg-general" class="form-msg ok"></span>
+          <div class="strip-sep"></div>
+          <button type="button" id="btn-export" class="btn ghost">Eksporter</button>
+          <button type="button" id="btn-import" class="btn ghost">Importer</button>
+          <button type="button" id="btn-merge" class="btn ghost">Flett inn</button>
+          <input type="file" id="input-import" accept=".json" hidden>
+          <input type="file" id="input-merge" accept=".json" hidden>
         </div>
       </section>
 
@@ -173,6 +179,25 @@
           <button type="button" id="save-instrument" class="btn primary">Lagre</button>
           <span id="msg-instrument" class="form-msg ok"></span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Merge-konflikter -->
+  <div class="modal-backdrop" id="modal-merge">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <div>
+          <h2 id="merge-title"></h2>
+          <span id="merge-progress" class="muted" style="font-size:0.85rem"></span>
+        </div>
+      </div>
+      <div id="merge-fields" class="merge-fields"></div>
+      <div class="merge-foot">
+        <button type="button" id="merge-keep-all" class="btn ghost small">Behold alle gjenstående</button>
+        <button type="button" id="merge-use-all"  class="btn ghost small">Importer alle gjenstående</button>
+        <div class="spacer"></div>
+        <button type="button" id="merge-next" class="btn primary">Neste →</button>
       </div>
     </div>
   </div>
