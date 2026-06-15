@@ -103,9 +103,11 @@ export async function addArtist(data) {
   return addDoc(artistsCol, {
     name: data.name,
     birthYear: data.birthYear ?? null,
+    deathYear: data.deathYear ?? null,
     gender: data.gender,
     genre: data.genre,
     instrument: data.instrument ?? "",
+    subgenres: data.subgenres ?? [],
     influenceStart: data.influenceStart ?? null,
     influenceEnd: data.influenceEnd ?? null,
     description: data.description ?? "",

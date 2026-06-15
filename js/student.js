@@ -82,9 +82,11 @@ function setupForm() {
     const candidate = {
       name: $("#in-name").value.trim(),
       birthYear: parseInt($("#in-birthyear").value, 10) || null,
+      deathYear: parseInt($("#in-deathyear").value, 10) || null,
       gender: $("#in-gender").value,
       genre: $("#in-genre").value,
       instrument: $("#in-instrument").value,
+      subgenres: $("#in-subgenres").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#in-start").value, 10) || null,
       influenceEnd: parseInt($("#in-end").value, 10) || null,
       description: $("#in-desc").value.trim(),

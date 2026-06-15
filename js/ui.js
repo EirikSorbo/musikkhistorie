@@ -182,9 +182,10 @@ function spotlightCard(a, config) {
           <span class="tag">${escapeHtml(a.genre)}</span>
           ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
           ${periodTag(a)}
-          ${a.birthYear ? `<span class="tag">f. ${a.birthYear}</span>` : ""}
+          ${lifespan(a)}
           <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
           ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+          ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
         </div>
       </header>
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
@@ -213,7 +214,8 @@ export function renderArtists(el, state) {
     list = list.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
-        (a.geography || "").toLowerCase().includes(q)
+        (a.geography || "").toLowerCase().includes(q) ||
+        (a.subgenres || []).some(s => s.toLowerCase().includes(q))
     );
   }
 
@@ -292,11 +294,10 @@ function artistCard(a, { isTeacher, clientId, config }) {
             <span class="tag">${escapeHtml(a.genre)}</span>
             ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
             ${periodTag(a)}
-            ${a.birthYear ? `<span class="tag">f. ${a.birthYear}</span>` : ""}
-            <span class="tag gender-${a.gender}">${
-    GENDER_LABEL[a.gender] || "Ukjent"
-  }</span>
+            ${lifespan(a)}
+            <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
             ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+            ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
           </div>
         </div>
       </header>
@@ -344,6 +345,13 @@ export function fillSelect(select, values, { placeholder } = {}) {
       })
       .join("");
   if (current) select.value = current;
+}
+
+function lifespan(a) {
+  if (!a.birthYear && !a.deathYear) return "";
+  if (a.birthYear && a.deathYear) return `<span class="tag">f. ${a.birthYear} – d. ${a.deathYear}</span>`;
+  if (a.birthYear) return `<span class="tag">f. ${a.birthYear}</span>`;
+  return `<span class="tag">d. ${a.deathYear}</span>`;
 }
 
 function periodTag(a) {

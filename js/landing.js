@@ -30,7 +30,8 @@ function renderSpotlight() {
     pool = pool.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
-        (a.geography || "").toLowerCase().includes(q)
+        (a.geography || "").toLowerCase().includes(q) ||
+        (a.subgenres || []).some(s => s.toLowerCase().includes(q))
     );
   }
 
