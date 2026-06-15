@@ -191,6 +191,7 @@ function spotlightCard(a, config) {
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
       ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
       ${links ? `<div class="links">${links}</div>` : ""}
+      ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${(a.kilder).map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
     </article>
   `;
 }
@@ -311,6 +312,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
           : ""
       }
       ${links ? `<div class="links">${links}</div>` : ""}
+      ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${(a.kilder).map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
 
       <footer class="card-foot">
         <span class="proposed muted">Foreslått av ${escapeHtml(

@@ -381,6 +381,12 @@ textarea { resize: vertical; }
 }
 .links a:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
+.kilder { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+.kilder ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+
+.source-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.source-row .source-text { flex: 1; }
+
 .card-foot {
   display: flex;
   align-items: center;

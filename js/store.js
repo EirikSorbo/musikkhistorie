@@ -114,6 +114,7 @@ export async function addArtist(data) {
     keyWorks: data.keyWorks ?? "",
     geography: data.geography ?? "",
     links: data.links ?? [],
+    kilder: data.kilder ?? [],
     proposedBy: data.proposedBy ?? "Anonym",
     status: "active",
     removedBy: null,

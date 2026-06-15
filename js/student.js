@@ -73,6 +73,7 @@ function setupForm() {
   const msg = $("#form-msg");
 
   $("#add-link").addEventListener("click", () => addLinkRow());
+  $("#add-source").addEventListener("click", () => addSourceRow());
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -94,6 +95,7 @@ function setupForm() {
       geography: $("#in-geo").value.trim(),
       proposedBy: $("#in-by").value.trim() || "Anonym",
       links: collectLinks(),
+      kilder: collectSources(),
     };
 
     if (!candidate.name || !candidate.genre || !candidate.influenceStart || !candidate.gender) {
@@ -114,6 +116,7 @@ function setupForm() {
       await addArtist(candidate);
       form.reset();
       resetLinkRows();
+      resetSourceRows();
       const base = `«${candidate.name}» er lagt til i pensumforslagene ✓`;
       if (warnings.length) {
         showMsg(msg, `${base} NB: ${warnings.join(" ")}`, "warn");
@@ -149,6 +152,26 @@ function collectLinks() {
       url: r.querySelector(".link-url").value.trim(),
     }))
     .filter((l) => l.url);
+}
+
+function addSourceRow(text = "") {
+  const wrap = $("#source-rows");
+  const row = document.createElement("div");
+  row.className = "source-row";
+  row.innerHTML = `
+    <input type="text" class="source-text" placeholder="F.eks. «Ward, Brian. Just My Soul Responding. 1998.»" value="${text}">
+    <button type="button" class="btn ghost small remove-source">✕</button>
+  `;
+  row.querySelector(".remove-source").addEventListener("click", () => row.remove());
+  wrap.appendChild(row);
+}
+function resetSourceRows() {
+  $("#source-rows").innerHTML = "";
+}
+function collectSources() {
+  return [...document.querySelectorAll(".source-text")]
+    .map((i) => i.value.trim())
+    .filter(Boolean);
 }
 
 // ----------------------------------------------------------------------------
@@ -187,6 +210,7 @@ function init() {
   setupForm();
   setupFilters();
   resetLinkRows();
+  resetSourceRows();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };

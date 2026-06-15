@@ -324,7 +324,7 @@ function startApp() {
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "genre", "instrument",
   "subgenres", "influenceStart", "influenceEnd", "geography",
-  "description", "keyWorks", "links", "proposedBy",
+  "description", "keyWorks", "links", "kilder", "proposedBy",
 ];
 
 const MERGE_LABELS = {
@@ -332,7 +332,7 @@ const MERGE_LABELS = {
   genre: "Sjanger", instrument: "Instrument", subgenres: "Undersjangre",
   influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
   geography: "Geografi", description: "Beskrivelse",
-  keyWorks: "Sentrale verk", links: "Lenker",
+  keyWorks: "Sentrale verk", links: "Lenker", kilder: "Kilder",
 };
 
 const COMPARE_FIELDS = Object.keys(MERGE_LABELS);
