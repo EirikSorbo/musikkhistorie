@@ -19,6 +19,27 @@ function openDetail(artist) {
   document.getElementById("modal-detail").classList.add("open");
 }
 
+function setupTagFilters() {
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-filter-key]");
+    if (!btn) return;
+    const key = btn.dataset.filterKey;
+    const val = btn.dataset.filterVal;
+    document.getElementById("modal-detail").classList.remove("open");
+    if (key === "genre") {
+      state.filters.genre = val;
+      $("#sp-genre").value = val;
+    } else if (key === "instrument") {
+      state.filters.instrument = val;
+      $("#sp-instrument").value = val;
+    } else if (key === "search") {
+      state.filters.search = val;
+      $("#sp-search").value = val;
+    }
+    renderSpotlight();
+  });
+}
+
 function setupDetailModal() {
   const backdrop = document.getElementById("modal-detail");
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.classList.remove("open"); });
@@ -101,6 +122,7 @@ function setupFilters() {
 
 function init() {
   setupFilters();
+  setupTagFilters();
   setupDetailModal();
 
   if (!CONFIGURED) {

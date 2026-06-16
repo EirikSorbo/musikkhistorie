@@ -165,25 +165,29 @@ export function renderResultList(el, artists, config, onSelect) {
   const sorted = [...artists].sort(
     (a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no")
   );
-  el.innerHTML = sorted.map((a) => `
-    <button class="result-row" data-id="${escapeHtml(a.id)}">
+  el.innerHTML = sorted.map((a) => {
+    const works = (a.keyWorks || "").split(",").map(s => s.trim()).filter(Boolean);
+    const workSnippet = works.length
+      ? escapeHtml(works[0]) + (works.length > 1 ? ` <span class="muted">(+${works.length - 1} til)</span>` : "")
+      : "";
+    return `
+    <div class="result-row" data-id="${escapeHtml(a.id)}" tabindex="0" role="button">
       <span class="result-name">${escapeHtml(a.name)}</span>
       <span class="result-meta">
-        ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
-        ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
-        ${periodTag(a)}
-        ${lifespan(a)}
-        ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
-        ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
+        ${a.genre ? `<button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : ""}
+        ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+        ${workSnippet ? `<span class="result-work">${workSnippet}</span>` : ""}
       </span>
       <span class="result-arrow">›</span>
-    </button>
-  `).join("");
-  el.querySelectorAll(".result-row").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const artist = artists.find((a) => a.id === btn.dataset.id);
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".result-row").forEach((div) => {
+    const open = () => {
+      const artist = artists.find((a) => a.id === div.dataset.id);
       if (artist) onSelect(artist);
-    });
+    };
+    div.addEventListener("click", (e) => { if (!e.target.closest(".tag-link")) open(); });
+    div.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
   });
 }
 
@@ -195,13 +199,13 @@ export function renderArtistDetail(el, artist, config) {
     .join("");
   el.innerHTML = `
     <div class="meta" style="margin-bottom:12px">
-      ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
-      ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+      ${a.genre ? `<button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : ""}
+      ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
       ${periodTag(a)}
       ${lifespan(a)}
       <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
       ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
-      ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
+      ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-filter-key="search" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
     ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
@@ -236,13 +240,13 @@ function spotlightCard(a, config) {
       <header class="card-head">
         <h3>${escapeHtml(a.name)}</h3>
         <div class="meta">
-          <span class="tag">${escapeHtml(a.genre)}</span>
-          ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+          <button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>
+          ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
           ${periodTag(a)}
           ${lifespan(a)}
           <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
           ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
-          ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
+          ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-filter-key="search" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
         </div>
       </header>
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
@@ -351,7 +355,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
           <h3>${escapeHtml(a.name)} ${removedBadge} ${protectedBadge}</h3>
           <div class="meta">
             <span class="tag">${escapeHtml(a.genre)}</span>
-            ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+            ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
             ${periodTag(a)}
             ${lifespan(a)}
             <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
