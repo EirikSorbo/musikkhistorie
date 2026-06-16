@@ -86,16 +86,13 @@ function renderSpotlight() {
     );
   }
 
-  const shuffleBtn = $("#sp-shuffle");
-  const heading = $("#spotlight-heading");
+  const spotlightHeader = $(".spotlight-header");
 
   if (hasFilters()) {
-    shuffleBtn.style.display = "none";
-    if (heading) heading.style.display = "none";
+    if (spotlightHeader) spotlightHeader.style.display = "none";
     renderResultList($("#spotlight"), pool, state.config, openDetail);
   } else {
-    shuffleBtn.style.display = "";
-    if (heading) heading.style.display = "";
+    if (spotlightHeader) spotlightHeader.style.display = "";
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     currentPicks = shuffled.slice(0, 1);
     renderSpotlightCards($("#spotlight"), currentPicks, state.config);
