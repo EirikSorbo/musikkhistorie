@@ -50,12 +50,14 @@
         <div id="dashboard"></div>
       </section>
 
-      <!-- Innholdsbeskrivelser -->
-      <section class="panel desc-buttons-panel">
-        <h2>Innholdsbeskrivelser</h2>
+      <!-- Kontekst -->
+      <section class="panel">
+        <h2>Kontekst</h2>
+        <h3 class="context-sub">Tiårsbeskrivelser</h3>
+        <div id="decade-buttons" class="settings-row"></div>
+        <h3 class="context-sub" style="margin-top:18px">Sjangerbeskrivelser</h3>
         <div class="settings-row">
-          <button type="button" class="btn primary" data-open-modal="modal-decade-desc">Tiårsbeskrivelser</button>
-          <button type="button" class="btn primary" data-open-modal="modal-subgenre-desc">Undersjangerbeskrivelser</button>
+          <button type="button" class="btn primary" data-open-modal="modal-subgenre-desc">Rediger sjangerbeskrivelser</button>
         </div>
       </section>
 
@@ -344,14 +346,14 @@
     </div>
   </div>
 
-  <!-- Undersjangerbeskrivelser -->
+  <!-- Sjangerbeskrivelser -->
   <div class="modal-backdrop" id="modal-subgenre-desc">
     <div class="modal modal-wide">
       <div class="modal-head">
-        <h2>Undersjangerbeskrivelser</h2>
+        <h2>Sjangerbeskrivelser</h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
-      <p class="hint">Beskriv hver undersjanger. Listen hentes automatisk fra artistenes tags.</p>
+      <p class="hint">Beskriv hver sjanger. Listen hentes automatisk fra artistenes tags.</p>
       <div id="subgenre-desc-list" class="desc-edit-list"></div>
     </div>
   </div>

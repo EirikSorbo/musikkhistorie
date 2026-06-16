@@ -670,6 +670,9 @@ a.brand { text-decoration: none; color: inherit; display: block; }
 body.is-teacher #teacher-app { display: block; }
 body.is-teacher #gate { display: none; }
 
+/* ----- Kontekst-seksjon (lærer) ----- */
+.context-sub { font-size: 0.88rem; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+
 /* ----- Beskrivelsesredigering (lærer) ----- */
 .desc-edit-list {
   display: flex;

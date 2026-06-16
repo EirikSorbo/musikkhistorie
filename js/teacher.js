@@ -119,10 +119,28 @@ function setupModals() {
 function renderAll() {
   if (!state.config) return;
   renderDashboard($("#dashboard"), state);
-  // Oppdater fyllingsgrad-modal hvis den er åpen
   if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
     renderLimits($("#modal-limits"), state);
+  buildDecadeButtons();
   renderList();
+}
+
+function buildDecadeButtons() {
+  const el = $("#decade-buttons");
+  if (!el || !state.config) return;
+  const decades = (state.config.decades || []).slice().sort((a, b) => a - b);
+  el.innerHTML = decades.map((d) =>
+    `<button type="button" class="btn primary small decade-btn" data-decade="${d}">${d}-tallet</button>`
+  ).join("");
+  el.querySelectorAll(".decade-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openModal("modal-decade-desc");
+      setTimeout(() => {
+        const item = document.querySelector(`.desc-edit-item[data-decade="${btn.dataset.decade}"]`);
+        if (item) item.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    });
+  });
 }
 
 function renderList() {
