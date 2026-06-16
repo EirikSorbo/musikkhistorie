@@ -6,61 +6,25 @@ import {
   subscribeArtists,
   subscribeConfig,
   addArtist,
-  voteOut,
-  undoVoteOut,
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { renderDashboard, renderLimits, renderArtists, fillSelect } from "./ui.js";
+import { fillSelect } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
   artists: [],
   config: null,
-  filters: { genre: "", decade: "", instrument: "", search: "", showRemoved: false },
-  isTeacher: false,
-  clientId: getClientId(),
-};
-
-const handlers = {
-  vote: (id) => voteOut(id, state.clientId, state.config.voteOutThreshold),
-  undoVote: (id) => undoVoteOut(id, state.clientId),
 };
 
 // ----------------------------------------------------------------------------
 //  Render
 // ----------------------------------------------------------------------------
 
-function renderAll() {
-  if (!state.config) return;
-  renderDashboard($("#dashboard"), state);
-  renderLimits($("#limits"), state);
-  renderList();
-}
-function renderList() {
-  renderArtists($("#artist-list"), { ...state, handlers });
-}
-
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#f-genre"), config.genres, { placeholder: "Alle sjangre" });
-  fillSelect(
-    $("#f-decade"),
-    config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
-    { placeholder: "Alle tiår" }
-  );
   fillSelect($("#in-genre"), config.genres, { placeholder: "Velg sjanger …" });
   fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
-  fillSelect(
-    $("#f-instrument"),
-    config.instruments || [],
-    { placeholder: "Alle instrumenter" }
-  );
-  fillSelect(
-    $("#f-decade"),
-    config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
-    { placeholder: "Alle tiår" }
-  );
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }
 
@@ -175,29 +139,6 @@ function collectSources() {
 }
 
 // ----------------------------------------------------------------------------
-//  Filtre
-// ----------------------------------------------------------------------------
-
-function setupFilters() {
-  $("#f-genre").addEventListener("change", (e) => {
-    state.filters.genre = e.target.value;
-    renderList();
-  });
-  $("#f-decade").addEventListener("change", (e) => {
-    state.filters.decade = e.target.value;
-    renderList();
-  });
-  $("#f-instrument").addEventListener("change", (e) => {
-    state.filters.instrument = e.target.value;
-    renderList();
-  });
-  $("#f-search").addEventListener("input", (e) => {
-    state.filters.search = e.target.value;
-    renderList();
-  });
-}
-
-// ----------------------------------------------------------------------------
 //  Hjelpere + oppstart
 // ----------------------------------------------------------------------------
 
@@ -208,26 +149,22 @@ function showMsg(el, text, type) {
 
 function init() {
   setupForm();
-  setupFilters();
   resetLinkRows();
   resetSourceRows();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
     refreshControls();
-    renderAll();
-    showSetupBanner("Du kan likevel se hvordan skjemaet og listen ser ut.");
+    showSetupBanner("Du kan likevel se hvordan skjemaet ser ut.");
     return;
   }
 
   subscribeConfig((config) => {
     state.config = config;
     refreshControls();
-    renderAll();
   });
   subscribeArtists((artists) => {
     state.artists = artists;
-    renderAll();
   });
 }
 

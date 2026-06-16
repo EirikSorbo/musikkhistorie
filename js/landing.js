@@ -1,7 +1,9 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres } from "./store.js";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteOut, undoVoteOut, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, fillSelect, escapeHtml } from "./ui.js";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
+
+const clientId = getClientId();
 
 const state = {
   artists: [],
@@ -9,6 +11,14 @@ const state = {
   decadeDescs: {},
   subgenreDescs: {},
   filters: { search: "", genre: "", instrument: "", decade: "", subgenre: "" },
+  listFilters: { search: "", genre: "", decade: "", instrument: "", showRemoved: false },
+  isTeacher: false,
+  clientId,
+};
+
+const handlers = {
+  vote: (id) => voteOut(id, clientId, state.config.voteOutThreshold),
+  undoVote: (id) => undoVoteOut(id, clientId),
 };
 
 // ----------------------------------------------------------------------------
@@ -150,6 +160,33 @@ function renderContextBox() {
   box.innerHTML = parts.join("");
 }
 
+// ----------------------------------------------------------------------------
+//  Alle forslag — fullstendig liste med stemmefunksjon
+// ----------------------------------------------------------------------------
+
+function renderList() {
+  if (!state.config) return;
+  renderArtists($("#artist-list"), { ...state, filters: state.listFilters, handlers });
+}
+
+function refreshListControls() {
+  const { config } = state;
+  fillSelect($("#f-genre"), config.genres, { placeholder: "Alle sjangre" });
+  fillSelect(
+    $("#f-decade"),
+    config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
+    { placeholder: "Alle tiår" }
+  );
+  fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
+}
+
+function setupListFilters() {
+  $("#f-genre").addEventListener("change", (e) => { state.listFilters.genre = e.target.value; renderList(); });
+  $("#f-decade").addEventListener("change", (e) => { state.listFilters.decade = e.target.value; renderList(); });
+  $("#f-instrument").addEventListener("change", (e) => { state.listFilters.instrument = e.target.value; renderList(); });
+  $("#f-search").addEventListener("input", (e) => { state.listFilters.search = e.target.value; renderList(); });
+}
+
 function refreshFilterControls() {
   const { config } = state;
   fillSelect($("#sp-genre"), config.genres, { placeholder: "Sjanger" });
@@ -164,6 +201,7 @@ function refreshFilterControls() {
       .flatMap(a => a.subgenres || [])
   )].sort((a, b) => a.localeCompare(b, "no"));
   fillSelect($("#sp-subgenre"), allSubs, { placeholder: "Underkategori" });
+  refreshListControls();
 }
 
 function setupFilters() {
@@ -207,6 +245,7 @@ function loadCache() {
 
 function init() {
   setupFilters();
+  setupListFilters();
   setupTagFilters();
   setupDetailModal();
 
@@ -214,6 +253,7 @@ function init() {
     state.config = { ...DEFAULT_CONFIG };
     refreshFilterControls();
     renderSpotlight();
+    renderList();
     showSetupBanner();
     return;
   }
@@ -222,17 +262,20 @@ function init() {
   if (state.config && state.artists.length) {
     refreshFilterControls();
     renderSpotlight();
+    renderList();
   }
 
   subscribeConfig((config) => {
     state.config = config;
     refreshFilterControls();
     renderSpotlight();
+    renderList();
     saveCache();
   });
   subscribeArtists((artists) => {
     state.artists = artists;
     renderSpotlight();
+    renderList();
     saveCache();
   });
   subscribeDecades((d) => { state.decadeDescs = d; renderSpotlight(); });
