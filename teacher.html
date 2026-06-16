@@ -22,7 +22,7 @@
         <a href="index.html">Forside</a>
         <a href="student.html">Foreslå</a>
         <a href="teacher.html" class="active">Lærer</a>
-        <button id="logout" class="btn ghost small teacher-only">Logg ut</button>
+        <button type="button" id="btn-settings" class="btn ghost small teacher-only gear-btn" data-open-modal="modal-settings" title="Innstillinger">⚙</button>
       </nav>
     </div>
   </header>
@@ -43,10 +43,6 @@
     <div id="teacher-app">
       <div id="banner" class="banner"></div>
 
-      <!-- Tannhjul øverst til høyre -->
-      <div class="gear-bar">
-        <button type="button" id="btn-settings" class="btn ghost small" data-open-modal="modal-settings" title="Innstillinger">⚙</button>
-      </div>
 
       <!-- Oversikt -->
       <section class="panel">
@@ -108,6 +104,8 @@
         <input type="file" id="input-import" accept=".json" hidden>
         <div class="strip-sep"></div>
         <button type="button" id="btn-nuke" class="btn danger small">Slett all data</button>
+        <div class="strip-sep"></div>
+        <button type="button" id="logout" class="btn ghost small">Logg ut</button>
       </div>
     </div>
   </div>
