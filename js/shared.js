@@ -3,11 +3,14 @@
 // ============================================================================
 
 import { firebaseConfig } from "./firebase-config.js";
+import { VERSION } from "./version.js";
 
-// Er Firebase satt opp, eller kjører vi i oppsett-/utforskningsmodus?
 export const CONFIGURED = !String(firebaseConfig.apiKey).startsWith("DIN_");
 
 export const $ = (sel) => document.querySelector(sel);
+
+const vEl = document.getElementById("app-version");
+if (vEl) vEl.textContent = `v${VERSION}`;
 
 // Viser oppsett-banneret når Firebase ikke er koblet til
 export function showSetupBanner(extra = "") {
