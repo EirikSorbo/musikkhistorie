@@ -395,9 +395,21 @@ function setupDataButtons() {
 // --- Eksport ---
 
 function handleExport() {
-  const data = state.artists
+  const artists = state.artists
     .filter((a) => a.status === "active")
     .map((a) => Object.fromEntries(EXPORT_FIELDS.map((f) => [f, a[f] ?? null])));
+
+  const decades = {};
+  for (const [id, d] of Object.entries(state.decadeDescs)) {
+    if (d.society || d.music) decades[id] = { society: d.society || "", music: d.music || "" };
+  }
+
+  const subgenres = {};
+  for (const [id, s] of Object.entries(state.subgenreDescs)) {
+    if (s.description) subgenres[id] = { description: s.description };
+  }
+
+  const data = { artists, decades, subgenres };
 
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
@@ -414,27 +426,62 @@ let pendingImportData = null;
 
 async function handleImportFile(file) {
   if (!file) return;
-  let data;
-  try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
-  if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
+  let raw;
+  try { raw = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
 
-  pendingImportData = data;
-  const count = data.filter(a => a.name).length;
-  $("#import-choice-desc").textContent = `Filen inneholder ${count} artister.`;
+  let artists, decades, subgenres;
+  if (Array.isArray(raw)) {
+    artists = raw;
+    decades = {};
+    subgenres = {};
+  } else if (raw && typeof raw === "object" && Array.isArray(raw.artists)) {
+    artists = raw.artists;
+    decades = raw.decades || {};
+    subgenres = raw.subgenres || {};
+  } else {
+    alert("Ugyldig format — filen må være en array eller et objekt med «artists»."); return;
+  }
+
+  pendingImportData = { artists, decades, subgenres };
+  const parts = [];
+  const artistCount = artists.filter(a => a.name).length;
+  if (artistCount) parts.push(`${artistCount} artister`);
+  const decadeCount = Object.keys(decades).length;
+  if (decadeCount) parts.push(`${decadeCount} tiårsbeskrivelser`);
+  const subCount = Object.keys(subgenres).length;
+  if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
+  $("#import-choice-desc").textContent = `Filen inneholder ${parts.join(", ")}.`;
   openModal("modal-import-choice");
 }
 
 function setupImportChoice() {
   $("#import-replace").addEventListener("click", async () => {
     closeModal("modal-import-choice");
-    if (pendingImportData) await handleReplace(pendingImportData);
+    if (pendingImportData) {
+      await handleReplace(pendingImportData.artists);
+      await importDescriptions(pendingImportData);
+    }
     pendingImportData = null;
   });
   $("#import-merge").addEventListener("click", async () => {
     closeModal("modal-import-choice");
-    if (pendingImportData) await handleMergeFile(pendingImportData);
+    if (pendingImportData) {
+      await handleMergeFile(pendingImportData.artists);
+      await importDescriptions(pendingImportData);
+    }
     pendingImportData = null;
   });
+}
+
+async function importDescriptions({ decades, subgenres }) {
+  let count = 0;
+  for (const [id, data] of Object.entries(decades || {})) {
+    if (data.society || data.music) { await saveDecadeDesc(id, data); count++; }
+  }
+  for (const [id, data] of Object.entries(subgenres || {})) {
+    if (data.description) { await saveSubgenreDesc(id, data); count++; }
+  }
+  if (count) alert(`${count} beskrivelser importert.`);
 }
 
 async function handleReplace(data) {
