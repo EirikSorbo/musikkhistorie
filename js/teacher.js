@@ -190,6 +190,51 @@ function setupSubgenreSingleSave() {
   });
 }
 
+function setupSubgenreInfo() {
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-subgenre-info]");
+    if (!btn) return;
+    e.stopPropagation();
+    openSubgenreInfo(btn.dataset.subgenreInfo);
+  });
+}
+
+function openSubgenreInfo(subgenreId) {
+  const desc = state.subgenreDescs[subgenreId];
+  $("#sgi-title").textContent = subgenreId;
+  $("#sgi-desc").textContent = desc?.description || "Ingen beskrivelse ennå.";
+  $("#sgi-desc").className = desc?.description ? "" : "muted";
+
+  const artists = state.artists
+    .filter(a => a.status === "active" && (a.subgenres || []).includes(subgenreId))
+    .sort((a, b) => a.name.localeCompare(b.name, "no"));
+
+  const el = $("#sgi-artists");
+  if (!artists.length) {
+    el.innerHTML = "";
+  } else {
+    el.innerHTML = `
+      <button class="btn ghost small sgi-toggle" style="margin-top:12px">Vis artister (${artists.length})</button>
+      <div class="sgi-list" style="display:none;margin-top:10px">
+        ${artists.map(a => `<div class="result-row sgi-artist-row" data-id="${escapeHtml(a.id)}">
+          <span class="result-name">${escapeHtml(a.name)}</span>
+          <span class="result-meta">
+            ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
+            ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
+          </span>
+        </div>`).join("")}
+      </div>`;
+    el.querySelector(".sgi-toggle").addEventListener("click", (e) => {
+      const list = el.querySelector(".sgi-list");
+      const visible = list.style.display !== "none";
+      list.style.display = visible ? "none" : "block";
+      e.target.textContent = visible ? `Vis artister (${artists.length})` : "Skjul artister";
+    });
+  }
+
+  openModal("modal-subgenre-info");
+}
+
 function buildDecadeButtons() {
   const el = $("#decade-buttons");
   if (!el || !state.config) return;
@@ -414,6 +459,7 @@ function startApp() {
   setupEditForm();
   setupDecadeSingleSave();
   setupSubgenreSingleSave();
+  setupSubgenreInfo();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
