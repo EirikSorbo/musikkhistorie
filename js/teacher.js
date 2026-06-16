@@ -294,6 +294,7 @@ function startApp() {
   setupFilters();
   setupAdmin();
   setupDataButtons();
+  setupImportChoice();
   setupEditForm();
 
   if (!CONFIGURED) {
@@ -367,7 +368,9 @@ function handleExport() {
   URL.revokeObjectURL(url);
 }
 
-// --- Import (velg erstatt eller slå sammen) ---
+// --- Import (velg erstatt eller slå sammen via modal) ---
+
+let pendingImportData = null;
 
 async function handleImportFile(file) {
   if (!file) return;
@@ -375,21 +378,23 @@ async function handleImportFile(file) {
   try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
   if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
 
-  const choice = prompt(
-    `Filen inneholder ${data.filter(a => a.name).length} artister.\n\n` +
-    `Skriv «erstatt» for å slette alle eksisterende og importere på nytt,\n` +
-    `eller «slå sammen» for å legge til nye og håndtere konflikter.`
-  );
-  if (!choice) return;
-  const c = choice.trim().toLowerCase();
+  pendingImportData = data;
+  const count = data.filter(a => a.name).length;
+  $("#import-choice-desc").textContent = `Filen inneholder ${count} artister.`;
+  openModal("modal-import-choice");
+}
 
-  if (c.startsWith("erstatt")) {
-    await handleReplace(data);
-  } else if (c.startsWith("slå")) {
-    await handleMergeFile(data);
-  } else {
-    alert("Ugyldig valg. Skriv «erstatt» eller «slå sammen».");
-  }
+function setupImportChoice() {
+  $("#import-replace").addEventListener("click", async () => {
+    closeModal("modal-import-choice");
+    if (pendingImportData) await handleReplace(pendingImportData);
+    pendingImportData = null;
+  });
+  $("#import-merge").addEventListener("click", async () => {
+    closeModal("modal-import-choice");
+    if (pendingImportData) await handleMergeFile(pendingImportData);
+    pendingImportData = null;
+  });
 }
 
 async function handleReplace(data) {

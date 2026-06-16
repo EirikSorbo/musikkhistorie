@@ -6,7 +6,7 @@ import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 const state = {
   artists: [],
   config: null,
-  filters: { search: "", genre: "", instrument: "", decade: "" },
+  filters: { search: "", genre: "", instrument: "", decade: "", subgenre: "" },
 };
 
 // ----------------------------------------------------------------------------
@@ -27,11 +27,12 @@ function setupTagFilters() {
     const val = btn.dataset.filterVal;
     document.getElementById("modal-detail").classList.remove("open");
     // Reset alle filtre før nytt filter settes
-    state.filters = { search: "", genre: "", instrument: "", decade: "" };
+    state.filters = { search: "", genre: "", instrument: "", decade: "", subgenre: "" };
     $("#sp-search").value = "";
     $("#sp-genre").value = "";
     $("#sp-instrument").value = "";
     $("#sp-decade").value = "";
+    $("#sp-subgenre").value = "";
     if (key === "genre") {
       state.filters.genre = val;
       $("#sp-genre").value = val;
@@ -61,7 +62,7 @@ function setupDetailModal() {
 
 function hasFilters() {
   const f = state.filters;
-  return !!(f.search || f.genre || f.instrument || f.decade);
+  return !!(f.search || f.genre || f.instrument || f.decade || f.subgenre);
 }
 
 let currentPicks = [];
@@ -75,6 +76,10 @@ function renderSpotlight() {
   if (state.filters.decade) {
     const d = Number(state.filters.decade);
     pool = pool.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(d));
+  }
+  if (state.filters.subgenre) {
+    const sg = state.filters.subgenre;
+    pool = pool.filter((a) => (a.subgenres || []).includes(sg));
   }
   if (state.filters.search) {
     const q = state.filters.search.toLowerCase();
@@ -101,17 +106,22 @@ function renderSpotlight() {
 
 function refreshFilterControls() {
   const { config } = state;
-  fillSelect($("#sp-genre"), config.genres, { placeholder: "Alle sjangre" });
-  fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
+  fillSelect($("#sp-genre"), config.genres, { placeholder: "Sjanger" });
+  fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
-    { placeholder: "Alle tiår" }
+    { placeholder: "Tiår" }
   );
+  const allSubs = [...new Set(
+    state.artists.filter(a => a.status === "active")
+      .flatMap(a => a.subgenres || [])
+  )].sort((a, b) => a.localeCompare(b, "no"));
+  fillSelect($("#sp-subgenre"), allSubs, { placeholder: "Underkategori" });
 }
 
 function setupFilters() {
-  ["sp-search", "sp-genre", "sp-instrument", "sp-decade"].forEach((id) => {
+  ["sp-search", "sp-genre", "sp-instrument", "sp-decade", "sp-subgenre"].forEach((id) => {
     const el = document.getElementById(id);
     el.addEventListener(id === "sp-search" ? "input" : "change", (e) => {
       const key = id.replace("sp-", "");

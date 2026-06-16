@@ -473,6 +473,10 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 }
 .modal-head h2 { margin: 0; font-size: 1.1rem; }
 
+/* ----- Tannhjul-bar (lærer) ----- */
+.gear-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.gear-bar button { font-size: 1.3rem; padding: 6px 10px; }
+
 /* ----- Innstillings-strip (lærer) ----- */
 .settings-strip {
   display: flex;

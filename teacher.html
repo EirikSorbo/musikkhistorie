@@ -43,30 +43,10 @@
     <div id="teacher-app">
       <div id="banner" class="banner"></div>
 
-      <!-- Innstillinger-strip -->
-      <section class="panel" id="admin-panel">
-        <h2>Innstillinger</h2>
-        <div class="settings-strip">
-          <label>Maks totalt
-            <input type="number" id="cfg-total" min="1" />
-          </label>
-          <label>Terskel utstemming
-            <input type="number" id="cfg-threshold" min="1" />
-          </label>
-          <div class="strip-sep"></div>
-          <button type="button" class="btn ghost" data-open-modal="modal-decade">Grense per tiår</button>
-          <button type="button" class="btn ghost" data-open-modal="modal-genre">Grense per sjanger</button>
-          <button type="button" class="btn ghost" data-open-modal="modal-instrument">Grense per instrument</button>
-          <div class="strip-sep"></div>
-          <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
-          <button type="button" id="save-general" class="btn primary">Lagre</button>
-          <span id="msg-general" class="form-msg ok"></span>
-          <div class="strip-sep"></div>
-          <button type="button" id="btn-export" class="btn ghost">Eksporter</button>
-          <button type="button" id="btn-import" class="btn ghost">Importer</button>
-          <input type="file" id="input-import" accept=".json" hidden>
-        </div>
-      </section>
+      <!-- Tannhjul øverst til høyre -->
+      <div class="gear-bar">
+        <button type="button" id="btn-settings" class="btn ghost small" data-open-modal="modal-settings" title="Innstillinger">⚙</button>
+      </div>
 
       <!-- Oversikt -->
       <section class="panel">
@@ -99,6 +79,36 @@
   </footer>
 
   <!-- ===== MODALER ===== -->
+
+  <!-- Innstillinger -->
+  <div class="modal-backdrop" id="modal-settings">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Innstillinger</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="settings-strip">
+        <label>Maks totalt
+          <input type="number" id="cfg-total" min="1" />
+        </label>
+        <label>Terskel utstemming
+          <input type="number" id="cfg-threshold" min="1" />
+        </label>
+        <div class="strip-sep"></div>
+        <button type="button" class="btn ghost" data-open-modal="modal-decade">Grense per tiår</button>
+        <button type="button" class="btn ghost" data-open-modal="modal-genre">Grense per sjanger</button>
+        <button type="button" class="btn ghost" data-open-modal="modal-instrument">Grense per instrument</button>
+        <div class="strip-sep"></div>
+        <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
+        <button type="button" id="save-general" class="btn primary">Lagre</button>
+        <span id="msg-general" class="form-msg ok"></span>
+        <div class="strip-sep"></div>
+        <button type="button" id="btn-export" class="btn ghost">Eksporter</button>
+        <button type="button" id="btn-import" class="btn ghost">Importer</button>
+        <input type="file" id="input-import" accept=".json" hidden>
+      </div>
+    </div>
+  </div>
 
   <!-- Tiår -->
   <div class="modal-backdrop" id="modal-decade">
@@ -177,6 +187,21 @@
           <button type="button" id="save-instrument" class="btn primary">Lagre</button>
           <span id="msg-instrument" class="form-msg ok"></span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Importvalg -->
+  <div class="modal-backdrop" id="modal-import-choice">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="import-choice-title">Importer</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p id="import-choice-desc" class="muted"></p>
+      <div class="add-actions" style="margin-top:16px">
+        <button type="button" id="import-replace" class="btn danger">Erstatt alle</button>
+        <button type="button" id="import-merge" class="btn primary">Slå sammen</button>
       </div>
     </div>
   </div>
