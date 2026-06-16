@@ -447,18 +447,33 @@ async function handleMergeFile(data) {
     );
     if (!existing) { mergeState.newArtists.push(imp); continue; }
 
-    const conflicts = COMPARE_FIELDS
-      .filter((f) => JSON.stringify(existing[f] ?? null) !== JSON.stringify(imp[f] ?? null))
-      .map((f) => ({ field: f, existing: existing[f], imported: imp[f] }));
-
-    if (conflicts.length) mergeState.queue.push({ existing, imported: imp, conflicts, resolved: {} });
+    const autoFill = {};
+    const conflicts = [];
+    for (const f of COMPARE_FIELDS) {
+      const ev = existing[f] ?? null;
+      const iv = imp[f] ?? null;
+      if (JSON.stringify(ev) === JSON.stringify(iv)) continue;
+      const existingEmpty = ev === null || ev === "" || (Array.isArray(ev) && !ev.length);
+      const importedEmpty = iv === null || iv === "" || (Array.isArray(iv) && !iv.length);
+      if (existingEmpty && !importedEmpty) {
+        autoFill[f] = iv;
+      } else if (!importedEmpty) {
+        conflicts.push({ field: f, existing: ev, imported: iv });
+      }
+    }
+    if (Object.keys(autoFill).length || conflicts.length) {
+      mergeState.queue.push({ existing, imported: imp, conflicts, resolved: { ...autoFill } });
+    }
   }
+
+  const hasConflicts = mergeState.queue.some(item => item.conflicts.length > 0);
 
   if (!mergeState.queue.length && !mergeState.newArtists.length) {
     alert("Ingen endringer å flette inn."); return;
   }
-  if (!mergeState.queue.length) { await finishMerge(); return; }
+  if (!hasConflicts) { await finishMerge(); return; }
 
+  mergeState.index = mergeState.queue.findIndex(item => item.conflicts.length > 0);
   openModal("modal-merge");
   renderMergeConflict();
 }
@@ -467,8 +482,10 @@ function renderMergeConflict() {
   const { queue, index } = mergeState;
   const item = queue[index];
 
+  const conflictItems = queue.filter(i => i.conflicts.length > 0);
+  const conflictIdx = conflictItems.indexOf(item) + 1;
   $("#merge-title").textContent    = item.existing.name;
-  $("#merge-progress").textContent = `Konflikt ${index + 1} av ${queue.length}`;
+  $("#merge-progress").textContent = `Konflikt ${conflictIdx} av ${conflictItems.length}`;
 
   $("#merge-fields").innerHTML = item.conflicts.map((c) => {
     const n = `cf-${c.field}`;
@@ -508,8 +525,10 @@ function collectCurrentChoices() {
 
 async function advanceMerge() {
   collectCurrentChoices();
-  if (mergeState.index < mergeState.queue.length - 1) {
-    mergeState.index++;
+  let next = mergeState.index + 1;
+  while (next < mergeState.queue.length && !mergeState.queue[next].conflicts.length) next++;
+  if (next < mergeState.queue.length) {
+    mergeState.index = next;
     renderMergeConflict();
   } else {
     await finishMerge();
