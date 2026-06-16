@@ -373,9 +373,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
       ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${(a.kilder).map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
 
       <footer class="card-foot">
-        <span class="proposed muted">Foreslått av ${escapeHtml(
-          a.proposedBy || "Anonym"
-        )}</span>
+        ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
         <span class="vote-count muted" title="Utstemminger">
           ⚑ ${votes}/${config.voteOutThreshold}
         </span>
