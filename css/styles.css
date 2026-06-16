@@ -506,6 +506,34 @@ textarea { resize: vertical; }
 .conflict-val.new { color: var(--accent-2); }
 .merge-foot { display: flex; gap: 10px; align-items: center; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 
+/* ----- Filtret resultatliste (forside) ----- */
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.result-row:hover { background: var(--surface-2); border-color: var(--accent); transform: translateX(3px); }
+.result-name { font-weight: 600; min-width: 160px; flex-shrink: 0; }
+.result-meta { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+.result-arrow { color: var(--accent); font-size: 1.2rem; margin-left: auto; flex-shrink: 0; }
+
 /* ----- Spotlight (forside) ----- */
 .spotlight-grid {
   display: grid;

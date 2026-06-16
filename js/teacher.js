@@ -27,11 +27,10 @@ const state = {
 };
 
 const handlers = {
-  remove: (id) => teacherRemove(id),
+  remove:  (id) => teacherRemove(id),
   restore: (id) => teacherRestore(id),
-  del: (id) => {
-    if (confirm("Slette dette forslaget permanent?")) teacherDelete(id);
-  },
+  del:     (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
+  edit:    (id) => openEditModal(id),
 };
 
 // ----------------------------------------------------------------------------
@@ -295,6 +294,7 @@ function startApp() {
   setupFilters();
   setupAdmin();
   setupDataButtons();
+  setupEditForm();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
@@ -518,5 +518,135 @@ async function finishMerge() {
   if (updated) parts.push(`${updated} artister oppdatert`);
   if (parts.length) alert(parts.join(", ") + ".");
 }
+
+// ----------------------------------------------------------------------------
+//  Rediger artist
+// ----------------------------------------------------------------------------
+
+function openEditModal(artistId) {
+  const a = state.artists.find((x) => x.id === artistId);
+  if (!a) return;
+  const c = state.config;
+
+  $("#ed-id").value = a.id;
+  $("#ed-name").value = a.name || "";
+  $("#ed-birthyear").value = a.birthYear || "";
+  $("#ed-deathyear").value = a.deathYear || "";
+  $("#ed-geo").value = a.geography || "";
+  $("#ed-start").value = a.influenceStart || "";
+  $("#ed-end").value = a.influenceEnd || "";
+  $("#ed-subgenres").value = (a.subgenres || []).join(", ");
+  $("#ed-desc").value = a.description || "";
+  $("#ed-works").value = a.keyWorks || "";
+  $("#ed-by").value = a.proposedBy || "";
+
+  fillSelect($("#ed-gender"), GENDERS_EDIT, { placeholder: "Velg kjønn …" });
+  $("#ed-gender").value = a.gender || "";
+  fillSelect($("#ed-genre"), c.genres, { placeholder: "Velg sjanger …" });
+  $("#ed-genre").value = a.genre || "";
+  fillSelect($("#ed-instrument"), c.instruments || [], { placeholder: "Ingen / ukjent" });
+  $("#ed-instrument").value = a.instrument || "";
+
+  buildEditLinkRows(a.links || []);
+  buildEditSourceRows(a.kilder || []);
+
+  $("#ed-msg").textContent = "";
+  openModal("modal-edit");
+}
+
+function buildEditLinkRows(links) {
+  const wrap = $("#ed-link-rows");
+  wrap.innerHTML = "";
+  (links.length ? links : [{ label: "", url: "" }]).forEach(({ label = "", url = "" }) =>
+    addEditLinkRow(label, url)
+  );
+}
+
+function addEditLinkRow(label = "", url = "") {
+  const wrap = $("#ed-link-rows");
+  const row = document.createElement("div");
+  row.className = "link-row";
+  row.innerHTML = `
+    <input type="text" class="link-label" placeholder="Tittel" value="${escapeHtml(label)}">
+    <input type="url" class="link-url" placeholder="https://…" value="${escapeHtml(url)}">
+    <button type="button" class="btn ghost small remove-link">✕</button>
+  `;
+  row.querySelector(".remove-link").addEventListener("click", () => row.remove());
+  wrap.appendChild(row);
+}
+
+function buildEditSourceRows(kilder) {
+  const wrap = $("#ed-source-rows");
+  wrap.innerHTML = "";
+  kilder.forEach((k) => addEditSourceRow(k));
+}
+
+function addEditSourceRow(text = "") {
+  const wrap = $("#ed-source-rows");
+  const row = document.createElement("div");
+  row.className = "source-row";
+  row.innerHTML = `
+    <input type="text" class="source-text" placeholder="Kilde …" value="${escapeHtml(text)}">
+    <button type="button" class="btn ghost small remove-source">✕</button>
+  `;
+  row.querySelector(".remove-source").addEventListener("click", () => row.remove());
+  wrap.appendChild(row);
+}
+
+function collectEditLinks() {
+  return [...$("#ed-link-rows").querySelectorAll(".link-row")]
+    .map((r) => ({ label: r.querySelector(".link-label").value.trim(), url: r.querySelector(".link-url").value.trim() }))
+    .filter((l) => l.url);
+}
+
+function collectEditSources() {
+  return [...$("#ed-source-rows").querySelectorAll(".source-text")]
+    .map((i) => i.value.trim()).filter(Boolean);
+}
+
+function setupEditForm() {
+  $("#ed-add-link").addEventListener("click", () => addEditLinkRow());
+  $("#ed-add-source").addEventListener("click", () => addEditSourceRow());
+
+  $("#edit-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = $("#ed-msg");
+    msg.textContent = "";
+    const id = $("#ed-id").value;
+    const fields = {
+      name:          $("#ed-name").value.trim(),
+      birthYear:     parseInt($("#ed-birthyear").value, 10) || null,
+      deathYear:     parseInt($("#ed-deathyear").value, 10) || null,
+      gender:        $("#ed-gender").value,
+      genre:         $("#ed-genre").value,
+      instrument:    $("#ed-instrument").value,
+      subgenres:     $("#ed-subgenres").value.split(",").map(s => s.trim()).filter(Boolean),
+      influenceStart: parseInt($("#ed-start").value, 10) || null,
+      influenceEnd:   parseInt($("#ed-end").value, 10) || null,
+      geography:     $("#ed-geo").value.trim(),
+      description:   $("#ed-desc").value.trim(),
+      keyWorks:      $("#ed-works").value.trim(),
+      links:         collectEditLinks(),
+      kilder:        collectEditSources(),
+      proposedBy:    $("#ed-by").value.trim() || "Anonym",
+    };
+    try {
+      await updateArtistFields(id, fields);
+      msg.textContent = "Lagret ✓";
+      msg.className = "form-msg ok";
+      setTimeout(() => closeModal("modal-edit"), 1000);
+    } catch (err) {
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
+  });
+}
+
+const GENDERS_EDIT = [
+  { value: "kvinne", label: "Kvinne" },
+  { value: "mann", label: "Mann" },
+  { value: "annet", label: "Annet / ikke-binær" },
+  { value: "ukjent", label: "Ukjent" },
+];
 
 setupGate();

@@ -155,8 +155,65 @@ function limitRow(label, count, max) {
 //  Forslagsliste
 // ----------------------------------------------------------------------------
 
+// Kompakt klikkbar liste når filtre er aktive
+export function renderResultList(el, artists, config, onSelect) {
+  el.className = "result-list";
+  if (!artists.length) {
+    el.innerHTML = `<p class="muted empty">Ingen forslag matcher filteret.</p>`;
+    return;
+  }
+  const sorted = [...artists].sort(
+    (a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no")
+  );
+  el.innerHTML = sorted.map((a) => `
+    <button class="result-row" data-id="${escapeHtml(a.id)}">
+      <span class="result-name">${escapeHtml(a.name)}</span>
+      <span class="result-meta">
+        ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
+        ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+        ${periodTag(a)}
+        ${lifespan(a)}
+        ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+        ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
+      </span>
+      <span class="result-arrow">›</span>
+    </button>
+  `).join("");
+  el.querySelectorAll(".result-row").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const artist = artists.find((a) => a.id === btn.dataset.id);
+      if (artist) onSelect(artist);
+    });
+  });
+}
+
+// Full innholdsvisning for detaljmodal (kun lesemodus)
+export function renderArtistDetail(el, artist, config) {
+  const a = artist;
+  const links = (a.links || [])
+    .map((l) => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">🎵 ${escapeHtml(l.label || "Lytt")}</a>`)
+    .join("");
+  el.innerHTML = `
+    <div class="meta" style="margin-bottom:12px">
+      ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
+      ${a.instrument ? `<span class="tag">🎸 ${escapeHtml(a.instrument)}</span>` : ""}
+      ${periodTag(a)}
+      ${lifespan(a)}
+      <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
+      ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+      ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
+    </div>
+    ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
+    ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
+    ${links ? `<div class="links">${links}</div>` : ""}
+    ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${a.kilder.map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
+    <p class="muted" style="font-size:0.8rem;margin-top:12px">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</p>
+  `;
+}
+
 // Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
 export function renderSpotlightCards(el, artists, config) {
+  el.className = "spotlight-grid";
   if (!artists.length) {
     el.innerHTML = `<p class="muted empty" style="grid-column:1/-1">Ingen forslag matcher filteret ennå.</p>`;
     return;
@@ -282,6 +339,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
             ? `<button class="btn small" data-action="restore" data-id="${a.id}">Gjenopprett</button>`
             : `<button class="btn small" data-action="remove" data-id="${a.id}">Fjern (veto)</button>`
         }
+        <button class="btn small" data-action="edit" data-id="${a.id}" title="Rediger">✏️</button>
         <button class="btn small danger" data-action="del" data-id="${a.id}">Slett</button>
       </div>`;
   }

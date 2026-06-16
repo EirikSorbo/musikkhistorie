@@ -213,6 +213,72 @@
     </div>
   </div>
 
+  <!-- Rediger artist -->
+  <div class="modal-backdrop" id="modal-edit">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Rediger artist</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <form id="edit-form" class="add-grid">
+        <input type="hidden" id="ed-id" />
+        <label>Navn *
+          <input type="text" id="ed-name" required />
+        </label>
+        <label>Fødselsår
+          <input type="number" id="ed-birthyear" min="1800" max="2025" />
+        </label>
+        <label>Dødsår
+          <input type="number" id="ed-deathyear" min="1800" max="2030" />
+        </label>
+        <label>Kjønn *
+          <select id="ed-gender" required></select>
+        </label>
+        <label>Sjanger *
+          <select id="ed-genre" required></select>
+        </label>
+        <label>Instrument
+          <select id="ed-instrument"></select>
+        </label>
+        <label>Geografisk tilhørighet
+          <input type="text" id="ed-geo" />
+        </label>
+        <label>Innflytelse fra (år) *
+          <input type="number" id="ed-start" min="1800" max="2030" required />
+        </label>
+        <label>Innflytelse til (år)
+          <input type="number" id="ed-end" min="1800" max="2030" />
+        </label>
+        <label class="full">Undersjangre / tags
+          <input type="text" id="ed-subgenres" placeholder="kommaseparert" />
+        </label>
+        <label class="full">Begrunnelse / hvorfor relevant
+          <textarea id="ed-desc" rows="2"></textarea>
+        </label>
+        <label class="full">Sentrale verk / album
+          <input type="text" id="ed-works" />
+        </label>
+        <div class="full">
+          <span class="field-label">Lenker til musikkeksempler</span>
+          <div id="ed-link-rows"></div>
+          <button type="button" id="ed-add-link" class="btn ghost small">+ Legg til lenke</button>
+        </div>
+        <div class="full">
+          <span class="field-label">Kilder</span>
+          <div id="ed-source-rows"></div>
+          <button type="button" id="ed-add-source" class="btn ghost small">+ Legg til kilde</button>
+        </div>
+        <label class="full">Foreslått av
+          <input type="text" id="ed-by" />
+        </label>
+        <div class="full add-actions">
+          <button type="submit" class="btn primary">Lagre endringer</button>
+          <span id="ed-msg" class="form-msg"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="js/teacher.js"></script>
 </body>
 </html>
