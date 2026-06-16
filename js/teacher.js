@@ -380,13 +380,22 @@ async function handleImportFile(file) {
   try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
   if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
 
-  let added = 0;
+  let added = 0, failed = 0;
   for (const a of data) {
     if (!a.name) continue;
-    await addArtist({ proposedBy: "Import", ...a });
-    added++;
+    try {
+      await addArtist({ proposedBy: "Import", ...a });
+      added++;
+    } catch (err) {
+      failed++;
+      console.error("Import feilet for", a.name, err);
+    }
   }
-  alert(`${added} artister lagt til.`);
+  if (failed) {
+    alert(`${added} artister lagt til. ${failed} mislyktes (se konsoll for detaljer).`);
+  } else {
+    alert(`${added} artister lagt til.`);
+  }
 }
 
 // --- Merge (sjekker duplikater, viser konflikter) ---

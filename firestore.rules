@@ -27,15 +27,17 @@ service cloud.firestore {
     match /artists/{id} {
       allow read: if true;
 
-      // Hvem som helst kan opprette et forslag, men feltene må være gyldige
-      allow create: if
+      // Hvem som helst kan opprette et forslag, men feltene må være gyldige.
+      // Lærer kan opprette uten feltrestriksjoner (import).
+      allow create: if isTeacher() || (
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
         request.resource.data.genre is string &&
         request.resource.data.influenceStart is number &&
         request.resource.data.status == "active" &&
-        request.resource.data.votedOutBy.size() == 0;
+        request.resource.data.votedOutBy.size() == 0
+      );
 
       // Oppdatering:
       //  • Lærer kan endre alt.
