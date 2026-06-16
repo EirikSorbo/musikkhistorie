@@ -87,14 +87,17 @@ function renderSpotlight() {
   }
 
   const shuffleBtn = $("#sp-shuffle");
+  const heading = $("#spotlight-heading");
 
   if (hasFilters()) {
     shuffleBtn.style.display = "none";
+    if (heading) heading.style.display = "none";
     renderResultList($("#spotlight"), pool, state.config, openDetail);
   } else {
     shuffleBtn.style.display = "";
+    if (heading) heading.style.display = "";
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    currentPicks = shuffled.slice(0, 2);
+    currentPicks = shuffled.slice(0, 1);
     renderSpotlightCards($("#spotlight"), currentPicks, state.config);
   }
 }
