@@ -605,6 +605,7 @@ function collectEditSources() {
 }
 
 function setupEditForm() {
+  if (!$("#edit-form")) return;
   $("#ed-add-link").addEventListener("click", () => addEditLinkRow());
   $("#ed-add-source").addEventListener("click", () => addEditSourceRow());
 
