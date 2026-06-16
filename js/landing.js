@@ -141,10 +141,10 @@ function renderContextBox() {
 
   if (state.filters.decade) {
     const d = state.decadeDescs[state.filters.decade];
-    if (d && (d.society || d.music)) {
+    if (d && (d.society || d.tech)) {
       let html = `<div class="context-card"><h3>${state.filters.decade}-tallet</h3>`;
-      if (d.society) html += `<p><strong>Samfunn og teknologi:</strong> ${escapeHtml(d.society)}</p>`;
-      if (d.music) html += `<p><strong>Musikkutvikling:</strong> ${escapeHtml(d.music)}</p>`;
+      if (d.society) html += `<p><strong>Samfunnsutvikling:</strong> ${escapeHtml(d.society)}</p>`;
+      if (d.tech) html += `<p><strong>Teknologiutvikling:</strong> ${escapeHtml(d.tech)}</p>`;
       html += `</div>`;
       parts.push(html);
     }

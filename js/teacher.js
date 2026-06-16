@@ -438,7 +438,7 @@ function handleExport() {
 
   const decades = {};
   for (const [id, d] of Object.entries(state.decadeDescs)) {
-    if (d.society || d.music) decades[id] = { society: d.society || "", music: d.music || "" };
+    if (d.society || d.tech) decades[id] = { society: d.society || "", tech: d.tech || "" };
   }
 
   const subgenres = {};
@@ -824,11 +824,11 @@ function renderDecadeDescList() {
     return `
       <div class="desc-edit-item" data-decade="${d}">
         <h3>${d}-tallet</h3>
-        <label>Samfunn og teknologi
-          <textarea class="dd-society" rows="3" placeholder="Beskriv samfunnskontekst for ${d}-tallet …">${escapeHtml(desc.society || "")}</textarea>
+        <label>Samfunnsutvikling
+          <textarea class="dd-society" rows="3" placeholder="Beskriv samfunnsutvikling for ${d}-tallet …">${escapeHtml(desc.society || "")}</textarea>
         </label>
-        <label>Musikkutvikling
-          <textarea class="dd-music" rows="3" placeholder="Beskriv musikkutvikling for ${d}-tallet …">${escapeHtml(desc.music || "")}</textarea>
+        <label>Teknologiutvikling
+          <textarea class="dd-tech" rows="3" placeholder="Beskriv teknologiutvikling for ${d}-tallet …">${escapeHtml(desc.tech || "")}</textarea>
         </label>
         <div class="desc-edit-actions">
           <button type="button" class="btn primary small dd-save">Lagre</button>
@@ -842,10 +842,10 @@ function renderDecadeDescList() {
       const item = btn.closest(".desc-edit-item");
       const decadeId = item.dataset.decade;
       const society = item.querySelector(".dd-society").value.trim();
-      const music = item.querySelector(".dd-music").value.trim();
+      const tech = item.querySelector(".dd-tech").value.trim();
       const msg = item.querySelector(".dd-msg");
       try {
-        await saveDecadeDesc(decadeId, { society, music });
+        await saveDecadeDesc(decadeId, { society, tech });
         msg.textContent = "Lagret ✓";
         setTimeout(() => (msg.textContent = ""), 2500);
       } catch (err) {
