@@ -83,32 +83,57 @@
         <h2>Innstillinger</h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
-      <div class="settings-strip">
-        <label>Maks totalt
-          <input type="number" id="cfg-total" min="1" />
-        </label>
-        <label>Terskel utstemming
-          <input type="number" id="cfg-threshold" min="1" />
-        </label>
-        <div class="strip-sep"></div>
-        <button type="button" class="btn ghost" data-open-modal="modal-decade">Grense per tiår</button>
-        <button type="button" class="btn ghost" data-open-modal="modal-genre">Grense per sjanger</button>
-        <button type="button" class="btn ghost" data-open-modal="modal-instrument">Grense per instrument</button>
-        <div class="strip-sep"></div>
-        <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
-        <div class="strip-sep"></div>
-        <button type="button" class="btn ghost" data-open-modal="modal-decade-desc">Tiårsbeskrivelser</button>
-        <button type="button" class="btn ghost" data-open-modal="modal-subgenre-desc">Undersjangerbeskrivelser</button>
-        <button type="button" id="save-general" class="btn primary">Lagre</button>
-        <span id="msg-general" class="form-msg ok"></span>
-        <div class="strip-sep"></div>
-        <button type="button" id="btn-export" class="btn ghost">Eksporter</button>
-        <button type="button" id="btn-import" class="btn ghost">Importer</button>
-        <input type="file" id="input-import" accept=".json" hidden>
-        <div class="strip-sep"></div>
-        <button type="button" id="btn-nuke" class="btn danger small">Slett all data</button>
-        <div class="strip-sep"></div>
-        <button type="button" id="logout" class="btn ghost small">Logg ut</button>
+      <div class="settings-sections">
+
+        <section class="settings-section">
+          <h3>Generelt</h3>
+          <div class="settings-row">
+            <label>Maks totalt
+              <input type="number" id="cfg-total" min="1" />
+            </label>
+            <label>Terskel utstemming
+              <input type="number" id="cfg-threshold" min="1" />
+            </label>
+            <button type="button" id="save-general" class="btn primary small">Lagre</button>
+            <span id="msg-general" class="form-msg ok"></span>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Grenser og oversikt</h3>
+          <div class="settings-row">
+            <button type="button" class="btn ghost" data-open-modal="modal-decade">Grense per tiår</button>
+            <button type="button" class="btn ghost" data-open-modal="modal-genre">Grense per sjanger</button>
+            <button type="button" class="btn ghost" data-open-modal="modal-instrument">Grense per instrument</button>
+            <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Innholdsbeskrivelser</h3>
+          <div class="settings-row">
+            <button type="button" class="btn ghost" data-open-modal="modal-decade-desc">Tiårsbeskrivelser</button>
+            <button type="button" class="btn ghost" data-open-modal="modal-subgenre-desc">Undersjangerbeskrivelser</button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Import / eksport</h3>
+          <div class="settings-row">
+            <button type="button" id="btn-export" class="btn ghost">Eksporter</button>
+            <button type="button" id="btn-import" class="btn ghost">Importer</button>
+            <input type="file" id="input-import" accept=".json" hidden>
+          </div>
+        </section>
+
+        <section class="settings-section settings-section--danger">
+          <h3>Faresone</h3>
+          <div class="settings-row">
+            <button type="button" id="btn-nuke" class="btn danger small">Slett all data</button>
+            <button type="button" id="logout" class="btn ghost small">Logg ut</button>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>

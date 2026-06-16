@@ -476,14 +476,34 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 /* ----- Tannhjul i header (lærer) ----- */
 .gear-btn { font-size: 1.4rem; line-height: 1; padding: 4px 8px; }
 
-/* ----- Innstillings-strip (lærer) ----- */
-.settings-strip {
+/* ----- Innstillinger (lærer) ----- */
+.settings-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.settings-section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.settings-section:first-child { padding-top: 0; }
+.settings-section:last-child { border-bottom: none; padding-bottom: 0; }
+.settings-section h3 {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-2);
+  font-weight: 600;
+}
+.settings-section--danger h3 { color: var(--danger); }
+.settings-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 14px;
+  gap: 10px;
 }
-.settings-strip label {
+.settings-row label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -491,14 +511,7 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
   font-weight: 500;
   color: var(--muted);
 }
-.settings-strip label input { width: 90px; }
-.strip-sep {
-  width: 1px;
-  height: 36px;
-  background: var(--line-strong);
-  align-self: flex-end;
-  margin: 0 4px;
-}
+.settings-row label input { width: 90px; }
 
 /* ----- Merge-konflikt ----- */
 .merge-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; max-height: 55vh; overflow-y: auto; }
