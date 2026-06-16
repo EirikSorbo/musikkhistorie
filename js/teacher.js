@@ -343,13 +343,8 @@ function setupDataButtons() {
   $("#btn-export").addEventListener("click", handleExport);
 
   const importInput = $("#input-import");
-  const mergeInput  = $("#input-merge");
-
   $("#btn-import").addEventListener("click", () => { importInput.value = ""; importInput.click(); });
-  $("#btn-merge").addEventListener("click",  () => { mergeInput.value  = ""; mergeInput.click(); });
-
   importInput.addEventListener("change", (e) => handleImportFile(e.target.files[0]));
-  mergeInput.addEventListener("change",  (e) => handleMergeFile(e.target.files[0]));
 
   $("#merge-keep-all").addEventListener("click", () => bulkMerge("existing"));
   $("#merge-use-all").addEventListener("click",  () => bulkMerge("imported"));
@@ -372,7 +367,7 @@ function handleExport() {
   URL.revokeObjectURL(url);
 }
 
-// --- Import (uten sjekk for duplikater) ---
+// --- Import (velg erstatt eller slå sammen) ---
 
 async function handleImportFile(file) {
   if (!file) return;
@@ -380,6 +375,30 @@ async function handleImportFile(file) {
   try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
   if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
 
+  const choice = prompt(
+    `Filen inneholder ${data.filter(a => a.name).length} artister.\n\n` +
+    `Skriv «erstatt» for å slette alle eksisterende og importere på nytt,\n` +
+    `eller «slå sammen» for å legge til nye og håndtere konflikter.`
+  );
+  if (!choice) return;
+  const c = choice.trim().toLowerCase();
+
+  if (c.startsWith("erstatt")) {
+    await handleReplace(data);
+  } else if (c.startsWith("slå")) {
+    await handleMergeFile(data);
+  } else {
+    alert("Ugyldig valg. Skriv «erstatt» eller «slå sammen».");
+  }
+}
+
+async function handleReplace(data) {
+  if (!confirm("Dette sletter ALLE eksisterende artister og erstatter med filen. Er du sikker?")) return;
+  let deleted = 0;
+  for (const a of state.artists) {
+    await teacherDelete(a.id);
+    deleted++;
+  }
   let added = 0, failed = 0;
   for (const a of data) {
     if (!a.name) continue;
@@ -391,21 +410,14 @@ async function handleImportFile(file) {
       console.error("Import feilet for", a.name, err);
     }
   }
-  if (failed) {
-    alert(`${added} artister lagt til. ${failed} mislyktes (se konsoll for detaljer).`);
-  } else {
-    alert(`${added} artister lagt til.`);
-  }
+  const parts = [`${deleted} slettet`, `${added} importert`];
+  if (failed) parts.push(`${failed} mislyktes`);
+  alert(parts.join(", ") + ".");
 }
 
 // --- Merge (sjekker duplikater, viser konflikter) ---
 
-async function handleMergeFile(file) {
-  if (!file) return;
-  let data;
-  try { data = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
-  if (!Array.isArray(data)) { alert("Filen må inneholde en JSON-array."); return; }
-
+async function handleMergeFile(data) {
   mergeState.queue      = [];
   mergeState.newArtists = [];
   mergeState.index      = 0;
