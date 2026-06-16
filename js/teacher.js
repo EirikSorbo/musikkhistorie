@@ -5,6 +5,7 @@ import {
   teacherRemove,
   teacherRestore,
   teacherDelete,
+  deleteAllArtists,
   updateConfig,
   updateArtistFields,
   getClientId,
@@ -346,6 +347,17 @@ function setupDataButtons() {
   const importInput = $("#input-import");
   $("#btn-import").addEventListener("click", () => { importInput.value = ""; importInput.click(); });
   importInput.addEventListener("change", (e) => handleImportFile(e.target.files[0]));
+
+  $("#btn-nuke").addEventListener("click", async () => {
+    if (!confirm("Er du HELT sikker? Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.")) return;
+    if (!confirm("Siste sjanse — skriv OK i neste boks for å bekrefte.")) return;
+    try {
+      await deleteAllArtists();
+      alert("All data er slettet.");
+    } catch (err) {
+      alert("Feil ved sletting: " + err.message);
+    }
+  });
 
   $("#merge-keep-all").addEventListener("click", () => bulkMerge("existing"));
   $("#merge-use-all").addEventListener("click",  () => bulkMerge("imported"));

@@ -13,6 +13,7 @@ import {
   addDoc,
   setDoc,
   deleteDoc,
+  getDocs,
   onSnapshot,
   runTransaction,
   serverTimestamp,
@@ -198,6 +199,13 @@ export async function teacherDelete(artistId) {
 // Oppdater enkeltfelt på en artist (brukt av merge)
 export async function updateArtistFields(artistId, fields) {
   return setDoc(doc(db, "artists", artistId), fields, { merge: true });
+}
+
+// Slett alle artister (full reset)
+export async function deleteAllArtists() {
+  const snapshot = await getDocs(artistsCol);
+  const deletes = snapshot.docs.map(d => deleteDoc(d.ref));
+  return Promise.all(deletes);
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
