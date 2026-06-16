@@ -26,6 +26,12 @@ function setupTagFilters() {
     const key = btn.dataset.filterKey;
     const val = btn.dataset.filterVal;
     document.getElementById("modal-detail").classList.remove("open");
+    // Reset alle filtre før nytt filter settes
+    state.filters = { search: "", genre: "", instrument: "", decade: "" };
+    $("#sp-search").value = "";
+    $("#sp-genre").value = "";
+    $("#sp-instrument").value = "";
+    $("#sp-decade").value = "";
     if (key === "genre") {
       state.filters.genre = val;
       $("#sp-genre").value = val;
