@@ -119,10 +119,47 @@ function setupModals() {
 function renderAll() {
   if (!state.config) return;
   renderDashboard($("#dashboard"), state);
+  setupSubgenreListBtn();
   if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
     renderLimits($("#modal-limits"), state);
   buildDecadeButtons();
   renderList();
+}
+
+function setupSubgenreListBtn() {
+  const btn = $("#btn-subgenre-list");
+  if (!btn) return;
+  btn.addEventListener("click", toggleSubgenreExpand);
+}
+
+function toggleSubgenreExpand() {
+  const dashboard = $("#dashboard");
+  let expand = dashboard.querySelector(".subgenre-expand");
+  if (expand) { expand.remove(); return; }
+
+  const allSubs = [...new Set(
+    state.artists.filter(a => a.status === "active").flatMap(a => a.subgenres || [])
+  )].sort((a, b) => a.localeCompare(b, "no"));
+
+  if (!allSubs.length) return;
+
+  expand = document.createElement("div");
+  expand.className = "subgenre-expand";
+  expand.innerHTML = `<h3>Alle undersjangre (${allSubs.length})</h3>
+    <div class="subgenre-tag-list">
+      ${allSubs.map(s => `<button class="tag" data-subgenre="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+    </div>`;
+  dashboard.appendChild(expand);
+
+  expand.querySelectorAll("[data-subgenre]").forEach((tag) => {
+    tag.addEventListener("click", () => {
+      openModal("modal-subgenre-desc");
+      setTimeout(() => {
+        const item = document.querySelector(`.desc-edit-item[data-subgenre="${tag.dataset.subgenre}"]`);
+        if (item) item.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    });
+  });
 }
 
 function buildDecadeButtons() {

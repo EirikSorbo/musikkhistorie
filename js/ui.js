@@ -41,6 +41,9 @@ export function renderDashboard(el, { artists, config }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => a.status === "removed").length;
+  const subgenreCount = new Set(
+    artists.filter(a => a.status === "active").flatMap(a => a.subgenres || [])
+  ).size;
 
   el.innerHTML = `
     <div class="stat-grid">
@@ -55,6 +58,10 @@ export function renderDashboard(el, { artists, config }) {
       <div class="stat-card">
         <div class="stat-num">${removed}</div>
         <div class="stat-label">Fjernet / utstemt</div>
+      </div>
+      <div class="stat-card">
+        <button class="stat-num stat-link" id="btn-subgenre-list">${subgenreCount}</button>
+        <div class="stat-label">Undersjangre</div>
       </div>
       <div class="stat-card stat-wide">
         <div class="stat-label">Kjønnsfordeling (aktive)</div>
