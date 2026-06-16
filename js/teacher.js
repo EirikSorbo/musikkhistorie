@@ -170,13 +170,37 @@ function buildDecadeButtons() {
     `<button type="button" class="btn primary small decade-btn" data-decade="${d}">${d}-tallet</button>`
   ).join("");
   el.querySelectorAll(".decade-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      openModal("modal-decade-desc");
-      setTimeout(() => {
-        const item = document.querySelector(`.desc-edit-item[data-decade="${btn.dataset.decade}"]`);
-        if (item) item.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    });
+    btn.addEventListener("click", () => openSingleDecadeModal(btn.dataset.decade));
+  });
+}
+
+function openSingleDecadeModal(decadeId) {
+  const desc = state.decadeDescs[String(decadeId)] || {};
+  const modal = $("#modal-decade-single");
+  $("#decade-single-title").textContent = `${decadeId}-tallet`;
+  $("#ds-society").value = desc.society || "";
+  $("#ds-tech").value = desc.tech || "";
+  $("#ds-msg").textContent = "";
+  modal.dataset.decade = decadeId;
+  openModal("modal-decade-single");
+}
+
+function setupDecadeSingleSave() {
+  $("#ds-save").addEventListener("click", async () => {
+    const modal = $("#modal-decade-single");
+    const decadeId = modal.dataset.decade;
+    const society = $("#ds-society").value.trim();
+    const tech = $("#ds-tech").value.trim();
+    const msg = $("#ds-msg");
+    try {
+      await saveDecadeDesc(decadeId, { society, tech });
+      msg.textContent = "Lagret ✓";
+      msg.className = "form-msg ok";
+      setTimeout(() => closeModal("modal-decade-single"), 800);
+    } catch (err) {
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
   });
 }
 
@@ -360,6 +384,7 @@ function startApp() {
   setupDataButtons();
   setupImportChoice();
   setupEditForm();
+  setupDecadeSingleSave();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
