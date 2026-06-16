@@ -166,6 +166,7 @@ function buildDecadeButtons() {
   const el = $("#decade-buttons");
   if (!el || !state.config) return;
   const decades = (state.config.decades || []).slice().sort((a, b) => a - b);
+  console.log("buildDecadeButtons:", decades.length, "tiår", decades);
   el.innerHTML = decades.map((d) =>
     `<button type="button" class="btn primary small decade-btn" data-decade="${d}">${d}-tallet</button>`
   ).join("");
