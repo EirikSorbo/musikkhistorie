@@ -147,18 +147,46 @@ function toggleSubgenreExpand() {
   expand.className = "subgenre-expand";
   expand.innerHTML = `<h3>Alle undersjangre (${allSubs.length})</h3>
     <div class="subgenre-tag-list">
-      ${allSubs.map(s => `<button class="tag" data-subgenre="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+      ${allSubs.map(s => {
+        const desc = state.subgenreDescs[s];
+        const hasDesc = desc && desc.description;
+        return `<div class="subgenre-chip">
+          <span class="tag">${escapeHtml(s)}</span>
+          <button class="subgenre-edit-btn" data-subgenre="${escapeHtml(s)}" title="Rediger">✏️</button>
+        </div>`;
+      }).join("")}
     </div>`;
   dashboard.appendChild(expand);
 
-  expand.querySelectorAll("[data-subgenre]").forEach((tag) => {
-    tag.addEventListener("click", () => {
-      openModal("modal-subgenre-desc");
-      setTimeout(() => {
-        const item = document.querySelector(`.desc-edit-item[data-subgenre="${tag.dataset.subgenre}"]`);
-        if (item) item.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    });
+  expand.querySelectorAll(".subgenre-edit-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openSingleSubgenreModal(btn.dataset.subgenre));
+  });
+}
+
+function openSingleSubgenreModal(subgenreId) {
+  const desc = state.subgenreDescs[subgenreId] || {};
+  $("#subgenre-single-title").textContent = subgenreId;
+  $("#ss-desc").value = desc.description || "";
+  $("#ss-msg").textContent = "";
+  $("#modal-subgenre-single").dataset.subgenre = subgenreId;
+  openModal("modal-subgenre-single");
+}
+
+function setupSubgenreSingleSave() {
+  $("#ss-save").addEventListener("click", async () => {
+    const modal = $("#modal-subgenre-single");
+    const subgenreId = modal.dataset.subgenre;
+    const description = $("#ss-desc").value.trim();
+    const msg = $("#ss-msg");
+    try {
+      await saveSubgenreDesc(subgenreId, { description });
+      msg.textContent = "Lagret ✓";
+      msg.className = "form-msg ok";
+      setTimeout(() => closeModal("modal-subgenre-single"), 800);
+    } catch (err) {
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
   });
 }
 
@@ -385,6 +413,7 @@ function startApp() {
   setupImportChoice();
   setupEditForm();
   setupDecadeSingleSave();
+  setupSubgenreSingleSave();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };

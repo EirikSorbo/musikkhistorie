@@ -223,8 +223,31 @@ body.is-teacher .show-removed { display: inline-flex; }
 }
 .subgenre-expand h3 { margin: 0 0 10px; font-size: 0.9rem; }
 .subgenre-tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.subgenre-tag-list .tag { cursor: pointer; }
-.subgenre-tag-list .tag:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
+.subgenre-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 3px 4px 3px 10px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.subgenre-chip .tag { border: none; padding: 0; background: none; }
+.subgenre-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 2px 4px;
+  border-radius: 50%;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.12s;
+}
+.subgenre-edit-btn:hover { opacity: 1; }
 
 /* ----- Bars ----- */
 .bar {
