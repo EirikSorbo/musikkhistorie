@@ -123,6 +123,29 @@ function setupFilters() {
 }
 
 // ----------------------------------------------------------------------------
+//  Cache — vis umiddelbart, oppdater fra Firebase i bakgrunnen
+// ----------------------------------------------------------------------------
+
+const CACHE_ARTISTS = "pensum_cache_artists";
+const CACHE_CONFIG  = "pensum_cache_config";
+
+function saveCache() {
+  try {
+    localStorage.setItem(CACHE_ARTISTS, JSON.stringify(state.artists));
+    if (state.config) localStorage.setItem(CACHE_CONFIG, JSON.stringify(state.config));
+  } catch { /* full storage, ignorer */ }
+}
+
+function loadCache() {
+  try {
+    const a = localStorage.getItem(CACHE_ARTISTS);
+    const c = localStorage.getItem(CACHE_CONFIG);
+    if (a) state.artists = JSON.parse(a);
+    if (c) state.config = JSON.parse(c);
+  } catch { /* korrupt cache, ignorer */ }
+}
+
+// ----------------------------------------------------------------------------
 //  Oppstart
 // ----------------------------------------------------------------------------
 
@@ -139,14 +162,22 @@ function init() {
     return;
   }
 
+  loadCache();
+  if (state.config && state.artists.length) {
+    refreshFilterControls();
+    renderSpotlight();
+  }
+
   subscribeConfig((config) => {
     state.config = config;
     refreshFilterControls();
     renderSpotlight();
+    saveCache();
   });
   subscribeArtists((artists) => {
     state.artists = artists;
     renderSpotlight();
+    saveCache();
   });
 }
 
