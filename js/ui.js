@@ -271,6 +271,10 @@ export function renderArtists(el, state) {
     const fd = Number(filters.decade);
     list = list.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(fd));
   }
+  if (filters.subgenre) {
+    const sg = filters.subgenre;
+    list = list.filter((a) => (a.subgenres || []).includes(sg));
+  }
   if (filters.search) {
     const q = filters.search.toLowerCase();
     list = list.filter(

@@ -10,8 +10,7 @@ const state = {
   config: null,
   decadeDescs: {},
   subgenreDescs: {},
-  filters: { search: "", genre: "", instrument: "", decade: "", subgenre: "" },
-  listFilters: { search: "", genre: "", decade: "", instrument: "", showRemoved: false },
+  filters: { search: "", genre: "", instrument: "", decade: "", subgenre: "", showRemoved: false },
   isTeacher: false,
   clientId,
 };
@@ -56,6 +55,7 @@ function setupTagFilters() {
       $("#sp-search").value = val;
     }
     renderSpotlight();
+    renderList();
   });
 }
 
@@ -166,25 +166,7 @@ function renderContextBox() {
 
 function renderList() {
   if (!state.config) return;
-  renderArtists($("#artist-list"), { ...state, filters: state.listFilters, handlers });
-}
-
-function refreshListControls() {
-  const { config } = state;
-  fillSelect($("#f-genre"), config.genres, { placeholder: "Alle sjangre" });
-  fillSelect(
-    $("#f-decade"),
-    config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
-    { placeholder: "Alle tiår" }
-  );
-  fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
-}
-
-function setupListFilters() {
-  $("#f-genre").addEventListener("change", (e) => { state.listFilters.genre = e.target.value; renderList(); });
-  $("#f-decade").addEventListener("change", (e) => { state.listFilters.decade = e.target.value; renderList(); });
-  $("#f-instrument").addEventListener("change", (e) => { state.listFilters.instrument = e.target.value; renderList(); });
-  $("#f-search").addEventListener("input", (e) => { state.listFilters.search = e.target.value; renderList(); });
+  renderArtists($("#artist-list"), { ...state, handlers });
 }
 
 function refreshFilterControls() {
@@ -201,7 +183,6 @@ function refreshFilterControls() {
       .flatMap(a => a.subgenres || [])
   )].sort((a, b) => a.localeCompare(b, "no"));
   fillSelect($("#sp-subgenre"), allSubs, { placeholder: "Underkategori" });
-  refreshListControls();
 }
 
 function setupFilters() {
@@ -211,6 +192,7 @@ function setupFilters() {
       const key = id.replace("sp-", "");
       state.filters[key] = e.target.value;
       renderSpotlight();
+      renderList();
     });
   });
   $("#sp-shuffle").addEventListener("click", renderSpotlight);
@@ -245,7 +227,6 @@ function loadCache() {
 
 function init() {
   setupFilters();
-  setupListFilters();
   setupTagFilters();
   setupDetailModal();
 
