@@ -1,11 +1,13 @@
-import { subscribeArtists, subscribeConfig } from "./store.js";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, fillSelect } from "./ui.js";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, fillSelect, escapeHtml } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
   artists: [],
   config: null,
+  decadeDescs: {},
+  subgenreDescs: {},
   filters: { search: "", genre: "", instrument: "", decade: "", subgenre: "" },
 };
 
@@ -96,12 +98,56 @@ function renderSpotlight() {
   if (hasFilters()) {
     if (spotlightHeader) spotlightHeader.style.display = "none";
     renderResultList($("#spotlight"), pool, state.config, openDetail);
+    renderContextBox();
   } else {
     if (spotlightHeader) spotlightHeader.style.display = "";
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     currentPicks = shuffled.slice(0, 1);
     renderSpotlightCards($("#spotlight"), currentPicks, state.config);
+    clearContextBox();
   }
+}
+
+function getContextBox() {
+  let box = document.getElementById("context-box");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "context-box";
+    box.className = "context-box";
+    const spotlight = $("#spotlight");
+    spotlight.parentNode.insertBefore(box, spotlight);
+  }
+  return box;
+}
+
+function clearContextBox() {
+  const box = document.getElementById("context-box");
+  if (box) box.innerHTML = "";
+}
+
+function renderContextBox() {
+  const box = getContextBox();
+  const parts = [];
+
+  if (state.filters.decade) {
+    const d = state.decadeDescs[state.filters.decade];
+    if (d && (d.society || d.music)) {
+      let html = `<div class="context-card"><h3>${state.filters.decade}-tallet</h3>`;
+      if (d.society) html += `<p><strong>Samfunn og teknologi:</strong> ${escapeHtml(d.society)}</p>`;
+      if (d.music) html += `<p><strong>Musikkutvikling:</strong> ${escapeHtml(d.music)}</p>`;
+      html += `</div>`;
+      parts.push(html);
+    }
+  }
+
+  if (state.filters.subgenre) {
+    const s = state.subgenreDescs[state.filters.subgenre];
+    if (s && s.description) {
+      parts.push(`<div class="context-card"><h3>${escapeHtml(state.filters.subgenre)}</h3><p>${escapeHtml(s.description)}</p></div>`);
+    }
+  }
+
+  box.innerHTML = parts.join("");
 }
 
 function refreshFilterControls() {
@@ -189,6 +235,8 @@ function init() {
     renderSpotlight();
     saveCache();
   });
+  subscribeDecades((d) => { state.decadeDescs = d; renderSpotlight(); });
+  subscribeSubgenres((s) => { state.subgenreDescs = s; renderSpotlight(); });
 }
 
 init();

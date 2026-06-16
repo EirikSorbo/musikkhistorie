@@ -35,6 +35,8 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 const artistsCol = collection(db, "artists");
+const decadesCol = collection(db, "decades");
+const subgenresCol = collection(db, "subgenres");
 const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
@@ -206,6 +208,38 @@ export async function deleteAllArtists() {
   const snapshot = await getDocs(artistsCol);
   const deletes = snapshot.docs.map(d => deleteDoc(d.ref));
   return Promise.all(deletes);
+}
+
+// ----------------------------------------------------------------------------
+//  TIÅR- OG UNDERSJANGER-BESKRIVELSER
+// ----------------------------------------------------------------------------
+
+export function subscribeDecades(callback) {
+  return onSnapshot(decadesCol, (snapshot) => {
+    const decades = {};
+    snapshot.docs.forEach((d) => { decades[d.id] = { id: d.id, ...d.data() }; });
+    callback(decades);
+  });
+}
+
+export function subscribeSubgenres(callback) {
+  return onSnapshot(subgenresCol, (snapshot) => {
+    const subs = {};
+    snapshot.docs.forEach((d) => { subs[d.id] = { id: d.id, ...d.data() }; });
+    callback(subs);
+  });
+}
+
+export async function saveDecadeDesc(decadeId, data) {
+  return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
+}
+
+export async function saveSubgenreDesc(subgenreId, data) {
+  return setDoc(doc(db, "subgenres", subgenreId), data, { merge: true });
+}
+
+export async function deleteSubgenreDesc(subgenreId) {
+  return deleteDoc(doc(db, "subgenres", subgenreId));
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede

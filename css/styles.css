@@ -649,6 +649,48 @@ a.brand { text-decoration: none; color: inherit; display: block; }
 body.is-teacher #teacher-app { display: block; }
 body.is-teacher #gate { display: none; }
 
+/* ----- Beskrivelsesredigering (lærer) ----- */
+.desc-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.desc-edit-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  background: var(--surface-2);
+}
+.desc-edit-item h3 { margin: 0 0 10px; font-size: 1rem; }
+.desc-edit-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.desc-edit-item textarea { font-size: 0.88rem; }
+.desc-edit-actions { display: flex; align-items: center; gap: 12px; }
+
+/* ----- Kontekstboks (forside) ----- */
+.context-box { margin-bottom: 8px; }
+.context-card {
+  background: var(--surface);
+  border: 1px solid #a7f3d0;
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 10px;
+}
+.context-card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--accent-2); }
+.context-card p { margin: 0 0 6px; font-size: 0.9rem; color: var(--text); line-height: 1.55; }
+.context-card p:last-child { margin-bottom: 0; }
+
 @media (max-width: 560px) {
   .cta-grid { grid-template-columns: 1fr; }
   .hero h2 { font-size: 1.85rem; }

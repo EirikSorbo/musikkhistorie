@@ -61,5 +61,17 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isTeacher();
     }
+
+    // ---- Tiårsbeskrivelser ----
+    match /decades/{doc} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // ---- Undersjangerbeskrivelser ----
+    match /subgenres/{doc} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
   }
 }

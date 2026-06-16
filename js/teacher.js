@@ -1,6 +1,8 @@
 import {
   subscribeArtists,
   subscribeConfig,
+  subscribeDecades,
+  subscribeSubgenres,
   addArtist,
   teacherRemove,
   teacherRestore,
@@ -8,6 +10,8 @@ import {
   deleteAllArtists,
   updateConfig,
   updateArtistFields,
+  saveDecadeDesc,
+  saveSubgenreDesc,
   getClientId,
   onAuthChange,
   signInWithGoogle,
@@ -21,6 +25,8 @@ import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 const state = {
   artists: [],
   config: null,
+  decadeDescs: {},
+  subgenreDescs: {},
   filters: { genre: "", decade: "", instrument: "", search: "", showRemoved: true },
   isTeacher: true,
   clientId: getClientId(),
@@ -81,6 +87,8 @@ function setupGate() {
 function openModal(id) {
   document.getElementById(id).classList.add("open");
   if (id === "modal-fyllingsgrad") renderLimits($("#modal-limits"), state);
+  if (id === "modal-decade-desc") renderDecadeDescList();
+  if (id === "modal-subgenre-desc") renderSubgenreDescList();
 }
 
 function closeModal(id) {
@@ -317,6 +325,8 @@ function startApp() {
     state.artists = artists;
     renderAll();
   });
+  subscribeDecades((d) => { state.decadeDescs = d; });
+  subscribeSubgenres((s) => { state.subgenreDescs = s; });
 }
 
 // ----------------------------------------------------------------------------
@@ -697,5 +707,93 @@ const GENDERS_EDIT = [
   { value: "annet", label: "Annet / ikke-binær" },
   { value: "ukjent", label: "Ukjent" },
 ];
+
+// ----------------------------------------------------------------------------
+//  Tiårs- og undersjangerbeskrivelser
+// ----------------------------------------------------------------------------
+
+function renderDecadeDescList() {
+  const el = $("#decade-desc-list");
+  const decades = (state.config?.decades || []).slice().sort((a, b) => a - b);
+  if (!decades.length) { el.innerHTML = `<p class="muted">Ingen tiår definert i innstillingene.</p>`; return; }
+
+  el.innerHTML = decades.map((d) => {
+    const desc = state.decadeDescs[String(d)] || {};
+    return `
+      <div class="desc-edit-item" data-decade="${d}">
+        <h3>${d}-tallet</h3>
+        <label>Samfunn og teknologi
+          <textarea class="dd-society" rows="3" placeholder="Beskriv samfunnskontekst for ${d}-tallet …">${escapeHtml(desc.society || "")}</textarea>
+        </label>
+        <label>Musikkutvikling
+          <textarea class="dd-music" rows="3" placeholder="Beskriv musikkutvikling for ${d}-tallet …">${escapeHtml(desc.music || "")}</textarea>
+        </label>
+        <div class="desc-edit-actions">
+          <button type="button" class="btn primary small dd-save">Lagre</button>
+          <span class="dd-msg form-msg ok"></span>
+        </div>
+      </div>`;
+  }).join("");
+
+  el.querySelectorAll(".dd-save").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const item = btn.closest(".desc-edit-item");
+      const decadeId = item.dataset.decade;
+      const society = item.querySelector(".dd-society").value.trim();
+      const music = item.querySelector(".dd-music").value.trim();
+      const msg = item.querySelector(".dd-msg");
+      try {
+        await saveDecadeDesc(decadeId, { society, music });
+        msg.textContent = "Lagret ✓";
+        setTimeout(() => (msg.textContent = ""), 2500);
+      } catch (err) {
+        msg.textContent = "Feil: " + err.message;
+        msg.className = "form-msg error";
+      }
+    });
+  });
+}
+
+function renderSubgenreDescList() {
+  const el = $("#subgenre-desc-list");
+  const allSubs = [...new Set(
+    state.artists.filter(a => a.status === "active")
+      .flatMap(a => a.subgenres || [])
+  )].sort((a, b) => a.localeCompare(b, "no"));
+
+  if (!allSubs.length) { el.innerHTML = `<p class="muted">Ingen undersjangre registrert blant artistene.</p>`; return; }
+
+  el.innerHTML = allSubs.map((s) => {
+    const desc = state.subgenreDescs[s] || {};
+    return `
+      <div class="desc-edit-item" data-subgenre="${escapeHtml(s)}">
+        <h3>${escapeHtml(s)}</h3>
+        <label>Beskrivelse
+          <textarea class="sg-desc" rows="3" placeholder="Beskriv ${s} …">${escapeHtml(desc.description || "")}</textarea>
+        </label>
+        <div class="desc-edit-actions">
+          <button type="button" class="btn primary small sg-save">Lagre</button>
+          <span class="sg-msg form-msg ok"></span>
+        </div>
+      </div>`;
+  }).join("");
+
+  el.querySelectorAll(".sg-save").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const item = btn.closest(".desc-edit-item");
+      const subgenreId = item.dataset.subgenre;
+      const description = item.querySelector(".sg-desc").value.trim();
+      const msg = item.querySelector(".sg-msg");
+      try {
+        await saveSubgenreDesc(subgenreId, { description });
+        msg.textContent = "Lagret ✓";
+        setTimeout(() => (msg.textContent = ""), 2500);
+      } catch (err) {
+        msg.textContent = "Feil: " + err.message;
+        msg.className = "form-msg error";
+      }
+    });
+  });
+}
 
 setupGate();

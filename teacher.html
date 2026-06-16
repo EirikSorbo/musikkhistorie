@@ -96,6 +96,9 @@
         <button type="button" class="btn ghost" data-open-modal="modal-instrument">Grense per instrument</button>
         <div class="strip-sep"></div>
         <button type="button" class="btn ghost" data-open-modal="modal-fyllingsgrad">Fyllingsgrad</button>
+        <div class="strip-sep"></div>
+        <button type="button" class="btn ghost" data-open-modal="modal-decade-desc">Tiårsbeskrivelser</button>
+        <button type="button" class="btn ghost" data-open-modal="modal-subgenre-desc">Undersjangerbeskrivelser</button>
         <button type="button" id="save-general" class="btn primary">Lagre</button>
         <span id="msg-general" class="form-msg ok"></span>
         <div class="strip-sep"></div>
@@ -299,6 +302,30 @@
           <span id="ed-msg" class="form-msg"></span>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Tiårsbeskrivelser -->
+  <div class="modal-backdrop" id="modal-decade-desc">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Tiårsbeskrivelser</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="hint">Skriv kontekst om samfunn, teknologi og musikkutvikling for hvert tiår.</p>
+      <div id="decade-desc-list" class="desc-edit-list"></div>
+    </div>
+  </div>
+
+  <!-- Undersjangerbeskrivelser -->
+  <div class="modal-backdrop" id="modal-subgenre-desc">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Undersjangerbeskrivelser</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="hint">Beskriv hver undersjanger. Listen hentes automatisk fra artistenes tags.</p>
+      <div id="subgenre-desc-list" class="desc-edit-list"></div>
     </div>
   </div>
 
