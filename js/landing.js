@@ -1,4 +1,4 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteOut, undoVoteOut, getClientId } from "./store.js";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
@@ -16,8 +16,8 @@ const state = {
 };
 
 const handlers = {
-  vote: (id) => voteOut(id, clientId, state.config.voteOutThreshold),
-  undoVote: (id) => undoVoteOut(id, clientId),
+  voteUp: (id) => voteUp(id, clientId),
+  undoVoteUp: (id) => undoVoteUp(id, clientId),
 };
 
 // ----------------------------------------------------------------------------

@@ -12,6 +12,8 @@ import {
   updateArtistFields,
   saveDecadeDesc,
   saveSubgenreDesc,
+  teacherVeto,
+  undoVeto,
   getClientId,
   onAuthChange,
   signInWithGoogle,
@@ -34,10 +36,12 @@ const state = {
 };
 
 const handlers = {
-  remove:  (id) => teacherRemove(id),
-  restore: (id) => teacherRestore(id),
-  del:     (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
-  edit:    (id) => openEditModal(id),
+  remove:    (id) => teacherRemove(id),
+  restore:   (id) => teacherRestore(id),
+  del:       (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
+  edit:      (id) => openEditModal(id),
+  veto:      (id) => teacherVeto(id),
+  undoVeto:  (id) => undoVeto(id),
 };
 
 // ----------------------------------------------------------------------------
@@ -148,19 +152,12 @@ function toggleSubgenreExpand() {
   expand.innerHTML = `<h3>Alle undersjangre (${allSubs.length})</h3>
     <div class="subgenre-tag-list">
       ${allSubs.map(s => {
-        const desc = state.subgenreDescs[s];
-        const hasDesc = desc && desc.description;
         return `<div class="subgenre-chip">
-          <span class="tag">${escapeHtml(s)}</span>
-          <button class="subgenre-edit-btn" data-subgenre="${escapeHtml(s)}" title="Rediger">✏️</button>
+          <button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>
         </div>`;
       }).join("")}
     </div>`;
   dashboard.appendChild(expand);
-
-  expand.querySelectorAll(".subgenre-edit-btn").forEach((btn) => {
-    btn.addEventListener("click", () => openSingleSubgenreModal(btn.dataset.subgenre));
-  });
 }
 
 function openSingleSubgenreModal(subgenreId) {
@@ -230,6 +227,14 @@ function openSubgenreInfo(subgenreId) {
       list.style.display = visible ? "none" : "block";
       e.target.textContent = visible ? `Vis artister (${artists.length})` : "Skjul artister";
     });
+  }
+
+  const editBtn = document.getElementById("sgi-edit-btn");
+  if (editBtn) {
+    editBtn.onclick = () => {
+      closeModal("modal-subgenre-info");
+      openSingleSubgenreModal(subgenreId);
+    };
   }
 
   openModal("modal-subgenre-info");

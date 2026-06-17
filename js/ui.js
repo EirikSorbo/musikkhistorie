@@ -212,7 +212,7 @@ export function renderArtistDetail(el, artist, config) {
       ${lifespan(a)}
       <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
       ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
-      ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-filter-key="search" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+      ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
     ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
@@ -253,7 +253,7 @@ function spotlightCard(a, config) {
           ${lifespan(a)}
           <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
           ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
-          ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-filter-key="search" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+          ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
         </div>
       </header>
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
@@ -313,9 +313,10 @@ export function renderArtists(el, state) {
 }
 
 function artistCard(a, { isTeacher, clientId, config }) {
-  const votes = (a.votedOutBy || []).length;
-  const hasVoted = (a.votedOutBy || []).includes(clientId);
+  const upvotes = (a.votedUpBy || []).length;
+  const hasUpvoted = (a.votedUpBy || []).includes(clientId);
   const removed = a.status === "removed";
+  const vetoed = a.teacherVetoed === true;
 
   const links = (a.links || [])
     .map(
@@ -328,20 +329,20 @@ function artistCard(a, { isTeacher, clientId, config }) {
 
   const removedBadge = removed
     ? `<span class="badge removed">${
-        a.removedBy === "teacher" ? "Fjernet av lærer" : "Stemt ut"
+        a.removedBy === "teacher" ? "Fjernet av lærer" : "Fjernet"
       }</span>`
     : "";
 
-  const protectedBadge = a.teacherProtected
-    ? `<span class="badge protected" title="Beskyttet av lærer mot utstemming">🛡️</span>`
+  const vetoBadge = vetoed
+    ? `<span class="badge veto" title="Inkludert av lærer">★ Veto</span>`
     : "";
 
   // Studenthandlinger
   let voteBtn = "";
   if (!removed) {
-    voteBtn = hasVoted
-      ? `<button class="btn ghost" data-action="undoVote" data-id="${a.id}">↩︎ Angre stemme</button>`
-      : `<button class="btn ghost danger" data-action="vote" data-id="${a.id}">⚑ Ikke relevant</button>`;
+    voteBtn = hasUpvoted
+      ? `<button class="btn ghost" data-action="undoVoteUp" data-id="${a.id}">↩︎ Angre stemme</button>`
+      : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">★ Svært relevant</button>`;
   }
 
   // Lærerhandlinger
@@ -349,10 +350,13 @@ function artistCard(a, { isTeacher, clientId, config }) {
   if (isTeacher) {
     teacherBtns = `
       <div class="teacher-actions">
-        ${
-          removed
-            ? `<button class="btn small" data-action="restore" data-id="${a.id}">Gjenopprett</button>`
-            : `<button class="btn small" data-action="remove" data-id="${a.id}">Fjern (veto)</button>`
+        ${removed
+          ? `<button class="btn small" data-action="restore" data-id="${a.id}">Gjenopprett</button>`
+          : `<button class="btn small" data-action="remove" data-id="${a.id}">Fjern</button>`
+        }
+        ${vetoed
+          ? `<button class="btn small accent" data-action="undoVeto" data-id="${a.id}" title="Fjern veto">★ Veto</button>`
+          : `<button class="btn small" data-action="veto" data-id="${a.id}" title="Inkluder uansett">☆ Veto</button>`
         }
         <button class="btn small" data-action="edit" data-id="${a.id}" title="Rediger">✏️</button>
         <button class="btn small danger" data-action="del" data-id="${a.id}">Slett</button>
@@ -360,10 +364,10 @@ function artistCard(a, { isTeacher, clientId, config }) {
   }
 
   return `
-    <article class="card ${removed ? "is-removed" : ""}">
+    <article class="card ${removed ? "is-removed" : ""} ${vetoed ? "is-vetoed" : ""}">
       <header class="card-head">
         <div>
-          <h3>${escapeHtml(a.name)} ${removedBadge} ${protectedBadge}</h3>
+          <h3>${escapeHtml(a.name)} ${removedBadge} ${vetoBadge}</h3>
           <div class="meta">
             <span class="tag">${escapeHtml(a.genre)}</span>
             ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
@@ -371,26 +375,20 @@ function artistCard(a, { isTeacher, clientId, config }) {
             ${lifespan(a)}
             <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
             ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
-            ${(a.subgenres || []).map(s => `<span class="tag tag-sub">${escapeHtml(s)}</span>`).join("")}
+            ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
           </div>
         </div>
       </header>
 
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
-      ${
-        a.keyWorks
-          ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(
-              a.keyWorks
-            )}</p>`
-          : ""
-      }
+      ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
       ${links ? `<div class="links">${links}</div>` : ""}
       ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${(a.kilder).map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
-        <span class="vote-count muted" title="Utstemminger">
-          ⚑ ${votes}/${config.voteOutThreshold}
+        <span class="vote-count muted" title="Positive stemmer">
+          ★ ${upvotes}
         </span>
         <div class="spacer"></div>
         ${voteBtn}

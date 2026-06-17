@@ -150,6 +150,29 @@ export async function voteOut(artistId, clientId, threshold) {
   });
 }
 
+// Stem frem et forslag ("svært relevant")
+export async function voteUp(artistId, clientId) {
+  const ref = doc(db, "artists", artistId);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const voters = new Set(snap.data().votedUpBy || []);
+    voters.add(clientId);
+    tx.update(ref, { votedUpBy: [...voters] });
+  });
+}
+
+// Angre positiv stemme
+export async function undoVoteUp(artistId, clientId) {
+  const ref = doc(db, "artists", artistId);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const votedUpBy = (snap.data().votedUpBy || []).filter((id) => id !== clientId);
+    tx.update(ref, { votedUpBy });
+  });
+}
+
 // Angre egen utstemming
 export async function undoVoteOut(artistId, clientId) {
   const ref = doc(db, "artists", artistId);
@@ -191,6 +214,16 @@ export async function teacherRestore(artistId) {
     { status: "active", removedBy: null, teacherProtected: true },
     { merge: true }
   );
+}
+
+// Lærer veto-inkluderer en artist (garantert med i pensum)
+export async function teacherVeto(artistId) {
+  return setDoc(doc(db, "artists", artistId), { teacherVetoed: true }, { merge: true });
+}
+
+// Angre veto-inkludering
+export async function undoVeto(artistId) {
+  return setDoc(doc(db, "artists", artistId), { teacherVetoed: false }, { merge: true });
 }
 
 // Lærer sletter et forslag permanent
