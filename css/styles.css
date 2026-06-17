@@ -441,7 +441,8 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 .card-foot {
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--line);
@@ -449,7 +450,7 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 }
 .spacer { flex: 1; }
 .proposed, .vote-count { color: var(--muted-2); }
-.teacher-actions { display: flex; gap: 8px; margin-top: 10px; }
+.teacher-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
 /* ----- Badges ----- */
 .badge {
@@ -531,8 +532,8 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 .info-label { margin: 0 0 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .info-text { margin: 0; line-height: 1.65; white-space: pre-wrap; }
 
-/* ----- Tannhjul i header (lærer) ----- */
-.gear-btn { font-size: 1.4rem; line-height: 1; padding: 4px 8px; }
+/* ----- Innstillinger-knapp i header (lærer) ----- */
+.gear-btn { font-size: 0.82rem; }
 
 /* ----- Innstillinger (lærer) ----- */
 .settings-sections {
@@ -786,4 +787,63 @@ body.is-teacher #gate { display: none; }
 @media (max-width: 560px) {
   .cta-grid { grid-template-columns: 1fr; }
   .hero h2 { font-size: 1.85rem; }
+}
+
+/* ===========================================================================
+   Mobil – generelle justeringer
+   =========================================================================== */
+
+/* Topbar: wrap brand + nav til to rader på smale skjermer */
+@media (max-width: 640px) {
+  .topbar .wrap {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    gap: 6px;
+  }
+  .brand h1 { font-size: 1.05rem; }
+  .nav { gap: 2px; }
+  .nav a { font-size: 0.8rem; padding: 6px 10px; }
+  .version-tag { display: none; }
+  .wrap { padding: 0 14px; }
+  main { padding: 20px 0 50px; }
+  .panel { padding: 18px 14px; margin-bottom: 14px; }
+
+  /* Modaler fyller mer av skjermen */
+  .modal-backdrop { padding: 10px; }
+  .modal { padding: 20px 16px; max-height: 92vh; border-radius: var(--radius-sm); }
+  .modal-head { margin-bottom: 16px; }
+
+  /* Filter: hvert element tar full bredde */
+  .filter-bar { gap: 8px; }
+  .filter-bar input,
+  .filter-bar select { width: 100%; }
+
+  /* Utforsk-knapper tar halv bredde hver */
+  .explore-btns { gap: 8px; }
+  .explore-btns .btn { flex: 1; }
+
+  /* Tiår-grid på mobil */
+  .decade-list-btn { min-width: 80px; }
+
+  /* Resultat-liste: kortere min-width på navn */
+  .result-name { min-width: 110px; }
+  .result-work { display: none; }
+
+  /* Skjema: lenke- og kilderader stables vertikalt */
+  .link-row { flex-direction: column; }
+  .source-row { flex-direction: column; }
+
+  /* Kortets bunntekst */
+  .spacer { display: none; }
+  .card-foot { gap: 8px; }
+}
+
+/* Ekstra smal: veldig gamle/små telefoner */
+@media (max-width: 380px) {
+  .brand h1 { font-size: 0.95rem; }
+  .nav a { font-size: 0.76rem; padding: 5px 8px; }
+  .panel { padding: 14px 12px; }
+  .modal { padding: 16px 14px; }
+  .btn { padding: 8px 13px; }
+  .btn.small { padding: 5px 9px; font-size: 0.78rem; }
 }
