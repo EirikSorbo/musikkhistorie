@@ -87,22 +87,21 @@ function setupExplore() {
 }
 
 // Bygger slektstreet ved første åpning, og åpner modalvinduet.
-let genealogyBuilt = false;
+let genealogyApi = null;
 function openGenealogy() {
   const modal = document.getElementById("modal-genealogy");
   if (!modal) return;
-  if (!genealogyBuilt) {
-    renderGenealogy({
-      svg: document.getElementById("gx-svg"),
-      info: document.getElementById("gx-info"),
-      legend: document.getElementById("gx-legend"),
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
+  modal.classList.add("open");
+  if (!genealogyApi) {
+    genealogyApi = renderGenealogy({
+      root: modal,
       subgenreDescs: state.subgenreDescs,
       onShowArtists: showArtistsForGenre,
     });
-    genealogyBuilt = true;
   }
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-  modal.classList.add("open");
+  // Sentrer kartet når scenen har fått mål (etter at modalen er synlig)
+  requestAnimationFrame(() => genealogyApi.fit());
 }
 
 // Lukker treet, setter filter på sjangeren og scroller til artistlista.

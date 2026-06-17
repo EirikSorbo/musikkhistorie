@@ -110,15 +110,22 @@
     </div>
   </div>
 
-  <!-- Slektstre -->
+  <!-- Slektstre (Carta) -->
   <div class="modal-backdrop" id="modal-genealogy">
     <div class="modal modal-wide">
       <div class="modal-head">
         <h2>Slektstre</h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Tid løper nedover. Trykk på en sjanger for å lyse opp slektslinjen — hvor den kom fra og hva den førte til.</p>
-      <svg id="gx-svg" viewBox="0 0 680 992" width="100%" role="img" aria-label="Slektstre over sjangrene"></svg>
+      <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Tid løper nedover, supersjanger bortover. Dra for å flytte kartet, scroll eller +/− for å zoome, hold over en sjanger for å se linjene, klikk for spilleliste.</p>
+      <div class="gx-stage" id="gx-stage">
+        <div class="gx-ctrl">
+          <button id="gx-zin" type="button" aria-label="Zoom inn">+</button>
+          <button id="gx-zout" type="button" aria-label="Zoom ut">−</button>
+          <button id="gx-rst" type="button" aria-label="Tilbakestill">⤺</button>
+        </div>
+        <svg id="gx-svg" width="100%" height="100%" role="img" aria-label="Slektstre over sjangrene"><g id="gx-cam"></g></svg>
+      </div>
       <div class="gx-info" id="gx-info"></div>
       <div class="gx-legend" id="gx-legend"></div>
     </div>
