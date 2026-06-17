@@ -642,6 +642,16 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 .filter-bar input,
 .filter-bar select { padding: 8px 11px; font-size: 0.88rem; }
 
+.explore-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.explore-btns .btn { font-size: 0.9rem; }
+
+.explore-decade-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.decade-list-btn { min-width: 100px; justify-content: center; }
+
 /* ===========================================================================
    Flersides-elementer: navigasjon, forside-hero, lærerport
    =========================================================================== */

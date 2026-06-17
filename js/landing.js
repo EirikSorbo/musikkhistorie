@@ -59,6 +59,75 @@ function setupTagFilters() {
   });
 }
 
+function setupExplore() {
+  // Koble alle nye modaler til backdrop-klikk og close-knapp
+  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list"].forEach((id) => {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
+    m.querySelector(".modal-close").addEventListener("click", () => m.classList.remove("open"));
+  });
+
+  // Tilbake-knapp i tiår-visning
+  const dvBack = document.getElementById("dv-back");
+  if (dvBack) dvBack.addEventListener("click", () => {
+    document.getElementById("modal-decade-view").classList.remove("open");
+    document.getElementById("modal-decade-list").classList.add("open");
+  });
+
+  const btnContext = document.getElementById("btn-context");
+  if (btnContext) btnContext.addEventListener("click", openDecadeList);
+
+  const btnGenres = document.getElementById("btn-genres");
+  if (btnGenres) btnGenres.addEventListener("click", openSubgenreList);
+}
+
+function openDecadeList() {
+  const modal = document.getElementById("modal-decade-list");
+  if (!modal) return;
+  const decades = (state.config?.decades || []).slice().sort((a, b) => a - b);
+  const el = document.getElementById("dl-buttons");
+  el.innerHTML = decades.map((d) => {
+    const desc = state.decadeDescs[String(d)];
+    const hasDesc = desc && (desc.society || desc.tech);
+    return `<button class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade-view="${d}">${d}-tallet</button>`;
+  }).join("");
+  el.querySelectorAll("[data-decade-view]").forEach((btn) => {
+    btn.addEventListener("click", () => openDecadeView(btn.dataset.decadeView));
+  });
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
+  modal.classList.add("open");
+}
+
+function openDecadeView(decadeId) {
+  const modal = document.getElementById("modal-decade-view");
+  if (!modal) return;
+  const desc = state.decadeDescs[String(decadeId)] || {};
+  document.getElementById("dv-title").textContent = `${decadeId}-tallet`;
+  const societyEl = document.getElementById("dv-society");
+  const techEl = document.getElementById("dv-tech");
+  societyEl.textContent = desc.society || "Ingen beskrivelse ennå.";
+  societyEl.className = "info-text" + (desc.society ? "" : " muted");
+  techEl.textContent = desc.tech || "Ingen beskrivelse ennå.";
+  techEl.className = "info-text" + (desc.tech ? "" : " muted");
+  document.getElementById("modal-decade-list").classList.remove("open");
+  modal.classList.add("open");
+}
+
+function openSubgenreList() {
+  const modal = document.getElementById("modal-subgenre-list");
+  if (!modal) return;
+  const allSubs = [...new Set(
+    state.artists.filter((a) => a.status === "active").flatMap((a) => a.subgenres || [])
+  )].sort((a, b) => a.localeCompare(b, "no"));
+  const el = document.getElementById("sl-chips");
+  el.innerHTML = allSubs.length
+    ? allSubs.map((s) => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
+  modal.classList.add("open");
+}
+
 function setupDetailModal() {
   const backdrop = document.getElementById("modal-detail");
   if (!backdrop) return;
@@ -299,6 +368,7 @@ function init() {
   setupTagFilters();
   setupDetailModal();
   setupSubgenreInfo();
+  setupExplore();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };

@@ -29,7 +29,7 @@
   <main class="wrap">
     <div id="banner" class="banner"></div>
 
-
+    <!-- Dagens navn -->
     <section class="panel">
       <div class="spotlight-header">
         <h2 id="spotlight-heading">Dagens navn</h2>
@@ -38,9 +38,9 @@
       <div id="spotlight" class="spotlight-grid"></div>
     </section>
 
-    <!-- Alle forslag -->
+    <!-- Utforsk -->
     <section class="panel">
-      <h2>Alle forslag</h2>
+      <h2>Utforsk</h2>
       <div class="filter-bar">
         <input type="search" id="sp-search" placeholder="Søk navn eller tags …" />
         <select id="sp-genre"></select>
@@ -48,14 +48,66 @@
         <select id="sp-decade"></select>
         <select id="sp-subgenre"></select>
       </div>
+      <div class="explore-btns">
+        <button class="btn ghost" id="btn-context">🗺 Kontekst</button>
+        <button class="btn ghost" id="btn-genres">🎵 Sjangere</button>
+      </div>
+    </section>
+
+    <!-- Alle forslag -->
+    <section class="panel">
+      <h2>Alle forslag</h2>
       <div id="artist-list" class="artist-list"></div>
     </section>
 
   </main>
 
-  <footer class="sitefoot wrap">
+  <footer class="sitefoot wrap"></footer>
 
-  </footer>
+  <!-- Tiår-liste -->
+  <div class="modal-backdrop" id="modal-decade-list">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Kontekst</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese om samfunns- og teknologiutvikling.</p>
+      <div id="dl-buttons" class="explore-decade-grid"></div>
+    </div>
+  </div>
+
+  <!-- Enkelt tiår (les) -->
+  <div class="modal-backdrop" id="modal-decade-view">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="dv-title"></h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="info-section">
+        <h4 class="info-label">Samfunnsutvikling</h4>
+        <p id="dv-society" class="info-text"></p>
+      </div>
+      <div class="info-section">
+        <h4 class="info-label">Teknologiutvikling</h4>
+        <p id="dv-tech" class="info-text"></p>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn ghost small" id="dv-back">← Tilbake</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sjangerl-liste -->
+  <div class="modal-backdrop" id="modal-subgenre-list">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Sjangere</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
+      <div id="sl-chips" class="subgenre-tag-list"></div>
+    </div>
+  </div>
 
   <!-- Sjanger-info -->
   <div class="modal-backdrop" id="modal-subgenre-info">
