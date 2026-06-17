@@ -87,6 +87,11 @@ function setupSubgenreInfo() {
 }
 
 function openSubgenreInfo(subgenreId) {
+  const modal = document.getElementById("modal-subgenre-info");
+  if (!modal) return;
+
+  document.querySelectorAll(".modal-backdrop.open").forEach(m => m.classList.remove("open"));
+
   const desc = state.subgenreDescs[subgenreId];
   $("#sgi-title").textContent = subgenreId;
   $("#sgi-desc").textContent = desc?.description || "Ingen beskrivelse ennå.";
