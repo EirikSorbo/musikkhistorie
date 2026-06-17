@@ -128,7 +128,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
   });
 
   // Utheving
-  let locked = null;
+  let locked = null, moved = false;
   function light(id) {
     const line = anc(id); line[id] = 1;
     const dn = desc(id); for (const k in dn) line[k] = 1;
@@ -185,7 +185,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     const g = gnodes[n.id];
     g.addEventListener("mouseenter", () => { if (!locked) light(n.id); });
     g.addEventListener("mouseleave", clearLight);
-    g.addEventListener("click", (ev) => { ev.stopPropagation(); pick(n.id); });
+    g.addEventListener("click", (ev) => { if (moved) return; ev.stopPropagation(); pick(n.id); });
   });
 
   // Pan / zoom
@@ -214,10 +214,10 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     zoom(ev.deltaY < 0 ? 1.12 : 0.9, ev.clientX - rect.left, ev.clientY - rect.top);
   }, { passive: false });
 
-  let drag = false, sx, sy, moved;
+  let drag = false, sx, sy;
   stage.addEventListener("pointerdown", (ev) => {
     drag = true; moved = false; sx = ev.clientX; sy = ev.clientY;
-    stage.classList.add("gx-drag"); stage.setPointerCapture(ev.pointerId);
+    stage.classList.add("gx-drag");
   });
   stage.addEventListener("pointermove", (ev) => {
     if (!drag) return;
@@ -225,7 +225,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
     tx += dx; ty += dy; sx = ev.clientX; sy = ev.clientY; apply();
   });
-  stage.addEventListener("pointerup", () => { drag = false; stage.classList.remove("gx-drag"); });
+  window.addEventListener("pointerup", () => { drag = false; stage.classList.remove("gx-drag"); });
   stage.addEventListener("click", (ev) => {
     if (!ev.target.closest(".gx-node") && !moved) reset();
   });
