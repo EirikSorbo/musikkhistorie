@@ -73,9 +73,10 @@ function setupDetailModal() {
 
 function setupSubgenreInfo() {
   const backdrop = document.getElementById("modal-subgenre-info");
-  if (!backdrop) return;
-  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.classList.remove("open"); });
-  backdrop.querySelector(".modal-close").addEventListener("click", () => backdrop.classList.remove("open"));
+  if (backdrop) {
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.classList.remove("open"); });
+    backdrop.querySelector(".modal-close").addEventListener("click", () => backdrop.classList.remove("open"));
+  }
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-subgenre-info]");
