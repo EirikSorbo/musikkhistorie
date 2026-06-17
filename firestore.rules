@@ -46,8 +46,9 @@ service cloud.firestore {
       //    "teacher".
       allow update: if isTeacher() || (
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(["votedOutBy", "status", "removedBy"]) &&
+          .hasOnly(["votedOutBy", "votedUpBy", "status", "removedBy"]) &&
         request.resource.data.teacherProtected == resource.data.teacherProtected &&
+        !("teacherVetoed" in request.resource.data.diff(resource.data).affectedKeys()) &&
         (request.resource.data.removedBy == null ||
          request.resource.data.removedBy == "votes")
       );

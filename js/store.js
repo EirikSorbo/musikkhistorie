@@ -122,7 +122,9 @@ export async function addArtist(data) {
     status: "active",
     removedBy: null,
     teacherProtected: false,
+    teacherVetoed: false,
     votedOutBy: [],
+    votedUpBy: [],
     addedYear: new Date().getFullYear(),
     createdAt: serverTimestamp(),
   });
