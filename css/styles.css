@@ -227,16 +227,15 @@ body.is-teacher .show-removed { display: inline-flex; }
 .subgenre-chip {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 100px;
-  padding: 3px 4px 3px 10px;
-  font-size: 0.74rem;
-  font-weight: 500;
-  color: var(--muted);
+  justify-content: center;
 }
-.subgenre-chip .tag { border: none; padding: 0; background: none; }
+.subgenre-chip .tag.tag-sub.tag-link {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+  font-style: normal;
+  text-align: center;
+}
 .subgenre-edit-btn {
   background: none;
   border: none;
