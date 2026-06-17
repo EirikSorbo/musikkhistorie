@@ -661,7 +661,7 @@ async function importDescriptions({ decades, subgenres }) {
     }
   }
   if (fail > 0) {
-    alert(`⚠️ ${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'subgenres' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+    alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'subgenres' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
     alert(`${ok} beskrivelse(r) importert.`);
   }

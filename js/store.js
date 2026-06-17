@@ -64,7 +64,7 @@ export function subscribeArtists(callback) {
     const artists = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     callback(artists);
   }, (err) => {
-    console.error("🔴 Kunne ikke lese artister – sjekk Firestore-regler:", err.code, err.message);
+    console.error("Kunne ikke lese artister – sjekk Firestore-regler:", err.code, err.message);
     document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
   });
 }
@@ -78,7 +78,7 @@ export function subscribeConfig(callback) {
       callback({ ...DEFAULT_CONFIG, ...snap.data() });
     }
   }, (err) => {
-    console.error("🔴 Kunne ikke lese konfig – sjekk Firestore-regler:", err.code, err.message);
+    console.error("Kunne ikke lese konfig – sjekk Firestore-regler:", err.code, err.message);
     callback({ ...DEFAULT_CONFIG });
   });
 }

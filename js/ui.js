@@ -203,7 +203,7 @@ export function renderResultList(el, artists, config, onSelect) {
 export function renderArtistDetail(el, artist, config) {
   const a = artist;
   const links = (a.links || [])
-    .map((l) => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">🎵 ${escapeHtml(l.label || "Lytt")}</a>`)
+    .map((l) => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || "Lytt")}</a>`)
     .join("");
   el.innerHTML = `
     <div class="meta" style="margin-bottom:12px">
@@ -212,7 +212,7 @@ export function renderArtistDetail(el, artist, config) {
       ${periodTag(a)}
       ${lifespan(a)}
       <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
-      ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+      ${a.geography ? `<span class="tag">${escapeHtml(a.geography)}</span>` : ""}
       ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
@@ -238,7 +238,7 @@ function spotlightCard(a, config) {
     .map(
       (l) =>
         `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
-          🎵 ${escapeHtml(l.label || "Lytt")}
+          ${escapeHtml(l.label || "Lytt")}
         </a>`
     )
     .join("");
@@ -253,7 +253,7 @@ function spotlightCard(a, config) {
           ${periodTag(a)}
           ${lifespan(a)}
           <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
-          ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+          ${a.geography ? `<span class="tag">${escapeHtml(a.geography)}</span>` : ""}
           ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
         </div>
       </header>
@@ -323,7 +323,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
     .map(
       (l) =>
         `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
-          🎵 ${escapeHtml(l.label || "Lytt")}
+          ${escapeHtml(l.label || "Lytt")}
         </a>`
     )
     .join("");
@@ -335,15 +335,15 @@ function artistCard(a, { isTeacher, clientId, config }) {
     : "";
 
   const vetoBadge = vetoed
-    ? `<span class="badge veto" title="Inkludert av lærer">★ Veto</span>`
+    ? `<span class="badge veto" title="Inkludert av lærer">Veto</span>`
     : "";
 
   // Studenthandlinger
   let voteBtn = "";
   if (!removed) {
     voteBtn = hasUpvoted
-      ? `<button class="btn ghost" data-action="undoVoteUp" data-id="${a.id}">↩︎ Angre stemme</button>`
-      : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">★ Svært relevant</button>`;
+      ? `<button class="btn ghost" data-action="undoVoteUp" data-id="${a.id}">Angre stemme</button>`
+      : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">Svært relevant</button>`;
   }
 
   // Lærerhandlinger
@@ -356,10 +356,10 @@ function artistCard(a, { isTeacher, clientId, config }) {
           : `<button class="btn small" data-action="remove" data-id="${a.id}">Fjern</button>`
         }
         ${vetoed
-          ? `<button class="btn small accent" data-action="undoVeto" data-id="${a.id}" title="Fjern veto">★ Veto</button>`
-          : `<button class="btn small" data-action="veto" data-id="${a.id}" title="Inkluder uansett">☆ Veto</button>`
+          ? `<button class="btn small accent" data-action="undoVeto" data-id="${a.id}" title="Fjern veto">Veto</button>`
+          : `<button class="btn small" data-action="veto" data-id="${a.id}" title="Inkluder uansett">Veto</button>`
         }
-        <button class="btn small" data-action="edit" data-id="${a.id}" title="Rediger">✏️</button>
+        <button class="btn small" data-action="edit" data-id="${a.id}">Rediger</button>
         <button class="btn small danger" data-action="del" data-id="${a.id}">Slett</button>
       </div>`;
   }
@@ -375,7 +375,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
             ${periodTag(a)}
             ${lifespan(a)}
             <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
-            ${a.geography ? `<span class="tag">📍 ${escapeHtml(a.geography)}</span>` : ""}
+            ${a.geography ? `<span class="tag">${escapeHtml(a.geography)}</span>` : ""}
             ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
           </div>
         </div>
@@ -388,9 +388,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
-        <span class="vote-count muted" title="Positive stemmer">
-          ★ ${upvotes}
-        </span>
+        <span class="vote-count muted" title="Positive stemmer">${upvotes} stemmer</span>
         <div class="spacer"></div>
         ${voteBtn}
       </footer>
