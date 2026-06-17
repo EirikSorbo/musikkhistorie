@@ -873,6 +873,8 @@ body.is-teacher #gate { display: none; }
 
 .gx-edge { stroke: #c2cfc7; stroke-width: 1.4; opacity: 0.35; fill: none; transition: opacity 0.15s, stroke-width 0.15s; }
 .gx-edge.gx-hl { opacity: 1; stroke-width: 2.2; }
+.gx-edge.gx-react { stroke: #e0a85a; stroke-dasharray: 6 5; opacity: 0.5; }
+.gx-edge.gx-react.gx-hl { opacity: 1; stroke-width: 2.4; }
 
 .gx-node { cursor: pointer; }
 .gx-node rect { stroke-width: 1; transition: opacity 0.15s; }
@@ -903,8 +905,11 @@ body.is-teacher #gate { display: none; }
 .gx-desc { font-size: 0.92rem; line-height: 1.55; margin: 0 0 10px; color: var(--text); }
 .gx-rel { font-size: 0.85rem; color: var(--muted); margin: 0 0 4px; }
 .gx-rel strong { color: var(--text); font-weight: 600; }
-.gx-tracks { margin: 8px 0 12px; padding-left: 18px; }
-.gx-tracks li { font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+.gx-tracks { margin: 6px 0 12px; padding-left: 18px; }
+.gx-tracks li { font-size: 0.85rem; line-height: 1.6; color: var(--muted); }
+.gx-tracks a { color: var(--accent); text-decoration: none; }
+.gx-tracks a:hover { text-decoration: underline; color: var(--accent-2); }
+.gx-react-rel strong { color: #b4690e; }
 
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
@@ -917,6 +922,7 @@ body.is-teacher #gate { display: none; }
 .gx-sw.gx-f-teal   { background: #ccfbf1; border-color: #0d9488; }
 .gx-sw.gx-f-pink   { background: #fce7f3; border-color: #db2777; }
 .gx-sw.gx-f-green  { background: #dcfce7; border-color: #16a34a; }
+.gx-sw-line { width: 18px; height: 0; border-top: 2px dashed #e0a85a; display: inline-block; vertical-align: middle; }
 
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {

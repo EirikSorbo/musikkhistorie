@@ -22,24 +22,24 @@ export const GENEALOGY = [
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 470, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", d: "Storband-jazz som ble USAs danse- og popmusikk.", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
   { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 90, r: 5, p: ["country"], g: "Country", era: "1939", d: "Tradisjonsbundet country med virtuost strengespill.", t: ["Uncle Pen – Bill Monroe (1965)"] },
   { id: "honkytonk", l: "Honky tonk", f: "Honky tonk", fam: "amber", cx: 235, r: 5, p: ["country"], g: "Country", era: "1940-tallet", d: "Røff bar-country om drikking og hjertesorg, elektrisk forsterket.", t: ["Lovesick Blues – Hank Williams (1949)", "Your Cheatin' Heart – Hank Williams (1953)"] },
-  { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 470, r: 5, p: ["swing"], g: "Jazz", era: "1945", d: "Kunstnerisk opprør: jazzen går fra dansemusikk til lyttemusikk.", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
+  { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 470, r: 5, p: ["swing"], rx: ["swing"], g: "Jazz", era: "1945", d: "Kunstnerisk opprør mot kommersialisert swing: jazzen går fra dansemusikk til lyttemusikk.", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
   { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 650, r: 5, p: ["blues", "gospel"], g: "Afroamerikansk populærmusikk", era: "1940-tallet", d: "Blues + jazzens energi + gospelens vokal. Forløper for soul og rock.", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
   { id: "nashville", l: "Nashville", f: "Nashville-sound", fam: "amber", cx: 160, r: 6, p: ["honkytonk"], g: "Country", era: "1957", d: "Polert, pop-orientert country med strykere og kor.", t: ["Crazy – Patsy Cline (1961)", "Four Walls – Jim Reeves (1957)"] },
   { id: "chicagoblues", l: "Chicago blues", f: "Chicago blues", fam: "blue", cx: 310, r: 6, p: ["blues"], g: "Blues", era: "1948", d: "Elektrisk, råere byblues. Tente den britiske blues-bølgen og rocken.", t: ["Got My Mojo Workin' – Muddy Waters (1956)", "Call It Stormy Monday – T-Bone Walker (1948)"] },
-  { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 445, r: 6, p: ["bebop"], g: "Jazz", era: "1949", d: "Intellektuell motreaksjon: dempet, lyrisk, behersket.", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
-  { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 565, r: 6, p: ["bebop"], g: "Jazz", era: "1955", d: "Tilbake til røttene: blues- og gospel-drevet jazz.", t: ["Moanin' – Art Blakey (1959)"] },
+  { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 445, r: 6, p: ["bebop"], rx: ["bebop"], g: "Jazz", era: "1949", d: "Intellektuell motreaksjon mot bebop: dempet, lyrisk, behersket.", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
+  { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 565, r: 6, p: ["bebop"], rx: ["cool"], g: "Jazz", era: "1955", d: "Motreaksjon mot cool jazz — tilbake til de afroamerikanske røttene: blues- og gospel-drevet.", t: ["Moanin' – Art Blakey (1959)"] },
   { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 700, r: 6, p: ["gospel", "rnb"], g: "Afroamerikansk populærmusikk", era: "1959", d: "Gospel møter R&B. Lydsporet til borgerrettskampen.", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
   { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 445, r: 7, p: ["bebop"], g: "Jazz", era: "1958", d: "Frigjøring fra akkordene; bygd på skalaer og stemninger.", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
-  { id: "free", l: "Free jazz", f: "Free jazz", fam: "purple", cx: 565, r: 7, p: ["bebop"], g: "Jazz", era: "1960", d: "Frigjøring fra alt: kollektiv improvisasjon uten fast struktur.", t: ["Free Jazz – Ornette Coleman (1961)"] },
+  { id: "free", l: "Free jazz", f: "Free jazz", fam: "purple", cx: 565, r: 7, p: ["bebop"], rx: ["hardbop"], g: "Jazz", era: "1960", d: "Motreaksjon mot fast struktur (hard bop/modal): frigjøring fra alt, kollektiv improvisasjon.", t: ["Free Jazz – Ornette Coleman (1961)"] },
   { id: "funk", l: "Funk", f: "Funk", fam: "red", cx: 700, r: 7, p: ["soul"], g: "Afroamerikansk populærmusikk", era: "1967", d: "Alt destillert til rytme og groove. Peker mot hip-hop.", t: ["Papa's Got a Brand New Bag – James Brown", "Chameleon – Herbie Hancock (1973)"] },
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 840, r: 7, p: ["rnb"], g: "Afroamerikansk populærmusikk", era: "1968", d: "Jamaicansk off-beat med «riddim». Toasting → grunnlaget for rap.", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
-  { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 150, r: 8, p: ["honkytonk"], g: "Country", era: "1970-tallet", d: "Opprør mot Nashville: røffere uttrykk og kunstnerisk frihet.", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
+  { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 150, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", d: "Opprør mot det polerte Nashville-systemet: røffere uttrykk og kunstnerisk frihet.", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
   { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 490, r: 8, p: ["jazz", "funk"], g: "Jazz", era: "1970", d: "Jazz + rock + funk + verdens folkemusikk. Elektrisk og global.", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
   { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 915, r: 8, p: ["funk", "reggae"], g: "Afroamerikansk populærmusikk", era: "1973", d: "Bronx-kultur: DJ-ing, MC-ing, breakdance, graffiti. Beat over melodi.", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
   { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1040, r: 8, p: ["funk", "soul"], g: "Elektronisk musikk", era: "1974", d: "Four-on-the-floor fra klubbene. Vugge for all klubbmusikk.", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
   { id: "house", l: "House", f: "House", fam: "teal", cx: 985, r: 9, p: ["disco"], g: "Elektronisk musikk", era: "1980", d: "Disco gjenfødt på trommemaskin i Chicago-klubbene.", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles"] },
   { id: "techno", l: "Techno", f: "Techno", fam: "teal", cx: 1075, r: 9, p: ["house"], g: "Elektronisk musikk", era: "1985", d: "Detroits futuristiske, maskinelle svar på house.", t: ["Strings of Life – Derrick May", "Big Fun – Inner City"] },
-  { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 130, r: 10, p: ["country"], g: "Country", era: "1990-tallet", d: "Jordnær, kritikerhyllet motvekt til mainstream-Nashville.", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
+  { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 130, r: 10, p: ["country"], rx: ["nashville"], g: "Country", era: "1990-tallet", d: "Jordnær, kritikerhyllet motvekt til mainstream-Nashville.", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
   { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 700, r: 10, p: ["soul", "hiphop"], g: "Afroamerikansk populærmusikk", era: "1990-tallet", d: "Soul med hip-hop-mikrorytmikk og rike harmonier.", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
   { id: "trance", l: "Trance / DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1030, r: 10, p: ["techno", "house"], g: "Elektronisk musikk", era: "1990-tallet", d: "Rave-eksplosjonen: melodisk trance og høyt tempo drum'n'bass.", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
   { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 490, r: 11, p: ["fusion", "techno"], g: "Jazz", era: "1997", d: "Norsk fjelljazz møter electronica og drum'n'bass.", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
@@ -70,10 +70,12 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
   const panel = root.querySelector("#gx-info");
 
   const map = {}, kids = {};
-  GENEALOGY.forEach((n) => { n.y = RY[n.r]; map[n.id] = n; kids[n.id] = []; });
-  GENEALOGY.forEach((n) => n.p.forEach((p) => { if (kids[p]) kids[p].push(n.id); }));
+  GENEALOGY.forEach((n) => { n.y = RY[n.r]; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
+  // Alle foreldre = avstamning (p) + motreaksjon (rx)
+  const parentsOf = (n) => { const a = n.p.slice(); n.rx.forEach((id) => { if (!a.includes(id)) a.push(id); }); return a; };
+  GENEALOGY.forEach((n) => parentsOf(n).forEach((p) => { if (kids[p]) kids[p].push(n.id); }));
 
-  const anc = (id, s = {}) => { map[id].p.forEach((p) => { if (!s[p]) { s[p] = 1; anc(p, s); } }); return s; };
+  const anc = (id, s = {}) => { parentsOf(map[id]).forEach((p) => { if (!s[p]) { s[p] = 1; anc(p, s); } }); return s; };
   const desc = (id, s = {}) => { kids[id].forEach((c) => { if (!s[c]) { s[c] = 1; desc(c, s); } }); return s; };
   const descFor = (n) => {
     const o = subgenreDescs[n.f] || subgenreDescs[n.l];
@@ -95,13 +97,22 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     cam.appendChild(t);
   });
 
-  // Kanter
+  // Kanter — heltrukne = avstamning, stiplet = motreaksjon
   const edges = [];
-  GENEALOGY.forEach((n) => n.p.forEach((p) => {
-    const pa = map[p];
-    const x1 = pa.cx, y1 = pa.y + NH / 2, x2 = n.cx, y2 = n.y - NH / 2, ym = (y1 + y2) / 2;
-    const path = el("path", { d: `M${x1},${y1} C${x1},${ym} ${x2},${ym} ${x2},${y2}`, class: "gx-edge" });
-    path.dataset.p = p; path.dataset.c = n.id; path.dataset.fam = n.fam;
+  GENEALOGY.forEach((n) => parentsOf(n).forEach((pid) => {
+    const pa = map[pid];
+    const reaction = n.rx.includes(pid);
+    let d;
+    if (pa.r === n.r) {
+      // Samme tiår: bue under begge nodene
+      const y1 = pa.y + NH / 2, y2 = n.y + NH / 2, bow = 46;
+      d = `M${pa.cx},${y1} C${pa.cx},${y1 + bow} ${n.cx},${y2 + bow} ${n.cx},${y2}`;
+    } else {
+      const x1 = pa.cx, y1 = pa.y + NH / 2, x2 = n.cx, y2 = n.y - NH / 2, ym = (y1 + y2) / 2;
+      d = `M${x1},${y1} C${x1},${ym} ${x2},${ym} ${x2},${y2}`;
+    }
+    const path = el("path", { d, class: "gx-edge" + (reaction ? " gx-react" : "") });
+    path.dataset.p = pid; path.dataset.c = n.id; path.dataset.fam = n.fam; path.dataset.react = reaction ? "1" : "";
     cam.appendChild(path); edges.push(path);
   }));
 
@@ -126,7 +137,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
       const on = line[e.dataset.p] && line[e.dataset.c];
       e.classList.toggle("gx-hl", !!on);
       e.classList.toggle("gx-dim", !on);
-      e.style.stroke = on ? (FAM_STROKE[e.dataset.fam] || "") : "";
+      e.style.stroke = on ? (e.dataset.react ? "#d97706" : (FAM_STROKE[e.dataset.fam] || "")) : "";
     });
   }
   function clearLight() {
@@ -137,15 +148,23 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
   function showPanel(id) {
     const n = map[id];
     const inf = n.p.map((p) => escapeHtml(map[p].f)).join(", ") || "—";
-    const ch = kids[id].map((c) => escapeHtml(map[c].f)).join(", ") || "—";
-    const pl = n.t.length ? `<ul class="gx-tracks">${n.t.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>` : "";
+    const grewInto = GENEALOGY.filter((x) => x.p.includes(id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
+    const reactAgainst = n.rx.map((p) => escapeHtml(map[p].f));
+    const reactedBy = GENEALOGY.filter((x) => x.rx.includes(id)).map((x) => escapeHtml(x.f));
+    const pl = n.t.length
+      ? `<p class="gx-rel" style="margin-top:10px"><strong>Hør på YouTube:</strong></p>
+         <ul class="gx-tracks">${n.t.map((t) =>
+           `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(t)}" target="_blank" rel="noopener">${escapeHtml(t)}</a></li>`).join("")}</ul>`
+      : "";
     const btn = (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "";
     panel.innerHTML = `
       <h3>${escapeHtml(n.f)}</h3>
       <p class="gx-era">${escapeHtml(n.era)}</p>
       <p class="gx-desc">${escapeHtml(descFor(n))}</p>
       <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
-      <p class="gx-rel"><strong>Førte videre til:</strong> ${ch}</p>
+      ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
+      <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
+      ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
       ${pl}${btn}`;
     const b = panel.querySelector(".gx-artists-btn");
     if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
@@ -217,7 +236,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     const LEGEND = [["blue", "Blues"], ["amber", "Country"], ["purple", "Jazz"], ["red", "Gospel / soul / funk"], ["teal", "Disco / electronica"], ["pink", "Hip-hop"], ["green", "Reggae"], ["gray", "Røtter"]];
     legend.innerHTML = LEGEND.map(([fam, label]) =>
       `<div class="gx-leg"><span class="gx-sw gx-f-${fam}"></span>${escapeHtml(label)}</div>`
-    ).join("");
+    ).join("") + `<div class="gx-leg"><span class="gx-sw-line"></span>motreaksjon</div>`;
   }
 
   reset();
