@@ -92,11 +92,13 @@
     <div class="modal">
       <div class="modal-head">
         <h2 id="sgi-title"></h2>
-        <button id="sgi-edit-btn" class="btn ghost small" title="Rediger beskrivelse">✏️ Rediger</button>
         <button class="modal-close btn ghost small">✕</button>
       </div>
       <p id="sgi-desc"></p>
       <div id="sgi-artists"></div>
+      <div class="modal-foot-right">
+        <button id="sgi-edit-btn" class="btn ghost small" title="Rediger beskrivelse">✏️ Rediger</button>
+      </div>
     </div>
   </div>
 
@@ -354,16 +356,33 @@
         <h2 id="decade-single-title"></h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
-      <div class="add-grid" style="grid-template-columns:1fr">
-        <label>Samfunnsutvikling
-          <textarea id="ds-society" rows="4" placeholder="Beskriv samfunnsutvikling …"></textarea>
-        </label>
-        <label>Teknologiutvikling
-          <textarea id="ds-tech" rows="4" placeholder="Beskriv teknologiutvikling …"></textarea>
-        </label>
-        <div class="add-actions">
-          <button type="button" id="ds-save" class="btn primary">Lagre</button>
-          <span id="ds-msg" class="form-msg ok"></span>
+      <!-- Visnings-modus -->
+      <div id="ds-view">
+        <div class="info-section">
+          <h4 class="info-label">Samfunnsutvikling</h4>
+          <p id="ds-society-text" class="info-text"></p>
+        </div>
+        <div class="info-section">
+          <h4 class="info-label">Teknologiutvikling</h4>
+          <p id="ds-tech-text" class="info-text"></p>
+        </div>
+        <div class="modal-foot-right">
+          <button type="button" id="ds-to-edit" class="btn ghost small">✏️ Rediger</button>
+        </div>
+      </div>
+      <!-- Redigerings-modus -->
+      <div id="ds-edit" style="display:none">
+        <div class="add-grid" style="grid-template-columns:1fr">
+          <label>Samfunnsutvikling
+            <textarea id="ds-society" rows="5" placeholder="Beskriv samfunnsutvikling …"></textarea>
+          </label>
+          <label>Teknologiutvikling
+            <textarea id="ds-tech" rows="5" placeholder="Beskriv teknologiutvikling …"></textarea>
+          </label>
+          <div class="add-actions">
+            <button type="button" id="ds-save" class="btn primary">Lagre</button>
+            <span id="ds-msg" class="form-msg ok"></span>
+          </div>
         </div>
       </div>
     </div>

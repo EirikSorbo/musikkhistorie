@@ -407,7 +407,7 @@ textarea { resize: vertical; }
   border-radius: 100px;
   color: var(--muted);
 }
-.tag.tag-sub { color: var(--accent-2); background: #ecfdf5; border-color: #a7f3d0; font-style: italic; }
+.tag.tag-sub { color: var(--accent-2); background: #ecfdf5; border-color: #a7f3d0; }
 button.tag { cursor: pointer; font-family: inherit; line-height: inherit; }
 button.tag:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
 button.tag.tag-sub:hover { border-color: var(--accent-2); }
@@ -525,6 +525,11 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
   margin-bottom: 22px;
 }
 .modal-head h2 { margin: 0; font-size: 1.1rem; }
+.modal-foot-right { display: flex; justify-content: flex-end; margin-top: 20px; }
+
+.info-section { margin-bottom: 18px; }
+.info-label { margin: 0 0 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.info-text { margin: 0; line-height: 1.65; white-space: pre-wrap; }
 
 /* ----- Tannhjul i header (lærer) ----- */
 .gear-btn { font-size: 1.4rem; line-height: 1; padding: 4px 8px; }

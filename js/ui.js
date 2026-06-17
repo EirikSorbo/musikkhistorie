@@ -60,8 +60,9 @@ export function renderDashboard(el, { artists, config }) {
         <div class="stat-label">Fjernet / utstemt</div>
       </div>
       <div class="stat-card">
-        <button class="stat-num stat-link" id="btn-subgenre-list">${subgenreCount}</button>
+        <div class="stat-num">${subgenreCount}</div>
         <div class="stat-label">Undersjangre</div>
+        <button class="btn ghost small" id="btn-subgenre-list" style="margin-top:8px">Vis alle</button>
       </div>
       <div class="stat-card stat-wide">
         <div class="stat-label">Kjønnsfordeling (aktive)</div>

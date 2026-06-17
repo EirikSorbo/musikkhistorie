@@ -256,14 +256,32 @@ function openSingleDecadeModal(decadeId) {
   const desc = state.decadeDescs[String(decadeId)] || {};
   const modal = $("#modal-decade-single");
   $("#decade-single-title").textContent = `${decadeId}-tallet`;
+
+  const noText = "Ingen beskrivelse ennå.";
+  const societyText = $("#ds-society-text");
+  const techText = $("#ds-tech-text");
+  societyText.textContent = desc.society || noText;
+  societyText.className = "info-text" + (desc.society ? "" : " muted");
+  techText.textContent = desc.tech || noText;
+  techText.className = "info-text" + (desc.tech ? "" : " muted");
+
   $("#ds-society").value = desc.society || "";
   $("#ds-tech").value = desc.tech || "";
   $("#ds-msg").textContent = "";
+
+  $("#ds-view").style.display = "";
+  $("#ds-edit").style.display = "none";
+
   modal.dataset.decade = decadeId;
   openModal("modal-decade-single");
 }
 
 function setupDecadeSingleSave() {
+  $("#ds-to-edit").addEventListener("click", () => {
+    $("#ds-view").style.display = "none";
+    $("#ds-edit").style.display = "";
+  });
+
   $("#ds-save").addEventListener("click", async () => {
     const modal = $("#modal-decade-single");
     const decadeId = modal.dataset.decade;
@@ -274,7 +292,20 @@ function setupDecadeSingleSave() {
       await saveDecadeDesc(decadeId, { society, tech });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
-      setTimeout(() => closeModal("modal-decade-single"), 800);
+
+      const noText = "Ingen beskrivelse ennå.";
+      const societyText = $("#ds-society-text");
+      const techText = $("#ds-tech-text");
+      societyText.textContent = society || noText;
+      societyText.className = "info-text" + (society ? "" : " muted");
+      techText.textContent = tech || noText;
+      techText.className = "info-text" + (tech ? "" : " muted");
+
+      setTimeout(() => {
+        $("#ds-view").style.display = "";
+        $("#ds-edit").style.display = "none";
+        msg.textContent = "";
+      }, 800);
     } catch (err) {
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";
