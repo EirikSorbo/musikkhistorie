@@ -254,7 +254,7 @@ export function subscribeDecades(callback) {
     const decades = {};
     snapshot.docs.forEach((d) => { decades[d.id] = { id: d.id, ...d.data() }; });
     callback(decades);
-  });
+  }, (err) => console.error("Kunne ikke lese tiårsbeskrivelser (sjekk Firestore-regler):", err.message));
 }
 
 export function subscribeSubgenres(callback) {
@@ -262,7 +262,7 @@ export function subscribeSubgenres(callback) {
     const subs = {};
     snapshot.docs.forEach((d) => { subs[d.id] = { id: d.id, ...d.data() }; });
     callback(subs);
-  });
+  }, (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
 }
 
 export async function saveDecadeDesc(decadeId, data) {

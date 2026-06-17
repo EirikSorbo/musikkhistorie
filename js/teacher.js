@@ -647,14 +647,24 @@ function setupImportChoice() {
 }
 
 async function importDescriptions({ decades, subgenres }) {
-  let count = 0;
+  let ok = 0, fail = 0;
   for (const [id, data] of Object.entries(decades || {})) {
-    if (data.society || data.music) { await saveDecadeDesc(id, data); count++; }
+    if (data.society || data.tech) {
+      try { await saveDecadeDesc(id, data); ok++; }
+      catch (e) { fail++; console.error("Tiår-import feilet for", id, e); }
+    }
   }
   for (const [id, data] of Object.entries(subgenres || {})) {
-    if (data.description) { await saveSubgenreDesc(id, data); count++; }
+    if (data.description) {
+      try { await saveSubgenreDesc(id, data); ok++; }
+      catch (e) { fail++; console.error("Sjanger-import feilet for", id, e); }
+    }
   }
-  if (count) alert(`${count} beskrivelser importert.`);
+  if (fail > 0) {
+    alert(`⚠️ ${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'subgenres' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+  } else if (ok > 0) {
+    alert(`${ok} beskrivelse(r) importert.`);
+  }
 }
 
 async function handleReplace(data) {
