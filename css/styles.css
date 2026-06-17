@@ -116,6 +116,7 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
   color: #164e2a;
 }
 .banner.show { display: block; }
+.banner.banner-error { display: block; background: #fef2f2; border-color: #fca5a5; color: #7f1d1d; }
 .banner code {
   background: #fff;
   border: 1px solid var(--line);

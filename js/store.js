@@ -63,11 +63,13 @@ export function subscribeArtists(callback) {
   return onSnapshot(artistsCol, (snapshot) => {
     const artists = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     callback(artists);
+  }, (err) => {
+    console.error("🔴 Kunne ikke lese artister – sjekk Firestore-regler:", err.code, err.message);
+    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
   });
 }
 
 // Lytter på konfigurasjon. Bruker standardgrenser til læreren lagrer egne.
-// (Vi skriver ikke her – config-skriving krever lærer-innlogging.)
 export function subscribeConfig(callback) {
   return onSnapshot(configRef, (snap) => {
     if (!snap.exists()) {
@@ -75,6 +77,9 @@ export function subscribeConfig(callback) {
     } else {
       callback({ ...DEFAULT_CONFIG, ...snap.data() });
     }
+  }, (err) => {
+    console.error("🔴 Kunne ikke lese konfig – sjekk Firestore-regler:", err.code, err.message);
+    callback({ ...DEFAULT_CONFIG });
   });
 }
 

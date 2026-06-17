@@ -308,6 +308,15 @@ function init() {
     renderList();
   }
 
+  document.addEventListener("firestore-error", (e) => {
+    const banner = $("#banner");
+    if (banner) {
+      banner.textContent = `⚠️ Kunne ikke laste data fra databasen (${e.detail?.code || "ukjent feil"}). Firestore-reglene tillater trolig ikke lesing uten innlogging. Publiser oppdaterte regler i Firebase Console.`;
+      banner.className = "banner banner-error";
+      banner.style.display = "block";
+    }
+  });
+
   subscribeConfig((config) => {
     state.config = config;
     refreshFilterControls();
