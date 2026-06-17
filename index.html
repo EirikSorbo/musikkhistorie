@@ -51,6 +51,7 @@
       <div class="explore-btns">
         <button class="btn ghost" id="btn-context">Kontekst</button>
         <button class="btn ghost" id="btn-genres">Sjangere</button>
+        <button class="btn ghost" id="btn-genealogy">Slektstre</button>
       </div>
     </section>
 
@@ -106,6 +107,20 @@
       </div>
       <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
       <div id="sl-chips" class="subgenre-tag-list"></div>
+    </div>
+  </div>
+
+  <!-- Slektstre -->
+  <div class="modal-backdrop" id="modal-genealogy">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Slektstre</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Tid løper nedover. Trykk på en sjanger for å lyse opp slektslinjen — hvor den kom fra og hva den førte til.</p>
+      <svg id="gx-svg" viewBox="0 0 680 992" width="100%" role="img" aria-label="Slektstre over sjangrene"></svg>
+      <div class="gx-info" id="gx-info"></div>
+      <div class="gx-legend" id="gx-legend"></div>
     </div>
   </div>
 

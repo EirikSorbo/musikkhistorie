@@ -838,6 +838,58 @@ body.is-teacher #gate { display: none; }
   .card-foot { gap: 8px; }
 }
 
+/* ===========================================================================
+   Slektstre (genealogy)
+   =========================================================================== */
+#gx-svg { display: block; width: 100%; height: auto; }
+
+.gx-edge { stroke: #c2cfc7; stroke-width: 1; opacity: 0.45; fill: none; transition: opacity 0.15s, stroke-width 0.15s; }
+.gx-edge.gx-hl { opacity: 1; stroke-width: 2.2; }
+
+.gx-node { cursor: pointer; }
+.gx-node rect { stroke-width: 1; transition: opacity 0.15s; }
+.gx-node text { font-size: 12px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
+.gx-node.gx-sel rect { stroke-width: 2.5; }
+.gx-dim { opacity: 0.16; }
+.gx-rowlab { font-size: 11px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
+
+.gx-f-gray rect   { fill: #e7ebe8; stroke: #9bada1; } .gx-f-gray text   { fill: #3a4a40; }
+.gx-f-blue rect   { fill: #dbeafe; stroke: #3b82f6; } .gx-f-blue text   { fill: #1e3a8a; }
+.gx-f-amber rect  { fill: #fef3c7; stroke: #d97706; } .gx-f-amber text  { fill: #7c2d12; }
+.gx-f-purple rect { fill: #ede9fe; stroke: #7c3aed; } .gx-f-purple text { fill: #4c1d95; }
+.gx-f-red rect    { fill: #fee2e2; stroke: #dc2626; } .gx-f-red text    { fill: #7f1d1d; }
+.gx-f-teal rect   { fill: #ccfbf1; stroke: #0d9488; } .gx-f-teal text   { fill: #134e4a; }
+.gx-f-pink rect   { fill: #fce7f3; stroke: #db2777; } .gx-f-pink text   { fill: #831843; }
+.gx-f-green rect  { fill: #dcfce7; stroke: #16a34a; } .gx-f-green text  { fill: #14532d; }
+
+.gx-info {
+  margin-top: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  min-height: 70px;
+}
+.gx-info h3 { margin: 0 0 2px; font-size: 1.05rem; }
+.gx-era { font-size: 0.8rem; color: var(--muted-2); margin: 0 0 8px; }
+.gx-desc { font-size: 0.92rem; line-height: 1.55; margin: 0 0 10px; color: var(--text); }
+.gx-rel { font-size: 0.85rem; color: var(--muted); margin: 0 0 4px; }
+.gx-rel strong { color: var(--text); font-weight: 600; }
+.gx-tracks { margin: 8px 0 12px; padding-left: 18px; }
+.gx-tracks li { font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+
+.gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; }
+.gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
+.gx-sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid; }
+.gx-sw.gx-f-gray   { background: #e7ebe8; border-color: #9bada1; }
+.gx-sw.gx-f-blue   { background: #dbeafe; border-color: #3b82f6; }
+.gx-sw.gx-f-amber  { background: #fef3c7; border-color: #d97706; }
+.gx-sw.gx-f-purple { background: #ede9fe; border-color: #7c3aed; }
+.gx-sw.gx-f-red    { background: #fee2e2; border-color: #dc2626; }
+.gx-sw.gx-f-teal   { background: #ccfbf1; border-color: #0d9488; }
+.gx-sw.gx-f-pink   { background: #fce7f3; border-color: #db2777; }
+.gx-sw.gx-f-green  { background: #dcfce7; border-color: #16a34a; }
+
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {
   .brand h1 { font-size: 0.95rem; }
