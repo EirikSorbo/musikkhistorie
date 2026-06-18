@@ -931,10 +931,10 @@ body.is-teacher #gate { display: none; }
 
 /* Spilleliste-popup */
 .pl-list { margin: 0 0 4px; padding-left: 16px; list-style: disc; }
-.pl-item { font-size: 0.88rem; line-height: 2.2; }
+.pl-item { font-size: 0.88rem; line-height: 2.4; }
 .pl-item a { color: var(--accent); text-decoration: none; }
 .pl-item a:hover { text-decoration: underline; }
-.tag.tag-pl { font-size: 0.72rem; padding: 1px 6px; vertical-align: middle; }
+.tag.tag-pl { font-size: 0.7rem; padding: 0 5px; vertical-align: middle; line-height: 1.5; }
 
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }

@@ -238,12 +238,18 @@ function openDecadeView(decadeId) {
 function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
+  const genreSet = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
   const allSubs = [...new Set(
     state.artists.filter((a) => a.status === "active").flatMap((a) => a.subgenres || [])
   )].sort((a, b) => a.localeCompare(b, "no"));
   const el = document.getElementById("sl-chips");
   el.innerHTML = allSubs.length
-    ? allSubs.map((s) => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    ? allSubs.map((s) => {
+        const isSjanger = genreSet.has(s.toLowerCase());
+        const attr = isSjanger ? `data-sjanger="${escapeHtml(s)}"` : `data-under="${escapeHtml(s)}"`;
+        const cls = isSjanger ? "tag tag-sjanger" : "tag tag-under";
+        return `<button class="${cls}" ${attr}>${escapeHtml(s)}</button>`;
+      }).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
   modalOpen(modal);
 }
