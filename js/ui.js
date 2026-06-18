@@ -30,15 +30,45 @@ export function modalCloseTop() {
   modalClose(open[open.length - 1]);
 }
 
-// Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre) fra subgenres.
+// Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).
 function genreTags(a) {
-  const subs = a.subgenres || [];
-  const sjanger = subs.filter((s) => SJANGER_SET.has(s.toLowerCase()));
-  const under = subs.filter((s) => !SJANGER_SET.has(s.toLowerCase()));
+  const sjanger = Array.isArray(a.sjangre) ? a.sjangre : [];
+  const under = Array.isArray(a.undersjangre) ? a.undersjangre : [];
   return [
     ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
     ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
   ].join("");
+}
+
+function keyWorksText(works) {
+  if (!Array.isArray(works) || !works.length) return "";
+  return works.map((w) => {
+    const t = escapeHtml(w.title || "");
+    const y = w.year ? ` (${w.year})` : "";
+    return w.url
+      ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${t}</a>${y}`
+      : `${t}${y}`;
+  }).join(", ");
+}
+
+function kilderHtml(kilder) {
+  if (!Array.isArray(kilder) || !kilder.length) return "";
+  const items = kilder.map((k) => {
+    const text = escapeHtml(k.text || "");
+    return k.url
+      ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${text}</a></li>`
+      : `<li>${text}</li>`;
+  }).join("");
+  return `<div class="kilder"><strong>Kilder:</strong><ul>${items}</ul></div>`;
+}
+
+function artistImage(a, big = false) {
+  if (!a.imageUrl) return "";
+  const credit = a.imageCredit ? `<span class="image-credit">${escapeHtml(a.imageCredit)}</span>` : "";
+  return `<figure class="artist-image ${big ? "big" : ""}">
+    <img src="${escapeHtml(a.imageUrl)}" alt="${escapeHtml(a.name)}" loading="lazy" />
+    ${credit}
+  </figure>`;
 }
 
 export function escapeHtml(str) {
@@ -67,7 +97,7 @@ export function renderDashboard(el, { artists, config }) {
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => a.status === "removed").length;
   const subgenreCount = new Set(
-    artists.filter(a => a.status === "active").flatMap(a => a.subgenres || [])
+    artists.filter(a => a.status === "active").flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
   ).size;
 
   el.innerHTML = `
@@ -230,16 +260,18 @@ export function renderArtistDetail(el, artist, config) {
   const links = (a.links || [])
     .map((l) => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || "Lytt")}</a>`)
     .join("");
+  const worksHtml = keyWorksText(a.keyWorks);
   el.innerHTML = `
+    ${artistImage(a, true)}
     ${factsLines(a)}
     <div class="meta" style="margin-bottom:12px">
       ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
       ${genreTags(a)}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
-    ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
+    ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
     ${links ? `<div class="links">${links}</div>` : ""}
-    ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${a.kilder.map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
+    ${kilderHtml(a.kilder)}
   `;
 }
 
@@ -262,10 +294,12 @@ function spotlightCard(a, config) {
         </a>`
     )
     .join("");
+  const worksHtml = keyWorksText(a.keyWorks);
 
   return `
     <article class="card">
       <header class="card-head">
+        ${artistImage(a)}
         <h3>${escapeHtml(a.name)}</h3>
         ${factsLines(a)}
         <div class="meta">
@@ -274,9 +308,9 @@ function spotlightCard(a, config) {
         </div>
       </header>
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
-      ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
+      ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${links ? `<div class="links">${links}</div>` : ""}
-      ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${(a.kilder).map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
+      ${kilderHtml(a.kilder)}
     </article>
   `;
 }
@@ -291,7 +325,9 @@ export function renderArtists(el, state) {
   }
   if (filters.sjanger) {
     const sj = filters.sjanger.toLowerCase();
-    list = list.filter((a) => a.genre === filters.sjanger || (a.subgenres || []).some((s) => s.toLowerCase() === sj));
+    list = list.filter((a) => a.genre === filters.sjanger
+      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
+      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj));
   }
   if (filters.genre) list = list.filter((a) => a.genre === filters.genre);
   if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
@@ -301,7 +337,7 @@ export function renderArtists(el, state) {
   }
   if (filters.subgenre) {
     const sg = filters.subgenre;
-    list = list.filter((a) => (a.subgenres || []).includes(sg));
+    list = list.filter((a) => (a.undersjangre || []).includes(sg) || (a.sjangre || []).includes(sg));
   }
   if (filters.search) {
     const q = filters.search.toLowerCase();
@@ -309,7 +345,8 @@ export function renderArtists(el, state) {
       (a) =>
         a.name.toLowerCase().includes(q) ||
         (a.geography || "").toLowerCase().includes(q) ||
-        (a.subgenres || []).some(s => s.toLowerCase().includes(q))
+        (a.sjangre || []).some(s => s.toLowerCase().includes(q)) ||
+        (a.undersjangre || []).some(s => s.toLowerCase().includes(q))
     );
   }
 
@@ -384,9 +421,12 @@ function artistCard(a, { isTeacher, clientId, config }) {
       </div>`;
   }
 
+  const worksHtml = keyWorksText(a.keyWorks);
+
   return `
     <article class="card ${removed ? "is-removed" : ""} ${vetoed ? "is-vetoed" : ""}">
       <header class="card-head">
+        ${artistImage(a)}
         <div>
           <h3>${escapeHtml(a.name)} ${removedBadge} ${vetoBadge}</h3>
           ${factsLines(a, { showGender: isTeacher })}
@@ -398,9 +438,9 @@ function artistCard(a, { isTeacher, clientId, config }) {
       </header>
 
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
-      ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
+      ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${links ? `<div class="links">${links}</div>` : ""}
-      ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${(a.kilder).map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
+      ${kilderHtml(a.kilder)}
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
@@ -490,9 +530,8 @@ export function buildArtistListRows(list) {
     const years = a.influenceStart
       ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
       : "";
-    const subs = a.subgenres || [];
-    const sjanger = subs.filter((s) => SJANGER_SET.has(s.toLowerCase()));
-    const under = subs.filter((s) => !SJANGER_SET.has(s.toLowerCase()));
+    const sjanger = Array.isArray(a.sjangre) ? a.sjangre : [];
+    const under = Array.isArray(a.undersjangre) ? a.undersjangre : [];
     const tags = [
       ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
       ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
@@ -509,23 +548,27 @@ export function buildArtistListRows(list) {
 }
 
 // Bygger HTML for spilleliste-popup: keyWorks/lenker fra artister, med sjanger-tag per rad.
-// "Fra sjangerbeskrivelsen"-seksjonen er fjernet — kun artisttilknyttede eksempler vises.
 export function buildPlaylistHtml(node, artists) {
   const enc = encodeURIComponent;
   const sj = (node.l || "").toLowerCase();
   const ytLink = (q, text) =>
     `<a href="https://www.youtube.com/results?search_query=${enc(q)}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
 
+  const matchesSj = (a) => {
+    if (a.genre === node.l) return true;
+    const all = [...(a.sjangre || []), ...(a.undersjangre || [])];
+    return all.some((s) => String(s).toLowerCase() === sj);
+  };
+
   const genreArtists = (artists || [])
-    .filter((a) => a.status === "active" && (a.genre === node.l || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
+    .filter((a) => a.status === "active" && matchesSj(a))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   const seen = new Set();
   const items = genreArtists.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
-    const sjangerTag = (a.subgenres || [])
-      .filter((s) => SJANGER_SET.has(s.toLowerCase()))
+    const sjangerTag = (a.sjangre || [])
       .map((s) => `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
       .join("");
     (a.links || []).forEach((l) => {
@@ -534,11 +577,17 @@ export function buildPlaylistHtml(node, artists) {
       seen.add(key);
       rows.push(`<li class="pl-item"><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || l.url)}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
     });
-    (a.keyWorks || "").split(",").map((s) => s.trim()).filter(Boolean).forEach((w) => {
-      const key = `${nameLow}|${w.toLowerCase()}`;
+    (a.keyWorks || []).forEach((w) => {
+      const title = w.title || "";
+      if (!title) return;
+      const key = `${nameLow}|${title.toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
-      rows.push(`<li class="pl-item">${ytLink(`${w} ${a.name}`, w)} <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
+      const yr = w.year ? ` <span class="muted">(${w.year})</span>` : "";
+      const link = w.url
+        ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>`
+        : ytLink(`${title} ${a.name}`, title);
+      rows.push(`<li class="pl-item">${link}${yr} <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
     });
     return rows;
   });

@@ -14,7 +14,11 @@ let lastSjangerLabel = null;
 function showArtistsForGenre({ label }) {
   const sj = label.toLowerCase();
   const list = artists
-    .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
+    .filter((a) => a.status === "active" && (
+      a.genre === label
+      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
+      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
+    ))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   document.getElementById("al-title").textContent = `${label} (${list.length})`;

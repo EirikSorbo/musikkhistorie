@@ -28,6 +28,53 @@ import {
 
 import { firebaseConfig } from "./firebase-config.js";
 import { DEFAULT_CONFIG } from "./limits.js";
+import { GENEALOGY_GENRES } from "./genealogy.js";
+
+const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
+
+// Normaliserer rå Firestore-data til intern ny modell.
+// Idempotent — kan kjøres på data som allerede er i ny form.
+export function normalizeArtist(a) {
+  const out = { ...a };
+
+  // sjangre + undersjangre: del opp `subgenres` hvis ikke allerede satt
+  if (!Array.isArray(out.sjangre) && !Array.isArray(out.undersjangre)) {
+    const subs = Array.isArray(out.subgenres) ? out.subgenres : [];
+    out.sjangre = subs.filter((s) => SJANGER_SET.has(String(s).toLowerCase()));
+    out.undersjangre = subs.filter((s) => !SJANGER_SET.has(String(s).toLowerCase()));
+  } else {
+    out.sjangre = Array.isArray(out.sjangre) ? out.sjangre : [];
+    out.undersjangre = Array.isArray(out.undersjangre) ? out.undersjangre : [];
+  }
+  // For bakoverkompatibilitet i kode som leser begge:
+  out.subgenres = [...out.sjangre, ...out.undersjangre];
+
+  // keyWorks: streng → array av {title, year?, url?}
+  if (typeof out.keyWorks === "string") {
+    out.keyWorks = out.keyWorks
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((title) => ({ title }));
+  } else if (!Array.isArray(out.keyWorks)) {
+    out.keyWorks = [];
+  }
+
+  // kilder: array av strenger → array av {text, url?}
+  if (Array.isArray(out.kilder)) {
+    out.kilder = out.kilder.map((k) =>
+      typeof k === "string" ? { text: k } : { text: k.text || "", url: k.url || "" }
+    ).filter((k) => k.text);
+  } else {
+    out.kilder = [];
+  }
+
+  // Bilder
+  out.imageUrl = out.imageUrl || "";
+  out.imageCredit = out.imageCredit || "";
+
+  return out;
+}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -61,7 +108,7 @@ export function getClientId() {
 // Lytter på alle artister. Kaller callback hver gang noe endres.
 export function subscribeArtists(callback) {
   return onSnapshot(artistsCol, (snapshot) => {
-    const artists = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const artists = snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
     callback(artists);
   }, (err) => {
     console.error("Kunne ikke lese artister – sjekk Firestore-regler:", err.code, err.message);
@@ -106,24 +153,28 @@ export function signOutTeacher() {
 //  STUDENTHANDLINGER
 // ----------------------------------------------------------------------------
 
-// Legg inn et nytt forslag
+// Legg inn et nytt forslag. Normaliserer inn til ny modell før skriving.
 export async function addArtist(data) {
+  const n = normalizeArtist(data);
   return addDoc(artistsCol, {
-    name: data.name,
-    birthYear: data.birthYear ?? null,
-    deathYear: data.deathYear ?? null,
-    gender: data.gender,
-    genre: data.genre,
-    instrument: data.instrument ?? "",
-    subgenres: data.subgenres ?? [],
-    influenceStart: data.influenceStart ?? null,
-    influenceEnd: data.influenceEnd ?? null,
-    description: data.description ?? "",
-    keyWorks: data.keyWorks ?? "",
-    geography: data.geography ?? "",
-    links: data.links ?? [],
-    kilder: data.kilder ?? [],
-    proposedBy: data.proposedBy ?? "Anonym",
+    name: n.name,
+    birthYear: n.birthYear ?? null,
+    deathYear: n.deathYear ?? null,
+    gender: n.gender,
+    genre: n.genre,
+    instrument: n.instrument ?? "",
+    sjangre: n.sjangre,
+    undersjangre: n.undersjangre,
+    influenceStart: n.influenceStart ?? null,
+    influenceEnd: n.influenceEnd ?? null,
+    description: n.description ?? "",
+    keyWorks: n.keyWorks,
+    kilder: n.kilder,
+    imageUrl: n.imageUrl,
+    imageCredit: n.imageCredit,
+    geography: n.geography ?? "",
+    links: n.links ?? [],
+    proposedBy: n.proposedBy ?? "Anonym",
     status: "active",
     removedBy: null,
     teacherProtected: false,

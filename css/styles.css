@@ -397,6 +397,30 @@ textarea { resize: vertical; }
 }
 
 .card-head h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.artist-image {
+  float: right;
+  margin: 0 0 10px 14px;
+  width: 110px;
+  max-width: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.artist-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+.artist-image.big { width: 180px; max-width: 50%; }
+.image-credit {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
+}
 .meta { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
   font-size: 0.74rem;
@@ -446,7 +470,12 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .kilder ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 
 .source-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.source-row .source-text { flex: 1; }
+.source-row .source-text { flex: 1.4; }
+.source-row .source-url { flex: 1; }
+.work-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.work-row .work-title { flex: 1.4; }
+.work-row .work-year { flex: 0 0 90px; }
+.work-row .work-url { flex: 1; }
 
 .card-foot {
   display: flex;
@@ -846,9 +875,13 @@ body.is-teacher #gate { display: none; }
   .result-name { min-width: 110px; }
   .result-work { display: none; }
 
-  /* Skjema: lenke- og kilderader stables vertikalt */
+  /* Skjema: lenke-, verk- og kilderader stables vertikalt */
   .link-row { flex-direction: column; }
   .source-row { flex-direction: column; }
+  .work-row { flex-direction: column; }
+  .work-row .work-year { flex: 1; }
+  .artist-image { float: none; max-width: 100%; margin: 0 0 12px; }
+  .artist-image.big { max-width: 100%; }
 
   /* Kortets bunntekst */
   .spacer { display: none; }

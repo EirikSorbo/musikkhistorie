@@ -317,14 +317,25 @@
         <label>Innflytelse til (år)
           <input type="number" id="ed-end" min="1800" max="2030" />
         </label>
-        <label class="full">Undersjangre / tags
-          <input type="text" id="ed-subgenres" placeholder="kommaseparert" />
+        <label class="full">Sjangre (fra slektstreet, kommaseparert)
+          <input type="text" id="ed-sjangre" placeholder="f.eks. Blues, Jazz" />
+        </label>
+        <label class="full">Undersjangre / tags (frie, kommaseparert)
+          <input type="text" id="ed-undersjangre" placeholder="f.eks. Delta blues, Akustisk blues" />
         </label>
         <label class="full">Begrunnelse / hvorfor relevant
           <textarea id="ed-desc" rows="2"></textarea>
         </label>
-        <label class="full">Sentrale verk / album
-          <input type="text" id="ed-works" />
+        <div class="full">
+          <span class="field-label">Sentrale verk</span>
+          <div id="ed-work-rows"></div>
+          <button type="button" id="ed-add-work" class="btn ghost small">+ Legg til verk</button>
+        </div>
+        <label class="full">Bilde-URL
+          <input type="url" id="ed-image-url" placeholder="https://..." />
+        </label>
+        <label class="full">Bildekreditering / kilde
+          <input type="text" id="ed-image-credit" placeholder="f.eks. Wikipedia / CC BY-SA 4.0" />
         </label>
         <div class="full">
           <span class="field-label">Lenker til musikkeksempler</span>
@@ -450,6 +461,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=157"></script>
+  <script type="module" src="js/teacher.js?v=160"></script>
 </body>
 </html>

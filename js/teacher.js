@@ -142,7 +142,7 @@ function toggleSubgenreExpand() {
   if (expand) { expand.remove(); return; }
 
   const allSubs = [...new Set(
-    state.artists.filter(a => a.status === "active").flatMap(a => a.subgenres || [])
+    state.artists.filter(a => a.status === "active").flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
 
   if (!allSubs.length) return;
@@ -203,7 +203,7 @@ function openSubgenreInfo(subgenreId) {
   $("#sgi-desc").className = desc?.description ? "" : "muted";
 
   const artists = state.artists
-    .filter(a => a.status === "active" && (a.subgenres || []).includes(subgenreId))
+    .filter(a => a.status === "active" && ((a.undersjangre || []).includes(subgenreId) || (a.sjangre || []).includes(subgenreId)))
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
   const el = $("#sgi-artists");
@@ -328,7 +328,7 @@ function refreshControls() {
   );
   fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
   const allSubs = [...new Set(
-    (state.artists || []).flatMap((a) => a.subgenres || [])
+    (state.artists || []).flatMap((a) => [...(a.sjangre || []), ...(a.undersjangre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
   fillSelect($("#f-subgenre"), allSubs, { placeholder: "Alle undersjangre" });
   if (state.filters.sjanger)  $("#f-sjanger").value = state.filters.sjanger;
@@ -531,7 +531,11 @@ function showArtistsForInstrument(instrument) {
 function showArtistsForSjanger({ label }) {
   const sj = label.toLowerCase();
   const list = state.artists
-    .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
+    .filter((a) => a.status === "active" && (
+      a.genre === label
+      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
+      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
+    ))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   document.getElementById("al-title").textContent = `${label} (${list.length})`;
   const body = document.getElementById("al-body");
@@ -606,16 +610,19 @@ function startApp() {
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "genre", "instrument",
-  "subgenres", "influenceStart", "influenceEnd", "geography",
-  "description", "keyWorks", "links", "kilder", "proposedBy",
+  "sjangre", "undersjangre", "influenceStart", "influenceEnd", "geography",
+  "description", "keyWorks", "links", "kilder",
+  "imageUrl", "imageCredit", "proposedBy",
 ];
 
 const MERGE_LABELS = {
   birthYear: "Fødselsår", deathYear: "Dødsår", gender: "Kjønn",
-  genre: "Sjanger", instrument: "Instrument", subgenres: "Undersjangre",
+  genre: "Metasjanger", instrument: "Instrument",
+  sjangre: "Sjangre", undersjangre: "Undersjangre",
   influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
   geography: "Geografi", description: "Beskrivelse",
   keyWorks: "Sentrale verk", links: "Lenker", kilder: "Kilder",
+  imageUrl: "Bilde-URL", imageCredit: "Bildekreditering",
 };
 
 const COMPARE_FIELDS = Object.keys(MERGE_LABELS);
@@ -921,10 +928,12 @@ function openEditModal(artistId) {
   $("#ed-geo").value = a.geography || "";
   $("#ed-start").value = a.influenceStart || "";
   $("#ed-end").value = a.influenceEnd || "";
-  $("#ed-subgenres").value = (a.subgenres || []).join(", ");
+  $("#ed-sjangre").value = (a.sjangre || []).join(", ");
+  $("#ed-undersjangre").value = (a.undersjangre || []).join(", ");
   $("#ed-desc").value = a.description || "";
-  $("#ed-works").value = a.keyWorks || "";
   $("#ed-by").value = a.proposedBy || "";
+  $("#ed-image-url").value = a.imageUrl || "";
+  $("#ed-image-credit").value = a.imageCredit || "";
 
   fillSelect($("#ed-gender"), GENDERS_EDIT, { placeholder: "Velg kjønn …" });
   $("#ed-gender").value = a.gender || "";
@@ -934,6 +943,7 @@ function openEditModal(artistId) {
   $("#ed-instrument").value = a.instrument || "";
 
   buildEditLinkRows(a.links || []);
+  buildEditWorkRows(a.keyWorks || []);
   buildEditSourceRows(a.kilder || []);
 
   $("#ed-msg").textContent = "";
@@ -964,18 +974,39 @@ function addEditLinkRow(label = "", url = "") {
 function buildEditSourceRows(kilder) {
   const wrap = $("#ed-source-rows");
   wrap.innerHTML = "";
-  kilder.forEach((k) => addEditSourceRow(k));
+  (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addEditSourceRow(k.text || "", k.url || ""));
 }
 
-function addEditSourceRow(text = "") {
+function addEditSourceRow(text = "", url = "") {
   const wrap = $("#ed-source-rows");
   const row = document.createElement("div");
   row.className = "source-row";
   row.innerHTML = `
     <input type="text" class="source-text" placeholder="Kilde …" value="${escapeHtml(text)}">
+    <input type="url" class="source-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
     <button type="button" class="btn ghost small remove-source">✕</button>
   `;
   row.querySelector(".remove-source").addEventListener("click", () => row.remove());
+  wrap.appendChild(row);
+}
+
+function buildEditWorkRows(works) {
+  const wrap = $("#ed-work-rows");
+  wrap.innerHTML = "";
+  (works.length ? works : [{ title: "", year: "", url: "" }]).forEach((w) => addEditWorkRow(w.title || "", w.year || "", w.url || ""));
+}
+
+function addEditWorkRow(title = "", year = "", url = "") {
+  const wrap = $("#ed-work-rows");
+  const row = document.createElement("div");
+  row.className = "work-row";
+  row.innerHTML = `
+    <input type="text" class="work-title" placeholder="Tittel" value="${escapeHtml(title)}">
+    <input type="number" class="work-year" placeholder="År" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
+    <input type="url" class="work-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
+    <button type="button" class="btn ghost small remove-work">✕</button>
+  `;
+  row.querySelector(".remove-work").addEventListener("click", () => row.remove());
   wrap.appendChild(row);
 }
 
@@ -986,14 +1017,34 @@ function collectEditLinks() {
 }
 
 function collectEditSources() {
-  return [...$("#ed-source-rows").querySelectorAll(".source-text")]
-    .map((i) => i.value.trim()).filter(Boolean);
+  return [...$("#ed-source-rows").querySelectorAll(".source-row")]
+    .map((r) => ({
+      text: r.querySelector(".source-text").value.trim(),
+      url: r.querySelector(".source-url").value.trim(),
+    }))
+    .filter((k) => k.text);
+}
+
+function collectEditWorks() {
+  return [...$("#ed-work-rows").querySelectorAll(".work-row")]
+    .map((r) => {
+      const title = r.querySelector(".work-title").value.trim();
+      const yearStr = r.querySelector(".work-year").value.trim();
+      const url = r.querySelector(".work-url").value.trim();
+      const out = { title };
+      const yr = parseInt(yearStr, 10);
+      if (Number.isFinite(yr)) out.year = yr;
+      if (url) out.url = url;
+      return out;
+    })
+    .filter((w) => w.title);
 }
 
 function setupEditForm() {
   if (!$("#edit-form")) return;
   $("#ed-add-link").addEventListener("click", () => addEditLinkRow());
   $("#ed-add-source").addEventListener("click", () => addEditSourceRow());
+  $("#ed-add-work").addEventListener("click", () => addEditWorkRow());
 
   $("#edit-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1007,14 +1058,17 @@ function setupEditForm() {
       gender:        $("#ed-gender").value,
       genre:         $("#ed-genre").value,
       instrument:    $("#ed-instrument").value,
-      subgenres:     $("#ed-subgenres").value.split(",").map(s => s.trim()).filter(Boolean),
+      sjangre:       $("#ed-sjangre").value.split(",").map(s => s.trim()).filter(Boolean),
+      undersjangre:  $("#ed-undersjangre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#ed-start").value, 10) || null,
       influenceEnd:   parseInt($("#ed-end").value, 10) || null,
       geography:     $("#ed-geo").value.trim(),
       description:   $("#ed-desc").value.trim(),
-      keyWorks:      $("#ed-works").value.trim(),
+      keyWorks:      collectEditWorks(),
       links:         collectEditLinks(),
       kilder:        collectEditSources(),
+      imageUrl:      $("#ed-image-url").value.trim(),
+      imageCredit:   $("#ed-image-credit").value.trim(),
       proposedBy:    $("#ed-by").value.trim() || "Anonym",
     };
     try {
@@ -1086,7 +1140,7 @@ function renderSubgenreDescList() {
   const el = $("#subgenre-desc-list");
   const allSubs = [...new Set(
     state.artists.filter(a => a.status === "active")
-      .flatMap(a => a.subgenres || [])
+      .flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
 
   if (!allSubs.length) { el.innerHTML = `<p class="muted">Ingen undersjangre registrert blant artistene.</p>`; return; }

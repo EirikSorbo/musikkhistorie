@@ -61,7 +61,11 @@ function showArtistsForInstrument(instrument) {
 function showArtistsForSjanger({ label }) {
   const sj = label.toLowerCase();
   const list = state.artists
-    .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
+    .filter((a) => a.status === "active" && (
+      a.genre === label
+      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
+      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
+    ))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   document.getElementById("al-title").textContent = `${label} (${list.length})`;
   const body = document.getElementById("al-body");
@@ -238,19 +242,20 @@ function openDecadeView(decadeId) {
 function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
-  const genreSet = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
-  const allSubs = [...new Set(
-    state.artists.filter((a) => a.status === "active").flatMap((a) => a.subgenres || [])
-  )].sort((a, b) => a.localeCompare(b, "no"));
+  const active = state.artists.filter((a) => a.status === "active");
+  const sjangreSet = new Set(active.flatMap((a) => a.sjangre || []));
+  const underSet = new Set(active.flatMap((a) => a.undersjangre || []));
+  const sjangre = [...sjangreSet].sort((a, b) => a.localeCompare(b, "no"));
+  const under = [...underSet].sort((a, b) => a.localeCompare(b, "no"));
   const el = document.getElementById("sl-chips");
-  el.innerHTML = allSubs.length
-    ? allSubs.map((s) => {
-        const isSjanger = genreSet.has(s.toLowerCase());
-        const attr = isSjanger ? `data-sjanger="${escapeHtml(s)}"` : `data-under="${escapeHtml(s)}"`;
-        const cls = isSjanger ? "tag tag-sjanger" : "tag tag-under";
-        return `<button class="${cls}" ${attr}>${escapeHtml(s)}</button>`;
-      }).join("")
-    : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+  if (!sjangre.length && !under.length) {
+    el.innerHTML = `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+  } else {
+    el.innerHTML = [
+      ...sjangre.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+      ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+    ].join("");
+  }
   modalOpen(modal);
 }
 
@@ -289,7 +294,7 @@ function openSubgenreInfo(subgenreId) {
   $("#sgi-desc").className = desc?.description ? "" : "muted";
 
   const artists = state.artists
-    .filter(a => a.status === "active" && (a.subgenres || []).includes(subgenreId))
+    .filter(a => a.status === "active" && ((a.undersjangre || []).includes(subgenreId) || (a.sjangre || []).includes(subgenreId)))
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
   const el = $("#sgi-artists");
@@ -342,7 +347,9 @@ function renderSpotlight() {
 
   if (state.filters.sjanger) {
     const sj = state.filters.sjanger.toLowerCase();
-    pool = pool.filter((a) => a.genre === state.filters.sjanger || (a.subgenres || []).some((s) => s.toLowerCase() === sj));
+    pool = pool.filter((a) => a.genre === state.filters.sjanger
+      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
+      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj));
   }
   if (state.filters.genre)      pool = pool.filter((a) => a.genre === state.filters.genre);
   if (state.filters.instrument) pool = pool.filter((a) => a.instrument === state.filters.instrument);
@@ -352,7 +359,7 @@ function renderSpotlight() {
   }
   if (state.filters.subgenre) {
     const sg = state.filters.subgenre;
-    pool = pool.filter((a) => (a.subgenres || []).includes(sg));
+    pool = pool.filter((a) => (a.undersjangre || []).includes(sg) || (a.sjangre || []).includes(sg));
   }
   if (state.filters.search) {
     const q = state.filters.search.toLowerCase();
@@ -360,7 +367,8 @@ function renderSpotlight() {
       (a) =>
         a.name.toLowerCase().includes(q) ||
         (a.geography || "").toLowerCase().includes(q) ||
-        (a.subgenres || []).some(s => s.toLowerCase().includes(q))
+        (a.sjangre || []).some(s => s.toLowerCase().includes(q)) ||
+        (a.undersjangre || []).some(s => s.toLowerCase().includes(q))
     );
   }
 
@@ -442,7 +450,7 @@ function refreshFilterControls() {
   );
   const allSubs = [...new Set(
     state.artists.filter(a => a.status === "active")
-      .flatMap(a => a.subgenres || [])
+      .flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
   fillSelect($("#sp-subgenre"), allSubs, { placeholder: "Undersjanger" });
   // Behold valgte filtre etter at listene er fylt på nytt
