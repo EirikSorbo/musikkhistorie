@@ -45,10 +45,13 @@ export const GENEALOGY = [
   { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 490, r: 11, p: ["fusion", "techno"], g: "Jazz", era: "1997", d: "Norsk fjelljazz møter electronica og drum'n'bass.", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
 ];
 
+// Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
+export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
+  .sort((a, b) => a.localeCompare(b, "no"));
+
 const W = 1140, H = 1180, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
 const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115 };
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t" };
-const SUPERS = [["Country", 110], ["Blues", 290], ["Jazz", 490], ["Gospel · soul · funk", 690], ["Reggae", 840], ["Hip-hop", 935], ["Electronica", 1040]];
 const FAM_STROKE = { gray: "#9bada1", blue: "#3b82f6", amber: "#d97706", purple: "#7c3aed", red: "#dc2626", teal: "#0d9488", pink: "#db2777", green: "#16a34a" };
 
 function el(tag, attrs) {
@@ -67,7 +70,9 @@ function escapeHtml(s) {
 export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
   const stage = root.querySelector("#gx-stage");
   const cam = root.querySelector("#gx-cam");
-  const panel = root.querySelector("#gx-info");
+  const modal = root.querySelector("#modal-sjanger");
+  const mTitle = root.querySelector("#sj-title");
+  const mBody = root.querySelector("#sj-body");
 
   const map = {}, kids = {};
   GENEALOGY.forEach((n) => { n.y = RY[n.r]; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
@@ -84,18 +89,13 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
 
   cam.innerHTML = "";
 
-  // Tiår-rutenett + supersjanger-kolonner
+  // Tiår-rutenett (tids-aksen)
   for (let r = 0; r <= 11; r++) {
     cam.appendChild(el("line", { x1: 0, y1: RY[r] - 47, x2: W, y2: RY[r] - 47, class: "gx-grid" }));
     const dl = el("text", { x: 14, y: RY[r] - 40, class: "gx-decade" });
     dl.textContent = DEC[r];
     cam.appendChild(dl);
   }
-  SUPERS.forEach(([label, x]) => {
-    const t = el("text", { x, y: 32, "text-anchor": "middle", class: "gx-super" });
-    t.textContent = label;
-    cam.appendChild(t);
-  });
 
   // Kanter — heltrukne = avstamning, stiplet = motreaksjon
   const edges = [];
@@ -127,8 +127,8 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     g.appendChild(tx); cam.appendChild(g); gnodes[n.id] = g;
   });
 
-  // Utheving
-  let locked = null, moved = false;
+  // Utheving (vises ved hover)
+  let moved = false;
   function light(id) {
     const line = anc(id); line[id] = 1;
     const dn = desc(id); for (const k in dn) line[k] = 1;
@@ -141,11 +141,13 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
     });
   }
   function clearLight() {
-    if (locked) return;
     GENEALOGY.forEach((n) => gnodes[n.id].classList.remove("gx-dim"));
     edges.forEach((e) => { e.classList.remove("gx-hl", "gx-dim"); e.style.stroke = ""; });
   }
-  function showPanel(id) {
+  const reset = clearLight;
+
+  // Klikk → popup med detaljer
+  function openModal(id) {
     const n = map[id];
     const inf = n.p.map((p) => escapeHtml(map[p].f)).join(", ") || "—";
     const grewInto = GENEALOGY.filter((x) => x.p.includes(id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
@@ -156,37 +158,37 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
          <ul class="gx-tracks">${n.t.map((t) =>
            `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(t)}" target="_blank" rel="noopener">${escapeHtml(t)}</a></li>`).join("")}</ul>`
       : "";
-    const btn = (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "";
-    panel.innerHTML = `
-      <h3>${escapeHtml(n.f)}</h3>
-      <p class="gx-era">${escapeHtml(n.era)}</p>
-      <p class="gx-desc">${escapeHtml(descFor(n))}</p>
-      <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
-      ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
-      <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
-      ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
-      ${pl}${btn}`;
-    const b = panel.querySelector(".gx-artists-btn");
-    if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
-  }
-  function pick(id) {
-    locked = id;
-    GENEALOGY.forEach((n) => gnodes[n.id].classList.toggle("gx-sel", n.id === id));
-    light(id); showPanel(id);
-  }
-  function reset() {
-    locked = null;
-    GENEALOGY.forEach((n) => gnodes[n.id].classList.remove("gx-sel", "gx-dim"));
-    edges.forEach((e) => { e.classList.remove("gx-hl", "gx-dim"); e.style.stroke = ""; });
-    panel.innerHTML = `<p class="gx-desc">Hold over en sjanger for å se linjene, eller klikk for beskrivelse og spilleliste.</p>`;
+    const btn = (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn" style="margin-top:8px">Vis artister</button>` : "";
+    if (mTitle) mTitle.textContent = n.f;
+    if (mBody) {
+      mBody.innerHTML = `
+        <p class="gx-era">${escapeHtml(n.era)}</p>
+        <p class="gx-desc">${escapeHtml(descFor(n))}</p>
+        <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
+        ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
+        <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
+        ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
+        ${pl}${btn}`;
+      const b = mBody.querySelector(".gx-artists-btn");
+      if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
+    }
+    if (modal) modal.classList.add("open");
   }
 
   GENEALOGY.forEach((n) => {
     const g = gnodes[n.id];
-    g.addEventListener("mouseenter", () => { if (!locked) light(n.id); });
+    g.addEventListener("mouseenter", () => light(n.id));
     g.addEventListener("mouseleave", clearLight);
-    g.addEventListener("click", (ev) => { if (moved) return; ev.stopPropagation(); pick(n.id); });
+    g.addEventListener("click", (ev) => { if (moved) return; ev.stopPropagation(); openModal(n.id); });
   });
+
+  // Lukking av popup
+  if (modal) {
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+    const cl = modal.querySelector(".modal-close");
+    if (cl) cl.addEventListener("click", () => modal.classList.remove("open"));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") modal.classList.remove("open"); });
+  }
 
   // Pan / zoom
   let sc = 0.56, tx = 20, ty = 10;

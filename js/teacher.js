@@ -23,13 +23,14 @@ import { DEFAULT_CONFIG } from "./limits.js";
 import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect } from "./ui.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
+import { GENEALOGY_GENRES } from "./genealogy.js";
 
 const state = {
   artists: [],
   config: null,
   decadeDescs: {},
   subgenreDescs: {},
-  filters: { genre: "", decade: "", instrument: "", search: "", showRemoved: true },
+  filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true },
   isTeacher: true,
   clientId: getClientId(),
   started: false,
@@ -319,13 +320,21 @@ function renderList() {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#f-genre"), config.genres, { placeholder: "Alle sjangre" });
+  fillSelect($("#f-sjanger"), GENEALOGY_GENRES, { placeholder: "Alle sjangre" });
+  fillSelect($("#f-genre"), config.genres, { placeholder: "Alle metasjangre" });
   fillSelect(
     $("#f-decade"),
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Alle tiår" }
   );
   fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
+  const allSubs = [...new Set(
+    (state.artists || []).flatMap((a) => a.subgenres || [])
+  )].sort((a, b) => a.localeCompare(b, "no"));
+  fillSelect($("#f-subgenre"), allSubs, { placeholder: "Alle undersjangre" });
+  if (state.filters.sjanger)  $("#f-sjanger").value = state.filters.sjanger;
+  if (state.filters.genre)    $("#f-genre").value = state.filters.genre;
+  if (state.filters.subgenre) $("#f-subgenre").value = state.filters.subgenre;
 }
 
 // ----------------------------------------------------------------------------
@@ -333,9 +342,11 @@ function refreshControls() {
 // ----------------------------------------------------------------------------
 
 function setupFilters() {
+  $("#f-sjanger").addEventListener("change", (e) => { state.filters.sjanger = e.target.value; renderList(); });
   $("#f-genre").addEventListener("change", (e) => { state.filters.genre = e.target.value; renderList(); });
   $("#f-decade").addEventListener("change", (e) => { state.filters.decade = e.target.value; renderList(); });
   $("#f-instrument").addEventListener("change", (e) => { state.filters.instrument = e.target.value; renderList(); });
+  $("#f-subgenre").addEventListener("change", (e) => { state.filters.subgenre = e.target.value; renderList(); });
   $("#f-search").addEventListener("input", (e) => { state.filters.search = e.target.value; renderList(); });
   const showRemoved = $("#f-show-removed");
   showRemoved.checked = state.filters.showRemoved;
@@ -514,6 +525,7 @@ function startApp() {
   });
   subscribeArtists((artists) => {
     state.artists = artists;
+    refreshControls();
     renderAll();
   });
   subscribeDecades((d) => { state.decadeDescs = d; });

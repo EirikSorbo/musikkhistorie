@@ -2,6 +2,7 @@ import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
+import { GENEALOGY_GENRES } from "./genealogy.js";
 
 const clientId = getClientId();
 
@@ -10,7 +11,7 @@ const state = {
   config: null,
   decadeDescs: {},
   subgenreDescs: {},
-  filters: { search: "", genre: "", instrument: "", decade: "", subgenre: "", showRemoved: false },
+  filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", subgenre: "", showRemoved: false },
   isTeacher: false,
   clientId,
 };
@@ -38,8 +39,9 @@ function setupTagFilters() {
     const val = btn.dataset.filterVal;
     document.getElementById("modal-detail").classList.remove("open");
     // Reset alle filtre før nytt filter settes
-    state.filters = { search: "", genre: "", instrument: "", decade: "", subgenre: "" };
+    state.filters = { search: "", sjanger: "", genre: "", instrument: "", decade: "", subgenre: "" };
     $("#sp-search").value = "";
+    $("#sp-sjanger").value = "";
     $("#sp-genre").value = "";
     $("#sp-instrument").value = "";
     $("#sp-decade").value = "";
@@ -86,12 +88,14 @@ function setupExplore() {
 // vent til data er lastet, sett filter og scroll til artistlista.
 function applyIncomingFilter() {
   const params = new URLSearchParams(location.search);
-  const g = params.get("genre"), s = params.get("subgenre");
-  if (!g && !s) return;
+  const sj = params.get("sjanger"), g = params.get("genre"), s = params.get("subgenre");
+  if (!sj && !g && !s) return;
+  state.filters.sjanger = sj || "";
   state.filters.genre = g || "";
   state.filters.subgenre = s || "";
   const tryApply = () => {
     if (!state.config || !state.artists.length) return false;
+    if (sj) $("#sp-sjanger").value = sj;
     if (g) $("#sp-genre").value = g;
     if (s) $("#sp-subgenre").value = s;
     renderSpotlight();
@@ -236,7 +240,7 @@ function openSubgenreInfo(subgenreId) {
 
 function hasFilters() {
   const f = state.filters;
-  return !!(f.search || f.genre || f.instrument || f.decade || f.subgenre);
+  return !!(f.search || f.sjanger || f.genre || f.instrument || f.decade || f.subgenre);
 }
 
 let currentPicks = [];
@@ -245,6 +249,10 @@ function renderSpotlight() {
   if (!state.config) return;
   let pool = state.artists.filter((a) => a.status === "active");
 
+  if (state.filters.sjanger) {
+    const sj = state.filters.sjanger.toLowerCase();
+    pool = pool.filter((a) => a.genre === state.filters.sjanger || (a.subgenres || []).some((s) => s.toLowerCase() === sj));
+  }
   if (state.filters.genre)      pool = pool.filter((a) => a.genre === state.filters.genre);
   if (state.filters.instrument) pool = pool.filter((a) => a.instrument === state.filters.instrument);
   if (state.filters.decade) {
@@ -333,7 +341,8 @@ function renderList() {
 
 function refreshFilterControls() {
   const { config } = state;
-  fillSelect($("#sp-genre"), config.genres, { placeholder: "Sjanger" });
+  fillSelect($("#sp-sjanger"), GENEALOGY_GENRES, { placeholder: "Sjanger" });
+  fillSelect($("#sp-genre"), config.genres, { placeholder: "Metasjanger" });
   fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
@@ -344,11 +353,15 @@ function refreshFilterControls() {
     state.artists.filter(a => a.status === "active")
       .flatMap(a => a.subgenres || [])
   )].sort((a, b) => a.localeCompare(b, "no"));
-  fillSelect($("#sp-subgenre"), allSubs, { placeholder: "Underkategori" });
+  fillSelect($("#sp-subgenre"), allSubs, { placeholder: "Undersjanger" });
+  // Behold valgte filtre etter at listene er fylt på nytt
+  if (state.filters.sjanger)  $("#sp-sjanger").value = state.filters.sjanger;
+  if (state.filters.genre)    $("#sp-genre").value = state.filters.genre;
+  if (state.filters.subgenre) $("#sp-subgenre").value = state.filters.subgenre;
 }
 
 function setupFilters() {
-  ["sp-search", "sp-genre", "sp-instrument", "sp-decade", "sp-subgenre"].forEach((id) => {
+  ["sp-search", "sp-sjanger", "sp-genre", "sp-instrument", "sp-decade", "sp-subgenre"].forEach((id) => {
     const el = document.getElementById(id);
     el.addEventListener(id === "sp-search" ? "input" : "change", (e) => {
       const key = id.replace("sp-", "");

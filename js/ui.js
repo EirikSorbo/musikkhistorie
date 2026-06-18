@@ -273,6 +273,10 @@ export function renderArtists(el, state) {
   if (!filters.showRemoved) {
     list = list.filter((a) => a.status === "active");
   }
+  if (filters.sjanger) {
+    const sj = filters.sjanger.toLowerCase();
+    list = list.filter((a) => a.genre === filters.sjanger || (a.subgenres || []).some((s) => s.toLowerCase() === sj));
+  }
   if (filters.genre) list = list.filter((a) => a.genre === filters.genre);
   if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
   if (filters.decade) {
