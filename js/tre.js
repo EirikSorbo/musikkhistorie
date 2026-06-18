@@ -26,11 +26,12 @@ function showArtistsForGenre({ label }) {
   } else {
     body.innerHTML = `<div class="result-list">${list.map((a) => {
       const years = a.influenceStart ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}` : "";
+      const enc = encodeURIComponent;
       return `<div class="result-row is-static">
-        <span class="result-name">${escapeHtml(a.name)}</span>
+        <a class="result-name result-link" href="index.html?artist=${enc(a.id)}">${escapeHtml(a.name)}</a>
         <span class="result-meta">
-          ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
-          ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
+          ${a.genre ? `<a class="tag tag-link" href="index.html?genre=${enc(a.genre)}">${escapeHtml(a.genre)}</a>` : ""}
+          ${a.instrument ? `<a class="tag tag-link" href="index.html?instrument=${enc(a.instrument)}">${escapeHtml(a.instrument)}</a>` : ""}
           ${years ? `<span class="result-work">${years}</span>` : ""}
         </span>
       </div>`;

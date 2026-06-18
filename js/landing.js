@@ -88,18 +88,25 @@ function setupExplore() {
 // vent til data er lastet, sett filter og scroll til artistlista.
 function applyIncomingFilter() {
   const params = new URLSearchParams(location.search);
-  const sj = params.get("sjanger"), g = params.get("genre"), s = params.get("subgenre");
-  if (!sj && !g && !s) return;
+  const sj = params.get("sjanger"), g = params.get("genre"), s = params.get("subgenre"),
+        inst = params.get("instrument"), artistId = params.get("artist");
+  if (!sj && !g && !s && !inst && !artistId) return;
   state.filters.sjanger = sj || "";
   state.filters.genre = g || "";
   state.filters.subgenre = s || "";
+  state.filters.instrument = inst || "";
   const tryApply = () => {
     if (!state.config || !state.artists.length) return false;
     if (sj) $("#sp-sjanger").value = sj;
     if (g) $("#sp-genre").value = g;
     if (s) $("#sp-subgenre").value = s;
+    if (inst) $("#sp-instrument").value = inst;
     renderSpotlight();
     renderList();
+    if (artistId) {
+      const a = state.artists.find((x) => x.id === artistId);
+      if (a) { openDetail(a); return true; }
+    }
     const list = document.getElementById("artist-list");
     if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
     return true;

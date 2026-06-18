@@ -619,6 +619,10 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 .result-row.is-static { cursor: default; }
 .result-row.is-static:hover { background: var(--surface); border-color: var(--line); transform: none; }
 .result-name { font-weight: 600; min-width: 130px; flex-shrink: 0; }
+.result-name.result-link { color: var(--text); text-decoration: none; cursor: pointer; }
+.result-name.result-link:hover { color: var(--accent); text-decoration: underline; }
+a.tag.tag-link { cursor: pointer; text-decoration: none; }
+a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
 .result-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; flex: 1; }
 .result-meta .tag { padding: 2px 8px; font-size: 0.72rem; }
 .result-arrow { color: var(--accent); font-size: 1.1rem; margin-left: auto; flex-shrink: 0; }
