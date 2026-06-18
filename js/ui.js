@@ -15,6 +15,21 @@ import {
   decadesForRange,
   GENDERS,
 } from "./limits.js";
+import { GENEALOGY_GENRES } from "./genealogy.js";
+
+// Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
+const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
+
+// Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre) fra subgenres.
+function genreTags(a) {
+  const subs = a.subgenres || [];
+  const sjanger = subs.filter((s) => SJANGER_SET.has(s.toLowerCase()));
+  const under = subs.filter((s) => !SJANGER_SET.has(s.toLowerCase()));
+  return [
+    ...sjanger.map((s) => `<button class="tag tag-sjanger tag-link" data-filter-key="sjanger" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+    ...under.map((s) => `<button class="tag tag-under tag-link" data-filter-key="subgenre" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+  ].join("");
+}
 
 export function escapeHtml(str) {
   return String(str ?? "")
@@ -208,9 +223,8 @@ export function renderArtistDetail(el, artist, config) {
   el.innerHTML = `
     ${factsLines(a)}
     <div class="meta" style="margin-bottom:12px">
-      ${a.genre ? `<button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : ""}
       ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
-      ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+      ${genreTags(a)}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
     ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
@@ -245,9 +259,8 @@ function spotlightCard(a, config) {
         <h3>${escapeHtml(a.name)}</h3>
         ${factsLines(a)}
         <div class="meta">
-          <button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>
           ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
-          ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+          ${genreTags(a)}
         </div>
       </header>
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
@@ -368,9 +381,8 @@ function artistCard(a, { isTeacher, clientId, config }) {
           <h3>${escapeHtml(a.name)} ${removedBadge} ${vetoBadge}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
-            <span class="tag">${escapeHtml(a.genre)}</span>
             ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
-            ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
+            ${genreTags(a)}
           </div>
         </div>
       </header>

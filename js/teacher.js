@@ -351,6 +351,19 @@ function setupFilters() {
   const showRemoved = $("#f-show-removed");
   showRemoved.checked = state.filters.showRemoved;
   showRemoved.addEventListener("change", (e) => { state.filters.showRemoved = e.target.checked; renderList(); });
+
+  // Klikk på sjanger-/undersjanger-/instrument-bobler i kortene filtrerer lista
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-filter-key]");
+    if (!btn) return;
+    const key = btn.dataset.filterKey, val = btn.dataset.filterVal;
+    const sel = { sjanger: "#f-sjanger", subgenre: "#f-subgenre", instrument: "#f-instrument", genre: "#f-genre" }[key];
+    if (!sel) return;
+    state.filters[key] = val;
+    const elSel = $(sel);
+    if (elSel) elSel.value = val;
+    renderList();
+  });
 }
 
 // ----------------------------------------------------------------------------

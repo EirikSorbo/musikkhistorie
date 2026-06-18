@@ -46,7 +46,13 @@ function setupTagFilters() {
     $("#sp-instrument").value = "";
     $("#sp-decade").value = "";
     $("#sp-subgenre").value = "";
-    if (key === "genre") {
+    if (key === "sjanger") {
+      state.filters.sjanger = val;
+      $("#sp-sjanger").value = val;
+    } else if (key === "subgenre") {
+      state.filters.subgenre = val;
+      $("#sp-subgenre").value = val;
+    } else if (key === "genre") {
       state.filters.genre = val;
       $("#sp-genre").value = val;
     } else if (key === "instrument") {
