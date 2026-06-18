@@ -3,7 +3,7 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres } from "./store.js";
 import { renderGenealogy } from "./genealogy.js";
-import { escapeHtml } from "./ui.js";
+import { escapeHtml, renderArtistDetail } from "./ui.js";
 import { CONFIGURED } from "./shared.js"; // setter også versjonsmerket
 
 // Stabil referanse som genealogy.js leser fra ved klikk – mutér innholdet
@@ -27,8 +27,8 @@ function showArtistsForGenre({ label }) {
     body.innerHTML = `<div class="result-list">${list.map((a) => {
       const years = a.influenceStart ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}` : "";
       const enc = encodeURIComponent;
-      return `<div class="result-row is-static">
-        <a class="result-name result-link" href="index.html?artist=${enc(a.id)}">${escapeHtml(a.name)}</a>
+      return `<div class="result-row" data-artist-id="${escapeHtml(a.id)}" tabindex="0" role="button">
+        <span class="result-name result-link">${escapeHtml(a.name)}</span>
         <span class="result-meta">
           ${a.genre ? `<a class="tag tag-link" href="index.html?genre=${enc(a.genre)}">${escapeHtml(a.genre)}</a>` : ""}
           ${a.instrument ? `<a class="tag tag-link" href="index.html?instrument=${enc(a.instrument)}">${escapeHtml(a.instrument)}</a>` : ""}
@@ -36,8 +36,25 @@ function showArtistsForGenre({ label }) {
         </span>
       </div>`;
     }).join("")}</div>`;
+
+    body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
+      const open = () => {
+        const a = list.find((x) => x.id === row.dataset.artistId);
+        if (a) showArtistDetail(a);
+      };
+      row.addEventListener("click", (e) => { if (!e.target.closest("a")) open(); });
+      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
   }
   document.getElementById("modal-artistliste").classList.add("open");
+}
+
+// Vis artist-detalj i eget popup; skjul artistlisten midlertidig
+function showArtistDetail(a) {
+  document.getElementById("modal-artistliste").classList.remove("open");
+  document.getElementById("ad-title").textContent = a.name;
+  renderArtistDetail(document.getElementById("ad-body"), a, {});
+  document.getElementById("modal-artist-detail").classList.add("open");
 }
 
 function build() {
@@ -54,7 +71,19 @@ function build() {
 const alModal = document.getElementById("modal-artistliste");
 alModal.addEventListener("click", (e) => { if (e.target === alModal) alModal.classList.remove("open"); });
 alModal.querySelector(".modal-close").addEventListener("click", () => alModal.classList.remove("open"));
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") alModal.classList.remove("open"); });
+
+// Lukking av artist-detalj → vis artistlisten igjen
+const adModal = document.getElementById("modal-artist-detail");
+const closeDetail = () => { adModal.classList.remove("open"); alModal.classList.add("open"); };
+adModal.addEventListener("click", (e) => { if (e.target === adModal) closeDetail(); });
+adModal.querySelector(".modal-close").addEventListener("click", closeDetail);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (adModal.classList.contains("open")) closeDetail();
+    else alModal.classList.remove("open");
+  }
+});
 
 build();
 window.addEventListener("resize", () => { if (api) api.fit(); });
