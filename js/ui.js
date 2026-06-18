@@ -27,7 +27,7 @@ function genreTags(a) {
   const under = subs.filter((s) => !SJANGER_SET.has(s.toLowerCase()));
   return [
     ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-    ...under.map((s) => `<button class="tag tag-under tag-link" data-filter-key="subgenre" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+    ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
   ].join("");
 }
 
@@ -445,6 +445,32 @@ function factsLines(a, { showGender = false } = {}) {
 function pct(n, max) {
   if (!max) return 0;
   return Math.min(100, Math.round((n / max) * 100));
+}
+
+// Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
+export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist } = {}) {
+  const modal = root.querySelector("#modal-sjanger");
+  const mTitle = root.querySelector("#sj-title");
+  const mBody = root.querySelector("#sj-body");
+  if (!modal || !mTitle || !mBody) return;
+
+  const desc = subgenreDescs[label];
+  const descText = desc?.description || "Ingen beskrivelse ennå.";
+
+  const btnArea = [
+    onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
+    onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+  ].filter(Boolean).join(" ");
+
+  mTitle.textContent = label;
+  mBody.innerHTML = `
+    <p class="gx-desc">${escapeHtml(descText)}</p>
+    ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
+  const b = mBody.querySelector(".gx-artists-btn");
+  if (b) b.addEventListener("click", () => { modal.classList.remove("open"); onShowArtists({ label }); });
+  const bp = mBody.querySelector(".gx-playlist-btn");
+  if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
+  modal.classList.add("open");
 }
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.

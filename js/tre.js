@@ -3,7 +3,7 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres } from "./store.js";
 import { renderGenealogy, showSjangerInfo } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows } from "./ui.js";
+import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo } from "./ui.js";
 import { CONFIGURED } from "./shared.js"; // setter også versjonsmerket
 
 // Stabil referanse som genealogy.js leser fra ved klikk – mutér innholdet
@@ -136,16 +136,35 @@ const sjModal = document.getElementById("modal-sjanger");
 sjModal.addEventListener("click", (e) => { if (e.target === sjModal) sjModal.classList.remove("open"); });
 sjModal.querySelector(".modal-close").addEventListener("click", () => sjModal.classList.remove("open"));
 
-// Global [data-sjanger] handler — fanger klikk fra artist-detalj og andre modaler
+const sjangerOpts = () => ({
+  root: document,
+  subgenreDescs: subDescs,
+  onShowArtists: showArtistsForGenre,
+  onShowPlaylist: showPlaylistForGenre,
+});
+const closeAllModals = () => {
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
+};
+
+// Global handler — fanger klikk fra artist-detalj og andre modaler
 document.addEventListener("click", (e) => {
   const sj = e.target.closest("[data-sjanger]");
   if (sj) {
-    adModal.classList.remove("open");
+    closeAllModals();
     openSjangerInfo(sj.dataset.sjanger);
     return;
   }
+  const underBtn = e.target.closest("[data-under]");
+  if (underBtn) {
+    closeAllModals();
+    showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
+    return;
+  }
   const inst = e.target.closest("[data-instrument]");
-  if (inst) showArtistsForInstrument(inst.dataset.instrument);
+  if (inst) {
+    closeAllModals();
+    showArtistsForInstrument(inst.dataset.instrument);
+  }
 });
 
 document.addEventListener("keydown", (e) => {

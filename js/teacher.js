@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows } from "./ui.js";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo } from "./ui.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -557,19 +557,33 @@ function setupSjangerModal() {
     al.addEventListener("click", (e) => { if (e.target === al) al.classList.remove("open"); });
     al.querySelector(".modal-close").addEventListener("click", () => al.classList.remove("open"));
   }
+  const sjangerOpts = () => ({
+    root: document,
+    subgenreDescs: state.subgenreDescs,
+    onShowArtists: showArtistsForSjanger,
+    onShowPlaylist: showPlaylistForGenre,
+  });
+  const closeAllModals = () => {
+    document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
+  };
   document.addEventListener("click", (e) => {
-    const sj = e.target.closest("[data-sjanger]");
-    if (sj) {
-      showSjangerInfo(sj.dataset.sjanger, {
-        root: document,
-        subgenreDescs: state.subgenreDescs,
-        onShowArtists: showArtistsForSjanger,
-        onShowPlaylist: showPlaylistForGenre,
-      });
+    const sjBtn = e.target.closest("[data-sjanger]");
+    if (sjBtn) {
+      closeAllModals();
+      showSjangerInfo(sjBtn.dataset.sjanger, sjangerOpts());
+      return;
+    }
+    const underBtn = e.target.closest("[data-under]");
+    if (underBtn) {
+      closeAllModals();
+      showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
       return;
     }
     const inst = e.target.closest("[data-instrument]");
-    if (inst) showArtistsForInstrument(inst.dataset.instrument);
+    if (inst) {
+      closeAllModals();
+      showArtistsForInstrument(inst.dataset.instrument);
+    }
   });
 }
 
