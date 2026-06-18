@@ -198,7 +198,7 @@ export function renderResultList(el, artists, config, onSelect) {
       <span class="result-name">${escapeHtml(a.name)}</span>
       <span class="result-meta">
         ${a.genre ? `<button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : ""}
-        ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+        ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
         ${workSnippet ? `<span class="result-work">${workSnippet}</span>` : ""}
       </span>
       <span class="result-arrow">›</span>
@@ -223,7 +223,7 @@ export function renderArtistDetail(el, artist, config) {
   el.innerHTML = `
     ${factsLines(a)}
     <div class="meta" style="margin-bottom:12px">
-      ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+      ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
       ${genreTags(a)}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
@@ -259,7 +259,7 @@ function spotlightCard(a, config) {
         <h3>${escapeHtml(a.name)}</h3>
         ${factsLines(a)}
         <div class="meta">
-          ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+          ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
           ${genreTags(a)}
         </div>
       </header>
@@ -381,7 +381,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
           <h3>${escapeHtml(a.name)} ${removedBadge} ${vetoBadge}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
-            ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
+            ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
             ${genreTags(a)}
           </div>
         </div>
@@ -450,16 +450,22 @@ function pct(n, max) {
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
 // Returnerer HTML-streng med rader som har data-artist-id for klikk-kobling.
 export function buildArtistListRows(list) {
-  const enc = encodeURIComponent;
   return list.map((a) => {
     const years = a.influenceStart
       ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
       : "";
+    const subs = a.subgenres || [];
+    const sjanger = subs.filter((s) => SJANGER_SET.has(s.toLowerCase()));
+    const under = subs.filter((s) => !SJANGER_SET.has(s.toLowerCase()));
+    const tags = [
+      ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+      ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+      a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
+    ].filter(Boolean).join("");
     return `<div class="result-row" data-artist-id="${escapeHtml(a.id)}" tabindex="0" role="button">
       <span class="result-name result-link">${escapeHtml(a.name)}</span>
       <span class="result-meta">
-        ${a.genre ? `<a class="tag tag-link" href="index.html?genre=${enc(a.genre)}">${escapeHtml(a.genre)}</a>` : ""}
-        ${a.instrument ? `<a class="tag tag-link" href="index.html?instrument=${enc(a.instrument)}">${escapeHtml(a.instrument)}</a>` : ""}
+        ${tags}
         ${years ? `<span class="result-work">${years}</span>` : ""}
       </span>
     </div>`;
@@ -482,7 +488,10 @@ export function buildPlaylistHtml(node, artists) {
   const items = genreArtists.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
-    const sjangerTag = a.genre ? `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : "";
+    const sjangerTag = (a.subgenres || [])
+      .filter((s) => SJANGER_SET.has(s.toLowerCase()))
+      .map((s) => `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
+      .join("");
     (a.links || []).forEach((l) => {
       const key = `${nameLow}|${(l.label || l.url).toLowerCase()}`;
       if (seen.has(key)) return;

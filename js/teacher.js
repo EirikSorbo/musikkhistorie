@@ -518,6 +518,18 @@ function showPlaylistForGenre({ label, fullName, node }) {
   document.getElementById("modal-spilleliste").classList.add("open");
 }
 
+function showArtistsForInstrument(instrument) {
+  const list = state.artists
+    .filter((a) => a.status === "active" && a.instrument === instrument)
+    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+  document.getElementById("al-title").textContent = `${instrument} (${list.length})`;
+  const body = document.getElementById("al-body");
+  body.innerHTML = list.length
+    ? `<div class="result-list">${buildArtistListRows(list)}</div>`
+    : `<p class="muted empty">Ingen forslag med dette instrumentet ennå.</p>`;
+  document.getElementById("modal-artistliste").classList.add("open");
+}
+
 function showArtistsForSjanger({ label }) {
   const sj = label.toLowerCase();
   const list = state.artists
@@ -546,14 +558,18 @@ function setupSjangerModal() {
     al.querySelector(".modal-close").addEventListener("click", () => al.classList.remove("open"));
   }
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-sjanger]");
-    if (!btn) return;
-    showSjangerInfo(btn.dataset.sjanger, {
-      root: document,
-      subgenreDescs: state.subgenreDescs,
-      onShowArtists: showArtistsForSjanger,
-      onShowPlaylist: showPlaylistForGenre,
-    });
+    const sj = e.target.closest("[data-sjanger]");
+    if (sj) {
+      showSjangerInfo(sj.dataset.sjanger, {
+        root: document,
+        subgenreDescs: state.subgenreDescs,
+        onShowArtists: showArtistsForSjanger,
+        onShowPlaylist: showPlaylistForGenre,
+      });
+      return;
+    }
+    const inst = e.target.closest("[data-instrument]");
+    if (inst) showArtistsForInstrument(inst.dataset.instrument);
   });
 }
 

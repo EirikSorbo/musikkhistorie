@@ -416,6 +416,8 @@ button.tag:hover { border-color: var(--accent); color: var(--accent); background
 button.tag.tag-sub:hover { border-color: var(--accent-2); }
 button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background: #a7f3d0; }
 button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: #d1fae5; }
+.tag.tag-instrument { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
+button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; background: #bfdbfe; }
 .tag.gender-kvinne { color: #be185d; background: #fce7f3; border-color: #fbcfe8; }
 .tag.gender-mann { color: #1d4ed8; background: #dbeafe; border-color: #bfdbfe; }
 .tag.gender-annet { color: #b45309; background: #fef3c7; border-color: #fde68a; }
@@ -929,9 +931,10 @@ body.is-teacher #gate { display: none; }
 
 /* Spilleliste-popup */
 .pl-list { margin: 0 0 4px; padding-left: 16px; list-style: disc; }
-.pl-item { font-size: 0.88rem; line-height: 1.7; }
+.pl-item { font-size: 0.88rem; line-height: 2.2; }
 .pl-item a { color: var(--accent); text-decoration: none; }
 .pl-item a:hover { text-decoration: underline; }
+.tag.tag-pl { font-size: 0.72rem; padding: 1px 6px; vertical-align: middle; }
 
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
