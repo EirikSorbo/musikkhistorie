@@ -934,7 +934,7 @@ body.is-teacher #gate { display: none; }
 .pl-item { font-size: 0.88rem; line-height: 2.4; }
 .pl-item a { color: var(--accent); text-decoration: none; }
 .pl-item a:hover { text-decoration: underline; }
-.tag.tag-pl { font-size: 0.7rem; padding: 0 5px; vertical-align: middle; line-height: 1.5; }
+.tag.tag-pl { font-size: 0.7rem; padding: 0 5px; vertical-align: middle; line-height: 1.5; margin-left: 4px; }
 
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
