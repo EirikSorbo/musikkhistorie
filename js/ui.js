@@ -447,46 +447,58 @@ function pct(n, max) {
   return Math.min(100, Math.round((n / max) * 100));
 }
 
-// Bygger HTML for spilleliste-popup: hardkodede spor fra noden + keyWorks/lenker fra artister.
+// Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
+// Returnerer HTML-streng med rader som har data-artist-id for klikk-kobling.
+export function buildArtistListRows(list) {
+  const enc = encodeURIComponent;
+  return list.map((a) => {
+    const years = a.influenceStart
+      ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
+      : "";
+    return `<div class="result-row" data-artist-id="${escapeHtml(a.id)}" tabindex="0" role="button">
+      <span class="result-name result-link">${escapeHtml(a.name)}</span>
+      <span class="result-meta">
+        ${a.genre ? `<a class="tag tag-link" href="index.html?genre=${enc(a.genre)}">${escapeHtml(a.genre)}</a>` : ""}
+        ${a.instrument ? `<a class="tag tag-link" href="index.html?instrument=${enc(a.instrument)}">${escapeHtml(a.instrument)}</a>` : ""}
+        ${years ? `<span class="result-work">${years}</span>` : ""}
+      </span>
+    </div>`;
+  }).join("");
+}
+
+// Bygger HTML for spilleliste-popup: keyWorks/lenker fra artister, med sjanger-tag per rad.
+// "Fra sjangerbeskrivelsen"-seksjonen er fjernet — kun artisttilknyttede eksempler vises.
 export function buildPlaylistHtml(node, artists) {
   const enc = encodeURIComponent;
+  const sj = (node.l || "").toLowerCase();
   const ytLink = (q, text) =>
     `<a href="https://www.youtube.com/results?search_query=${enc(q)}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
-
-  const sj = (node.l || "").toLowerCase();
-  const nodeItems = (node.t || []).map((t) => `<li class="pl-item">${ytLink(t, t)}</li>`);
 
   const genreArtists = (artists || [])
     .filter((a) => a.status === "active" && (a.genre === node.l || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   const seen = new Set();
-  const artistItems = genreArtists.flatMap((a) => {
+  const items = genreArtists.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
+    const sjangerTag = a.genre ? `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : "";
     (a.links || []).forEach((l) => {
       const key = `${nameLow}|${(l.label || l.url).toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
-      rows.push(`<li class="pl-item"><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || l.url)}</a> <span class="muted">— ${escapeHtml(a.name)}</span></li>`);
+      rows.push(`<li class="pl-item"><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || l.url)}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
     });
     (a.keyWorks || "").split(",").map((s) => s.trim()).filter(Boolean).forEach((w) => {
       const key = `${nameLow}|${w.toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
-      rows.push(`<li class="pl-item">${ytLink(`${w} ${a.name}`, w)} <span class="muted">— ${escapeHtml(a.name)}</span></li>`);
+      rows.push(`<li class="pl-item">${ytLink(`${w} ${a.name}`, w)} <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
     });
     return rows;
   });
 
-  const total = nodeItems.length + artistItems.length;
+  const total = items.length;
   if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>` };
-
-  const nodeSec = nodeItems.length
-    ? `<p class="muted" style="font-size:0.8rem;margin:0 0 4px">Fra sjangerbeskrivelsen</p><ul class="pl-list">${nodeItems.join("")}</ul>`
-    : "";
-  const artistSec = artistItems.length
-    ? `<p class="muted" style="font-size:0.8rem;margin:${nodeItems.length ? "12px" : "0"} 0 4px">Fra foreslåtte artister</p><ul class="pl-list">${artistItems.join("")}</ul>`
-    : "";
-  return { total, html: nodeSec + artistSec };
+  return { total, html: `<ul class="pl-list">${items.join("")}</ul>` };
 }

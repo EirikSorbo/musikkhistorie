@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml } from "./ui.js";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -39,20 +39,48 @@ function showPlaylistForGenre({ label, fullName, node }) {
   document.getElementById("modal-spilleliste").classList.add("open");
 }
 
+function showArtistsForSjanger({ label }) {
+  const sj = label.toLowerCase();
+  const list = state.artists
+    .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
+    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+  document.getElementById("modal-sjanger").classList.remove("open");
+  document.getElementById("al-title").textContent = `${label} (${list.length})`;
+  const body = document.getElementById("al-body");
+  body.innerHTML = list.length
+    ? `<div class="result-list">${buildArtistListRows(list)}</div>`
+    : `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
+  body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
+    const open = () => {
+      const a = list.find((x) => x.id === row.dataset.artistId);
+      if (a) { document.getElementById("modal-artistliste").classList.remove("open"); openDetail(a); }
+    };
+    row.addEventListener("click", (e) => { if (!e.target.closest("a")) open(); });
+    row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+  });
+  document.getElementById("modal-artistliste").classList.add("open");
+}
+
 function setupSjangerModal() {
   const sj = document.getElementById("modal-sjanger");
   const pl = document.getElementById("modal-spilleliste");
+  const al = document.getElementById("modal-artistliste");
   if (!sj || !pl) return;
   sj.addEventListener("click", (e) => { if (e.target === sj) sj.classList.remove("open"); });
   sj.querySelector(".modal-close").addEventListener("click", () => sj.classList.remove("open"));
   pl.addEventListener("click", (e) => { if (e.target === pl) pl.classList.remove("open"); });
   pl.querySelector(".modal-close").addEventListener("click", () => pl.classList.remove("open"));
+  if (al) {
+    al.addEventListener("click", (e) => { if (e.target === al) al.classList.remove("open"); });
+    al.querySelector(".modal-close").addEventListener("click", () => al.classList.remove("open"));
+  }
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-sjanger]");
     if (!btn) return;
     showSjangerInfo(btn.dataset.sjanger, {
       root: document,
       subgenreDescs: state.subgenreDescs,
+      onShowArtists: showArtistsForSjanger,
       onShowPlaylist: showPlaylistForGenre,
     });
   });

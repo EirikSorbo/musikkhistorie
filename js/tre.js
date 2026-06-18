@@ -3,7 +3,7 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres } from "./store.js";
 import { renderGenealogy } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, buildPlaylistHtml } from "./ui.js";
+import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows } from "./ui.js";
 import { CONFIGURED } from "./shared.js"; // setter også versjonsmerket
 
 // Stabil referanse som genealogy.js leser fra ved klikk – mutér innholdet
@@ -24,18 +24,7 @@ function showArtistsForGenre({ label }) {
   if (!list.length) {
     body.innerHTML = `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
   } else {
-    body.innerHTML = `<div class="result-list">${list.map((a) => {
-      const years = a.influenceStart ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}` : "";
-      const enc = encodeURIComponent;
-      return `<div class="result-row" data-artist-id="${escapeHtml(a.id)}" tabindex="0" role="button">
-        <span class="result-name result-link">${escapeHtml(a.name)}</span>
-        <span class="result-meta">
-          ${a.genre ? `<a class="tag tag-link" href="index.html?genre=${enc(a.genre)}">${escapeHtml(a.genre)}</a>` : ""}
-          ${a.instrument ? `<a class="tag tag-link" href="index.html?instrument=${enc(a.instrument)}">${escapeHtml(a.instrument)}</a>` : ""}
-          ${years ? `<span class="result-work">${years}</span>` : ""}
-        </span>
-      </div>`;
-    }).join("")}</div>`;
+    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
 
     body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
       const open = () => {
