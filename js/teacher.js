@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect } from "./ui.js";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml } from "./ui.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -510,15 +510,30 @@ function splitList(v, fallback) {
   return parts.length ? parts : fallback;
 }
 
+function showPlaylistForGenre({ label, fullName, node }) {
+  const { total, html } = buildPlaylistHtml(node, state.artists);
+  document.getElementById("modal-sjanger").classList.remove("open");
+  document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
+  document.getElementById("pl-body").innerHTML = html;
+  document.getElementById("modal-spilleliste").classList.add("open");
+}
+
 function setupSjangerModal() {
-  const m = document.getElementById("modal-sjanger");
-  if (!m) return;
-  m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
-  m.querySelector(".modal-close").addEventListener("click", () => m.classList.remove("open"));
+  const sj = document.getElementById("modal-sjanger");
+  const pl = document.getElementById("modal-spilleliste");
+  if (!sj || !pl) return;
+  sj.addEventListener("click", (e) => { if (e.target === sj) sj.classList.remove("open"); });
+  sj.querySelector(".modal-close").addEventListener("click", () => sj.classList.remove("open"));
+  pl.addEventListener("click", (e) => { if (e.target === pl) pl.classList.remove("open"); });
+  pl.querySelector(".modal-close").addEventListener("click", () => pl.classList.remove("open"));
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-sjanger]");
     if (!btn) return;
-    showSjangerInfo(btn.dataset.sjanger, { root: document, subgenreDescs: state.subgenreDescs });
+    showSjangerInfo(btn.dataset.sjanger, {
+      root: document,
+      subgenreDescs: state.subgenreDescs,
+      onShowPlaylist: showPlaylistForGenre,
+    });
   });
 }
 

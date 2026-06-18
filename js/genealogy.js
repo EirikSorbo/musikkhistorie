@@ -51,7 +51,7 @@ export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n)
 
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, subgenreDescs, onShowArtists }
-export function showSjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists } = {}) {
+export function showSjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist } = {}) {
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return;
@@ -65,14 +65,11 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
   const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
   const descFor = () => { const o = subgenreDescs[n.f] || subgenreDescs[n.l]; return (o && o.description) ? o.description : n.d; };
-  const pl = n.t.length
-    ? `<p class="gx-rel" style="margin-top:10px"><strong>Hør på YouTube:</strong></p>
-       <ul class="gx-tracks">${n.t.map((t) =>
-         `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(t)}" target="_blank" rel="noopener">${escapeHtml(t)}</a></li>`).join("")}</ul>`
-    : "";
-  const btn = (n.g && onShowArtists)
-    ? `<div style="margin-top:10px"><button type="button" class="btn ghost small gx-artists-btn">Vis artister</button></div>`
-    : "";
+
+  const btnArea = [
+    (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
+    (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+  ].filter(Boolean).join(" ");
 
   mTitle.textContent = n.f;
   mBody.innerHTML = `
@@ -82,9 +79,11 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
     ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
-    ${pl}${btn}`;
+    ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => { modal.classList.remove("open"); onShowArtists({ label: n.l }); });
+  const bp = mBody.querySelector(".gx-playlist-btn");
+  if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
   modal.classList.add("open");
 }
 
@@ -192,11 +191,6 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists, onSho
     const grewInto = GENEALOGY.filter((x) => x.p.includes(id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
     const reactAgainst = n.rx.map((p) => escapeHtml(map[p].f));
     const reactedBy = GENEALOGY.filter((x) => x.rx.includes(id)).map((x) => escapeHtml(x.f));
-    const pl = n.t.length
-      ? `<p class="gx-rel" style="margin-top:10px"><strong>Hør på YouTube:</strong></p>
-         <ul class="gx-tracks">${n.t.map((t) =>
-           `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(t)}" target="_blank" rel="noopener">${escapeHtml(t)}</a></li>`).join("")}</ul>`
-      : "";
     const btnArea = [
       (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
       (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
@@ -210,7 +204,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists, onSho
         ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
         <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
         ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
-        ${pl}${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
+        ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
       const b = mBody.querySelector(".gx-artists-btn");
       if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
       const bp = mBody.querySelector(".gx-playlist-btn");

@@ -446,3 +446,47 @@ function pct(n, max) {
   if (!max) return 0;
   return Math.min(100, Math.round((n / max) * 100));
 }
+
+// Bygger HTML for spilleliste-popup: hardkodede spor fra noden + keyWorks/lenker fra artister.
+export function buildPlaylistHtml(node, artists) {
+  const enc = encodeURIComponent;
+  const ytLink = (q, text) =>
+    `<a href="https://www.youtube.com/results?search_query=${enc(q)}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
+
+  const sj = (node.l || "").toLowerCase();
+  const nodeItems = (node.t || []).map((t) => `<li class="pl-item">${ytLink(t, t)}</li>`);
+
+  const genreArtists = (artists || [])
+    .filter((a) => a.status === "active" && (a.genre === node.l || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
+    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+
+  const seen = new Set();
+  const artistItems = genreArtists.flatMap((a) => {
+    const rows = [];
+    const nameLow = a.name.toLowerCase();
+    (a.links || []).forEach((l) => {
+      const key = `${nameLow}|${(l.label || l.url).toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      rows.push(`<li class="pl-item"><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || l.url)}</a> <span class="muted">— ${escapeHtml(a.name)}</span></li>`);
+    });
+    (a.keyWorks || "").split(",").map((s) => s.trim()).filter(Boolean).forEach((w) => {
+      const key = `${nameLow}|${w.toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      rows.push(`<li class="pl-item">${ytLink(`${w} ${a.name}`, w)} <span class="muted">— ${escapeHtml(a.name)}</span></li>`);
+    });
+    return rows;
+  });
+
+  const total = nodeItems.length + artistItems.length;
+  if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>` };
+
+  const nodeSec = nodeItems.length
+    ? `<p class="muted" style="font-size:0.8rem;margin:0 0 4px">Fra sjangerbeskrivelsen</p><ul class="pl-list">${nodeItems.join("")}</ul>`
+    : "";
+  const artistSec = artistItems.length
+    ? `<p class="muted" style="font-size:0.8rem;margin:${nodeItems.length ? "12px" : "0"} 0 4px">Fra foreslåtte artister</p><ul class="pl-list">${artistItems.join("")}</ul>`
+    : "";
+  return { total, html: nodeSec + artistSec };
+}
