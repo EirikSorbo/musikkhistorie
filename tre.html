@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slektstre – Populærmusikkhistorie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="index.html">
+        <h1>Afroamerikansk musikkhistorie</h1>
+      </a>
+      <nav class="nav"><span id="app-version" class="version-tag"></span>
+        <a href="index.html">Startside</a>
+        <a href="tre.html" class="active">Slektstre</a>
+        <a href="student.html">Foreslå</a>
+        <a href="teacher.html">Lærer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="banner" class="banner"></div>
+
+    <section class="panel gx-page">
+      <h2>Slektstre</h2>
+      <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Tid løper nedover, supersjanger bortover. Dra for å flytte kartet, scroll eller +/− for å zoome, hold over en sjanger for å se linjene, klikk for beskrivelse og spilleliste.</p>
+      <div class="gx-stage gx-stage-tall" id="gx-stage">
+        <div class="gx-ctrl">
+          <button id="gx-zin" type="button" aria-label="Zoom inn">+</button>
+          <button id="gx-zout" type="button" aria-label="Zoom ut">−</button>
+          <button id="gx-rst" type="button" aria-label="Tilbakestill">⤺</button>
+        </div>
+        <svg id="gx-svg" width="100%" height="100%" role="img" aria-label="Slektstre over sjangrene"><g id="gx-cam"></g></svg>
+      </div>
+      <div class="gx-info" id="gx-info"></div>
+      <div class="gx-legend" id="gx-legend"></div>
+    </section>
+  </main>
+
+  <footer class="sitefoot wrap"></footer>
+
+  <script type="module" src="js/tre.js"></script>
+</body>
+</html>

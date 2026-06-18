@@ -2,7 +2,6 @@ import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { renderGenealogy } from "./genealogy.js";
 
 const clientId = getClientId();
 
@@ -62,7 +61,7 @@ function setupTagFilters() {
 
 function setupExplore() {
   // Koble alle nye modaler til backdrop-klikk og close-knapp
-  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list", "modal-genealogy"].forEach((id) => {
+  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list"].forEach((id) => {
     const m = document.getElementById(id);
     if (!m) return;
     m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
@@ -81,50 +80,30 @@ function setupExplore() {
 
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", openSubgenreList);
-
-  const btnGenealogy = document.getElementById("btn-genealogy");
-  if (btnGenealogy) btnGenealogy.addEventListener("click", openGenealogy);
 }
 
-// Bygger slektstreet ved første åpning, og åpner modalvinduet.
-let genealogyApi = null;
-function openGenealogy() {
-  const modal = document.getElementById("modal-genealogy");
-  if (!modal) return;
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-  modal.classList.add("open");
-  if (!genealogyApi) {
-    genealogyApi = renderGenealogy({
-      root: modal,
-      subgenreDescs: state.subgenreDescs,
-      onShowArtists: showArtistsForGenre,
-    });
+// Filter sendt fra slektstre-siden (index.html?genre=… / ?subgenre=…):
+// vent til data er lastet, sett filter og scroll til artistlista.
+function applyIncomingFilter() {
+  const params = new URLSearchParams(location.search);
+  const g = params.get("genre"), s = params.get("subgenre");
+  if (!g && !s) return;
+  state.filters.genre = g || "";
+  state.filters.subgenre = s || "";
+  const tryApply = () => {
+    if (!state.config || !state.artists.length) return false;
+    if (g) $("#sp-genre").value = g;
+    if (s) $("#sp-subgenre").value = s;
+    renderSpotlight();
+    renderList();
+    const list = document.getElementById("artist-list");
+    if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
+    return true;
+  };
+  if (!tryApply()) {
+    const iv = setInterval(() => { if (tryApply()) clearInterval(iv); }, 150);
+    setTimeout(() => clearInterval(iv), 5000);
   }
-  // Sentrer kartet når scenen har fått mål (etter at modalen er synlig)
-  requestAnimationFrame(() => genealogyApi.fit());
-}
-
-// Lukker treet, setter filter på sjangeren og scroller til artistlista.
-function showArtistsForGenre({ label, genre }) {
-  document.getElementById("modal-genealogy").classList.remove("open");
-  state.filters = { search: "", genre: "", instrument: "", decade: "", subgenre: "" };
-  $("#sp-search").value = ""; $("#sp-genre").value = ""; $("#sp-instrument").value = "";
-  $("#sp-decade").value = ""; $("#sp-subgenre").value = "";
-
-  // Bruk undersjanger-tag hvis noen artister faktisk bruker den, ellers hovedsjanger
-  const hasSub = state.artists.some(
-    (a) => a.status === "active" && (a.subgenres || []).some((s) => s.toLowerCase() === label.toLowerCase())
-  );
-  if (hasSub) {
-    state.filters.subgenre = label;
-    $("#sp-subgenre").value = label;
-  } else if (genre) {
-    state.filters.genre = genre;
-    $("#sp-genre").value = genre;
-  }
-  renderSpotlight();
-  renderList();
-  document.getElementById("artist-list").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function openDecadeList() {
@@ -455,6 +434,8 @@ function init() {
   });
   subscribeDecades((d) => { state.decadeDescs = d; renderSpotlight(); });
   subscribeSubgenres((s) => { state.subgenreDescs = s; renderSpotlight(); });
+
+  applyIncomingFilter();
 }
 
 init();

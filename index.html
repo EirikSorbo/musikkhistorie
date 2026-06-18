@@ -20,6 +20,7 @@
       </a>
       <nav class="nav"><span id="app-version" class="version-tag"></span>
         <a href="index.html" class="active">Startside</a>
+        <a href="tre.html">Slektstre</a>
         <a href="student.html">Foreslå</a>
         <a href="teacher.html">Lærer</a>
       </nav>
@@ -51,7 +52,6 @@
       <div class="explore-btns">
         <button class="btn ghost" id="btn-context">Kontekst</button>
         <button class="btn ghost" id="btn-genres">Sjangere</button>
-        <button class="btn ghost" id="btn-genealogy">Slektstre</button>
       </div>
     </section>
 
@@ -107,27 +107,6 @@
       </div>
       <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
       <div id="sl-chips" class="subgenre-tag-list"></div>
-    </div>
-  </div>
-
-  <!-- Slektstre (Carta) -->
-  <div class="modal-backdrop" id="modal-genealogy">
-    <div class="modal modal-wide">
-      <div class="modal-head">
-        <h2>Slektstre</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Tid løper nedover, supersjanger bortover. Dra for å flytte kartet, scroll eller +/− for å zoome, hold over en sjanger for å se linjene, klikk for spilleliste.</p>
-      <div class="gx-stage" id="gx-stage">
-        <div class="gx-ctrl">
-          <button id="gx-zin" type="button" aria-label="Zoom inn">+</button>
-          <button id="gx-zout" type="button" aria-label="Zoom ut">−</button>
-          <button id="gx-rst" type="button" aria-label="Tilbakestill">⤺</button>
-        </div>
-        <svg id="gx-svg" width="100%" height="100%" role="img" aria-label="Slektstre over sjangrene"><g id="gx-cam"></g></svg>
-      </div>
-      <div class="gx-info" id="gx-info"></div>
-      <div class="gx-legend" id="gx-legend"></div>
     </div>
   </div>
 
