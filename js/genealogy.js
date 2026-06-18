@@ -65,6 +65,12 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
   const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
   const descFor = () => { const o = subgenreDescs[n.f] || subgenreDescs[n.l]; return (o && o.description) ? o.description : n.d; };
+  const descObj = subgenreDescs[n.f] || subgenreDescs[n.l] || {};
+  const kilder = Array.isArray(descObj.kilder) ? descObj.kilder : [];
+  const kilderHtml = kilder.length ? `<div class="kilder"><strong>Kilder:</strong><ul>${kilder.map((k) => {
+    const t = escapeHtml(k.text || "");
+    return k.url ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${t}</a></li>` : `<li>${t}</li>`;
+  }).join("")}</ul></div>` : "";
 
   const btnArea = [
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
@@ -79,6 +85,7 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
     ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
+    ${kilderHtml}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label: n.l }));
@@ -199,6 +206,12 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists, onSho
     ].filter(Boolean).join(" ");
     if (mTitle) mTitle.textContent = n.f;
     if (mBody) {
+      const descObj = subgenreDescs[n.f] || subgenreDescs[n.l] || {};
+      const kilder = Array.isArray(descObj.kilder) ? descObj.kilder : [];
+      const kilderHtml = kilder.length ? `<div class="kilder"><strong>Kilder:</strong><ul>${kilder.map((k) => {
+        const t = escapeHtml(k.text || "");
+        return k.url ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${t}</a></li>` : `<li>${t}</li>`;
+      }).join("")}</ul></div>` : "";
       mBody.innerHTML = `
         <p class="gx-era">${escapeHtml(n.era)}</p>
         <p class="gx-desc">${escapeHtml(descFor(n))}</p>
@@ -206,6 +219,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists, onSho
         ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
         <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
         ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
+        ${kilderHtml}
         ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
       const b = mBody.querySelector(".gx-artists-btn");
       if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));

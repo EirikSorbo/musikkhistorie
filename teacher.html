@@ -382,12 +382,23 @@
       <!-- Redigerings-modus -->
       <div id="ds-edit" style="display:none">
         <div class="add-grid" style="grid-template-columns:1fr">
-          <label>Samfunnsutvikling
-            <textarea id="ds-society" rows="5" placeholder="Beskriv samfunnsutvikling …"></textarea>
+          <label>Samfunnsutvikling (kort)
+            <textarea id="ds-society" rows="3" placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
           </label>
-          <label>Teknologiutvikling
-            <textarea id="ds-tech" rows="5" placeholder="Beskriv teknologiutvikling …"></textarea>
+          <label>Samfunnsutvikling — utvidet («Les mer»)
+            <textarea id="ds-society-more" rows="6" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
           </label>
+          <label>Teknologiutvikling (kort)
+            <textarea id="ds-tech" rows="3" placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
+          </label>
+          <label>Teknologiutvikling — utvidet («Les mer»)
+            <textarea id="ds-tech-more" rows="6" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
+          </label>
+          <div>
+            <span class="field-label">Kilder for tiåret</span>
+            <div id="ds-kilder-rows"></div>
+            <button type="button" id="ds-add-kilder" class="btn ghost small">+ Legg til kilde</button>
+          </div>
           <div class="add-actions">
             <button type="button" id="ds-save" class="btn primary">Lagre</button>
             <span id="ds-msg" class="form-msg ok"></span>
@@ -408,6 +419,11 @@
         <label>Beskrivelse
           <textarea id="ss-desc" rows="5" placeholder="Beskriv sjangeren …"></textarea>
         </label>
+        <div>
+          <span class="field-label">Kilder for sjangeren</span>
+          <div id="ss-kilder-rows"></div>
+          <button type="button" id="ss-add-kilder" class="btn ghost small">+ Legg til kilde</button>
+        </div>
         <div class="add-actions">
           <button type="button" id="ss-save" class="btn primary">Lagre</button>
           <span id="ss-msg" class="form-msg ok"></span>
@@ -461,6 +477,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=160"></script>
+  <script type="module" src="js/teacher.js?v=161"></script>
 </body>
 </html>

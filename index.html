@@ -88,14 +88,28 @@
       <div class="info-section">
         <h4 class="info-label">Samfunnsutvikling</h4>
         <p id="dv-society" class="info-text"></p>
+        <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer →</button>
       </div>
       <div class="info-section">
         <h4 class="info-label">Teknologiutvikling</h4>
         <p id="dv-tech" class="info-text"></p>
+        <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer →</button>
       </div>
+      <div id="dv-kilder"></div>
       <div style="margin-top:16px">
-        <button class="btn ghost small" id="dv-back">← Tilbake</button>
+        <button class="btn ghost small" id="dv-back">← Tilbake til oversikt</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Utvidet tiårsbeskrivelse -->
+  <div class="modal-backdrop" id="modal-decade-more">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="dm-title"></h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p id="dm-text" class="info-text" style="white-space:pre-wrap"></p>
     </div>
   </div>
 
@@ -167,6 +181,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=160"></script>
+  <script type="module" src="js/landing.js?v=161"></script>
 </body>
 </html>

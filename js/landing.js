@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -155,7 +155,7 @@ function setupTagFilters() {
 }
 
 function setupExplore() {
-  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list"].forEach((id) => {
+  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list", "modal-decade-more"].forEach((id) => {
     const m = document.getElementById(id);
     if (!m) return;
     m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); });
@@ -235,7 +235,32 @@ function openDecadeView(decadeId) {
   societyEl.className = "info-text" + (desc.society ? "" : " muted");
   techEl.textContent = desc.tech || "Ingen beskrivelse ennå.";
   techEl.className = "info-text" + (desc.tech ? "" : " muted");
+
+  // «Les mer»-knapper synes kun hvis det finnes utdypende tekst
+  const moreSociety = document.getElementById("dv-society-more");
+  const moreTech = document.getElementById("dv-tech-more");
+  if (moreSociety) {
+    moreSociety.style.display = desc.societyMore ? "" : "none";
+    moreSociety.onclick = () => openDecadeMore(`${decadeId}-tallet — samfunnsutvikling`, desc.societyMore);
+  }
+  if (moreTech) {
+    moreTech.style.display = desc.techMore ? "" : "none";
+    moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
+  }
+
+  // Kilder for tiåret (delt mellom samfunn og teknologi)
+  const kilderEl = document.getElementById("dv-kilder");
+  if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
+
   modalClose(document.getElementById("modal-decade-list"));
+  modalOpen(modal);
+}
+
+function openDecadeMore(title, text) {
+  const modal = document.getElementById("modal-decade-more");
+  if (!modal) return;
+  document.getElementById("dm-title").textContent = title;
+  document.getElementById("dm-text").textContent = text || "";
   modalOpen(modal);
 }
 

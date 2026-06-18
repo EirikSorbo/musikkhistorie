@@ -564,7 +564,10 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   align-items: center;
   margin-bottom: 22px;
 }
-.modal-head h2 { margin: 0; font-size: 1.1rem; }
+.modal-head h2 { margin: 0; font-size: 1.1rem; flex: 1; }
+.modal-head .modal-close,
+.modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
+.modal-head .modal-close { margin-right: 4px; }
 .modal-foot-right { display: flex; justify-content: flex-end; margin-top: 20px; }
 
 .info-section { margin-bottom: 18px; }

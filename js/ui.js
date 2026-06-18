@@ -29,6 +29,43 @@ export function modalCloseTop() {
   open.sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
   modalClose(open[open.length - 1]);
 }
+export function modalCloseAll() {
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+}
+
+// Konverter eksisterende ✕-knapp til ←-tilbakeknapp og injiser ny ✕ for "lukk alle".
+function initModalHeaders() {
+  document.querySelectorAll(".modal-head").forEach((head) => {
+    const closeBtn = head.querySelector(".modal-close");
+    if (!closeBtn || head.querySelector(".modal-close-all")) return;
+    closeBtn.innerHTML = "&larr;";
+    closeBtn.title = "Tilbake";
+    const closeAll = document.createElement("button");
+    closeAll.type = "button";
+    closeAll.className = "modal-close-all btn ghost small";
+    closeAll.innerHTML = "&times;";
+    closeAll.title = "Lukk alle";
+    closeAll.addEventListener("click", modalCloseAll);
+    closeBtn.parentNode.insertBefore(closeAll, closeBtn.nextSibling);
+  });
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initModalHeaders);
+} else {
+  initModalHeaders();
+}
+
+// Bygger en strukturert kilde-liste (brukt på artist, sjanger og tiår).
+export function buildKilderList(kilder, label = "Kilder") {
+  if (!Array.isArray(kilder) || !kilder.length) return "";
+  const items = kilder.map((k) => {
+    const text = escapeHtml(k.text || "");
+    return k.url
+      ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${text}</a></li>`
+      : `<li>${text}</li>`;
+  }).join("");
+  return `<div class="kilder"><strong>${escapeHtml(label)}:</strong><ul>${items}</ul></div>`;
+}
 
 // Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).
 function genreTags(a) {
@@ -51,16 +88,7 @@ function keyWorksText(works) {
   }).join(", ");
 }
 
-function kilderHtml(kilder) {
-  if (!Array.isArray(kilder) || !kilder.length) return "";
-  const items = kilder.map((k) => {
-    const text = escapeHtml(k.text || "");
-    return k.url
-      ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${text}</a></li>`
-      : `<li>${text}</li>`;
-  }).join("");
-  return `<div class="kilder"><strong>Kilder:</strong><ul>${items}</ul></div>`;
-}
+const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
 
 function artistImage(a, big = false) {
   if (!a.imageUrl) return "";
@@ -506,6 +534,7 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
 
   const desc = subgenreDescs[label];
   const descText = desc?.description || "Ingen beskrivelse ennå.";
+  const kilder = Array.isArray(desc?.kilder) ? desc.kilder : [];
 
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
@@ -515,6 +544,7 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
   mTitle.textContent = label;
   mBody.innerHTML = `
     <p class="gx-desc">${escapeHtml(descText)}</p>
+    ${buildKilderList(kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label }));

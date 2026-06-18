@@ -165,18 +165,28 @@ function openSingleSubgenreModal(subgenreId) {
   $("#subgenre-single-title").textContent = subgenreId;
   $("#ss-desc").value = desc.description || "";
   $("#ss-msg").textContent = "";
+  const kilderWrap = $("#ss-kilder-rows");
+  if (kilderWrap) {
+    kilderWrap.innerHTML = "";
+    const kilder = Array.isArray(desc.kilder) ? desc.kilder : [];
+    (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || "", "ss"));
+  }
   $("#modal-subgenre-single").dataset.subgenre = subgenreId;
   openAdminModal("modal-subgenre-single");
 }
 
 function setupSubgenreSingleSave() {
+  const addKilderBtn = $("#ss-add-kilder");
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ss-kilder-rows"), "", "", "ss"));
+
   $("#ss-save").addEventListener("click", async () => {
     const modal = $("#modal-subgenre-single");
     const subgenreId = modal.dataset.subgenre;
     const description = $("#ss-desc").value.trim();
+    const kilder = collectKilderRows($("#ss-kilder-rows"));
     const msg = $("#ss-msg");
     try {
-      await saveSubgenreDesc(subgenreId, { description });
+      await saveSubgenreDesc(subgenreId, { description, kilder });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
       setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);
@@ -267,6 +277,9 @@ function openSingleDecadeModal(decadeId) {
 
   $("#ds-society").value = desc.society || "";
   $("#ds-tech").value = desc.tech || "";
+  $("#ds-society-more").value = desc.societyMore || "";
+  $("#ds-tech-more").value = desc.techMore || "";
+  buildDecadeKilderRows(desc.kilder || []);
   $("#ds-msg").textContent = "";
 
   $("#ds-view").style.display = "";
@@ -276,20 +289,53 @@ function openSingleDecadeModal(decadeId) {
   openAdminModal("modal-decade-single");
 }
 
+function buildDecadeKilderRows(kilder) {
+  const wrap = $("#ds-kilder-rows");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(wrap, k.text || "", k.url || "", "ds"));
+}
+
+function addKilderRow(wrap, text = "", url = "", prefix = "ds") {
+  const row = document.createElement("div");
+  row.className = "source-row";
+  row.innerHTML = `
+    <input type="text" class="${prefix}-kilde-text source-text" placeholder="Kilde …" value="${escapeHtml(text)}">
+    <input type="url" class="${prefix}-kilde-url source-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
+    <button type="button" class="btn ghost small remove-source">✕</button>
+  `;
+  row.querySelector(".remove-source").addEventListener("click", () => row.remove());
+  wrap.appendChild(row);
+}
+
+function collectKilderRows(wrap) {
+  return [...wrap.querySelectorAll(".source-row")]
+    .map((r) => ({
+      text: r.querySelector(".source-text").value.trim(),
+      url: r.querySelector(".source-url").value.trim(),
+    }))
+    .filter((k) => k.text);
+}
+
 function setupDecadeSingleSave() {
   $("#ds-to-edit").addEventListener("click", () => {
     $("#ds-view").style.display = "none";
     $("#ds-edit").style.display = "";
   });
+  const addKilderBtn = $("#ds-add-kilder");
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ds-kilder-rows"), "", "", "ds"));
 
   $("#ds-save").addEventListener("click", async () => {
     const modal = $("#modal-decade-single");
     const decadeId = modal.dataset.decade;
     const society = $("#ds-society").value.trim();
     const tech = $("#ds-tech").value.trim();
+    const societyMore = $("#ds-society-more").value.trim();
+    const techMore = $("#ds-tech-more").value.trim();
+    const kilder = collectKilderRows($("#ds-kilder-rows"));
     const msg = $("#ds-msg");
     try {
-      await saveDecadeDesc(decadeId, { society, tech });
+      await saveDecadeDesc(decadeId, { society, tech, societyMore, techMore, kilder });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
 
