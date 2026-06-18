@@ -2,7 +2,7 @@ import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES } from "./genealogy.js";
+import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const clientId = getClientId();
 
@@ -29,6 +29,18 @@ function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
   renderArtistDetail($("#detail-body"), artist, state.config);
   document.getElementById("modal-detail").classList.add("open");
+}
+
+function setupSjangerModal() {
+  const m = document.getElementById("modal-sjanger");
+  if (!m) return;
+  m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
+  m.querySelector(".modal-close").addEventListener("click", () => m.classList.remove("open"));
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-sjanger]");
+    if (!btn) return;
+    showSjangerInfo(btn.dataset.sjanger, { root: document, subgenreDescs: state.subgenreDescs });
+  });
 }
 
 function setupTagFilters() {
@@ -416,6 +428,7 @@ function loadCache() {
 function init() {
   setupFilters();
   setupTagFilters();
+  setupSjangerModal();
   setupDetailModal();
   setupSubgenreInfo();
   setupExplore();

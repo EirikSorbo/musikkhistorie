@@ -23,7 +23,7 @@ import { DEFAULT_CONFIG } from "./limits.js";
 import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect } from "./ui.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES } from "./genealogy.js";
+import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const state = {
   artists: [],
@@ -510,9 +510,22 @@ function splitList(v, fallback) {
   return parts.length ? parts : fallback;
 }
 
+function setupSjangerModal() {
+  const m = document.getElementById("modal-sjanger");
+  if (!m) return;
+  m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
+  m.querySelector(".modal-close").addEventListener("click", () => m.classList.remove("open"));
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-sjanger]");
+    if (!btn) return;
+    showSjangerInfo(btn.dataset.sjanger, { root: document, subgenreDescs: state.subgenreDescs });
+  });
+}
+
 function startApp() {
   state.started = true;
   setupFilters();
+  setupSjangerModal();
   setupAdmin();
   setupDataButtons();
   setupImportChoice();

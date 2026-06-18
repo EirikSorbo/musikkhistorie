@@ -49,6 +49,45 @@ export const GENEALOGY = [
 export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
   .sort((a, b) => a.localeCompare(b, "no"));
 
+// Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
+// opts: { root, subgenreDescs, onShowArtists }
+export function showSjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists } = {}) {
+  const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
+  const n = GENEALOGY.find((x) => x.l === label || x.f === label);
+  if (!n) return;
+  const modal = root.querySelector("#modal-sjanger");
+  const mTitle = root.querySelector("#sj-title");
+  const mBody = root.querySelector("#sj-body");
+  if (!modal || !mTitle || !mBody) return;
+
+  const inf = n.p.map((p) => escapeHtml(map[p]?.f || p)).join(", ") || "—";
+  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
+  const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
+  const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
+  const descFor = () => { const o = subgenreDescs[n.f] || subgenreDescs[n.l]; return (o && o.description) ? o.description : n.d; };
+  const pl = n.t.length
+    ? `<p class="gx-rel" style="margin-top:10px"><strong>Hør på YouTube:</strong></p>
+       <ul class="gx-tracks">${n.t.map((t) =>
+         `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(t)}" target="_blank" rel="noopener">${escapeHtml(t)}</a></li>`).join("")}</ul>`
+    : "";
+  const btn = (n.g && onShowArtists)
+    ? `<div style="margin-top:10px"><button type="button" class="btn ghost small gx-artists-btn">Vis artister</button></div>`
+    : "";
+
+  mTitle.textContent = n.f;
+  mBody.innerHTML = `
+    <p class="gx-era">${escapeHtml(n.era)}</p>
+    <p class="gx-desc">${escapeHtml(descFor())}</p>
+    <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
+    ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
+    <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
+    ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
+    ${pl}${btn}`;
+  const b = mBody.querySelector(".gx-artists-btn");
+  if (b) b.addEventListener("click", () => { modal.classList.remove("open"); onShowArtists({ label: n.l }); });
+  modal.classList.add("open");
+}
+
 const W = 1140, H = 1180, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
 const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115 };
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t" };

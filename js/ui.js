@@ -26,7 +26,7 @@ function genreTags(a) {
   const sjanger = subs.filter((s) => SJANGER_SET.has(s.toLowerCase()));
   const under = subs.filter((s) => !SJANGER_SET.has(s.toLowerCase()));
   return [
-    ...sjanger.map((s) => `<button class="tag tag-sjanger tag-link" data-filter-key="sjanger" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+    ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
     ...under.map((s) => `<button class="tag tag-under tag-link" data-filter-key="subgenre" data-filter-val="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
   ].join("");
 }
