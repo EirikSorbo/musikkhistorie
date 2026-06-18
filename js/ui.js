@@ -20,6 +20,16 @@ import { GENEALOGY_GENRES } from "./genealogy.js";
 // Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
 const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
 
+window._modalZ = window._modalZ || 100;
+export function modalOpen(el) { el.style.zIndex = ++window._modalZ; el.classList.add("open"); }
+export function modalClose(el) { el.classList.remove("open"); }
+export function modalCloseTop() {
+  const open = [...document.querySelectorAll(".modal-backdrop.open")];
+  if (!open.length) return;
+  open.sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
+  modalClose(open[open.length - 1]);
+}
+
 // Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre) fra subgenres.
 function genreTags(a) {
   const subs = a.subgenres || [];
@@ -467,10 +477,10 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
     <p class="gx-desc">${escapeHtml(descText)}</p>
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   const b = mBody.querySelector(".gx-artists-btn");
-  if (b) b.addEventListener("click", () => { modal.classList.remove("open"); onShowArtists({ label }); });
+  if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
-  modal.classList.add("open");
+  modalOpen(modal);
 }
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.

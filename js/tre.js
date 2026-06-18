@@ -3,30 +3,26 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres } from "./store.js";
 import { renderGenealogy, showSjangerInfo } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo } from "./ui.js";
-import { CONFIGURED } from "./shared.js"; // setter også versjonsmerket
+import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js";
+import { CONFIGURED } from "./shared.js";
 
-// Stabil referanse som genealogy.js leser fra ved klikk – mutér innholdet
 const subDescs = {};
 let artists = [];
 let api = null;
-let lastSjangerLabel = null; // for tilbake-knapp i spilleliste
+let lastSjangerLabel = null;
 
-// Klikk på «Vis artister» → vis en slank liste i et popup-vindu
 function showArtistsForGenre({ label }) {
   const sj = label.toLowerCase();
   const list = artists
     .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("al-title").textContent = `${label} (${list.length})`;
   const body = document.getElementById("al-body");
   if (!list.length) {
     body.innerHTML = `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
   } else {
     body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
-
     body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
       const open = () => {
         const a = list.find((x) => x.id === row.dataset.artistId);
@@ -36,26 +32,20 @@ function showArtistsForGenre({ label }) {
       row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
     });
   }
-  document.getElementById("modal-artistliste").classList.add("open");
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
-// Vis artist-detalj i eget popup; skjul artistlisten midlertidig
 function showArtistDetail(a) {
-  document.getElementById("modal-artistliste").classList.remove("open");
   document.getElementById("ad-title").textContent = a.name;
   renderArtistDetail(document.getElementById("ad-body"), a, {});
-  document.getElementById("modal-artist-detail").classList.add("open");
+  modalOpen(document.getElementById("modal-artist-detail"));
 }
 
-// Klikk på «Vis artister for instrument»
 function showArtistsForInstrument(instrument) {
   const list = artists
     .filter((a) => a.status === "active" && a.instrument === instrument)
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
-  // Lukk eventuelle åpne sub-modaler
-  document.getElementById("modal-artist-detail").classList.remove("open");
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("al-title").textContent = `${instrument} (${list.length})`;
   const body = document.getElementById("al-body");
   if (!list.length) {
@@ -71,17 +61,15 @@ function showArtistsForInstrument(instrument) {
       row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
     });
   }
-  document.getElementById("modal-artistliste").classList.add("open");
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
-// Klikk på «Vis spilleliste» → samle alle musikkeksempler for sjangeren
 function showPlaylistForGenre({ label, fullName, node }) {
   lastSjangerLabel = label;
   const { total, html } = buildPlaylistHtml(node, artists);
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
   document.getElementById("pl-body").innerHTML = html;
-  document.getElementById("modal-spilleliste").classList.add("open");
+  modalOpen(document.getElementById("modal-spilleliste"));
 }
 
 function openSjangerInfo(label) {
@@ -104,21 +92,20 @@ function build() {
   requestAnimationFrame(() => api.fit());
 }
 
-// Lukking av artist-liste-popup
+// Lukking av artist-liste
 const alModal = document.getElementById("modal-artistliste");
-alModal.addEventListener("click", (e) => { if (e.target === alModal) alModal.classList.remove("open"); });
-alModal.querySelector(".modal-close").addEventListener("click", () => alModal.classList.remove("open"));
+alModal.addEventListener("click", (e) => { if (e.target === alModal) modalClose(alModal); });
+alModal.querySelector(".modal-close").addEventListener("click", () => modalClose(alModal));
 
-// Lukking av artist-detalj → vis artistlisten igjen
+// Lukking av artist-detalj
 const adModal = document.getElementById("modal-artist-detail");
-const closeDetail = () => { adModal.classList.remove("open"); alModal.classList.add("open"); };
-adModal.addEventListener("click", (e) => { if (e.target === adModal) closeDetail(); });
-adModal.querySelector(".modal-close").addEventListener("click", closeDetail);
+adModal.addEventListener("click", (e) => { if (e.target === adModal) modalClose(adModal); });
+adModal.querySelector(".modal-close").addEventListener("click", () => modalClose(adModal));
 
 // Lukking av spilleliste → tilbake til sjanger-popup
 const plModal = document.getElementById("modal-spilleliste");
 const closePl = () => {
-  plModal.classList.remove("open");
+  modalClose(plModal);
   if (lastSjangerLabel) {
     const lbl = lastSjangerLabel;
     lastSjangerLabel = null;
@@ -131,10 +118,10 @@ plCloseBtn.className = "btn ghost small";
 plModal.addEventListener("click", (e) => { if (e.target === plModal) closePl(); });
 plCloseBtn.addEventListener("click", closePl);
 
-// Lukking av sjanger-info-popup
+// Lukking av sjanger-info
 const sjModal = document.getElementById("modal-sjanger");
-sjModal.addEventListener("click", (e) => { if (e.target === sjModal) sjModal.classList.remove("open"); });
-sjModal.querySelector(".modal-close").addEventListener("click", () => sjModal.classList.remove("open"));
+sjModal.addEventListener("click", (e) => { if (e.target === sjModal) modalClose(sjModal); });
+sjModal.querySelector(".modal-close").addEventListener("click", () => modalClose(sjModal));
 
 const sjangerOpts = () => ({
   root: document,
@@ -142,38 +129,24 @@ const sjangerOpts = () => ({
   onShowArtists: showArtistsForGenre,
   onShowPlaylist: showPlaylistForGenre,
 });
-const closeAllModals = () => {
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-};
 
-// Global handler — fanger klikk fra artist-detalj og andre modaler
 document.addEventListener("click", (e) => {
   const sj = e.target.closest("[data-sjanger]");
   if (sj) {
-    closeAllModals();
     openSjangerInfo(sj.dataset.sjanger);
     return;
   }
   const underBtn = e.target.closest("[data-under]");
   if (underBtn) {
-    closeAllModals();
     showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
     return;
   }
   const inst = e.target.closest("[data-instrument]");
-  if (inst) {
-    closeAllModals();
-    showArtistsForInstrument(inst.dataset.instrument);
-  }
+  if (inst) showArtistsForInstrument(inst.dataset.instrument);
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    if (adModal.classList.contains("open")) closeDetail();
-    else if (plModal.classList.contains("open")) closePl();
-    else if (sjModal.classList.contains("open")) sjModal.classList.remove("open");
-    else alModal.classList.remove("open");
-  }
+  if (e.key === "Escape") modalCloseTop();
 });
 
 build();

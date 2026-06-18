@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo } from "./ui.js";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -89,31 +89,30 @@ function setupGate() {
 //  Modaler
 // ----------------------------------------------------------------------------
 
-function openModal(id) {
-  document.getElementById(id).classList.add("open");
+function openAdminModal(id) {
+  const el = document.getElementById(id);
+  modalOpen(el);
   if (id === "modal-fyllingsgrad") renderLimits($("#modal-limits"), state);
   if (id === "modal-decade-desc") renderDecadeDescList();
   if (id === "modal-subgenre-desc") renderSubgenreDescList();
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove("open");
+function closeAdminModal(id) {
+  modalClose(document.getElementById(id));
 }
 
 function setupModals() {
   document.querySelectorAll("[data-open-modal]").forEach((btn) =>
-    btn.addEventListener("click", () => openModal(btn.dataset.openModal))
+    btn.addEventListener("click", () => openAdminModal(btn.dataset.openModal))
   );
   document.querySelectorAll(".modal-backdrop").forEach((m) =>
-    m.addEventListener("click", (e) => { if (e.target === m) closeModal(m.id); })
+    m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); })
   );
   document.querySelectorAll(".modal-close").forEach((btn) =>
-    btn.addEventListener("click", () => closeModal(btn.closest(".modal-backdrop").id))
+    btn.addEventListener("click", () => modalClose(btn.closest(".modal-backdrop")))
   );
-  // ESC-tast lukker åpen modal
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape")
-      document.querySelectorAll(".modal-backdrop.open").forEach((m) => closeModal(m.id));
+    if (e.key === "Escape") modalCloseTop();
   });
 }
 
@@ -167,7 +166,7 @@ function openSingleSubgenreModal(subgenreId) {
   $("#ss-desc").value = desc.description || "";
   $("#ss-msg").textContent = "";
   $("#modal-subgenre-single").dataset.subgenre = subgenreId;
-  openModal("modal-subgenre-single");
+  openAdminModal("modal-subgenre-single");
 }
 
 function setupSubgenreSingleSave() {
@@ -180,7 +179,7 @@ function setupSubgenreSingleSave() {
       await saveSubgenreDesc(subgenreId, { description });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
-      setTimeout(() => closeModal("modal-subgenre-single"), 800);
+      setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);
     } catch (err) {
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";
@@ -233,12 +232,12 @@ function openSubgenreInfo(subgenreId) {
   const editBtn = document.getElementById("sgi-edit-btn");
   if (editBtn) {
     editBtn.onclick = () => {
-      closeModal("modal-subgenre-info");
+      closeAdminModal("modal-subgenre-info");
       openSingleSubgenreModal(subgenreId);
     };
   }
 
-  openModal("modal-subgenre-info");
+  openAdminModal("modal-subgenre-info");
 }
 
 function buildDecadeButtons() {
@@ -274,7 +273,7 @@ function openSingleDecadeModal(decadeId) {
   $("#ds-edit").style.display = "none";
 
   modal.dataset.decade = decadeId;
-  openModal("modal-decade-single");
+  openAdminModal("modal-decade-single");
 }
 
 function setupDecadeSingleSave() {
@@ -512,10 +511,9 @@ function splitList(v, fallback) {
 
 function showPlaylistForGenre({ label, fullName, node }) {
   const { total, html } = buildPlaylistHtml(node, state.artists);
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
   document.getElementById("pl-body").innerHTML = html;
-  document.getElementById("modal-spilleliste").classList.add("open");
+  modalOpen(document.getElementById("modal-spilleliste"));
 }
 
 function showArtistsForInstrument(instrument) {
@@ -527,7 +525,7 @@ function showArtistsForInstrument(instrument) {
   body.innerHTML = list.length
     ? `<div class="result-list">${buildArtistListRows(list)}</div>`
     : `<p class="muted empty">Ingen forslag med dette instrumentet ennå.</p>`;
-  document.getElementById("modal-artistliste").classList.add("open");
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
 function showArtistsForSjanger({ label }) {
@@ -535,55 +533,34 @@ function showArtistsForSjanger({ label }) {
   const list = state.artists
     .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("al-title").textContent = `${label} (${list.length})`;
   const body = document.getElementById("al-body");
   body.innerHTML = list.length
     ? `<div class="result-list">${buildArtistListRows(list)}</div>`
     : `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
-  document.getElementById("modal-artistliste").classList.add("open");
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
 function setupSjangerModal() {
-  const sj = document.getElementById("modal-sjanger");
-  const pl = document.getElementById("modal-spilleliste");
-  const al = document.getElementById("modal-artistliste");
-  if (!sj || !pl) return;
-  sj.addEventListener("click", (e) => { if (e.target === sj) sj.classList.remove("open"); });
-  sj.querySelector(".modal-close").addEventListener("click", () => sj.classList.remove("open"));
-  pl.addEventListener("click", (e) => { if (e.target === pl) pl.classList.remove("open"); });
-  pl.querySelector(".modal-close").addEventListener("click", () => pl.classList.remove("open"));
-  if (al) {
-    al.addEventListener("click", (e) => { if (e.target === al) al.classList.remove("open"); });
-    al.querySelector(".modal-close").addEventListener("click", () => al.classList.remove("open"));
-  }
   const sjangerOpts = () => ({
     root: document,
     subgenreDescs: state.subgenreDescs,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
   });
-  const closeAllModals = () => {
-    document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-  };
   document.addEventListener("click", (e) => {
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
-      closeAllModals();
       showSjangerInfo(sjBtn.dataset.sjanger, sjangerOpts());
       return;
     }
     const underBtn = e.target.closest("[data-under]");
     if (underBtn) {
-      closeAllModals();
       showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
       return;
     }
     const inst = e.target.closest("[data-instrument]");
-    if (inst) {
-      closeAllModals();
-      showArtistsForInstrument(inst.dataset.instrument);
-    }
+    if (inst) showArtistsForInstrument(inst.dataset.instrument);
   });
 }
 
@@ -727,12 +704,12 @@ async function handleImportFile(file) {
   const subCount = Object.keys(subgenres).length;
   if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
   $("#import-choice-desc").textContent = `Filen inneholder ${parts.join(", ")}.`;
-  openModal("modal-import-choice");
+  openAdminModal("modal-import-choice");
 }
 
 function setupImportChoice() {
   $("#import-replace").addEventListener("click", async () => {
-    closeModal("modal-import-choice");
+    closeAdminModal("modal-import-choice");
     if (pendingImportData) {
       await handleReplace(pendingImportData.artists);
       await importDescriptions(pendingImportData);
@@ -740,7 +717,7 @@ function setupImportChoice() {
     pendingImportData = null;
   });
   $("#import-merge").addEventListener("click", async () => {
-    closeModal("modal-import-choice");
+    closeAdminModal("modal-import-choice");
     if (pendingImportData) {
       await handleMergeFile(pendingImportData.artists);
       await importDescriptions(pendingImportData);
@@ -835,7 +812,7 @@ async function handleMergeFile(data) {
   if (!hasConflicts) { await finishMerge(); return; }
 
   mergeState.index = mergeState.queue.findIndex(item => item.conflicts.length > 0);
-  openModal("modal-merge");
+  openAdminModal("modal-merge");
   renderMergeConflict();
 }
 
@@ -908,7 +885,7 @@ async function bulkMerge(choice) {
 }
 
 async function finishMerge() {
-  closeModal("modal-merge");
+  closeAdminModal("modal-merge");
   let added = 0, updated = 0;
 
   for (const a of mergeState.newArtists) {
@@ -960,7 +937,7 @@ function openEditModal(artistId) {
   buildEditSourceRows(a.kilder || []);
 
   $("#ed-msg").textContent = "";
-  openModal("modal-edit");
+  openAdminModal("modal-edit");
 }
 
 function buildEditLinkRows(links) {
@@ -1044,7 +1021,7 @@ function setupEditForm() {
       await updateArtistFields(id, fields);
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
-      setTimeout(() => closeModal("modal-edit"), 1000);
+      setTimeout(() => closeAdminModal("modal-edit"), 1000);
     } catch (err) {
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";

@@ -81,9 +81,11 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
     ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   const b = mBody.querySelector(".gx-artists-btn");
-  if (b) b.addEventListener("click", () => { modal.classList.remove("open"); onShowArtists({ label: n.l }); });
+  if (b) b.addEventListener("click", () => onShowArtists({ label: n.l }));
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
+  window._modalZ = window._modalZ || 100;
+  modal.style.zIndex = ++window._modalZ;
   modal.classList.add("open");
 }
 
@@ -210,7 +212,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists, onSho
       const bp = mBody.querySelector(".gx-playlist-btn");
       if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
     }
-    if (modal) modal.classList.add("open");
+    if (modal) { window._modalZ = window._modalZ || 100; modal.style.zIndex = ++window._modalZ; modal.classList.add("open"); }
   }
 
   GENEALOGY.forEach((n) => {

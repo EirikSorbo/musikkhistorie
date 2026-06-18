@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo } from "./ui.js";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -28,15 +28,14 @@ const handlers = {
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
   renderArtistDetail($("#detail-body"), artist, state.config);
-  document.getElementById("modal-detail").classList.add("open");
+  modalOpen(document.getElementById("modal-detail"));
 }
 
 function showPlaylistForGenre({ label, fullName, node }) {
   const { total, html } = buildPlaylistHtml(node, state.artists);
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
   document.getElementById("pl-body").innerHTML = html;
-  document.getElementById("modal-spilleliste").classList.add("open");
+  modalOpen(document.getElementById("modal-spilleliste"));
 }
 
 function showArtistsForInstrument(instrument) {
@@ -51,12 +50,12 @@ function showArtistsForInstrument(instrument) {
   body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
     const open = () => {
       const a = list.find((x) => x.id === row.dataset.artistId);
-      if (a) { document.getElementById("modal-artistliste").classList.remove("open"); openDetail(a); }
+      if (a) openDetail(a);
     };
     row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
     row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
   });
-  document.getElementById("modal-artistliste").classList.add("open");
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
 function showArtistsForSjanger({ label }) {
@@ -64,7 +63,6 @@ function showArtistsForSjanger({ label }) {
   const list = state.artists
     .filter((a) => a.status === "active" && (a.genre === label || (a.subgenres || []).some((s) => s.toLowerCase() === sj)))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  document.getElementById("modal-sjanger").classList.remove("open");
   document.getElementById("al-title").textContent = `${label} (${list.length})`;
   const body = document.getElementById("al-body");
   body.innerHTML = list.length
@@ -73,12 +71,12 @@ function showArtistsForSjanger({ label }) {
   body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
     const open = () => {
       const a = list.find((x) => x.id === row.dataset.artistId);
-      if (a) { document.getElementById("modal-artistliste").classList.remove("open"); openDetail(a); }
+      if (a) openDetail(a);
     };
-    row.addEventListener("click", (e) => { if (!e.target.closest("a")) open(); });
+    row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
     row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
   });
-  document.getElementById("modal-artistliste").classList.add("open");
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
 function setupSjangerModal() {
@@ -86,13 +84,13 @@ function setupSjangerModal() {
   const pl = document.getElementById("modal-spilleliste");
   const al = document.getElementById("modal-artistliste");
   if (!sj || !pl) return;
-  sj.addEventListener("click", (e) => { if (e.target === sj) sj.classList.remove("open"); });
-  sj.querySelector(".modal-close").addEventListener("click", () => sj.classList.remove("open"));
-  pl.addEventListener("click", (e) => { if (e.target === pl) pl.classList.remove("open"); });
-  pl.querySelector(".modal-close").addEventListener("click", () => pl.classList.remove("open"));
+  sj.addEventListener("click", (e) => { if (e.target === sj) modalClose(sj); });
+  sj.querySelector(".modal-close").addEventListener("click", () => modalClose(sj));
+  pl.addEventListener("click", (e) => { if (e.target === pl) modalClose(pl); });
+  pl.querySelector(".modal-close").addEventListener("click", () => modalClose(pl));
   if (al) {
-    al.addEventListener("click", (e) => { if (e.target === al) al.classList.remove("open"); });
-    al.querySelector(".modal-close").addEventListener("click", () => al.classList.remove("open"));
+    al.addEventListener("click", (e) => { if (e.target === al) modalClose(al); });
+    al.querySelector(".modal-close").addEventListener("click", () => modalClose(al));
   }
   const sjangerOpts = () => ({
     root: document,
@@ -100,27 +98,19 @@ function setupSjangerModal() {
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
   });
-  const closeAllModals = () => {
-    document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-  };
   document.addEventListener("click", (e) => {
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
-      closeAllModals();
       showSjangerInfo(sjBtn.dataset.sjanger, sjangerOpts());
       return;
     }
     const underBtn = e.target.closest("[data-under]");
     if (underBtn) {
-      closeAllModals();
       showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
       return;
     }
     const inst = e.target.closest("[data-instrument]");
-    if (inst) {
-      closeAllModals();
-      showArtistsForInstrument(inst.dataset.instrument);
-    }
+    if (inst) showArtistsForInstrument(inst.dataset.instrument);
   });
 }
 
@@ -161,19 +151,17 @@ function setupTagFilters() {
 }
 
 function setupExplore() {
-  // Koble alle nye modaler til backdrop-klikk og close-knapp
   ["modal-decade-list", "modal-decade-view", "modal-subgenre-list"].forEach((id) => {
     const m = document.getElementById(id);
     if (!m) return;
-    m.addEventListener("click", (e) => { if (e.target === m) m.classList.remove("open"); });
-    m.querySelector(".modal-close").addEventListener("click", () => m.classList.remove("open"));
+    m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); });
+    m.querySelector(".modal-close").addEventListener("click", () => modalClose(m));
   });
 
-  // Tilbake-knapp i tiår-visning
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
-    document.getElementById("modal-decade-view").classList.remove("open");
-    document.getElementById("modal-decade-list").classList.add("open");
+    modalClose(document.getElementById("modal-decade-view"));
+    modalOpen(document.getElementById("modal-decade-list"));
   });
 
   const btnContext = document.getElementById("btn-context");
@@ -229,8 +217,7 @@ function openDecadeList() {
   el.querySelectorAll("[data-decade-view]").forEach((btn) => {
     btn.addEventListener("click", () => openDecadeView(btn.dataset.decadeView));
   });
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-  modal.classList.add("open");
+  modalOpen(modal);
 }
 
 function openDecadeView(decadeId) {
@@ -244,8 +231,8 @@ function openDecadeView(decadeId) {
   societyEl.className = "info-text" + (desc.society ? "" : " muted");
   techEl.textContent = desc.tech || "Ingen beskrivelse ennå.";
   techEl.className = "info-text" + (desc.tech ? "" : " muted");
-  document.getElementById("modal-decade-list").classList.remove("open");
-  modal.classList.add("open");
+  modalClose(document.getElementById("modal-decade-list"));
+  modalOpen(modal);
 }
 
 function openSubgenreList() {
@@ -258,27 +245,24 @@ function openSubgenreList() {
   el.innerHTML = allSubs.length
     ? allSubs.map((s) => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-  modal.classList.add("open");
+  modalOpen(modal);
 }
 
 function setupDetailModal() {
   const backdrop = document.getElementById("modal-detail");
   if (!backdrop) return;
-  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.classList.remove("open"); });
-  backdrop.querySelector(".modal-close").addEventListener("click", () => backdrop.classList.remove("open"));
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) modalClose(backdrop); });
+  backdrop.querySelector(".modal-close").addEventListener("click", () => modalClose(backdrop));
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      document.querySelectorAll(".modal-backdrop.open").forEach((m) => m.classList.remove("open"));
-    }
+    if (e.key === "Escape") modalCloseTop();
   });
 }
 
 function setupSubgenreInfo() {
   const backdrop = document.getElementById("modal-subgenre-info");
   if (backdrop) {
-    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.classList.remove("open"); });
-    backdrop.querySelector(".modal-close").addEventListener("click", () => backdrop.classList.remove("open"));
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) modalClose(backdrop); });
+    backdrop.querySelector(".modal-close").addEventListener("click", () => modalClose(backdrop));
   }
 
   document.addEventListener("click", (e) => {
@@ -292,8 +276,6 @@ function setupSubgenreInfo() {
 function openSubgenreInfo(subgenreId) {
   const modal = document.getElementById("modal-subgenre-info");
   if (!modal) return;
-
-  document.querySelectorAll(".modal-backdrop.open").forEach(m => m.classList.remove("open"));
 
   const desc = state.subgenreDescs[subgenreId];
   $("#sgi-title").textContent = subgenreId;
@@ -329,15 +311,12 @@ function openSubgenreInfo(subgenreId) {
     el.querySelectorAll(".sgi-artist-row").forEach((row) => {
       row.addEventListener("click", () => {
         const artist = artists.find(a => a.id === row.dataset.id);
-        if (artist) {
-          document.getElementById("modal-subgenre-info").classList.remove("open");
-          openDetail(artist);
-        }
+        if (artist) openDetail(artist);
       });
     });
   }
 
-  document.getElementById("modal-subgenre-info").classList.add("open");
+  modalOpen(modal);
 }
 
 // ----------------------------------------------------------------------------
