@@ -418,6 +418,9 @@ button.tag.tag-sub:hover { border-color: var(--accent-2); }
 
 .desc { margin: 4px 0; font-size: 0.9rem; color: #2c2e44; }
 .works { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.facts { margin: 6px 0 10px; }
+.facts p { margin: 0 0 2px; font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
+.facts strong { color: var(--text); font-weight: 600; }
 .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .links a {
   font-size: 0.82rem;

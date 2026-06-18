@@ -206,20 +206,16 @@ export function renderArtistDetail(el, artist, config) {
     .map((l) => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || "Lytt")}</a>`)
     .join("");
   el.innerHTML = `
+    ${factsLines(a)}
     <div class="meta" style="margin-bottom:12px">
       ${a.genre ? `<button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : ""}
       ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
-      ${periodTag(a)}
-      ${lifespan(a)}
-      <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
-      ${a.geography ? `<span class="tag">${escapeHtml(a.geography)}</span>` : ""}
       ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
     ${a.keyWorks ? `<p class="works"><strong>Sentrale verk:</strong> ${escapeHtml(a.keyWorks)}</p>` : ""}
     ${links ? `<div class="links">${links}</div>` : ""}
     ${(a.kilder || []).length ? `<div class="kilder"><strong>Kilder:</strong><ul>${a.kilder.map(k => `<li>${escapeHtml(k)}</li>`).join("")}</ul></div>` : ""}
-    <p class="muted" style="font-size:0.8rem;margin-top:12px">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</p>
   `;
 }
 
@@ -247,13 +243,10 @@ function spotlightCard(a, config) {
     <article class="card">
       <header class="card-head">
         <h3>${escapeHtml(a.name)}</h3>
+        ${factsLines(a)}
         <div class="meta">
           <button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>
           ${a.instrument ? `<button class="tag tag-link" data-filter-key="instrument" data-filter-val="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
-          ${periodTag(a)}
-          ${lifespan(a)}
-          <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
-          ${a.geography ? `<span class="tag">${escapeHtml(a.geography)}</span>` : ""}
           ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
         </div>
       </header>
@@ -373,13 +366,10 @@ function artistCard(a, { isTeacher, clientId, config }) {
       <header class="card-head">
         <div>
           <h3>${escapeHtml(a.name)} ${removedBadge} ${vetoBadge}</h3>
+          ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             <span class="tag">${escapeHtml(a.genre)}</span>
             ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
-            ${periodTag(a)}
-            ${lifespan(a)}
-            <span class="tag gender-${a.gender}">${GENDER_LABEL[a.gender] || "Ukjent"}</span>
-            ${a.geography ? `<span class="tag">${escapeHtml(a.geography)}</span>` : ""}
             ${(a.subgenres || []).map(s => `<button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}
           </div>
         </div>
@@ -421,19 +411,23 @@ export function fillSelect(select, values, { placeholder } = {}) {
   if (current) select.value = current;
 }
 
-function lifespan(a) {
-  if (!a.birthYear && !a.deathYear) return "";
-  if (a.birthYear && a.deathYear) return `<span class="tag">f. ${a.birthYear} – d. ${a.deathYear}</span>`;
-  if (a.birthYear) return `<span class="tag">f. ${a.birthYear}</span>`;
-  return `<span class="tag">d. ${a.deathYear}</span>`;
-}
-
-function periodTag(a) {
-  if (!a.influenceStart) return "";
-  if (!a.influenceEnd || a.influenceEnd === a.influenceStart) {
-    return `<span class="tag">ca. ${a.influenceStart}</span>`;
+// Faktalinjer under tittel: levetid, innflytelse, kjønn (kun lærer), virkested.
+// Vises som tekst (samme format som «Sentrale verk»), ikke som bobler.
+function factsLines(a, { showGender = false } = {}) {
+  const rows = [];
+  if (a.birthYear && a.deathYear) rows.push(["Levetid", `f. ${a.birthYear} – d. ${a.deathYear}`]);
+  else if (a.birthYear) rows.push(["Født", `${a.birthYear}`]);
+  else if (a.deathYear) rows.push(["Død", `${a.deathYear}`]);
+  if (a.influenceStart) {
+    const p = (!a.influenceEnd || a.influenceEnd === a.influenceStart)
+      ? `ca. ${a.influenceStart}`
+      : `${a.influenceStart}–${a.influenceEnd}`;
+    rows.push(["Innflytelse", p]);
   }
-  return `<span class="tag">${a.influenceStart}–${a.influenceEnd}</span>`;
+  if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
+  if (a.geography) rows.push(["Virkested", a.geography]);
+  if (!rows.length) return "";
+  return `<div class="facts">${rows.map(([l, v]) => `<p><strong>${l}:</strong> ${escapeHtml(v)}</p>`).join("")}</div>`;
 }
 
 function pct(n, max) {
