@@ -927,6 +927,12 @@ body.is-teacher #gate { display: none; }
 .gx-tracks a:hover { text-decoration: underline; color: var(--accent-2); }
 .gx-react-rel strong { color: #b4690e; }
 
+/* Spilleliste-popup */
+.pl-list { margin: 0 0 4px; padding-left: 16px; list-style: disc; }
+.pl-item { font-size: 0.88rem; line-height: 1.7; }
+.pl-item a { color: var(--accent); text-decoration: none; }
+.pl-item a:hover { text-decoration: underline; }
+
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
 .gx-sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid; }

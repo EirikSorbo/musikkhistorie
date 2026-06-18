@@ -67,7 +67,7 @@ function escapeHtml(s) {
 //  Bygger kartet i modal-rotelementet. Returnerer { fit } for å sentrere ved
 //  hver åpning. opts: { root, subgenreDescs, onShowArtists }
 // ----------------------------------------------------------------------------
-export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
+export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists, onShowPlaylist }) {
   const stage = root.querySelector("#gx-stage");
   const cam = root.querySelector("#gx-cam");
   const modal = root.querySelector("#modal-sjanger");
@@ -158,7 +158,10 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
          <ul class="gx-tracks">${n.t.map((t) =>
            `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(t)}" target="_blank" rel="noopener">${escapeHtml(t)}</a></li>`).join("")}</ul>`
       : "";
-    const btn = (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn" style="margin-top:8px">Vis artister</button>` : "";
+    const btnArea = [
+      (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
+      (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+    ].filter(Boolean).join(" ");
     if (mTitle) mTitle.textContent = n.f;
     if (mBody) {
       mBody.innerHTML = `
@@ -168,9 +171,11 @@ export function renderGenealogy({ root, subgenreDescs = {}, onShowArtists }) {
         ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
         <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
         ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
-        ${pl}${btn}`;
+        ${pl}${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
       const b = mBody.querySelector(".gx-artists-btn");
       if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
+      const bp = mBody.querySelector(".gx-playlist-btn");
+      if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
     }
     if (modal) modal.classList.add("open");
   }
