@@ -614,14 +614,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   color: var(--muted);
 }
 .settings-row label input { width: 90px; background: #fff; }
-.settings-row .btn.ghost {
-  background: var(--grad);
-  color: #fff;
-  border: none;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
-}
-.settings-row .btn.ghost:hover { box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35); filter: brightness(1.03); color: #fff; }
 
 /* ----- Merge-konflikt ----- */
 .merge-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; max-height: 55vh; overflow-y: auto; }
