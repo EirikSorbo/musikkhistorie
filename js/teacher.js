@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=163";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=164";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -254,10 +254,12 @@ function buildDecadeButtons() {
   const el = $("#decade-buttons");
   if (!el || !state.config) return;
   const decades = (state.config.decades || []).slice().sort((a, b) => a - b);
-  el.innerHTML = decades.map((d) =>
-    `<button type="button" class="btn primary small decade-btn" data-decade="${d}">${d}-tallet</button>`
-  ).join("");
-  el.querySelectorAll(".decade-btn").forEach((btn) => {
+  el.innerHTML = `<div class="explore-decade-grid">${decades.map((d) => {
+    const desc = state.decadeDescs[String(d)];
+    const hasDesc = desc && (desc.society || desc.tech);
+    return `<button type="button" class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade="${d}">${d}-tallet</button>`;
+  }).join("")}</div>`;
+  el.querySelectorAll("[data-decade]").forEach((btn) => {
     btn.addEventListener("click", () => openSingleDecadeModal(btn.dataset.decade));
   });
 }
@@ -275,6 +277,20 @@ function openSingleDecadeModal(decadeId) {
   techText.textContent = desc.tech || noText;
   techText.className = "info-text" + (desc.tech ? "" : " muted");
 
+  const moreSociety = $("#ds-society-more-btn");
+  const moreTech = $("#ds-tech-more-btn");
+  if (moreSociety) {
+    moreSociety.style.display = desc.societyMore ? "" : "none";
+    moreSociety.onclick = () => openDecadeMore(`${decadeId}-tallet — samfunnsutvikling`, desc.societyMore);
+  }
+  if (moreTech) {
+    moreTech.style.display = desc.techMore ? "" : "none";
+    moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
+  }
+
+  const kilderEl = $("#ds-kilder-view");
+  if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
+
   $("#ds-society").value = desc.society || "";
   $("#ds-tech").value = desc.tech || "";
   $("#ds-society-more").value = desc.societyMore || "";
@@ -287,6 +303,14 @@ function openSingleDecadeModal(decadeId) {
 
   modal.dataset.decade = decadeId;
   openAdminModal("modal-decade-single");
+}
+
+function openDecadeMore(title, text) {
+  const modal = document.getElementById("modal-decade-more");
+  if (!modal) return;
+  document.getElementById("dm-title").textContent = title;
+  document.getElementById("dm-text").textContent = text || "";
+  modalOpen(modal);
 }
 
 function buildDecadeKilderRows(kilder) {

@@ -370,11 +370,14 @@
         <div class="info-section">
           <h4 class="info-label">Samfunnsutvikling</h4>
           <p id="ds-society-text" class="info-text"></p>
+          <button class="btn ghost small" id="ds-society-more-btn" style="display:none">Les mer →</button>
         </div>
         <div class="info-section">
           <h4 class="info-label">Teknologiutvikling</h4>
           <p id="ds-tech-text" class="info-text"></p>
+          <button class="btn ghost small" id="ds-tech-more-btn" style="display:none">Les mer →</button>
         </div>
+        <div id="ds-kilder-view"></div>
         <div class="modal-foot-right">
           <button type="button" id="ds-to-edit" class="btn ghost small">Rediger</button>
         </div>
@@ -405,6 +408,17 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Utvidet tiårsbeskrivelse -->
+  <div class="modal-backdrop" id="modal-decade-more">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="dm-title"></h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p id="dm-text" class="info-text" style="white-space:pre-wrap"></p>
     </div>
   </div>
 
@@ -477,6 +491,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=163"></script>
+  <script type="module" src="js/teacher.js?v=164"></script>
 </body>
 </html>
