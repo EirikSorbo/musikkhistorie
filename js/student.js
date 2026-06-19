@@ -9,7 +9,7 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=164";
+import { fillSelect } from "./ui.js?v=165";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
@@ -36,6 +36,7 @@ function setupForm() {
   const form = $("#add-form");
   const msg = $("#form-msg");
 
+  $("#add-work").addEventListener("click", () => addWorkRow());
   $("#add-link").addEventListener("click", () => addLinkRow());
   $("#add-source").addEventListener("click", () => addSourceRow());
 
@@ -55,8 +56,10 @@ function setupForm() {
       influenceStart: parseInt($("#in-start").value, 10) || null,
       influenceEnd: parseInt($("#in-end").value, 10) || null,
       description: $("#in-desc").value.trim(),
-      keyWorks: $("#in-works").value.trim(),
+      keyWorks: collectWorks(),
       geography: $("#in-geo").value.trim(),
+      imageUrl: $("#in-image-url").value.trim(),
+      imageCredit: $("#in-image-credit").value.trim(),
       proposedBy: $("#in-by").value.trim() || "Anonym",
       links: collectLinks(),
       kilder: collectSources(),
@@ -79,6 +82,7 @@ function setupForm() {
     try {
       await addArtist(candidate);
       form.reset();
+      resetWorkRows();
       resetLinkRows();
       resetSourceRows();
       const base = `«${candidate.name}» er lagt til i pensumforslagene ✓`;
@@ -118,12 +122,45 @@ function collectLinks() {
     .filter((l) => l.url);
 }
 
-function addSourceRow(text = "") {
+function addWorkRow(title = "", year = "", url = "") {
+  const wrap = $("#work-rows");
+  const row = document.createElement("div");
+  row.className = "work-row";
+  row.innerHTML = `
+    <input type="text" class="work-title" placeholder="Tittel (f.eks. «Cross Road Blues»)" value="${title}">
+    <input type="number" class="work-year" placeholder="Årstall" min="1800" max="2030" value="${year}">
+    <input type="url" class="work-url" placeholder="https://… (valgfritt)" value="${url}">
+    <button type="button" class="btn ghost small remove-work">✕</button>
+  `;
+  row.querySelector(".remove-work").addEventListener("click", () => row.remove());
+  wrap.appendChild(row);
+}
+function resetWorkRows() {
+  $("#work-rows").innerHTML = "";
+  addWorkRow();
+}
+function collectWorks() {
+  return [...document.querySelectorAll("#work-rows .work-row")]
+    .map((r) => {
+      const title = r.querySelector(".work-title").value.trim();
+      const yearStr = r.querySelector(".work-year").value.trim();
+      const url = r.querySelector(".work-url").value.trim();
+      const out = { title };
+      const yr = parseInt(yearStr, 10);
+      if (Number.isFinite(yr)) out.year = yr;
+      if (url) out.url = url;
+      return out;
+    })
+    .filter((w) => w.title);
+}
+
+function addSourceRow(text = "", url = "") {
   const wrap = $("#source-rows");
   const row = document.createElement("div");
   row.className = "source-row";
   row.innerHTML = `
     <input type="text" class="source-text" placeholder="F.eks. «Ward, Brian. Just My Soul Responding. 1998.»" value="${text}">
+    <input type="url" class="source-url" placeholder="https://… (valgfritt)" value="${url}">
     <button type="button" class="btn ghost small remove-source">✕</button>
   `;
   row.querySelector(".remove-source").addEventListener("click", () => row.remove());
@@ -133,9 +170,12 @@ function resetSourceRows() {
   $("#source-rows").innerHTML = "";
 }
 function collectSources() {
-  return [...document.querySelectorAll(".source-text")]
-    .map((i) => i.value.trim())
-    .filter(Boolean);
+  return [...document.querySelectorAll("#source-rows .source-row")]
+    .map((r) => ({
+      text: r.querySelector(".source-text").value.trim(),
+      url: r.querySelector(".source-url").value.trim(),
+    }))
+    .filter((k) => k.text);
 }
 
 // ----------------------------------------------------------------------------
@@ -149,6 +189,7 @@ function showMsg(el, text, type) {
 
 function init() {
   setupForm();
+  resetWorkRows();
   resetLinkRows();
   resetSourceRows();
 

@@ -67,15 +67,24 @@
         <label class="full">Begrunnelse / hvorfor relevant
           <textarea id="in-desc" rows="2" placeholder="Kort om musikkhistorisk betydning …"></textarea>
         </label>
-        <label class="full">Sentrale verk / album
-          <input type="text" id="in-works" placeholder="f.eks. «Cross Road Blues», «Hellhound on My Trail»" />
-        </label>
+        <div class="full">
+          <span class="field-label">Sentrale verk / album</span>
+          <div id="work-rows"></div>
+          <button type="button" id="add-work" class="btn ghost small">+ Legg til verk</button>
+        </div>
 
         <div class="full">
           <span class="field-label">Lenker til musikkeksempler</span>
           <div id="link-rows"></div>
           <button type="button" id="add-link" class="btn ghost small">+ Legg til lenke</button>
         </div>
+
+        <label class="full">Bilde-URL
+          <input type="url" id="in-image-url" placeholder="https://… (lenke til bilde av artisten, valgfritt)" />
+        </label>
+        <label class="full">Bildekreditering / kilde
+          <input type="text" id="in-image-credit" placeholder="f.eks. Wikipedia / CC BY-SA 4.0" />
+        </label>
 
         <div class="full">
           <span class="field-label">Kilder</span>
@@ -100,6 +109,6 @@
 
   </footer>
 
-  <script type="module" src="js/student.js"></script>
+  <script type="module" src="js/student.js?v=165"></script>
 </body>
 </html>
