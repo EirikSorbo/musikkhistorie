@@ -53,6 +53,7 @@
       <div class="explore-btns">
         <button class="btn ghost" id="btn-context">Kontekst</button>
         <button class="btn ghost" id="btn-genres">Sjangere</button>
+        <button class="btn ghost" id="btn-undergenres">Undersjangre</button>
       </div>
     </section>
 
@@ -113,7 +114,7 @@
     </div>
   </div>
 
-  <!-- Sjangerl-liste -->
+  <!-- Sjangere-liste -->
   <div class="modal-backdrop" id="modal-subgenre-list">
     <div class="modal">
       <div class="modal-head">
@@ -122,6 +123,18 @@
       </div>
       <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
       <div id="sl-chips" class="subgenre-tag-list"></div>
+    </div>
+  </div>
+
+  <!-- Undersjangre-liste -->
+  <div class="modal-backdrop" id="modal-undergenre-list">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Undersjangre</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en undersjanger for å lese beskrivelsen.</p>
+      <div id="ul-chips" class="subgenre-tag-list"></div>
     </div>
   </div>
 
@@ -181,6 +194,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=165"></script>
+  <script type="module" src="js/landing.js?v=166"></script>
 </body>
 </html>

@@ -9,7 +9,7 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=165";
+import { fillSelect } from "./ui.js?v=166";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {

@@ -45,16 +45,15 @@
       <div id="banner" class="banner"></div>
 
 
-      <!-- Oversikt -->
+      <!-- Utforsk -->
       <section class="panel">
-        <h2>Oversikt</h2>
-        <div id="dashboard"></div>
-      </section>
-
-      <!-- Kontekst -->
-      <section class="panel">
-        <h2>Kontekst</h2>
+        <h2>Utforsk</h2>
         <div id="decade-buttons"></div>
+        <div class="explore-btns" style="margin-top:12px">
+          <button class="btn ghost" id="btn-t-sjangere">Sjangere</button>
+          <button class="btn ghost" id="btn-t-undersjangre">Undersjangre</button>
+          <button class="btn ghost" id="btn-t-oversikt">Oversikt</button>
+        </div>
       </section>
 
       <!-- Forslagsliste -->
@@ -84,6 +83,41 @@
   </footer>
 
   <!-- ===== MODALER ===== -->
+
+  <!-- Sjangere-liste -->
+  <div class="modal-backdrop" id="modal-sjangere-list">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Sjangere</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
+      <div id="tsl-chips" class="subgenre-tag-list"></div>
+    </div>
+  </div>
+
+  <!-- Undersjangre-liste -->
+  <div class="modal-backdrop" id="modal-undersjangre-list">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Undersjangre</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en undersjanger for å lese beskrivelsen.</p>
+      <div id="tul-chips" class="subgenre-tag-list"></div>
+    </div>
+  </div>
+
+  <!-- Oversikt -->
+  <div class="modal-backdrop" id="modal-oversikt">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Oversikt</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="oversikt-body"></div>
+    </div>
+  </div>
 
   <!-- Sjanger-info -->
   <div class="modal-backdrop" id="modal-subgenre-info">
@@ -491,6 +525,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=165"></script>
+  <script type="module" src="js/teacher.js?v=166"></script>
 </body>
 </html>

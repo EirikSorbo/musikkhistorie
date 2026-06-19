@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=165";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=166";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -122,42 +122,41 @@ function setupModals() {
 
 function renderAll() {
   if (!state.config) return;
-  renderDashboard($("#dashboard"), state);
-  setupSubgenreListBtn();
   if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
     renderLimits($("#modal-limits"), state);
   buildDecadeButtons();
   renderList();
 }
 
-function setupSubgenreListBtn() {
-  const btn = $("#btn-subgenre-list");
-  if (!btn) return;
-  btn.addEventListener("click", toggleSubgenreExpand);
+function openSjangereListe() {
+  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const active = state.artists.filter(a => a.status === "active");
+  const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(s => sjangerSet.has(s.toLowerCase()))))]
+    .sort((a, b) => a.localeCompare(b, "no"));
+  const el = $("#tsl-chips");
+  el.innerHTML = sjangre.length
+    ? sjangre.map(s => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+  openAdminModal("modal-sjangere-list");
 }
 
-function toggleSubgenreExpand() {
-  const dashboard = $("#dashboard");
-  let expand = dashboard.querySelector(".subgenre-expand");
-  if (expand) { expand.remove(); return; }
+function openUndersjangreListe() {
+  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const active = state.artists.filter(a => a.status === "active");
+  const under = [...new Set(active.flatMap(a => [
+    ...(a.sjangre || []).filter(s => !sjangerSet.has(s.toLowerCase())),
+    ...(a.undersjangre || []),
+  ]))].sort((a, b) => a.localeCompare(b, "no"));
+  const el = $("#tul-chips");
+  el.innerHTML = under.length
+    ? under.map(s => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
+  openAdminModal("modal-undersjangre-list");
+}
 
-  const allSubs = [...new Set(
-    state.artists.filter(a => a.status === "active").flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
-  )].sort((a, b) => a.localeCompare(b, "no"));
-
-  if (!allSubs.length) return;
-
-  expand = document.createElement("div");
-  expand.className = "subgenre-expand";
-  expand.innerHTML = `<h3>Alle undersjangre (${allSubs.length})</h3>
-    <div class="subgenre-tag-list">
-      ${allSubs.map(s => {
-        return `<div class="subgenre-chip">
-          <button class="tag tag-sub tag-link" data-subgenre-info="${escapeHtml(s)}">${escapeHtml(s)}</button>
-        </div>`;
-      }).join("")}
-    </div>`;
-  dashboard.appendChild(expand);
+function openOversikt() {
+  renderDashboard($("#oversikt-body"), state);
+  openAdminModal("modal-oversikt");
 }
 
 function openSingleSubgenreModal(subgenreId) {
@@ -649,6 +648,10 @@ function startApp() {
   setupDecadeSingleSave();
   setupSubgenreSingleSave();
   setupSubgenreInfo();
+
+  $("#btn-t-sjangere").addEventListener("click", openSjangereListe);
+  $("#btn-t-undersjangre").addEventListener("click", openUndersjangreListe);
+  $("#btn-t-oversikt").addEventListener("click", openOversikt);
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };

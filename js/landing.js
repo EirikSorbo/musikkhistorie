@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=165";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=166";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -155,7 +155,7 @@ function setupTagFilters() {
 }
 
 function setupExplore() {
-  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list", "modal-decade-more"].forEach((id) => {
+  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list", "modal-undergenre-list", "modal-decade-more"].forEach((id) => {
     const m = document.getElementById(id);
     if (!m) return;
     m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); });
@@ -173,6 +173,9 @@ function setupExplore() {
 
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", openSubgenreList);
+
+  const btnUnder = document.getElementById("btn-undergenres");
+  if (btnUnder) btnUnder.addEventListener("click", openUndergenreList);
 }
 
 // Filter sendt fra slektstre-siden (index.html?genre=… / ?subgenre=…):
@@ -267,20 +270,30 @@ function openDecadeMore(title, text) {
 function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
+  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
   const active = state.artists.filter((a) => a.status === "active");
-  const sjangreSet = new Set(active.flatMap((a) => a.sjangre || []));
-  const underSet = new Set(active.flatMap((a) => a.undersjangre || []));
-  const sjangre = [...sjangreSet].sort((a, b) => a.localeCompare(b, "no"));
-  const under = [...underSet].sort((a, b) => a.localeCompare(b, "no"));
+  const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(s => sjangerSet.has(s.toLowerCase()))))]
+    .sort((a, b) => a.localeCompare(b, "no"));
   const el = document.getElementById("sl-chips");
-  if (!sjangre.length && !under.length) {
-    el.innerHTML = `<p class="muted">Ingen sjangere registrert ennå.</p>`;
-  } else {
-    el.innerHTML = [
-      ...sjangre.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-      ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-    ].join("");
-  }
+  el.innerHTML = sjangre.length
+    ? sjangre.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+  modalOpen(modal);
+}
+
+function openUndergenreList() {
+  const modal = document.getElementById("modal-undergenre-list");
+  if (!modal) return;
+  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const active = state.artists.filter((a) => a.status === "active");
+  const under = [...new Set(active.flatMap(a => [
+    ...(a.sjangre || []).filter(s => !sjangerSet.has(s.toLowerCase())),
+    ...(a.undersjangre || []),
+  ]))].sort((a, b) => a.localeCompare(b, "no"));
+  const el = document.getElementById("ul-chips");
+  el.innerHTML = under.length
+    ? under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
   modalOpen(modal);
 }
 
