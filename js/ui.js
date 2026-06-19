@@ -257,16 +257,23 @@ export function renderResultList(el, artists, config, onSelect) {
     (a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no")
   );
   el.innerHTML = sorted.map((a) => {
-    const works = (a.keyWorks || "").split(",").map(s => s.trim()).filter(Boolean);
-    const workSnippet = works.length
-      ? escapeHtml(works[0]) + (works.length > 1 ? ` <span class="muted">(+${works.length - 1} til)</span>` : "")
+    const works = Array.isArray(a.keyWorks) ? a.keyWorks : [];
+    const firstTitle = works[0]?.title || "";
+    const workSnippet = firstTitle
+      ? escapeHtml(firstTitle) + (works.length > 1 ? ` <span class="muted">(+${works.length - 1} til)</span>` : "")
       : "";
+    const sjanger = Array.isArray(a.sjangre) ? a.sjangre : [];
+    const under = Array.isArray(a.undersjangre) ? a.undersjangre : [];
+    const tags = [
+      ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+      ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+      a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
+    ].filter(Boolean).join("");
     return `
     <div class="result-row" data-id="${escapeHtml(a.id)}" tabindex="0" role="button">
-      <span class="result-name">${escapeHtml(a.name)}</span>
+      <span class="result-name result-link">${escapeHtml(a.name)}</span>
       <span class="result-meta">
-        ${a.genre ? `<button class="tag tag-link" data-filter-key="genre" data-filter-val="${escapeHtml(a.genre)}">${escapeHtml(a.genre)}</button>` : ""}
-        ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+        ${tags}
         ${workSnippet ? `<span class="result-work">${workSnippet}</span>` : ""}
       </span>
       <span class="result-arrow">›</span>
@@ -277,7 +284,7 @@ export function renderResultList(el, artists, config, onSelect) {
       const artist = artists.find((a) => a.id === div.dataset.id);
       if (artist) onSelect(artist);
     };
-    div.addEventListener("click", (e) => { if (!e.target.closest(".tag-link")) open(); });
+    div.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
     div.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
   });
 }
