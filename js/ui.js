@@ -77,14 +77,24 @@ function genreTags(a) {
   ].join("");
 }
 
+function yearLabel(w) {
+  const y = w.year || null;
+  const r = w.recordingYear || null;
+  if (y && r && r !== y) return `(${y}, opptak ${r})`;
+  if (y) return `(${y})`;
+  if (r) return `(opptak ${r})`;
+  return "";
+}
+
 function keyWorksText(works) {
   if (!Array.isArray(works) || !works.length) return "";
   return works.map((w) => {
     const t = escapeHtml(w.title || "");
-    const y = w.year ? ` (${w.year})` : "";
+    const y = yearLabel(w);
+    const ySuffix = y ? ` ${y}` : "";
     return w.url
-      ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${t}</a>${y}`
-      : `${t}${y}`;
+      ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${t}</a>${ySuffix}`
+      : `${t}${ySuffix}`;
   }).join(", ");
 }
 
@@ -620,7 +630,8 @@ export function buildPlaylistHtml(node, artists) {
       const key = `${nameLow}|${title.toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
-      const yr = w.year ? ` <span class="muted">(${w.year})</span>` : "";
+      const yLabel = yearLabel(w);
+      const yr = yLabel ? ` <span class="muted">${escapeHtml(yLabel)}</span>` : "";
       const link = w.url
         ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>`
         : ytLink(`${title} ${a.name}`, title);

@@ -2,7 +2,7 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.61
+**Versjon:** 1.63
 **Sist endret:** 2026-06-18
 
 ---
@@ -87,13 +87,20 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 ### `keyWorks[]`
 
 ```json
-{ "title": "Cross Road Blues", "year": 1936, "url": "https://..." }
+{ "title": "A Love Supreme", "year": 1965, "url": "https://..." }
+```
+
+Med separat opptaksår (typisk konsertopptak utgitt senere):
+
+```json
+{ "title": "My Favorite Things (Live in Belgium)", "year": 1965, "recordingYear": 1965, "url": "https://..." }
 ```
 
 | Felt | Påkrevd | Notater |
 |---|---|---|
 | `title` | ✓ | Verkets/låtens tittel. |
-| `year` | | 4-sifret. Vises som "(1936)" etter tittel. Hjelper kronologisk sortering. |
+| `year` | | **Utgivelsesår.** 4-sifret. Brukes som default i visning og kronologisk sortering. |
+| `recordingYear` | | **Opptaksår.** Settes når opptaket ble gjort et annet år enn utgivelsen — typisk konsertopptak utgitt senere. Hvis `recordingYear === year` vises bare ett årstall; hvis ulike, vises `(1965, opptak 1958)`. |
 | `url` | | Lenke (Spotify, YouTube, Apple Music). Hvis tomt brukes YouTube-søk på `tittel + artist`. |
 
 ### `kilder[]`

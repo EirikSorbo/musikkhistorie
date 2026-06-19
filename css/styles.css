@@ -474,7 +474,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .source-row .source-url { flex: 1; }
 .work-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .work-row .work-title { flex: 1.4; }
-.work-row .work-year { flex: 0 0 90px; }
+.work-row .work-year { flex: 0 0 110px; }
+.work-row .work-recording-year { flex: 0 0 110px; }
 .work-row .work-url { flex: 1; }
 
 .card-foot {

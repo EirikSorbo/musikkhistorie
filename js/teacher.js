@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=162";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=163";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -1039,16 +1039,18 @@ function addEditSourceRow(text = "", url = "") {
 function buildEditWorkRows(works) {
   const wrap = $("#ed-work-rows");
   wrap.innerHTML = "";
-  (works.length ? works : [{ title: "", year: "", url: "" }]).forEach((w) => addEditWorkRow(w.title || "", w.year || "", w.url || ""));
+  (works.length ? works : [{ title: "", year: "", recordingYear: "", url: "" }])
+    .forEach((w) => addEditWorkRow(w.title || "", w.year || "", w.recordingYear || "", w.url || ""));
 }
 
-function addEditWorkRow(title = "", year = "", url = "") {
+function addEditWorkRow(title = "", year = "", recordingYear = "", url = "") {
   const wrap = $("#ed-work-rows");
   const row = document.createElement("div");
   row.className = "work-row";
   row.innerHTML = `
     <input type="text" class="work-title" placeholder="Tittel" value="${escapeHtml(title)}">
-    <input type="number" class="work-year" placeholder="År" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
+    <input type="number" class="work-year" placeholder="Utgivelsesår" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
+    <input type="number" class="work-recording-year" placeholder="Opptaksår" min="1800" max="2030" value="${escapeHtml(String(recordingYear || ""))}" title="Året opptaket/konserten ble holdt (hvis annerledes enn utgivelsesår)">
     <input type="url" class="work-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
     <button type="button" class="btn ghost small remove-work">✕</button>
   `;
@@ -1076,10 +1078,13 @@ function collectEditWorks() {
     .map((r) => {
       const title = r.querySelector(".work-title").value.trim();
       const yearStr = r.querySelector(".work-year").value.trim();
+      const recYearStr = r.querySelector(".work-recording-year")?.value.trim();
       const url = r.querySelector(".work-url").value.trim();
       const out = { title };
       const yr = parseInt(yearStr, 10);
       if (Number.isFinite(yr)) out.year = yr;
+      const recYr = parseInt(recYearStr, 10);
+      if (Number.isFinite(recYr)) out.recordingYear = recYr;
       if (url) out.url = url;
       return out;
     })

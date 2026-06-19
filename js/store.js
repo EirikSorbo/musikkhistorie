@@ -49,7 +49,7 @@ export function normalizeArtist(a) {
   // For bakoverkompatibilitet i kode som leser begge:
   out.subgenres = [...out.sjangre, ...out.undersjangre];
 
-  // keyWorks: streng → array av {title, year?, url?}
+  // keyWorks: streng → array av {title, year?, recordingYear?, url?}
   if (typeof out.keyWorks === "string") {
     out.keyWorks = out.keyWorks
       .split(",")
