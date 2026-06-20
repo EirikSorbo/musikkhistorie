@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=169";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=170";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -168,8 +168,10 @@ function setupExplore() {
     modalOpen(document.getElementById("modal-decade-list"));
   });
 
-  const btnContext = document.getElementById("btn-context");
-  if (btnContext) btnContext.addEventListener("click", openDecadeList);
+  const btnSociety = document.getElementById("btn-society");
+  if (btnSociety) btnSociety.addEventListener("click", () => openDecadeList("society"));
+  const btnTech = document.getElementById("btn-tech");
+  if (btnTech) btnTech.addEventListener("click", () => openDecadeList("tech"));
 
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", openSubgenreList);
@@ -211,14 +213,18 @@ function applyIncomingFilter() {
   }
 }
 
-function openDecadeList() {
+let contextMode = "society";
+
+function openDecadeList(mode) {
+  contextMode = mode;
   const modal = document.getElementById("modal-decade-list");
   if (!modal) return;
+  modal.querySelector(".modal-head h2").textContent = mode === "society" ? "Samfunn" : "Teknologi";
   const decades = (state.config?.decades || []).slice().sort((a, b) => a - b);
   const el = document.getElementById("dl-buttons");
   el.innerHTML = decades.map((d) => {
     const desc = state.decadeDescs[String(d)];
-    const hasDesc = desc && (desc.society || desc.tech);
+    const hasDesc = mode === "society" ? desc && desc.society : desc && desc.tech;
     return `<button class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade-view="${d}">${d}-tallet</button>`;
   }).join("");
   el.querySelectorAll("[data-decade-view]").forEach((btn) => {
@@ -231,7 +237,14 @@ function openDecadeView(decadeId) {
   const modal = document.getElementById("modal-decade-view");
   if (!modal) return;
   const desc = state.decadeDescs[String(decadeId)] || {};
-  document.getElementById("dv-title").textContent = `${decadeId}-tallet`;
+  const isSociety = contextMode === "society";
+  document.getElementById("dv-title").textContent = `${decadeId}-tallet — ${isSociety ? "samfunn" : "teknologi"}`;
+
+  const societySection = document.getElementById("dv-society-section");
+  const techSection = document.getElementById("dv-tech-section");
+  if (societySection) societySection.style.display = isSociety ? "" : "none";
+  if (techSection) techSection.style.display = isSociety ? "none" : "";
+
   const societyEl = document.getElementById("dv-society");
   const techEl = document.getElementById("dv-tech");
   societyEl.textContent = desc.society || "Ingen beskrivelse ennå.";
@@ -239,19 +252,17 @@ function openDecadeView(decadeId) {
   techEl.textContent = desc.tech || "Ingen beskrivelse ennå.";
   techEl.className = "info-text" + (desc.tech ? "" : " muted");
 
-  // «Les mer»-knapper synes kun hvis det finnes utdypende tekst
   const moreSociety = document.getElementById("dv-society-more");
   const moreTech = document.getElementById("dv-tech-more");
   if (moreSociety) {
-    moreSociety.style.display = desc.societyMore ? "" : "none";
+    moreSociety.style.display = desc.societyMore && isSociety ? "" : "none";
     moreSociety.onclick = () => openDecadeMore(`${decadeId}-tallet — samfunnsutvikling`, desc.societyMore);
   }
   if (moreTech) {
-    moreTech.style.display = desc.techMore ? "" : "none";
+    moreTech.style.display = desc.techMore && !isSociety ? "" : "none";
     moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
   }
 
-  // Kilder for tiåret (delt mellom samfunn og teknologi)
   const kilderEl = document.getElementById("dv-kilder");
   if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
 

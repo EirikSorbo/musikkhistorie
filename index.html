@@ -51,7 +51,8 @@
         <select id="sp-genre"></select>
       </div>
       <div class="explore-btns">
-        <button class="btn ghost" id="btn-context">Kontekst</button>
+        <button class="btn ghost" id="btn-society">Samfunn</button>
+        <button class="btn ghost" id="btn-tech">Teknologi</button>
         <button class="btn ghost" id="btn-genres">Sjangere</button>
         <button class="btn ghost" id="btn-undergenres">Undersjangre</button>
       </div>
@@ -74,7 +75,7 @@
         <h2>Kontekst</h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese om samfunns- og teknologiutvikling.</p>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese mer.</p>
       <div id="dl-buttons" class="explore-decade-grid"></div>
     </div>
   </div>
@@ -86,12 +87,12 @@
         <h2 id="dv-title"></h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
-      <div class="info-section">
+      <div class="info-section" id="dv-society-section">
         <h4 class="info-label">Samfunnsutvikling</h4>
         <p id="dv-society" class="info-text"></p>
         <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer →</button>
       </div>
-      <div class="info-section">
+      <div class="info-section" id="dv-tech-section">
         <h4 class="info-label">Teknologiutvikling</h4>
         <p id="dv-tech" class="info-text"></p>
         <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer →</button>
@@ -194,6 +195,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=169"></script>
+  <script type="module" src="js/landing.js?v=170"></script>
 </body>
 </html>

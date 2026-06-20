@@ -22,7 +22,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=169";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=170";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -128,7 +128,6 @@ function renderAll() {
   if (!state.config) return;
   if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
     renderLimits($("#modal-limits"), state);
-  buildDecadeButtons();
   updatePendingBadge();
   renderList();
 }
@@ -264,24 +263,31 @@ function openSubgenreInfo(subgenreId) {
   openAdminModal("modal-subgenre-info");
 }
 
-function buildDecadeButtons() {
-  const el = $("#decade-buttons");
-  if (!el || !state.config) return;
+let teacherContextMode = "society";
+
+function openDecadeListPopup(mode) {
+  teacherContextMode = mode;
+  if (!state.config) return;
   const decades = (state.config.decades || []).slice().sort((a, b) => a - b);
-  el.innerHTML = `<div class="explore-decade-grid">${decades.map((d) => {
+  const modal = $("#modal-decade-list-t");
+  modal.querySelector(".modal-head h2").textContent = mode === "society" ? "Samfunn" : "Teknologi";
+  const el = $("#tdl-buttons");
+  el.innerHTML = decades.map((d) => {
     const desc = state.decadeDescs[String(d)];
-    const hasDesc = desc && (desc.society || desc.tech);
+    const hasDesc = mode === "society" ? desc && desc.society : desc && desc.tech;
     return `<button type="button" class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade="${d}">${d}-tallet</button>`;
-  }).join("")}</div>`;
+  }).join("");
   el.querySelectorAll("[data-decade]").forEach((btn) => {
     btn.addEventListener("click", () => openSingleDecadeModal(btn.dataset.decade));
   });
+  openAdminModal("modal-decade-list-t");
 }
 
 function openSingleDecadeModal(decadeId) {
   const desc = state.decadeDescs[String(decadeId)] || {};
   const modal = $("#modal-decade-single");
-  $("#decade-single-title").textContent = `${decadeId}-tallet`;
+  const isSociety = teacherContextMode === "society";
+  $("#decade-single-title").textContent = `${decadeId}-tallet — ${isSociety ? "samfunn" : "teknologi"}`;
 
   const noText = "Ingen beskrivelse ennå.";
   const societyText = $("#ds-society-text");
@@ -291,14 +297,17 @@ function openSingleDecadeModal(decadeId) {
   techText.textContent = desc.tech || noText;
   techText.className = "info-text" + (desc.tech ? "" : " muted");
 
+  $("#ds-society-section").style.display = isSociety ? "" : "none";
+  $("#ds-tech-section").style.display = isSociety ? "none" : "";
+
   const moreSociety = $("#ds-society-more-btn");
   const moreTech = $("#ds-tech-more-btn");
   if (moreSociety) {
-    moreSociety.style.display = desc.societyMore ? "" : "none";
+    moreSociety.style.display = desc.societyMore && isSociety ? "" : "none";
     moreSociety.onclick = () => openDecadeMore(`${decadeId}-tallet — samfunnsutvikling`, desc.societyMore);
   }
   if (moreTech) {
-    moreTech.style.display = desc.techMore ? "" : "none";
+    moreTech.style.display = desc.techMore && !isSociety ? "" : "none";
     moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
   }
 
@@ -312,10 +321,16 @@ function openSingleDecadeModal(decadeId) {
   buildDecadeKilderRows(desc.kilder || []);
   $("#ds-msg").textContent = "";
 
+  $("#ds-edit-society").style.display = isSociety ? "" : "none";
+  $("#ds-edit-society-more").style.display = isSociety ? "" : "none";
+  $("#ds-edit-tech").style.display = isSociety ? "none" : "";
+  $("#ds-edit-tech-more").style.display = isSociety ? "none" : "";
+
   $("#ds-view").style.display = "";
   $("#ds-edit").style.display = "none";
 
   modal.dataset.decade = decadeId;
+  modalClose($("#modal-decade-list-t"));
   openAdminModal("modal-decade-single");
 }
 
@@ -674,6 +689,8 @@ function startApp() {
   setupSubgenreSingleSave();
   setupSubgenreInfo();
 
+  $("#btn-t-society").addEventListener("click", () => openDecadeListPopup("society"));
+  $("#btn-t-tech").addEventListener("click", () => openDecadeListPopup("tech"));
   $("#btn-t-sjangere").addEventListener("click", openSjangereListe);
   $("#btn-t-undersjangre").addEventListener("click", openUndersjangreListe);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);

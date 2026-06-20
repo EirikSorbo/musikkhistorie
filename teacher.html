@@ -48,8 +48,9 @@
       <!-- Utforsk -->
       <section class="panel">
         <h2>Utforsk</h2>
-        <div id="decade-buttons"></div>
-        <div class="explore-btns" style="margin-top:12px">
+        <div class="explore-btns">
+          <button class="btn ghost" id="btn-t-society">Samfunn</button>
+          <button class="btn ghost" id="btn-t-tech">Teknologi</button>
           <button class="btn ghost" id="btn-t-sjangere">Sjangere</button>
           <button class="btn ghost" id="btn-t-undersjangre">Undersjangre</button>
           <button class="btn ghost" id="btn-t-oversikt">Oversikt</button>
@@ -84,6 +85,18 @@
   </footer>
 
   <!-- ===== MODALER ===== -->
+
+  <!-- Tiårs-liste (Samfunn / Teknologi) -->
+  <div class="modal-backdrop" id="modal-decade-list-t">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Samfunn</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese og redigere beskrivelsen.</p>
+      <div id="tdl-buttons" class="explore-decade-grid"></div>
+    </div>
+  </div>
 
   <!-- Sjangere-liste -->
   <div class="modal-backdrop" id="modal-sjangere-list">
@@ -402,12 +415,12 @@
       </div>
       <!-- Visnings-modus -->
       <div id="ds-view">
-        <div class="info-section">
+        <div class="info-section" id="ds-society-section">
           <h4 class="info-label">Samfunnsutvikling</h4>
           <p id="ds-society-text" class="info-text"></p>
           <button class="btn ghost small" id="ds-society-more-btn" style="display:none">Les mer →</button>
         </div>
-        <div class="info-section">
+        <div class="info-section" id="ds-tech-section">
           <h4 class="info-label">Teknologiutvikling</h4>
           <p id="ds-tech-text" class="info-text"></p>
           <button class="btn ghost small" id="ds-tech-more-btn" style="display:none">Les mer →</button>
@@ -420,16 +433,16 @@
       <!-- Redigerings-modus -->
       <div id="ds-edit" style="display:none">
         <div class="add-grid" style="grid-template-columns:1fr">
-          <label>Samfunnsutvikling (kort)
+          <label id="ds-edit-society">Samfunnsutvikling (kort)
             <textarea id="ds-society" rows="3" placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
           </label>
-          <label>Samfunnsutvikling — utvidet («Les mer»)
+          <label id="ds-edit-society-more">Samfunnsutvikling — utvidet («Les mer»)
             <textarea id="ds-society-more" rows="6" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
           </label>
-          <label>Teknologiutvikling (kort)
+          <label id="ds-edit-tech">Teknologiutvikling (kort)
             <textarea id="ds-tech" rows="3" placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
           </label>
-          <label>Teknologiutvikling — utvidet («Les mer»)
+          <label id="ds-edit-tech-more">Teknologiutvikling — utvidet («Les mer»)
             <textarea id="ds-tech-more" rows="6" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
           </label>
           <div>
@@ -526,6 +539,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=169"></script>
+  <script type="module" src="js/teacher.js?v=170"></script>
 </body>
 </html>
