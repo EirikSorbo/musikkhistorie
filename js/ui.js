@@ -207,8 +207,8 @@ export function buildTimeline(text, decadeId) {
   events.sort((a, b) => (a.year || startYear) - (b.year || startYear));
   let html = '<div class="timeline">';
   for (const ev of events) {
-    const label = ev.year ? String(ev.year) : `${startYear}+`;
-    html += `<div class="tl-item"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-dot"></span><span class="tl-desc">${escapeHtml(shortDesc(ev.text))}</span></div>`;
+    const label = ev.year ? String(ev.year) : `${startYear}‑årene`;
+    html += `<div class="tl-item"><div class="tl-dot"></div><div class="tl-body"><div class="tl-year">${escapeHtml(label)}</div><div class="tl-desc">${escapeHtml(shortDesc(ev.text))}</div></div></div>`;
   }
   html += "</div>";
   return html;
