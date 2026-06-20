@@ -2,7 +2,7 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.68
+**Versjon:** 1.71
 **Sist endret:** 2026-06-20
 
 ---
@@ -70,8 +70,8 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 | `birthYear` | number \| null | | 4-sifret årstall. |
 | `deathYear` | number \| null | | 4-sifret årstall. |
 | `gender` | string | ✓ | Én av: `"kvinne"`, `"mann"`, `"annet"`, `"ukjent"`. |
-| `genre` | string | ✓ | **Metasjanger.** Må være én av de 5 i `config.genres` (Blues / Jazz / Country / Afroamerikansk populærmusikk / Elektronisk musikk). Brukes i grenser/kvoter. |
-| `instrument` | string | | Må matche én verdi i `config.instruments` (eks. Vokal, Gitar, Piano/keyboards, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Elektronisk produksjon, Annet). |
+| `genre` | string | ✓ | **Sjanger fra slektstreet.** Må være én av sjangrene i `GENEALOGY_GENRES` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). Brukes i grenser/kvoter. |
+| `instrument` | string | ✓ | Må matche én verdi i `config.instruments` (eks. Vokal, Gitar, Piano/keyboards, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Elektronisk produksjon, Annet). |
 | `sjangre` | array av strings | | **Sjangere fra slektstreet.** Strengene må matche en label i `GENEALOGY` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). |
 | `undersjangre` | array av strings | | **Frie tags.** Hva som helst (Delta blues, Akustisk blues, New Orleans-jazz, …). Brukes til søk og filter. |
 | `influenceStart` | number | ✓ | Året kunstneren begynte å påvirke. Styrer tiår-tilhørighet. |
@@ -80,7 +80,7 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 | `description` | string | | Pedagogisk begrunnelse — *hvorfor relevant?* Vanlig tekst, kort. |
 | `keyWorks` | array av objekter | | Sentrale verk. Se under. |
 | `musicExamples` | array av objekter | | Musikkeksempler (lyttelenker). `{ label, url, year?, performanceYear? }`. Se under. |
-| `kilder` | array av objekter | | Kilder. Se under. |
+| `kilder` | array av objekter | ✓ | Kilder (minst én). Se under. |
 | `imageUrl` | string | | URL til portrettbilde. Bruk Commons/CC-lisensiert. |
 | `imageCredit` | string | | Fotograf + lisens, vises som bildetekst (eks. *"Carl Van Vechten / Library of Congress, public domain"*). |
 | `proposedBy` | string | | Hvem la inn forslaget. |
@@ -203,10 +203,9 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
 - **`undersjangre`** = frie tags. Brukes til mer spesifikke uttrykk (*Delta blues, Hard bop, Cool jazz, Neo-soul, Acid jazz, …*) eller geografiske/kontekstuelle markører. Bruk samme stavemåte konsekvent — bruk gjerne `subgenres`-objektet til å gi dem beskrivelser.
 - Hvis du er i tvil: er navnet en node i slektstreet? → `sjangre`. Hvis ikke → `undersjangre`.
 
-### `genre` (metasjanger)
-- Skal alltid være satt. Brukes til kvoter (`maxPerGenre`).
+### `genre` (sjanger fra slektstreet)
+- Skal alltid være satt. Velges fra `GENEALOGY_GENRES`. Brukes til kvoter (`maxPerGenre`).
 - For artister som krysser sjangere (eks. Ray Charles): velg den dominerende.
-- Nyere artister med eget uttrykk (eks. Erykah Badu): velg den nærmeste — `Afroamerikansk populærmusikk`.
 
 ### Influence vs. levetid
 - `birthYear`/`deathYear` = biografi.
