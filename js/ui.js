@@ -205,12 +205,14 @@ export function buildTimeline(text, decadeId) {
     return { year: m ? parseInt(m[1], 10) : null, text: b };
   });
   events.sort((a, b) => (a.year || startYear) - (b.year || startYear));
-  let html = '<div class="timeline">';
-  for (const ev of events) {
+  let html = '<div class="timeline"><div class="tl-track">';
+  for (let i = 0; i < events.length; i++) {
+    const ev = events[i];
     const label = ev.year ? String(ev.year) : `${startYear}‑årene`;
-    html += `<div class="tl-item"><div class="tl-dot"></div><div class="tl-body"><div class="tl-year">${escapeHtml(label)}</div><div class="tl-desc">${escapeHtml(shortDesc(ev.text))}</div></div></div>`;
+    const pos = i % 2 === 0 ? "below" : "above";
+    html += `<div class="tl-item tl-${pos}"><div class="tl-dot"></div><div class="tl-label"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-desc">${escapeHtml(shortDesc(ev.text))}</span></div></div>`;
   }
-  html += "</div>";
+  html += "</div></div>";
   return html;
 }
 

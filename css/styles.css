@@ -592,15 +592,17 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .info-text ul { margin: 6px 0 10px; padding-left: 20px; }
 .info-text li { margin-bottom: 4px; }
 
-/* ----- Tidslinje ----- */
-.timeline { position: relative; margin: 20px 0 8px; padding-left: 28px; }
-.timeline::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
-.tl-item { position: relative; padding-bottom: 24px; display: flex; align-items: flex-start; gap: 14px; }
-.tl-item:last-child { padding-bottom: 0; }
-.tl-dot { position: absolute; left: -24px; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--accent); background: var(--bg); flex-shrink: 0; z-index: 1; }
-.tl-body { min-width: 0; }
-.tl-year { font-weight: 700; font-size: 0.85rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 2px; }
-.tl-desc { font-size: 0.84rem; line-height: 1.5; color: var(--fg); opacity: 0.85; }
+/* ----- Tidslinje (horisontal) ----- */
+.timeline { margin: 24px 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tl-track { position: relative; display: flex; align-items: center; min-width: max-content; padding: 90px 16px; }
+.tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: var(--accent); border-radius: 2px; transform: translateY(-50%); }
+.tl-item { position: relative; flex: 1 0 120px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
+.tl-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--accent); background: var(--bg); flex-shrink: 0; z-index: 2; }
+.tl-label { position: absolute; width: 110px; text-align: center; }
+.tl-below .tl-label { top: calc(50% + 18px); }
+.tl-above .tl-label { bottom: calc(50% + 18px); }
+.tl-year { display: block; font-weight: 700; font-size: 0.78rem; color: var(--accent); margin-bottom: 2px; }
+.tl-desc { display: block; font-size: 0.75rem; line-height: 1.4; color: var(--fg); opacity: 0.8; }
 
 /* ----- Innstillinger-knapp i header (lærer) ----- */
 .gear-btn { font-size: 0.82rem; }
