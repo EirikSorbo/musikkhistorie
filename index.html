@@ -30,15 +30,6 @@
   <main class="wrap">
     <div id="banner" class="banner"></div>
 
-    <!-- Dagens navn -->
-    <section class="panel">
-      <div class="spotlight-header">
-        <h2 id="spotlight-heading">Dagens navn</h2>
-        <button id="sp-shuffle" class="btn ghost small">Nytt navn</button>
-      </div>
-      <div id="spotlight" class="spotlight-grid"></div>
-    </section>
-
     <!-- Utforsk -->
     <section class="panel">
       <h2>Utforsk</h2>
@@ -55,7 +46,9 @@
         <button class="btn ghost" id="btn-tech">Teknologi</button>
         <button class="btn ghost" id="btn-genres">Sjangere</button>
         <button class="btn ghost" id="btn-undergenres">Undersjangre</button>
+        <button class="btn ghost" id="btn-dagens-navn">Dagens navn</button>
       </div>
+      <div id="filter-results"></div>
     </section>
 
     <!-- Alle forslag -->
@@ -67,6 +60,18 @@
   </main>
 
   <footer class="sitefoot wrap"></footer>
+
+  <!-- Dagens navn -->
+  <div class="modal-backdrop" id="modal-dagens-navn">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Dagens navn</h2>
+        <button id="sp-shuffle" class="btn ghost small">Nytt navn</button>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="spotlight" class="spotlight-grid"></div>
+    </div>
+  </div>
 
   <!-- Tiår-liste -->
   <div class="modal-backdrop" id="modal-decade-list">
@@ -195,6 +200,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=171"></script>
+  <script type="module" src="js/landing.js?v=172"></script>
 </body>
 </html>

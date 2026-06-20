@@ -149,7 +149,7 @@ function setupTagFilters() {
       state.filters.search = val;
       $("#sp-search").value = val;
     }
-    renderSpotlight();
+    renderFilterResults();
     renderList();
   });
 }
@@ -178,6 +178,15 @@ function setupExplore() {
 
   const btnUnder = document.getElementById("btn-undergenres");
   if (btnUnder) btnUnder.addEventListener("click", openUndergenreList);
+
+  const btnDagens = document.getElementById("btn-dagens-navn");
+  if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);
+
+  const dagensModal = document.getElementById("modal-dagens-navn");
+  if (dagensModal) {
+    dagensModal.addEventListener("click", (e) => { if (e.target === dagensModal) modalClose(dagensModal); });
+    dagensModal.querySelector(".modal-close").addEventListener("click", () => modalClose(dagensModal));
+  }
 }
 
 // Filter sendt fra slektstre-siden (index.html?genre=… / ?subgenre=…):
@@ -197,7 +206,7 @@ function applyIncomingFilter() {
     if (g) $("#sp-genre").value = g;
     if (s) $("#sp-subgenre").value = s;
     if (inst) $("#sp-instrument").value = inst;
-    renderSpotlight();
+    renderFilterResults();
     renderList();
     if (artistId) {
       const a = state.artists.find((x) => x.id === artistId);
@@ -276,6 +285,11 @@ function openDecadeMore(title, text) {
   document.getElementById("dm-title").textContent = title;
   document.getElementById("dm-text").textContent = text || "";
   modalOpen(modal);
+}
+
+function openDagensNavn() {
+  renderSpotlight();
+  modalOpen(document.getElementById("modal-dagens-navn"));
 }
 
 function openSubgenreList() {
@@ -392,6 +406,23 @@ let currentPicks = [];
 
 function renderSpotlight() {
   if (!state.config) return;
+  const pool = state.artists.filter((a) => a.status === "active");
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  currentPicks = shuffled.slice(0, 1);
+  renderSpotlightCards($("#spotlight"), currentPicks, state.config);
+}
+
+function renderFilterResults() {
+  if (!state.config) return;
+  const el = document.getElementById("filter-results");
+  if (!el) return;
+
+  if (!hasFilters()) {
+    el.innerHTML = "";
+    clearContextBox();
+    return;
+  }
+
   let pool = state.artists.filter((a) => a.status === "active");
 
   if (state.filters.sjanger) {
@@ -421,19 +452,8 @@ function renderSpotlight() {
     );
   }
 
-  const spotlightHeader = $(".spotlight-header");
-
-  if (hasFilters()) {
-    if (spotlightHeader) spotlightHeader.style.display = "none";
-    renderResultList($("#spotlight"), pool, state.config, openDetail);
-    renderContextBox();
-  } else {
-    if (spotlightHeader) spotlightHeader.style.display = "";
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    currentPicks = shuffled.slice(0, 1);
-    renderSpotlightCards($("#spotlight"), currentPicks, state.config);
-    clearContextBox();
-  }
+  renderResultList(el, pool, state.config, openDetail);
+  renderContextBox();
 }
 
 function getContextBox() {
@@ -442,8 +462,8 @@ function getContextBox() {
     box = document.createElement("div");
     box.id = "context-box";
     box.className = "context-box";
-    const spotlight = $("#spotlight");
-    spotlight.parentNode.insertBefore(box, spotlight);
+    const filterResults = document.getElementById("filter-results");
+    filterResults.parentNode.insertBefore(box, filterResults);
   }
   return box;
 }
@@ -514,7 +534,7 @@ function setupFilters() {
     el.addEventListener(id === "sp-search" ? "input" : "change", (e) => {
       const key = id.replace("sp-", "");
       state.filters[key] = e.target.value;
-      renderSpotlight();
+      renderFilterResults();
       renderList();
     });
   });
@@ -559,7 +579,6 @@ function init() {
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
     refreshFilterControls();
-    renderSpotlight();
     renderList();
     showSetupBanner();
     return;
@@ -568,7 +587,6 @@ function init() {
   loadCache();
   if (state.config && state.artists.length) {
     refreshFilterControls();
-    renderSpotlight();
     renderList();
   }
 
@@ -584,18 +602,18 @@ function init() {
   subscribeConfig((config) => {
     state.config = config;
     refreshFilterControls();
-    renderSpotlight();
+    renderFilterResults();
     renderList();
     saveCache();
   });
   subscribeArtists((artists) => {
     state.artists = artists;
-    renderSpotlight();
+    renderFilterResults();
     renderList();
     saveCache();
   });
-  subscribeDecades((d) => { state.decadeDescs = d; renderSpotlight(); });
-  subscribeSubgenres((s) => { state.subgenreDescs = s; renderSpotlight(); });
+  subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
+  subscribeSubgenres((s) => { state.subgenreDescs = s; renderFilterResults(); });
 
   applyIncomingFilter();
 }
