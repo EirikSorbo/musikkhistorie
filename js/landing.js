@@ -311,7 +311,7 @@ function renderPodkastList() {
   const el = document.getElementById("podkast-list");
   if (!el) return;
   if (!state.podcasts.length) {
-    el.innerHTML = `<p class="muted empty">Ingen episoder ennå.</p>`;
+    el.innerHTML = `<p class="muted empty">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`;
     return;
   }
   el.innerHTML = state.podcasts.map((ep) => {
