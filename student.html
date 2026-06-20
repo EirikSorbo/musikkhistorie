@@ -49,8 +49,8 @@
         <label>Sjanger *
           <select id="in-genre" required></select>
         </label>
-        <label>Instrument
-          <select id="in-instrument"></select>
+        <label>Instrument *
+          <select id="in-instrument" required></select>
         </label>
         <label>Geografisk tilhørighet
           <input type="text" id="in-geo" placeholder="f.eks. Mississippi Delta" />
@@ -61,7 +61,7 @@
         <label>Innflytelse til (år)
           <input type="number" id="in-end" min="1800" max="2030" placeholder="f.eks. 1972" />
         </label>
-        <label class="full">Undersjangre / tags
+        <label class="full">Undersjangre
           <input type="text" id="in-subgenres" placeholder="f.eks. Delta blues, akustisk blues, country blues" />
         </label>
         <label class="full">Begrunnelse / hvorfor relevant
@@ -87,7 +87,7 @@
         </label>
 
         <div class="full">
-          <span class="field-label">Kilder</span>
+          <span class="field-label">Kilder *</span>
           <p class="hint">Bøker, artikler, nettsider eller andre referanser brukt om denne artisten.</p>
           <div id="source-rows"></div>
           <button type="button" id="add-source" class="btn ghost small">+ Legg til kilde</button>
@@ -109,6 +109,6 @@
 
   </footer>
 
-  <script type="module" src="js/student.js?v=170"></script>
+  <script type="module" src="js/student.js?v=171"></script>
 </body>
 </html>

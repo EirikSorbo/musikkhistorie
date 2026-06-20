@@ -9,8 +9,9 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=170";
+import { fillSelect } from "./ui.js?v=171";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
+import { GENEALOGY_GENRES } from "./genealogy.js";
 
 const state = {
   artists: [],
@@ -23,7 +24,7 @@ const state = {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#in-genre"), config.genres, { placeholder: "Velg sjanger …" });
+  fillSelect($("#in-genre"), GENEALOGY_GENRES, { placeholder: "Velg sjanger …" });
   fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }
@@ -65,8 +66,11 @@ function setupForm() {
       kilder: collectSources(),
     };
 
-    if (!candidate.name || !candidate.genre || !candidate.influenceStart || !candidate.gender) {
-      return showMsg(msg, "Fyll inn navn, kjønn, sjanger og startår for innflytelse.", "error");
+    if (!candidate.name || !candidate.genre || !candidate.influenceStart || !candidate.gender || !candidate.instrument) {
+      return showMsg(msg, "Fyll inn navn, kjønn, sjanger, instrument og startår for innflytelse.", "error");
+    }
+    if (!candidate.kilder.length) {
+      return showMsg(msg, "Legg til minst én kilde.", "error");
     }
 
     if (!CONFIGURED) {
