@@ -720,6 +720,17 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 .podkast-duration { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
 .podkast-desc { font-size: 0.9rem; color: var(--muted); margin: 0 0 10px; }
 .podkast-episode audio { width: 100%; margin-top: 4px; }
+.podkast-episode .podkast-actions { display: flex; gap: 8px; margin-top: 8px; }
+.podkast-drop-zone {
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.podkast-drop-zone.drag-over { border-color: var(--accent); background: var(--surface-2); }
+.podkast-drop-zone p { margin: 0; pointer-events: none; }
 
 /* ===========================================================================
    Flersides-elementer: navigasjon, forside-hero, lærerport

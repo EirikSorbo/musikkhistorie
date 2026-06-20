@@ -3,6 +3,7 @@ import {
   subscribeConfig,
   subscribeDecades,
   subscribeSubgenres,
+  subscribePodcasts,
   addArtist,
   teacherApprove,
   teacherReject,
@@ -20,6 +21,10 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
+  uploadPodcastAudio,
+  addPodcast,
+  updatePodcast,
+  deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
 import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=171";
@@ -32,6 +37,7 @@ const state = {
   config: null,
   decadeDescs: {},
   subgenreDescs: {},
+  podcasts: [],
   filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false },
   isTeacher: true,
   clientId: getClientId(),
@@ -694,6 +700,8 @@ function startApp() {
   $("#btn-t-sjangere").addEventListener("click", openSjangereListe);
   $("#btn-t-undersjangre").addEventListener("click", openUndersjangreListe);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
+  $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);
+  setupPodkastAdmin();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
@@ -717,6 +725,109 @@ function startApp() {
   });
   subscribeDecades((d) => { state.decadeDescs = d; });
   subscribeSubgenres((s) => { state.subgenreDescs = s; });
+  subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
+}
+
+// ----------------------------------------------------------------------------
+//  Podkast-administrasjon
+// ----------------------------------------------------------------------------
+
+let podSelectedFile = null;
+
+function openPodkastAdmin() {
+  renderPodkastAdmin();
+  modalOpen(document.getElementById("modal-podkast-admin"));
+}
+
+function renderPodkastAdmin() {
+  const el = document.getElementById("podkast-admin-list");
+  if (!el) return;
+  if (!state.podcasts.length) {
+    el.innerHTML = `<p class="muted empty">Ingen episoder ennå.</p>`;
+    return;
+  }
+  el.innerHTML = state.podcasts.map((ep) => {
+    const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
+    const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
+    return `
+      <article class="podkast-episode">
+        <div class="podkast-header">
+          <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
+          ${duration}
+        </div>
+        ${desc}
+        ${ep.audioUrl ? `<audio controls preload="none" src="${escapeHtml(ep.audioUrl)}"></audio>` : ""}
+        <div class="podkast-actions">
+          <button class="btn ghost small btn-danger-text" data-pod-delete="${ep.id}">Slett</button>
+        </div>
+      </article>`;
+  }).join("");
+  el.querySelectorAll("[data-pod-delete]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Slette denne episoden?")) return;
+      await deletePodcast(btn.dataset.podDelete);
+    });
+  });
+}
+
+function setupPodkastAdmin() {
+  const modal = document.getElementById("modal-podkast-admin");
+  if (!modal) return;
+  modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
+  modal.querySelector(".modal-close").addEventListener("click", () => modalClose(modal));
+
+  const dropZone = document.getElementById("pod-drop-zone");
+  const fileInput = document.getElementById("pod-file");
+  const dropText = document.getElementById("pod-drop-text");
+
+  dropZone.addEventListener("click", () => fileInput.click());
+  dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("audio/")) {
+      podSelectedFile = file;
+      dropText.textContent = file.name;
+    }
+  });
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files[0]) {
+      podSelectedFile = fileInput.files[0];
+      dropText.textContent = podSelectedFile.name;
+    }
+  });
+
+  document.getElementById("pod-save").addEventListener("click", async () => {
+    const title = document.getElementById("pod-title").value.trim();
+    const msg = document.getElementById("pod-msg");
+    if (!title) { msg.textContent = "Tittel er påkrevd."; msg.className = "form-msg error"; return; }
+    if (!podSelectedFile) { msg.textContent = "Velg en lydfil."; msg.className = "form-msg error"; return; }
+
+    msg.textContent = "Laster opp …";
+    msg.className = "form-msg ok";
+    try {
+      const audioUrl = await uploadPodcastAudio(podSelectedFile);
+      await addPodcast({
+        title,
+        description: document.getElementById("pod-desc").value.trim(),
+        duration: document.getElementById("pod-duration").value.trim(),
+        audioUrl,
+        order: state.podcasts.length + 1,
+      });
+      document.getElementById("pod-title").value = "";
+      document.getElementById("pod-desc").value = "";
+      document.getElementById("pod-duration").value = "";
+      podSelectedFile = null;
+      dropText.textContent = "Dra inn en fil eller klikk for å velge";
+      msg.textContent = "Episode lagt til!";
+    } catch (err) {
+      console.error("Podkast-opplasting feilet:", err);
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
+  });
 }
 
 // ----------------------------------------------------------------------------

@@ -74,5 +74,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isTeacher();
     }
+
+    // ---- Podkast-episoder ----
+    match /podcasts/{doc} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
   }
 }

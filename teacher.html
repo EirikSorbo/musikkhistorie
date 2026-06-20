@@ -54,6 +54,7 @@
           <button class="btn ghost" id="btn-t-sjangere">Sjangere</button>
           <button class="btn ghost" id="btn-t-undersjangre">Undersjangre</button>
           <button class="btn ghost" id="btn-t-oversikt">Oversikt</button>
+          <button class="btn ghost" id="btn-t-podkast">Podkast</button>
         </div>
       </section>
 
@@ -539,6 +540,41 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=171"></script>
+  <!-- Podkast-administrasjon -->
+  <div class="modal-backdrop" id="modal-podkast-admin">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Podkast</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="podkast-admin-list" class="podkast-list"></div>
+      <div class="podkast-add-form" style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px">
+        <h3 style="margin:0 0 12px">Legg til episode</h3>
+        <div class="add-grid" style="grid-template-columns:1fr 1fr">
+          <label>Tittel *
+            <input type="text" id="pod-title" required />
+          </label>
+          <label>Varighet
+            <input type="text" id="pod-duration" placeholder="f.eks. 45 min" />
+          </label>
+          <label class="full">Beskrivelse
+            <textarea id="pod-desc" rows="2"></textarea>
+          </label>
+          <label class="full">Lydfil (MP3)
+            <div class="podkast-drop-zone" id="pod-drop-zone">
+              <input type="file" id="pod-file" accept="audio/*" hidden />
+              <p class="muted" id="pod-drop-text">Dra inn en fil eller klikk for å velge</p>
+            </div>
+          </label>
+          <div class="full add-actions">
+            <button type="button" id="pod-save" class="btn primary">Last opp og lagre</button>
+            <span id="pod-msg" class="form-msg ok"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/teacher.js?v=174"></script>
 </body>
 </html>
