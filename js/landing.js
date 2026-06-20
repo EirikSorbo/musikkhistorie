@@ -1,4 +1,4 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, voteUp, undoVoteUp, getClientId } from "./store.js";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=171";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
@@ -11,6 +11,7 @@ const state = {
   config: null,
   decadeDescs: {},
   subgenreDescs: {},
+  podcasts: [],
   filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", subgenre: "", showRemoved: false },
   isTeacher: false,
   clientId,
@@ -187,6 +188,15 @@ function setupExplore() {
     dagensModal.addEventListener("click", (e) => { if (e.target === dagensModal) modalClose(dagensModal); });
     dagensModal.querySelector(".modal-close").addEventListener("click", () => modalClose(dagensModal));
   }
+
+  const btnPodkast = document.getElementById("btn-podkast");
+  if (btnPodkast) btnPodkast.addEventListener("click", openPodkast);
+
+  const podkastModal = document.getElementById("modal-podkast");
+  if (podkastModal) {
+    podkastModal.addEventListener("click", (e) => { if (e.target === podkastModal) modalClose(podkastModal); });
+    podkastModal.querySelector(".modal-close").addEventListener("click", () => modalClose(podkastModal));
+  }
 }
 
 // Filter sendt fra slektstre-siden (index.html?genre=… / ?subgenre=…):
@@ -290,6 +300,33 @@ function openDecadeMore(title, text) {
 function openDagensNavn() {
   renderSpotlight();
   modalOpen(document.getElementById("modal-dagens-navn"));
+}
+
+function openPodkast() {
+  renderPodkastList();
+  modalOpen(document.getElementById("modal-podkast"));
+}
+
+function renderPodkastList() {
+  const el = document.getElementById("podkast-list");
+  if (!el) return;
+  if (!state.podcasts.length) {
+    el.innerHTML = `<p class="muted empty">Ingen episoder ennå.</p>`;
+    return;
+  }
+  el.innerHTML = state.podcasts.map((ep) => {
+    const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
+    const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
+    return `
+      <article class="podkast-episode">
+        <div class="podkast-header">
+          <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
+          ${duration}
+        </div>
+        ${desc}
+        ${ep.audioUrl ? `<audio controls preload="none" src="${escapeHtml(ep.audioUrl)}"></audio>` : ""}
+      </article>`;
+  }).join("");
 }
 
 function openSubgenreList() {
@@ -614,6 +651,7 @@ function init() {
   });
   subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
   subscribeSubgenres((s) => { state.subgenreDescs = s; renderFilterResults(); });
+  subscribePodcasts((pods) => { state.podcasts = pods; });
 
   applyIncomingFilter();
 }

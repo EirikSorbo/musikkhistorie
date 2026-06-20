@@ -880,7 +880,7 @@ async function handleReplace(data) {
   for (const a of data) {
     if (!a.name) continue;
     try {
-      await addArtist({ proposedBy: "Eirik Sørbø", ...a });
+      await addArtist({ proposedBy: "Eirik Sørbø", status: "active", ...a });
       added++;
     } catch (err) {
       failed++;
@@ -1011,7 +1011,7 @@ async function finishMerge() {
   let added = 0, updated = 0;
 
   for (const a of mergeState.newArtists) {
-    await addArtist({ proposedBy: "Eirik Sørbø", ...a });
+    await addArtist({ proposedBy: "Eirik Sørbø", status: "active", ...a });
     added++;
   }
   for (const item of mergeState.queue) {

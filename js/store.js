@@ -96,6 +96,7 @@ const googleProvider = new GoogleAuthProvider();
 const artistsCol = collection(db, "artists");
 const decadesCol = collection(db, "decades");
 const subgenresCol = collection(db, "subgenres");
+const podcastsCol = collection(db, "podcasts");
 const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
@@ -187,7 +188,7 @@ export async function addArtist(data) {
     geography: n.geography ?? "",
     musicExamples: n.musicExamples ?? [],
     proposedBy: n.proposedBy ?? "Anonym",
-    status: "pending",
+    status: data.status === "active" ? "active" : "pending",
     removedBy: null,
     teacherProtected: false,
     teacherVetoed: false,
@@ -343,6 +344,14 @@ export function subscribeSubgenres(callback) {
     snapshot.docs.forEach((d) => { subs[d.id] = { id: d.id, ...d.data() }; });
     callback(subs);
   }, (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
+}
+
+export function subscribePodcasts(callback) {
+  return onSnapshot(podcastsCol, (snapshot) => {
+    const pods = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    pods.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+    callback(pods);
+  }, (err) => console.error("Kunne ikke lese podkaster (sjekk Firestore-regler):", err.message));
 }
 
 export async function saveDecadeDesc(decadeId, data) {

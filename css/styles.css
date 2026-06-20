@@ -708,6 +708,19 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 }
 .decade-list-btn { min-width: 100px; justify-content: center; }
 
+/* ----- Podkast ----- */
+.podkast-list { display: flex; flex-direction: column; gap: 16px; }
+.podkast-episode {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+.podkast-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.podkast-title { margin: 0; font-size: 1rem; }
+.podkast-duration { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+.podkast-desc { font-size: 0.9rem; color: var(--muted); margin: 0 0 10px; }
+.podkast-episode audio { width: 100%; margin-top: 4px; }
+
 /* ===========================================================================
    Flersides-elementer: navigasjon, forside-hero, lærerport
    =========================================================================== */
