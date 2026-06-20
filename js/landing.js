@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=171";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=176";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -266,9 +266,9 @@ function openDecadeView(decadeId) {
 
   const societyEl = document.getElementById("dv-society");
   const techEl = document.getElementById("dv-tech");
-  societyEl.textContent = desc.society || "Ingen beskrivelse ennå.";
+  societyEl.innerHTML = desc.society ? formatInfoText(desc.society) : "Ingen beskrivelse ennå.";
   societyEl.className = "info-text" + (desc.society ? "" : " muted");
-  techEl.textContent = desc.tech || "Ingen beskrivelse ennå.";
+  techEl.innerHTML = desc.tech ? formatInfoText(desc.tech) : "Ingen beskrivelse ennå.";
   techEl.className = "info-text" + (desc.tech ? "" : " muted");
 
   const moreSociety = document.getElementById("dv-society-more");
@@ -293,7 +293,7 @@ function openDecadeMore(title, text) {
   const modal = document.getElementById("modal-decade-more");
   if (!modal) return;
   document.getElementById("dm-title").textContent = title;
-  document.getElementById("dm-text").textContent = text || "";
+  document.getElementById("dm-text").innerHTML = formatInfoText(text);
   modalOpen(modal);
 }
 
@@ -518,8 +518,8 @@ function renderContextBox() {
     const d = state.decadeDescs[state.filters.decade];
     if (d && (d.society || d.tech)) {
       let html = `<div class="context-card"><h3>${state.filters.decade}-tallet</h3>`;
-      if (d.society) html += `<p><strong>Samfunnsutvikling:</strong> ${escapeHtml(d.society)}</p>`;
-      if (d.tech) html += `<p><strong>Teknologiutvikling:</strong> ${escapeHtml(d.tech)}</p>`;
+      if (d.society) html += `<div><strong>Samfunnsutvikling:</strong>${formatInfoText(d.society)}</div>`;
+      if (d.tech) html += `<div><strong>Teknologiutvikling:</strong>${formatInfoText(d.tech)}</div>`;
       html += `</div>`;
       parts.push(html);
     }

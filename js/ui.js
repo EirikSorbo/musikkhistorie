@@ -124,6 +124,30 @@ export function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
+export function formatInfoText(text) {
+  if (!text) return "";
+  const lines = text.split("\n");
+  let html = "";
+  let inList = false;
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      if (inList) { html += "</ul>"; inList = false; }
+      continue;
+    }
+    const bullet = trimmed.match(/^[•\-–]\s*(.*)/);
+    if (bullet) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += `<li>${escapeHtml(bullet[1])}</li>`;
+    } else {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<p>${escapeHtml(trimmed)}</p>`;
+    }
+  }
+  if (inList) html += "</ul>";
+  return html;
+}
+
 const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",

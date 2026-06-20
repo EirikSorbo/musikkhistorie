@@ -586,7 +586,11 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 
 .info-section { margin-bottom: 18px; }
 .info-label { margin: 0 0 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.info-text { margin: 0; line-height: 1.65; white-space: pre-wrap; }
+.info-text { margin: 0; line-height: 1.65; }
+.info-text p { margin: 0 0 8px; }
+.info-text p:last-child { margin-bottom: 0; }
+.info-text ul { margin: 6px 0 10px; padding-left: 20px; }
+.info-text li { margin-bottom: 4px; }
 
 /* ----- Innstillinger-knapp i header (lærer) ----- */
 .gear-btn { font-size: 0.82rem; }

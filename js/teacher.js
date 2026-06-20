@@ -26,7 +26,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=171";
+import { escapeHtml, formatInfoText, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=176";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -297,9 +297,9 @@ function openSingleDecadeModal(decadeId) {
   const noText = "Ingen beskrivelse ennå.";
   const societyText = $("#ds-society-text");
   const techText = $("#ds-tech-text");
-  societyText.textContent = desc.society || noText;
+  societyText.innerHTML = desc.society ? formatInfoText(desc.society) : noText;
   societyText.className = "info-text" + (desc.society ? "" : " muted");
-  techText.textContent = desc.tech || noText;
+  techText.innerHTML = desc.tech ? formatInfoText(desc.tech) : noText;
   techText.className = "info-text" + (desc.tech ? "" : " muted");
 
   $("#ds-society-section").style.display = isSociety ? "" : "none";
@@ -343,7 +343,7 @@ function openDecadeMore(title, text) {
   const modal = document.getElementById("modal-decade-more");
   if (!modal) return;
   document.getElementById("dm-title").textContent = title;
-  document.getElementById("dm-text").textContent = text || "";
+  document.getElementById("dm-text").innerHTML = formatInfoText(text);
   modalOpen(modal);
 }
 
