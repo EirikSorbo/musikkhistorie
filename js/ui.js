@@ -130,7 +130,19 @@ export function formatInfoText(text) {
   if (!hasBullets) {
     const sentences = text.split(/(?<=\.)\s+/).filter(s => s.trim());
     if (sentences.length > 1) {
-      return "<ul>" + sentences.map(s => `<li>${escapeHtml(s.trim())}</li>`).join("") + "</ul>";
+      const cont = /^(Fortsatt|Også|Samtidig|Dessuten|I tillegg|Likevel|Imidlertid|Derimot|Dermed|Slik|Dette|Disse|Den samme|Det samme)\b/i;
+      const grouped = [sentences[0]];
+      for (let i = 1; i < sentences.length; i++) {
+        if (cont.test(sentences[i].trim())) {
+          grouped[grouped.length - 1] += " " + sentences[i].trim();
+        } else {
+          grouped.push(sentences[i].trim());
+        }
+      }
+      if (grouped.length > 1) {
+        return "<ul>" + grouped.map(s => `<li>${escapeHtml(s)}</li>`).join("") + "</ul>";
+      }
+      return `<p>${escapeHtml(text.trim())}</p>`;
     }
     return `<p>${escapeHtml(text.trim())}</p>`;
   }
