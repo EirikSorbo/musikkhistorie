@@ -9,7 +9,7 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=168";
+import { fillSelect } from "./ui.js?v=169";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
@@ -85,7 +85,7 @@ function setupForm() {
       resetWorkRows();
       resetMusicExampleRows();
       resetSourceRows();
-      const base = `«${candidate.name}» er lagt til i pensumforslagene ✓`;
+      const base = `«${candidate.name}» er sendt inn og venter på godkjenning fra lærer`;
       if (warnings.length) {
         showMsg(msg, `${base} NB: ${warnings.join(" ")}`, "warn");
       } else {

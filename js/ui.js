@@ -140,6 +140,7 @@ export function renderDashboard(el, { artists, config }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => a.status === "removed").length;
+  const pending = artists.filter((a) => a.status === "pending").length;
   const subgenreCount = new Set(
     artists.filter(a => a.status === "active").flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
   ).size;
@@ -154,6 +155,10 @@ export function renderDashboard(el, { artists, config }) {
           config.maxTotal
         )}%"></div></div>
       </div>
+      ${pending ? `<div class="stat-card stat-pending">
+        <div class="stat-num">${pending}</div>
+        <div class="stat-label">Venter på godkjenning</div>
+      </div>` : ""}
       <div class="stat-card">
         <div class="stat-num">${removed}</div>
         <div class="stat-label">Fjernet / utstemt</div>
@@ -370,7 +375,9 @@ export function renderArtists(el, state) {
 
   let list = [...artists];
 
-  if (!filters.showRemoved) {
+  if (filters.showPending) {
+    list = list.filter((a) => a.status === "pending");
+  } else if (!filters.showRemoved) {
     list = list.filter((a) => a.status === "active");
   }
   if (filters.sjanger) {
@@ -424,6 +431,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
   const upvotes = (a.votedUpBy || []).length;
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
   const removed = a.status === "removed";
+  const pending = a.status === "pending";
   const vetoed = a.teacherVetoed === true;
 
   const examplesHtml = (a.musicExamples || [])
@@ -441,13 +449,17 @@ function artistCard(a, { isTeacher, clientId, config }) {
       }</span>`
     : "";
 
+  const pendingBadge = pending
+    ? `<span class="badge pending">Venter på godkjenning</span>`
+    : "";
+
   const vetoBadge = vetoed
     ? `<span class="badge veto" title="Inkludert av lærer">Veto</span>`
     : "";
 
   // Studenthandlinger
   let voteBtn = "";
-  if (!removed) {
+  if (!removed && !pending) {
     voteBtn = hasUpvoted
       ? `<button class="btn ghost" data-action="undoVoteUp" data-id="${a.id}">Angre stemme</button>`
       : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">Svært relevant</button>`;
@@ -455,7 +467,14 @@ function artistCard(a, { isTeacher, clientId, config }) {
 
   // Lærerhandlinger
   let teacherBtns = "";
-  if (isTeacher) {
+  if (isTeacher && pending) {
+    teacherBtns = `
+      <div class="teacher-actions">
+        <button class="btn small primary" data-action="approve" data-id="${a.id}">Godkjenn</button>
+        <button class="btn small danger" data-action="reject" data-id="${a.id}">Avvis</button>
+        <button class="btn small" data-action="edit" data-id="${a.id}">Rediger</button>
+      </div>`;
+  } else if (isTeacher) {
     teacherBtns = `
       <div class="teacher-actions">
         ${removed
@@ -474,11 +493,11 @@ function artistCard(a, { isTeacher, clientId, config }) {
   const worksHtml = keyWorksText(a.keyWorks);
 
   return `
-    <article class="card ${removed ? "is-removed" : ""} ${vetoed ? "is-vetoed" : ""}">
+    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${vetoed ? "is-vetoed" : ""}">
       <header class="card-head">
         ${artistImage(a)}
         <div>
-          <h3>${escapeHtml(a.name)} ${removedBadge} ${vetoBadge}</h3>
+          <h3>${escapeHtml(a.name)} ${pendingBadge} ${removedBadge} ${vetoBadge}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}

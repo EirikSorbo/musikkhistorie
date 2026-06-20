@@ -4,6 +4,8 @@ import {
   subscribeDecades,
   subscribeSubgenres,
   addArtist,
+  teacherApprove,
+  teacherReject,
   teacherRemove,
   teacherRestore,
   teacherDelete,
@@ -20,7 +22,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=168";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=169";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -30,13 +32,15 @@ const state = {
   config: null,
   decadeDescs: {},
   subgenreDescs: {},
-  filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true },
+  filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false },
   isTeacher: true,
   clientId: getClientId(),
   started: false,
 };
 
 const handlers = {
+  approve:   (id) => teacherApprove(id),
+  reject:    (id) => { if (confirm("Avvise dette forslaget?")) teacherReject(id); },
   remove:    (id) => teacherRemove(id),
   restore:   (id) => teacherRestore(id),
   del:       (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
@@ -125,7 +129,18 @@ function renderAll() {
   if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
     renderLimits($("#modal-limits"), state);
   buildDecadeButtons();
+  updatePendingBadge();
   renderList();
+}
+
+function updatePendingBadge() {
+  const count = state.artists.filter(a => a.status === "pending").length;
+  const badge = $("#pending-badge");
+  const btn = $("#btn-pending");
+  if (!btn) return;
+  badge.textContent = count;
+  badge.style.display = count ? "" : "none";
+  btn.classList.toggle("active", !!state.filters.showPending);
 }
 
 function openSjangereListe() {
@@ -419,6 +434,12 @@ function setupFilters() {
   const showRemoved = $("#f-show-removed");
   showRemoved.checked = state.filters.showRemoved;
   showRemoved.addEventListener("change", (e) => { state.filters.showRemoved = e.target.checked; renderList(); });
+
+  $("#btn-pending").addEventListener("click", () => {
+    state.filters.showPending = !state.filters.showPending;
+    updatePendingBadge();
+    renderList();
+  });
 
   // Klikk på sjanger-/undersjanger-/instrument-bobler i kortene filtrerer lista
   document.addEventListener("click", (e) => {

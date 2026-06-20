@@ -502,9 +502,21 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   vertical-align: middle;
 }
 .badge.removed { background: #fee2e2; color: var(--danger); }
+.badge.pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .badge.protected { background: transparent; }
 .badge.veto { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+.card.is-pending { border-left: 3px solid #f59e0b; opacity: 0.92; }
 .card.is-vetoed { border-left: 3px solid #facc15; }
+
+.pending-filter { position: relative; }
+.pending-filter.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.pending-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #f59e0b; color: #fff; font-size: 0.7rem; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 9px; padding: 0 5px;
+  margin-left: 4px;
+}
+.stat-card.stat-pending { border-left: 3px solid #f59e0b; }
 .btn.ghost.accent { color: var(--accent); border-color: var(--accent); }
 .btn.ghost.accent:hover { background: var(--accent); color: #fff; }
 .btn.small.accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; }

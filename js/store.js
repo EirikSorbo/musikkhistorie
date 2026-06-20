@@ -187,7 +187,7 @@ export async function addArtist(data) {
     geography: n.geography ?? "",
     musicExamples: n.musicExamples ?? [],
     proposedBy: n.proposedBy ?? "Anonym",
-    status: "active",
+    status: "pending",
     removedBy: null,
     teacherProtected: false,
     teacherVetoed: false,
@@ -274,6 +274,18 @@ export async function teacherRemove(artistId) {
     { status: "removed", removedBy: "teacher" },
     { merge: true }
   );
+}
+
+// Lærer godkjenner et ventende forslag
+export async function teacherApprove(artistId) {
+  const ref = doc(db, "artists", artistId);
+  return setDoc(ref, { status: "active" }, { merge: true });
+}
+
+// Lærer avviser et ventende forslag
+export async function teacherReject(artistId) {
+  const ref = doc(db, "artists", artistId);
+  return setDoc(ref, { status: "removed", removedBy: "teacher" }, { merge: true });
 }
 
 // Lærer gjenoppretter et fjernet forslag og beskytter det mot ny auto-fjerning
