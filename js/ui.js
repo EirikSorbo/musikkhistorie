@@ -124,25 +124,37 @@ export function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
+const ABBREVS = /(?:ca|f\.eks|bl\.a|dvs|mfl|nr|St|vs|evt|pga|ifm|ift|jf|kl|mrd|mill)\.\s*$/;
+const CONT = /^(Fortsatt|Også|Samtidig|Dessuten|I tillegg|Likevel|Imidlertid|Derimot|Dermed|Slik|Dette|Disse|Den samme|Det samme)\b/i;
+
+function splitSentences(text) {
+  const raw = text.split(/(?<=\.)\s+/).filter(s => s.trim());
+  const merged = [raw[0]];
+  for (let i = 1; i < raw.length; i++) {
+    if (ABBREVS.test(merged[merged.length - 1]) || /^\d/.test(raw[i].trim()) || !/^[A-ZÆØÅ]/.test(raw[i].trim())) {
+      merged[merged.length - 1] += " " + raw[i].trim();
+    } else {
+      merged.push(raw[i].trim());
+    }
+  }
+  const grouped = [merged[0]];
+  for (let i = 1; i < merged.length; i++) {
+    if (CONT.test(merged[i].trim())) {
+      grouped[grouped.length - 1] += " " + merged[i].trim();
+    } else {
+      grouped.push(merged[i].trim());
+    }
+  }
+  return grouped;
+}
+
 export function formatInfoText(text) {
   if (!text) return "";
   const hasBullets = /^[•\-–]\s/m.test(text);
   if (!hasBullets) {
-    const sentences = text.split(/(?<=\.)\s+/).filter(s => s.trim());
-    if (sentences.length > 1) {
-      const cont = /^(Fortsatt|Også|Samtidig|Dessuten|I tillegg|Likevel|Imidlertid|Derimot|Dermed|Slik|Dette|Disse|Den samme|Det samme)\b/i;
-      const grouped = [sentences[0]];
-      for (let i = 1; i < sentences.length; i++) {
-        if (cont.test(sentences[i].trim())) {
-          grouped[grouped.length - 1] += " " + sentences[i].trim();
-        } else {
-          grouped.push(sentences[i].trim());
-        }
-      }
-      if (grouped.length > 1) {
-        return "<ul>" + grouped.map(s => `<li>${escapeHtml(s)}</li>`).join("") + "</ul>";
-      }
-      return `<p>${escapeHtml(text.trim())}</p>`;
+    const grouped = splitSentences(text);
+    if (grouped.length > 1) {
+      return "<ul>" + grouped.map(s => `<li>${escapeHtml(s)}</li>`).join("") + "</ul>";
     }
     return `<p>${escapeHtml(text.trim())}</p>`;
   }
@@ -168,6 +180,21 @@ export function formatInfoText(text) {
   return html;
 }
 
+function extractBullets(text) {
+  const hasBullets = /^[•\-–]\s/m.test(text);
+  if (hasBullets) {
+    return text.split("\n").map(l => l.trim()).filter(l => /^[•\-–]\s/.test(l)).map(l => l.replace(/^[•\-–]\s*/, ""));
+  }
+  return splitSentences(text);
+}
+
+function shortDesc(text) {
+  const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
+  if (first.length <= 70) return first;
+  const cut = first.lastIndexOf(" ", 67);
+  return first.slice(0, cut > 30 ? cut : 67) + "…";
+}
+
 export function buildTimeline(text, decadeId) {
   if (!text) return "";
   const bullets = extractBullets(text);
@@ -177,33 +204,14 @@ export function buildTimeline(text, decadeId) {
     const m = b.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
     return { year: m ? parseInt(m[1], 10) : null, text: b };
   });
+  events.sort((a, b) => (a.year || startYear) - (b.year || startYear));
   let html = '<div class="timeline">';
   for (const ev of events) {
     const label = ev.year ? String(ev.year) : `${startYear}+`;
-    const short = ev.text.length > 120 ? ev.text.slice(0, 117) + "…" : ev.text;
-    html += `<div class="tl-item"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-dot"></span><span class="tl-desc">${escapeHtml(short)}</span></div>`;
+    html += `<div class="tl-item"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-dot"></span><span class="tl-desc">${escapeHtml(shortDesc(ev.text))}</span></div>`;
   }
   html += "</div>";
   return html;
-}
-
-function extractBullets(text) {
-  const hasBullets = /^[•\-–]\s/m.test(text);
-  if (hasBullets) {
-    return text.split("\n").map(l => l.trim()).filter(l => /^[•\-–]\s/.test(l)).map(l => l.replace(/^[•\-–]\s*/, ""));
-  }
-  const sentences = text.split(/(?<=\.)\s+/).filter(s => s.trim());
-  if (sentences.length <= 1) return sentences;
-  const cont = /^(Fortsatt|Også|Samtidig|Dessuten|I tillegg|Likevel|Imidlertid|Derimot|Dermed|Slik|Dette|Disse|Den samme|Det samme)\b/i;
-  const grouped = [sentences[0]];
-  for (let i = 1; i < sentences.length; i++) {
-    if (cont.test(sentences[i].trim())) {
-      grouped[grouped.length - 1] += " " + sentences[i].trim();
-    } else {
-      grouped.push(sentences[i].trim());
-    }
-  }
-  return grouped;
 }
 
 const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
