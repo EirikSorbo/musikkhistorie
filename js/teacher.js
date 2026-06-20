@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=167";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=168";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -688,7 +688,7 @@ function startApp() {
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "genre", "instrument",
   "sjangre", "undersjangre", "influenceStart", "influenceEnd", "geography",
-  "description", "keyWorks", "links", "kilder",
+  "description", "keyWorks", "musicExamples", "kilder",
   "imageUrl", "imageCredit", "proposedBy",
 ];
 
@@ -698,7 +698,7 @@ const MERGE_LABELS = {
   sjangre: "Sjangre", undersjangre: "Undersjangre",
   influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
   geography: "Geografi", description: "Beskrivelse",
-  keyWorks: "Sentrale verk", links: "Lenker", kilder: "Kilder",
+  keyWorks: "Sentrale verk", musicExamples: "Musikkeksempler", kilder: "Kilder",
   imageUrl: "Bilde-URL", imageCredit: "Bildekreditering",
 };
 
@@ -1019,7 +1019,7 @@ function openEditModal(artistId) {
   fillSelect($("#ed-instrument"), c.instruments || [], { placeholder: "Ingen / ukjent" });
   $("#ed-instrument").value = a.instrument || "";
 
-  buildEditLinkRows(a.links || []);
+  buildEditMusicExampleRows(a.musicExamples || []);
   buildEditWorkRows(a.keyWorks || []);
   buildEditSourceRows(a.kilder || []);
 
@@ -1027,24 +1027,26 @@ function openEditModal(artistId) {
   openAdminModal("modal-edit");
 }
 
-function buildEditLinkRows(links) {
-  const wrap = $("#ed-link-rows");
+function buildEditMusicExampleRows(examples) {
+  const wrap = $("#ed-me-rows");
   wrap.innerHTML = "";
-  (links.length ? links : [{ label: "", url: "" }]).forEach(({ label = "", url = "" }) =>
-    addEditLinkRow(label, url)
+  (examples.length ? examples : [{ label: "", url: "", year: "", performanceYear: "" }]).forEach((m) =>
+    addEditMusicExampleRow(m.label || "", m.url || "", m.year || "", m.performanceYear || "")
   );
 }
 
-function addEditLinkRow(label = "", url = "") {
-  const wrap = $("#ed-link-rows");
+function addEditMusicExampleRow(label = "", url = "", year = "", perfYear = "") {
+  const wrap = $("#ed-me-rows");
   const row = document.createElement("div");
-  row.className = "link-row";
+  row.className = "me-row";
   row.innerHTML = `
-    <input type="text" class="link-label" placeholder="Tittel" value="${escapeHtml(label)}">
-    <input type="url" class="link-url" placeholder="https://…" value="${escapeHtml(url)}">
-    <button type="button" class="btn ghost small remove-link">✕</button>
+    <input type="text" class="me-label" placeholder="Tittel" value="${escapeHtml(label)}">
+    <input type="number" class="me-year" placeholder="Årstall" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
+    <input type="url" class="me-url" placeholder="https://…" value="${escapeHtml(url)}">
+    <input type="number" class="me-perf-year" placeholder="Framf.år" min="1800" max="2030" value="${escapeHtml(String(perfYear || ""))}" title="Året for framføring/konsert (kun hvis annet enn utgivelsesår)">
+    <button type="button" class="btn ghost small remove-me">✕</button>
   `;
-  row.querySelector(".remove-link").addEventListener("click", () => row.remove());
+  row.querySelector(".remove-me").addEventListener("click", () => row.remove());
   wrap.appendChild(row);
 }
 
@@ -1070,18 +1072,17 @@ function addEditSourceRow(text = "", url = "") {
 function buildEditWorkRows(works) {
   const wrap = $("#ed-work-rows");
   wrap.innerHTML = "";
-  (works.length ? works : [{ title: "", year: "", recordingYear: "", url: "" }])
-    .forEach((w) => addEditWorkRow(w.title || "", w.year || "", w.recordingYear || "", w.url || ""));
+  (works.length ? works : [{ title: "", year: "", url: "" }])
+    .forEach((w) => addEditWorkRow(w.title || "", w.year || "", w.url || ""));
 }
 
-function addEditWorkRow(title = "", year = "", recordingYear = "", url = "") {
+function addEditWorkRow(title = "", year = "", url = "") {
   const wrap = $("#ed-work-rows");
   const row = document.createElement("div");
   row.className = "work-row";
   row.innerHTML = `
     <input type="text" class="work-title" placeholder="Tittel" value="${escapeHtml(title)}">
     <input type="number" class="work-year" placeholder="Utgivelsesår" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
-    <input type="number" class="work-recording-year" placeholder="Opptaksår" min="1800" max="2030" value="${escapeHtml(String(recordingYear || ""))}" title="Året opptaket/konserten ble holdt (hvis annerledes enn utgivelsesår)">
     <input type="url" class="work-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
     <button type="button" class="btn ghost small remove-work">✕</button>
   `;
@@ -1089,10 +1090,21 @@ function addEditWorkRow(title = "", year = "", recordingYear = "", url = "") {
   wrap.appendChild(row);
 }
 
-function collectEditLinks() {
-  return [...$("#ed-link-rows").querySelectorAll(".link-row")]
-    .map((r) => ({ label: r.querySelector(".link-label").value.trim(), url: r.querySelector(".link-url").value.trim() }))
-    .filter((l) => l.url);
+function collectEditMusicExamples() {
+  return [...$("#ed-me-rows").querySelectorAll(".me-row")]
+    .map((r) => {
+      const label = r.querySelector(".me-label").value.trim();
+      const url = r.querySelector(".me-url").value.trim();
+      const yearStr = r.querySelector(".me-year").value.trim();
+      const perfYearStr = r.querySelector(".me-perf-year").value.trim();
+      const out = { label, url };
+      const yr = parseInt(yearStr, 10);
+      if (Number.isFinite(yr)) out.year = yr;
+      const pyr = parseInt(perfYearStr, 10);
+      if (Number.isFinite(pyr)) out.performanceYear = pyr;
+      return out;
+    })
+    .filter((m) => m.url);
 }
 
 function collectEditSources() {
@@ -1109,13 +1121,10 @@ function collectEditWorks() {
     .map((r) => {
       const title = r.querySelector(".work-title").value.trim();
       const yearStr = r.querySelector(".work-year").value.trim();
-      const recYearStr = r.querySelector(".work-recording-year")?.value.trim();
       const url = r.querySelector(".work-url").value.trim();
       const out = { title };
       const yr = parseInt(yearStr, 10);
       if (Number.isFinite(yr)) out.year = yr;
-      const recYr = parseInt(recYearStr, 10);
-      if (Number.isFinite(recYr)) out.recordingYear = recYr;
       if (url) out.url = url;
       return out;
     })
@@ -1124,7 +1133,7 @@ function collectEditWorks() {
 
 function setupEditForm() {
   if (!$("#edit-form")) return;
-  $("#ed-add-link").addEventListener("click", () => addEditLinkRow());
+  $("#ed-add-me").addEventListener("click", () => addEditMusicExampleRow());
   $("#ed-add-source").addEventListener("click", () => addEditSourceRow());
   $("#ed-add-work").addEventListener("click", () => addEditWorkRow());
 
@@ -1147,7 +1156,7 @@ function setupEditForm() {
       geography:     $("#ed-geo").value.trim(),
       description:   $("#ed-desc").value.trim(),
       keyWorks:      collectEditWorks(),
-      links:         collectEditLinks(),
+      musicExamples: collectEditMusicExamples(),
       kilder:        collectEditSources(),
       imageUrl:      $("#ed-image-url").value.trim(),
       imageCredit:   $("#ed-image-credit").value.trim(),

@@ -337,9 +337,11 @@ input:focus, select:focus, textarea:focus {
 textarea { resize: vertical; }
 .field-label { font-size: 0.82rem; font-weight: 500; color: var(--muted); display: block; margin-bottom: 8px; }
 
-.link-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.link-row .link-label { flex: 1; }
-.link-row .link-url { flex: 1.4; }
+.link-row, .me-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.link-row .link-label, .me-row .me-label { flex: 1; }
+.link-row .link-url, .me-row .me-url { flex: 1.4; }
+.me-row .me-year { flex: 0 0 90px; }
+.me-row .me-perf-year { flex: 0 0 110px; }
 
 .add-actions, .admin-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
@@ -475,7 +477,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .work-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .work-row .work-title { flex: 1.4; }
 .work-row .work-year { flex: 0 0 110px; }
-.work-row .work-recording-year { flex: 0 0 110px; }
 .work-row .work-url { flex: 1; }
 
 .card-foot {
@@ -872,7 +873,7 @@ body.is-teacher #gate { display: none; }
   .result-work { display: none; }
 
   /* Skjema: lenke-, verk- og kilderader stables vertikalt */
-  .link-row { flex-direction: column; }
+  .link-row, .me-row { flex-direction: column; }
   .source-row { flex-direction: column; }
   .work-row { flex-direction: column; }
   .work-row .work-year { flex: 1; }

@@ -2,8 +2,8 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.63
-**Sist endret:** 2026-06-18
+**Versjon:** 1.68
+**Sist endret:** 2026-06-20
 
 ---
 
@@ -48,8 +48,9 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
     { "title": "Hellhound on My Trail", "year": 1937 },
     { "title": "Sweet Home Chicago", "year": 1936 }
   ],
-  "links": [
-    { "label": "King of the Delta Blues Singers (1961)", "url": "https://youtube.com/..." }
+  "musicExamples": [
+    { "label": "King of the Delta Blues Singers (1961)", "url": "https://youtube.com/...", "year": 1961 },
+    { "label": "Live at Newport 1964", "url": "https://youtube.com/...", "year": 1961, "performanceYear": 1964 }
   ],
   "kilder": [
     { "text": "Wald, Elijah. Escaping the Delta. Amistad, 2004." },
@@ -78,7 +79,7 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 | `geography` | string | | Fritekst: by, region, miljø. "Mississippi Delta", "Bronx, New York". |
 | `description` | string | | Pedagogisk begrunnelse — *hvorfor relevant?* Vanlig tekst, kort. |
 | `keyWorks` | array av objekter | | Sentrale verk. Se under. |
-| `links` | array av objekter | | Lytteeksempler/innspilte versjoner. `{ label, url }`. |
+| `musicExamples` | array av objekter | | Musikkeksempler (lyttelenker). `{ label, url, year?, performanceYear? }`. Se under. |
 | `kilder` | array av objekter | | Kilder. Se under. |
 | `imageUrl` | string | | URL til portrettbilde. Bruk Commons/CC-lisensiert. |
 | `imageCredit` | string | | Fotograf + lisens, vises som bildetekst (eks. *"Carl Van Vechten / Library of Congress, public domain"*). |
@@ -90,17 +91,10 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 { "title": "A Love Supreme", "year": 1965, "url": "https://..." }
 ```
 
-Med separat opptaksår (typisk konsertopptak utgitt senere):
-
-```json
-{ "title": "My Favorite Things (Live in Belgium)", "year": 1965, "recordingYear": 1965, "url": "https://..." }
-```
-
 | Felt | Påkrevd | Notater |
 |---|---|---|
 | `title` | ✓ | Verkets/låtens tittel. |
-| `year` | | **Utgivelsesår.** 4-sifret. Brukes som default i visning og kronologisk sortering. |
-| `recordingYear` | | **Opptaksår.** Settes når opptaket ble gjort et annet år enn utgivelsen — typisk konsertopptak utgitt senere. Hvis `recordingYear === year` vises bare ett årstall; hvis ulike, vises `(1965, opptak 1958)`. |
+| `year` | | **Utgivelsesår.** 4-sifret. Brukes i visning og kronologisk sortering. |
 | `url` | | Lenke (Spotify, YouTube, Apple Music). Hvis tomt brukes YouTube-søk på `tittel + artist`. |
 
 ### `kilder[]`
@@ -114,13 +108,26 @@ Med separat opptaksår (typisk konsertopptak utgitt senere):
 | `text` | ✓ | Hele kildereferansen, sluttet stil (Chicago/MLA). |
 | `url` | | Klikkbar lenke. Hvis satt: hele teksten blir lenke. |
 
-### `links[]` (musikkeksempler)
+### `musicExamples[]`
 
 ```json
-{ "label": "Live, Newport 1964", "url": "https://youtube.com/..." }
+{ "label": "Live, Newport 1964", "url": "https://youtube.com/...", "year": 1964 }
 ```
 
-Forskjell på `links` og `keyWorks`: `links` er konkrete innspillinger/opptredener; `keyWorks` er det kanoniske verket. Et verk kan eksistere som `keyWorks` uten lenke, og bli koblet til flere `links` (forskjellige versjoner).
+Med framføringsår (konsertopptak e.l. der framføringen skjedde et annet år enn utgivelsen):
+
+```json
+{ "label": "Live at Montreaux 1968", "url": "https://youtube.com/...", "year": 2003, "performanceYear": 1968 }
+```
+
+| Felt | Påkrevd | Notater |
+|---|---|---|
+| `label` | | Tittel / beskrivelse. Vises som lenketekst (fallback: «Lytt»). |
+| `url` | ✓ | URL til YouTube, Spotify, Apple Music e.l. |
+| `year` | | **Utgivelsesår.** 4-sifret. Vises etter tittelen. |
+| `performanceYear` | | **Framføringsår.** Settes kun når framføringen skjedde et annet år enn utgivelsen — typisk konsertopptak utgitt senere. Hvis satt, vises `(2003, framføring 1968)`. |
+
+Forskjell på `musicExamples` og `keyWorks`: `musicExamples` er konkrete innspillinger/opptredener med lyttelenke; `keyWorks` er det kanoniske verket. Et verk kan eksistere som `keyWorks` uten lenke, og bli koblet til flere `musicExamples` (forskjellige versjoner).
 
 ---
 
@@ -235,8 +242,8 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
         { "title": "Nobody Knows You When You're Down and Out", "year": 1929 },
         { "title": "St. Louis Blues", "year": 1925, "url": "https://www.loc.gov/item/jukebox-21731/" }
       ],
-      "links": [
-        { "label": "Complete Recordings, Vol. 1 (Columbia)", "url": "https://open.spotify.com/album/..." }
+      "musicExamples": [
+        { "label": "Complete Recordings, Vol. 1 (Columbia)", "url": "https://open.spotify.com/album/...", "year": 1991 }
       ],
       "kilder": [
         { "text": "Davis, A. Blues Legacies and Black Feminism. Pantheon, 1998." },
@@ -287,5 +294,7 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
 
 ### Bakoverkompatibilitet
 - Gammel modell med `subgenres` (blandet array) og `keyWorks` (komma­separert streng) leses fortsatt — konverteres automatisk på lesetid.
+- Gammelt `links`-felt konverteres automatisk til `musicExamples` på lesetid (`normalizeArtist`).
+- `recordingYear` i `keyWorks` er fjernet (v1.68). Eksisterende verdier ignoreres.
 - Når en lærer redigerer og lagrer, skrives det alltid i nytt format.
 - Etter en runde med redigering er all data konvertert.

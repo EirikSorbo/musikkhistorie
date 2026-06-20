@@ -49,7 +49,7 @@ export function normalizeArtist(a) {
   // For bakoverkompatibilitet i kode som leser begge:
   out.subgenres = [...out.sjangre, ...out.undersjangre];
 
-  // keyWorks: streng → array av {title, year?, recordingYear?, url?}
+  // keyWorks: streng → array av {title, year?, url?}
   if (typeof out.keyWorks === "string") {
     out.keyWorks = out.keyWorks
       .split(",")
@@ -68,6 +68,18 @@ export function normalizeArtist(a) {
   } else {
     out.kilder = [];
   }
+
+  // musicExamples: bakoverkompatibilitet fra gamle «links»
+  if (!Array.isArray(out.musicExamples)) {
+    const old = Array.isArray(out.links) ? out.links : [];
+    out.musicExamples = old.map((l) => ({
+      label: l.label || "",
+      url: l.url || "",
+      year: l.year || null,
+      performanceYear: l.performanceYear || null,
+    })).filter((m) => m.url);
+  }
+  delete out.links;
 
   // Bilder
   out.imageUrl = out.imageUrl || "";
@@ -173,7 +185,7 @@ export async function addArtist(data) {
     imageUrl: n.imageUrl,
     imageCredit: n.imageCredit,
     geography: n.geography ?? "",
-    links: n.links ?? [],
+    musicExamples: n.musicExamples ?? [],
     proposedBy: n.proposedBy ?? "Anonym",
     status: "active",
     removedBy: null,

@@ -9,7 +9,7 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=167";
+import { fillSelect } from "./ui.js?v=168";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
@@ -37,7 +37,7 @@ function setupForm() {
   const msg = $("#form-msg");
 
   $("#add-work").addEventListener("click", () => addWorkRow());
-  $("#add-link").addEventListener("click", () => addLinkRow());
+  $("#add-me").addEventListener("click", () => addMusicExampleRow());
   $("#add-source").addEventListener("click", () => addSourceRow());
 
   form.addEventListener("submit", async (e) => {
@@ -61,7 +61,7 @@ function setupForm() {
       imageUrl: $("#in-image-url").value.trim(),
       imageCredit: $("#in-image-credit").value.trim(),
       proposedBy: $("#in-by").value.trim() || "Anonym",
-      links: collectLinks(),
+      musicExamples: collectMusicExamples(),
       kilder: collectSources(),
     };
 
@@ -83,7 +83,7 @@ function setupForm() {
       await addArtist(candidate);
       form.reset();
       resetWorkRows();
-      resetLinkRows();
+      resetMusicExampleRows();
       resetSourceRows();
       const base = `«${candidate.name}» er lagt til i pensumforslagene ✓`;
       if (warnings.length) {
@@ -97,29 +97,39 @@ function setupForm() {
   });
 }
 
-function addLinkRow(label = "", url = "") {
-  const wrap = $("#link-rows");
+function addMusicExampleRow(label = "", url = "", year = "", perfYear = "") {
+  const wrap = $("#me-rows");
   const row = document.createElement("div");
-  row.className = "link-row";
+  row.className = "me-row";
   row.innerHTML = `
-    <input type="text" class="link-label" placeholder="Tittel (f.eks. «Hellhound on My Trail»)" value="${label}">
-    <input type="url" class="link-url" placeholder="https://youtube.com/…" value="${url}">
-    <button type="button" class="btn ghost small remove-link">✕</button>
+    <input type="text" class="me-label" placeholder="Tittel (f.eks. «Hellhound on My Trail»)" value="${label}">
+    <input type="number" class="me-year" placeholder="Årstall" min="1800" max="2030" value="${year}">
+    <input type="url" class="me-url" placeholder="https://youtube.com/…" value="${url}">
+    <input type="number" class="me-perf-year" placeholder="Framf.år" min="1800" max="2030" value="${perfYear}" title="Året for framføring/konsert (kun hvis annet enn utgivelsesår)">
+    <button type="button" class="btn ghost small remove-me">✕</button>
   `;
-  row.querySelector(".remove-link").addEventListener("click", () => row.remove());
+  row.querySelector(".remove-me").addEventListener("click", () => row.remove());
   wrap.appendChild(row);
 }
-function resetLinkRows() {
-  $("#link-rows").innerHTML = "";
-  addLinkRow();
+function resetMusicExampleRows() {
+  $("#me-rows").innerHTML = "";
+  addMusicExampleRow();
 }
-function collectLinks() {
-  return [...document.querySelectorAll(".link-row")]
-    .map((r) => ({
-      label: r.querySelector(".link-label").value.trim(),
-      url: r.querySelector(".link-url").value.trim(),
-    }))
-    .filter((l) => l.url);
+function collectMusicExamples() {
+  return [...document.querySelectorAll(".me-row")]
+    .map((r) => {
+      const label = r.querySelector(".me-label").value.trim();
+      const url = r.querySelector(".me-url").value.trim();
+      const yearStr = r.querySelector(".me-year").value.trim();
+      const perfYearStr = r.querySelector(".me-perf-year").value.trim();
+      const out = { label, url };
+      const yr = parseInt(yearStr, 10);
+      if (Number.isFinite(yr)) out.year = yr;
+      const pyr = parseInt(perfYearStr, 10);
+      if (Number.isFinite(pyr)) out.performanceYear = pyr;
+      return out;
+    })
+    .filter((m) => m.url);
 }
 
 function addWorkRow(title = "", year = "", url = "") {
@@ -190,7 +200,7 @@ function showMsg(el, text, type) {
 function init() {
   setupForm();
   resetWorkRows();
-  resetLinkRows();
+  resetMusicExampleRows();
   resetSourceRows();
 
   if (!CONFIGURED) {

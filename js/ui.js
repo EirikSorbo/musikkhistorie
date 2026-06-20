@@ -79,10 +79,16 @@ function genreTags(a) {
 
 function yearLabel(w) {
   const y = w.year || null;
-  const r = w.recordingYear || null;
-  if (y && r && r !== y) return `(${y}, opptak ${r})`;
   if (y) return `(${y})`;
-  if (r) return `(opptak ${r})`;
+  return "";
+}
+
+function musicExampleLabel(m) {
+  const y = m.year || null;
+  const p = m.performanceYear || null;
+  if (y && p && p !== y) return ` (${y}, framføring ${p})`;
+  if (y) return ` (${y})`;
+  if (p) return ` (framføring ${p})`;
   return "";
 }
 
@@ -301,8 +307,8 @@ export function renderResultList(el, artists, config, onSelect) {
 // Full innholdsvisning for detaljmodal (kun lesemodus)
 export function renderArtistDetail(el, artist, config) {
   const a = artist;
-  const links = (a.links || [])
-    .map((l) => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || "Lytt")}</a>`)
+  const examplesHtml = (a.musicExamples || [])
+    .map((m) => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
     .join("");
   const worksHtml = keyWorksText(a.keyWorks);
   el.innerHTML = `
@@ -314,7 +320,7 @@ export function renderArtistDetail(el, artist, config) {
     </div>
     ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
     ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-    ${links ? `<div class="links">${links}</div>` : ""}
+    ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
     ${kilderHtml(a.kilder)}
   `;
 }
@@ -330,11 +336,11 @@ export function renderSpotlightCards(el, artists, config) {
 }
 
 function spotlightCard(a, config) {
-  const links = (a.links || [])
+  const examplesHtml = (a.musicExamples || [])
     .map(
-      (l) =>
-        `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
-          ${escapeHtml(l.label || "Lytt")}
+      (m) =>
+        `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">
+          ${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}
         </a>`
     )
     .join("");
@@ -353,7 +359,7 @@ function spotlightCard(a, config) {
       </header>
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-      ${links ? `<div class="links">${links}</div>` : ""}
+      ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
     </article>
   `;
@@ -420,11 +426,11 @@ function artistCard(a, { isTeacher, clientId, config }) {
   const removed = a.status === "removed";
   const vetoed = a.teacherVetoed === true;
 
-  const links = (a.links || [])
+  const examplesHtml = (a.musicExamples || [])
     .map(
-      (l) =>
-        `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
-          ${escapeHtml(l.label || "Lytt")}
+      (m) =>
+        `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">
+          ${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}
         </a>`
     )
     .join("");
@@ -483,7 +489,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
 
       ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-      ${links ? `<div class="links">${links}</div>` : ""}
+      ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
 
       <footer class="card-foot">
@@ -620,11 +626,12 @@ export function buildPlaylistHtml(node, artists) {
     const sjangerTag = (a.sjangre || [])
       .map((s) => `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
       .join("");
-    (a.links || []).forEach((l) => {
-      const key = `${nameLow}|${(l.label || l.url).toLowerCase()}`;
+    (a.musicExamples || []).forEach((m) => {
+      const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
-      rows.push(`<li class="pl-item"><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label || l.url)}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
+      const yInfo = musicExampleLabel(m);
+      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
     });
     (a.keyWorks || []).forEach((w) => {
       const title = w.title || "";
