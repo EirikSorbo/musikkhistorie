@@ -126,6 +126,14 @@ export function escapeHtml(str) {
 
 export function formatInfoText(text) {
   if (!text) return "";
+  const hasBullets = /^[•\-–]\s/m.test(text);
+  if (!hasBullets) {
+    const sentences = text.split(/(?<=\.)\s+/).filter(s => s.trim());
+    if (sentences.length > 1) {
+      return "<ul>" + sentences.map(s => `<li>${escapeHtml(s.trim())}</li>`).join("") + "</ul>";
+    }
+    return `<p>${escapeHtml(text.trim())}</p>`;
+  }
   const lines = text.split("\n");
   let html = "";
   let inList = false;
