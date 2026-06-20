@@ -155,7 +155,6 @@ export function renderDashboard(el, { artists, config }) {
       <div class="stat-card">
         <div class="stat-num">${subgenreCount}</div>
         <div class="stat-label">Undersjangre</div>
-        <button class="btn ghost small" id="btn-subgenre-list" style="margin-top:8px">Vis alle</button>
       </div>
       <div class="stat-card stat-wide">
         <div class="stat-label">Kjønnsfordeling (aktive)</div>
@@ -543,7 +542,7 @@ function pct(n, max) {
 }
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
-export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist } = {}) {
+export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist, onEdit } = {}) {
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -556,6 +555,7 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
     onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+    onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
   mTitle.textContent = label;
@@ -567,6 +567,8 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
   if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
+  const be = mBody.querySelector(".gx-edit-btn");
+  if (be) be.addEventListener("click", () => onEdit(label));
   modalOpen(modal);
 }
 

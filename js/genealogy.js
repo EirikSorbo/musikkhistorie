@@ -51,7 +51,7 @@ export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n)
 
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, subgenreDescs, onShowArtists }
-export function showSjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist } = {}) {
+export function showSjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist, onEdit } = {}) {
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return;
@@ -75,6 +75,7 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
   const btnArea = [
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
     (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+    onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
   mTitle.textContent = n.f;
@@ -91,6 +92,8 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, on
   if (b) b.addEventListener("click", () => onShowArtists({ label: n.l }));
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
+  const be = mBody.querySelector(".gx-edit-btn");
+  if (be) be.addEventListener("click", () => onEdit(n.f));
   window._modalZ = window._modalZ || 100;
   modal.style.zIndex = ++window._modalZ;
   modal.classList.add("open");

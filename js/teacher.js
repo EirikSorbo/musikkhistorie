@@ -20,7 +20,7 @@ import {
   signOutTeacher,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=166";
+import { escapeHtml, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=167";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -620,6 +620,10 @@ function setupSjangerModal() {
     subgenreDescs: state.subgenreDescs,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
+    onEdit: (label) => {
+      modalClose(document.getElementById("modal-sjanger"));
+      openSingleSubgenreModal(label);
+    },
   });
   document.addEventListener("click", (e) => {
     const sjBtn = e.target.closest("[data-sjanger]");
