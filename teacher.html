@@ -560,14 +560,11 @@
           <label class="full">Beskrivelse
             <textarea id="pod-desc" rows="2"></textarea>
           </label>
-          <label class="full">Lydfil (MP3)
-            <div class="podkast-drop-zone" id="pod-drop-zone">
-              <input type="file" id="pod-file" accept="audio/*" hidden />
-              <p class="muted" id="pod-drop-text">Dra inn en fil eller klikk for å velge</p>
-            </div>
+          <label class="full">Dropbox-lenke (del → kopier lenke)
+            <input type="url" id="pod-url" placeholder="https://www.dropbox.com/…" />
           </label>
           <div class="full add-actions">
-            <button type="button" id="pod-save" class="btn primary">Last opp og lagre</button>
+            <button type="button" id="pod-save" class="btn primary">Lagre episode</button>
             <span id="pod-msg" class="form-msg ok"></span>
           </div>
         </div>
@@ -575,6 +572,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=174"></script>
+  <script type="module" src="js/teacher.js?v=175"></script>
 </body>
 </html>

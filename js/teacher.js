@@ -21,7 +21,6 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-  uploadPodcastAudio,
   addPodcast,
   updatePodcast,
   deletePodcast,
@@ -732,8 +731,6 @@ function startApp() {
 //  Podkast-administrasjon
 // ----------------------------------------------------------------------------
 
-let podSelectedFile = null;
-
 function openPodkastAdmin() {
   renderPodkastAdmin();
   modalOpen(document.getElementById("modal-podkast-admin"));
@@ -776,54 +773,29 @@ function setupPodkastAdmin() {
   modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
   modal.querySelector(".modal-close").addEventListener("click", () => modalClose(modal));
 
-  const dropZone = document.getElementById("pod-drop-zone");
-  const fileInput = document.getElementById("pod-file");
-  const dropText = document.getElementById("pod-drop-text");
-
-  dropZone.addEventListener("click", () => fileInput.click());
-  dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
-  dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("drag-over");
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("audio/")) {
-      podSelectedFile = file;
-      dropText.textContent = file.name;
-    }
-  });
-  fileInput.addEventListener("change", () => {
-    if (fileInput.files[0]) {
-      podSelectedFile = fileInput.files[0];
-      dropText.textContent = podSelectedFile.name;
-    }
-  });
-
   document.getElementById("pod-save").addEventListener("click", async () => {
     const title = document.getElementById("pod-title").value.trim();
+    const audioUrl = document.getElementById("pod-url").value.trim();
     const msg = document.getElementById("pod-msg");
     if (!title) { msg.textContent = "Tittel er påkrevd."; msg.className = "form-msg error"; return; }
-    if (!podSelectedFile) { msg.textContent = "Velg en lydfil."; msg.className = "form-msg error"; return; }
 
-    msg.textContent = "Laster opp …";
+    msg.textContent = "Lagrer …";
     msg.className = "form-msg ok";
     try {
-      const audioUrl = await uploadPodcastAudio(podSelectedFile);
       await addPodcast({
         title,
         description: document.getElementById("pod-desc").value.trim(),
         duration: document.getElementById("pod-duration").value.trim(),
-        audioUrl,
+        audioUrl: audioUrl ? audioUrl.replace(/dl=0/, "dl=1").replace(/\?dl=1$/, "?raw=1") : "",
         order: state.podcasts.length + 1,
       });
       document.getElementById("pod-title").value = "";
       document.getElementById("pod-desc").value = "";
       document.getElementById("pod-duration").value = "";
-      podSelectedFile = null;
-      dropText.textContent = "Dra inn en fil eller klikk for å velge";
+      document.getElementById("pod-url").value = "";
       msg.textContent = "Episode lagt til!";
     } catch (err) {
-      console.error("Podkast-opplasting feilet:", err);
+      console.error("Podkast-lagring feilet:", err);
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";
     }

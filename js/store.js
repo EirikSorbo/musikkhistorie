@@ -25,12 +25,6 @@ import {
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 import { firebaseConfig } from "./firebase-config.js";
 import { DEFAULT_CONFIG } from "./limits.js";
@@ -96,7 +90,6 @@ export function normalizeArtist(a) {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -359,12 +352,6 @@ export function subscribePodcasts(callback) {
     pods.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
     callback(pods);
   }, (err) => console.error("Kunne ikke lese podkaster (sjekk Firestore-regler):", err.message));
-}
-
-export async function uploadPodcastAudio(file) {
-  const fileRef = storageRef(storage, `podcasts/${Date.now()}_${file.name}`);
-  await uploadBytes(fileRef, file);
-  return getDownloadURL(fileRef);
 }
 
 export async function addPodcast(data) {
