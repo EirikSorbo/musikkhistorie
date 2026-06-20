@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=176";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=177";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -270,6 +270,11 @@ function openDecadeView(decadeId) {
   societyEl.className = "info-text" + (desc.society ? "" : " muted");
   techEl.innerHTML = desc.tech ? formatInfoText(desc.tech) : "Ingen beskrivelse ennå.";
   techEl.className = "info-text" + (desc.tech ? "" : " muted");
+
+  const stl = document.getElementById("dv-society-timeline");
+  if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
+  const ttl = document.getElementById("dv-tech-timeline");
+  if (ttl) ttl.innerHTML = buildTimeline(desc.tech, decadeId);
 
   const moreSociety = document.getElementById("dv-society-more");
   const moreTech = document.getElementById("dv-tech-more");

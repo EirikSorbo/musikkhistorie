@@ -168,6 +168,44 @@ export function formatInfoText(text) {
   return html;
 }
 
+export function buildTimeline(text, decadeId) {
+  if (!text) return "";
+  const bullets = extractBullets(text);
+  if (bullets.length < 2) return "";
+  const startYear = parseInt(decadeId, 10);
+  const events = bullets.map(b => {
+    const m = b.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
+    return { year: m ? parseInt(m[1], 10) : null, text: b };
+  });
+  let html = '<div class="timeline">';
+  for (const ev of events) {
+    const label = ev.year ? String(ev.year) : `${startYear}+`;
+    const short = ev.text.length > 120 ? ev.text.slice(0, 117) + "…" : ev.text;
+    html += `<div class="tl-item"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-dot"></span><span class="tl-desc">${escapeHtml(short)}</span></div>`;
+  }
+  html += "</div>";
+  return html;
+}
+
+function extractBullets(text) {
+  const hasBullets = /^[•\-–]\s/m.test(text);
+  if (hasBullets) {
+    return text.split("\n").map(l => l.trim()).filter(l => /^[•\-–]\s/.test(l)).map(l => l.replace(/^[•\-–]\s*/, ""));
+  }
+  const sentences = text.split(/(?<=\.)\s+/).filter(s => s.trim());
+  if (sentences.length <= 1) return sentences;
+  const cont = /^(Fortsatt|Også|Samtidig|Dessuten|I tillegg|Likevel|Imidlertid|Derimot|Dermed|Slik|Dette|Disse|Den samme|Det samme)\b/i;
+  const grouped = [sentences[0]];
+  for (let i = 1; i < sentences.length; i++) {
+    if (cont.test(sentences[i].trim())) {
+      grouped[grouped.length - 1] += " " + sentences[i].trim();
+    } else {
+      grouped.push(sentences[i].trim());
+    }
+  }
+  return grouped;
+}
+
 const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",

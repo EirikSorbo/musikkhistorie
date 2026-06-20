@@ -592,6 +592,14 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .info-text ul { margin: 6px 0 10px; padding-left: 20px; }
 .info-text li { margin-bottom: 4px; }
 
+/* ----- Tidslinje ----- */
+.timeline { position: relative; margin: 14px 0 6px; padding-left: 18px; border-left: 2px solid var(--border); }
+.tl-item { position: relative; padding: 0 0 14px 14px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot { position: absolute; left: -23px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.tl-year { display: inline-block; font-weight: 600; font-size: 0.78rem; color: var(--accent); min-width: 38px; margin-right: 6px; }
+.tl-desc { font-size: 0.85rem; line-height: 1.5; color: var(--fg); }
+
 /* ----- Innstillinger-knapp i header (lærer) ----- */
 .gear-btn { font-size: 0.82rem; }
 

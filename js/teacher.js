@@ -26,7 +26,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=176";
+import { escapeHtml, formatInfoText, buildTimeline, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=177";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -302,6 +302,11 @@ function openSingleDecadeModal(decadeId) {
   techText.innerHTML = desc.tech ? formatInfoText(desc.tech) : noText;
   techText.className = "info-text" + (desc.tech ? "" : " muted");
 
+  const stl = $("#ds-society-timeline");
+  if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
+  const ttl = $("#ds-tech-timeline");
+  if (ttl) ttl.innerHTML = buildTimeline(desc.tech, decadeId);
+
   $("#ds-society-section").style.display = isSociety ? "" : "none";
   $("#ds-tech-section").style.display = isSociety ? "none" : "";
 
@@ -400,10 +405,14 @@ function setupDecadeSingleSave() {
       const noText = "Ingen beskrivelse ennå.";
       const societyText = $("#ds-society-text");
       const techText = $("#ds-tech-text");
-      societyText.textContent = society || noText;
+      societyText.innerHTML = society ? formatInfoText(society) : noText;
       societyText.className = "info-text" + (society ? "" : " muted");
-      techText.textContent = tech || noText;
+      techText.innerHTML = tech ? formatInfoText(tech) : noText;
       techText.className = "info-text" + (tech ? "" : " muted");
+      const stl2 = $("#ds-society-timeline");
+      if (stl2) stl2.innerHTML = buildTimeline(society, decadeId);
+      const ttl2 = $("#ds-tech-timeline");
+      if (ttl2) ttl2.innerHTML = buildTimeline(tech, decadeId);
 
       setTimeout(() => {
         $("#ds-view").style.display = "";
