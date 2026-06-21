@@ -911,8 +911,9 @@ function setupTechAdmin() {
     importBtn.disabled = true;
     importBtn.textContent = "Importerer…";
     try {
-      const res = await fetch("data/tech-innovations.json");
-      const items = await res.json();
+      const res = await fetch("data/musikkhistorie.json");
+      const data = await res.json();
+      const items = data.tech || [];
       let count = 0;
       for (const item of items) {
         const exists = state.techItems.some(t => t.name === item.name);

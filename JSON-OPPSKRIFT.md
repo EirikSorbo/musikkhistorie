@@ -224,7 +224,7 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
 | Kringkasting og spredning | Radio, TV, MTV, satellitt, fildeling, strømming osv. |
 | Instrumenter og lydutstyr | El-gitar, synther, trommemaskiner, MIDI, el-piano osv. |
 
-Startdata finnes i `data/tech-innovations.json`.
+Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
 
 ---
 
