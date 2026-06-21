@@ -1,6 +1,6 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, voteUp, undoVoteUp, getClientId } from "./store.js";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=177";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=178";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -12,6 +12,7 @@ const state = {
   decadeDescs: {},
   subgenreDescs: {},
   podcasts: [],
+  techItems: [],
   filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", subgenre: "", showRemoved: false },
   isTeacher: false,
   clientId,
@@ -197,6 +198,22 @@ function setupExplore() {
     podkastModal.addEventListener("click", (e) => { if (e.target === podkastModal) modalClose(podkastModal); });
     podkastModal.querySelector(".modal-close").addEventListener("click", () => modalClose(podkastModal));
   }
+
+  const btnTeknologi = document.getElementById("btn-teknologi");
+  if (btnTeknologi) btnTeknologi.addEventListener("click", openTeknologi);
+
+  const tekModal = document.getElementById("modal-teknologi");
+  if (tekModal) {
+    tekModal.addEventListener("click", (e) => { if (e.target === tekModal) modalClose(tekModal); });
+    tekModal.querySelector(".modal-close").addEventListener("click", () => modalClose(tekModal));
+    tekModal.querySelectorAll(".tech-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        tekModal.querySelectorAll(".tech-tab").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderTeknologiList(btn.dataset.techCat || "");
+      });
+    });
+  }
 }
 
 // Filter sendt fra slektstre-siden (index.html?genre=… / ?subgenre=…):
@@ -332,6 +349,19 @@ function renderPodkastList() {
         ${ep.audioUrl ? `<audio controls preload="none" src="${escapeHtml(ep.audioUrl)}"></audio>` : ""}
       </article>`;
   }).join("");
+}
+
+function openTeknologi() {
+  renderTeknologiList("");
+  const modal = document.getElementById("modal-teknologi");
+  modal.querySelectorAll(".tech-tab").forEach(b => b.classList.toggle("active", !b.dataset.techCat));
+  modalOpen(modal);
+}
+
+function renderTeknologiList(category) {
+  const el = document.getElementById("tech-list");
+  if (!el) return;
+  renderTechList(el, state.techItems, category || "");
 }
 
 function openSubgenreList() {
@@ -657,6 +687,7 @@ function init() {
   subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
   subscribeSubgenres((s) => { state.subgenreDescs = s; renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
+  subscribeTech((items) => { state.techItems = items; });
 
   applyIncomingFilter();
 }

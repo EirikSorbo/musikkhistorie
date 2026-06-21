@@ -4,6 +4,10 @@ import {
   subscribeDecades,
   subscribeSubgenres,
   subscribePodcasts,
+  subscribeTech,
+  addTech,
+  updateTech,
+  deleteTech,
   addArtist,
   teacherApprove,
   teacherReject,
@@ -26,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=177";
+import { escapeHtml, formatInfoText, buildTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=178";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -37,6 +41,7 @@ const state = {
   decadeDescs: {},
   subgenreDescs: {},
   podcasts: [],
+  techItems: [],
   filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false },
   isTeacher: true,
   clientId: getClientId(),
@@ -710,6 +715,9 @@ function startApp() {
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
   $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);
   setupPodkastAdmin();
+  const btnTek = document.getElementById("btn-t-teknologi");
+  if (btnTek) btnTek.addEventListener("click", openTechAdmin);
+  setupTechAdmin();
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
@@ -734,6 +742,7 @@ function startApp() {
   subscribeDecades((d) => { state.decadeDescs = d; });
   subscribeSubgenres((s) => { state.subgenreDescs = s; });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
+  subscribeTech((items) => { state.techItems = items; });
 }
 
 // ----------------------------------------------------------------------------
@@ -807,6 +816,122 @@ function setupPodkastAdmin() {
       console.error("Podkast-lagring feilet:", err);
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";
+    }
+  });
+}
+
+// ----------------------------------------------------------------------------
+//  Teknologi-admin
+// ----------------------------------------------------------------------------
+
+function openTechAdmin() {
+  renderTechAdmin();
+  const modal = document.getElementById("modal-tech-admin");
+  modal.querySelectorAll(".tech-tab").forEach(b => b.classList.toggle("active", !b.dataset.techCat));
+  openAdminModal("modal-tech-admin");
+}
+
+let techAdminCat = "";
+
+function renderTechAdmin() {
+  const el = document.getElementById("tech-admin-list");
+  if (!el) return;
+  const filtered = techAdminCat ? state.techItems.filter(t => t.category === techAdminCat) : state.techItems;
+  if (!filtered.length) {
+    el.innerHTML = `<p class="muted empty">Ingen teknologier i denne kategorien ennå.</p>`;
+    return;
+  }
+  el.innerHTML = filtered.map(t => {
+    const img = t.imageUrl ? `<img src="${escapeHtml(t.imageUrl)}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:6px;margin-right:10px" />` : "";
+    return `<div class="podkast-episode" style="display:flex;align-items:flex-start;gap:8px" data-tech-id="${escapeHtml(t.id)}">
+      ${img}
+      <div style="flex:1;min-width:0">
+        <strong>${escapeHtml(t.name)}</strong>
+        <span style="color:var(--accent);font-size:0.8rem;margin-left:6px">${escapeHtml(t.adoptedLabel || "")}</span>
+        <p style="margin:4px 0 0;font-size:0.82rem;opacity:0.8">${escapeHtml(t.description || "")}</p>
+      </div>
+      <div class="podkast-actions">
+        <button class="btn ghost small tech-edit-btn">Rediger</button>
+        <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  el.querySelectorAll(".tech-del-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.closest("[data-tech-id]").dataset.techId;
+      if (confirm("Slette denne teknologien?")) await deleteTech(id);
+    });
+  });
+
+  el.querySelectorAll(".tech-edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.closest("[data-tech-id]").dataset.techId;
+      const t = state.techItems.find(x => x.id === id);
+      if (!t) return;
+      fillTechForm(t);
+    });
+  });
+}
+
+function fillTechForm(t) {
+  document.getElementById("tech-name").value = t ? t.name || "" : "";
+  document.getElementById("tech-category").value = t ? t.category || "" : "";
+  document.getElementById("tech-invented").value = t ? t.inventedYear || "" : "";
+  document.getElementById("tech-adopted").value = t ? t.adoptedYear || "" : "";
+  document.getElementById("tech-adopted-label").value = t ? t.adoptedLabel || "" : "";
+  document.getElementById("tech-decade").value = t ? t.decade || "" : "";
+  document.getElementById("tech-desc").value = t ? t.description || "" : "";
+  document.getElementById("tech-image-url").value = t ? t.imageUrl || "" : "";
+  document.getElementById("tech-image-credit").value = t ? t.imageCredit || "" : "";
+  document.getElementById("tech-msg").textContent = "";
+  document.getElementById("tech-save").dataset.editId = t ? t.id : "";
+}
+
+function setupTechAdmin() {
+  const modal = document.getElementById("modal-tech-admin");
+  if (!modal) return;
+  modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
+  modal.querySelector(".modal-close").addEventListener("click", () => modalClose(modal));
+
+  modal.querySelectorAll(".tech-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".tech-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      techAdminCat = btn.dataset.techCat || "";
+      renderTechAdmin();
+    });
+  });
+
+  document.getElementById("tech-new-btn").addEventListener("click", () => fillTechForm(null));
+
+  document.getElementById("tech-save").addEventListener("click", async () => {
+    const name = document.getElementById("tech-name").value.trim();
+    const msg = document.getElementById("tech-msg");
+    if (!name) { msg.textContent = "Navn er påkrevd."; msg.className = "form-msg error"; return; }
+    const data = {
+      name,
+      category: document.getElementById("tech-category").value,
+      inventedYear: parseInt(document.getElementById("tech-invented").value) || null,
+      adoptedYear: parseInt(document.getElementById("tech-adopted").value) || null,
+      adoptedLabel: document.getElementById("tech-adopted-label").value.trim(),
+      decade: document.getElementById("tech-decade").value.trim(),
+      description: document.getElementById("tech-desc").value.trim(),
+      imageUrl: document.getElementById("tech-image-url").value.trim(),
+      imageCredit: document.getElementById("tech-image-credit").value.trim(),
+    };
+    const editId = document.getElementById("tech-save").dataset.editId;
+    try {
+      if (editId) {
+        await updateTech(editId, data);
+        msg.textContent = "Oppdatert ✓"; msg.className = "form-msg ok";
+      } else {
+        await addTech(data);
+        msg.textContent = "Lagt til ✓"; msg.className = "form-msg ok";
+        fillTechForm(null);
+      }
+    } catch (err) {
+      msg.textContent = "Feil: " + err.message; msg.className = "form-msg error";
     }
   });
 }

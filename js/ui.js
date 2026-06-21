@@ -141,6 +141,35 @@ function extractBullets(text) {
   return splitLines(text);
 }
 
+const TECH_CATEGORIES = [
+  "Opptak og avspilling",
+  "Kringkasting og spredning",
+  "Instrumenter og lydutstyr",
+];
+
+export { TECH_CATEGORIES };
+
+export function renderTechList(el, items, activeCategory) {
+  const filtered = activeCategory ? items.filter(t => t.category === activeCategory) : items;
+  if (!filtered.length) {
+    el.innerHTML = `<p class="muted empty">Ingen teknologier i denne kategorien ennå.</p>`;
+    return;
+  }
+  el.innerHTML = filtered.map(t => {
+    const img = t.imageUrl
+      ? `<figure class="tech-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
+      : "";
+    return `<article class="tech-card" data-tech-id="${escapeHtml(t.id)}">
+      ${img}
+      <div class="tech-card-body">
+        <h4 class="tech-card-name">${escapeHtml(t.name)}</h4>
+        <span class="tech-card-year">${escapeHtml(t.adoptedLabel || String(t.adoptedYear || ""))}</span>
+        <p class="tech-card-desc">${escapeHtml(t.description || "")}</p>
+      </div>
+    </article>`;
+  }).join("");
+}
+
 function shortDesc(text) {
   const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
   if (first.length <= 70) return first;

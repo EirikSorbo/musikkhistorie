@@ -46,6 +46,7 @@
         <button class="btn ghost" id="btn-tech">Teknologi</button>
         <button class="btn ghost" id="btn-genres">Sjangere</button>
         <button class="btn ghost" id="btn-undergenres">Undersjangre</button>
+        <button class="btn ghost" id="btn-teknologi">Teknologi</button>
         <button class="btn ghost" id="btn-dagens-navn">Dagens navn</button>
         <button class="btn ghost" id="btn-podkast">Podkast</button>
       </div>
@@ -71,6 +72,23 @@
         <button class="modal-close btn ghost small">✕</button>
       </div>
       <div id="spotlight" class="spotlight-grid"></div>
+    </div>
+  </div>
+
+  <!-- Teknologi -->
+  <div class="modal-backdrop" id="modal-teknologi">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Teknologiske innovasjoner</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="tech-category-tabs">
+        <button class="btn ghost small tech-tab active" data-tech-cat="">Alle</button>
+        <button class="btn ghost small tech-tab" data-tech-cat="Opptak og avspilling">Opptak</button>
+        <button class="btn ghost small tech-tab" data-tech-cat="Kringkasting og spredning">Kringkasting</button>
+        <button class="btn ghost small tech-tab" data-tech-cat="Instrumenter og lydutstyr">Instrumenter</button>
+      </div>
+      <div id="tech-list" class="tech-grid"></div>
     </div>
   </div>
 
@@ -214,6 +232,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=177"></script>
+  <script type="module" src="js/landing.js?v=178"></script>
 </body>
 </html>

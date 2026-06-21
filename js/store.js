@@ -97,6 +97,7 @@ const artistsCol = collection(db, "artists");
 const decadesCol = collection(db, "decades");
 const subgenresCol = collection(db, "subgenres");
 const podcastsCol = collection(db, "podcasts");
+const techCol = collection(db, "tech");
 const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
@@ -364,6 +365,26 @@ export async function updatePodcast(id, data) {
 
 export async function deletePodcast(id) {
   return deleteDoc(doc(db, "podcasts", id));
+}
+
+export function subscribeTech(callback) {
+  return onSnapshot(techCol, (snapshot) => {
+    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
+    callback(items);
+  }, (err) => console.error("Kunne ikke lese tech (sjekk Firestore-regler):", err.message));
+}
+
+export async function addTech(data) {
+  return addDoc(techCol, data);
+}
+
+export async function updateTech(id, data) {
+  return setDoc(doc(db, "tech", id), data, { merge: true });
+}
+
+export async function deleteTech(id) {
+  return deleteDoc(doc(db, "tech", id));
 }
 
 export async function saveDecadeDesc(decadeId, data) {

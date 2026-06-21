@@ -2,8 +2,8 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.71
-**Sist endret:** 2026-06-20
+**Versjon:** 1.78
+**Sist endret:** 2026-06-21
 
 ---
 
@@ -13,7 +13,8 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 {
   "artists":   [ /* array av artistobjekter */ ],
   "decades":   { "1920": { ... }, "1930": { ... } },
-  "subgenres": { "Blues": { ... }, "Delta blues": { ... } }
+  "subgenres": { "Blues": { ... }, "Delta blues": { ... } },
+  "tech":      [ /* array av teknologiobjekter */ ]
 }
 ```
 
@@ -22,6 +23,7 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 | `artists` | array | Alle artistforslag. Rekkefølge spiller ingen rolle. |
 | `decades` | objekt | Tiårsbeskrivelser. Nøkkel = tiåret som string ("1920", "1960"). |
 | `subgenres` | objekt | Sjanger- og undersjangerbeskrivelser. Nøkkel = navnet eksakt slik det brukes som tag (`"Blues"`, `"Delta blues"`). |
+| `tech` | array | Teknologiske innovasjoner. Sortert etter `adoptedYear`. |
 
 Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firestore-collection `config`, ikke i denne filen.
 
@@ -181,6 +183,48 @@ Nøkkel = nøyaktig navnet som brukes som tag. Sjangere fra slektstreet bruker l
 | `kilder` | | Kilder spesifikt for sjangeren. |
 
 For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, brukes fallback fra `GENEALOGY`-noden (`d`-feltet i `genealogy.js`).
+
+---
+
+## 4. Teknologiobjekt
+
+```json
+{
+  "name": "Vinylplata (LP)",
+  "category": "Opptak og avspilling",
+  "inventedYear": 1948,
+  "adoptedYear": 1948,
+  "adoptedLabel": "1948",
+  "decade": "1940",
+  "description": "Lansert 1948 av Columbia Records. Muliggjorde lengre album og bedre lydkvalitet enn 78-plata.",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/...",
+  "imageCredit": "Fotograf / lisens"
+}
+```
+
+### Feltbeskrivelser
+
+| Felt | Type | Påkrevd | Notater |
+|---|---|---|---|
+| `name` | string | ✓ | Visningsnavn for teknologien/innovasjonen. |
+| `category` | string | ✓ | Én av: `"Opptak og avspilling"`, `"Kringkasting og spredning"`, `"Instrumenter og lydutstyr"`. |
+| `inventedYear` | number \| null | | Året teknologien ble oppfunnet/lansert. |
+| `adoptedYear` | number \| null | | Året teknologien ble tatt i bruk / fikk gjennomslag. Brukes til sortering og tiårsfiltrering. |
+| `adoptedLabel` | string | | Visningslabel for perioden, f.eks. `"ca. 1950"`, `"sent 1960-tall"`, `"1948"`. |
+| `decade` | string | | Tiåret teknologien primært tilhører (f.eks. `"1940"`, `"1960"`). Brukes til filtrering i tiårsvisningen. |
+| `description` | string | | Kort beskrivelse av teknologien og dens betydning. |
+| `imageUrl` | string | | URL til bilde. Bruk CC-lisensierte bilder. |
+| `imageCredit` | string | | Fotograf + lisens, vises som bildetekst. |
+
+### Kategorier
+
+| Kategori | Innhold |
+|---|---|
+| Opptak og avspilling | Grammofon, LP, CD, MP3, DAW, kassett, flerkanalsopptak osv. |
+| Kringkasting og spredning | Radio, TV, MTV, satellitt, fildeling, strømming osv. |
+| Instrumenter og lydutstyr | El-gitar, synther, trommemaskiner, MIDI, el-piano osv. |
+
+Startdata finnes i `data/tech-innovations.json`.
 
 ---
 
