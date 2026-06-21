@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=178";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=179";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -291,7 +291,7 @@ function openDecadeView(decadeId) {
   const stl = document.getElementById("dv-society-timeline");
   if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
   const ttl = document.getElementById("dv-tech-timeline");
-  if (ttl) ttl.innerHTML = buildTimeline(desc.tech, decadeId);
+  if (ttl) ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
 
   const moreSociety = document.getElementById("dv-society-more");
   const moreTech = document.getElementById("dv-tech-more");

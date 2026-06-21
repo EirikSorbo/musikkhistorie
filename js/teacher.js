@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=178";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=179";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -310,7 +310,7 @@ function openSingleDecadeModal(decadeId) {
   const stl = $("#ds-society-timeline");
   if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
   const ttl = $("#ds-tech-timeline");
-  if (ttl) ttl.innerHTML = buildTimeline(desc.tech, decadeId);
+  if (ttl) ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
 
   $("#ds-society-section").style.display = isSociety ? "" : "none";
   $("#ds-tech-section").style.display = isSociety ? "none" : "";
@@ -417,7 +417,7 @@ function setupDecadeSingleSave() {
       const stl2 = $("#ds-society-timeline");
       if (stl2) stl2.innerHTML = buildTimeline(society, decadeId);
       const ttl2 = $("#ds-tech-timeline");
-      if (ttl2) ttl2.innerHTML = buildTimeline(tech, decadeId);
+      if (ttl2) ttl2.innerHTML = buildTechTimeline(state.techItems, decadeId);
 
       setTimeout(() => {
         $("#ds-view").style.display = "";

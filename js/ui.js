@@ -200,6 +200,22 @@ export function buildTimeline(text, decadeId) {
   return html;
 }
 
+export function buildTechTimeline(techItems, decadeId) {
+  const d = String(decadeId);
+  const filtered = techItems.filter(t => t.decade === d);
+  if (filtered.length < 2) return "";
+  filtered.sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
+  let html = '<div class="timeline"><div class="tl-track">';
+  for (let i = 0; i < filtered.length; i++) {
+    const t = filtered[i];
+    const label = t.adoptedYear ? String(t.adoptedYear) : `${d}+`;
+    const pos = i % 2 === 0 ? "below" : "above";
+    html += `<div class="tl-item tl-${pos}"><div class="tl-dot"></div><div class="tl-label"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-desc">${escapeHtml(t.name)}</span></div></div>`;
+  }
+  html += "</div></div>";
+  return html;
+}
+
 const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
