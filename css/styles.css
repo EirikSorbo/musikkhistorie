@@ -984,7 +984,7 @@ body.is-teacher #gate { display: none; }
 .gx-edge.gx-react.gx-hl { opacity: 1; stroke-width: 2.4; }
 
 .gx-node { cursor: pointer; }
-.gx-node rect { stroke-width: 1; transition: opacity 0.15s; }
+.gx-node rect { fill: none !important; stroke: none !important; }
 .gx-node text { font-size: 13px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
 .gx-node.gx-sel rect { stroke-width: 2.5; }
 .gx-dim { opacity: 0.16; }
