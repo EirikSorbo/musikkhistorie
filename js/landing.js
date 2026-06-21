@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=181";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=182";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -295,8 +295,8 @@ function openDecadeView(decadeId) {
     ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
     ttl.querySelectorAll("[data-tech-id]").forEach(el => {
       el.addEventListener("click", () => {
-        modalClose(modal);
-        openTeknologi(el.dataset.techId);
+        const t = state.techItems.find(x => x.id === el.dataset.techId);
+        if (t) openTechDetail(t);
       });
     });
   }
@@ -359,19 +359,17 @@ function renderPodkastList() {
   }).join("");
 }
 
-function openTeknologi(scrollToId) {
+function openTeknologi() {
   renderTeknologiList("");
   const modal = document.getElementById("modal-teknologi");
   modal.querySelectorAll(".tech-tab").forEach(b => b.classList.toggle("active", !b.dataset.techCat));
   modalOpen(modal);
-  if (scrollToId) {
-    const card = modal.querySelector(`[data-tech-id="${scrollToId}"]`);
-    if (card) {
-      card.scrollIntoView({ behavior: "smooth", block: "center" });
-      card.classList.add("highlight-pulse");
-      setTimeout(() => card.classList.remove("highlight-pulse"), 1500);
-    }
-  }
+}
+
+function openTechDetail(t) {
+  document.getElementById("td-title").textContent = t.name;
+  renderTechDetail(document.getElementById("td-body"), t);
+  modalOpen(document.getElementById("modal-tech-detail"));
 }
 
 function renderTeknologiList(category) {

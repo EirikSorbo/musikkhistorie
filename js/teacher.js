@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=181";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=182";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -315,7 +315,11 @@ function openSingleDecadeModal(decadeId) {
     ttl.querySelectorAll("[data-tech-id]").forEach(el => {
       el.addEventListener("click", () => {
         const t = state.techItems.find(x => x.id === el.dataset.techId);
-        if (t) { openTechAdmin(); fillTechForm(t); }
+        if (t) {
+          document.getElementById("td-title").textContent = t.name;
+          renderTechDetail(document.getElementById("td-body"), t);
+          modalOpen(document.getElementById("modal-tech-detail"));
+        }
       });
     });
   }
@@ -430,7 +434,11 @@ function setupDecadeSingleSave() {
         ttl2.querySelectorAll("[data-tech-id]").forEach(el2 => {
           el2.addEventListener("click", () => {
             const t2 = state.techItems.find(x => x.id === el2.dataset.techId);
-            if (t2) { openTechAdmin(); fillTechForm(t2); }
+            if (t2) {
+              document.getElementById("td-title").textContent = t2.name;
+              renderTechDetail(document.getElementById("td-body"), t2);
+              modalOpen(document.getElementById("modal-tech-detail"));
+            }
           });
         });
       }

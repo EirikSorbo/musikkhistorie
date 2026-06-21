@@ -172,6 +172,15 @@ export function renderTechList(el, items, activeCategory) {
   }).join("");
 }
 
+export function renderTechDetail(el, t) {
+  const img = t.imageUrl
+    ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
+    : "";
+  const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
+  const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
+  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}</div>${t.description ? `<p>${escapeHtml(t.description)}</p>` : ""}`;
+}
+
 function shortDesc(text) {
   const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
   if (first.length <= 70) return first;
