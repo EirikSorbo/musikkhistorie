@@ -357,7 +357,6 @@ function openSingleDecadeModal(decadeId) {
   $("#ds-edit").style.display = "none";
 
   modal.dataset.decade = decadeId;
-  modalClose($("#modal-decade-list-t"));
   openAdminModal("modal-decade-single");
 }
 
