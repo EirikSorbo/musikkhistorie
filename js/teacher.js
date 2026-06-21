@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=183";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=186";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -58,6 +58,15 @@ const handlers = {
   veto:      (id) => teacherVeto(id),
   undoVeto:  (id) => undoVeto(id),
 };
+
+function openDetail(artist) {
+  const modal = document.getElementById("modal-detail");
+  document.getElementById("detail-name").textContent = artist.name;
+  renderArtistDetail(document.getElementById("detail-body"), artist, state.config);
+  const editBtn = document.getElementById("detail-edit-btn");
+  editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
+  modalOpen(modal);
+}
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -697,7 +706,7 @@ function setupSjangerModal() {
     root: document,
     subgenreDescs: state.subgenreDescs,
     artists: state.artists,
-    onArtistClick: (a) => openEditModal(a.id),
+    onArtistClick: openDetail,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
     onEdit: (label) => {
