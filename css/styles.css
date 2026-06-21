@@ -1047,3 +1047,9 @@ body.is-teacher #gate { display: none; }
   .btn { padding: 8px 13px; }
   .btn.small { padding: 5px 9px; font-size: 0.78rem; }
 }
+
+@keyframes highlightPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0.35); }
+}
+.highlight-pulse { animation: highlightPulse 0.75s ease 2; }

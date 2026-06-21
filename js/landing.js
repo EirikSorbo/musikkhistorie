@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=179";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=181";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -291,7 +291,15 @@ function openDecadeView(decadeId) {
   const stl = document.getElementById("dv-society-timeline");
   if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
   const ttl = document.getElementById("dv-tech-timeline");
-  if (ttl) ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
+  if (ttl) {
+    ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
+    ttl.querySelectorAll("[data-tech-id]").forEach(el => {
+      el.addEventListener("click", () => {
+        modalClose(modal);
+        openTeknologi(el.dataset.techId);
+      });
+    });
+  }
 
   const moreSociety = document.getElementById("dv-society-more");
   const moreTech = document.getElementById("dv-tech-more");
@@ -351,11 +359,19 @@ function renderPodkastList() {
   }).join("");
 }
 
-function openTeknologi() {
+function openTeknologi(scrollToId) {
   renderTeknologiList("");
   const modal = document.getElementById("modal-teknologi");
   modal.querySelectorAll(".tech-tab").forEach(b => b.classList.toggle("active", !b.dataset.techCat));
   modalOpen(modal);
+  if (scrollToId) {
+    const card = modal.querySelector(`[data-tech-id="${scrollToId}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.classList.add("highlight-pulse");
+      setTimeout(() => card.classList.remove("highlight-pulse"), 1500);
+    }
+  }
 }
 
 function renderTeknologiList(category) {

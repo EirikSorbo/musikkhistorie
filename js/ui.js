@@ -210,7 +210,7 @@ export function buildTechTimeline(techItems, decadeId) {
     const t = filtered[i];
     const label = t.adoptedYear ? String(t.adoptedYear) : `${d}+`;
     const pos = i % 2 === 0 ? "below" : "above";
-    html += `<div class="tl-item tl-${pos}"><div class="tl-dot"></div><div class="tl-label"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-desc">${escapeHtml(t.name)}</span></div></div>`;
+    html += `<div class="tl-item tl-${pos}" data-tech-id="${escapeHtml(t.id)}" style="cursor:pointer"><div class="tl-dot"></div><div class="tl-label"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-desc">${escapeHtml(t.name)}</span></div></div>`;
   }
   html += "</div></div>";
   return html;

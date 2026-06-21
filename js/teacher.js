@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=180";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=181";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -310,7 +310,15 @@ function openSingleDecadeModal(decadeId) {
   const stl = $("#ds-society-timeline");
   if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
   const ttl = $("#ds-tech-timeline");
-  if (ttl) ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
+  if (ttl) {
+    ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
+    ttl.querySelectorAll("[data-tech-id]").forEach(el => {
+      el.addEventListener("click", () => {
+        const t = state.techItems.find(x => x.id === el.dataset.techId);
+        if (t) { openTechAdmin(); fillTechForm(t); }
+      });
+    });
+  }
 
   $("#ds-society-section").style.display = isSociety ? "" : "none";
   $("#ds-tech-section").style.display = isSociety ? "none" : "";
@@ -417,7 +425,15 @@ function setupDecadeSingleSave() {
       const stl2 = $("#ds-society-timeline");
       if (stl2) stl2.innerHTML = buildTimeline(society, decadeId);
       const ttl2 = $("#ds-tech-timeline");
-      if (ttl2) ttl2.innerHTML = buildTechTimeline(state.techItems, decadeId);
+      if (ttl2) {
+        ttl2.innerHTML = buildTechTimeline(state.techItems, decadeId);
+        ttl2.querySelectorAll("[data-tech-id]").forEach(el2 => {
+          el2.addEventListener("click", () => {
+            const t2 = state.techItems.find(x => x.id === el2.dataset.techId);
+            if (t2) { openTechAdmin(); fillTechForm(t2); }
+          });
+        });
+      }
 
       setTimeout(() => {
         $("#ds-view").style.display = "";
@@ -910,26 +926,6 @@ function setupTechAdmin() {
 
   document.getElementById("tech-new-btn").addEventListener("click", () => fillTechForm(null));
 
-  const importBtn = document.getElementById("tech-import-btn");
-  if (importBtn) importBtn.addEventListener("click", async () => {
-    if (!confirm("Importere alle teknologier fra JSON-filen? Eksisterende data beholdes.")) return;
-    importBtn.disabled = true;
-    importBtn.textContent = "Importerer…";
-    try {
-      const res = await fetch("data/musikkhistorie.json");
-      const data = await res.json();
-      const items = data.tech || [];
-      let count = 0;
-      for (const item of items) {
-        const exists = state.techItems.some(t => t.name === item.name);
-        if (!exists) { await addTech(item); count++; }
-      }
-      importBtn.textContent = `${count} importert ✓`;
-    } catch (err) {
-      importBtn.textContent = "Feil: " + err.message;
-    }
-  });
-
   document.getElementById("tech-save").addEventListener("click", async () => {
     const name = document.getElementById("tech-name").value.trim();
     const msg = document.getElementById("tech-msg");
@@ -1026,7 +1022,12 @@ function handleExport() {
     if (s.description) subgenres[id] = { description: s.description };
   }
 
-  const data = { artists, decades, subgenres };
+  const tech = state.techItems.map(t => {
+    const { id, ...rest } = t;
+    return rest;
+  });
+
+  const data = { artists, decades, subgenres, tech };
 
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
@@ -1046,20 +1047,22 @@ async function handleImportFile(file) {
   let raw;
   try { raw = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
 
-  let artists, decades, subgenres;
+  let artists, decades, subgenres, tech;
   if (Array.isArray(raw)) {
     artists = raw;
     decades = {};
     subgenres = {};
+    tech = [];
   } else if (raw && typeof raw === "object" && Array.isArray(raw.artists)) {
     artists = raw.artists;
     decades = raw.decades || {};
     subgenres = raw.subgenres || {};
+    tech = raw.tech || [];
   } else {
     alert("Ugyldig format — filen må være en array eller et objekt med «artists»."); return;
   }
 
-  pendingImportData = { artists, decades, subgenres };
+  pendingImportData = { artists, decades, subgenres, tech };
   const parts = [];
   const artistCount = artists.filter(a => a.name).length;
   if (artistCount) parts.push(`${artistCount} artister`);
@@ -1067,6 +1070,7 @@ async function handleImportFile(file) {
   if (decadeCount) parts.push(`${decadeCount} tiårsbeskrivelser`);
   const subCount = Object.keys(subgenres).length;
   if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
+  if (tech.length) parts.push(`${tech.length} teknologier`);
   $("#import-choice-desc").textContent = `Filen inneholder ${parts.join(", ")}.`;
   openAdminModal("modal-import-choice");
 }
@@ -1077,6 +1081,7 @@ function setupImportChoice() {
     if (pendingImportData) {
       await handleReplace(pendingImportData.artists);
       await importDescriptions(pendingImportData);
+      await importTechItems(pendingImportData.tech);
     }
     pendingImportData = null;
   });
@@ -1085,6 +1090,7 @@ function setupImportChoice() {
     if (pendingImportData) {
       await handleMergeFile(pendingImportData.artists);
       await importDescriptions(pendingImportData);
+      await importTechItems(pendingImportData.tech);
     }
     pendingImportData = null;
   });
@@ -1109,6 +1115,25 @@ async function importDescriptions({ decades, subgenres }) {
   } else if (ok > 0) {
     alert(`${ok} beskrivelse(r) importert.`);
   }
+}
+
+async function importTechItems(techArray) {
+  if (!techArray || !techArray.length) return;
+  let added = 0, updated = 0;
+  for (const item of techArray) {
+    if (!item.name) continue;
+    const existing = state.techItems.find(t => t.name === item.name);
+    try {
+      if (existing) {
+        await updateTech(existing.id, item);
+        updated++;
+      } else {
+        await addTech(item);
+        added++;
+      }
+    } catch (e) { console.error("Tech-import feilet for", item.name, e); }
+  }
+  if (added || updated) alert(`Teknologi: ${added} nye, ${updated} oppdaterte.`);
 }
 
 async function handleReplace(data) {
