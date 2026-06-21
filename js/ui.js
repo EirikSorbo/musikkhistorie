@@ -16,6 +16,8 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
+import { linkifyArtists, wireArtistLinks } from "./linkify.js";
+export { linkifyArtists };
 
 // Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
 const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
@@ -122,39 +124,6 @@ export function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-export function linkifyArtists(text, artists) {
-  if (!text || !artists || !artists.length) return escapeHtml(text);
-  const active = artists.filter(a => a.status === "active" && a.name);
-  if (!active.length) return escapeHtml(text);
-  const sorted = active.slice().sort((a, b) => b.name.length - a.name.length);
-  const escaped = escapeHtml(text);
-  const markers = [];
-  const lowerEscaped = escaped.toLowerCase();
-  for (const a of sorted) {
-    const nameEsc = escapeHtml(a.name);
-    const needle = nameEsc.toLowerCase();
-    let pos = 0;
-    while ((pos = lowerEscaped.indexOf(needle, pos)) !== -1) {
-      const end = pos + nameEsc.length;
-      if (!markers.some(m => (pos < m.end && end > m.start))) {
-        markers.push({ start: pos, end, id: a.id, original: escaped.slice(pos, end) });
-      }
-      pos = end;
-    }
-  }
-  if (!markers.length) return escaped;
-  markers.sort((a, b) => a.start - b.start);
-  let result = "";
-  let last = 0;
-  for (const m of markers) {
-    result += escaped.slice(last, m.start);
-    result += `<a class="artist-link" data-artist-id="${escapeHtml(m.id)}">${m.original}</a>`;
-    last = m.end;
-  }
-  result += escaped.slice(last);
-  return result;
 }
 
 function splitLines(text) {
@@ -732,15 +701,7 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
   modalOpen(modal);
 }
 
-function wireArtistLinks(container, artists, onClick) {
-  container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const a = artists.find(x => x.id === link.dataset.artistId);
-      if (a) onClick(a);
-    });
-  });
-}
+
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
 // Returnerer HTML-streng med rader som har data-artist-id for klikk-kobling.

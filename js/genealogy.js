@@ -7,7 +7,7 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyArtists } from "./ui.js";
+import { linkifyArtists, wireArtistLinks } from "./linkify.js";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -100,17 +100,6 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, ar
   window._modalZ = window._modalZ || 100;
   modal.style.zIndex = ++window._modalZ;
   modal.classList.add("open");
-}
-
-function wireArtistLinks(container, artists, onClick) {
-  if (!onClick) return;
-  container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const a = artists.find(x => x.id === link.dataset.artistId);
-      if (a) onClick(a);
-    });
-  });
 }
 
 const W = 1140, H = 1180, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
