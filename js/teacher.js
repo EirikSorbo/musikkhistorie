@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=179";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=180";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -841,20 +841,25 @@ function renderTechAdmin() {
     el.innerHTML = `<p class="muted empty">Ingen teknologier i denne kategorien ennå.</p>`;
     return;
   }
+  el.className = "tech-grid";
   el.innerHTML = filtered.map(t => {
-    const img = t.imageUrl ? `<img src="${escapeHtml(t.imageUrl)}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:6px;margin-right:10px" />` : "";
-    return `<div class="podkast-episode" style="display:flex;align-items:flex-start;gap:8px" data-tech-id="${escapeHtml(t.id)}">
-      ${img}
-      <div style="flex:1;min-width:0">
-        <strong>${escapeHtml(t.name)}</strong>
-        <span style="color:var(--accent);font-size:0.8rem;margin-left:6px">${escapeHtml(t.adoptedLabel || "")}</span>
-        <p style="margin:4px 0 0;font-size:0.82rem;opacity:0.8">${escapeHtml(t.description || "")}</p>
-      </div>
-      <div class="podkast-actions">
+    const img = t.imageUrl
+      ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
+      : "";
+    const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
+    const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
+    return `<article class="card" data-tech-id="${escapeHtml(t.id)}">
+      <header class="card-head">
+        ${img}
+        <h3>${escapeHtml(t.name)}</h3>
+        <div class="meta">${yearTag}${catTag}</div>
+      </header>
+      ${t.description ? `<p class="desc">${escapeHtml(t.description)}</p>` : ""}
+      <div class="card-foot" style="margin-top:auto;padding-top:8px">
         <button class="btn ghost small tech-edit-btn">Rediger</button>
         <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
       </div>
-    </div>`;
+    </article>`;
   }).join("");
 
   el.querySelectorAll(".tech-del-btn").forEach(btn => {
