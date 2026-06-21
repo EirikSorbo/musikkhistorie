@@ -124,68 +124,21 @@ export function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
-const ABBREVS = /(?:ca|f\.eks|bl\.a|dvs|mfl|nr|St|vs|evt|pga|ifm|ift|jf|kl|mrd|mill)\.\s*$/;
-const CONT = /^(Fortsatt|Også|Samtidig|Dessuten|I tillegg|Likevel|Imidlertid|Derimot|Dermed|Slik|Dette|Disse|Den samme|Det samme)\b/i;
-
-function splitSentences(text) {
-  const raw = text.split(/(?<=\.)\s+/).filter(s => s.trim());
-  const merged = [raw[0]];
-  for (let i = 1; i < raw.length; i++) {
-    if (ABBREVS.test(merged[merged.length - 1]) || /^\d/.test(raw[i].trim()) || !/^[A-ZÆØÅ]/.test(raw[i].trim())) {
-      merged[merged.length - 1] += " " + raw[i].trim();
-    } else {
-      merged.push(raw[i].trim());
-    }
-  }
-  const grouped = [merged[0]];
-  for (let i = 1; i < merged.length; i++) {
-    if (CONT.test(merged[i].trim())) {
-      grouped[grouped.length - 1] += " " + merged[i].trim();
-    } else {
-      grouped.push(merged[i].trim());
-    }
-  }
-  return grouped;
+function splitLines(text) {
+  return text.split("\n").map(l => l.replace(/^[•\-–]\s*/, "").trim()).filter(Boolean);
 }
 
 export function formatInfoText(text) {
   if (!text) return "";
-  const hasBullets = /^[•\-–]\s/m.test(text);
-  if (!hasBullets) {
-    const grouped = splitSentences(text);
-    if (grouped.length > 1) {
-      return "<ul>" + grouped.map(s => `<li>${escapeHtml(s)}</li>`).join("") + "</ul>";
-    }
-    return `<p>${escapeHtml(text.trim())}</p>`;
+  const lines = splitLines(text);
+  if (lines.length > 1) {
+    return "<ul>" + lines.map(l => `<li>${escapeHtml(l)}</li>`).join("") + "</ul>";
   }
-  const lines = text.split("\n");
-  let html = "";
-  let inList = false;
-  for (const raw of lines) {
-    const trimmed = raw.trim();
-    if (!trimmed) {
-      if (inList) { html += "</ul>"; inList = false; }
-      continue;
-    }
-    const bullet = trimmed.match(/^[•\-–]\s*(.*)/);
-    if (bullet) {
-      if (!inList) { html += "<ul>"; inList = true; }
-      html += `<li>${escapeHtml(bullet[1])}</li>`;
-    } else {
-      if (inList) { html += "</ul>"; inList = false; }
-      html += `<p>${escapeHtml(trimmed)}</p>`;
-    }
-  }
-  if (inList) html += "</ul>";
-  return html;
+  return `<p>${escapeHtml(lines[0] || text.trim())}</p>`;
 }
 
 function extractBullets(text) {
-  const hasBullets = /^[•\-–]\s/m.test(text);
-  if (hasBullets) {
-    return text.split("\n").map(l => l.trim()).filter(l => /^[•\-–]\s/.test(l)).map(l => l.replace(/^[•\-–]\s*/, ""));
-  }
-  return splitSentences(text);
+  return splitLines(text);
 }
 
 function shortDesc(text) {
