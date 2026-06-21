@@ -1053,3 +1053,6 @@ body.is-teacher #gate { display: none; }
   50% { box-shadow: 0 0 0 6px rgba(59,130,246,0.35); }
 }
 .highlight-pulse { animation: highlightPulse 0.75s ease 2; }
+
+.artist-link { color: var(--accent); cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.artist-link:hover { text-decoration-style: solid; }

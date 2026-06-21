@@ -3,7 +3,7 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres } from "./store.js";
 import { renderGenealogy, showSjangerInfo } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=171";
+import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=183";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
@@ -80,6 +80,8 @@ function openSjangerInfo(label) {
   showSjangerInfo(label, {
     root: document,
     subgenreDescs: subDescs,
+    artists,
+    onArtistClick: showArtistDetail,
     onShowArtists: showArtistsForGenre,
     onShowPlaylist: showPlaylistForGenre,
   });
@@ -90,6 +92,8 @@ function build() {
   api = renderGenealogy({
     root: document,
     subgenreDescs: subDescs,
+    getArtists: () => artists,
+    onArtistClick: showArtistDetail,
     onShowArtists: showArtistsForGenre,
     onShowPlaylist: showPlaylistForGenre,
   });
@@ -130,6 +134,8 @@ sjModal.querySelector(".modal-close").addEventListener("click", () => modalClose
 const sjangerOpts = () => ({
   root: document,
   subgenreDescs: subDescs,
+  artists,
+  onArtistClick: showArtistDetail,
   onShowArtists: showArtistsForGenre,
   onShowPlaylist: showPlaylistForGenre,
 });

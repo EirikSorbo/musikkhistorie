@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=182";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=183";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -101,6 +101,8 @@ function setupSjangerModal() {
   const sjangerOpts = () => ({
     root: document,
     subgenreDescs: state.subgenreDescs,
+    artists: state.artists,
+    onArtistClick: openDetail,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
   });

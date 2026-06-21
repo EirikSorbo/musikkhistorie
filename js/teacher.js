@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=182";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=183";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -696,6 +696,8 @@ function setupSjangerModal() {
   const sjangerOpts = () => ({
     root: document,
     subgenreDescs: state.subgenreDescs,
+    artists: state.artists,
+    onArtistClick: (a) => openEditModal(a.id),
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
     onEdit: (label) => {

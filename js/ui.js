@@ -124,6 +124,39 @@ export function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
+export function linkifyArtists(text, artists) {
+  if (!text || !artists || !artists.length) return escapeHtml(text);
+  const active = artists.filter(a => a.status === "active" && a.name);
+  if (!active.length) return escapeHtml(text);
+  const sorted = active.slice().sort((a, b) => b.name.length - a.name.length);
+  const escaped = escapeHtml(text);
+  const markers = [];
+  const lowerEscaped = escaped.toLowerCase();
+  for (const a of sorted) {
+    const nameEsc = escapeHtml(a.name);
+    const needle = nameEsc.toLowerCase();
+    let pos = 0;
+    while ((pos = lowerEscaped.indexOf(needle, pos)) !== -1) {
+      const end = pos + nameEsc.length;
+      if (!markers.some(m => (pos < m.end && end > m.start))) {
+        markers.push({ start: pos, end, id: a.id, original: escaped.slice(pos, end) });
+      }
+      pos = end;
+    }
+  }
+  if (!markers.length) return escaped;
+  markers.sort((a, b) => a.start - b.start);
+  let result = "";
+  let last = 0;
+  for (const m of markers) {
+    result += escaped.slice(last, m.start);
+    result += `<a class="artist-link" data-artist-id="${escapeHtml(m.id)}">${m.original}</a>`;
+    last = m.end;
+  }
+  result += escaped.slice(last);
+  return result;
+}
+
 function splitLines(text) {
   return text.split("\n").map(l => l.replace(/^[•\-–]\s*/, "").trim()).filter(Boolean);
 }
@@ -668,7 +701,7 @@ function pct(n, max) {
 }
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
-export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, onShowArtists, onShowPlaylist, onEdit } = {}) {
+export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, artists = [], onArtistClick, onShowArtists, onShowPlaylist, onEdit } = {}) {
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -686,9 +719,10 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
 
   mTitle.textContent = label;
   mBody.innerHTML = `
-    <p class="gx-desc">${escapeHtml(descText)}</p>
+    <p class="gx-desc">${linkifyArtists(descText, artists)}</p>
     ${buildKilderList(kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
+  if (onArtistClick) wireArtistLinks(mBody, artists, onArtistClick);
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");
@@ -696,6 +730,16 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
   const be = mBody.querySelector(".gx-edit-btn");
   if (be) be.addEventListener("click", () => onEdit(label));
   modalOpen(modal);
+}
+
+function wireArtistLinks(container, artists, onClick) {
+  container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const a = artists.find(x => x.id === link.dataset.artistId);
+      if (a) onClick(a);
+    });
+  });
 }
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
