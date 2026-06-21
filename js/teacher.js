@@ -905,6 +905,25 @@ function setupTechAdmin() {
 
   document.getElementById("tech-new-btn").addEventListener("click", () => fillTechForm(null));
 
+  const importBtn = document.getElementById("tech-import-btn");
+  if (importBtn) importBtn.addEventListener("click", async () => {
+    if (!confirm("Importere alle teknologier fra JSON-filen? Eksisterende data beholdes.")) return;
+    importBtn.disabled = true;
+    importBtn.textContent = "Importerer…";
+    try {
+      const res = await fetch("data/tech-innovations.json");
+      const items = await res.json();
+      let count = 0;
+      for (const item of items) {
+        const exists = state.techItems.some(t => t.name === item.name);
+        if (!exists) { await addTech(item); count++; }
+      }
+      importBtn.textContent = `${count} importert ✓`;
+    } catch (err) {
+      importBtn.textContent = "Feil: " + err.message;
+    }
+  });
+
   document.getElementById("tech-save").addEventListener("click", async () => {
     const name = document.getElementById("tech-name").value.trim();
     const msg = document.getElementById("tech-msg");
