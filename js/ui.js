@@ -157,15 +157,17 @@ export function renderTechList(el, items, activeCategory) {
   }
   el.innerHTML = filtered.map(t => {
     const img = t.imageUrl
-      ? `<figure class="tech-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
+      ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
       : "";
-    return `<article class="tech-card" data-tech-id="${escapeHtml(t.id)}">
-      ${img}
-      <div class="tech-card-body">
-        <h4 class="tech-card-name">${escapeHtml(t.name)}</h4>
-        <span class="tech-card-year">${escapeHtml(t.adoptedLabel || String(t.adoptedYear || ""))}</span>
-        <p class="tech-card-desc">${escapeHtml(t.description || "")}</p>
-      </div>
+    const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
+    const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
+    return `<article class="card" data-tech-id="${escapeHtml(t.id)}">
+      <header class="card-head">
+        ${img}
+        <h3>${escapeHtml(t.name)}</h3>
+        <div class="meta">${yearTag}${catTag}</div>
+      </header>
+      ${t.description ? `<p class="desc">${escapeHtml(t.description)}</p>` : ""}
     </article>`;
   }).join("");
 }
