@@ -675,9 +675,9 @@ export function fillSelect(select, values, { placeholder } = {}) {
 // Vises som tekst (samme format som «Sentrale verk»), ikke som bobler.
 function factsLines(a, { showGender = false } = {}) {
   const rows = [];
-  if (a.birthYear && a.deathYear) rows.push(["Levetid", `f. ${a.birthYear} – d. ${a.deathYear}`]);
-  else if (a.birthYear) rows.push(["Født", `${a.birthYear}`]);
-  else if (a.deathYear) rows.push(["Død", `${a.deathYear}`]);
+  if (a.birthYear && a.deathYear) rows.push(["Levetid", `${a.birthYear}–${a.deathYear}`]);
+  else if (a.birthYear) rows.push(["Levetid", `${a.birthYear}–`]);
+  else if (a.deathYear) rows.push(["Levetid", `?–${a.deathYear}`]);
   if (a.influenceStart) {
     const p = (!a.influenceEnd || a.influenceEnd === a.influenceStart)
       ? `ca. ${a.influenceStart}`
