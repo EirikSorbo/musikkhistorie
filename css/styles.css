@@ -655,6 +655,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 }
 .tl-prop .tl-above .tl-label { bottom: calc(var(--stem, 24px) + 10px); }
 .tl-prop .tl-below .tl-label { top: calc(var(--stem, 24px) + 10px); }
+.tl-prop .tl-start .tl-label { left: -10px; text-align: left; }
+.tl-prop .tl-end .tl-label { left: auto; right: -10px; text-align: right; }
 
 /* ----- Teknologi-kort ----- */
 .tech-category-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }

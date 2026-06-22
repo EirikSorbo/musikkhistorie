@@ -217,18 +217,26 @@ function shortDesc(text) {
   return first.slice(0, cut > 30 ? cut : 67) + "…";
 }
 
-function assignStems(events) {
-  const stems = [26, 48, 70];
+function layoutTimeline(events) {
+  const stems = [24, 44, 64];
   const result = [];
+  let lastAboveAt = -Infinity, lastBelowAt = -Infinity;
   for (let i = 0; i < events.length; i++) {
-    let si = i % 3;
-    if (i > 0) {
-      const gap = (events[i].pct - events[i - 1].pct);
-      if (gap < 12) si = (result[i - 1].si + 1) % 3;
-      else if (gap < 20) si = (result[i - 1].si + 1) % 2;
-      else si = 0;
+    const e = events[i];
+    const aboveGap = e.pct - lastAboveAt;
+    const belowGap = e.pct - lastBelowAt;
+    let dir, stem;
+    if (aboveGap >= 18 && belowGap >= 18) {
+      dir = "above"; stem = stems[0];
+    } else if (aboveGap >= belowGap) {
+      dir = "above";
+      stem = aboveGap < 10 ? stems[2] : aboveGap < 18 ? stems[1] : stems[0];
+    } else {
+      dir = "below";
+      stem = belowGap < 10 ? stems[2] : belowGap < 18 ? stems[1] : stems[0];
     }
-    result.push({ ...events[i], si, stem: stems[si] });
+    if (dir === "above") lastAboveAt = e.pct; else lastBelowAt = e.pct;
+    result.push({ ...e, dir, stem });
   }
   return result;
 }
@@ -243,12 +251,14 @@ function buildProportionalTimeline(items, startYear) {
     ...e,
     pct: pad + ((e.year || startYear) - minY) / span * (100 - 2 * pad),
   }));
-  const withStems = assignStems(mapped);
-  const maxStem = Math.max(...withStems.map(e => e.stem));
+  const laid = layoutTimeline(mapped);
+  const maxStem = Math.max(...laid.map(e => e.stem));
   let html = `<div class="timeline tl-prop" style="--tl-max-stem:${maxStem}px"><div class="tl-track">`;
-  for (const ev of withStems) {
-    const extra = ev.attrs ? ev.attrs.replace(/style="/, `style="left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px;`) : `style="left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px"`;
-    html += `<div class="tl-item" ${extra}>` +
+  for (const ev of laid) {
+    const edge = ev.pct <= 12 ? " tl-start" : ev.pct >= 88 ? " tl-end" : "";
+    const posStyle = `left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px`;
+    const extra = ev.attrs ? ev.attrs.replace(/style="/, `style="${posStyle};`) : `style="${posStyle}"`;
+    html += `<div class="tl-item tl-${ev.dir}${edge}" ${extra}>` +
       `<div class="tl-dot"></div><div class="tl-stem"></div>` +
       `<div class="tl-label"><span class="tl-year">${escapeHtml(ev.label)}</span>` +
       `<span class="tl-desc">${escapeHtml(ev.desc)}</span></div></div>`;
