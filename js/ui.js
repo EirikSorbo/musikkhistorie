@@ -217,6 +217,46 @@ function shortDesc(text) {
   return first.slice(0, cut > 30 ? cut : 67) + "…";
 }
 
+function assignStems(events) {
+  const stems = [26, 48, 70];
+  const result = [];
+  for (let i = 0; i < events.length; i++) {
+    let si = i % 3;
+    if (i > 0) {
+      const gap = (events[i].pct - events[i - 1].pct);
+      if (gap < 12) si = (result[i - 1].si + 1) % 3;
+      else if (gap < 20) si = (result[i - 1].si + 1) % 2;
+      else si = 0;
+    }
+    result.push({ ...events[i], si, stem: stems[si] });
+  }
+  return result;
+}
+
+function buildProportionalTimeline(items, startYear) {
+  if (items.length < 2) return "";
+  const minY = Math.min(...items.map(e => e.year || startYear));
+  const maxY = Math.max(...items.map(e => e.year || startYear + 9));
+  const span = Math.max(maxY - minY, 1);
+  const pad = 4;
+  const mapped = items.map(e => ({
+    ...e,
+    pct: pad + ((e.year || startYear) - minY) / span * (100 - 2 * pad),
+  }));
+  const withStems = assignStems(mapped);
+  const maxStem = Math.max(...withStems.map(e => e.stem));
+  let html = `<div class="timeline tl-prop" style="--tl-max-stem:${maxStem}px"><div class="tl-track">`;
+  for (const ev of withStems) {
+    const extra = ev.attrs ? ev.attrs.replace(/style="/, `style="left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px;`) : `style="left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px"`;
+    html += `<div class="tl-item" ${extra}>` +
+      `<div class="tl-dot"></div><div class="tl-stem"></div>` +
+      `<div class="tl-label"><span class="tl-year">${escapeHtml(ev.label)}</span>` +
+      `<span class="tl-desc">${escapeHtml(ev.desc)}</span></div></div>`;
+  }
+  html += "</div></div>";
+  return html;
+}
+
 export function buildTimeline(text, decadeId) {
   if (!text) return "";
   const bullets = extractBullets(text);
@@ -227,15 +267,12 @@ export function buildTimeline(text, decadeId) {
     return { year: m ? parseInt(m[1], 10) : null, text: b };
   });
   events.sort((a, b) => (a.year || startYear) - (b.year || startYear));
-  let html = '<div class="timeline"><div class="tl-track">';
-  for (let i = 0; i < events.length; i++) {
-    const ev = events[i];
-    const label = ev.year ? String(ev.year) : `${startYear}‑årene`;
-    const pos = i % 2 === 0 ? "below" : "above";
-    html += `<div class="tl-item tl-${pos}"><div class="tl-dot"></div><div class="tl-label"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-desc">${escapeHtml(shortDesc(ev.text))}</span></div></div>`;
-  }
-  html += "</div></div>";
-  return html;
+  const items = events.map(ev => ({
+    year: ev.year,
+    label: ev.year ? String(ev.year) : `${startYear}‑årene`,
+    desc: shortDesc(ev.text),
+  }));
+  return buildProportionalTimeline(items, startYear);
 }
 
 export function buildTechTimeline(techItems, decadeId) {
@@ -243,15 +280,14 @@ export function buildTechTimeline(techItems, decadeId) {
   const filtered = techItems.filter(t => t.decade === d);
   if (filtered.length < 2) return "";
   filtered.sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
-  let html = '<div class="timeline"><div class="tl-track">';
-  for (let i = 0; i < filtered.length; i++) {
-    const t = filtered[i];
-    const label = t.adoptedYear ? String(t.adoptedYear) : `${d}+`;
-    const pos = i % 2 === 0 ? "below" : "above";
-    html += `<div class="tl-item tl-${pos}" data-tech-id="${escapeHtml(t.id)}" style="cursor:pointer"><div class="tl-dot"></div><div class="tl-label"><span class="tl-year">${escapeHtml(label)}</span><span class="tl-desc">${escapeHtml(t.name)}</span></div></div>`;
-  }
-  html += "</div></div>";
-  return html;
+  const startYear = parseInt(d, 10);
+  const items = filtered.map(t => ({
+    year: t.adoptedYear || null,
+    label: t.adoptedYear ? String(t.adoptedYear) : `${d}+`,
+    desc: t.name,
+    attrs: ` data-tech-id="${escapeHtml(t.id)}" style="cursor:pointer"`,
+  }));
+  return buildProportionalTimeline(items, startYear);
 }
 
 const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
