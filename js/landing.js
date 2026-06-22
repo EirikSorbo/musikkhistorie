@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=200";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=201";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo, renderGenealogy } from "./genealogy.js";
 
@@ -691,7 +691,8 @@ function renderList() {
 function refreshFilterControls() {
   const { config } = state;
   fillSelect($("#sp-sjanger"), GENEALOGY_GENRES, { placeholder: "Sjanger" });
-  fillSelect($("#sp-genre"), config.genres, { placeholder: "Metasjanger" });
+  const GENRE_SHORT = { "Afroamerikansk populærmusikk": "Populærmusikk", "Elektronisk musikk": "Elektronisk" };
+  fillSelect($("#sp-genre"), config.genres.map(g => ({ value: g, label: GENRE_SHORT[g] || g })), { placeholder: "Metasjanger" });
   fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
