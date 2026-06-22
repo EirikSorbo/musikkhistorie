@@ -128,12 +128,17 @@ function keyWorksText(works) {
 
 const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
 
+export function fmtCredit(raw) {
+  if (!raw) return "";
+  const text = raw.replace(/^Foto:\s*/i, "");
+  return `<span class="image-credit">Foto: ${escapeHtml(text)}</span>`;
+}
+
 function artistImage(a, big = false) {
   if (!a.imageUrl) return "";
-  const credit = a.imageCredit ? `<span class="image-credit">${escapeHtml(a.imageCredit)}</span>` : "";
   return `<figure class="artist-image ${big ? "big" : ""}">
     <img src="${escapeHtml(a.imageUrl)}" alt="${escapeHtml(a.name)}" loading="lazy" />
-    ${credit}
+    ${fmtCredit(a.imageCredit)}
   </figure>`;
 }
 
@@ -179,7 +184,7 @@ export function renderTechList(el, items, activeCategory, lc) {
   }
   el.innerHTML = filtered.map(t => {
     const img = t.imageUrl
-      ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
+      ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${fmtCredit(t.imageCredit)}</figure>`
       : "";
     const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
     const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
@@ -197,7 +202,7 @@ export function renderTechList(el, items, activeCategory, lc) {
 
 export function renderTechDetail(el, t, lc) {
   const img = t.imageUrl
-    ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
+    ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${fmtCredit(t.imageCredit)}</figure>`
     : "";
   const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
   const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;

@@ -3,7 +3,7 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
 import { renderGenealogy, showSjangerInfo } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=189";
+import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=190";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
