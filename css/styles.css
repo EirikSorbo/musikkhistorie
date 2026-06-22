@@ -728,8 +728,8 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .dash-card {
-  background: var(--surface-2);
-  border: 1px solid transparent;
+  background: #fff;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 16px 14px;
   text-align: left;
