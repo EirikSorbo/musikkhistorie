@@ -231,6 +231,12 @@ function setupExplore() {
   const btnDagens = document.getElementById("btn-dagens-navn");
   if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);
 
+  const btnArtister = document.getElementById("btn-artister");
+  if (btnArtister) btnArtister.addEventListener("click", () => {
+    document.getElementById("sp-search")?.focus();
+    document.getElementById("artist-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   const dagensModal = document.getElementById("modal-dagens-navn");
   if (dagensModal) {
     dagensModal.addEventListener("click", (e) => { if (e.target === dagensModal) modalClose(dagensModal); });
