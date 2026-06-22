@@ -611,48 +611,50 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .tl-prop .tl-track {
   display: block;
   min-width: 100%;
-  height: calc(var(--tl-max-stem, 70px) + 90px);
+  height: calc((var(--tl-max-stem, 64px) + 80px) * 2 + 4px);
   padding: 0;
   position: relative;
 }
 .tl-prop .tl-track::before {
-  top: auto;
-  bottom: 0;
-  transform: none;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
 }
 .tl-prop .tl-item {
   position: absolute;
-  bottom: 0;
   flex: none;
   width: 0;
   align-items: center;
   transform: translateX(-50%);
 }
+.tl-prop .tl-item.tl-above { bottom: 50%; }
+.tl-prop .tl-item.tl-below { top: 50%; }
 .tl-prop .tl-dot {
   width: 14px;
   height: 14px;
   position: absolute;
-  bottom: -5px;
 }
-.tl-stem {
-  display: none;
-}
+.tl-prop .tl-above .tl-dot { bottom: -7px; }
+.tl-prop .tl-below .tl-dot { top: -7px; }
+.tl-stem { display: none; }
 .tl-prop .tl-stem {
   display: block;
   width: 2px;
-  height: var(--stem, 26px);
+  height: var(--stem, 24px);
   background: var(--accent);
   opacity: 0.4;
   position: absolute;
-  bottom: 8px;
 }
+.tl-prop .tl-above .tl-stem { bottom: 6px; }
+.tl-prop .tl-below .tl-stem { top: 6px; }
 .tl-prop .tl-label {
   position: absolute;
-  bottom: calc(var(--stem, 26px) + 12px);
   width: 130px;
   text-align: center;
   left: -65px;
 }
+.tl-prop .tl-above .tl-label { bottom: calc(var(--stem, 24px) + 10px); }
+.tl-prop .tl-below .tl-label { top: calc(var(--stem, 24px) + 10px); }
 
 /* ----- Teknologi-kort ----- */
 .tech-category-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
