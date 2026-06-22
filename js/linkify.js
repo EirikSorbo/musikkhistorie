@@ -7,7 +7,7 @@ function esc(str) {
     .replaceAll("'", "&#39;");
 }
 
-const SKIP = new Set(["jazz", "blues"]);
+const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
 
 export function linkifyAll(text, { artists, techItems, genres } = {}) {
   if (!text) return esc(text);
