@@ -7,24 +7,26 @@ function esc(str) {
     .replaceAll("'", "&#39;");
 }
 
+const SKIP = new Set(["jazz", "blues"]);
+
 export function linkifyAll(text, { artists, techItems, genres } = {}) {
   if (!text) return esc(text);
   const escaped = esc(text);
   const markers = [];
   const lower = escaped.toLowerCase();
 
-  const activeArtists = (artists || []).filter(a => a.status === "active" && a.name);
+  const activeArtists = (artists || []).filter(a => a.status === "active" && a.name && !SKIP.has(a.name.toLowerCase()));
   activeArtists.sort((a, b) => b.name.length - a.name.length);
   for (const a of activeArtists) {
     findMatches(lower, escaped, esc(a.name), a.id, "artist", markers);
   }
 
-  const techs = (techItems || []).filter(t => t.name).slice().sort((a, b) => b.name.length - a.name.length);
+  const techs = (techItems || []).filter(t => t.name && !SKIP.has(t.name.toLowerCase())).slice().sort((a, b) => b.name.length - a.name.length);
   for (const t of techs) {
     findMatches(lower, escaped, esc(t.name), t.id, "tech", markers);
   }
 
-  const genreList = (genres || []).slice().sort((a, b) => b.length - a.length);
+  const genreList = (genres || []).filter(g => !SKIP.has(g.toLowerCase())).slice().sort((a, b) => b.length - a.length);
   for (const g of genreList) {
     findMatches(lower, escaped, esc(g), g, "genre", markers);
   }
@@ -52,12 +54,23 @@ export function linkifyArtists(text, artists, techItems, genres) {
   return linkifyAll(text, { artists, techItems, genres });
 }
 
+function isWordChar(ch) {
+  if (!ch) return false;
+  if ((ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z")) return true;
+  if (ch >= "0" && ch <= "9") return true;
+  const c = ch.charCodeAt(0);
+  return c >= 0xC0 && c !== 0xD7 && c !== 0xF7;
+}
+
 function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
   const needle = nameEsc.toLowerCase();
   let pos = 0;
   while ((pos = lowerHaystack.indexOf(needle, pos)) !== -1) {
     const end = pos + nameEsc.length;
-    if (!markers.some(m => (pos < m.end && end > m.start))) {
+    const before = pos > 0 ? lowerHaystack[pos - 1] : "";
+    const after = end < lowerHaystack.length ? lowerHaystack[end] : "";
+    if (!isWordChar(before) && !isWordChar(after) &&
+        !markers.some(m => (pos < m.end && end > m.start))) {
       markers.push({ start: pos, end, id, type, original: haystack.slice(pos, end) });
     }
     pos = end;
