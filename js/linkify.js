@@ -70,7 +70,7 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
     const end = pos + nameEsc.length;
     const before = pos > 0 ? lowerHaystack[pos - 1] : "";
     const after = end < lowerHaystack.length ? lowerHaystack[end] : "";
-    if (!isWordChar(before) && !isWordChar(after) &&
+    if (!isWordChar(before) && !isWordChar(after) && before !== "-" && after !== "-" &&
         !markers.some(m => (pos < m.end && end > m.start))) {
       markers.push({ start: pos, end, id, type, original: haystack.slice(pos, end) });
     }
