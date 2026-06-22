@@ -585,7 +585,15 @@ export function renderArtists(el, state) {
     );
   }
 
-  list.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+  const hasFilter = filters.search || filters.sjanger || filters.genre || filters.instrument || filters.decade || filters.subgenre;
+  if (hasFilter) {
+    list.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+  } else {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+  }
 
   if (list.length === 0) {
     el.innerHTML = `<p class="muted empty">Ingen forslag matcher filteret ennå.</p>`;
