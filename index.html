@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=199" />
+  <link rel="stylesheet" href="css/styles.css?v=200" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -79,9 +79,17 @@
       </div>
     </section>
 
-    <!-- Finn artister -->
-    <section class="panel">
-      <p class="section-label">Finn artister</p>
+  </main>
+
+  <footer class="sitefoot wrap"></footer>
+
+  <!-- Finn artister -->
+  <div class="modal-backdrop" id="modal-artister">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Finn artister</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
       <div class="filter-bar">
         <input type="search" id="sp-search" placeholder="Søk etter navn..." />
         <select id="sp-sjanger"></select>
@@ -91,11 +99,8 @@
       </div>
       <div id="filter-results"></div>
       <div id="artist-list" class="artist-list"></div>
-    </section>
-
-  </main>
-
-  <footer class="sitefoot wrap"></footer>
+    </div>
+  </div>
 
   <!-- Dagens navn -->
   <div class="modal-backdrop" id="modal-dagens-navn">
@@ -291,6 +296,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=199"></script>
+  <script type="module" src="js/landing.js?v=200"></script>
 </body>
 </html>

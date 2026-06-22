@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=199";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=200";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo, renderGenealogy } from "./genealogy.js";
 
@@ -181,6 +181,7 @@ function setupTagFilters() {
     }
     renderFilterResults();
     renderList();
+    modalOpen(document.getElementById("modal-artister"));
   });
 }
 
@@ -229,9 +230,15 @@ function setupExplore() {
 
   const btnArtister = document.getElementById("btn-artister");
   if (btnArtister) btnArtister.addEventListener("click", () => {
+    modalOpen(document.getElementById("modal-artister"));
     document.getElementById("sp-search")?.focus();
-    document.getElementById("artist-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+
+  const artisterModal = document.getElementById("modal-artister");
+  if (artisterModal) {
+    artisterModal.addEventListener("click", (e) => { if (e.target === artisterModal) modalClose(artisterModal); });
+    artisterModal.querySelector(".modal-close").addEventListener("click", () => modalClose(artisterModal));
+  }
 
   const dagensModal = document.getElementById("modal-dagens-navn");
   if (dagensModal) {
@@ -286,8 +293,7 @@ function applyIncomingFilter() {
       const a = state.artists.find((x) => x.id === artistId);
       if (a) { openDetail(a); return true; }
     }
-    const list = document.getElementById("artist-list");
-    if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
+    modalOpen(document.getElementById("modal-artister"));
     return true;
   };
   if (!tryApply()) {
