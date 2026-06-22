@@ -2,7 +2,7 @@ import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=190";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
+import { GENEALOGY_GENRES, showSjangerInfo, renderGenealogy } from "./genealogy.js";
 
 const clientId = getClientId();
 
@@ -38,6 +38,32 @@ function showPlaylistForGenre({ label, fullName, node }) {
   document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
   document.getElementById("pl-body").innerHTML = html;
   modalOpen(document.getElementById("modal-spilleliste"));
+}
+
+function showArtistsForGenre({ label }) {
+  const sj = label.toLowerCase();
+  const list = state.artists
+    .filter((a) => a.status === "active" && (
+      a.genre === label
+      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
+      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
+    ))
+    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+  document.getElementById("al-title").textContent = `${label} (${list.length})`;
+  const body = document.getElementById("al-body");
+  if (!list.length) {
+    body.innerHTML = `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
+  } else {
+    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
+    body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
+      row.addEventListener("click", (e) => {
+        if (e.target.closest("button")) return;
+        const a = list.find((x) => x.id === row.dataset.artistId);
+        if (a) openDetail(a);
+      });
+    });
+  }
+  modalOpen(document.getElementById("modal-artistliste"));
 }
 
 function showArtistsForInstrument(instrument) {
@@ -163,7 +189,7 @@ function setupTagFilters() {
 }
 
 function setupExplore() {
-  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list", "modal-undergenre-list", "modal-decade-more"].forEach((id) => {
+  ["modal-decade-list", "modal-decade-view", "modal-subgenre-list", "modal-decade-more", "modal-slektstre"].forEach((id) => {
     const m = document.getElementById(id);
     if (!m) return;
     m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); });
@@ -184,8 +210,23 @@ function setupExplore() {
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", openSubgenreList);
 
-  const btnUnder = document.getElementById("btn-undergenres");
-  if (btnUnder) btnUnder.addEventListener("click", openUndergenreList);
+  // Fane-veksling sjangre / undersjangre
+  document.querySelectorAll(".genre-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".genre-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      const isSjangre = tab.dataset.genreTab === "sjangre";
+      document.getElementById("sl-chips").style.display = isSjangre ? "" : "none";
+      document.getElementById("ul-chips").style.display = isSjangre ? "none" : "";
+      document.getElementById("sl-hint").textContent = isSjangre
+        ? "Trykk på en sjanger for å lese beskrivelsen."
+        : "Trykk på en undersjanger for å lese beskrivelsen.";
+    });
+  });
+
+  // Slektstre-knapp
+  const btnSlektstre = document.getElementById("btn-slektstre");
+  if (btnSlektstre) btnSlektstre.addEventListener("click", openSlektstre);
 
   const btnDagens = document.getElementById("btn-dagens-navn");
   if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);
@@ -416,29 +457,55 @@ function openSubgenreList() {
   if (!modal) return;
   const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
   const active = state.artists.filter((a) => a.status === "active");
+
+  // Sjangre-fane
   const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(s => sjangerSet.has(s.toLowerCase()))))]
     .sort((a, b) => a.localeCompare(b, "no"));
-  const el = document.getElementById("sl-chips");
-  el.innerHTML = sjangre.length
+  const slEl = document.getElementById("sl-chips");
+  slEl.innerHTML = sjangre.length
     ? sjangre.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
-  modalOpen(modal);
-}
 
-function openUndergenreList() {
-  const modal = document.getElementById("modal-undergenre-list");
-  if (!modal) return;
-  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
-  const active = state.artists.filter((a) => a.status === "active");
+  // Undersjangre-fane
   const under = [...new Set(active.flatMap(a => [
     ...(a.sjangre || []).filter(s => !sjangerSet.has(s.toLowerCase())),
     ...(a.undersjangre || []),
   ]))].sort((a, b) => a.localeCompare(b, "no"));
-  const el = document.getElementById("ul-chips");
-  el.innerHTML = under.length
+  const ulEl = document.getElementById("ul-chips");
+  ulEl.innerHTML = under.length
     ? under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
     : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
+
+  // Reset til sjangre-fane
+  document.querySelectorAll(".genre-tab").forEach(t => t.classList.remove("active"));
+  document.querySelector('.genre-tab[data-genre-tab="sjangre"]').classList.add("active");
+  slEl.style.display = "";
+  ulEl.style.display = "none";
+  document.getElementById("sl-hint").textContent = "Trykk på en sjanger for å lese beskrivelsen.";
+
   modalOpen(modal);
+}
+
+let gxApi = null;
+function openSlektstre() {
+  const modal = document.getElementById("modal-slektstre");
+  if (!modal) return;
+  modalOpen(modal);
+  if (!gxApi) {
+    gxApi = renderGenealogy({
+      root: document,
+      subgenreDescs: state.subgenreDescs,
+      getArtists: () => state.artists,
+      getTechItems: () => state.techItems,
+      getGenres: () => buildGenreList(state.artists),
+      onArtistClick: openDetail,
+      onTechClick: openTechDetail,
+      onGenreClick,
+      onShowArtists: showArtistsForGenre,
+      onShowPlaylist: showPlaylistForGenre,
+    });
+  }
+  requestAnimationFrame(() => gxApi.fit());
 }
 
 function setupDetailModal() {
