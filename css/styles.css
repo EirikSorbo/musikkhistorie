@@ -760,7 +760,8 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
    =========================================================================== */
 
 /* Merke som lenke */
-a.brand { text-decoration: none; color: inherit; display: block; }
+a.brand { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
+.brand-icon { height: 36px; width: auto; }
 
 /* Navigasjon */
 .nav { display: flex; gap: 6px; align-items: center; }
