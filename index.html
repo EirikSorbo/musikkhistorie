@@ -36,29 +36,53 @@
 
     <!-- Utforsk -->
     <section class="panel">
-      <h2>Utforsk</h2>
+      <p class="section-label">Utforsk</p>
+      <div class="dash-grid">
+        <button class="dash-card" id="btn-society">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
+          <span class="dash-title">Samfunn</span>
+          <span class="dash-desc">Samfunnsutvikling tiår for tiår</span>
+        </button>
+        <button class="dash-card" id="btn-tech">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path d="M8 7h8M8 11h6"/></svg>
+          <span class="dash-title">Teknologi</span>
+          <span class="dash-desc">Teknologiutvikling tiår for tiår</span>
+        </button>
+        <button class="dash-card" id="btn-genres">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><path d="M9 17V4h8v9"/><circle cx="17" cy="13" r="3"/></svg>
+          <span class="dash-title">Sjangre</span>
+          <span class="dash-desc">Alle sjangre fra røtter til i dag</span>
+        </button>
+        <button class="dash-card" id="btn-undergenres">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#993556" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>
+          <span class="dash-title">Undersjangre</span>
+          <span class="dash-desc">Utforsk alle undersjangre</span>
+        </button>
+        <button class="dash-card" id="btn-dagens-navn">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <span class="dash-title">Dagens navn</span>
+          <span class="dash-desc">Tilfeldig utvalgt artist</span>
+        </button>
+        <button class="dash-card" id="btn-podkast">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+          <span class="dash-title">Podkast</span>
+          <span class="dash-desc">Studentenes egne episoder</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Finn artister -->
+    <section class="panel">
+      <p class="section-label">Finn artister</p>
       <div class="filter-bar">
-        <input type="search" id="sp-search" placeholder="Søk navn eller tags …" />
+        <input type="search" id="sp-search" placeholder="Søk etter navn..." />
         <select id="sp-sjanger"></select>
         <select id="sp-instrument"></select>
         <select id="sp-decade"></select>
         <select id="sp-subgenre"></select>
         <select id="sp-genre"></select>
       </div>
-      <div class="explore-btns">
-        <button class="btn ghost" id="btn-society">Samfunn</button>
-        <button class="btn ghost" id="btn-tech">Teknologi</button>
-        <button class="btn ghost" id="btn-genres">Sjangere</button>
-        <button class="btn ghost" id="btn-undergenres">Undersjangre</button>
-        <button class="btn ghost" id="btn-dagens-navn">Dagens navn</button>
-        <button class="btn ghost" id="btn-podkast">Podkast</button>
-      </div>
       <div id="filter-results"></div>
-    </section>
-
-    <!-- Alle forslag -->
-    <section class="panel">
-      <h2>Alle forslag</h2>
       <div id="artist-list" class="artist-list"></div>
     </section>
 
@@ -247,6 +271,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=190"></script>
+  <script type="module" src="js/landing.js?v=192"></script>
 </body>
 </html>
