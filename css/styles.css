@@ -230,11 +230,20 @@ body.is-teacher .show-removed { display: inline-flex; }
   justify-content: center;
 }
 .subgenre-chip .tag.tag-sub.tag-link {
-  background: var(--surface);
-  border-color: var(--line);
-  color: var(--text);
+  background: #fff;
+  border-color: var(--line-strong);
+  border-radius: 10px;
+  color: var(--muted);
   font-style: normal;
   text-align: center;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  transition: border-color 0.12s, box-shadow 0.12s, color 0.12s;
+}
+.subgenre-chip .tag.tag-sub.tag-link:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
 .subgenre-edit-btn {
   background: none;
@@ -439,6 +448,21 @@ textarea { resize: vertical; }
 .tag.tag-under { color: var(--accent-2); background: #ecfdf5; border-color: #a7f3d0; }
 button.tag { cursor: pointer; font-family: inherit; line-height: inherit; }
 button.tag:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
+.subgenre-tag-list .tag {
+  background: #fff;
+  border-color: var(--line-strong);
+  border-radius: 10px;
+  color: var(--muted);
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  transition: border-color 0.12s, box-shadow 0.12s, color 0.12s;
+}
+.subgenre-tag-list .tag:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  background: #fff;
+}
 button.tag.tag-sub:hover { border-color: var(--accent-2); }
 button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background: #a7f3d0; }
 button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: #d1fae5; }
@@ -732,10 +756,11 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 16px 14px;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
