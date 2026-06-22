@@ -10,12 +10,21 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=198" />
+  <link rel="stylesheet" href="css/styles.css?v=199" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
 </head>
 <body>
+  <div id="role-gate" class="role-gate">
+    <div class="role-gate-card">
+      <img src="img/header-icon.png" alt="" style="width:56px;height:56px;margin-bottom:12px" />
+      <h2>Velkommen!</h2>
+      <p style="margin:8px 0 24px;color:var(--muted)">Hvem er du?</p>
+      <button class="btn" id="role-student">Student</button>
+      <button class="btn ghost" id="role-teacher" style="margin-top:10px">Lærer</button>
+    </div>
+  </div>
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="index.html">
@@ -24,9 +33,8 @@
       </a>
       <nav class="nav"><span id="app-version" class="version-tag"></span>
         <a href="index.html" class="active">Startside</a>
-        <a href="tre.html">Slektstre</a>
         <a href="student.html">Foreslå</a>
-        <a href="teacher.html">Lærer</a>
+        <a href="teacher.html" class="nav-teacher">Lærer</a>
       </nav>
     </div>
   </header>
@@ -190,7 +198,7 @@
         <button class="btn ghost small genre-tab active" data-genre-tab="sjangre">Sjangre</button>
         <button class="btn ghost small genre-tab" data-genre-tab="under">Undersjangre</button>
       </div>
-      <button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:14px">Vis slektstre →</button>
+      <button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:14px">Vis sjangertre →</button>
       <p class="muted" style="margin-bottom:14px;font-size:0.9rem" id="sl-hint">Trykk på en sjanger for å lese beskrivelsen.</p>
       <div id="sl-chips" class="subgenre-tag-list"></div>
       <div id="ul-chips" class="subgenre-tag-list" style="display:none"></div>
@@ -264,11 +272,11 @@
     </div>
   </div>
 
-  <!-- Slektstre-popup -->
+  <!-- Sjangertre-popup -->
   <div class="modal-backdrop" id="modal-slektstre">
     <div class="modal modal-wide">
       <div class="modal-head">
-        <h2>Slektstre</h2>
+        <h2>Sjangertre</h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
       <div class="gx-stage gx-stage-tall" id="gx-stage">
@@ -277,12 +285,12 @@
           <button id="gx-zout" type="button" aria-label="Zoom ut">−</button>
           <button id="gx-rst" type="button" aria-label="Tilbakestill">⤺</button>
         </div>
-        <svg id="gx-svg" width="100%" height="100%" role="img" aria-label="Slektstre over sjangrene"><g id="gx-cam"></g></svg>
+        <svg id="gx-svg" width="100%" height="100%" role="img" aria-label="Sjangertre"><g id="gx-cam"></g></svg>
       </div>
       <div class="gx-legend" id="gx-legend"></div>
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=198"></script>
+  <script type="module" src="js/landing.js?v=199"></script>
 </body>
 </html>

@@ -551,6 +551,21 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   .panel { padding: 20px; }
 }
 
+/* ----- Rollevelger ----- */
+.role-gate {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+}
+.role-gate.hidden { display: none; }
+.role-gate-card {
+  text-align: center; padding: 40px 32px; max-width: 340px; width: 100%;
+}
+.role-gate-card h2 { margin: 0 0 4px; }
+.role-gate-card .btn { width: 100%; padding: 12px; font-size: 1rem; }
+
+body.role-student .nav-teacher { display: none; }
+
 /* ----- Modaler ----- */
 .modal-backdrop {
   display: none;

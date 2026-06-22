@@ -10,9 +10,10 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=198" />
+  <link rel="stylesheet" href="css/styles.css?v=199" />
 </head>
 <body>
+  <script>if(localStorage.getItem("pensum-role")==="student")document.body.classList.add("role-student")</script>
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="index.html">
@@ -20,9 +21,8 @@
       </a>
       <nav class="nav"><span id="app-version" class="version-tag"></span>
         <a href="index.html">Startside</a>
-        <a href="tre.html">Slektstre</a>
         <a href="student.html" class="active">Foreslå</a>
-        <a href="teacher.html">Lærer</a>
+        <a href="teacher.html" class="nav-teacher">Lærer</a>
       </nav>
     </div>
   </header>

@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=198";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=199";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo, renderGenealogy } from "./genealogy.js";
 
@@ -789,4 +789,32 @@ function init() {
   applyIncomingFilter();
 }
 
-init();
+// Rollevelger
+(function roleGate() {
+  const role = localStorage.getItem("pensum-role");
+  const gate = document.getElementById("role-gate");
+
+  function applyRole(r) {
+    if (r === "student") document.body.classList.add("role-student");
+    if (gate) gate.classList.add("hidden");
+  }
+
+  if (role) {
+    applyRole(role);
+    init();
+    return;
+  }
+
+  if (!gate) { init(); return; }
+
+  document.getElementById("role-student")?.addEventListener("click", () => {
+    localStorage.setItem("pensum-role", "student");
+    applyRole("student");
+    init();
+  });
+  document.getElementById("role-teacher")?.addEventListener("click", () => {
+    localStorage.setItem("pensum-role", "teacher");
+    applyRole("teacher");
+    window.location.href = "teacher.html";
+  });
+})();
