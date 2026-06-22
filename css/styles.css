@@ -561,6 +561,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   align-items: center;
   justify-content: center;
   padding: 20px;
+  overscroll-behavior: contain;
+  overflow: hidden;
 }
 .modal-backdrop.open { display: flex; }
 .modal {
@@ -571,6 +573,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   max-width: 640px;
   max-height: 85vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: var(--shadow-lg);
   animation: rise 0.2s ease both;
 }
@@ -596,7 +599,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .info-text li { margin-bottom: 4px; }
 
 /* ----- Tidslinje (horisontal) ----- */
-.timeline { margin: 24px 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.timeline { margin: 24px 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .tl-track { position: relative; display: flex; align-items: center; min-width: max-content; padding: 90px 16px; }
 .tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: var(--accent); border-radius: 2px; transform: translateY(-50%); }
 .tl-item { position: relative; flex: 1 0 120px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
