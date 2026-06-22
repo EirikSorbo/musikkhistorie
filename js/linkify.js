@@ -7,6 +7,7 @@ function esc(str) {
     .replaceAll("'", "&#39;");
 }
 
+// Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
 
 export function linkifyAll(text, { artists, techItems, genres } = {}) {
