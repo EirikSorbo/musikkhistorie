@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyArtists, wireArtistLinks } from "./linkify.js";
+import { linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js";
 export { linkifyArtists };
 
 // Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
@@ -670,7 +670,7 @@ function pct(n, max) {
 }
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
-export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, artists = [], onArtistClick, onShowArtists, onShowPlaylist, onEdit } = {}) {
+export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, artists = [], techItems = [], onArtistClick, onTechClick, onShowArtists, onShowPlaylist, onEdit } = {}) {
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -688,10 +688,11 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
 
   mTitle.textContent = label;
   mBody.innerHTML = `
-    <p class="gx-desc">${linkifyArtists(descText, artists)}</p>
+    <p class="gx-desc">${linkifyArtists(descText, artists, techItems)}</p>
     ${buildKilderList(kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   if (onArtistClick) wireArtistLinks(mBody, artists, onArtistClick);
+  if (onTechClick) wireTechLinks(mBody, techItems, onTechClick);
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");

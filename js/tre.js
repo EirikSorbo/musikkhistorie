@@ -1,13 +1,14 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeSubgenres } from "./store.js";
+import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
 import { renderGenealogy, showSjangerInfo } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=183";
+import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=188";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
 let artists = [];
+let techItems = [];
 let api = null;
 let lastSjangerLabel = null;
 
@@ -43,6 +44,12 @@ function showArtistDetail(a) {
   document.getElementById("ad-title").textContent = a.name;
   renderArtistDetail(document.getElementById("ad-body"), a, {});
   modalOpen(document.getElementById("modal-artist-detail"));
+}
+
+function showTechDetail(t) {
+  document.getElementById("td-title").textContent = t.name;
+  renderTechDetail(document.getElementById("td-body"), t);
+  modalOpen(document.getElementById("modal-tech-detail"));
 }
 
 function showArtistsForInstrument(instrument) {
@@ -81,7 +88,9 @@ function openSjangerInfo(label) {
     root: document,
     subgenreDescs: subDescs,
     artists,
+    techItems,
     onArtistClick: showArtistDetail,
+    onTechClick: showTechDetail,
     onShowArtists: showArtistsForGenre,
     onShowPlaylist: showPlaylistForGenre,
   });
@@ -93,7 +102,9 @@ function build() {
     root: document,
     subgenreDescs: subDescs,
     getArtists: () => artists,
+    getTechItems: () => techItems,
     onArtistClick: showArtistDetail,
+    onTechClick: showTechDetail,
     onShowArtists: showArtistsForGenre,
     onShowPlaylist: showPlaylistForGenre,
   });
@@ -135,7 +146,9 @@ const sjangerOpts = () => ({
   root: document,
   subgenreDescs: subDescs,
   artists,
+  techItems,
   onArtistClick: showArtistDetail,
+  onTechClick: showTechDetail,
   onShowArtists: showArtistsForGenre,
   onShowPlaylist: showPlaylistForGenre,
 });
@@ -168,4 +181,5 @@ if (CONFIGURED) {
     Object.assign(subDescs, s);
   });
   subscribeArtists((a) => { artists = a; });
+  subscribeTech((t) => { techItems = t; });
 }

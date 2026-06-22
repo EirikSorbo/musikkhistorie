@@ -30,7 +30,7 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=186";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=188";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -66,6 +66,12 @@ function openDetail(artist) {
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
   modalOpen(modal);
+}
+
+function openTechDetailPopup(t) {
+  document.getElementById("td-title").textContent = t.name;
+  renderTechDetail(document.getElementById("td-body"), t);
+  modalOpen(document.getElementById("modal-tech-detail"));
 }
 
 // ----------------------------------------------------------------------------
@@ -706,7 +712,9 @@ function setupSjangerModal() {
     root: document,
     subgenreDescs: state.subgenreDescs,
     artists: state.artists,
+    techItems: state.techItems,
     onArtistClick: openDetail,
+    onTechClick: openTechDetailPopup,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
     onEdit: (label) => {
