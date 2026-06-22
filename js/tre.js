@@ -3,7 +3,7 @@
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
 import { renderGenealogy, showSjangerInfo } from "./genealogy.js";
-import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop } from "./ui.js?v=188";
+import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=189";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
@@ -40,15 +40,31 @@ function showArtistsForGenre({ label }) {
   modalOpen(document.getElementById("modal-artistliste"));
 }
 
+function onGenreClick(genre) {
+  const opts = sjangerOpts();
+  showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
+}
+
+function buildLc() {
+  return {
+    artists,
+    techItems,
+    genres: buildGenreList(artists),
+    onArtistClick: showArtistDetail,
+    onTechClick: showTechDetail,
+    onGenreClick,
+  };
+}
+
 function showArtistDetail(a) {
   document.getElementById("ad-title").textContent = a.name;
-  renderArtistDetail(document.getElementById("ad-body"), a, {});
+  renderArtistDetail(document.getElementById("ad-body"), a, {}, buildLc());
   modalOpen(document.getElementById("modal-artist-detail"));
 }
 
 function showTechDetail(t) {
   document.getElementById("td-title").textContent = t.name;
-  renderTechDetail(document.getElementById("td-body"), t);
+  renderTechDetail(document.getElementById("td-body"), t, buildLc());
   modalOpen(document.getElementById("modal-tech-detail"));
 }
 
@@ -84,16 +100,7 @@ function showPlaylistForGenre({ label, fullName, node }) {
 }
 
 function openSjangerInfo(label) {
-  showSjangerInfo(label, {
-    root: document,
-    subgenreDescs: subDescs,
-    artists,
-    techItems,
-    onArtistClick: showArtistDetail,
-    onTechClick: showTechDetail,
-    onShowArtists: showArtistsForGenre,
-    onShowPlaylist: showPlaylistForGenre,
-  });
+  showSjangerInfo(label, sjangerOpts());
 }
 
 function build() {
@@ -103,8 +110,10 @@ function build() {
     subgenreDescs: subDescs,
     getArtists: () => artists,
     getTechItems: () => techItems,
+    getGenres: () => buildGenreList(artists),
     onArtistClick: showArtistDetail,
     onTechClick: showTechDetail,
+    onGenreClick,
     onShowArtists: showArtistsForGenre,
     onShowPlaylist: showPlaylistForGenre,
   });
@@ -147,8 +156,10 @@ const sjangerOpts = () => ({
   subgenreDescs: subDescs,
   artists,
   techItems,
+  genres: buildGenreList(artists),
   onArtistClick: showArtistDetail,
   onTechClick: showTechDetail,
+  onGenreClick,
   onShowArtists: showArtistsForGenre,
   onShowPlaylist: showPlaylistForGenre,
 });

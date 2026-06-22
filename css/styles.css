@@ -1054,7 +1054,8 @@ body.is-teacher #gate { display: none; }
 }
 .highlight-pulse { animation: highlightPulse 0.75s ease 2; }
 
-.artist-link, .tech-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.artist-link, .tech-link, .genre-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
 .artist-link { color: var(--accent); }
 .tech-link { color: #d97706; }
-.artist-link:hover, .tech-link:hover { text-decoration-style: solid; }
+.genre-link { color: #059669; }
+.artist-link:hover, .tech-link:hover, .genre-link:hover { text-decoration-style: solid; }

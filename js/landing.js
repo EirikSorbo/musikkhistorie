@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=188";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=189";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
@@ -29,7 +29,7 @@ const handlers = {
 
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
-  renderArtistDetail($("#detail-body"), artist, state.config);
+  renderArtistDetail($("#detail-body"), artist, state.config, buildLc());
   modalOpen(document.getElementById("modal-detail"));
 }
 
@@ -103,8 +103,10 @@ function setupSjangerModal() {
     subgenreDescs: state.subgenreDescs,
     artists: state.artists,
     techItems: state.techItems,
+    genres: buildGenreList(state.artists),
     onArtistClick: openDetail,
     onTechClick: openTechDetail,
+    onGenreClick,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
   });
@@ -370,16 +372,43 @@ function openTeknologi() {
   modalOpen(modal);
 }
 
+function onGenreClick(genre) {
+  const opts = {
+    root: document,
+    subgenreDescs: state.subgenreDescs,
+    artists: state.artists,
+    techItems: state.techItems,
+    genres: buildGenreList(state.artists),
+    onArtistClick: openDetail,
+    onTechClick: openTechDetail,
+    onGenreClick,
+    onShowArtists: showArtistsForSjanger,
+    onShowPlaylist: showPlaylistForGenre,
+  };
+  showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
+}
+
+function buildLc() {
+  return {
+    artists: state.artists,
+    techItems: state.techItems,
+    genres: buildGenreList(state.artists),
+    onArtistClick: openDetail,
+    onTechClick: openTechDetail,
+    onGenreClick,
+  };
+}
+
 function openTechDetail(t) {
   document.getElementById("td-title").textContent = t.name;
-  renderTechDetail(document.getElementById("td-body"), t);
+  renderTechDetail(document.getElementById("td-body"), t, buildLc());
   modalOpen(document.getElementById("modal-tech-detail"));
 }
 
 function renderTeknologiList(category) {
   const el = document.getElementById("tech-list");
   if (!el) return;
-  renderTechList(el, state.techItems, category || "");
+  renderTechList(el, state.techItems, category || "", buildLc());
 }
 
 function openSubgenreList() {
@@ -499,7 +528,7 @@ function renderSpotlight() {
   const pool = state.artists.filter((a) => a.status === "active");
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   currentPicks = shuffled.slice(0, 1);
-  renderSpotlightCards($("#spotlight"), currentPicks, state.config);
+  renderSpotlightCards($("#spotlight"), currentPicks, state.config, buildLc());
 }
 
 function renderFilterResults() {
@@ -594,7 +623,7 @@ function renderContextBox() {
 
 function renderList() {
   if (!state.config) return;
-  renderArtists($("#artist-list"), { ...state, handlers });
+  renderArtists($("#artist-list"), { ...state, handlers, linkCtx: buildLc() });
 }
 
 function refreshFilterControls() {

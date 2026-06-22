@@ -7,7 +7,7 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js";
+import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -53,10 +53,11 @@ export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n)
 
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, subgenreDescs, onShowArtists }
-export function showSjangerInfo(label, { root = document, subgenreDescs = {}, artists = [], techItems = [], onArtistClick, onTechClick, onShowArtists, onShowPlaylist, onEdit } = {}) {
+export function showSjangerInfo(label, opts = {}) {
+  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
-  if (!n) return;
+  if (!n) return false;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -80,18 +81,18 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, ar
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onGenreClick };
   mTitle.textContent = n.f;
   mBody.innerHTML = `
     <p class="gx-era">${escapeHtml(n.era)}</p>
-    <p class="gx-desc">${linkifyArtists(descFor(), artists, techItems)}</p>
+    <p class="gx-desc">${linkifyAll(descFor(), lc)}</p>
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
     ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
     ${kilderHtml}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
-  wireArtistLinks(mBody, artists, onArtistClick);
-  wireTechLinks(mBody, techItems, onTechClick);
+  wireAllLinks(mBody, lc);
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label: n.l }));
   const bp = mBody.querySelector(".gx-playlist-btn");
@@ -101,6 +102,7 @@ export function showSjangerInfo(label, { root = document, subgenreDescs = {}, ar
   window._modalZ = window._modalZ || 100;
   modal.style.zIndex = ++window._modalZ;
   modal.classList.add("open");
+  return true;
 }
 
 const W = 1140, H = 1180, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
@@ -121,9 +123,10 @@ function escapeHtml(s) {
 //  Bygger kartet i modal-rotelementet. Returnerer { fit } for å sentrere ved
 //  hver åpning. opts: { root, subgenreDescs, onShowArtists }
 // ----------------------------------------------------------------------------
-export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtists, getArtists, getTechItems, onArtistClick, onTechClick, onShowArtists, onShowPlaylist }) {
+export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtists, getArtists, getTechItems, getGenres, onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist }) {
   const artists = getArtists ? { get current() { return getArtists(); } } : { current: staticArtists || [] };
   const tech = getTechItems ? { get current() { return getTechItems(); } } : { current: [] };
+  const genreProxy = getGenres ? { get current() { return getGenres(); } } : { current: [] };
   const stage = root.querySelector("#gx-stage");
   const cam = root.querySelector("#gx-cam");
   const modal = root.querySelector("#modal-sjanger");
@@ -223,15 +226,14 @@ export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtis
       }).join("")}</ul></div>` : "";
       mBody.innerHTML = `
         <p class="gx-era">${escapeHtml(n.era)}</p>
-        <p class="gx-desc">${linkifyArtists(descFor(n), artists.current, tech.current)}</p>
+        <p class="gx-desc">${linkifyAll(descFor(n), { artists: artists.current, techItems: tech.current, genres: genreProxy.current })}</p>
         <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
         ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
         <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
         ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
         ${kilderHtml}
         ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
-      wireArtistLinks(mBody, artists.current, onArtistClick);
-      wireTechLinks(mBody, tech.current, onTechClick);
+      wireAllLinks(mBody, { artists: artists.current, techItems: tech.current, onArtistClick, onTechClick, onGenreClick });
       const b = mBody.querySelector(".gx-artists-btn");
       if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
       const bp = mBody.querySelector(".gx-playlist-btn");

@@ -30,10 +30,11 @@ import {
   deletePodcast,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList } from "./ui.js?v=188";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=189";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
+import { linkifyAll, wireAllLinks } from "./linkify.js";
 
 const state = {
   artists: [],
@@ -59,10 +60,41 @@ const handlers = {
   undoVeto:  (id) => undoVeto(id),
 };
 
+function onGenreClick(genre) {
+  const opts = {
+    root: document,
+    subgenreDescs: state.subgenreDescs,
+    artists: state.artists,
+    techItems: state.techItems,
+    genres: buildGenreList(state.artists),
+    onArtistClick: openDetail,
+    onTechClick: openTechDetailPopup,
+    onGenreClick,
+    onShowArtists: showArtistsForSjanger,
+    onShowPlaylist: showPlaylistForGenre,
+    onEdit: (label) => {
+      modalClose(document.getElementById("modal-sjanger"));
+      openSingleSubgenreModal(label);
+    },
+  };
+  showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
+}
+
+function buildLc() {
+  return {
+    artists: state.artists,
+    techItems: state.techItems,
+    genres: buildGenreList(state.artists),
+    onArtistClick: openDetail,
+    onTechClick: openTechDetailPopup,
+    onGenreClick,
+  };
+}
+
 function openDetail(artist) {
   const modal = document.getElementById("modal-detail");
   document.getElementById("detail-name").textContent = artist.name;
-  renderArtistDetail(document.getElementById("detail-body"), artist, state.config);
+  renderArtistDetail(document.getElementById("detail-body"), artist, state.config, buildLc());
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
   modalOpen(modal);
@@ -70,7 +102,7 @@ function openDetail(artist) {
 
 function openTechDetailPopup(t) {
   document.getElementById("td-title").textContent = t.name;
-  renderTechDetail(document.getElementById("td-body"), t);
+  renderTechDetail(document.getElementById("td-body"), t, buildLc());
   modalOpen(document.getElementById("modal-tech-detail"));
 }
 
@@ -470,7 +502,7 @@ function setupDecadeSingleSave() {
 }
 
 function renderList() {
-  renderArtists($("#artist-list"), { ...state, handlers });
+  renderArtists($("#artist-list"), { ...state, handlers, linkCtx: buildLc() });
 }
 
 function refreshControls() {
@@ -713,8 +745,10 @@ function setupSjangerModal() {
     subgenreDescs: state.subgenreDescs,
     artists: state.artists,
     techItems: state.techItems,
+    genres: buildGenreList(state.artists),
     onArtistClick: openDetail,
     onTechClick: openTechDetailPopup,
+    onGenreClick,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForGenre,
     onEdit: (label) => {
@@ -896,13 +930,15 @@ function renderTechAdmin() {
         <h3>${escapeHtml(t.name)}</h3>
         <div class="meta">${yearTag}${catTag}</div>
       </header>
-      ${t.description ? `<p class="desc">${escapeHtml(t.description)}</p>` : ""}
+      ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildGenreList(state.artists) })}</p>` : ""}
       <div class="card-foot" style="margin-top:auto;padding-top:8px">
         <button class="btn ghost small tech-edit-btn">Rediger</button>
         <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
       </div>
     </article>`;
   }).join("");
+
+  wireAllLinks(el, buildLc());
 
   el.querySelectorAll(".tech-del-btn").forEach(btn => {
     btn.addEventListener("click", async () => {

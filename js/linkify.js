@@ -7,21 +7,26 @@ function esc(str) {
     .replaceAll("'", "&#39;");
 }
 
-export function linkifyArtists(text, artists, techItems) {
+export function linkifyAll(text, { artists, techItems, genres } = {}) {
   if (!text) return esc(text);
   const escaped = esc(text);
   const markers = [];
-  const lowerEscaped = escaped.toLowerCase();
+  const lower = escaped.toLowerCase();
 
   const activeArtists = (artists || []).filter(a => a.status === "active" && a.name);
-  const sorted = activeArtists.slice().sort((a, b) => b.name.length - a.name.length);
-  for (const a of sorted) {
-    findMatches(lowerEscaped, escaped, esc(a.name), a.id, "artist", markers);
+  activeArtists.sort((a, b) => b.name.length - a.name.length);
+  for (const a of activeArtists) {
+    findMatches(lower, escaped, esc(a.name), a.id, "artist", markers);
   }
 
   const techs = (techItems || []).filter(t => t.name).slice().sort((a, b) => b.name.length - a.name.length);
   for (const t of techs) {
-    findMatches(lowerEscaped, escaped, esc(t.name), t.id, "tech", markers);
+    findMatches(lower, escaped, esc(t.name), t.id, "tech", markers);
+  }
+
+  const genreList = (genres || []).slice().sort((a, b) => b.length - a.length);
+  for (const g of genreList) {
+    findMatches(lower, escaped, esc(g), g, "genre", markers);
   }
 
   if (!markers.length) return escaped;
@@ -32,13 +37,19 @@ export function linkifyArtists(text, artists, techItems) {
     result += escaped.slice(last, m.start);
     if (m.type === "artist") {
       result += `<a class="artist-link" data-artist-id="${esc(m.id)}">${m.original}</a>`;
-    } else {
+    } else if (m.type === "tech") {
       result += `<a class="tech-link" data-tech-id="${esc(m.id)}">${m.original}</a>`;
+    } else {
+      result += `<a class="genre-link" data-genre="${esc(m.id)}">${m.original}</a>`;
     }
     last = m.end;
   }
   result += escaped.slice(last);
   return result;
+}
+
+export function linkifyArtists(text, artists, techItems, genres) {
+  return linkifyAll(text, { artists, techItems, genres });
 }
 
 function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
@@ -53,24 +64,39 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
   }
 }
 
-export function wireArtistLinks(container, artists, onClick) {
-  if (!onClick) return;
-  container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const a = artists.find(x => x.id === link.dataset.artistId);
-      if (a) onClick(a);
+export function wireAllLinks(container, { artists, techItems, onArtistClick, onTechClick, onGenreClick } = {}) {
+  if (onArtistClick) {
+    container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const a = (artists || []).find(x => x.id === link.dataset.artistId);
+        if (a) onArtistClick(a);
+      });
     });
-  });
+  }
+  if (onTechClick) {
+    container.querySelectorAll(".tech-link[data-tech-id]").forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const t = (techItems || []).find(x => x.id === link.dataset.techId);
+        if (t) onTechClick(t);
+      });
+    });
+  }
+  if (onGenreClick) {
+    container.querySelectorAll(".genre-link[data-genre]").forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        onGenreClick(link.dataset.genre);
+      });
+    });
+  }
+}
+
+export function wireArtistLinks(container, artists, onClick) {
+  wireAllLinks(container, { artists, onArtistClick: onClick });
 }
 
 export function wireTechLinks(container, techItems, onClick) {
-  if (!onClick) return;
-  container.querySelectorAll(".tech-link[data-tech-id]").forEach(link => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const t = techItems.find(x => x.id === link.dataset.techId);
-      if (t) onClick(t);
-    });
-  });
+  wireAllLinks(container, { techItems, onTechClick: onClick });
 }

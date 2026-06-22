@@ -16,8 +16,28 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js";
 export { linkifyArtists };
+
+export function buildGenreList(artists) {
+  const set = new Set(GENEALOGY_GENRES);
+  for (const a of (artists || [])) {
+    if (a.status !== "active") continue;
+    for (const s of (a.sjangre || [])) set.add(s);
+    for (const s of (a.undersjangre || [])) set.add(s);
+  }
+  return [...set];
+}
+
+function linkDesc(text, lc) {
+  if (!lc) return escapeHtml(text);
+  return linkifyAll(text, lc);
+}
+
+function wireLinks(el, lc) {
+  if (!lc) return;
+  wireAllLinks(el, lc);
+}
 
 // Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
 const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
@@ -151,7 +171,7 @@ const TECH_CATEGORIES = [
 
 export { TECH_CATEGORIES };
 
-export function renderTechList(el, items, activeCategory) {
+export function renderTechList(el, items, activeCategory, lc) {
   const filtered = activeCategory ? items.filter(t => t.category === activeCategory) : items;
   if (!filtered.length) {
     el.innerHTML = `<p class="muted empty">Ingen teknologier i denne kategorien ennå.</p>`;
@@ -169,18 +189,20 @@ export function renderTechList(el, items, activeCategory) {
         <h3>${escapeHtml(t.name)}</h3>
         <div class="meta">${yearTag}${catTag}</div>
       </header>
-      ${t.description ? `<p class="desc">${escapeHtml(t.description)}</p>` : ""}
+      ${t.description ? `<p class="desc">${linkDesc(t.description, lc)}</p>` : ""}
     </article>`;
   }).join("");
+  wireLinks(el, lc);
 }
 
-export function renderTechDetail(el, t) {
+export function renderTechDetail(el, t, lc) {
   const img = t.imageUrl
     ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${t.imageCredit ? `<span class="image-credit">${escapeHtml(t.imageCredit)}</span>` : ""}</figure>`
     : "";
   const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
   const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}</div>${t.description ? `<p>${escapeHtml(t.description)}</p>` : ""}`;
+  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}</div>${t.description ? `<p>${linkDesc(t.description, lc)}</p>` : ""}`;
+  wireLinks(el, lc);
 }
 
 function shortDesc(text) {
@@ -413,7 +435,7 @@ export function renderResultList(el, artists, config, onSelect) {
 }
 
 // Full innholdsvisning for detaljmodal (kun lesemodus)
-export function renderArtistDetail(el, artist, config) {
+export function renderArtistDetail(el, artist, config, lc) {
   const a = artist;
   const examplesHtml = (a.musicExamples || [])
     .map((m) => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
@@ -426,24 +448,26 @@ export function renderArtistDetail(el, artist, config) {
       ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
       ${genreTags(a)}
     </div>
-    ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
+    ${a.description ? `<p class="desc">${linkDesc(a.description, lc)}</p>` : ""}
     ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
     ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
     ${kilderHtml(a.kilder)}
   `;
+  wireLinks(el, lc);
 }
 
 // Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
-export function renderSpotlightCards(el, artists, config) {
+export function renderSpotlightCards(el, artists, config, lc) {
   el.className = "spotlight-grid";
   if (!artists.length) {
     el.innerHTML = `<p class="muted empty" style="grid-column:1/-1">Ingen forslag matcher filteret ennå.</p>`;
     return;
   }
-  el.innerHTML = artists.map((a) => spotlightCard(a, config)).join("");
+  el.innerHTML = artists.map((a) => spotlightCard(a, config, lc)).join("");
+  wireLinks(el, lc);
 }
 
-function spotlightCard(a, config) {
+function spotlightCard(a, config, lc) {
   const examplesHtml = (a.musicExamples || [])
     .map(
       (m) =>
@@ -465,7 +489,7 @@ function spotlightCard(a, config) {
           ${genreTags(a)}
         </div>
       </header>
-      ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
+      ${a.description ? `<p class="desc">${linkDesc(a.description, lc)}</p>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
@@ -517,9 +541,11 @@ export function renderArtists(el, state) {
     return;
   }
 
+  const linkCtx = state.linkCtx;
   el.innerHTML = list
-    .map((a) => artistCard(a, { isTeacher, clientId, config }))
+    .map((a) => artistCard(a, { isTeacher, clientId, config, linkCtx }))
     .join("");
+  wireLinks(el, linkCtx);
 
   // Koble på knappehandlinger
   el.querySelectorAll("[data-action]").forEach((btn) => {
@@ -530,7 +556,7 @@ export function renderArtists(el, state) {
   });
 }
 
-function artistCard(a, { isTeacher, clientId, config }) {
+function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   const upvotes = (a.votedUpBy || []).length;
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
   const removed = a.status === "removed";
@@ -609,7 +635,7 @@ function artistCard(a, { isTeacher, clientId, config }) {
         </div>
       </header>
 
-      ${a.description ? `<p class="desc">${escapeHtml(a.description)}</p>` : ""}
+      ${a.description ? `<p class="desc">${linkDesc(a.description, linkCtx)}</p>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
@@ -670,7 +696,8 @@ function pct(n, max) {
 }
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
-export function showSubsjangerInfo(label, { root = document, subgenreDescs = {}, artists = [], techItems = [], onArtistClick, onTechClick, onShowArtists, onShowPlaylist, onEdit } = {}) {
+export function showSubsjangerInfo(label, opts = {}) {
+  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -686,13 +713,13 @@ export function showSubsjangerInfo(label, { root = document, subgenreDescs = {},
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onGenreClick };
   mTitle.textContent = label;
   mBody.innerHTML = `
-    <p class="gx-desc">${linkifyArtists(descText, artists, techItems)}</p>
+    <p class="gx-desc">${linkDesc(descText, lc)}</p>
     ${buildKilderList(kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
-  if (onArtistClick) wireArtistLinks(mBody, artists, onArtistClick);
-  if (onTechClick) wireTechLinks(mBody, techItems, onTechClick);
+  wireLinks(mBody, lc);
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");
