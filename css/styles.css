@@ -53,27 +53,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Myke fargeskyer i bakgrunnen */
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  z-index: -1;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.5;
-  pointer-events: none;
-}
-body::before {
-  width: 520px; height: 520px;
-  top: -180px; left: -120px;
-  background: radial-gradient(circle, #bbf7d0, transparent 70%);
-}
-body::after {
-  width: 480px; height: 480px;
-  top: -120px; right: -140px;
-  background: radial-gradient(circle, #99f6e4, transparent 70%);
-}
+/* Bakgrunnsskyer fjernet – ren hvit bakgrunn */
 
 h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: -0.01em; }
 
@@ -84,8 +64,7 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(14px);
+  background: #fff;
   border-bottom: 1px solid var(--line);
 }
 .topbar .wrap {
