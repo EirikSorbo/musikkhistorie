@@ -578,6 +578,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .role-gate-card .btn { width: 100%; padding: 12px; font-size: 1rem; }
 
 body.role-student .nav-teacher { display: none; }
+body.role-student .version-tag { display: none; }
 
 /* ----- Modaler ----- */
 .modal-backdrop {
