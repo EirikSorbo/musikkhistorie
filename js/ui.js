@@ -558,6 +558,7 @@ export function renderArtists(el, state) {
   } else if (!filters.showRemoved) {
     list = list.filter((a) => a.status === "active");
   }
+  if (filters.hideChecked) list = list.filter((a) => !a.teacherChecked);
   if (filters.sjanger) {
     const sj = filters.sjanger.toLowerCase();
     list = list.filter((a) => a.genre === filters.sjanger

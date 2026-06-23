@@ -46,7 +46,7 @@ const state = {
   podcasts: [],
   techItems: [],
   teacherChecks: { genres: [], subgenres: [] },
-  filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false },
+  filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false, hideChecked: false },
   isTeacher: true,
   clientId: getClientId(),
   started: false,
@@ -580,6 +580,9 @@ function setupFilters() {
   const showRemoved = $("#f-show-removed");
   showRemoved.checked = state.filters.showRemoved;
   showRemoved.addEventListener("change", (e) => { state.filters.showRemoved = e.target.checked; renderList(); });
+  const hideChecked = $("#f-hide-checked");
+  hideChecked.checked = state.filters.hideChecked;
+  hideChecked.addEventListener("change", (e) => { state.filters.hideChecked = e.target.checked; renderList(); });
 
   $("#btn-pending").addEventListener("click", () => {
     state.filters.showPending = !state.filters.showPending;
