@@ -85,6 +85,7 @@ function onGenreClick(genre) {
     },
   };
   showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
+  addGenreCheckToggle(genre);
 }
 
 function buildLc() {
@@ -104,6 +105,16 @@ function openDetail(artist) {
   renderArtistDetail(document.getElementById("detail-body"), artist, state.config, buildLc());
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
+  const checkBtn = document.getElementById("detail-check-btn");
+  const checked = artist.teacherChecked === true;
+  checkBtn.textContent = checked ? "✓ Sjekket" : "Sjekk";
+  checkBtn.className = `btn ghost small ${checked ? "accent" : ""}`;
+  checkBtn.onclick = () => {
+    updateArtistFields(artist.id, { teacherChecked: !artist.teacherChecked });
+    const nowChecked = !artist.teacherChecked;
+    checkBtn.textContent = nowChecked ? "✓ Sjekket" : "Sjekk";
+    checkBtn.className = `btn ghost small ${nowChecked ? "accent" : ""}`;
+  };
   modalOpen(modal);
 }
 
@@ -214,9 +225,8 @@ function openSjangereListe() {
   const checked = state.teacherChecks.genres || [];
   const el = $("#tsl-chips");
   el.innerHTML = sjangre.length
-    ? sjangre.map(s => `<span class="tag-check-wrap"><button class="tag tag-sjanger ${checked.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button><button class="check-toggle" data-check-name="${escapeHtml(s)}" title="Merk som sjekket">${checked.includes(s) ? "☑" : "☐"}</button></span>`).join("")
+    ? sjangre.map(s => `<button class="tag tag-sjanger ${checked.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
-  wireGenreChecks(el, "genres");
   openAdminModal("modal-sjangere-list");
 }
 
@@ -230,27 +240,32 @@ function openUndersjangreListe() {
   const checked = state.teacherChecks.subgenres || [];
   const el = $("#tul-chips");
   el.innerHTML = under.length
-    ? under.map(s => `<span class="tag-check-wrap"><button class="tag tag-under ${checked.includes(s) ? "is-checked" : ""}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button><button class="check-toggle" data-check-name="${escapeHtml(s)}" title="Merk som sjekket">${checked.includes(s) ? "☑" : "☐"}</button></span>`).join("")
+    ? under.map(s => `<button class="tag tag-under ${checked.includes(s) ? "is-checked" : ""}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
     : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
-  wireGenreChecks(el, "subgenres");
   openAdminModal("modal-undersjangre-list");
 }
 
-function wireGenreChecks(container, field) {
-  container.querySelectorAll(".check-toggle").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const name = btn.dataset.checkName;
-      if (!name) return;
-      const list = [...(state.teacherChecks[field] || [])];
-      const idx = list.indexOf(name);
-      const tag = btn.previousElementSibling;
-      if (idx >= 0) { list.splice(idx, 1); btn.textContent = "☐"; tag?.classList.remove("is-checked"); }
-      else { list.push(name); btn.textContent = "☑"; tag?.classList.add("is-checked"); }
-      setTeacherChecks({ [field]: list });
-    });
+function addGenreCheckToggle(genre) {
+  const body = document.getElementById("sj-body");
+  if (!body) return;
+  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const field = sjangerSet.has(genre.toLowerCase()) ? "genres" : "subgenres";
+  const list = state.teacherChecks[field] || [];
+  const checked = list.includes(genre);
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "margin-top:12px";
+  wrap.innerHTML = `<button class="btn ghost small ${checked ? "accent" : ""}" id="sj-check-btn">${checked ? "✓ Sjekket" : "Sjekk"}</button>`;
+  body.appendChild(wrap);
+  wrap.querySelector("#sj-check-btn").addEventListener("click", () => {
+    const cur = [...(state.teacherChecks[field] || [])];
+    const idx = cur.indexOf(genre);
+    const btn = wrap.querySelector("#sj-check-btn");
+    if (idx >= 0) { cur.splice(idx, 1); btn.textContent = "Sjekk"; btn.className = "btn ghost small"; }
+    else { cur.push(genre); btn.textContent = "✓ Sjekket"; btn.className = "btn ghost small accent"; }
+    setTeacherChecks({ [field]: cur });
   });
 }
+
 
 function openOversikt() {
   renderDashboard($("#oversikt-body"), state);
