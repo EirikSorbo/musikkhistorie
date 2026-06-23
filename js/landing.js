@@ -604,6 +604,18 @@ function renderSpotlight() {
   renderSpotlightCards($("#spotlight"), currentPicks, state.config, buildLc());
 }
 
+let dagensArtistId = null;
+function renderDagensArtist() {
+  if (!state.config) return;
+  const pool = state.artists.filter((a) => a.status === "active");
+  if (!pool.length) return;
+  if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
+  const artist = pool.find((a) => a.id === dagensArtistId) || pool[0];
+  const section = document.getElementById("dagens-artist-section");
+  if (section) section.style.display = "";
+  renderSpotlightCards($("#dagens-artist"), [artist], state.config, buildLc());
+}
+
 function renderFilterResults() {
   if (!state.config) return;
   const el = document.getElementById("filter-results");
@@ -764,6 +776,7 @@ function init() {
   if (state.config && state.artists.length) {
     refreshFilterControls();
     renderList();
+    renderDagensArtist();
   }
 
   document.addEventListener("firestore-error", (e) => {
@@ -786,6 +799,7 @@ function init() {
     state.artists = artists;
     renderFilterResults();
     renderList();
+    renderDagensArtist();
     saveCache();
   });
   subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
