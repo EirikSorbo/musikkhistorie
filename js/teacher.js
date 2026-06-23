@@ -805,11 +805,13 @@ function setupSjangerModal() {
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
       showSjangerInfo(sjBtn.dataset.sjanger, sjangerOpts());
+      addGenreCheckToggle(sjBtn.dataset.sjanger);
       return;
     }
     const underBtn = e.target.closest("[data-under]");
     if (underBtn) {
       showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
+      addGenreCheckToggle(underBtn.dataset.under);
       return;
     }
     const inst = e.target.closest("[data-instrument]");
