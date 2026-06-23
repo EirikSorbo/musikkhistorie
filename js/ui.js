@@ -631,6 +631,8 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
     )
     .join("");
 
+  const checked = a.teacherChecked === true;
+
   const removedBadge = removed
     ? `<span class="badge removed">${
         a.removedBy === "teacher" ? "Fjernet av lærer" : "Fjernet"
@@ -665,6 +667,7 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   } else if (isTeacher) {
     teacherBtns = `
       <div class="teacher-actions">
+        <button class="btn small ${checked ? "accent" : ""}" data-action="toggleCheck" data-id="${a.id}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${checked ? "✓ Sjekket" : "Sjekk"}</button>
         ${removed
           ? `<button class="btn small" data-action="restore" data-id="${a.id}">Gjenopprett</button>`
           : `<button class="btn small" data-action="remove" data-id="${a.id}">Fjern</button>`
@@ -681,7 +684,7 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   const worksHtml = keyWorksText(a.keyWorks);
 
   return `
-    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${vetoed ? "is-vetoed" : ""}">
+    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${vetoed ? "is-vetoed" : ""} ${checked ? "is-checked" : ""}">
       <header class="card-head">
         ${artistImage(a)}
         <div>

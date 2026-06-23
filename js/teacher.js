@@ -28,9 +28,11 @@ import {
   addPodcast,
   updatePodcast,
   deletePodcast,
+  subscribeTeacherChecks,
+  setTeacherChecks,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=190";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=202";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -43,6 +45,7 @@ const state = {
   subgenreDescs: {},
   podcasts: [],
   techItems: [],
+  teacherChecks: { genres: [], subgenres: [] },
   filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false },
   isTeacher: true,
   clientId: getClientId(),
@@ -50,14 +53,18 @@ const state = {
 };
 
 const handlers = {
-  approve:   (id) => teacherApprove(id),
-  reject:    (id) => { if (confirm("Avvise dette forslaget?")) teacherReject(id); },
-  remove:    (id) => teacherRemove(id),
-  restore:   (id) => teacherRestore(id),
-  del:       (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
-  edit:      (id) => openEditModal(id),
-  veto:      (id) => teacherVeto(id),
-  undoVeto:  (id) => undoVeto(id),
+  approve:     (id) => teacherApprove(id),
+  reject:      (id) => { if (confirm("Avvise dette forslaget?")) teacherReject(id); },
+  remove:      (id) => teacherRemove(id),
+  restore:     (id) => teacherRestore(id),
+  del:         (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
+  edit:        (id) => openEditModal(id),
+  veto:        (id) => teacherVeto(id),
+  undoVeto:    (id) => undoVeto(id),
+  toggleCheck: (id) => {
+    const a = state.artists.find(x => x.id === id);
+    updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) });
+  },
 };
 
 function onGenreClick(genre) {
@@ -204,10 +211,12 @@ function openSjangereListe() {
   const active = state.artists.filter(a => a.status === "active");
   const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(s => sjangerSet.has(s.toLowerCase()))))]
     .sort((a, b) => a.localeCompare(b, "no"));
+  const checked = state.teacherChecks.genres || [];
   const el = $("#tsl-chips");
   el.innerHTML = sjangre.length
-    ? sjangre.map(s => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    ? sjangre.map(s => `<span class="tag-check-wrap"><button class="tag tag-sjanger ${checked.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button><button class="check-toggle" data-check-name="${escapeHtml(s)}" title="Merk som sjekket">${checked.includes(s) ? "☑" : "☐"}</button></span>`).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+  wireGenreChecks(el, "genres");
   openAdminModal("modal-sjangere-list");
 }
 
@@ -218,11 +227,29 @@ function openUndersjangreListe() {
     ...(a.sjangre || []).filter(s => !sjangerSet.has(s.toLowerCase())),
     ...(a.undersjangre || []),
   ]))].sort((a, b) => a.localeCompare(b, "no"));
+  const checked = state.teacherChecks.subgenres || [];
   const el = $("#tul-chips");
   el.innerHTML = under.length
-    ? under.map(s => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    ? under.map(s => `<span class="tag-check-wrap"><button class="tag tag-under ${checked.includes(s) ? "is-checked" : ""}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button><button class="check-toggle" data-check-name="${escapeHtml(s)}" title="Merk som sjekket">${checked.includes(s) ? "☑" : "☐"}</button></span>`).join("")
     : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
+  wireGenreChecks(el, "subgenres");
   openAdminModal("modal-undersjangre-list");
+}
+
+function wireGenreChecks(container, field) {
+  container.querySelectorAll(".check-toggle").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const name = btn.dataset.checkName;
+      if (!name) return;
+      const list = [...(state.teacherChecks[field] || [])];
+      const idx = list.indexOf(name);
+      const tag = btn.previousElementSibling;
+      if (idx >= 0) { list.splice(idx, 1); btn.textContent = "☐"; tag?.classList.remove("is-checked"); }
+      else { list.push(name); btn.textContent = "☑"; tag?.classList.add("is-checked"); }
+      setTeacherChecks({ [field]: list });
+    });
+  });
 }
 
 function openOversikt() {
@@ -819,6 +846,7 @@ function startApp() {
   subscribeSubgenres((s) => { state.subgenreDescs = s; });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
   subscribeTech((items) => { state.techItems = items; });
+  subscribeTeacherChecks((checks) => { state.teacherChecks = checks; });
 }
 
 // ----------------------------------------------------------------------------

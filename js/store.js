@@ -404,3 +404,15 @@ export async function deleteSubgenreDesc(subgenreId) {
 export async function updateConfig(config) {
   return setDoc(configRef, config);
 }
+
+const teacherChecksRef = doc(db, "config", "teacherChecks");
+
+export function subscribeTeacherChecks(callback) {
+  return onSnapshot(teacherChecksRef, (snap) => {
+    callback(snap.exists() ? snap.data() : { genres: [], subgenres: [] });
+  });
+}
+
+export async function setTeacherChecks(data) {
+  return setDoc(teacherChecksRef, data, { merge: true });
+}
