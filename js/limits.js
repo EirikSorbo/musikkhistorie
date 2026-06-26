@@ -46,7 +46,7 @@ export const DEFAULT_CONFIG = {
 export const GENDERS = [
   { value: "kvinne", label: "Kvinne" },
   { value: "mann", label: "Mann" },
-  { value: "annet", label: "Annet / ikke-binær" },
+  { value: "annet", label: "Gruppe" },
   { value: "ukjent", label: "Ukjent / kollektiv" },
 ];
 
