@@ -35,12 +35,12 @@ import {
   approveTech,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=223";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=224";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=223";
-import { initExplore } from "./explore.js?v=223";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=224";
+import { initExplore } from "./explore.js?v=224";
 
 const state = {
   artists: [],
@@ -1419,7 +1419,15 @@ function openEditModal(artistId) {
   buildEditWorkRows(a.keyWorks || []);
   buildEditSourceRows(a.kilder || []);
 
-  $("#ed-msg").textContent = "";
+  const pending = state.pendingEdits.find(p => p.entityType === "artist" && p.entityId === a.id);
+  const msgEl = $("#ed-msg");
+  if (pending) {
+    msgEl.className = "form-msg warn";
+    msgEl.textContent = `Obs: Det finnes et åpent endringsforslag for ${a.name} fra ${pending.proposedBy || "Anonym"}. Behandle det først via «Endringsforslag».`;
+  } else {
+    msgEl.className = "form-msg";
+    msgEl.textContent = "";
+  }
   openAdminModal("modal-edit");
 }
 
