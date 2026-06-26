@@ -355,6 +355,7 @@ textarea { resize: vertical; }
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 20px;
+  position: relative;
 }
 .list-head h2 { margin: 0; font-size: 1.15rem; }
 .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -538,6 +539,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 
 .priority-filter-bar {
   display: flex; align-items: center; gap: 6px;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
 }
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -640,6 +642,7 @@ body.role-student .version-tag { display: none; }
   justify-content: space-between;
   align-items: center;
   margin-bottom: 22px;
+  position: relative;
 }
 .modal-head h2 { margin: 0; font-size: 1.1rem; flex: 1; }
 .modal-head .modal-close,
