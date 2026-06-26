@@ -681,18 +681,22 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   } else if (isTeacher) {
     teacherBtns = `
       <div class="teacher-actions">
-        <button class="icon-btn ${checked ? "active" : ""}" data-action="toggleCheck" data-id="${a.id}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${ICO_CHECK}</button>
-        <span class="action-sep"></span>
-        <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${a.id}" title="Viktigst">${ICO_STAR}</button>
-        <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${a.id}" title="Viktig">${ICO_ALERT}</button>
-        <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${a.id}" title="Mindre viktig">${ICO_THUMB}</button>
-        <span class="action-sep"></span>
-        ${removed
-          ? `<button class="icon-btn" data-action="restore" data-id="${a.id}" title="Gjenopprett">${ICO_RESTORE}</button>`
-          : `<button class="icon-btn" data-action="remove" data-id="${a.id}" title="Fjern">${ICO_BAN}</button>`
-        }
-        <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
-        <button class="icon-btn danger" data-action="del" data-id="${a.id}" title="Slett">${ICO_TRASH}</button>
+        <div class="ta-left">
+          <button class="icon-btn ${checked ? "active" : ""}" data-action="toggleCheck" data-id="${a.id}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${ICO_CHECK}</button>
+        </div>
+        <div class="ta-center">
+          <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${a.id}" title="Viktigst">${ICO_STAR}</button>
+          <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${a.id}" title="Viktig">${ICO_ALERT}</button>
+          <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${a.id}" title="Mindre viktig">${ICO_THUMB}</button>
+        </div>
+        <div class="ta-right">
+          ${removed
+            ? `<button class="icon-btn" data-action="restore" data-id="${a.id}" title="Gjenopprett">${ICO_RESTORE}</button>`
+            : `<button class="icon-btn" data-action="remove" data-id="${a.id}" title="Fjern">${ICO_BAN}</button>`
+          }
+          <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
+          <button class="icon-btn danger" data-action="del" data-id="${a.id}" title="Slett">${ICO_TRASH}</button>
+        </div>
       </div>`;
   }
 

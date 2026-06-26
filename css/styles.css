@@ -496,8 +496,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 }
 .spacer { flex: 1; }
 .proposed, .vote-count { color: var(--muted-2); }
-.teacher-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
-.action-sep { width: 1px; height: 20px; background: var(--line); margin: 0 2px; }
+.teacher-actions { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 10px; }
+.ta-left, .ta-center, .ta-right { display: flex; gap: 6px; align-items: center; }
 
 /* ----- Icon buttons ----- */
 .icon-btn {
