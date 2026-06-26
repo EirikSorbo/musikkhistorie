@@ -43,7 +43,7 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
   "undersjangre": ["Delta blues", "Akustisk blues"],
   "influenceStart": 1936,
   "influenceEnd": 1938,
-  "label": "Vocalion",
+  "recordLabel": "Vocalion",
   "geography": "Mississippi Delta",
   "description": "Mytisk skikkelse i Delta blues-tradisjonen. Bare 29 innspillinger, men enorm innflytelse på etterkrigsblues, britisk blues-bølge og tidlig rock.",
   "keyWorks": [
@@ -79,7 +79,7 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 | `undersjangre` | array av strings | | **Frie tags.** Hva som helst (Delta blues, Akustisk blues, New Orleans-jazz, …). Brukes til søk og filter. |
 | `influenceStart` | number | ✓ | Året kunstneren begynte å påvirke. Styrer tiår-tilhørighet. |
 | `influenceEnd` | number \| null | | Året innflytelsen tok slutt (eller null hvis aktiv/død). |
-| `label` | string | | Plateselskap(er) artisten er knyttet til. Fritekst, f.eks. `"Columbia"`, `"Stax / Atlantic"`. |
+| `recordLabel` | string | | Plateselskap(er) artisten er knyttet til. Fritekst, f.eks. `"Columbia"`, `"Stax / Atlantic"`. |
 | `geography` | string | | Fritekst: by, region, miljø. "Mississippi Delta", "Bronx, New York". |
 | `description` | string | | Pedagogisk begrunnelse — *hvorfor relevant?* Vanlig tekst, kort. |
 | `keyWorks` | array av objekter | | Sentrale verk. Se under. |
@@ -280,7 +280,7 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
       "undersjangre": ["Classic blues", "Vaudeville blues"],
       "influenceStart": 1923,
       "influenceEnd": 1937,
-      "label": "Columbia",
+      "recordLabel": "Columbia",
       "geography": "Chattanooga / New York",
       "description": "«Empress of the Blues». Vaudeville-skolert sangerinne som førte klassisk blues fra teaterscener inn på plate og ga sjangeren bred kulturell rekkevidde i 1920-årene.",
       "keyWorks": [
