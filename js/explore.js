@@ -1,4 +1,4 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=212";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=213";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const MODAL_HTML = `
@@ -9,6 +9,7 @@ const MODAL_HTML = `
       <h2>Teknologiske innovasjoner</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div id="tek-admin-extra"></div>
     <div class="tech-category-tabs">
       <button class="btn ghost small tech-tab active" data-tech-cat="">Alle</button>
       <button class="btn ghost small tech-tab" data-tech-cat="Opptak og avspilling">Opptak</button>
@@ -516,6 +517,15 @@ function wireModals() {
   if (opts.onSlektstre && slExtra) {
     slExtra.innerHTML = `<button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:14px">Vis sjangertre →</button>`;
     slExtra.querySelector("#btn-slektstre").addEventListener("click", () => opts.onSlektstre());
+  }
+
+  const tekExtra = document.getElementById("tek-admin-extra");
+  if (opts.onTechAdmin && tekExtra) {
+    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-admin" style="width:100%;margin-bottom:14px">Vis teknologikort (admin) →</button>`;
+    tekExtra.querySelector("#btn-tech-admin").addEventListener("click", () => {
+      modalClose(document.getElementById("modal-teknologi"));
+      opts.onTechAdmin();
+    });
   }
 
   const tekModal = document.getElementById("modal-teknologi");
