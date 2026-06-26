@@ -312,14 +312,37 @@ const GENDER_COLORS = {
 //  Dashboard: totaltelling + kjønnsfordeling
 // ----------------------------------------------------------------------------
 
-export function renderDashboard(el, { artists, config }) {
+export function renderDashboard(el, { artists, config, subgenreDescs = {} }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => a.status === "removed").length;
   const pending = artists.filter((a) => a.status === "pending").length;
+  const checked = artists.filter((a) => a.status === "active" && a.teacherChecked === true).length;
+  const activeArtists = artists.filter(a => a.status === "active");
   const subgenreCount = new Set(
-    artists.filter(a => a.status === "active").flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
+    activeArtists.flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
   ).size;
+
+  const artistsNoSjanger = activeArtists
+    .filter(a => !a.sjangre || a.sjangre.length === 0)
+    .sort((a, b) => a.name.localeCompare(b.name, "no"));
+
+  const allArtistTags = new Set(activeArtists.flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])]));
+  const orphanedSubgenres = Object.keys(subgenreDescs)
+    .filter(s => !allArtistTags.has(s))
+    .sort((a, b) => a.localeCompare(b, "no"));
+
+  const noSjangerHtml = artistsNoSjanger.length
+    ? artistsNoSjanger.map(a =>
+        `<div class="result-row"><span class="result-name">${escapeHtml(a.name)}</span><span class="result-meta">${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}</span></div>`
+      ).join("")
+    : `<p class="muted">Ingen.</p>`;
+
+  const orphanHtml = orphanedSubgenres.length
+    ? orphanedSubgenres.map(s =>
+        `<div class="result-row"><span class="result-name">${escapeHtml(s)}</span></div>`
+      ).join("")
+    : `<p class="muted">Ingen.</p>`;
 
   el.innerHTML = `
     <div class="stat-grid">
@@ -343,12 +366,36 @@ export function renderDashboard(el, { artists, config }) {
         <div class="stat-num">${subgenreCount}</div>
         <div class="stat-label">Undersjangre</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-num">${checked}</div>
+        <div class="stat-label">Artistkort sjekket</div>
+      </div>
       <div class="stat-card stat-wide">
         <div class="stat-label">Kjønnsfordeling (aktive)</div>
         ${renderGenderChart(dist)}
       </div>
+      <div class="stat-card stat-wide">
+        <button class="btn ghost small" id="ov-btn-no-sjanger">Artister uten sjanger (${artistsNoSjanger.length})</button>
+        <div id="ov-no-sjanger-list" style="display:none;margin-top:10px"></div>
+        <button class="btn ghost small" id="ov-btn-orphan-sub" style="margin-top:8px">Undersjangre uten artistkort (${orphanedSubgenres.length})</button>
+        <div id="ov-orphan-sub-list" style="display:none;margin-top:10px"></div>
+      </div>
     </div>
   `;
+
+  el.querySelector("#ov-btn-no-sjanger").addEventListener("click", () => {
+    const panel = el.querySelector("#ov-no-sjanger-list");
+    const visible = panel.style.display !== "none";
+    panel.style.display = visible ? "none" : "block";
+    if (!visible) panel.innerHTML = `<div class="result-list">${noSjangerHtml}</div>`;
+  });
+
+  el.querySelector("#ov-btn-orphan-sub").addEventListener("click", () => {
+    const panel = el.querySelector("#ov-orphan-sub-list");
+    const visible = panel.style.display !== "none";
+    panel.style.display = visible ? "none" : "block";
+    if (!visible) panel.innerHTML = `<div class="result-list">${orphanHtml}</div>`;
+  });
 }
 
 function renderGenderChart(dist) {
