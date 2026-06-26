@@ -31,12 +31,12 @@ import {
   setTeacherChecks,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=216";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=217";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=216";
-import { initExplore } from "./explore.js?v=216";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=217";
+import { initExplore } from "./explore.js?v=217";
 
 const state = {
   artists: [],
@@ -428,6 +428,13 @@ function refreshControls() {
 //  Filtre
 // ----------------------------------------------------------------------------
 
+function updatePrioButtons() {
+  document.querySelectorAll("#t-prio-bar .prio-filter-btn").forEach((btn) => {
+    const p = parseInt(btn.dataset.prio, 10);
+    btn.className = `prio-filter-btn${state.filters.priority === p ? ` active-${p}` : ""}`;
+  });
+}
+
 function setupFilters() {
   $("#f-sjanger").addEventListener("change", (e) => { state.filters.sjanger = e.target.value; renderList(); });
   $("#f-genre").addEventListener("change", (e) => { state.filters.genre = e.target.value; renderList(); });
@@ -435,6 +442,14 @@ function setupFilters() {
   $("#f-instrument").addEventListener("change", (e) => { state.filters.instrument = e.target.value; renderList(); });
   $("#f-subgenre").addEventListener("change", (e) => { state.filters.subgenre = e.target.value; renderList(); });
   $("#f-search").addEventListener("input", (e) => { state.filters.search = e.target.value; renderList(); });
+  document.querySelectorAll("#t-prio-bar .prio-filter-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const p = parseInt(btn.dataset.prio, 10);
+      state.filters.priority = state.filters.priority === p ? 0 : p;
+      updatePrioButtons();
+      renderList();
+    });
+  });
   const showRemoved = $("#f-show-removed");
   showRemoved.checked = state.filters.showRemoved;
   showRemoved.addEventListener("change", (e) => { state.filters.showRemoved = e.target.checked; renderList(); });

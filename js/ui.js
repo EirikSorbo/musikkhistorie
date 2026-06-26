@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=216";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=217";
 export { linkifyArtists };
 
 export function buildGenreList(artists) {
@@ -595,17 +595,6 @@ function spotlightCard(a, config, lc) {
   `;
 }
 
-function buildPrioFilterBar(activePrio) {
-  const ICO_STAR = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
-  const ICO_ALERT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-  const ICO_THUMB = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`;
-  return `<div class="priority-filter-bar">
-    <button class="prio-filter-btn ${activePrio === 3 ? "active-3" : ""}" data-prio="3" title="Vis kun viktigst">${ICO_STAR}</button>
-    <button class="prio-filter-btn ${activePrio === 2 ? "active-2" : ""}" data-prio="2" title="Vis kun viktig">${ICO_ALERT}</button>
-    <button class="prio-filter-btn ${activePrio === 1 ? "active-1" : ""}" data-prio="1" title="Vis kun mindre viktig">${ICO_THUMB}</button>
-  </div>`;
-}
-
 export function renderArtists(el, state) {
   const { artists, filters, isTeacher, clientId, config, handlers } = state;
 
@@ -663,20 +652,10 @@ export function renderArtists(el, state) {
   }
 
   const linkCtx = state.linkCtx;
-  const activePrio = filters.priority || 0;
-  const prioBar = buildPrioFilterBar(activePrio);
-  el.innerHTML = prioBar + list
+  el.innerHTML = list
     .map((a) => artistCard(a, { isTeacher, clientId, config, linkCtx }))
     .join("");
   wireLinks(el, linkCtx);
-
-  el.querySelectorAll(".prio-filter-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const p = parseInt(btn.dataset.prio, 10);
-      filters.priority = filters.priority === p ? 0 : p;
-      renderArtists(el, state);
-    });
-  });
 
   // Koble på knappehandlinger
   el.querySelectorAll("[data-action]").forEach((btn) => {

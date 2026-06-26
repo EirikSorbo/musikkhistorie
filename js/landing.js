@@ -1,9 +1,9 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=216";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=217";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, renderGenealogy } from "./genealogy.js";
-import { initExplore } from "./explore.js?v=216";
+import { initExplore } from "./explore.js?v=217";
 
 const clientId = getClientId();
 
@@ -299,12 +299,28 @@ function refreshFilterControls() {
   if (state.filters.genre)    $("#sp-genre").value = state.filters.genre;
 }
 
+function updatePrioButtons() {
+  document.querySelectorAll("#sp-prio-bar .prio-filter-btn").forEach((btn) => {
+    const p = parseInt(btn.dataset.prio, 10);
+    btn.className = `prio-filter-btn${state.filters.priority === p ? ` active-${p}` : ""}`;
+  });
+}
+
 function setupFilters() {
   ["sp-search", "sp-sjanger", "sp-genre", "sp-instrument", "sp-decade"].forEach((id) => {
     const el = document.getElementById(id);
     el.addEventListener(id === "sp-search" ? "input" : "change", (e) => {
       const key = id.replace("sp-", "");
       state.filters[key] = e.target.value;
+      renderFilterResults();
+      renderList();
+    });
+  });
+  document.querySelectorAll("#sp-prio-bar .prio-filter-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const p = parseInt(btn.dataset.prio, 10);
+      state.filters.priority = state.filters.priority === p ? 0 : p;
+      updatePrioButtons();
       renderFilterResults();
       renderList();
     });

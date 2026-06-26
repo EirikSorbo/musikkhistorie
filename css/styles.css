@@ -537,8 +537,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .tag.is-checked { outline: 2px solid #22c55e; outline-offset: -2px; }
 
 .priority-filter-bar {
-  display: flex; justify-content: center; gap: 8px;
-  padding: 8px 0 4px; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px;
 }
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
