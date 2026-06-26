@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=210" />
+  <link rel="stylesheet" href="css/styles.css?v=211" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -47,18 +47,40 @@
     <div id="teacher-app">
       <div id="banner" class="banner"></div>
 
-
       <!-- Utforsk -->
       <section class="panel">
-        <h2>Utforsk</h2>
-        <div class="explore-btns">
-          <button class="btn ghost" id="btn-t-society">Samfunn</button>
-          <button class="btn ghost" id="btn-t-tech">Teknologi</button>
-          <button class="btn ghost" id="btn-t-sjangere">Sjangere</button>
-          <button class="btn ghost" id="btn-t-undersjangre">Undersjangre</button>
-          <button class="btn ghost" id="btn-t-oversikt">Oversikt</button>
-          <button class="btn ghost" id="btn-t-teknologi">Teknologi-kort</button>
-          <button class="btn ghost" id="btn-t-podkast">Podkast</button>
+        <p class="section-label">Utforsk</p>
+        <div class="dash-grid">
+          <button class="dash-card" id="btn-t-genres">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><path d="M9 17V4h8v9"/><circle cx="17" cy="13" r="3"/></svg>
+            <span class="dash-title">Sjangre</span>
+            <span class="dash-desc">Alle sjangre fra røtter til i dag</span>
+          </button>
+          <button class="dash-card" id="btn-t-tech">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path d="M8 7h8M8 11h6"/></svg>
+            <span class="dash-title">Teknologi</span>
+            <span class="dash-desc">Teknologiutvikling tiår for tiår</span>
+          </button>
+          <button class="dash-card" id="btn-t-society">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
+            <span class="dash-title">Samfunn</span>
+            <span class="dash-desc">Samfunnsutvikling tiår for tiår</span>
+          </button>
+          <button class="dash-card" id="btn-t-podkast">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+            <span class="dash-title">Podkast</span>
+            <span class="dash-desc">Studentenes egne episoder</span>
+          </button>
+          <button class="dash-card" id="btn-t-teknologi">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+            <span class="dash-title">Teknologi-kort</span>
+            <span class="dash-desc">Administrer teknologier</span>
+          </button>
+          <button class="dash-card" id="btn-t-oversikt">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M9 12l2 2 4-4"/></svg>
+            <span class="dash-title">Oversikt</span>
+            <span class="dash-desc">Status og statistikk</span>
+          </button>
         </div>
       </section>
 
@@ -92,43 +114,7 @@
 
   </footer>
 
-  <!-- ===== MODALER ===== -->
-
-  <!-- Tiårs-liste (Samfunn / Teknologi) -->
-  <div class="modal-backdrop" id="modal-decade-list-t">
-    <div class="modal">
-      <div class="modal-head">
-        <h2>Samfunn</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese og redigere beskrivelsen.</p>
-      <div id="tdl-buttons" class="explore-decade-grid"></div>
-    </div>
-  </div>
-
-  <!-- Sjangere-liste -->
-  <div class="modal-backdrop" id="modal-sjangere-list">
-    <div class="modal">
-      <div class="modal-head">
-        <h2>Sjangere</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
-      <div id="tsl-chips" class="subgenre-tag-list"></div>
-    </div>
-  </div>
-
-  <!-- Undersjangre-liste -->
-  <div class="modal-backdrop" id="modal-undersjangre-list">
-    <div class="modal">
-      <div class="modal-head">
-        <h2>Undersjangre</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en undersjanger for å lese beskrivelsen.</p>
-      <div id="tul-chips" class="subgenre-tag-list"></div>
-    </div>
-  </div>
+  <!-- ===== MODALER (lærer-only) ===== -->
 
   <!-- Oversikt -->
   <div class="modal-backdrop" id="modal-oversikt">
@@ -138,21 +124,6 @@
         <button class="modal-close btn ghost small">✕</button>
       </div>
       <div id="oversikt-body"></div>
-    </div>
-  </div>
-
-  <!-- Sjanger-info -->
-  <div class="modal-backdrop" id="modal-subgenre-info">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="sgi-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <p id="sgi-desc"></p>
-      <div id="sgi-artists"></div>
-      <div class="modal-foot-right">
-        <button id="sgi-edit-btn" class="btn ghost small" title="Rediger beskrivelse">Rediger</button>
-      </div>
     </div>
   </div>
 
@@ -469,17 +440,6 @@
     </div>
   </div>
 
-  <!-- Utvidet tiårsbeskrivelse -->
-  <div class="modal-backdrop" id="modal-decade-more">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="dm-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="dm-text" class="info-text"></div>
-    </div>
-  </div>
-
   <!-- Enkelt sjangerbeskrivelse -->
   <div class="modal-backdrop" id="modal-subgenre-single">
     <div class="modal">
@@ -501,39 +461,6 @@
           <span id="ss-msg" class="form-msg ok"></span>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Artistliste-popup (åpnes fra sjanger-beskrivelse) -->
-  <div class="modal-backdrop" id="modal-artistliste">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="al-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="al-body"></div>
-    </div>
-  </div>
-
-  <!-- Spilleliste-popup (åpnes fra sjanger-beskrivelse) -->
-  <div class="modal-backdrop" id="modal-spilleliste">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="pl-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="pl-body"></div>
-    </div>
-  </div>
-
-  <!-- Sjanger-beskrivelse (åpnes fra sjanger-bobler i artistkort) -->
-  <div class="modal-backdrop" id="modal-sjanger">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="sj-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="sj-body"></div>
     </div>
   </div>
 
@@ -656,17 +583,6 @@
     </div>
   </div>
 
-  <!-- Teknologi-detalj -->
-  <div class="modal-backdrop" id="modal-tech-detail">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="td-title"></h2>
-        <button class="modal-close btn ghost small">&#x2715;</button>
-      </div>
-      <div id="td-body"></div>
-    </div>
-  </div>
-
-  <script type="module" src="js/teacher.js?v=210"></script>
+  <script type="module" src="js/teacher.js?v=211"></script>
 </body>
 </html>

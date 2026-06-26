@@ -31,11 +31,12 @@ import {
   setTeacherChecks,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=210";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=211";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=210";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=211";
+import { initExplore } from "./explore.js?v=211";
 
 const state = {
   artists: [],
@@ -67,42 +68,12 @@ const handlers = {
   },
 };
 
-function onGenreClick(genre) {
-  const opts = {
-    root: document,
-    subgenreDescs: state.subgenreDescs,
-    artists: state.artists,
-    techItems: state.techItems,
-    genres: buildGenreList(state.artists),
-    onArtistClick: openDetail,
-    onTechClick: openTechDetailPopup,
-    onGenreClick,
-    onShowArtists: showArtistsForSjanger,
-    onShowPlaylist: showPlaylistForGenre,
-    onEdit: (label) => {
-      modalClose(document.getElementById("modal-sjanger"));
-      openSingleSubgenreModal(label);
-    },
-  };
-  showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
-  addGenreCheckToggle(genre);
-}
-
-function buildLc() {
-  return {
-    artists: state.artists,
-    techItems: state.techItems,
-    genres: buildGenreList(state.artists),
-    onArtistClick: openDetail,
-    onTechClick: openTechDetailPopup,
-    onGenreClick,
-  };
-}
+let explore = null;
 
 function openDetail(artist) {
   const modal = document.getElementById("modal-detail");
   document.getElementById("detail-name").textContent = artist.name;
-  renderArtistDetail(document.getElementById("detail-body"), artist, state.config, buildLc());
+  renderArtistDetail(document.getElementById("detail-body"), artist, state.config, explore.buildLinkCtx());
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
   const checkBtn = document.getElementById("detail-check-btn");
@@ -118,10 +89,30 @@ function openDetail(artist) {
   modalOpen(modal);
 }
 
-function openTechDetailPopup(t) {
-  document.getElementById("td-title").textContent = t.name;
-  renderTechDetail(document.getElementById("td-body"), t, buildLc());
-  modalOpen(document.getElementById("modal-tech-detail"));
+function addGenreCheckToggle(genre) {
+  const body = document.getElementById("sj-body");
+  if (!body) return;
+  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const field = sjangerSet.has(genre.toLowerCase()) ? "genres" : "subgenres";
+  const list = state.teacherChecks[field] || [];
+  const checked = list.includes(genre);
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "margin-top:12px";
+  wrap.innerHTML = `<button class="btn ghost small ${checked ? "accent" : ""}" id="sj-check-btn">${checked ? "✓ Sjekket" : "Sjekk"}</button>`;
+  body.appendChild(wrap);
+  wrap.querySelector("#sj-check-btn").addEventListener("click", () => {
+    const cur = [...(state.teacherChecks[field] || [])];
+    const idx = cur.indexOf(genre);
+    const btn = wrap.querySelector("#sj-check-btn");
+    if (idx >= 0) { cur.splice(idx, 1); btn.textContent = "Sjekk"; btn.className = "btn ghost small"; }
+    else { cur.push(genre); btn.textContent = "✓ Sjekket"; btn.className = "btn ghost small accent"; }
+    setTeacherChecks({ [field]: cur });
+  });
+}
+
+function openOversikt() {
+  renderDashboard($("#oversikt-body"), state);
+  openAdminModal("modal-oversikt");
 }
 
 // ----------------------------------------------------------------------------
@@ -217,172 +208,10 @@ function updatePendingBadge() {
   btn.classList.toggle("active", !!state.filters.showPending);
 }
 
-function openSjangereListe() {
-  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
-  const active = state.artists.filter(a => a.status === "active");
-  const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(s => sjangerSet.has(s.toLowerCase()))))]
-    .sort((a, b) => a.localeCompare(b, "no"));
-  const checked = state.teacherChecks.genres || [];
-  const el = $("#tsl-chips");
-  el.innerHTML = sjangre.length
-    ? sjangre.map(s => `<button class="tag tag-sjanger ${checked.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
-    : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
-  openAdminModal("modal-sjangere-list");
-}
-
-function openUndersjangreListe() {
-  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
-  const active = state.artists.filter(a => a.status === "active");
-  const under = [...new Set(active.flatMap(a => [
-    ...(a.sjangre || []).filter(s => !sjangerSet.has(s.toLowerCase())),
-    ...(a.undersjangre || []),
-  ]))].sort((a, b) => a.localeCompare(b, "no"));
-  const checked = state.teacherChecks.subgenres || [];
-  const el = $("#tul-chips");
-  el.innerHTML = under.length
-    ? under.map(s => `<button class="tag tag-under ${checked.includes(s) ? "is-checked" : ""}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
-    : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
-  openAdminModal("modal-undersjangre-list");
-}
-
-function addGenreCheckToggle(genre) {
-  const body = document.getElementById("sj-body");
-  if (!body) return;
-  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
-  const field = sjangerSet.has(genre.toLowerCase()) ? "genres" : "subgenres";
-  const list = state.teacherChecks[field] || [];
-  const checked = list.includes(genre);
-  const wrap = document.createElement("div");
-  wrap.style.cssText = "margin-top:12px";
-  wrap.innerHTML = `<button class="btn ghost small ${checked ? "accent" : ""}" id="sj-check-btn">${checked ? "✓ Sjekket" : "Sjekk"}</button>`;
-  body.appendChild(wrap);
-  wrap.querySelector("#sj-check-btn").addEventListener("click", () => {
-    const cur = [...(state.teacherChecks[field] || [])];
-    const idx = cur.indexOf(genre);
-    const btn = wrap.querySelector("#sj-check-btn");
-    if (idx >= 0) { cur.splice(idx, 1); btn.textContent = "Sjekk"; btn.className = "btn ghost small"; }
-    else { cur.push(genre); btn.textContent = "✓ Sjekket"; btn.className = "btn ghost small accent"; }
-    setTeacherChecks({ [field]: cur });
-  });
-}
-
-
-function openOversikt() {
-  renderDashboard($("#oversikt-body"), state);
-  openAdminModal("modal-oversikt");
-}
-
-function openSingleSubgenreModal(subgenreId) {
-  const desc = state.subgenreDescs[subgenreId] || {};
-  $("#subgenre-single-title").textContent = subgenreId;
-  $("#ss-desc").value = desc.description || "";
-  $("#ss-msg").textContent = "";
-  const kilderWrap = $("#ss-kilder-rows");
-  if (kilderWrap) {
-    kilderWrap.innerHTML = "";
-    const kilder = Array.isArray(desc.kilder) ? desc.kilder : [];
-    (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || "", "ss"));
-  }
-  $("#modal-subgenre-single").dataset.subgenre = subgenreId;
-  openAdminModal("modal-subgenre-single");
-}
-
-function setupSubgenreSingleSave() {
-  const addKilderBtn = $("#ss-add-kilder");
-  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ss-kilder-rows"), "", "", "ss"));
-
-  $("#ss-save").addEventListener("click", async () => {
-    const modal = $("#modal-subgenre-single");
-    const subgenreId = modal.dataset.subgenre;
-    const description = $("#ss-desc").value.trim();
-    const kilder = collectKilderRows($("#ss-kilder-rows"));
-    const msg = $("#ss-msg");
-    try {
-      await saveSubgenreDesc(subgenreId, { description, kilder });
-      msg.textContent = "Lagret ✓";
-      msg.className = "form-msg ok";
-      setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);
-    } catch (err) {
-      msg.textContent = "Feil: " + err.message;
-      msg.className = "form-msg error";
-    }
-  });
-}
-
-function setupSubgenreInfo() {
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-subgenre-info]");
-    if (!btn) return;
-    e.stopPropagation();
-    openSubgenreInfo(btn.dataset.subgenreInfo);
-  });
-}
-
-function openSubgenreInfo(subgenreId) {
-  const desc = state.subgenreDescs[subgenreId];
-  $("#sgi-title").textContent = subgenreId;
-  $("#sgi-desc").textContent = desc?.description || "Ingen beskrivelse ennå.";
-  $("#sgi-desc").className = desc?.description ? "" : "muted";
-
-  const artists = state.artists
-    .filter(a => a.status === "active" && ((a.undersjangre || []).includes(subgenreId) || (a.sjangre || []).includes(subgenreId)))
-    .sort((a, b) => a.name.localeCompare(b.name, "no"));
-
-  const el = $("#sgi-artists");
-  if (!artists.length) {
-    el.innerHTML = "";
-  } else {
-    el.innerHTML = `
-      <button class="btn ghost small sgi-toggle" style="margin-top:12px">Vis artister (${artists.length})</button>
-      <div class="sgi-list" style="display:none;margin-top:10px">
-        ${artists.map(a => `<div class="result-row sgi-artist-row" data-id="${escapeHtml(a.id)}">
-          <span class="result-name">${escapeHtml(a.name)}</span>
-          <span class="result-meta">
-            ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
-            ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
-          </span>
-        </div>`).join("")}
-      </div>`;
-    el.querySelector(".sgi-toggle").addEventListener("click", (e) => {
-      const list = el.querySelector(".sgi-list");
-      const visible = list.style.display !== "none";
-      list.style.display = visible ? "none" : "block";
-      e.target.textContent = visible ? `Vis artister (${artists.length})` : "Skjul artister";
-    });
-  }
-
-  const editBtn = document.getElementById("sgi-edit-btn");
-  if (editBtn) {
-    editBtn.onclick = () => {
-      closeAdminModal("modal-subgenre-info");
-      openSingleSubgenreModal(subgenreId);
-    };
-  }
-
-  openAdminModal("modal-subgenre-info");
-}
-
 let teacherContextMode = "society";
 
-function openDecadeListPopup(mode) {
-  teacherContextMode = mode;
-  if (!state.config) return;
-  const decades = (state.config.decades || []).slice().sort((a, b) => a - b);
-  const modal = $("#modal-decade-list-t");
-  modal.querySelector(".modal-head h2").textContent = mode === "society" ? "Samfunn" : "Teknologi";
-  const el = $("#tdl-buttons");
-  el.innerHTML = decades.map((d) => {
-    const desc = state.decadeDescs[String(d)];
-    const hasDesc = mode === "society" ? desc && desc.society : desc && desc.tech;
-    return `<button type="button" class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade="${d}">${d}-tallet</button>`;
-  }).join("");
-  el.querySelectorAll("[data-decade]").forEach((btn) => {
-    btn.addEventListener("click", () => openSingleDecadeModal(btn.dataset.decade));
-  });
-  openAdminModal("modal-decade-list-t");
-}
-
-function openSingleDecadeModal(decadeId) {
+function openSingleDecadeModal(decadeId, mode) {
+  if (mode) teacherContextMode = mode;
   const desc = state.decadeDescs[String(decadeId)] || {};
   const modal = $("#modal-decade-single");
   const isSociety = teacherContextMode === "society";
@@ -404,11 +233,7 @@ function openSingleDecadeModal(decadeId) {
     ttl.querySelectorAll("[data-tech-id]").forEach(el => {
       el.addEventListener("click", () => {
         const t = state.techItems.find(x => x.id === el.dataset.techId);
-        if (t) {
-          document.getElementById("td-title").textContent = t.name;
-          renderTechDetail(document.getElementById("td-body"), t);
-          modalOpen(document.getElementById("modal-tech-detail"));
-        }
+        if (t) explore.openTechDetail(t);
       });
     });
   }
@@ -420,11 +245,19 @@ function openSingleDecadeModal(decadeId) {
   const moreTech = $("#ds-tech-more-btn");
   if (moreSociety) {
     moreSociety.style.display = desc.societyMore && isSociety ? "" : "none";
-    moreSociety.onclick = () => openDecadeMore(`${decadeId}-tallet — samfunnsutvikling`, desc.societyMore);
+    moreSociety.onclick = () => {
+      document.getElementById("dm-title").textContent = `${decadeId}-tallet — samfunnsutvikling`;
+      document.getElementById("dm-text").innerHTML = formatInfoText(desc.societyMore);
+      modalOpen(document.getElementById("modal-decade-more"));
+    };
   }
   if (moreTech) {
     moreTech.style.display = desc.techMore && !isSociety ? "" : "none";
-    moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
+    moreTech.onclick = () => {
+      document.getElementById("dm-title").textContent = `${decadeId}-tallet — teknologiutvikling`;
+      document.getElementById("dm-text").innerHTML = formatInfoText(desc.techMore);
+      modalOpen(document.getElementById("modal-decade-more"));
+    };
   }
 
   const kilderEl = $("#ds-kilder-view");
@@ -449,12 +282,19 @@ function openSingleDecadeModal(decadeId) {
   openAdminModal("modal-decade-single");
 }
 
-function openDecadeMore(title, text) {
-  const modal = document.getElementById("modal-decade-more");
-  if (!modal) return;
-  document.getElementById("dm-title").textContent = title;
-  document.getElementById("dm-text").innerHTML = formatInfoText(text);
-  modalOpen(modal);
+function openSingleSubgenreModal(subgenreId) {
+  const desc = state.subgenreDescs[subgenreId] || {};
+  $("#subgenre-single-title").textContent = subgenreId;
+  $("#ss-desc").value = desc.description || "";
+  $("#ss-msg").textContent = "";
+  const kilderWrap = $("#ss-kilder-rows");
+  if (kilderWrap) {
+    kilderWrap.innerHTML = "";
+    const kilder = Array.isArray(desc.kilder) ? desc.kilder : [];
+    (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || "", "ss"));
+  }
+  $("#modal-subgenre-single").dataset.subgenre = subgenreId;
+  openAdminModal("modal-subgenre-single");
 }
 
 function buildDecadeKilderRows(kilder) {
@@ -483,6 +323,28 @@ function collectKilderRows(wrap) {
       url: r.querySelector(".source-url").value.trim(),
     }))
     .filter((k) => k.text);
+}
+
+function setupSubgenreSingleSave() {
+  const addKilderBtn = $("#ss-add-kilder");
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ss-kilder-rows"), "", "", "ss"));
+
+  $("#ss-save").addEventListener("click", async () => {
+    const modal = $("#modal-subgenre-single");
+    const subgenreId = modal.dataset.subgenre;
+    const description = $("#ss-desc").value.trim();
+    const kilder = collectKilderRows($("#ss-kilder-rows"));
+    const msg = $("#ss-msg");
+    try {
+      await saveSubgenreDesc(subgenreId, { description, kilder });
+      msg.textContent = "Lagret ✓";
+      msg.className = "form-msg ok";
+      setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);
+    } catch (err) {
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
+  });
 }
 
 function setupDecadeSingleSave() {
@@ -522,11 +384,7 @@ function setupDecadeSingleSave() {
         ttl2.querySelectorAll("[data-tech-id]").forEach(el2 => {
           el2.addEventListener("click", () => {
             const t2 = state.techItems.find(x => x.id === el2.dataset.techId);
-            if (t2) {
-              document.getElementById("td-title").textContent = t2.name;
-              renderTechDetail(document.getElementById("td-body"), t2);
-              modalOpen(document.getElementById("modal-tech-detail"));
-            }
+            if (t2) explore.openTechDetail(t2);
           });
         });
       }
@@ -544,7 +402,7 @@ function setupDecadeSingleSave() {
 }
 
 function renderList() {
-  renderArtists($("#artist-list"), { ...state, handlers, linkCtx: buildLc() });
+  renderArtists($("#artist-list"), { ...state, handlers, linkCtx: explore ? explore.buildLinkCtx() : {} });
 }
 
 function refreshControls() {
@@ -590,7 +448,6 @@ function setupFilters() {
     renderList();
   });
 
-  // Klikk på sjanger-/undersjanger-/instrument-bobler i kortene filtrerer lista
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-filter-key]");
     if (!btn) return;
@@ -611,7 +468,6 @@ function setupFilters() {
 function setupAdmin() {
   setupModals();
 
-  // Rebuild limit-grids når lister/standarder endres
   $("#mdec-decades").addEventListener("input", buildDecadeLimits);
   $("#mdec-default").addEventListener("input", buildDecadeLimits);
   $("#mgen-genres").addEventListener("input", buildGenreLimits);
@@ -619,7 +475,6 @@ function setupAdmin() {
   $("#minstr-instruments").addEventListener("input", buildInstrumentLimits);
   $("#minstr-default").addEventListener("input", buildInstrumentLimits);
 
-  // Lagre-knapper
   $("#save-general").addEventListener("click", () => saveSection("general"));
   $("#save-decade").addEventListener("click", () => saveSection("decade"));
   $("#save-genre").addEventListener("click", () => saveSection("genre"));
@@ -748,97 +603,28 @@ function splitList(v, fallback) {
   return parts.length ? parts : fallback;
 }
 
-function showPlaylistForGenre({ label, fullName, node }) {
-  const { total, html } = buildPlaylistHtml(node, state.artists);
-  document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
-  document.getElementById("pl-body").innerHTML = html;
-  modalOpen(document.getElementById("modal-spilleliste"));
-}
-
-function showArtistsForInstrument(instrument) {
-  const list = state.artists
-    .filter((a) => a.status === "active" && a.instrument === instrument)
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  document.getElementById("al-title").textContent = `${instrument} (${list.length})`;
-  const body = document.getElementById("al-body");
-  body.innerHTML = list.length
-    ? `<div class="result-list">${buildArtistListRows(list)}</div>`
-    : `<p class="muted empty">Ingen forslag med dette instrumentet ennå.</p>`;
-  modalOpen(document.getElementById("modal-artistliste"));
-}
-
-function showArtistsForSjanger({ label }) {
-  const sj = label.toLowerCase();
-  const list = state.artists
-    .filter((a) => a.status === "active" && (
-      a.genre === label
-      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
-      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
-    ))
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  document.getElementById("al-title").textContent = `${label} (${list.length})`;
-  const body = document.getElementById("al-body");
-  body.innerHTML = list.length
-    ? `<div class="result-list">${buildArtistListRows(list)}</div>`
-    : `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
-  modalOpen(document.getElementById("modal-artistliste"));
-}
-
-function setupSjangerModal() {
-  const sjangerOpts = () => ({
-    root: document,
-    subgenreDescs: state.subgenreDescs,
-    artists: state.artists,
-    techItems: state.techItems,
-    genres: buildGenreList(state.artists),
-    onArtistClick: openDetail,
-    onTechClick: openTechDetailPopup,
-    onGenreClick,
-    onShowArtists: showArtistsForSjanger,
-    onShowPlaylist: showPlaylistForGenre,
-    onEdit: (label) => {
-      modalClose(document.getElementById("modal-sjanger"));
-      openSingleSubgenreModal(label);
-    },
-  });
-  document.addEventListener("click", (e) => {
-    const sjBtn = e.target.closest("[data-sjanger]");
-    if (sjBtn) {
-      const name = sjBtn.dataset.sjanger;
-      if (showSjangerInfo(name, sjangerOpts()) || showSubsjangerInfo(name, sjangerOpts())) {
-        addGenreCheckToggle(name);
-      }
-      return;
-    }
-    const underBtn = e.target.closest("[data-under]");
-    if (underBtn) {
-      const name = underBtn.dataset.under;
-      if (showSubsjangerInfo(name, sjangerOpts()) || showSjangerInfo(name, sjangerOpts())) {
-        addGenreCheckToggle(name);
-      }
-      return;
-    }
-    const inst = e.target.closest("[data-instrument]");
-    if (inst) showArtistsForInstrument(inst.dataset.instrument);
-  });
-}
-
 function startApp() {
   state.started = true;
   setupFilters();
-  setupSjangerModal();
   setupAdmin();
   setupDataButtons();
   setupImportChoice();
   setupEditForm();
   setupDecadeSingleSave();
   setupSubgenreSingleSave();
-  setupSubgenreInfo();
 
-  $("#btn-t-society").addEventListener("click", () => openDecadeListPopup("society"));
-  $("#btn-t-tech").addEventListener("click", () => openDecadeListPopup("tech"));
-  $("#btn-t-sjangere").addEventListener("click", openSjangereListe);
-  $("#btn-t-undersjangre").addEventListener("click", openUndersjangreListe);
+  explore = initExplore({
+    getState: () => state,
+    onArtistClick: openDetail,
+    onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
+    onSubgenreEdit: (label) => openSingleSubgenreModal(label),
+    onGenreCheck: (genre) => addGenreCheckToggle(genre),
+    getCheckedState: () => state.teacherChecks,
+  });
+
+  $("#btn-t-society").addEventListener("click", () => explore.openDecadeList("society"));
+  $("#btn-t-tech").addEventListener("click", () => explore.openDecadeList("tech"));
+  $("#btn-t-genres").addEventListener("click", explore.openSubgenreList);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
   $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);
   setupPodkastAdmin();
@@ -990,7 +776,7 @@ function renderTechAdmin() {
     </article>`;
   }).join("");
 
-  wireAllLinks(el, buildLc());
+  wireAllLinks(el, explore ? explore.buildLinkCtx() : {});
 
   el.querySelectorAll(".tech-del-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -1119,8 +905,6 @@ function setupDataButtons() {
   $("#merge-next").addEventListener("click", advanceMerge);
 }
 
-// --- Eksport ---
-
 function handleExport() {
   const artists = state.artists
     .filter((a) => a.status === "active")
@@ -1151,8 +935,6 @@ function handleExport() {
   link.click();
   URL.revokeObjectURL(url);
 }
-
-// --- Import (velg erstatt eller slå sammen via modal) ---
 
 let pendingImportData = null;
 
@@ -1272,8 +1054,6 @@ async function handleReplace(data) {
   if (failed) parts.push(`${failed} mislyktes`);
   alert(parts.join(", ") + ".");
 }
-
-// --- Merge (sjekker duplikater, viser konflikter) ---
 
 async function handleMergeFile(data) {
   mergeState.queue      = [];

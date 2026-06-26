@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=210" />
+  <link rel="stylesheet" href="css/styles.css?v=211" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -120,159 +120,7 @@
     </div>
   </div>
 
-  <!-- Teknologi -->
-  <div class="modal-backdrop" id="modal-teknologi">
-    <div class="modal modal-wide">
-      <div class="modal-head">
-        <h2>Teknologiske innovasjoner</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div class="tech-category-tabs">
-        <button class="btn ghost small tech-tab active" data-tech-cat="">Alle</button>
-        <button class="btn ghost small tech-tab" data-tech-cat="Opptak og avspilling">Opptak</button>
-        <button class="btn ghost small tech-tab" data-tech-cat="Kringkasting og spredning">Kringkasting</button>
-        <button class="btn ghost small tech-tab" data-tech-cat="Instrumenter og lydutstyr">Instrumenter</button>
-      </div>
-      <div id="tech-list" class="tech-grid"></div>
-    </div>
-  </div>
-
-  <!-- Podkast -->
-  <div class="modal-backdrop" id="modal-podkast">
-    <div class="modal modal-wide">
-      <div class="modal-head">
-        <h2>Podkast</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="podkast-list" class="podkast-list"></div>
-    </div>
-  </div>
-
-  <!-- Tiår-liste -->
-  <div class="modal-backdrop" id="modal-decade-list">
-    <div class="modal">
-      <div class="modal-head">
-        <h2>Kontekst</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <button class="btn ghost" id="btn-teknologi" style="margin-bottom:14px;width:100%">Teknologiske innovasjoner</button>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese mer.</p>
-      <div id="dl-buttons" class="explore-decade-grid"></div>
-    </div>
-  </div>
-
-  <!-- Enkelt tiår (les) -->
-  <div class="modal-backdrop" id="modal-decade-view">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="dv-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div class="info-section" id="dv-society-section">
-        <h4 class="info-label">Samfunnsutvikling</h4>
-        <div id="dv-society-timeline"></div>
-        <div id="dv-society" class="info-text"></div>
-        <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer →</button>
-      </div>
-      <div class="info-section" id="dv-tech-section">
-        <h4 class="info-label">Teknologiutvikling</h4>
-        <div id="dv-tech-timeline"></div>
-        <div id="dv-tech" class="info-text"></div>
-        <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer →</button>
-      </div>
-      <div id="dv-kilder"></div>
-      <div style="margin-top:16px">
-        <button class="btn ghost small" id="dv-back">← Tilbake til oversikt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Utvidet tiårsbeskrivelse -->
-  <div class="modal-backdrop" id="modal-decade-more">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="dm-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="dm-text" class="info-text"></div>
-    </div>
-  </div>
-
-  <!-- Sjangere-liste (med faner for sjangre/undersjangre + slektstre-knapp) -->
-  <div class="modal-backdrop" id="modal-subgenre-list">
-    <div class="modal">
-      <div class="modal-head">
-        <h2>Sjangre</h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div class="genre-tabs">
-        <button class="btn ghost small genre-tab active" data-genre-tab="sjangre">Sjangre</button>
-        <button class="btn ghost small genre-tab" data-genre-tab="under">Undersjangre</button>
-      </div>
-      <button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:14px">Vis sjangertre →</button>
-      <p class="muted" style="margin-bottom:14px;font-size:0.9rem" id="sl-hint">Trykk på en sjanger for å lese beskrivelsen.</p>
-      <div id="sl-chips" class="subgenre-tag-list"></div>
-      <div id="ul-chips" class="subgenre-tag-list" style="display:none"></div>
-    </div>
-  </div>
-
-  <!-- Sjanger-info -->
-  <div class="modal-backdrop" id="modal-subgenre-info">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="sgi-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <p id="sgi-desc"></p>
-      <div id="sgi-artists"></div>
-    </div>
-  </div>
-
   <!-- Detaljmodal -->
-  <!-- Artistliste-popup (åpnes fra sjanger-beskrivelse) -->
-  <div class="modal-backdrop" id="modal-artistliste">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="al-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="al-body"></div>
-    </div>
-  </div>
-
-  <!-- Spilleliste-popup (åpnes fra sjanger-beskrivelse) -->
-  <div class="modal-backdrop" id="modal-spilleliste">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="pl-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="pl-body"></div>
-    </div>
-  </div>
-
-  <!-- Sjanger-beskrivelse (åpnes fra sjanger-bobler i artistkort) -->
-  <div class="modal-backdrop" id="modal-sjanger">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="sj-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="sj-body"></div>
-    </div>
-  </div>
-
-  <!-- Teknologi-detalj -->
-  <div class="modal-backdrop" id="modal-tech-detail">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="td-title"></h2>
-        <button class="modal-close btn ghost small">&#x2715;</button>
-      </div>
-      <div id="td-body"></div>
-    </div>
-  </div>
-
   <div class="modal-backdrop" id="modal-detail">
     <div class="modal">
       <div class="modal-head">
@@ -301,6 +149,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=210"></script>
+  <script type="module" src="js/landing.js?v=211"></script>
 </body>
 </html>
