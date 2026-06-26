@@ -721,6 +721,12 @@ body.role-student .version-tag { display: none; }
 .tl-prop .tl-start .tl-label { left: -10px; text-align: left; }
 .tl-prop .tl-end .tl-label { left: auto; right: -10px; text-align: right; }
 
+/* ----- Endringsforslag-liste ----- */
+.pending-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
+.pending-table th, .pending-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.pending-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+.pending-table .tag { font-size: 0.78rem; }
+
 /* ----- Endringsforslag (diff-tabell) ----- */
 .diff-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 8px 0 16px; }
 .diff-table th, .diff-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }

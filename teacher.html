@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=222" />
+  <link rel="stylesheet" href="css/styles.css?v=223" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -95,6 +95,7 @@
           </div>
           <div class="filters">
             <button type="button" id="btn-pending" class="btn ghost small pending-filter">Ventende <span id="pending-badge" class="pending-count" style="display:none">0</span></button>
+            <button type="button" id="btn-pending-edits" class="btn ghost small pending-filter">Endringsforslag <span id="pending-edits-badge" class="pending-count" style="display:none">0</span></button>
             <input type="search" id="f-search" placeholder="Søk navn/sted …" />
             <select id="f-sjanger"></select>
             <select id="f-instrument"></select>
@@ -591,6 +592,34 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=222"></script>
+  <!-- Endringsforslag-liste -->
+  <div class="modal-backdrop" id="modal-pending-edits">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Endringsforslag fra studenter</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="pending-edits-list"></div>
+    </div>
+  </div>
+
+  <!-- Diff-modal (godkjenn/avvis per felt) -->
+  <div class="modal-backdrop" id="modal-diff">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 id="diff-title">Endringsforslag</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin:0 0 10px;font-size:0.88rem" id="diff-meta"></p>
+      <div id="diff-body"></div>
+      <div id="diff-msg" class="form-msg" style="margin-top:10px"></div>
+      <div class="modal-foot-right" style="gap:8px;display:flex;justify-content:flex-end">
+        <button type="button" class="btn ghost small" id="diff-reject-all">Avvis alle</button>
+        <button type="button" class="btn primary" id="diff-save">Lagre valgte endringer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/teacher.js?v=223"></script>
 </body>
 </html>
