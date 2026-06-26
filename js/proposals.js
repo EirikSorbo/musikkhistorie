@@ -9,7 +9,7 @@
 // ============================================================================
 
 import { addPendingEdit, addTechProposal } from "./store.js";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=224";
+import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=225";
 
 const FIELD_SPECS = {
   artist: [
@@ -129,7 +129,10 @@ export function openProposalEditor(config) {
   form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
 
   const submit = document.getElementById("prop-submit");
-  // Reset onclick to drop old closure
+  submit.disabled = false;
+  submit.textContent = "Send forslag";
+  submit.classList.remove("sent");
+  submit.classList.add("primary");
   submit.onclick = async () => {
     const proposed = {};
     for (const s of specs) {
@@ -144,6 +147,7 @@ export function openProposalEditor(config) {
       return;
     }
     submit.disabled = true;
+    submit.textContent = "Sender …";
     try {
       await addPendingEdit({
         entityType: config.entityType,
@@ -154,12 +158,15 @@ export function openProposalEditor(config) {
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg success";
-      setTimeout(() => modalClose(modal), 1200);
+      submit.textContent = "Forslag sendt ✓";
+      submit.classList.remove("primary");
+      submit.classList.add("sent");
+      setTimeout(() => modalClose(modal), 1600);
     } catch (e) {
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
-    } finally {
       submit.disabled = false;
+      submit.textContent = "Send forslag";
     }
   };
 
@@ -181,6 +188,10 @@ export function openNewTechProposal() {
   form.innerHTML = specs.map((s) => inputForField(s, "")).join("");
 
   const submit = document.getElementById("prop-submit");
+  submit.disabled = false;
+  submit.textContent = "Send forslag";
+  submit.classList.remove("sent");
+  submit.classList.add("primary");
   submit.onclick = async () => {
     const data = {};
     for (const s of specs) {
@@ -194,6 +205,7 @@ export function openNewTechProposal() {
       return;
     }
     submit.disabled = true;
+    submit.textContent = "Sender …";
     try {
       await addTechProposal({
         ...data,
@@ -201,12 +213,15 @@ export function openNewTechProposal() {
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg success";
-      setTimeout(() => modalClose(modal), 1200);
+      submit.textContent = "Forslag sendt ✓";
+      submit.classList.remove("primary");
+      submit.classList.add("sent");
+      setTimeout(() => modalClose(modal), 1600);
     } catch (e) {
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
-    } finally {
       submit.disabled = false;
+      submit.textContent = "Send forslag";
     }
   };
 

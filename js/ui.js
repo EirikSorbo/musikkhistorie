@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=224";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=225";
 export { linkifyArtists };
 
 export function buildGenreList(artists) {
@@ -188,6 +188,9 @@ export function renderTechList(el, items, activeCategory, lc) {
       : "";
     const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
     const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
+    const propBtn = lc?.isTeacher
+      ? ""
+      : `<footer class="card-foot"><div class="spacer"></div><button class="btn ghost small" data-propose-type="tech" data-propose-id="${escapeHtml(t.id)}">Foreslå endring</button></footer>`;
     return `<article class="card" data-tech-id="${escapeHtml(t.id)}">
       <header class="card-head">
         ${img}
@@ -195,6 +198,7 @@ export function renderTechList(el, items, activeCategory, lc) {
         <div class="meta">${yearTag}${catTag}</div>
       </header>
       ${t.description ? `<p class="desc">${linkDesc(t.description, lc)}</p>` : ""}
+      ${propBtn}
     </article>`;
   }).join("");
   wireLinks(el, lc);
@@ -591,6 +595,10 @@ function spotlightCard(a, config, lc) {
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
+      <footer class="card-foot">
+        <div class="spacer"></div>
+        <button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>
+      </footer>
     </article>
   `;
 }
@@ -775,6 +783,7 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
         <span class="vote-count muted" title="Positive stemmer">${upvotes} stemmer</span>
         <div class="spacer"></div>
+        ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>` : ""}
         ${voteBtn}
       </footer>
       ${teacherBtns}

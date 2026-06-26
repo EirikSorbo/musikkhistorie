@@ -1,10 +1,10 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=224";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=225";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, renderGenealogy } from "./genealogy.js";
-import { initExplore } from "./explore.js?v=224";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=224";
+import { initExplore } from "./explore.js?v=225";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=225";
 
 const clientId = getClientId();
 
@@ -48,6 +48,26 @@ function openDetail(artist) {
     });
   }
   modalOpen(document.getElementById("modal-detail"));
+}
+
+function setupProposeButtons() {
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-propose-type]");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const type = btn.dataset.proposeType;
+    const id = btn.dataset.proposeId;
+    if (type === "artist") {
+      const a = state.artists.find((x) => x.id === id);
+      if (!a) return;
+      openProposalEditor({ entityType: "artist", entityId: a.id, entityName: a.name, currentValues: a });
+    } else if (type === "tech") {
+      const t = state.techItems.find((x) => x.id === id);
+      if (!t) return;
+      openProposalEditor({ entityType: "tech", entityId: t.id, entityName: t.name, currentValues: t });
+    }
+  });
 }
 
 function setupTagFilters() {
@@ -379,6 +399,7 @@ function loadCache() {
 function init() {
   setupFilters();
   setupTagFilters();
+  setupProposeButtons();
   setupDetailModal();
   setupExplore();
 
