@@ -1,4 +1,4 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=220";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=221";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const MODAL_HTML = `

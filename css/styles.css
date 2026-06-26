@@ -673,7 +673,7 @@ body.role-student .version-tag { display: none; }
 /* Proporsjonal tidslinje */
 .tl-prop .tl-track {
   display: block;
-  min-width: 100%;
+  min-width: max(100%, 560px);
   height: calc((var(--tl-max-stem, 64px) + 80px) * 2 + 4px);
   padding: 0;
   position: relative;
