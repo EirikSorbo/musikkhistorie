@@ -534,10 +534,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .card.is-prio-2 { border-left: 3px solid #38bdf8; }
 .card.is-prio-1 { border-left: 3px solid #86efac; }
 .card.is-checked { border-left: 3px solid #22c55e; }
-.card.is-checked::after {
-  content: "✓"; position: absolute; top: 10px; right: 12px;
-  color: #22c55e; font-size: 1.2rem; font-weight: 700;
-}
 .tag.is-checked { outline: 2px solid #22c55e; outline-offset: -2px; }
 
 .pending-filter { position: relative; }
