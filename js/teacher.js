@@ -35,7 +35,7 @@ import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTec
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
-import { linkifyAll, wireAllLinks } from "./linkify.js";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=210";
 
 const state = {
   artists: [],

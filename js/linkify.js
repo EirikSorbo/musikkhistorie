@@ -63,6 +63,13 @@ function isWordChar(ch) {
   return c >= 0xC0 && c !== 0xD7 && c !== 0xF7;
 }
 
+// Curly/smart apostrophes after a name signal genitive ('s or ').
+// Straight apostrophe (U+0027) is HTML-escaped to &#39;, so the char after becomes '&'
+// which already passes the word-boundary check without special handling.
+function isGenitiveSuffix(ch) {
+  return ch === "‘" || ch === "’" || ch === "ʼ";
+}
+
 function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
   const needle = nameEsc.toLowerCase();
   let pos = 0;
@@ -70,7 +77,8 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
     const end = pos + nameEsc.length;
     const before = pos > 0 ? lowerHaystack[pos - 1] : "";
     const after = end < lowerHaystack.length ? lowerHaystack[end] : "";
-    if (!isWordChar(before) && !isWordChar(after) && before !== "-" && after !== "-" &&
+    const afterOk = !isWordChar(after) || isGenitiveSuffix(after);
+    if (!isWordChar(before) && afterOk && before !== "-" && after !== "-" &&
         !markers.some(m => (pos < m.end && end > m.start))) {
       markers.push({ start: pos, end, id, type, original: haystack.slice(pos, end) });
     }
