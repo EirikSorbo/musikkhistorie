@@ -77,7 +77,9 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
     const end = pos + nameEsc.length;
     const before = pos > 0 ? lowerHaystack[pos - 1] : "";
     const after = end < lowerHaystack.length ? lowerHaystack[end] : "";
-    const afterOk = !isWordChar(after) || isGenitiveSuffix(after);
+    const afterAfter = end + 1 < lowerHaystack.length ? lowerHaystack[end + 1] : "";
+    const afterIsGenitiveS = after === "s" && !isWordChar(afterAfter);
+    const afterOk = !isWordChar(after) || isGenitiveSuffix(after) || afterIsGenitiveS;
     if (!isWordChar(before) && afterOk && before !== "-" && after !== "-" &&
         !markers.some(m => (pos < m.end && end > m.start))) {
       markers.push({ start: pos, end, id, type, original: haystack.slice(pos, end) });
