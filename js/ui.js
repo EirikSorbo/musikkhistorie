@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=215";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=216";
 export { linkifyArtists };
 
 export function buildGenreList(artists) {
@@ -836,6 +836,7 @@ function factsLines(a, { showGender = false } = {}) {
       : `${a.influenceStart}–${a.influenceEnd}`;
     rows.push(["Innflytelse", p]);
   }
+  if (a.label) rows.push(["Plateselskap", a.label]);
   if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
   if (a.geography) rows.push(["Virkested", a.geography]);
   if (!rows.length) return "";

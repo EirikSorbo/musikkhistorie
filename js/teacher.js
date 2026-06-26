@@ -31,12 +31,12 @@ import {
   setTeacherChecks,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=215";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=216";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=215";
-import { initExplore } from "./explore.js?v=215";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=216";
+import { initExplore } from "./explore.js?v=216";
 
 const state = {
   artists: [],
@@ -868,8 +868,8 @@ function setupTechAdmin() {
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "genre", "instrument",
-  "sjangre", "undersjangre", "influenceStart", "influenceEnd", "geography",
-  "description", "keyWorks", "musicExamples", "kilder",
+  "sjangre", "undersjangre", "influenceStart", "influenceEnd", "label",
+  "geography", "description", "keyWorks", "musicExamples", "kilder",
   "imageUrl", "imageCredit", "proposedBy",
 ];
 
@@ -878,6 +878,7 @@ const MERGE_LABELS = {
   genre: "Metasjanger", instrument: "Instrument",
   sjangre: "Sjangre", undersjangre: "Undersjangre",
   influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
+  label: "Plateselskap",
   geography: "Geografi", description: "Beskrivelse",
   keyWorks: "Sentrale verk", musicExamples: "Musikkeksempler", kilder: "Kilder",
   imageUrl: "Bilde-URL", imageCredit: "Bildekreditering",
@@ -1209,6 +1210,7 @@ function openEditModal(artistId) {
   $("#ed-geo").value = a.geography || "";
   $("#ed-start").value = a.influenceStart || "";
   $("#ed-end").value = a.influenceEnd || "";
+  $("#ed-label").value = a.label || "";
   $("#ed-sjangre").value = (a.sjangre || []).join(", ");
   $("#ed-undersjangre").value = (a.undersjangre || []).join(", ");
   $("#ed-desc").value = a.description || "";
@@ -1357,6 +1359,7 @@ function setupEditForm() {
       undersjangre:  $("#ed-undersjangre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#ed-start").value, 10) || null,
       influenceEnd:   parseInt($("#ed-end").value, 10) || null,
+      label:         $("#ed-label").value.trim(),
       geography:     $("#ed-geo").value.trim(),
       description:   $("#ed-desc").value.trim(),
       keyWorks:      collectEditWorks(),
