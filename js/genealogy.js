@@ -7,7 +7,7 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=221";
+import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=222";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -54,7 +54,7 @@ export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n)
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, subgenreDescs, onShowArtists }
 export function showSjangerInfo(label, opts = {}) {
-  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit } = opts;
+  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -99,6 +99,25 @@ export function showSjangerInfo(label, opts = {}) {
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
   const be = mBody.querySelector(".gx-edit-btn");
   if (be) be.addEventListener("click", () => onEdit(n.f));
+  // Foreslå endring (student)
+  const foot = root.querySelector("#sj-foot");
+  const propBtn = root.querySelector("#sj-propose");
+  if (foot && propBtn) {
+    if (onPropose) {
+      const locked = hasPendingEdit?.("subgenre", n.f);
+      foot.style.display = "";
+      propBtn.disabled = !!locked;
+      propBtn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
+      propBtn.onclick = () => onPropose({
+        entityType: "subgenre",
+        entityId: n.f,
+        entityName: n.f,
+        currentValues: { description: descObj.description || n.d || "" },
+      });
+    } else {
+      foot.style.display = "none";
+    }
+  }
   window._modalZ = window._modalZ || 100;
   modal.style.zIndex = ++window._modalZ;
   modal.classList.add("open");

@@ -1,9 +1,10 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=221";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=222";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, renderGenealogy } from "./genealogy.js";
-import { initExplore } from "./explore.js?v=221";
+import { initExplore } from "./explore.js?v=222";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=222";
 
 const clientId = getClientId();
 
@@ -14,10 +15,15 @@ const state = {
   subgenreDescs: {},
   podcasts: [],
   techItems: [],
+  pendingEdits: [],
   filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
   isTeacher: false,
   clientId,
 };
+
+function hasPendingEdit(entityType, entityId) {
+  return state.pendingEdits.some((p) => p.entityType === entityType && String(p.entityId) === String(entityId));
+}
 
 const handlers = {
   voteUp: (id) => voteUp(id, clientId),
@@ -29,6 +35,18 @@ let explore = null;
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
   renderArtistDetail($("#detail-body"), artist, state.config, explore.buildLinkCtx());
+  const btn = document.getElementById("detail-propose");
+  if (btn) {
+    const locked = hasPendingEdit("artist", artist.id);
+    btn.disabled = locked;
+    btn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
+    btn.onclick = () => openProposalEditor({
+      entityType: "artist",
+      entityId: artist.id,
+      entityName: artist.name,
+      currentValues: artist,
+    });
+  }
   modalOpen(document.getElementById("modal-detail"));
 }
 
@@ -69,6 +87,9 @@ function setupExplore() {
     getState: () => state,
     onArtistClick: openDetail,
     onSlektstre: openSlektstre,
+    onProposeEdit: (cfg) => openProposalEditor(cfg),
+    onProposeNewTech: () => openNewTechProposal(),
+    hasPendingEdit,
   });
 
   const btnSociety = document.getElementById("btn-society");
@@ -409,7 +430,8 @@ function init() {
   subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
   subscribeSubgenres((s) => { state.subgenreDescs = s; renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
-  subscribeTech((items) => { state.techItems = items; });
+  subscribeTech((items) => { state.techItems = items.filter((t) => t.status !== "pending"); });
+  subscribePendingEdits((edits) => { state.pendingEdits = edits; });
 
   applyIncomingFilter();
 }

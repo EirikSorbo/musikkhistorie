@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=221" />
+  <link rel="stylesheet" href="css/styles.css?v=222" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -133,6 +133,28 @@
         <button class="modal-close btn ghost small">✕</button>
       </div>
       <div id="detail-body"></div>
+      <div class="modal-foot-right" id="detail-foot">
+        <button type="button" class="btn ghost small" id="detail-propose">Foreslå endring</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Endringsforslag (student) -->
+  <div class="modal-backdrop" id="modal-proposal">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 id="prop-title">Foreslå endring</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin:0 0 14px;font-size:0.9rem">Endre feltene du vil foreslå nye verdier for. Lærer kan godta eller avvise hvert enkelt felt.</p>
+      <form id="prop-form" class="add-grid"></form>
+      <label style="display:block;margin:14px 0 0">Ditt navn (valgfritt)
+        <input type="text" id="prop-by" placeholder="Anonym" />
+      </label>
+      <div id="prop-msg" class="form-msg" style="margin-top:10px"></div>
+      <div class="modal-foot-right">
+        <button type="button" class="btn primary" id="prop-submit">Send forslag</button>
+      </div>
     </div>
   </div>
 
@@ -154,6 +176,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/landing.js?v=221"></script>
+  <script type="module" src="js/landing.js?v=222"></script>
 </body>
 </html>

@@ -84,7 +84,27 @@ service cloud.firestore {
     // ---- Teknologiske innovasjoner ----
     match /tech/{doc} {
       allow read: if true;
-      allow write: if isTeacher();
+      // Studenter kan foreslå nye innovasjonskort med status:"pending".
+      // Lærer kan endre/slette alt, samt opprette uten restriksjoner.
+      allow create: if isTeacher() || (
+        request.resource.data.status == "pending" &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 120
+      );
+      allow update, delete: if isTeacher();
+    }
+
+    // ---- Endringsforslag (foreslåtte endringer på eksisterende kort) ----
+    // Hvem som helst kan opprette et forslag. Bare lærer kan endre eller slette.
+    match /pendingEdits/{doc} {
+      allow read: if true;
+      allow create: if (
+        request.resource.data.entityType in ["artist", "tech", "subgenre", "decade-society", "decade-tech"] &&
+        request.resource.data.entityId is string &&
+        request.resource.data.proposedFields is map
+      );
+      allow update, delete: if isTeacher();
     }
   }
 }

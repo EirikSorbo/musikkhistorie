@@ -1,4 +1,4 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=221";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=222";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const MODAL_HTML = `
@@ -56,12 +56,14 @@ const MODAL_HTML = `
       <div id="dv-society-timeline"></div>
       <div id="dv-society" class="info-text"></div>
       <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer →</button>
+      <button class="btn ghost small" id="dv-society-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div class="info-section" id="dv-tech-section">
       <h4 class="info-label">Teknologiutvikling</h4>
       <div id="dv-tech-timeline"></div>
       <div id="dv-tech" class="info-text"></div>
       <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer →</button>
+      <button class="btn ghost small" id="dv-tech-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div id="dv-kilder"></div>
     <div style="margin-top:16px">
@@ -142,6 +144,9 @@ const MODAL_HTML = `
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="sj-body"></div>
+    <div class="modal-foot-right" id="sj-foot" style="display:none">
+      <button type="button" class="btn ghost small" id="sj-propose">Foreslå endring</button>
+    </div>
   </div>
 </div>
 
@@ -153,6 +158,9 @@ const MODAL_HTML = `
       <button class="modal-close btn ghost small">&#x2715;</button>
     </div>
     <div id="td-body"></div>
+    <div class="modal-foot-right" id="td-foot" style="display:none">
+      <button type="button" class="btn ghost small" id="td-propose">Foreslå endring</button>
+    </div>
   </div>
 </div>
 `;
@@ -191,6 +199,8 @@ function sjangerOpts() {
       modalClose(document.getElementById("modal-sjanger"));
       opts.onSubgenreEdit(label);
     } : undefined,
+    onPropose: opts.onProposeEdit,
+    hasPendingEdit: opts.hasPendingEdit,
   };
 }
 
@@ -259,6 +269,22 @@ function showArtistsForInstrument(instrument) {
 function openTechDetail(t) {
   document.getElementById("td-title").textContent = t.name;
   renderTechDetail(document.getElementById("td-body"), t, buildLinkCtx());
+  const foot = document.getElementById("td-foot");
+  const btn = document.getElementById("td-propose");
+  if (foot && btn && opts.onProposeEdit) {
+    foot.style.display = "";
+    const locked = opts.hasPendingEdit?.("tech", t.id);
+    btn.disabled = !!locked;
+    btn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
+    btn.onclick = () => opts.onProposeEdit({
+      entityType: "tech",
+      entityId: t.id,
+      entityName: t.name,
+      currentValues: t,
+    });
+  } else if (foot) {
+    foot.style.display = "none";
+  }
   modalOpen(document.getElementById("modal-tech-detail"));
 }
 
@@ -338,6 +364,41 @@ function openDecadeView(decadeId) {
   if (moreTech) {
     moreTech.style.display = desc.techMore && !isSociety ? "" : "none";
     moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
+  }
+
+  const propSociety = document.getElementById("dv-society-propose");
+  const propTech = document.getElementById("dv-tech-propose");
+  if (propSociety) {
+    if (isSociety && opts.onProposeEdit) {
+      const locked = opts.hasPendingEdit?.("decade-society", decadeId);
+      propSociety.style.display = "";
+      propSociety.disabled = !!locked;
+      propSociety.textContent = locked ? "Forslag venter" : "Foreslå endring";
+      propSociety.onclick = () => opts.onProposeEdit({
+        entityType: "decade-society",
+        entityId: String(decadeId),
+        entityName: `${decadeId}-tallet — samfunn`,
+        currentValues: { society: desc.society || "", societyMore: desc.societyMore || "", kilder: desc.kilder || [] },
+      });
+    } else {
+      propSociety.style.display = "none";
+    }
+  }
+  if (propTech) {
+    if (!isSociety && opts.onProposeEdit) {
+      const locked = opts.hasPendingEdit?.("decade-tech", decadeId);
+      propTech.style.display = "";
+      propTech.disabled = !!locked;
+      propTech.textContent = locked ? "Forslag venter" : "Foreslå endring";
+      propTech.onclick = () => opts.onProposeEdit({
+        entityType: "decade-tech",
+        entityId: String(decadeId),
+        entityName: `${decadeId}-tallet — teknologi`,
+        currentValues: { tech: desc.tech || "", techMore: desc.techMore || "", kilder: desc.kilder || [] },
+      });
+    } else {
+      propTech.style.display = "none";
+    }
   }
 
   const kilderEl = document.getElementById("dv-kilder");
@@ -536,6 +597,9 @@ function wireModals() {
       modalClose(document.getElementById("modal-teknologi"));
       opts.onTechAdmin();
     });
+  } else if (opts.onProposeNewTech && tekExtra) {
+    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-new" style="width:100%;margin-bottom:14px">Foreslå nytt innovasjonskort →</button>`;
+    tekExtra.querySelector("#btn-tech-new").addEventListener("click", () => opts.onProposeNewTech());
   }
 
   const tekModal = document.getElementById("modal-teknologi");

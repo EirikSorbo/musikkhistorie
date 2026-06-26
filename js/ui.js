@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=221";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=222";
 export { linkifyArtists };
 
 export function buildGenreList(artists) {
@@ -829,7 +829,7 @@ function pct(n, max) {
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
 export function showSubsjangerInfo(label, opts = {}) {
-  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit } = opts;
+  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -838,6 +838,7 @@ export function showSubsjangerInfo(label, opts = {}) {
   const desc = subgenreDescs[label];
   const descText = desc?.description || "Ingen beskrivelse ennå.";
   const kilder = Array.isArray(desc?.kilder) ? desc.kilder : [];
+  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: desc?.description || "" });
 
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
@@ -973,6 +974,19 @@ const FIELD_LABELS = {
 
 export function fieldLabelFor(entityType, key) {
   return (FIELD_LABELS[entityType] && FIELD_LABELS[entityType][key]) || key;
+}
+
+// Hjelper som viser/skjuler #sj-foot i sjanger-modalen og binder klikk.
+export function wireProposeFoot(root, onPropose, hasPendingEdit, entityType, entityId, entityName, currentValues) {
+  const foot = root.querySelector("#sj-foot");
+  const btn = root.querySelector("#sj-propose");
+  if (!foot || !btn) return;
+  if (!onPropose) { foot.style.display = "none"; return; }
+  const locked = hasPendingEdit?.(entityType, entityId);
+  foot.style.display = "";
+  btn.disabled = !!locked;
+  btn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
+  btn.onclick = () => onPropose({ entityType, entityId, entityName, currentValues });
 }
 
 // Deep-equal for primitiver, arrays, og enkle objekter (verdens-modellen vår).
