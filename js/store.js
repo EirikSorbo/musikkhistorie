@@ -13,6 +13,7 @@ import {
   addDoc,
   setDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   onSnapshot,
   runTransaction,
@@ -98,6 +99,7 @@ const decadesCol = collection(db, "decades");
 const subgenresCol = collection(db, "subgenres");
 const podcastsCol = collection(db, "podcasts");
 const techCol = collection(db, "tech");
+const pendingEditsCol = collection(db, "pendingEdits");
 const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
@@ -398,6 +400,85 @@ export async function deleteSubgenreDesc(subgenreId) {
 // per-tiår/per-sjanger-grenser ikke blir liggende igjen).
 export async function updateConfig(config) {
   return setDoc(configRef, config);
+}
+
+// ----------------------------------------------------------------------------
+//  ENDRINGSFORSLAG (studentenes foreslåtte endringer på eksisterende kort)
+// ----------------------------------------------------------------------------
+
+// Sanntids-lytter på alle åpne endringsforslag.
+export function subscribePendingEdits(callback) {
+  return onSnapshot(pendingEditsCol, (snapshot) => {
+    const edits = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    edits.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+    callback(edits);
+  }, (err) => console.error("Kunne ikke lese endringsforslag (sjekk Firestore-regler):", err.message));
+}
+
+// Legg inn et endringsforslag. `proposedFields` skal kun inneholde feltene
+// som faktisk er endret — UI-koden gjør differansen mot dagens verdier.
+export async function addPendingEdit({ entityType, entityId, entityName, proposedFields, proposedBy }) {
+  return addDoc(pendingEditsCol, {
+    entityType,
+    entityId,
+    entityName: entityName || "",
+    proposedFields: proposedFields || {},
+    proposedBy: proposedBy || "Anonym",
+    createdAt: serverTimestamp(),
+  });
+}
+
+// Lærer godkjenner valgte felter. `approvedKeys` er liste over feltnøklene
+// fra `proposedFields` som skal skrives til target-entiteten. Sletter alltid
+// hele `pendingEdit`-dokumentet etter behandling.
+export async function approvePendingEdit(pendingEditId, approvedKeys) {
+  const editRef = doc(db, "pendingEdits", pendingEditId);
+  const snap = await getDoc(editRef);
+  if (!snap.exists()) return;
+  const data = snap.data();
+
+  const toApply = {};
+  for (const k of approvedKeys || []) {
+    if (k in (data.proposedFields || {})) toApply[k] = data.proposedFields[k];
+  }
+
+  const targetRef = pendingEditTargetRef(data.entityType, data.entityId);
+  if (targetRef && Object.keys(toApply).length) {
+    await setDoc(targetRef, toApply, { merge: true });
+  }
+  await deleteDoc(editRef);
+}
+
+// Lærer avviser hele forslaget uten å lagre noe.
+export async function rejectPendingEdit(pendingEditId) {
+  return deleteDoc(doc(db, "pendingEdits", pendingEditId));
+}
+
+function pendingEditTargetRef(entityType, entityId) {
+  switch (entityType) {
+    case "artist":         return doc(db, "artists", entityId);
+    case "tech":           return doc(db, "tech", entityId);
+    case "subgenre":       return doc(db, "subgenres", entityId);
+    case "decade-society": return doc(db, "decades", String(entityId));
+    case "decade-tech":    return doc(db, "decades", String(entityId));
+    default:               return null;
+  }
+}
+
+// Forslag om et helt nytt innovasjonskort fra student. Markeres med
+// `status: "pending"` og venter på lærergodkjenning. Eksisterende
+// tech-dokumenter uten status-felt regnes som aktive.
+export async function addTechProposal(data) {
+  return addDoc(techCol, {
+    ...data,
+    status: "pending",
+    proposedBy: data.proposedBy || "Anonym",
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function approveTech(techId) {
+  return setDoc(doc(db, "tech", techId), { status: "active" }, { merge: true });
 }
 
 const teacherChecksRef = doc(db, "config", "teacherChecks");
