@@ -621,7 +621,7 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
   const removed = a.status === "removed";
   const pending = a.status === "pending";
-  const vetoed = a.teacherVetoed === true;
+  const prio = a.priority || 0;
 
   const examplesHtml = (a.musicExamples || [])
     .map(
@@ -644,8 +644,9 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
     ? `<span class="badge pending">Venter på godkjenning</span>`
     : "";
 
-  const vetoBadge = vetoed
-    ? `<span class="badge veto" title="Inkludert av lærer">Veto</span>`
+  const PRIO_LABELS = { 3: "Viktigst", 2: "Viktig", 1: "Mindre viktig" };
+  const prioBadge = prio
+    ? `<span class="badge prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_LABELS[prio]}</span>`
     : "";
 
   // Studenthandlinger
@@ -656,40 +657,53 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
       : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">Svært relevant</button>`;
   }
 
+  const ico = (d, stroke = "currentColor") => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+  const ICO_CHECK = ico("M20 6L9 17l-5-5");
+  const ICO_EDIT = ico("M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7") + ico("M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5");
+  const ICO_BAN = ico("M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636");
+  const ICO_TRASH = ico("M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2");
+  const ICO_RESTORE = ico("M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8") + ico("M21 3v5h-5");
+  const ICO_APPROVE = ico("M22 11.08V12a10 10 0 11-5.93-9.14") + ico("M22 4L12 14.01l-3-3");
+  const ICO_REJECT = ico("M18 6L6 18M6 6l12 12");
+  const ICO_STAR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+  const ICO_ALERT = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  const ICO_THUMB = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`;
+
   // Lærerhandlinger
   let teacherBtns = "";
   if (isTeacher && pending) {
     teacherBtns = `
       <div class="teacher-actions">
-        <button class="btn small primary" data-action="approve" data-id="${a.id}">Godkjenn</button>
-        <button class="btn small danger" data-action="reject" data-id="${a.id}">Avvis</button>
-        <button class="btn small" data-action="edit" data-id="${a.id}">Rediger</button>
+        <button class="icon-btn primary" data-action="approve" data-id="${a.id}" title="Godkjenn">${ICO_APPROVE}</button>
+        <button class="icon-btn danger" data-action="reject" data-id="${a.id}" title="Avvis">${ICO_REJECT}</button>
+        <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
       </div>`;
   } else if (isTeacher) {
     teacherBtns = `
       <div class="teacher-actions">
-        <button class="btn small ${checked ? "accent" : ""}" data-action="toggleCheck" data-id="${a.id}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${checked ? "✓ Sjekket" : "Sjekk"}</button>
+        <button class="icon-btn ${checked ? "active" : ""}" data-action="toggleCheck" data-id="${a.id}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${ICO_CHECK}</button>
+        <span class="action-sep"></span>
+        <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${a.id}" title="Viktigst">${ICO_STAR}</button>
+        <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${a.id}" title="Viktig">${ICO_ALERT}</button>
+        <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${a.id}" title="Mindre viktig">${ICO_THUMB}</button>
+        <span class="action-sep"></span>
         ${removed
-          ? `<button class="btn small" data-action="restore" data-id="${a.id}">Gjenopprett</button>`
-          : `<button class="btn small" data-action="remove" data-id="${a.id}">Fjern</button>`
+          ? `<button class="icon-btn" data-action="restore" data-id="${a.id}" title="Gjenopprett">${ICO_RESTORE}</button>`
+          : `<button class="icon-btn" data-action="remove" data-id="${a.id}" title="Fjern">${ICO_BAN}</button>`
         }
-        ${vetoed
-          ? `<button class="btn small accent" data-action="undoVeto" data-id="${a.id}" title="Fjern veto">Veto</button>`
-          : `<button class="btn small" data-action="veto" data-id="${a.id}" title="Inkluder uansett">Veto</button>`
-        }
-        <button class="btn small" data-action="edit" data-id="${a.id}">Rediger</button>
-        <button class="btn small danger" data-action="del" data-id="${a.id}">Slett</button>
+        <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
+        <button class="icon-btn danger" data-action="del" data-id="${a.id}" title="Slett">${ICO_TRASH}</button>
       </div>`;
   }
 
   const worksHtml = keyWorksText(a.keyWorks);
 
   return `
-    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${vetoed ? "is-vetoed" : ""} ${checked ? "is-checked" : ""}">
+    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${prio ? "is-prio-" + prio : ""} ${checked ? "is-checked" : ""}">
       <header class="card-head">
         ${artistImage(a)}
         <div>
-          <h3>${escapeHtml(a.name)} ${pendingBadge} ${removedBadge} ${vetoBadge}</h3>
+          <h3>${escapeHtml(a.name)} ${pendingBadge} ${removedBadge} ${prioBadge}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}

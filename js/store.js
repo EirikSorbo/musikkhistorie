@@ -192,7 +192,7 @@ export async function addArtist(data) {
     status: data.status === "active" ? "active" : "pending",
     removedBy: null,
     teacherProtected: false,
-    teacherVetoed: false,
+    priority: 0,
     votedOutBy: [],
     votedUpBy: [],
     addedYear: new Date().getFullYear(),
@@ -300,14 +300,9 @@ export async function teacherRestore(artistId) {
   );
 }
 
-// Lærer veto-inkluderer en artist (garantert med i pensum)
-export async function teacherVeto(artistId) {
-  return setDoc(doc(db, "artists", artistId), { teacherVetoed: true }, { merge: true });
-}
-
-// Angre veto-inkludering
-export async function undoVeto(artistId) {
-  return setDoc(doc(db, "artists", artistId), { teacherVetoed: false }, { merge: true });
+// Sett prioritetsnivå (3=viktigst, 2=viktig, 1=mindre viktig, 0=ingen)
+export async function setArtistPriority(artistId, level) {
+  return setDoc(doc(db, "artists", artistId), { priority: level }, { merge: true });
 }
 
 // Lærer sletter et forslag permanent

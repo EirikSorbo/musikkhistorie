@@ -19,8 +19,7 @@ import {
   updateArtistFields,
   saveDecadeDesc,
   saveSubgenreDesc,
-  teacherVeto,
-  undoVeto,
+  setArtistPriority,
   getClientId,
   onAuthChange,
   signInWithGoogle,
@@ -32,7 +31,7 @@ import {
   setTeacherChecks,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=202";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit } from "./ui.js?v=206";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
@@ -59,8 +58,9 @@ const handlers = {
   restore:     (id) => teacherRestore(id),
   del:         (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
   edit:        (id) => openEditModal(id),
-  veto:        (id) => teacherVeto(id),
-  undoVeto:    (id) => undoVeto(id),
+  priority3:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 3 ? 0 : 3); },
+  priority2:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 2 ? 0 : 2); },
+  priority1:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 1 ? 0 : 1); },
   toggleCheck: (id) => {
     const a = state.artists.find(x => x.id === id);
     updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) });
@@ -804,14 +804,18 @@ function setupSjangerModal() {
   document.addEventListener("click", (e) => {
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
-      showSjangerInfo(sjBtn.dataset.sjanger, sjangerOpts());
-      addGenreCheckToggle(sjBtn.dataset.sjanger);
+      const name = sjBtn.dataset.sjanger;
+      if (showSjangerInfo(name, sjangerOpts()) || showSubsjangerInfo(name, sjangerOpts())) {
+        addGenreCheckToggle(name);
+      }
       return;
     }
     const underBtn = e.target.closest("[data-under]");
     if (underBtn) {
-      showSubsjangerInfo(underBtn.dataset.under, sjangerOpts());
-      addGenreCheckToggle(underBtn.dataset.under);
+      const name = underBtn.dataset.under;
+      if (showSubsjangerInfo(name, sjangerOpts()) || showSjangerInfo(name, sjangerOpts())) {
+        addGenreCheckToggle(name);
+      }
       return;
     }
     const inst = e.target.closest("[data-instrument]");
