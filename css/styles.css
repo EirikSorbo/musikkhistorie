@@ -543,6 +543,11 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   display: flex; align-items: center; gap: 6px;
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
 }
+/* I lærerens listehode flyter prio-baren inline ved siden av h2,
+   ikke som absolutt-sentrert over filterraden. */
+.list-head .priority-filter-bar {
+  position: static; transform: none;
+}
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; border-radius: 10px;
