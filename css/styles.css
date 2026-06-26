@@ -452,6 +452,11 @@ button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background
 button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: #d1fae5; }
 .tag.tag-instrument { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
 button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; background: #bfdbfe; }
+.tag.tag-prio { padding: 2px 8px; display: inline-flex; align-items: center; }
+.tag.tag-prio svg { display: block; }
+.tag.tag-prio.prio-3 { background: #fef9c3; border-color: #facc15; color: #854d0e; }
+.tag.tag-prio.prio-2 { background: #e0f2fe; border-color: #38bdf8; color: #075985; }
+.tag.tag-prio.prio-1 { background: #f0fdf4; border-color: #86efac; color: #166534; }
 .tag.gender-kvinne { color: #be185d; background: #fce7f3; border-color: #fbcfe8; }
 .tag.gender-mann { color: #1d4ed8; background: #dbeafe; border-color: #bfdbfe; }
 .tag.gender-annet { color: #b45309; background: #fef3c7; border-color: #fde68a; }
