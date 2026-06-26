@@ -624,9 +624,11 @@ export function renderArtists(el, state) {
   }
   if (filters.search) {
     const q = filters.search.toLowerCase();
+    const qn = q.replace(/[.\-]/g, "");
     list = list.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
+        a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
         (a.geography || "").toLowerCase().includes(q) ||
         (a.sjangre || []).some(s => s.toLowerCase().includes(q)) ||
         (a.undersjangre || []).some(s => s.toLowerCase().includes(q))

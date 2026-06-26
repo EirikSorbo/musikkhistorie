@@ -1,6 +1,6 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=207";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, renderTechList, renderTechDetail, TECH_CATEGORIES, fillSelect, escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList } from "./ui.js?v=210";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo, renderGenealogy } from "./genealogy.js";
 
@@ -643,9 +643,11 @@ function renderFilterResults() {
   }
   if (state.filters.search) {
     const q = state.filters.search.toLowerCase();
+    const qn = q.replace(/[.\-]/g, "");
     pool = pool.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
+        a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
         (a.geography || "").toLowerCase().includes(q) ||
         (a.sjangre || []).some(s => s.toLowerCase().includes(q)) ||
         (a.undersjangre || []).some(s => s.toLowerCase().includes(q))
