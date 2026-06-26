@@ -1,4 +1,4 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=219";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=220";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const MODAL_HTML = `
@@ -38,6 +38,7 @@ const MODAL_HTML = `
       <h2>Kontekst</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div id="dl-tech-extra"></div>
     <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese mer.</p>
     <div id="dl-buttons" class="explore-decade-grid"></div>
   </div>
@@ -267,6 +268,15 @@ function openDecadeList(mode) {
   const modal = document.getElementById("modal-decade-list");
   if (!modal) return;
   modal.querySelector(".modal-head h2").textContent = mode === "society" ? "Samfunn" : "Teknologi";
+  const techExtra = document.getElementById("dl-tech-extra");
+  if (techExtra) {
+    if (mode === "tech") {
+      techExtra.innerHTML = `<button class="btn ghost" id="dl-btn-innovasjon" style="width:100%;margin-bottom:14px">Vis innovasjonskort →</button>`;
+      techExtra.querySelector("#dl-btn-innovasjon").addEventListener("click", () => openTeknologi());
+    } else {
+      techExtra.innerHTML = "";
+    }
+  }
   const decades = (s.config?.decades || []).slice().sort((a, b) => a - b);
   const el = document.getElementById("dl-buttons");
   el.innerHTML = decades.map((d) => {
