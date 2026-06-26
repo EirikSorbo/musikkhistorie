@@ -721,6 +721,33 @@ body.role-student .version-tag { display: none; }
 .tl-prop .tl-start .tl-label { left: -10px; text-align: left; }
 .tl-prop .tl-end .tl-label { left: auto; right: -10px; text-align: right; }
 
+/* ----- Endringsforslag (diff-tabell) ----- */
+.diff-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 8px 0 16px; }
+.diff-table th, .diff-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.diff-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+.diff-table .diff-field { font-weight: 600; width: 18%; }
+.diff-table .diff-current { width: 32%; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+.diff-table .diff-proposed { width: 32%; white-space: pre-wrap; word-break: break-word; }
+.diff-table .diff-actions { width: 18%; white-space: nowrap; }
+.diff-table .diff-actions button { padding: 4px 10px; min-width: 36px; margin-right: 4px; }
+.diff-table .diff-row.is-approved { background: #f0fdf4; }
+.diff-table .diff-row.is-approved .diff-approve { background: #16a34a; color: #fff; border-color: #16a34a; }
+.diff-table .diff-row.is-rejected { background: #fef2f2; }
+.diff-table .diff-row.is-rejected .diff-reject { background: #dc2626; color: #fff; border-color: #dc2626; }
+.diff-empty { color: var(--muted); font-style: italic; }
+.diff-full { margin-top: 6px; font-size: 0.88rem; white-space: pre-wrap; }
+.pending-edit-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 600; border: 1px solid #fcd34d; }
+@media (max-width: 640px) {
+  .diff-table, .diff-table thead, .diff-table tbody, .diff-table tr, .diff-table td { display: block; }
+  .diff-table thead { display: none; }
+  .diff-table .diff-row { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .diff-table .diff-field, .diff-table .diff-current, .diff-table .diff-proposed, .diff-table .diff-actions {
+    width: auto; padding: 4px 0; border-bottom: none;
+  }
+  .diff-table .diff-current::before { content: "Gjeldende: "; font-weight: 600; color: var(--muted); }
+  .diff-table .diff-proposed::before { content: "Foreslått: "; font-weight: 600; color: var(--text); }
+}
+
 /* ----- Teknologi-kort ----- */
 .tech-category-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
 .tech-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
