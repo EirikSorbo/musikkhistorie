@@ -1,9 +1,9 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=214";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=215";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, renderGenealogy } from "./genealogy.js";
-import { initExplore } from "./explore.js?v=214";
+import { initExplore } from "./explore.js?v=215";
 
 const clientId = getClientId();
 
@@ -14,7 +14,7 @@ const state = {
   subgenreDescs: {},
   podcasts: [],
   techItems: [],
-  filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", showRemoved: false },
+  filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
   isTeacher: false,
   clientId,
 };
@@ -39,7 +39,7 @@ function setupTagFilters() {
     const key = btn.dataset.filterKey;
     const val = btn.dataset.filterVal;
     document.getElementById("modal-detail").classList.remove("open");
-    state.filters = { search: "", sjanger: "", genre: "", instrument: "", decade: "" };
+    state.filters = { search: "", sjanger: "", genre: "", instrument: "", decade: "", priority: 0 };
     $("#sp-search").value = "";
     $("#sp-sjanger").value = "";
     $("#sp-genre").value = "";

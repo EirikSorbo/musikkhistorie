@@ -9,7 +9,7 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=171";
+import { fillSelect } from "./ui.js?v=215";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
 

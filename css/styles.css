@@ -536,6 +536,23 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .card.is-checked { border-left: 3px solid #22c55e; }
 .tag.is-checked { outline: 2px solid #22c55e; outline-offset: -2px; }
 
+.priority-filter-bar {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 8px 0 4px; margin-bottom: 4px;
+}
+.prio-filter-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface);
+  color: var(--muted); cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.prio-filter-btn:hover { background: var(--bg); border-color: var(--line-strong); color: var(--text); }
+.prio-filter-btn.active-3 { background: #fef9c3; border-color: #facc15; color: #854d0e; box-shadow: 0 0 0 2px #fde68a; }
+.prio-filter-btn.active-2 { background: #e0f2fe; border-color: #38bdf8; color: #075985; box-shadow: 0 0 0 2px #7dd3fc; }
+.prio-filter-btn.active-1 { background: #f0fdf4; border-color: #86efac; color: #166534; box-shadow: 0 0 0 2px #bbf7d0; }
+.prio-filter-btn svg { pointer-events: none; }
+
 .pending-filter { position: relative; }
 .pending-filter.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
 .pending-count {
