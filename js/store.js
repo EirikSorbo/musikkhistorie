@@ -194,7 +194,7 @@ export async function addArtist(data) {
     status: data.status === "active" ? "active" : "pending",
     removedBy: null,
     teacherProtected: false,
-    priority: 0,
+    priority: n.priority || 0,
     votedOutBy: [],
     votedUpBy: [],
     addedYear: new Date().getFullYear(),
