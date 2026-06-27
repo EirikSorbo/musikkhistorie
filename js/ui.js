@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=228";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=229";
 export { linkifyArtists };
 
 export function buildGenreList(artists) {
@@ -316,7 +316,7 @@ const GENDER_COLORS = {
 //  Dashboard: totaltelling + kjønnsfordeling
 // ----------------------------------------------------------------------------
 
-export function renderDashboard(el, { artists, config, subgenreDescs = {} }) {
+export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSubgenreClick }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => (a.priority || 0) === -1).length;
@@ -344,7 +344,7 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {} }) {
 
   const orphanHtml = orphanedSubgenres.length
     ? orphanedSubgenres.map(s =>
-        `<div class="result-row"><span class="result-name">${escapeHtml(s)}</span></div>`
+        `<div class="result-row orphan-link" data-subgenre="${escapeHtml(s)}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(s)}</span></div>`
       ).join("")
     : `<p class="muted">Ingen.</p>`;
 
@@ -398,7 +398,14 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {} }) {
     const panel = el.querySelector("#ov-orphan-sub-list");
     const visible = panel.style.display !== "none";
     panel.style.display = visible ? "none" : "block";
-    if (!visible) panel.innerHTML = `<div class="result-list">${orphanHtml}</div>`;
+    if (!visible) {
+      panel.innerHTML = `<div class="result-list">${orphanHtml}</div>`;
+      if (onSubgenreClick) {
+        panel.querySelectorAll(".orphan-link").forEach(row => {
+          row.addEventListener("click", () => onSubgenreClick(row.dataset.subgenre));
+        });
+      }
+    }
   });
 }
 
