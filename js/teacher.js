@@ -31,14 +31,14 @@ import {
   approvePendingEdit,
   rejectPendingEdit,
   approveTech,
-} from "./store.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.40";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.40";
-import { TEACHER_EMAILS } from "./firebase-config.js";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.40";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.40";
-import { initExplore } from "./explore.js?v=2.40";
+} from "./store.js?v=2.41";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.41";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.41";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.41";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.41";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.41";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.41";
+import { initExplore } from "./explore.js?v=2.41";
 
 const state = {
   artists: [],

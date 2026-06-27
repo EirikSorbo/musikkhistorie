@@ -1,0 +1,35 @@
+MANGLER-LISTE (artister som ikke kunne bekreftes i SNL, Britannica eller Wikipedia)
+================================================================================
+Ingen. Alle 30 artister ble funnet og bekreftet i minst én av de tre autoriserte kildene
+(Store norske leksikon, Encyclopaedia Britannica, eller Wikipedia som siste utvei).
+
+
+RECORDLABEL-FORSLAGSLISTE
+(Artister der recordLabel ble satt til tom streng i JSON-filen fordi det ikke kunne
+bekreftes i løpetekst hos SNL/Britannica/Wikipedia. Forslagene nedenfor er IKKE skrevet
+inn i JSON-filen - de er basert på generell/velkjent kunnskap om artistenes plateselskap,
+og er kun ment som hjelp hvis du vil fylle ut feltet manuelt.)
+================================================================================
+Beyoncé              -> Columbia Records / Parkwood Entertainment
+Bill Monroe          -> Columbia Records / Decca Records
+Bob Dylan            -> Columbia Records
+Buck Owens           -> Capitol Records
+Dolly Parton         -> RCA Victor / RCA Records
+Eagles               -> Asylum Records
+Earl Scruggs         -> Mercury Records / Columbia Records
+Emmylou Harris       -> Reprise Records
+Faith Hill           -> Warner Bros. Nashville
+Gene Autry           -> Columbia Records
+Jim Reeves           -> RCA Victor
+John Denver          -> RCA Records
+Lefty Frizzell       -> Columbia Records
+Loretta Lynn         -> Decca Records / MCA Records
+Merle Haggard        -> Capitol Records
+Neil Young           -> Reprise Records / Geffen Records
+Reba McEntire        -> Mercury Records / MCA Nashville
+Roy Acuff            -> OKeh Records / Columbia Records
+Ryan Adams           -> Bloodshot Records / Lost Highway Records (PAX AM Records bekreftet i SNL for 2021-22-selvutgivelser)
+Steve Earle          -> Epic Records / MCA Records / E-Squared Records
+Tammy Wynette        -> Epic Records
+Waylon Jennings      -> RCA Victor
+Willie Nelson        -> Columbia Records

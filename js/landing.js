@@ -1,10 +1,10 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.40";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.40";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.40";
-import { initExplore } from "./explore.js?v=2.40";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.40";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.41";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.41";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.41";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.41";
+import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.41";
+import { initExplore } from "./explore.js?v=2.41";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.41";
 
 const clientId = getClientId();
 
@@ -363,8 +363,24 @@ function setupFilters() {
 //  Cache
 // ----------------------------------------------------------------------------
 
-const CACHE_ARTISTS = "pensum_cache_artists";
-const CACHE_CONFIG  = "pensum_cache_config";
+// Skjemaversjon i nøkkelen: bump ved feltnavn-endringer på artist/config, så
+// gamle caches (f.eks. fra før «genre»→«metaGenre»/«sjangre»→«mainGenre»-
+// migreringen) ignoreres og appen faller tilbake til ferske Firestore-data.
+const CACHE_SCHEMA  = "v2";
+const CACHE_ARTISTS = `pensum_cache_artists_${CACHE_SCHEMA}`;
+const CACHE_CONFIG  = `pensum_cache_config_${CACHE_SCHEMA}`;
+
+// Rydd bort caches fra eldre skjemaer (engangs).
+function purgeLegacyCache() {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if ((k.startsWith("pensum_cache_artists") || k.startsWith("pensum_cache_config"))
+          && k !== CACHE_ARTISTS && k !== CACHE_CONFIG) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch { /* ingen tilgang */ }
+}
 
 function saveCache() {
   try {
@@ -374,6 +390,7 @@ function saveCache() {
 }
 
 function loadCache() {
+  purgeLegacyCache();
   try {
     const a = localStorage.getItem(CACHE_ARTISTS);
     const c = localStorage.getItem(CACHE_CONFIG);
