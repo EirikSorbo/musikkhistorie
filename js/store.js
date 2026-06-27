@@ -28,8 +28,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.35";
-import { isMainGenre } from "./genealogy.js?v=2.35";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.36";
+import { isMainGenre } from "./genealogy.js?v=2.36";
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.

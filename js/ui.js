@@ -14,10 +14,10 @@ import {
   limitForInstrument,
   decadesForRange,
   GENDERS,
-} from "./limits.js?v=2.35";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.35";
-import { escapeHtml } from "./util.js?v=2.35";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.35";
+} from "./limits.js?v=2.36";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.36";
+import { escapeHtml } from "./util.js?v=2.36";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.36";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {
@@ -636,13 +636,13 @@ export function renderArtists(el, state) {
   }
   if (filters.hideChecked) list = list.filter((a) => !a.teacherChecked);
   if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
-  if (filters.sjanger) {
-    const sj = filters.sjanger.toLowerCase();
-    list = list.filter((a) => a.metaGenre === filters.sjanger
+  if (filters.mainGenre) {
+    const sj = filters.mainGenre.toLowerCase();
+    list = list.filter((a) => a.metaGenre === filters.mainGenre
       || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
       || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
   }
-  if (filters.genre) list = list.filter((a) => a.metaGenre === filters.genre);
+  if (filters.metaGenre) list = list.filter((a) => a.metaGenre === filters.metaGenre);
   if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
   if (filters.decade) {
     const fd = Number(filters.decade);
@@ -665,7 +665,7 @@ export function renderArtists(el, state) {
     );
   }
 
-  const hasFilter = filters.search || filters.sjanger || filters.genre || filters.instrument || filters.decade || filters.subgenre || filters.priority;
+  const hasFilter = filters.search || filters.mainGenre || filters.metaGenre || filters.instrument || filters.decade || filters.subgenre || filters.priority;
   if (hasFilter) {
     list.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   } else {

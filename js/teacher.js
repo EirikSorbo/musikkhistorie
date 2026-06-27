@@ -32,13 +32,13 @@ import {
   rejectPendingEdit,
   approveTech,
 } from "./store.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.35";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.35";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.36";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.36";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.35";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.35";
-import { initExplore } from "./explore.js?v=2.35";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.36";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.36";
+import { initExplore } from "./explore.js?v=2.36";
 
 const state = {
   artists: [],
@@ -49,7 +49,7 @@ const state = {
   techItems: [],
   teacherChecks: { genres: [], subgenres: [] },
   pendingEdits: [],
-  filters: { sjanger: "", genre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false, hideChecked: false, priority: 0 },
+  filters: { mainGenre: "", metaGenre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false, hideChecked: false, priority: 0 },
   isTeacher: true,
   clientId: getClientId(),
   started: false,
@@ -584,8 +584,8 @@ function refreshControls() {
     (state.artists || []).flatMap((a) => [...(a.mainGenre || []), ...(a.subGenre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
   fillSelect($("#f-subgenre"), allSubs, { placeholder: "Alle undersjangre" });
-  if (state.filters.sjanger)  $("#f-sjanger").value = state.filters.sjanger;
-  if (state.filters.genre)    $("#f-genre").value = state.filters.genre;
+  if (state.filters.mainGenre)  $("#f-sjanger").value = state.filters.mainGenre;
+  if (state.filters.metaGenre)    $("#f-genre").value = state.filters.metaGenre;
   if (state.filters.subgenre) $("#f-subgenre").value = state.filters.subgenre;
 }
 
@@ -601,8 +601,8 @@ function updatePrioButtons() {
 }
 
 function setupFilters() {
-  $("#f-sjanger").addEventListener("change", (e) => { state.filters.sjanger = e.target.value; renderList(); });
-  $("#f-genre").addEventListener("change", (e) => { state.filters.genre = e.target.value; renderList(); });
+  $("#f-sjanger").addEventListener("change", (e) => { state.filters.mainGenre = e.target.value; renderList(); });
+  $("#f-genre").addEventListener("change", (e) => { state.filters.metaGenre = e.target.value; renderList(); });
   $("#f-decade").addEventListener("change", (e) => { state.filters.decade = e.target.value; renderList(); });
   $("#f-instrument").addEventListener("change", (e) => { state.filters.instrument = e.target.value; renderList(); });
   $("#f-subgenre").addEventListener("change", (e) => { state.filters.subgenre = e.target.value; renderList(); });
@@ -632,7 +632,7 @@ function setupFilters() {
     const btn = e.target.closest("[data-filter-key]");
     if (!btn) return;
     const key = btn.dataset.filterKey, val = btn.dataset.filterVal;
-    const sel = { sjanger: "#f-sjanger", subgenre: "#f-subgenre", instrument: "#f-instrument", genre: "#f-genre" }[key];
+    const sel = { mainGenre: "#f-sjanger", subgenre: "#f-subgenre", instrument: "#f-instrument", metaGenre: "#f-genre" }[key];
     if (!sel) return;
     state.filters[key] = val;
     const elSel = $(sel);

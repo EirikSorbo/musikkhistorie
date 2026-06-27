@@ -1,10 +1,10 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.35";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.35";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.36";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.36";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.35";
-import { initExplore } from "./explore.js?v=2.35";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.35";
+import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.36";
+import { initExplore } from "./explore.js?v=2.36";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.36";
 
 const clientId = getClientId();
 
@@ -16,7 +16,7 @@ const state = {
   podcasts: [],
   techItems: [],
   pendingEdits: [],
-  filters: { search: "", sjanger: "", genre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
+  filters: { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
   isTeacher: false,
   clientId,
 };
@@ -77,17 +77,17 @@ function setupTagFilters() {
     const key = btn.dataset.filterKey;
     const val = btn.dataset.filterVal;
     document.getElementById("modal-detail").classList.remove("open");
-    state.filters = { search: "", sjanger: "", genre: "", instrument: "", decade: "", priority: 0 };
+    state.filters = { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: "", priority: 0 };
     $("#sp-search").value = "";
     $("#sp-sjanger").value = "";
     $("#sp-genre").value = "";
     $("#sp-instrument").value = "";
     $("#sp-decade").value = "";
-    if (key === "sjanger") {
-      state.filters.sjanger = val;
+    if (key === "mainGenre") {
+      state.filters.mainGenre = val;
       $("#sp-sjanger").value = val;
-    } else if (key === "genre") {
-      state.filters.genre = val;
+    } else if (key === "metaGenre") {
+      state.filters.metaGenre = val;
       $("#sp-genre").value = val;
     } else if (key === "instrument") {
       state.filters.instrument = val;
@@ -158,11 +158,11 @@ function openSlektstre() {
 
 function applyIncomingFilter() {
   const params = new URLSearchParams(location.search);
-  const sj = params.get("sjanger"), g = params.get("genre"),
+  const sj = params.get("mainGenre"), g = params.get("metaGenre"),
         inst = params.get("instrument"), artistId = params.get("artist");
   if (!sj && !g && !inst && !artistId) return;
-  state.filters.sjanger = sj || "";
-  state.filters.genre = g || "";
+  state.filters.mainGenre = sj || "";
+  state.filters.metaGenre = g || "";
   state.filters.instrument = inst || "";
   const tryApply = () => {
     if (!state.config || !state.artists.length) return false;
@@ -242,13 +242,13 @@ function renderFilterResults() {
 
   let pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
 
-  if (state.filters.sjanger) {
-    const sj = state.filters.sjanger.toLowerCase();
-    pool = pool.filter((a) => a.metaGenre === state.filters.sjanger
+  if (state.filters.mainGenre) {
+    const sj = state.filters.mainGenre.toLowerCase();
+    pool = pool.filter((a) => a.metaGenre === state.filters.mainGenre
       || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
       || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
   }
-  if (state.filters.genre)      pool = pool.filter((a) => a.metaGenre === state.filters.genre);
+  if (state.filters.metaGenre)      pool = pool.filter((a) => a.metaGenre === state.filters.metaGenre);
   if (state.filters.instrument) pool = pool.filter((a) => a.instrument === state.filters.instrument);
   if (state.filters.decade) {
     const d = Number(state.filters.decade);
@@ -326,8 +326,8 @@ function refreshFilterControls() {
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Tiår" }
   );
-  if (state.filters.sjanger)  $("#sp-sjanger").value = state.filters.sjanger;
-  if (state.filters.genre)    $("#sp-genre").value = state.filters.genre;
+  if (state.filters.mainGenre)  $("#sp-sjanger").value = state.filters.mainGenre;
+  if (state.filters.metaGenre)    $("#sp-genre").value = state.filters.metaGenre;
 }
 
 function updatePrioButtons() {
