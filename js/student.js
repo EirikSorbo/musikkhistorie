@@ -9,9 +9,9 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=230";
+import { fillSelect } from "./ui.js?v=231";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES } from "./genealogy.js?v=230";
+import { GENEALOGY_GENRES } from "./genealogy.js?v=231";
 
 const state = {
   artists: [],

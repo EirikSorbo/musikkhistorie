@@ -1,8 +1,8 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=230";
-import { GENEALOGY_GENRES, GENEALOGY_SUPERGENRES, showSjangerInfo } from "./genealogy.js?v=230";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=231";
+import { GENEALOGY_GENRES, GENEALOGY_SUPERSJANGRE, showSjangerInfo } from "./genealogy.js?v=231";
 
 // Varmekart: supersjanger (rad) × tiår (kolonne). Radene hentes dynamisk fra
-// treet (GENEALOGY_SUPERGENRES) — nye supersjangre dukker opp automatisk.
+// treet (GENEALOGY_SUPERSJANGRE) — nye supersjangre dukker opp automatisk.
 // «Varmen» er derimot redaksjonell: nivå 0–5 for hvor toneangivende sjangeren
 // var det tiåret. Supersjangre som mangler i HEAT vises som «ingen data».
 const VK_DECADES = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
@@ -497,7 +497,7 @@ function openVarmekart() {
   html += VK_DECADES.map((d) => `<div style="text-align:center;font-size:0.72rem;color:var(--muted)">${d}</div>`).join("");
   html += `</div>`;
 
-  for (const sj of GENEALOGY_SUPERGENRES) {
+  for (const sj of GENEALOGY_SUPERSJANGRE) {
     const vals = VK_HEAT[sj] || VK_DECADES.map(() => null);
     html += `<div style="${gridStyle};align-items:center;margin-bottom:3px">`;
     html += `<div style="font-size:0.82rem;color:var(--text);padding-right:8px;line-height:1.2">${escapeHtml(sj)}</div>`;
@@ -650,9 +650,10 @@ function wireModals() {
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {
-    let btns = "";
-    if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:10px">Vis sjangertre →</button>`;
-    btns += `<button class="btn ghost" id="btn-varmekart" style="width:100%;margin-bottom:14px">Varmekart: tyngdepunkt gjennom tiårene →</button>`;
+    let btns = `<div style="display:flex;gap:10px;margin-bottom:14px">`;
+    if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="flex:1">Vis sjangertre →</button>`;
+    btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Vis varmekart →</button>`;
+    btns += `</div>`;
     slExtra.innerHTML = btns;
     const treBtn = slExtra.querySelector("#btn-slektstre");
     if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());
