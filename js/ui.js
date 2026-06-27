@@ -14,9 +14,9 @@ import {
   limitForInstrument,
   decadesForRange,
   GENDERS,
-} from "./limits.js?v=2.31";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.31";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.31";
+} from "./limits.js?v=2.32";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.32";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.32";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {
@@ -38,9 +38,6 @@ function wireLinks(el, lc) {
   if (!lc) return;
   wireAllLinks(el, lc);
 }
-
-// Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
-const SJANGER_SET = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
 
 window._modalZ = window._modalZ || 100;
 export function modalOpen(el) { el.style.zIndex = ++window._modalZ; el.classList.add("open"); }

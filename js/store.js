@@ -28,10 +28,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.31";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.31";
-
-const SJANGER_SET = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
+import { DEFAULT_CONFIG } from "./limits.js?v=2.32";
+import { isMainGenre } from "./genealogy.js?v=2.32";
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.
@@ -48,8 +46,8 @@ export function normalizeArtist(a) {
   // mainGenre + subGenre: del opp `subgenres` hvis ikke allerede satt
   if (!Array.isArray(out.mainGenre) && !Array.isArray(out.subGenre)) {
     const subs = Array.isArray(out.subgenres) ? out.subgenres : [];
-    out.mainGenre = subs.filter((s) => SJANGER_SET.has(String(s).toLowerCase()));
-    out.subGenre = subs.filter((s) => !SJANGER_SET.has(String(s).toLowerCase()));
+    out.mainGenre = subs.filter((s) => isMainGenre(s));
+    out.subGenre = subs.filter((s) => !isMainGenre(s));
   } else {
     out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
     out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];

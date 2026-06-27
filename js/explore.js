@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=2.31";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=2.31";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=2.32";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.32";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -508,11 +508,10 @@ function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
   const s = getState();
-  const sjangerSet = new Set(GENEALOGY_MAIN_GENRES.map(g => g.toLowerCase()));
   const active = s.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
 
-  const sjangre = [...new Set(active.flatMap(a => (a.mainGenre || []).filter(x => sjangerSet.has(x.toLowerCase()))))]
+  const sjangre = [...new Set(active.flatMap(a => (a.mainGenre || []).filter(isMainGenre)))]
     .sort((a, b) => a.localeCompare(b, "no"));
   const slEl = document.getElementById("sl-chips");
   const checkedMainGenres = checkedState?.genres || [];
@@ -521,7 +520,7 @@ function openSubgenreList() {
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
 
   const under = [...new Set(active.flatMap(a => [
-    ...(a.mainGenre || []).filter(x => !sjangerSet.has(x.toLowerCase())),
+    ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
     ...(a.subGenre || []),
   ]))].sort((a, b) => a.localeCompare(b, "no"));
   const ulEl = document.getElementById("ul-chips");
