@@ -16,7 +16,7 @@ export function linkifyAll(text, { artists, techItems, genres } = {}) {
   const markers = [];
   const lower = escaped.toLowerCase();
 
-  const activeArtists = (artists || []).filter(a => a.status === "active" && a.name && !SKIP.has(a.name.toLowerCase()));
+  const activeArtists = (artists || []).filter(a => a.status === "active" && (a.priority || 0) !== -1 && a.name && !SKIP.has(a.name.toLowerCase()));
   activeArtists.sort((a, b) => b.name.length - a.name.length);
   for (const a of activeArtists) {
     findMatches(lower, escaped, esc(a.name), a.id, "artist", markers);

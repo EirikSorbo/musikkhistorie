@@ -1,4 +1,4 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=227";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=228";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
 
 const MODAL_HTML = `
@@ -222,7 +222,7 @@ function showArtistsForSjanger({ label }) {
   const s = getState();
   const sj = label.toLowerCase();
   const list = s.artists
-    .filter((a) => a.status === "active" && (
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
       a.genre === label
       || (a.sjangre || []).some((x) => x.toLowerCase() === sj)
       || (a.undersjangre || []).some((x) => x.toLowerCase() === sj)
@@ -249,7 +249,7 @@ function showArtistsForSjanger({ label }) {
 function showArtistsForInstrument(instrument) {
   const s = getState();
   const list = s.artists
-    .filter((a) => a.status === "active" && a.instrument === instrument)
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.instrument === instrument)
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   document.getElementById("al-title").textContent = `${instrument} (${list.length})`;
   const body = document.getElementById("al-body");
@@ -464,7 +464,7 @@ function openSubgenreList() {
   if (!modal) return;
   const s = getState();
   const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
-  const active = s.artists.filter((a) => a.status === "active");
+  const active = s.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
 
   const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(x => sjangerSet.has(x.toLowerCase()))))]
@@ -504,7 +504,7 @@ function openSubgenreInfo(subgenreId) {
   document.getElementById("sgi-desc").className = desc?.description ? "" : "muted";
 
   const artists = s.artists
-    .filter(a => a.status === "active" && ((a.undersjangre || []).includes(subgenreId) || (a.sjangre || []).includes(subgenreId)))
+    .filter(a => a.status === "active" && (a.priority || 0) !== -1 && ((a.undersjangre || []).includes(subgenreId) || (a.sjangre || []).includes(subgenreId)))
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
   const el = document.getElementById("sgi-artists");

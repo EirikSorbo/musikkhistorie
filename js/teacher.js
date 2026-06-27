@@ -11,8 +11,6 @@ import {
   addArtist,
   teacherApprove,
   teacherReject,
-  teacherRemove,
-  teacherRestore,
   teacherDelete,
   deleteAllArtists,
   updateConfig,
@@ -35,12 +33,12 @@ import {
   approveTech,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=227";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=228";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=227";
-import { initExplore } from "./explore.js?v=227";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=228";
+import { initExplore } from "./explore.js?v=228";
 
 const state = {
   artists: [],
@@ -60,8 +58,8 @@ const state = {
 const handlers = {
   approve:     (id) => teacherApprove(id),
   reject:      (id) => { if (confirm("Avvise dette forslaget?")) teacherReject(id); },
-  remove:      (id) => teacherRemove(id),
-  restore:     (id) => teacherRestore(id),
+  remove:      (id) => setArtistPriority(id, -1),
+  restore:     (id) => setArtistPriority(id, 0),
   del:         (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
   edit:        (id) => openEditModal(id),
   priority3:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 3 ? 0 : 3); },
@@ -1103,8 +1101,8 @@ function setupDataButtons() {
 
 function handleExport() {
   const artists = state.artists
-    .filter((a) => a.status === "active")
-    .map((a) => Object.fromEntries(EXPORT_FIELDS.map((f) => [f, a[f] ?? null])));
+    .filter((a) => a.status === "active" || a.status === "removed")
+    .map((a) => Object.fromEntries([...EXPORT_FIELDS, "priority"].map((f) => [f, a[f] ?? null])));
 
   const decades = {};
   for (const [id, d] of Object.entries(state.decadeDescs)) {
@@ -1259,7 +1257,7 @@ async function handleMergeFile(data) {
   for (const imp of data) {
     if (!imp.name) continue;
     const existing = state.artists.find(
-      (a) => a.status === "active" &&
+      (a) => (a.status === "active" || a.status === "removed") &&
               a.name.trim().toLowerCase() === imp.name.trim().toLowerCase()
     );
     if (!existing) { mergeState.newArtists.push(imp); continue; }

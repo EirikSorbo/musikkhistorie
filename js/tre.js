@@ -15,7 +15,7 @@ let lastSjangerLabel = null;
 function showArtistsForGenre({ label }) {
   const sj = label.toLowerCase();
   const list = artists
-    .filter((a) => a.status === "active" && (
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
       a.genre === label
       || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
       || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
@@ -70,7 +70,7 @@ function showTechDetail(t) {
 
 function showArtistsForInstrument(instrument) {
   const list = artists
-    .filter((a) => a.status === "active" && a.instrument === instrument)
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.instrument === instrument)
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   document.getElementById("al-title").textContent = `${instrument} (${list.length})`;

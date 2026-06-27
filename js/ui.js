@@ -16,7 +16,7 @@ import {
   GENDERS,
 } from "./limits.js";
 import { GENEALOGY_GENRES } from "./genealogy.js";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=227";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=228";
 export { linkifyArtists };
 
 export function buildGenreList(artists) {
@@ -319,7 +319,7 @@ const GENDER_COLORS = {
 export function renderDashboard(el, { artists, config, subgenreDescs = {} }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
-  const removed = artists.filter((a) => a.status === "removed").length;
+  const removed = artists.filter((a) => (a.priority || 0) === -1).length;
   const pending = artists.filter((a) => a.status === "pending").length;
   const checked = artists.filter((a) => a.status === "active" && a.teacherChecked === true).length;
   const activeArtists = artists.filter(a => a.status === "active");
@@ -364,7 +364,7 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {} }) {
       </div>` : ""}
       <div class="stat-card">
         <div class="stat-num">${removed}</div>
-        <div class="stat-label">Fjernet / utstemt</div>
+        <div class="stat-label">Skjult for studenter</div>
       </div>
       <div class="stat-card">
         <div class="stat-num">${subgenreCount}</div>
@@ -621,8 +621,10 @@ export function renderArtists(el, state) {
 
   if (filters.showPending) {
     list = list.filter((a) => a.status === "pending");
-  } else if (!filters.showRemoved) {
-    list = list.filter((a) => a.status === "active");
+  } else if (!filters.showRemoved && filters.priority !== -1) {
+    list = list.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+  } else {
+    list = list.filter((a) => a.status !== "pending");
   }
   if (filters.hideChecked) list = list.filter((a) => !a.teacherChecked);
   if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
@@ -688,9 +690,9 @@ export function renderArtists(el, state) {
 function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   const upvotes = (a.votedUpBy || []).length;
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
-  const removed = a.status === "removed";
-  const pending = a.status === "pending";
   const prio = a.priority || 0;
+  const removed = prio === -1;
+  const pending = a.status === "pending";
 
   const examplesHtml = (a.musicExamples || [])
     .map(
@@ -704,21 +706,20 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   const checked = a.teacherChecked === true;
 
   const removedBadge = removed
-    ? `<span class="badge removed">${
-        a.removedBy === "teacher" ? "Fjernet av lærer" : "Fjernet"
-      }</span>`
+    ? `<span class="badge removed">Skjult for studenter</span>`
     : "";
 
   const pendingBadge = pending
     ? `<span class="badge pending">Venter på godkjenning</span>`
     : "";
 
-  const PRIO_LABELS = { 3: "Viktigst", 2: "Viktig", 1: "Mindre viktig" };
+  const PRIO_LABELS = { 3: "Viktigst", 2: "Viktig", 1: "Mindre viktig", "-1": "Skjult" };
   const prioBadge = "";
   const PRIO_ICONS = {
     3: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
     2: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
     1: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`,
+    "-1": `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
   };
   const prioTag = prio
     ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
@@ -763,12 +764,9 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
           <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${a.id}" title="Viktigst">${ICO_STAR}</button>
           <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${a.id}" title="Viktig">${ICO_ALERT}</button>
           <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${a.id}" title="Mindre viktig">${ICO_THUMB}</button>
+          <button class="icon-btn ${removed ? "active" : ""}" data-action="${removed ? "restore" : "remove"}" data-id="${a.id}" title="${removed ? "Gjør synlig" : "Skjul for studenter"}">${ICO_BAN}</button>
         </div>
         <div class="ta-right">
-          ${removed
-            ? `<button class="icon-btn" data-action="restore" data-id="${a.id}" title="Gjenopprett">${ICO_RESTORE}</button>`
-            : `<button class="icon-btn" data-action="remove" data-id="${a.id}" title="Fjern">${ICO_BAN}</button>`
-          }
           <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
           <button class="icon-btn danger" data-action="del" data-id="${a.id}" title="Slett">${ICO_TRASH}</button>
         </div>
@@ -929,7 +927,7 @@ export function buildPlaylistHtml(node, artists) {
   };
 
   const genreArtists = (artists || [])
-    .filter((a) => a.status === "active" && matchesSj(a))
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && matchesSj(a))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   const seen = new Set();

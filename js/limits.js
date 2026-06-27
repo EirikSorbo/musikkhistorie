@@ -54,9 +54,9 @@ export const GENDERS = [
 //  TELLING OG GRENSESJEKK
 // ----------------------------------------------------------------------------
 
-// Bare aktive forslag teller mot grensene. Utstemte/fjernede frigjør plass.
+// Bare aktive, synlige forslag teller mot grensene. Skjulte/utstemte frigjør plass.
 export function activeArtists(artists) {
-  return artists.filter((a) => a.status === "active");
+  return artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
 }
 
 export function limitForDecade(config, decade) {

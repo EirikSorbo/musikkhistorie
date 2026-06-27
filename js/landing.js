@@ -1,10 +1,10 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=227";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=228";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 import { GENEALOGY_GENRES, renderGenealogy } from "./genealogy.js";
-import { initExplore } from "./explore.js?v=227";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=227";
+import { initExplore } from "./explore.js?v=228";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=228";
 
 const clientId = getClientId();
 
@@ -221,7 +221,7 @@ let currentPicks = [];
 
 function renderSpotlight() {
   if (!state.config) return;
-  const pool = state.artists.filter((a) => a.status === "active");
+  const pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   currentPicks = shuffled.slice(0, 1);
   renderSpotlightCards($("#spotlight"), currentPicks, state.config, explore.buildLinkCtx());
@@ -230,7 +230,7 @@ function renderSpotlight() {
 let dagensArtistId = null;
 function renderDagensArtist() {
   if (!state.config) return;
-  const pool = state.artists.filter((a) => a.status === "active");
+  const pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   if (!pool.length) return;
   if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
   const artist = pool.find((a) => a.id === dagensArtistId) || pool[0];
@@ -250,7 +250,7 @@ function renderFilterResults() {
     return;
   }
 
-  let pool = state.artists.filter((a) => a.status === "active");
+  let pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
 
   if (state.filters.sjanger) {
     const sj = state.filters.sjanger.toLowerCase();
