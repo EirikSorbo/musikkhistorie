@@ -2,8 +2,8 @@
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=234";
-import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=190";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.30";
+import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.30";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};

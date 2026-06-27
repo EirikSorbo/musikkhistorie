@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=234";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=234";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=2.30";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=2.30";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
