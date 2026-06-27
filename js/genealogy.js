@@ -7,8 +7,8 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.41";
-import { escapeHtml } from "./util.js?v=2.41";
+import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.42";
+import { escapeHtml } from "./util.js?v=2.42";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -140,7 +140,20 @@ export function showSjangerInfo(label, opts = {}) {
 const W = 1140, H = 1180, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
 const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115 };
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t" };
-const FAM_STROKE = { gray: "#9bada1", blue: "#3b82f6", amber: "#d97706", purple: "#7c3aed", red: "#dc2626", teal: "#0d9488", pink: "#db2777", green: "#16a34a" };
+// Sjangerfamilier: strekfarge + etikett til fargeforklaringen. Rekkefølgen her
+// styrer rekkefølgen i forklaringen. Familier som brukes i treet, men mangler
+// her, varsles i konsollen og tegnes uten farge (se renderGenealogy).
+const FAMILIES = {
+  blue:   { stroke: "#3b82f6", label: "Blues" },
+  amber:  { stroke: "#d97706", label: "Country" },
+  purple: { stroke: "#7c3aed", label: "Jazz" },
+  red:    { stroke: "#dc2626", label: "Gospel / soul / funk" },
+  teal:   { stroke: "#0d9488", label: "Disco / electronica" },
+  pink:   { stroke: "#db2777", label: "Hip-hop" },
+  green:  { stroke: "#16a34a", label: "Reggae" },
+  gray:   { stroke: "#9bada1", label: "Røtter" },
+};
+const FAM_STROKE = Object.fromEntries(Object.entries(FAMILIES).map(([k, v]) => [k, v.stroke]));
 
 function el(tag, attrs) {
   const e = document.createElementNS(SVGNS, tag);
@@ -331,9 +344,15 @@ export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtis
   // Fargeforklaring
   const legend = root.querySelector("#gx-legend");
   if (legend) {
-    const LEGEND = [["blue", "Blues"], ["amber", "Country"], ["purple", "Jazz"], ["red", "Gospel / soul / funk"], ["teal", "Disco / electronica"], ["pink", "Hip-hop"], ["green", "Reggae"], ["gray", "Røtter"]];
-    legend.innerHTML = LEGEND.map(([fam, label]) =>
-      `<div class="gx-leg"><span class="gx-sw gx-f-${fam}"></span>${escapeHtml(label)}</div>`
+    // Drevet av treet: bare familier som faktisk brukes i nodene, i FAMILIES-
+    // rekkefølge. Familier uten farge/etikett varsles i konsollen.
+    const used = new Set(GENEALOGY.map((n) => n.fam));
+    used.forEach((fam) => {
+      if (!FAMILIES[fam]) console.warn(`Slektstre: fam «${fam}» mangler i FAMILIES (ingen strekfarge/etikett i forklaringen).`);
+    });
+    const fams = Object.keys(FAMILIES).filter((fam) => used.has(fam));
+    legend.innerHTML = fams.map((fam) =>
+      `<div class="gx-leg"><span class="gx-sw gx-f-${fam}"></span>${escapeHtml(FAMILIES[fam].label)}</div>`
     ).join("") + `<div class="gx-leg"><span class="gx-sw-line"></span>motreaksjon</div>`;
   }
 

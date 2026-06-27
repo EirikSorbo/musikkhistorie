@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, buildKilderList, buildMainGenreList } from "./ui.js?v=2.41";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.41";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, buildKilderList, buildMainGenreList } from "./ui.js?v=2.42";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.42";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -39,6 +39,19 @@ const VK_HEAT = {
   "Trance / DnB":  [0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4],
   "Nu-jazz":       [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3],
 };
+
+// Varmen er redaksjonell og kan ikke utledes fra treet. Varsle derfor i
+// konsollen om sjangre (noder) som mangler en VK_HEAT-rad, så de ikke stille
+// vises som «ingen data» i varmekartet.
+{
+  const missing = GENEALOGY_MAIN_GENRES.filter((sj) => !VK_HEAT[sj]);
+  if (missing.length) {
+    console.warn(
+      `Varmekart: ${missing.length} sjanger(e) mangler VK_HEAT-rad i explore.js og vises som «ingen data»:`,
+      missing
+    );
+  }
+}
 
 const MODAL_HTML = `
 <!-- Teknologi -->

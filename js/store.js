@@ -27,8 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.41";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.41";
+import { firebaseConfig } from "./firebase-config.js?v=2.42";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.42";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.42";
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.
@@ -127,6 +128,10 @@ function normalizeConfig(d) {
   if (c.metaGenreLimits == null && c.genreLimits != null) c.metaGenreLimits = c.genreLimits;
   if (c.maxPerMetaGenre == null && c.maxPerGenre != null) c.maxPerMetaGenre = c.maxPerGenre;
   delete c.genres; delete c.genreLimits; delete c.maxPerGenre;
+  // Treet er sannhetskilde: metasjangre derfra skal alltid være med, selv om
+  // læreren har lagret en egen liste. Lærertillegg beholdes, treets vinner.
+  const saved = Array.isArray(c.metaGenres) ? c.metaGenres : [];
+  c.metaGenres = [...new Set([...GENEALOGY_META_GENRES, ...saved])];
   return c;
 }
 
