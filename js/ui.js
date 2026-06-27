@@ -14,9 +14,9 @@ import {
   limitForInstrument,
   decadesForRange,
   GENDERS,
-} from "./limits.js";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=233";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=233";
+} from "./limits.js?v=234";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=234";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=234";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {

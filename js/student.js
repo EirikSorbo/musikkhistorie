@@ -8,8 +8,8 @@ import {
   addArtist,
   getClientId,
 } from "./store.js";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=233";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=234";
+import { fillSelect } from "./ui.js?v=234";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {

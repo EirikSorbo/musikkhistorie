@@ -5,6 +5,8 @@
 //  (lagres i Firestore), men dette er utgangspunktet hvis databasen er tom.
 // ============================================================================
 
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=234";
+
 export const DEFAULT_CONFIG = {
   maxTotal: 80,
   maxPerDecade: 8,
@@ -15,13 +17,9 @@ export const DEFAULT_CONFIG = {
   instrumentLimits: {},
   voteOutThreshold: 8,
 
-  metaGenres: [
-    "Blues",
-    "Country",
-    "Jazz",
-    "Afroamerikansk populærmusikk",
-    "Elektronisk musikk",
-  ],
+  // Én sannhetskilde: de brede metasjangrene utledes fra slektstreet.
+  // Læreren kan fortsatt overstyre lista i admin (lagres i Firestore).
+  metaGenres: [...GENEALOGY_META_GENRES],
 
   decades: [
     1900, 1910, 1920, 1930, 1940, 1950,
