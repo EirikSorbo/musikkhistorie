@@ -29,7 +29,7 @@ import {
 
 import { firebaseConfig } from "./firebase-config.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { GENEALOGY_GENRES } from "./genealogy.js";
+import { GENEALOGY_GENRES } from "./genealogy.js?v=230";
 
 const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
 

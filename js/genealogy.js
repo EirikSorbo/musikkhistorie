@@ -7,7 +7,7 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=229";
+import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=230";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -50,6 +50,11 @@ export const GENEALOGY = [
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
 export const GENEALOGY_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
   .sort((a, b) => a.localeCompare(b, "no"));
+
+// Supersjangre (treets kolonner): én rad per hovedretning. Beholder rekkefølgen
+// fra GENEALOGY (≈ kronologisk). Brukes som rader i varmekartet — utvides
+// automatisk når nye supersjangre legges inn i treet.
+export const GENEALOGY_SUPERGENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
 
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, subgenreDescs, onShowArtists }

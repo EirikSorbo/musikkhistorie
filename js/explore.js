@@ -1,5 +1,19 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=229";
-import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=230";
+import { GENEALOGY_GENRES, GENEALOGY_SUPERGENRES, showSjangerInfo } from "./genealogy.js?v=230";
+
+// Varmekart: supersjanger (rad) × tiår (kolonne). Radene hentes dynamisk fra
+// treet (GENEALOGY_SUPERGENRES) — nye supersjangre dukker opp automatisk.
+// «Varmen» er derimot redaksjonell: nivå 0–5 for hvor toneangivende sjangeren
+// var det tiåret. Supersjangre som mangler i HEAT vises som «ingen data».
+const VK_DECADES = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
+const VK_COLORS = ["#eef3f0", "#d4efe0", "#a3e0c2", "#5cc596", "#23a06d", "#0c7a4f"];
+const VK_HEAT = {
+  "Blues":                          [1, 2, 4, 4, 4, 5, 3, 2, 2, 1, 1, 1, 1],
+  "Jazz":                           [1, 2, 4, 5, 5, 5, 5, 3, 2, 2, 2, 2, 2],
+  "Afroamerikansk populærmusikk":   [0, 1, 2, 3, 4, 4, 5, 5, 4, 5, 5, 5, 5],
+  "Country":                        [0, 0, 3, 3, 4, 5, 4, 4, 3, 4, 3, 3, 3],
+  "Elektronisk musikk":             [0, 0, 0, 0, 0, 0, 1, 3, 4, 5, 5, 5, 5],
+};
 
 const MODAL_HTML = `
 <!-- Teknologi -->
@@ -80,6 +94,18 @@ const MODAL_HTML = `
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="dm-text" class="info-text"></div>
+  </div>
+</div>
+
+<!-- Varmekart: supersjanger × tiår -->
+<div class="modal-backdrop" id="modal-varmekart">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Tyngdepunkt gjennom tiårene</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår. Mørkere = mer toneangivende.</p>
+    <div id="vk-body"></div>
   </div>
 </div>
 
@@ -459,6 +485,43 @@ function renderTeknologiList(category) {
   renderTechList(el, s.techItems, category || "", buildLinkCtx());
 }
 
+function openVarmekart() {
+  const modal = document.getElementById("modal-varmekart");
+  if (!modal) return;
+  const body = document.getElementById("vk-body");
+  const cols = VK_DECADES.length;
+  const gridStyle = `display:grid;grid-template-columns:128px repeat(${cols},minmax(32px,1fr));gap:3px`;
+
+  let html = `<div style="overflow-x:auto"><div style="min-width:560px">`;
+  html += `<div style="${gridStyle};align-items:end;margin-bottom:3px"><div></div>`;
+  html += VK_DECADES.map((d) => `<div style="text-align:center;font-size:0.72rem;color:var(--muted)">${d}</div>`).join("");
+  html += `</div>`;
+
+  for (const sj of GENEALOGY_SUPERGENRES) {
+    const vals = VK_HEAT[sj] || VK_DECADES.map(() => null);
+    html += `<div style="${gridStyle};align-items:center;margin-bottom:3px">`;
+    html += `<div style="font-size:0.82rem;color:var(--text);padding-right:8px;line-height:1.2">${escapeHtml(sj)}</div>`;
+    html += vals.map((v, i) => {
+      const has = v != null;
+      const bg = has ? VK_COLORS[v] : "#f5f8f6";
+      const title = `${sj} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}`;
+      return `<div title="${escapeHtml(title)}" style="height:30px;border-radius:6px;background:${bg}${has ? "" : ";border:1px dashed var(--line-strong)"}"></div>`;
+    }).join("");
+    html += `</div>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div style="display:flex;align-items:center;gap:8px;margin-top:18px;font-size:0.8rem;color:var(--muted);flex-wrap:wrap">`;
+  html += `<span>Mindre</span>`;
+  html += [1, 2, 3, 4, 5].map((v) => `<span style="width:22px;height:14px;border-radius:4px;background:${VK_COLORS[v]}"></span>`).join("");
+  html += `<span>Mer</span>`;
+  html += `<span style="margin-left:14px;display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:14px;border-radius:4px;background:#f5f8f6;border:1px dashed var(--line-strong)"></span>ingen data ennå</span>`;
+  html += `</div>`;
+
+  body.innerHTML = html;
+  modalOpen(modal);
+}
+
 function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
@@ -558,7 +621,7 @@ function injectModals() {
 
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
-   "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info",
+   "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail"].forEach((id) => {
     const m = document.getElementById(id);
     if (!m) return;
@@ -586,9 +649,14 @@ function wireModals() {
   });
 
   const slExtra = document.getElementById("sl-extra");
-  if (opts.onSlektstre && slExtra) {
-    slExtra.innerHTML = `<button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:14px">Vis sjangertre →</button>`;
-    slExtra.querySelector("#btn-slektstre").addEventListener("click", () => opts.onSlektstre());
+  if (slExtra) {
+    let btns = "";
+    if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="width:100%;margin-bottom:10px">Vis sjangertre →</button>`;
+    btns += `<button class="btn ghost" id="btn-varmekart" style="width:100%;margin-bottom:14px">Varmekart: tyngdepunkt gjennom tiårene →</button>`;
+    slExtra.innerHTML = btns;
+    const treBtn = slExtra.querySelector("#btn-slektstre");
+    if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());
+    slExtra.querySelector("#btn-varmekart").addEventListener("click", openVarmekart);
   }
 
   const tekExtra = document.getElementById("tek-admin-extra");
@@ -648,6 +716,7 @@ export function initExplore(options) {
   return {
     openDecadeList,
     openSubgenreList,
+    openVarmekart,
     openPodkast,
     openTeknologi,
     openTechDetail,
