@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=2.30";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=2.30";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=2.31";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=2.31";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -261,61 +261,16 @@ function onMainGenreClick(genre) {
   if (opts.onMainGenreCheck) opts.onMainGenreCheck(genre);
 }
 
-function showPlaylistForMainGenre({ label, fullName, node }) {
-  const s = getState();
-  const { total, html } = buildPlaylistHtml(node, s.artists);
-  document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
-  document.getElementById("pl-body").innerHTML = html;
-  modalOpen(document.getElementById("modal-spilleliste"));
+function showPlaylistForMainGenre({ fullName, node }) {
+  openPlaylistModal(fullName, node, getState().artists);
 }
 
 function showArtistsForSjanger({ label }) {
-  const s = getState();
-  const sj = label.toLowerCase();
-  const list = s.artists
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
-      a.metaGenre === label
-      || (a.mainGenre || []).some((x) => x.toLowerCase() === sj)
-      || (a.subGenre || []).some((x) => x.toLowerCase() === sj)
-    ))
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  document.getElementById("al-title").textContent = `${label} (${list.length})`;
-  const body = document.getElementById("al-body");
-  if (!list.length) {
-    body.innerHTML = `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
-  } else {
-    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
-    body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
-      const open = () => {
-        const a = list.find((x) => x.id === row.dataset.artistId);
-        if (a) opts.onArtistClick(a);
-      };
-      row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
-      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
-    });
-  }
-  modalOpen(document.getElementById("modal-artistliste"));
+  openArtistListModal(label, artistsInGenre(getState().artists, label), opts.onArtistClick, "Ingen forslag i denne sjangeren ennå.");
 }
 
 function showArtistsForInstrument(instrument) {
-  const s = getState();
-  const list = s.artists
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.instrument === instrument)
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  document.getElementById("al-title").textContent = `${instrument} (${list.length})`;
-  const body = document.getElementById("al-body");
-  body.innerHTML = list.length
-    ? `<div class="result-list">${buildArtistListRows(list)}</div>`
-    : `<p class="muted empty">Ingen forslag med dette instrumentet ennå.</p>`;
-  body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
-    const open = () => {
-      const a = list.find((x) => x.id === row.dataset.artistId);
-      if (a) opts.onArtistClick(a);
-    };
-    row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
-    row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
-  });
-  modalOpen(document.getElementById("modal-artistliste"));
+  openArtistListModal(instrument, artistsByInstrument(getState().artists, instrument), opts.onArtistClick, "Ingen forslag med dette instrumentet ennå.");
 }
 
 function openTechDetail(t) {

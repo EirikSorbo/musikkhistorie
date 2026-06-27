@@ -28,8 +28,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.30";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.30";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.31";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.31";
 
 const SJANGER_SET = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
 

@@ -14,9 +14,9 @@ import {
   limitForInstrument,
   decadesForRange,
   GENDERS,
-} from "./limits.js?v=2.30";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.30";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.30";
+} from "./limits.js?v=2.31";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.31";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.31";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {
@@ -918,6 +918,56 @@ export function buildArtistListRows(list) {
       </span>
     </div>`;
   }).join("");
+}
+
+const byInfluenceThenName = (a, b) =>
+  (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no");
+
+// Aktive, synlige artister som hører til en sjanger (meta/main/sub matcher label).
+export function artistsInGenre(artists, label) {
+  const sj = label.toLowerCase();
+  return (artists || [])
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
+      a.metaGenre === label
+      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
+    ))
+    .sort(byInfluenceThenName);
+}
+
+// Aktive, synlige artister på et instrument.
+export function artistsByInstrument(artists, instrument) {
+  return (artists || [])
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.instrument === instrument)
+    .sort(byInfluenceThenName);
+}
+
+// Fyller og åpner artistliste-popupen (#modal-artistliste). Delt av forsiden og slektstre-siden.
+export function openArtistListModal(title, list, onArtistClick, emptyText = "Ingen forslag ennå.") {
+  document.getElementById("al-title").textContent = `${title} (${list.length})`;
+  const body = document.getElementById("al-body");
+  if (!list.length) {
+    body.innerHTML = `<p class="muted empty">${escapeHtml(emptyText)}</p>`;
+  } else {
+    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
+    body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
+      const open = () => {
+        const a = list.find((x) => x.id === row.dataset.artistId);
+        if (a) onArtistClick(a);
+      };
+      row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
+      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
+  }
+  modalOpen(document.getElementById("modal-artistliste"));
+}
+
+// Fyller og åpner spilleliste-popupen (#modal-spilleliste).
+export function openPlaylistModal(fullName, node, artists) {
+  const { total, html } = buildPlaylistHtml(node, artists);
+  document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
+  document.getElementById("pl-body").innerHTML = html;
+  modalOpen(document.getElementById("modal-spilleliste"));
 }
 
 // Bygger HTML for spilleliste-popup: keyWorks/lenker fra artister, med sjanger-tag per rad.

@@ -2,8 +2,8 @@
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.30";
-import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.30";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.31";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.31";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
@@ -13,31 +13,7 @@ let api = null;
 let lastSjangerLabel = null;
 
 function showArtistsForMainGenre({ label }) {
-  const sj = label.toLowerCase();
-  const list = artists
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
-      a.metaGenre === label
-      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
-      || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
-    ))
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-
-  document.getElementById("al-title").textContent = `${label} (${list.length})`;
-  const body = document.getElementById("al-body");
-  if (!list.length) {
-    body.innerHTML = `<p class="muted empty">Ingen forslag i denne sjangeren ennå.</p>`;
-  } else {
-    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
-    body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
-      const open = () => {
-        const a = list.find((x) => x.id === row.dataset.artistId);
-        if (a) showArtistDetail(a);
-      };
-      row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
-      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
-    });
-  }
-  modalOpen(document.getElementById("modal-artistliste"));
+  openArtistListModal(label, artistsInGenre(artists, label), showArtistDetail, "Ingen forslag i denne sjangeren ennå.");
 }
 
 function onMainGenreClick(genre) {
@@ -69,34 +45,12 @@ function showTechDetail(t) {
 }
 
 function showArtistsForInstrument(instrument) {
-  const list = artists
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.instrument === instrument)
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-
-  document.getElementById("al-title").textContent = `${instrument} (${list.length})`;
-  const body = document.getElementById("al-body");
-  if (!list.length) {
-    body.innerHTML = `<p class="muted empty">Ingen forslag med dette instrumentet ennå.</p>`;
-  } else {
-    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
-    body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
-      const open = () => {
-        const a = list.find((x) => x.id === row.dataset.artistId);
-        if (a) showArtistDetail(a);
-      };
-      row.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
-      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
-    });
-  }
-  modalOpen(document.getElementById("modal-artistliste"));
+  openArtistListModal(instrument, artistsByInstrument(artists, instrument), showArtistDetail, "Ingen forslag med dette instrumentet ennå.");
 }
 
 function showPlaylistForMainGenre({ label, fullName, node }) {
   lastSjangerLabel = label;
-  const { total, html } = buildPlaylistHtml(node, artists);
-  document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
-  document.getElementById("pl-body").innerHTML = html;
-  modalOpen(document.getElementById("modal-spilleliste"));
+  openPlaylistModal(fullName, node, artists);
 }
 
 function openSjangerInfo(label) {
