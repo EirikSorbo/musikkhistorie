@@ -1058,7 +1058,7 @@ const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "genre", "instrument",
   "sjangre", "undersjangre", "influenceStart", "influenceEnd", "recordLabel",
   "geography", "description", "keyWorks", "musicExamples", "kilder",
-  "imageUrl", "imageCredit", "proposedBy",
+  "imageUrl", "imageCredit", "proposedBy", "priority", "teacherChecked",
 ];
 
 const MERGE_LABELS = {
@@ -1102,7 +1102,7 @@ function setupDataButtons() {
 function handleExport() {
   const artists = state.artists
     .filter((a) => a.status === "active" || a.status === "removed")
-    .map((a) => Object.fromEntries([...EXPORT_FIELDS, "priority"].map((f) => [f, a[f] ?? null])));
+    .map((a) => Object.fromEntries(EXPORT_FIELDS.map((f) => [f, a[f] ?? null])));
 
   const decades = {};
   for (const [id, d] of Object.entries(state.decadeDescs)) {
