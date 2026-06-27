@@ -449,6 +449,9 @@ button.tag:hover { border-color: var(--accent); color: var(--accent); background
 }
 button.tag.tag-sub:hover { border-color: var(--accent-2); }
 button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background: #a7f3d0; }
+/* Sjanger uten artister ennå: nedtonet + stiplet, men fortsatt klikkbar for beskrivelsen. */
+.tag.tag-sjanger.is-empty { color: #9ca3af; background: #f3f4f6; border-color: #e5e7eb; border-style: dashed; }
+button.tag.tag-sjanger.is-empty:hover { color: #065f46; background: #ecfdf5; border-color: #6ee7b7; }
 button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: #d1fae5; }
 .tag.tag-instrument { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
 button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; background: #bfdbfe; }

@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=2.42";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.42";
-import { linkifyArtists } from "./linkify.js?v=2.42";
+import { decadesForRange } from "./limits.js?v=2.43";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.43";
+import { linkifyArtists } from "./linkify.js?v=2.43";
 import {
   escapeHtml,
   linkDesc,
@@ -27,12 +27,12 @@ import {
   artistImage,
   formatInfoText,
   factsLines,
-} from "./ui-helpers.js?v=2.42";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal } from "./ui-modal.js?v=2.42";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.42";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.42";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.42";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.42";
+} from "./ui-helpers.js?v=2.43";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal } from "./ui-modal.js?v=2.43";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.43";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.43";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.43";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.43";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { linkifyArtists };

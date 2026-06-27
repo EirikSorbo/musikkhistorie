@@ -27,9 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.42";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.42";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.42";
+import { firebaseConfig } from "./firebase-config.js?v=2.43";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.43";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.43";
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.

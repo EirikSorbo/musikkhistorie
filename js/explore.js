@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, buildKilderList, buildMainGenreList } from "./ui.js?v=2.42";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.42";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, buildKilderList, buildMainGenreList } from "./ui.js?v=2.43";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.43";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -524,12 +524,18 @@ function openSubgenreList() {
   const active = s.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
 
-  const sjangre = [...new Set(active.flatMap(a => (a.mainGenre || []).filter(isMainGenre)))]
+  // Tre-drevet: alle sjangre fra treet vises alltid. De artist-taggede er en
+  // delmengde (isMainGenre), men tas med for sikkerhets skyld.
+  const withArtists = new Set(active.flatMap(a => (a.mainGenre || []).filter(isMainGenre)));
+  const sjangre = [...new Set([...GENEALOGY_MAIN_GENRES, ...withArtists])]
     .sort((a, b) => a.localeCompare(b, "no"));
   const slEl = document.getElementById("sl-chips");
   const checkedMainGenres = checkedState?.genres || [];
   slEl.innerHTML = sjangre.length
-    ? sjangre.map((s) => `<button class="tag tag-sjanger ${checkedMainGenres.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    ? sjangre.map((s) => {
+        const empty = !withArtists.has(s);
+        return `<button class="tag tag-sjanger ${checkedMainGenres.includes(s) ? "is-checked" : ""}${empty ? " is-empty" : ""}" data-sjanger="${escapeHtml(s)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(s)}</button>`;
+      }).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
 
   const under = [...new Set(active.flatMap(a => [
