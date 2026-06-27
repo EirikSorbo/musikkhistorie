@@ -1,10 +1,10 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js?v=2.43";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.43";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.43";
-import { CONFIGURED } from "./shared.js?v=2.43";
+import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js?v=2.44";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.44";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.44";
+import { CONFIGURED } from "./shared.js?v=2.44";
 
 const subDescs = {};
 let artists = [];
