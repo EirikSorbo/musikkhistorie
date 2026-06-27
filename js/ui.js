@@ -1,26 +1,47 @@
 // ============================================================================
-//  UI — rendering
+//  UI — rendering (artist- og listevisninger)
 // ----------------------------------------------------------------------------
 //  Rene funksjoner som bygger og oppdaterer grensesnittet ut fra tilstand.
 //  Ingen direkte databasekall her — handlinger sendes inn via `handlers`.
+//
+//  Lavnivå-hjelpere, tidslinjer, teknologi, dashboard, modaler og diff-tabell
+//  bor i egne moduler (ui-helpers/ui-timeline/ui-tech/ui-dashboard/ui-modal/
+//  ui-edit). De re-eksporteres herfra, så resten av appen importerer alt fra
+//  ./ui.js som før.
 // ============================================================================
 
+import { decadesForRange } from "./limits.js?v=2.40";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.40";
+import { linkifyArtists } from "./linkify.js?v=2.40";
 import {
-  computeCounts,
-  genderDistribution,
-  activeArtists,
-  limitForDecade,
-  limitForMetaGenre,
-  limitForInstrument,
-  decadesForRange,
-  GENDERS,
-} from "./limits.js?v=2.39";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.39";
-import { escapeHtml } from "./util.js?v=2.39";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.39";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal } from "./ui-modal.js?v=2.39";
+  escapeHtml,
+  linkDesc,
+  wireLinks,
+  buildKilderList,
+  kilderHtml,
+  genreTags,
+  yearLabel,
+  musicExampleLabel,
+  keyWorksText,
+  fmtCredit,
+  artistImage,
+  formatInfoText,
+  factsLines,
+} from "./ui-helpers.js?v=2.40";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal } from "./ui-modal.js?v=2.40";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.40";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.40";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.40";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.40";
+
+// Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { linkifyArtists };
+export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal };
+export { TECH_CATEGORIES, renderTechList, renderTechDetail };
+export { buildTimeline, buildTechTimeline };
+export { renderDashboard, renderLimits };
+export { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
 
 export function buildMainGenreList(artists) {
   const set = new Set(GENEALOGY_MAIN_GENRES);
@@ -30,428 +51,6 @@ export function buildMainGenreList(artists) {
     for (const s of (a.subGenre || [])) set.add(s);
   }
   return [...set];
-}
-
-function linkDesc(text, lc) {
-  if (!lc) return escapeHtml(text);
-  return linkifyAll(text, lc);
-}
-
-function wireLinks(el, lc) {
-  if (!lc) return;
-  wireAllLinks(el, lc);
-}
-
-// Bygger en strukturert kilde-liste (brukt på artist, sjanger og tiår).
-export function buildKilderList(kilder, label = "Kilder") {
-  if (!Array.isArray(kilder) || !kilder.length) return "";
-  const items = kilder.map((k) => {
-    const text = escapeHtml(k.text || "");
-    return k.url
-      ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${text}</a></li>`
-      : `<li>${text}</li>`;
-  }).join("");
-  return `<div class="kilder"><strong>${escapeHtml(label)}:</strong><ul>${items}</ul></div>`;
-}
-
-// Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).
-function genreTags(a) {
-  const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
-  const under = Array.isArray(a.subGenre) ? a.subGenre : [];
-  return [
-    ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-    ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-  ].join("");
-}
-
-function yearLabel(w) {
-  const y = w.year || null;
-  if (y) return `(${y})`;
-  return "";
-}
-
-function musicExampleLabel(m) {
-  const y = m.year || null;
-  const p = m.performanceYear || null;
-  if (y && p && p !== y) return ` (${y}, framføring ${p})`;
-  if (y) return ` (${y})`;
-  if (p) return ` (framføring ${p})`;
-  return "";
-}
-
-function keyWorksText(works) {
-  if (!Array.isArray(works) || !works.length) return "";
-  return works.map((w) => {
-    const t = escapeHtml(w.title || "");
-    const y = yearLabel(w);
-    const ySuffix = y ? ` ${y}` : "";
-    return w.url
-      ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${t}</a>${ySuffix}`
-      : `${t}${ySuffix}`;
-  }).join(", ");
-}
-
-const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
-
-export function fmtCredit(raw) {
-  if (!raw) return "";
-  const text = raw.replace(/^Foto:\s*/i, "");
-  return `<span class="image-credit">Foto: ${escapeHtml(text)}</span>`;
-}
-
-function artistImage(a, big = false) {
-  if (!a.imageUrl) return "";
-  return `<figure class="artist-image ${big ? "big" : ""}">
-    <img src="${escapeHtml(a.imageUrl)}" alt="${escapeHtml(a.name)}" loading="lazy" />
-    ${fmtCredit(a.imageCredit)}
-  </figure>`;
-}
-
-export { escapeHtml };
-
-function splitLines(text) {
-  return text.split("\n").map(l => l.replace(/^[•\-–]\s*/, "").trim()).filter(Boolean);
-}
-
-export function formatInfoText(text) {
-  if (!text) return "";
-  const lines = splitLines(text);
-  if (lines.length > 1) {
-    return "<ul>" + lines.map(l => `<li>${escapeHtml(l)}</li>`).join("") + "</ul>";
-  }
-  return `<p>${escapeHtml(lines[0] || text.trim())}</p>`;
-}
-
-function extractBullets(text) {
-  return splitLines(text);
-}
-
-const TECH_CATEGORIES = [
-  "Opptak og avspilling",
-  "Kringkasting og spredning",
-  "Instrumenter og lydutstyr",
-];
-
-export { TECH_CATEGORIES };
-
-export function renderTechList(el, items, activeCategory, lc) {
-  const filtered = activeCategory ? items.filter(t => t.category === activeCategory) : items;
-  if (!filtered.length) {
-    el.innerHTML = `<p class="muted empty">Ingen teknologier i denne kategorien ennå.</p>`;
-    return;
-  }
-  el.innerHTML = filtered.map(t => {
-    const img = t.imageUrl
-      ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${fmtCredit(t.imageCredit)}</figure>`
-      : "";
-    const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-    const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
-    const propBtn = lc?.isTeacher
-      ? ""
-      : `<footer class="card-foot"><div class="spacer"></div><button class="btn ghost small" data-propose-type="tech" data-propose-id="${escapeHtml(t.id)}">Foreslå endring</button></footer>`;
-    return `<article class="card" data-tech-id="${escapeHtml(t.id)}">
-      <header class="card-head">
-        ${img}
-        <h3>${escapeHtml(t.name)}</h3>
-        <div class="meta">${yearTag}${catTag}</div>
-      </header>
-      ${t.description ? `<p class="desc">${linkDesc(t.description, lc)}</p>` : ""}
-      ${propBtn}
-    </article>`;
-  }).join("");
-  wireLinks(el, lc);
-}
-
-export function renderTechDetail(el, t, lc) {
-  const img = t.imageUrl
-    ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${fmtCredit(t.imageCredit)}</figure>`
-    : "";
-  const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
-  const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}</div>${t.description ? `<p>${linkDesc(t.description, lc)}</p>` : ""}`;
-  wireLinks(el, lc);
-}
-
-function shortDesc(text) {
-  const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
-  if (first.length <= 70) return first;
-  const cut = first.lastIndexOf(" ", 67);
-  return first.slice(0, cut > 30 ? cut : 67) + "…";
-}
-
-function layoutTimeline(events) {
-  const stems = [24, 44, 64];
-  const result = [];
-  let lastAboveAt = -Infinity, lastBelowAt = -Infinity;
-  for (let i = 0; i < events.length; i++) {
-    const e = events[i];
-    const aboveGap = e.pct - lastAboveAt;
-    const belowGap = e.pct - lastBelowAt;
-    let dir, stem;
-    if (aboveGap >= 18 && belowGap >= 18) {
-      dir = "above"; stem = stems[0];
-    } else if (aboveGap >= belowGap) {
-      dir = "above";
-      stem = aboveGap < 10 ? stems[2] : aboveGap < 18 ? stems[1] : stems[0];
-    } else {
-      dir = "below";
-      stem = belowGap < 10 ? stems[2] : belowGap < 18 ? stems[1] : stems[0];
-    }
-    if (dir === "above") lastAboveAt = e.pct; else lastBelowAt = e.pct;
-    result.push({ ...e, dir, stem });
-  }
-  return result;
-}
-
-function buildProportionalTimeline(items, startYear) {
-  if (items.length < 2) return "";
-  const minY = Math.min(...items.map(e => e.year || startYear));
-  const maxY = Math.max(...items.map(e => e.year || startYear + 9));
-  const span = Math.max(maxY - minY, 1);
-  const pad = 4;
-  const mapped = items.map(e => ({
-    ...e,
-    pct: pad + ((e.year || startYear) - minY) / span * (100 - 2 * pad),
-  }));
-  const laid = layoutTimeline(mapped);
-  const maxStem = Math.max(...laid.map(e => e.stem));
-  let html = `<div class="timeline tl-prop" style="--tl-max-stem:${maxStem}px"><div class="tl-track">`;
-  for (const ev of laid) {
-    const edge = ev.pct <= 12 ? " tl-start" : ev.pct >= 88 ? " tl-end" : "";
-    const posStyle = `left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px`;
-    const extra = ev.attrs ? ev.attrs.replace(/style="/, `style="${posStyle};`) : `style="${posStyle}"`;
-    html += `<div class="tl-item tl-${ev.dir}${edge}" ${extra}>` +
-      `<div class="tl-dot"></div><div class="tl-stem"></div>` +
-      `<div class="tl-label"><span class="tl-year">${escapeHtml(ev.label)}</span>` +
-      `<span class="tl-desc">${escapeHtml(ev.desc)}</span></div></div>`;
-  }
-  html += "</div></div>";
-  return html;
-}
-
-export function buildTimeline(text, decadeId) {
-  if (!text) return "";
-  const bullets = extractBullets(text);
-  if (bullets.length < 2) return "";
-  const startYear = parseInt(decadeId, 10);
-  const events = bullets.map(b => {
-    const m = b.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
-    return { year: m ? parseInt(m[1], 10) : null, text: b };
-  });
-  events.sort((a, b) => (a.year || startYear) - (b.year || startYear));
-  const items = events.map(ev => ({
-    year: ev.year,
-    label: ev.year ? String(ev.year) : `${startYear}‑årene`,
-    desc: shortDesc(ev.text),
-  }));
-  return buildProportionalTimeline(items, startYear);
-}
-
-export function buildTechTimeline(techItems, decadeId) {
-  const d = String(decadeId);
-  const filtered = techItems.filter(t => t.decade === d);
-  if (filtered.length < 2) return "";
-  filtered.sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
-  const startYear = parseInt(d, 10);
-  const items = filtered.map(t => ({
-    year: t.adoptedYear || null,
-    label: t.adoptedYear ? String(t.adoptedYear) : `${d}+`,
-    desc: t.name,
-    attrs: ` data-tech-id="${escapeHtml(t.id)}" style="cursor:pointer"`,
-  }));
-  return buildProportionalTimeline(items, startYear);
-}
-
-const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
-const GENDER_COLORS = {
-  kvinne: "var(--c-kvinne)",
-  mann: "var(--c-mann)",
-  annet: "var(--c-annet)",
-  ukjent: "var(--c-ukjent)",
-};
-
-// ----------------------------------------------------------------------------
-//  Dashboard: totaltelling + kjønnsfordeling
-// ----------------------------------------------------------------------------
-
-export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSubgenreClick }) {
-  const counts = computeCounts(artists);
-  const dist = genderDistribution(artists);
-  const removed = artists.filter((a) => (a.priority || 0) === -1).length;
-  const pending = artists.filter((a) => a.status === "pending").length;
-  const checked = artists.filter((a) => a.status === "active" && a.teacherChecked === true).length;
-  const activeArtists = artists.filter(a => a.status === "active");
-  const subgenreCount = new Set(
-    activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])])
-  ).size;
-
-  const artistsNoSjanger = activeArtists
-    .filter(a => !a.mainGenre || a.mainGenre.length === 0)
-    .sort((a, b) => a.name.localeCompare(b.name, "no"));
-
-  const allArtistTags = new Set(activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])]));
-  const orphanedSubgenres = Object.keys(subgenreDescs)
-    .filter(s => !allArtistTags.has(s))
-    .sort((a, b) => a.localeCompare(b, "no"));
-
-  const noSjangerHtml = artistsNoSjanger.length
-    ? artistsNoSjanger.map(a =>
-        `<div class="result-row"><span class="result-name">${escapeHtml(a.name)}</span><span class="result-meta">${a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : ""}</span></div>`
-      ).join("")
-    : `<p class="muted">Ingen.</p>`;
-
-  const orphanHtml = orphanedSubgenres.length
-    ? orphanedSubgenres.map(s =>
-        `<div class="result-row orphan-link" data-subgenre="${escapeHtml(s)}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(s)}</span></div>`
-      ).join("")
-    : `<p class="muted">Ingen.</p>`;
-
-  el.innerHTML = `
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-num">${counts.total}<span>/${config.maxTotal}</span></div>
-        <div class="stat-label">Aktive forslag totalt</div>
-        <div class="bar"><div class="bar-fill" style="width:${pct(
-          counts.total,
-          config.maxTotal
-        )}%"></div></div>
-      </div>
-      ${pending ? `<div class="stat-card stat-pending">
-        <div class="stat-num">${pending}</div>
-        <div class="stat-label">Venter på godkjenning</div>
-      </div>` : ""}
-      <div class="stat-card">
-        <div class="stat-num">${removed}</div>
-        <div class="stat-label">Skjult for studenter</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">${subgenreCount}</div>
-        <div class="stat-label">Undersjangre</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">${checked}</div>
-        <div class="stat-label">Artistkort sjekket</div>
-      </div>
-      <div class="stat-card stat-wide">
-        <div class="stat-label">Kjønnsfordeling (aktive)</div>
-        ${renderGenderChart(dist)}
-      </div>
-      <div class="stat-card stat-wide">
-        <button class="btn ghost small" id="ov-btn-no-sjanger">Artister uten sjanger (${artistsNoSjanger.length})</button>
-        <div id="ov-no-sjanger-list" style="display:none;margin-top:10px"></div>
-        <button class="btn ghost small" id="ov-btn-orphan-sub" style="margin-top:8px">Undersjangre uten artistkort (${orphanedSubgenres.length})</button>
-        <div id="ov-orphan-sub-list" style="display:none;margin-top:10px"></div>
-      </div>
-    </div>
-  `;
-
-  el.querySelector("#ov-btn-no-sjanger").addEventListener("click", () => {
-    const panel = el.querySelector("#ov-no-sjanger-list");
-    const visible = panel.style.display !== "none";
-    panel.style.display = visible ? "none" : "block";
-    if (!visible) panel.innerHTML = `<div class="result-list">${noSjangerHtml}</div>`;
-  });
-
-  el.querySelector("#ov-btn-orphan-sub").addEventListener("click", () => {
-    const panel = el.querySelector("#ov-orphan-sub-list");
-    const visible = panel.style.display !== "none";
-    panel.style.display = visible ? "none" : "block";
-    if (!visible) {
-      panel.innerHTML = `<div class="result-list">${orphanHtml}</div>`;
-      if (onSubgenreClick) {
-        panel.querySelectorAll(".orphan-link").forEach(row => {
-          row.addEventListener("click", () => onSubgenreClick(row.dataset.subgenre));
-        });
-      }
-    }
-  });
-}
-
-function renderGenderChart(dist) {
-  if (dist.total === 0) {
-    return `<p class="muted">Ingen forslag ennå.</p>`;
-  }
-  const segments = ["kvinne", "mann", "annet", "ukjent"]
-    .filter((k) => dist[k] > 0)
-    .map(
-      (k) =>
-        `<div class="gender-seg" style="width:${pct(
-          dist[k],
-          dist.total
-        )}%;background:${GENDER_COLORS[k]}" title="${GENDER_LABEL[k]}: ${
-          dist[k]
-        }"></div>`
-    )
-    .join("");
-
-  const legend = ["kvinne", "mann", "annet", "ukjent"]
-    .map(
-      (k) => `
-      <span class="legend-item">
-        <span class="dot" style="background:${GENDER_COLORS[k]}"></span>
-        ${GENDER_LABEL[k]}: <strong>${dist[k]}</strong>
-        (${pct(dist[k], dist.total)}%)
-      </span>`
-    )
-    .join("");
-
-  return `
-    <div class="gender-bar">${segments}</div>
-    <div class="legend">${legend}</div>
-  `;
-}
-
-// ----------------------------------------------------------------------------
-//  Grenseoversikt: per tiår og per sjanger
-// ----------------------------------------------------------------------------
-
-export function renderLimits(el, { artists, config }) {
-  const counts = computeCounts(artists);
-
-  const decadeRows = config.decades
-    .map((d) =>
-      limitRow(`${d}-tallet`, counts.perDecade[d] || 0, limitForDecade(config, d))
-    )
-    .join("");
-
-  const genreRows = config.metaGenres
-    .map((g) => limitRow(g, counts.perMetaGenre[g] || 0, limitForMetaGenre(config, g)))
-    .join("");
-
-  const instrumentRows = (config.instruments || [])
-    .map((i) => limitRow(i, counts.perInstrument[i] || 0, limitForInstrument(config, i)))
-    .join("");
-
-  el.innerHTML = `
-    <div class="limits-cols">
-      <div>
-        <h3>Per tiår</h3>
-        <div class="limit-list">${decadeRows}</div>
-      </div>
-      <div>
-        <h3>Per sjanger</h3>
-        <div class="limit-list">${genreRows}</div>
-      </div>
-      <div>
-        <h3>Per instrument</h3>
-        <div class="limit-list">${instrumentRows}</div>
-      </div>
-    </div>
-  `;
-}
-
-function limitRow(label, count, max) {
-  const full = count >= max;
-  return `
-    <div class="limit-row ${full ? "full" : ""}">
-      <span class="limit-label">${escapeHtml(label)}</span>
-      <span class="bar small"><span class="bar-fill" style="width:${pct(
-        count,
-        max
-      )}%"></span></span>
-      <span class="limit-count">${count}/${max}${full ? " 🔒" : ""}</span>
-    </div>
-  `;
 }
 
 // ----------------------------------------------------------------------------
@@ -792,31 +391,6 @@ export function fillSelect(select, values, { placeholder } = {}) {
   if (current) select.value = current;
 }
 
-// Faktalinjer under tittel: levetid, innflytelse, kjønn (kun lærer), virkested.
-// Vises som tekst (samme format som «Sentrale verk»), ikke som bobler.
-function factsLines(a, { showGender = false } = {}) {
-  const rows = [];
-  if (a.birthYear && a.deathYear) rows.push(["Levetid", `${a.birthYear}–${a.deathYear}`]);
-  else if (a.birthYear) rows.push(["Levetid", `${a.birthYear}–`]);
-  else if (a.deathYear) rows.push(["Levetid", `?–${a.deathYear}`]);
-  if (a.influenceStart) {
-    const p = (!a.influenceEnd || a.influenceEnd === a.influenceStart)
-      ? `ca. ${a.influenceStart}`
-      : `${a.influenceStart}–${a.influenceEnd}`;
-    rows.push(["Innflytelse", p]);
-  }
-  if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel]);
-  if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
-  if (a.geography) rows.push(["Virkested", a.geography]);
-  if (!rows.length) return "";
-  return `<div class="facts">${rows.map(([l, v]) => `<p><strong>${l}:</strong> ${escapeHtml(v)}</p>`).join("")}</div>`;
-}
-
-function pct(n, max) {
-  if (!max) return 0;
-  return Math.min(100, Math.round((n / max) * 100));
-}
-
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
 export function showSubsjangerInfo(label, opts = {}) {
   const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
@@ -851,8 +425,6 @@ export function showSubsjangerInfo(label, opts = {}) {
   if (be) be.addEventListener("click", () => onEdit(label));
   modalOpen(modal);
 }
-
-
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
 // Returnerer HTML-streng med rader som har data-artist-id for klikk-kobling.
@@ -979,7 +551,3 @@ export function buildPlaylistHtml(node, artists) {
   if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>` };
   return { total, html: `<ul class="pl-list">${items.join("")}</ul>` };
 }
-
-
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.39";
-export { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
