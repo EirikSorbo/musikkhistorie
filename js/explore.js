@@ -1,18 +1,43 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildGenreList } from "./ui.js?v=231";
-import { GENEALOGY_GENRES, GENEALOGY_SUPERSJANGRE, showSjangerInfo } from "./genealogy.js?v=231";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=232";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=232";
 
-// Varmekart: supersjanger (rad) × tiår (kolonne). Radene hentes dynamisk fra
-// treet (GENEALOGY_SUPERSJANGRE) — nye supersjangre dukker opp automatisk.
+// Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
+// treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
 // «Varmen» er derimot redaksjonell: nivå 0–5 for hvor toneangivende sjangeren
-// var det tiåret. Supersjangre som mangler i HEAT vises som «ingen data».
+// var det tiåret. Sjangre som mangler i HEAT vises som «ingen data».
 const VK_DECADES = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
 const VK_COLORS = ["#eef3f0", "#d4efe0", "#a3e0c2", "#5cc596", "#23a06d", "#0c7a4f"];
 const VK_HEAT = {
-  "Blues":                          [1, 2, 4, 4, 4, 5, 3, 2, 2, 1, 1, 1, 1],
-  "Jazz":                           [1, 2, 4, 5, 5, 5, 5, 3, 2, 2, 2, 2, 2],
-  "Afroamerikansk populærmusikk":   [0, 1, 2, 3, 4, 4, 5, 5, 4, 5, 5, 5, 5],
-  "Country":                        [0, 0, 3, 3, 4, 5, 4, 4, 3, 4, 3, 3, 3],
-  "Elektronisk musikk":             [0, 0, 0, 0, 0, 0, 1, 3, 4, 5, 5, 5, 5],
+  "Blues":         [2, 3, 4, 4, 4, 5, 4, 3, 2, 2, 2, 2, 2],
+  "Ragtime":       [4, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  "Tin Pan Alley": [0, 3, 4, 4, 4, 3, 1, 0, 0, 0, 0, 0, 0],
+  "Jazz":          [0, 2, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2],
+  "Country":       [0, 0, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  "Gospel":        [0, 0, 0, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2],
+  "Swing":         [0, 0, 1, 4, 5, 2, 1, 0, 0, 0, 0, 0, 0],
+  "Bluegrass":     [0, 0, 0, 0, 2, 3, 3, 2, 2, 2, 2, 2, 2],
+  "Honky tonk":    [0, 0, 0, 0, 3, 4, 3, 2, 1, 1, 1, 1, 1],
+  "Bebop":         [0, 0, 0, 0, 3, 5, 3, 1, 1, 1, 1, 1, 1],
+  "R&B":           [0, 0, 0, 0, 3, 4, 4, 3, 3, 3, 3, 3, 3],
+  "Nashville":     [0, 0, 0, 0, 0, 2, 4, 3, 3, 2, 2, 2, 2],
+  "Chicago blues": [0, 0, 0, 0, 1, 4, 4, 2, 2, 1, 1, 1, 1],
+  "Cool jazz":     [0, 0, 0, 0, 0, 3, 3, 1, 1, 1, 1, 1, 1],
+  "Hard bop":      [0, 0, 0, 0, 0, 2, 4, 2, 1, 1, 1, 1, 1],
+  "Soul":          [0, 0, 0, 0, 0, 1, 5, 4, 2, 2, 2, 2, 2],
+  "Modal jazz":    [0, 0, 0, 0, 0, 1, 3, 2, 1, 1, 1, 1, 1],
+  "Free jazz":     [0, 0, 0, 0, 0, 0, 3, 2, 1, 1, 1, 1, 1],
+  "Funk":          [0, 0, 0, 0, 0, 0, 2, 4, 3, 2, 2, 2, 2],
+  "Reggae":        [0, 0, 0, 0, 0, 0, 2, 4, 3, 2, 2, 2, 2],
+  "Outlaw":        [0, 0, 0, 0, 0, 0, 0, 3, 2, 1, 1, 1, 1],
+  "Fusion":        [0, 0, 0, 0, 0, 0, 1, 4, 3, 2, 2, 2, 2],
+  "Hip-hop":       [0, 0, 0, 0, 0, 0, 0, 2, 4, 5, 5, 5, 5],
+  "Disco":         [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0, 0],
+  "House":         [0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4],
+  "Techno":        [0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 4, 4, 4],
+  "Americana":     [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3],
+  "Neo-soul":      [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 3, 3],
+  "Trance / DnB":  [0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4],
+  "Nu-jazz":       [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3],
 };
 
 const MODAL_HTML = `
@@ -201,10 +226,10 @@ function buildLinkCtx() {
   return {
     artists: s.artists,
     techItems: s.techItems,
-    genres: buildGenreList(s.artists),
+    genres: buildMainGenreList(s.artists),
     onArtistClick: opts.onArtistClick,
     onTechClick: openTechDetail,
-    onGenreClick,
+    onMainGenreClick,
     isTeacher: !!s.isTeacher,
   };
 }
@@ -216,12 +241,12 @@ function sjangerOpts() {
     subgenreDescs: s.subgenreDescs,
     artists: s.artists,
     techItems: s.techItems,
-    genres: buildGenreList(s.artists),
+    genres: buildMainGenreList(s.artists),
     onArtistClick: opts.onArtistClick,
     onTechClick: openTechDetail,
-    onGenreClick,
+    onMainGenreClick,
     onShowArtists: showArtistsForSjanger,
-    onShowPlaylist: showPlaylistForGenre,
+    onShowPlaylist: showPlaylistForMainGenre,
     onEdit: opts.onSubgenreEdit ? (label) => {
       modalClose(document.getElementById("modal-sjanger"));
       opts.onSubgenreEdit(label);
@@ -231,12 +256,12 @@ function sjangerOpts() {
   };
 }
 
-function onGenreClick(genre) {
+function onMainGenreClick(genre) {
   showSjangerInfo(genre, sjangerOpts()) || showSubsjangerInfo(genre, sjangerOpts());
-  if (opts.onGenreCheck) opts.onGenreCheck(genre);
+  if (opts.onMainGenreCheck) opts.onMainGenreCheck(genre);
 }
 
-function showPlaylistForGenre({ label, fullName, node }) {
+function showPlaylistForMainGenre({ label, fullName, node }) {
   const s = getState();
   const { total, html } = buildPlaylistHtml(node, s.artists);
   document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
@@ -249,9 +274,9 @@ function showArtistsForSjanger({ label }) {
   const sj = label.toLowerCase();
   const list = s.artists
     .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
-      a.genre === label
-      || (a.sjangre || []).some((x) => x.toLowerCase() === sj)
-      || (a.undersjangre || []).some((x) => x.toLowerCase() === sj)
+      a.metaGenre === label
+      || (a.mainGenre || []).some((x) => x.toLowerCase() === sj)
+      || (a.subGenre || []).some((x) => x.toLowerCase() === sj)
     ))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   document.getElementById("al-title").textContent = `${label} (${list.length})`;
@@ -497,7 +522,9 @@ function openVarmekart() {
   html += VK_DECADES.map((d) => `<div style="text-align:center;font-size:0.72rem;color:var(--muted)">${d}</div>`).join("");
   html += `</div>`;
 
-  for (const sj of GENEALOGY_SUPERSJANGRE) {
+  const firstHot = (sj) => { const i = (VK_HEAT[sj] || []).findIndex((v) => v > 0); return i < 0 ? 99 : i; };
+  const rows = [...GENEALOGY_MAIN_GENRES].sort((a, b) => firstHot(a) - firstHot(b) || a.localeCompare(b, "no"));
+  for (const sj of rows) {
     const vals = VK_HEAT[sj] || VK_DECADES.map(() => null);
     html += `<div style="${gridStyle};align-items:center;margin-bottom:3px">`;
     html += `<div style="font-size:0.82rem;color:var(--text);padding-right:8px;line-height:1.2">${escapeHtml(sj)}</div>`;
@@ -526,21 +553,21 @@ function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
   const s = getState();
-  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const sjangerSet = new Set(GENEALOGY_MAIN_GENRES.map(g => g.toLowerCase()));
   const active = s.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
 
-  const sjangre = [...new Set(active.flatMap(a => (a.sjangre || []).filter(x => sjangerSet.has(x.toLowerCase()))))]
+  const sjangre = [...new Set(active.flatMap(a => (a.mainGenre || []).filter(x => sjangerSet.has(x.toLowerCase()))))]
     .sort((a, b) => a.localeCompare(b, "no"));
   const slEl = document.getElementById("sl-chips");
-  const checkedGenres = checkedState?.genres || [];
+  const checkedMainGenres = checkedState?.genres || [];
   slEl.innerHTML = sjangre.length
-    ? sjangre.map((s) => `<button class="tag tag-sjanger ${checkedGenres.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    ? sjangre.map((s) => `<button class="tag tag-sjanger ${checkedMainGenres.includes(s) ? "is-checked" : ""}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
 
   const under = [...new Set(active.flatMap(a => [
-    ...(a.sjangre || []).filter(x => !sjangerSet.has(x.toLowerCase())),
-    ...(a.undersjangre || []),
+    ...(a.mainGenre || []).filter(x => !sjangerSet.has(x.toLowerCase())),
+    ...(a.subGenre || []),
   ]))].sort((a, b) => a.localeCompare(b, "no"));
   const ulEl = document.getElementById("ul-chips");
   const checkedSubs = checkedState?.subgenres || [];
@@ -567,7 +594,7 @@ function openSubgenreInfo(subgenreId) {
   document.getElementById("sgi-desc").className = desc?.description ? "" : "muted";
 
   const artists = s.artists
-    .filter(a => a.status === "active" && (a.priority || 0) !== -1 && ((a.undersjangre || []).includes(subgenreId) || (a.sjangre || []).includes(subgenreId)))
+    .filter(a => a.status === "active" && (a.priority || 0) !== -1 && ((a.subGenre || []).includes(subgenreId) || (a.mainGenre || []).includes(subgenreId)))
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
   const el = document.getElementById("sgi-artists");
@@ -580,7 +607,7 @@ function openSubgenreInfo(subgenreId) {
         ${artists.map(a => `<div class="result-row sgi-artist-row" data-id="${escapeHtml(a.id)}">
           <span class="result-name">${escapeHtml(a.name)}</span>
           <span class="result-meta">
-            ${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}
+            ${a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : ""}
             ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
           </span>
           <span class="result-arrow">›</span>
@@ -688,14 +715,14 @@ function wireModals() {
     if (sjBtn) {
       const name = sjBtn.dataset.sjanger;
       showSjangerInfo(name, sjangerOpts()) || showSubsjangerInfo(name, sjangerOpts());
-      if (opts.onGenreCheck) opts.onGenreCheck(name);
+      if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
       return;
     }
     const underBtn = e.target.closest("[data-under]");
     if (underBtn) {
       const name = underBtn.dataset.under;
       showSubsjangerInfo(name, sjangerOpts()) || showSjangerInfo(name, sjangerOpts());
-      if (opts.onGenreCheck) opts.onGenreCheck(name);
+      if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
       return;
     }
     const inst = e.target.closest("[data-instrument]");
@@ -723,8 +750,8 @@ export function initExplore(options) {
     openTechDetail,
     buildLinkCtx,
     showArtistsForSjanger,
-    showPlaylistForGenre,
-    onGenreClick,
+    showPlaylistForMainGenre,
+    onMainGenreClick,
     openSubgenreInfo,
   };
 }

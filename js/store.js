@@ -29,26 +29,33 @@ import {
 
 import { firebaseConfig } from "./firebase-config.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { GENEALOGY_GENRES } from "./genealogy.js?v=231";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=232";
 
-const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
+const SJANGER_SET = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.
 export function normalizeArtist(a) {
   const out = { ...a };
 
-  // sjangre + undersjangre: del opp `subgenres` hvis ikke allerede satt
-  if (!Array.isArray(out.sjangre) && !Array.isArray(out.undersjangre)) {
+  // Bakoverkompat: gamle feltnavn → nye (genre→metaGenre, sjangre→mainGenre, undersjangre→subGenre).
+  // Lar appen lese eksisterende Firestore-dokumenter og gamle JSON-eksporter uten datatap.
+  if (out.metaGenre == null && out.genre != null) out.metaGenre = out.genre;
+  if (!Array.isArray(out.mainGenre) && Array.isArray(out.sjangre)) out.mainGenre = out.sjangre;
+  if (!Array.isArray(out.subGenre) && Array.isArray(out.undersjangre)) out.subGenre = out.undersjangre;
+  delete out.genre; delete out.sjangre; delete out.undersjangre;
+
+  // mainGenre + subGenre: del opp `subgenres` hvis ikke allerede satt
+  if (!Array.isArray(out.mainGenre) && !Array.isArray(out.subGenre)) {
     const subs = Array.isArray(out.subgenres) ? out.subgenres : [];
-    out.sjangre = subs.filter((s) => SJANGER_SET.has(String(s).toLowerCase()));
-    out.undersjangre = subs.filter((s) => !SJANGER_SET.has(String(s).toLowerCase()));
+    out.mainGenre = subs.filter((s) => SJANGER_SET.has(String(s).toLowerCase()));
+    out.subGenre = subs.filter((s) => !SJANGER_SET.has(String(s).toLowerCase()));
   } else {
-    out.sjangre = Array.isArray(out.sjangre) ? out.sjangre : [];
-    out.undersjangre = Array.isArray(out.undersjangre) ? out.undersjangre : [];
+    out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
+    out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];
   }
   // For bakoverkompatibilitet i kode som leser begge:
-  out.subgenres = [...out.sjangre, ...out.undersjangre];
+  out.subgenres = [...out.mainGenre, ...out.subGenre];
 
   // keyWorks: streng → array av {title, year?, url?}
   if (typeof out.keyWorks === "string") {
@@ -132,13 +139,23 @@ export function subscribeArtists(callback) {
   });
 }
 
+// Bakoverkompat for config: gamle nøkler → nye (genres→metaGenres osv.).
+function normalizeConfig(d) {
+  const c = { ...d };
+  if (c.metaGenres == null && c.genres != null) c.metaGenres = c.genres;
+  if (c.metaGenreLimits == null && c.genreLimits != null) c.metaGenreLimits = c.genreLimits;
+  if (c.maxPerMetaGenre == null && c.maxPerGenre != null) c.maxPerMetaGenre = c.maxPerGenre;
+  delete c.genres; delete c.genreLimits; delete c.maxPerGenre;
+  return c;
+}
+
 // Lytter på konfigurasjon. Bruker standardgrenser til læreren lagrer egne.
 export function subscribeConfig(callback) {
   return onSnapshot(configRef, (snap) => {
     if (!snap.exists()) {
       callback({ ...DEFAULT_CONFIG });
     } else {
-      callback({ ...DEFAULT_CONFIG, ...snap.data() });
+      callback({ ...DEFAULT_CONFIG, ...normalizeConfig(snap.data()) });
     }
   }, (err) => {
     console.error("Kunne ikke lese konfig – sjekk Firestore-regler:", err.code, err.message);
@@ -177,10 +194,10 @@ export async function addArtist(data) {
     birthYear: n.birthYear ?? null,
     deathYear: n.deathYear ?? null,
     gender: n.gender,
-    genre: n.genre,
+    metaGenre: n.metaGenre,
     instrument: n.instrument ?? "",
-    sjangre: n.sjangre,
-    undersjangre: n.undersjangre,
+    mainGenre: n.mainGenre,
+    subGenre: n.subGenre,
     influenceStart: n.influenceStart ?? null,
     influenceEnd: n.influenceEnd ?? null,
     description: n.description ?? "",

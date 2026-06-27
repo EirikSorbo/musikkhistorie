@@ -33,12 +33,12 @@ import {
   approveTech,
 } from "./store.js";
 import { DEFAULT_CONFIG } from "./limits.js";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=231";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=232";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES, showSjangerInfo } from "./genealogy.js?v=231";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=231";
-import { initExplore } from "./explore.js?v=231";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo } from "./genealogy.js?v=232";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=232";
+import { initExplore } from "./explore.js?v=232";
 
 const state = {
   artists: [],
@@ -92,10 +92,10 @@ function openDetail(artist) {
   modalOpen(modal);
 }
 
-function addGenreCheckToggle(genre) {
+function addMainGenreCheckToggle(genre) {
   const body = document.getElementById("sj-body");
   if (!body) return;
-  const sjangerSet = new Set(GENEALOGY_GENRES.map(g => g.toLowerCase()));
+  const sjangerSet = new Set(GENEALOGY_MAIN_GENRES.map(g => g.toLowerCase()));
   const field = sjangerSet.has(genre.toLowerCase()) ? "genres" : "subgenres";
   const list = state.teacherChecks[field] || [];
   const checked = list.includes(genre);
@@ -578,8 +578,8 @@ function renderList() {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#f-sjanger"), GENEALOGY_GENRES, { placeholder: "Alle sjangre" });
-  fillSelect($("#f-genre"), config.genres, { placeholder: "Alle metasjangre" });
+  fillSelect($("#f-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Alle sjangre" });
+  fillSelect($("#f-genre"), config.metaGenres, { placeholder: "Alle metasjangre" });
   fillSelect(
     $("#f-decade"),
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
@@ -587,7 +587,7 @@ function refreshControls() {
   );
   fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
   const allSubs = [...new Set(
-    (state.artists || []).flatMap((a) => [...(a.sjangre || []), ...(a.undersjangre || [])])
+    (state.artists || []).flatMap((a) => [...(a.mainGenre || []), ...(a.subGenre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
   fillSelect($("#f-subgenre"), allSubs, { placeholder: "Alle undersjangre" });
   if (state.filters.sjanger)  $("#f-sjanger").value = state.filters.sjanger;
@@ -656,8 +656,8 @@ function setupAdmin() {
 
   $("#mdec-decades").addEventListener("input", buildDecadeLimits);
   $("#mdec-default").addEventListener("input", buildDecadeLimits);
-  $("#mgen-genres").addEventListener("input", buildGenreLimits);
-  $("#mgen-default").addEventListener("input", buildGenreLimits);
+  $("#mgen-genres").addEventListener("input", buildMetaGenreLimits);
+  $("#mgen-default").addEventListener("input", buildMetaGenreLimits);
   $("#minstr-instruments").addEventListener("input", buildInstrumentLimits);
   $("#minstr-default").addEventListener("input", buildInstrumentLimits);
 
@@ -684,9 +684,9 @@ async function saveSection(section) {
     };
   } else if (section === "genre") {
     updates = {
-      maxPerGenre: int($("#mgen-default").value, state.config.maxPerGenre),
-      genres: splitList($("#mgen-genres").value, state.config.genres),
-      genreLimits: collectLimitMap("#mgen-limits", "data-genre"),
+      maxPerMetaGenre: int($("#mgen-default").value, state.config.maxPerMetaGenre),
+      metaGenres: splitList($("#mgen-genres").value, state.config.metaGenres),
+      metaGenreLimits: collectLimitMap("#mgen-limits", "data-genre"),
     };
   } else if (section === "instrument") {
     updates = {
@@ -708,12 +708,12 @@ function fillAdminForm() {
   $("#cfg-threshold").value = c.voteOutThreshold;
   $("#mdec-default").value = c.maxPerDecade;
   $("#mdec-decades").value = c.decades.join(", ");
-  $("#mgen-default").value = c.maxPerGenre;
-  $("#mgen-genres").value = c.genres.join(", ");
+  $("#mgen-default").value = c.maxPerMetaGenre;
+  $("#mgen-genres").value = c.metaGenres.join(", ");
   $("#minstr-default").value = c.maxPerInstrument;
   $("#minstr-instruments").value = (c.instruments || []).join(", ");
   buildDecadeLimits();
-  buildGenreLimits();
+  buildMetaGenreLimits();
   buildInstrumentLimits();
 }
 
@@ -727,12 +727,12 @@ function buildDecadeLimits() {
   );
 }
 
-function buildGenreLimits() {
-  const genres = splitList($("#mgen-genres").value, state.config.genres);
-  const def = int($("#mgen-default").value, state.config.maxPerGenre);
+function buildMetaGenreLimits() {
+  const genres = splitList($("#mgen-genres").value, state.config.metaGenres);
+  const def = int($("#mgen-default").value, state.config.maxPerMetaGenre);
   renderLimitInputs(
     $("#mgen-limits"), "data-genre",
-    genres.map((g) => ({ key: g, label: g, explicit: state.config.genreLimits?.[g] })),
+    genres.map((g) => ({ key: g, label: g, explicit: state.config.metaGenreLimits?.[g] })),
     def
   );
 }
@@ -805,7 +805,7 @@ function startApp() {
     onArtistClick: openDetail,
     onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
     onSubgenreEdit: (label) => openSingleSubgenreModal(label),
-    onGenreCheck: (genre) => addGenreCheckToggle(genre),
+    onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,
     onTechAdmin: () => openTechAdmin(),
   });
@@ -961,7 +961,7 @@ function renderTechAdmin() {
         <h3>${escapeHtml(t.name)}</h3>
         <div class="meta">${yearTag}${catTag}</div>
       </header>
-      ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildGenreList(state.artists) })}</p>` : ""}
+      ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) })}</p>` : ""}
       <div class="card-foot" style="margin-top:auto;padding-top:8px">
         <button class="btn ghost small tech-edit-btn">Rediger</button>
         <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
@@ -1055,16 +1055,16 @@ function setupTechAdmin() {
 // ----------------------------------------------------------------------------
 
 const EXPORT_FIELDS = [
-  "name", "birthYear", "deathYear", "gender", "genre", "instrument",
-  "sjangre", "undersjangre", "influenceStart", "influenceEnd", "recordLabel",
+  "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
+  "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
   "geography", "description", "keyWorks", "musicExamples", "kilder",
   "imageUrl", "imageCredit", "proposedBy", "priority", "teacherChecked",
 ];
 
 const MERGE_LABELS = {
   birthYear: "Fødselsår", deathYear: "Dødsår", gender: "Kjønn",
-  genre: "Metasjanger", instrument: "Instrument",
-  sjangre: "Sjangre", undersjangre: "Undersjangre",
+  metaGenre: "Metasjanger", instrument: "Instrument",
+  mainGenre: "Sjangre", subGenre: "Undersjangre",
   influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
   recordLabel: "Plateselskap",
   geography: "Geografi", description: "Beskrivelse",
@@ -1399,8 +1399,8 @@ function openEditModal(artistId) {
   $("#ed-start").value = a.influenceStart || "";
   $("#ed-end").value = a.influenceEnd || "";
   $("#ed-recordLabel").value = a.recordLabel || "";
-  $("#ed-sjangre").value = (a.sjangre || []).join(", ");
-  $("#ed-undersjangre").value = (a.undersjangre || []).join(", ");
+  $("#ed-mainGenre").value = (a.mainGenre || []).join(", ");
+  $("#ed-subGenre").value = (a.subGenre || []).join(", ");
   $("#ed-desc").value = a.description || "";
   $("#ed-by").value = a.proposedBy || "";
   $("#ed-image-url").value = a.imageUrl || "";
@@ -1408,8 +1408,8 @@ function openEditModal(artistId) {
 
   fillSelect($("#ed-gender"), GENDERS_EDIT, { placeholder: "Velg kjønn …" });
   $("#ed-gender").value = a.gender || "";
-  fillSelect($("#ed-genre"), c.genres, { placeholder: "Velg sjanger …" });
-  $("#ed-genre").value = a.genre || "";
+  fillSelect($("#ed-metaGenre"), c.metaGenres, { placeholder: "Velg sjanger …" });
+  $("#ed-metaGenre").value = a.metaGenre || "";
   fillSelect($("#ed-instrument"), c.instruments || [], { placeholder: "Ingen / ukjent" });
   $("#ed-instrument").value = a.instrument || "";
 
@@ -1549,10 +1549,10 @@ function setupEditForm() {
       birthYear:     parseInt($("#ed-birthyear").value, 10) || null,
       deathYear:     parseInt($("#ed-deathyear").value, 10) || null,
       gender:        $("#ed-gender").value,
-      genre:         $("#ed-genre").value,
+      metaGenre:     $("#ed-metaGenre").value,
       instrument:    $("#ed-instrument").value,
-      sjangre:       $("#ed-sjangre").value.split(",").map(s => s.trim()).filter(Boolean),
-      undersjangre:  $("#ed-undersjangre").value.split(",").map(s => s.trim()).filter(Boolean),
+      mainGenre:     $("#ed-mainGenre").value.split(",").map(s => s.trim()).filter(Boolean),
+      subGenre:      $("#ed-subGenre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#ed-start").value, 10) || null,
       influenceEnd:   parseInt($("#ed-end").value, 10) || null,
       recordLabel:   $("#ed-recordLabel").value.trim(),
@@ -1634,7 +1634,7 @@ function renderSubgenreDescList() {
   const el = $("#subgenre-desc-list");
   const allSubs = [...new Set(
     state.artists.filter(a => a.status === "active")
-      .flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
+      .flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
 
   if (!allSubs.length) { el.innerHTML = `<p class="muted">Ingen undersjangre registrert blant artistene.</p>`; return; }

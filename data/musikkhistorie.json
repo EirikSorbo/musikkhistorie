@@ -5,12 +5,12 @@
       "birthYear": 1923,
       "deathYear": 1950,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1946,
       "influenceEnd": 1950,
       "geography": "New York",
@@ -45,12 +45,12 @@
       "birthYear": 1924,
       "deathYear": 1990,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1944,
       "influenceEnd": 1990,
       "geography": "New York",
@@ -85,12 +85,12 @@
       "birthYear": 1935,
       "deathYear": 2022,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Rock and roll",
         "Rockabilly"
       ],
@@ -134,12 +134,12 @@
       "birthYear": 1920,
       "deathYear": 2012,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Cool jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "West Coast jazz"
       ],
       "influenceStart": 1951,
@@ -182,12 +182,12 @@
       "birthYear": 1964,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Nu-jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Europeisk jazz",
         "Electronica jazz"
       ],
@@ -231,10 +231,10 @@
       "birthYear": 1955,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "M-Base"
       ],
       "influenceStart": 1986,
@@ -278,10 +278,10 @@
       "birthYear": 1868,
       "deathYear": 1917,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Ragtime"
       ],
       "influenceStart": 1899,
@@ -328,12 +328,12 @@
       "birthYear": 1989,
       "deathYear": 2018,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Progressive house",
         "EDM"
       ],
@@ -377,12 +377,12 @@
       "birthYear": 1932,
       "deathYear": 2022,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1960,
       "influenceEnd": 2022,
       "geography": "Kentucky; Nashville, Tennessee",
@@ -417,12 +417,12 @@
       "birthYear": 1930,
       "deathYear": 2015,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Free jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Avant-garde"
       ],
       "influenceStart": 1959,
@@ -471,10 +471,10 @@
       "birthYear": 1988,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Dubstep",
         "EDM"
       ],
@@ -518,13 +518,13 @@
       "birthYear": 1930,
       "deathYear": 2004,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "R&B",
         "Soul"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1954,
       "influenceEnd": 2004,
       "geography": "Georgia; Los Angeles",
@@ -569,12 +569,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Funk jazz"
       ],
       "influenceStart": 2020,
@@ -607,10 +607,10 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Trip hop",
         "Dub"
       ],
@@ -654,13 +654,13 @@
       "birthYear": 1974,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Neo-soul",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1995,
       "influenceEnd": null,
       "geography": "Richmond, Virginia",
@@ -705,12 +705,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Old school hip-hop"
       ],
       "influenceStart": 1983,
@@ -758,12 +758,12 @@
       "birthYear": 1955,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Old school hip-hop"
       ],
       "influenceStart": 1973,
@@ -795,12 +795,12 @@
       "birthYear": 1891,
       "deathYear": 1934,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Delta blues"
       ],
       "influenceStart": 1910,
@@ -841,12 +841,12 @@
       "birthYear": 1988,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Post-bop"
       ],
       "influenceStart": 2013,
@@ -890,12 +890,12 @@
       "birthYear": 1928,
       "deathYear": 2017,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "New Orleans R&B",
         "Rock and roll"
       ],
@@ -943,13 +943,13 @@
       "birthYear": 1929,
       "deathYear": 1980,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "Cool jazz",
         "Modal jazz"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1956,
       "influenceEnd": 1980,
       "geography": "New York",
@@ -984,12 +984,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hip-hop jazz",
         "Conscious rap"
       ],
@@ -1033,12 +1033,12 @@
       "birthYear": 1982,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Dirty South"
       ],
       "influenceStart": 1999,
@@ -1081,13 +1081,13 @@
       "birthYear": 1972,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1996,
       "influenceEnd": null,
       "geography": "Virginia Beach, Virginia",
@@ -1122,12 +1122,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "French house",
         "EDM"
       ],
@@ -1175,12 +1175,12 @@
       "birthYear": 1928,
       "deathYear": 1975,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Soul jazz"
       ],
       "influenceStart": 1955,
@@ -1224,12 +1224,12 @@
       "birthYear": 1910,
       "deathYear": 1975,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues",
         "Texas blues"
       ],
@@ -1273,12 +1273,12 @@
       "birthYear": 1955,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "Free jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Avant-garde"
       ],
       "influenceStart": 1975,
@@ -1321,12 +1321,12 @@
       "birthYear": 1949,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Blues rock"
       ],
       "influenceStart": 1971,
@@ -1370,13 +1370,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1998,
       "influenceEnd": null,
       "geography": "Virginia Beach, Virginia",
@@ -1411,10 +1411,10 @@
       "birthYear": 1890,
       "deathYear": 1941,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "New Orleans jazz",
         "Ragtime"
       ],
@@ -1458,10 +1458,10 @@
       "birthYear": 1941,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Singer-songwriter",
         "Folk"
       ],
@@ -1503,12 +1503,12 @@
       "birthYear": 1897,
       "deathYear": 1933,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hillbilly"
       ],
       "influenceStart": 1927,
@@ -1560,12 +1560,12 @@
       "birthYear": 1904,
       "deathYear": 1984,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Kansas City jazz"
       ],
       "influenceStart": 1936,
@@ -1613,12 +1613,12 @@
       "birthYear": 1883,
       "deathYear": 1948,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hillbilly"
       ],
       "influenceStart": 1924,
@@ -1655,13 +1655,13 @@
       "birthYear": 1923,
       "deathYear": 1990,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop",
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1945,
       "influenceEnd": 1990,
       "geography": "Los Angeles; København",
@@ -1696,12 +1696,12 @@
       "birthYear": 1910,
       "deathYear": 1953,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Gypsy jazz"
       ],
       "influenceStart": 1934,
@@ -1745,12 +1745,12 @@
       "birthYear": 1967,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "EDM"
       ],
       "influenceStart": 2001,
@@ -1793,13 +1793,13 @@
       "birthYear": 1986,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 2009,
       "influenceEnd": null,
       "geography": "Toronto, Canada",
@@ -1844,10 +1844,10 @@
       "birthYear": 1919,
       "deathYear": 1965,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Crooner"
       ],
       "influenceStart": 1943,
@@ -1895,12 +1895,12 @@
       "birthYear": 1972,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1999,
       "influenceEnd": null,
       "geography": "Detroit, Michigan",
@@ -1941,10 +1941,10 @@
       "birthYear": 1937,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Europeisk jazz"
       ],
       "influenceStart": 1964,
@@ -1988,12 +1988,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 2000,
@@ -2032,12 +2032,12 @@
       "birthYear": 1889,
       "deathYear": 1932,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hillbilly"
       ],
       "influenceStart": 1925,
@@ -2070,10 +2070,10 @@
       "birthYear": 1903,
       "deathYear": 1977,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Crooner",
         "Tin Pan Alley"
       ],
@@ -2117,12 +2117,12 @@
       "birthYear": 1942,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Jazz-rock"
       ],
       "influenceStart": 1969,
@@ -2170,12 +2170,12 @@
       "birthYear": 1928,
       "deathYear": 2006,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1949,
       "influenceEnd": 2006,
       "geography": "New York",
@@ -2216,10 +2216,10 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Blås",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Dixieland",
         "New Orleans jazz"
       ],
@@ -2263,10 +2263,10 @@
       "birthYear": 1979,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Jazz pop",
         "Singer-songwriter"
       ],
@@ -2304,12 +2304,12 @@
       "birthYear": 1945,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "British blues",
         "Blues rock"
       ],
@@ -2363,13 +2363,13 @@
       "birthYear": 1943,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop",
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Smooth jazz"
       ],
       "influenceStart": 1964,
@@ -2413,12 +2413,12 @@
       "birthYear": 1951,
       "deathYear": 1987,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Bass",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1976,
       "influenceEnd": 1987,
       "geography": "Fort Lauderdale, Florida",
@@ -2453,10 +2453,10 @@
       "birthYear": 1928,
       "deathYear": 2023,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Brill Building"
       ],
       "influenceStart": 1957,
@@ -2497,13 +2497,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Funk",
         "Soul"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1968,
       "influenceEnd": null,
       "geography": "Oakland, California",
@@ -2545,12 +2545,12 @@
       "birthYear": 1892,
       "deathYear": 1960,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hillbilly"
       ],
       "influenceStart": 1920,
@@ -2582,13 +2582,13 @@
       "birthYear": 1967,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Americana"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Alt-country"
       ],
       "influenceStart": 1996,
@@ -2631,12 +2631,12 @@
       "birthYear": 1936,
       "deathYear": 2021,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Reggae"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Dub"
       ],
       "influenceStart": 1963,
@@ -2673,13 +2673,13 @@
       "birthYear": 1947,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Americana"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1975,
       "influenceEnd": null,
       "geography": "Nashville, Tennessee",
@@ -2720,13 +2720,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "House",
         "Techno"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Acid house"
       ],
       "influenceStart": 1988,
@@ -2769,12 +2769,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Doo-wop"
       ],
       "influenceStart": 1955,
@@ -2815,12 +2815,12 @@
       "birthYear": 1924,
       "deathYear": 1982,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1946,
       "influenceEnd": 1982,
       "geography": "New York",
@@ -2851,12 +2851,12 @@
       "birthYear": 1961,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Neoclassicism"
       ],
       "influenceStart": 1981,
@@ -2900,12 +2900,12 @@
       "birthYear": 1920,
       "deathYear": 1955,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1944,
       "influenceEnd": 1955,
       "geography": "New York; Kansas City, Missouri",
@@ -2950,12 +2950,12 @@
       "birthYear": 1941,
       "deathYear": 1989,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "Reggae"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Dub"
       ],
       "influenceStart": 1968,
@@ -2998,13 +2998,13 @@
       "birthYear": 1937,
       "deathYear": 2016,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Outlaw"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Bakersfield Sound",
         "Honky tonk"
       ],
@@ -3046,12 +3046,12 @@
       "birthYear": 1977,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 2004,
       "influenceEnd": null,
       "geography": "Chicago, Illinois; Los Angeles",
@@ -3096,10 +3096,10 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Rave",
         "Electronic"
       ],
@@ -3143,12 +3143,12 @@
       "birthYear": 1885,
       "deathYear": 1938,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "New Orleans jazz",
         "Chicago jazz"
       ],
@@ -3192,10 +3192,10 @@
       "birthYear": 1948,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Musical"
       ],
       "influenceStart": 1968,
@@ -3232,12 +3232,12 @@
       "birthYear": 1969,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Post-bop"
       ],
       "influenceStart": 1993,
@@ -3285,13 +3285,13 @@
       "birthYear": 1913,
       "deathYear": 1983,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues",
         "Chicago blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues",
         "Delta blues"
       ],
@@ -3340,12 +3340,12 @@
       "birthYear": 1944,
       "deathYear": 1987,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Reggae"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1963,
       "influenceEnd": 1987,
       "geography": "Kingston, Jamaica",
@@ -3380,12 +3380,12 @@
       "birthYear": 1914,
       "deathYear": 1985,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1941,
       "influenceEnd": 1985,
       "geography": "New York; Paris, Frankrike",
@@ -3416,13 +3416,13 @@
       "birthYear": 1937,
       "deathYear": 2002,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Outlaw"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1965,
       "influenceEnd": 2002,
       "geography": "Texas; Nashville, Tennessee",
@@ -3457,10 +3457,10 @@
       "birthYear": 1970,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Post-bop"
       ],
       "influenceStart": 1995,
@@ -3497,13 +3497,13 @@
       "birthYear": 1971,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Strykeinstrumenter",
-      "sjangre": [
+      "mainGenre": [
         "Bluegrass",
         "Country"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1987,
       "influenceEnd": null,
       "geography": "Champaign, Illinois; Nashville",
@@ -3538,12 +3538,12 @@
       "birthYear": 1929,
       "deathYear": 1988,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Cool jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "West Coast jazz"
       ],
       "influenceStart": 1952,
@@ -3580,13 +3580,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Disco",
         "Funk"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1977,
       "influenceEnd": null,
       "geography": "New York",
@@ -3627,10 +3627,10 @@
       "birthYear": 1898,
       "deathYear": 1937,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Tin Pan Alley",
         "Symfonisk jazz"
       ],
@@ -3678,12 +3678,12 @@
       "birthYear": 1942,
       "deathYear": 1998,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Nashville Sound"
       ],
       "influenceStart": 1966,
@@ -3726,13 +3726,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Funk",
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "New Orleans funk"
       ],
       "influenceStart": 1966,
@@ -3775,12 +3775,12 @@
       "birthYear": 1886,
       "deathYear": 1939,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Classic blues",
         "Vaudeville blues"
       ],
@@ -3828,12 +3828,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Old school hip-hop"
       ],
       "influenceStart": 1979,
@@ -3872,12 +3872,12 @@
       "birthYear": 1940,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Disco"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Synth-pop",
         "Electronic"
       ],
@@ -3915,10 +3915,10 @@
       "birthYear": 1947,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "ECM jazz",
         "Europeisk jazz"
       ],
@@ -3962,12 +3962,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Dirty South"
       ],
       "influenceStart": 1994,
@@ -4008,12 +4008,12 @@
       "birthYear": 1929,
       "deathYear": 2018,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Free jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Avant-garde"
       ],
       "influenceStart": 1956,
@@ -4057,12 +4057,12 @@
       "birthYear": 1894,
       "deathYear": 1937,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Classic blues",
         "Vaudeville blues"
       ],
@@ -4110,12 +4110,12 @@
       "birthYear": 1932,
       "deathYear": 2020,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Rock and roll"
       ],
       "influenceStart": 1955,
@@ -4162,12 +4162,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Nu-jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Europeisk jazz"
       ],
       "influenceStart": 1996,
@@ -4204,12 +4204,12 @@
       "birthYear": 1932,
       "deathYear": 2003,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Rockabilly"
       ],
       "influenceStart": 1955,
@@ -4257,12 +4257,12 @@
       "birthYear": 1953,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Free jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Avant-garde"
       ],
       "influenceStart": 1977,
@@ -4306,12 +4306,12 @@
       "birthYear": 1973,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1994,
       "influenceEnd": null,
       "geography": "Queens, New York",
@@ -4352,13 +4352,13 @@
       "birthYear": 1897,
       "deathYear": 1973,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues",
         "Chicago blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Memphis blues",
         "Electric blues"
       ],
@@ -4406,14 +4406,14 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Funk",
         "Soul",
         "Disco"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1972,
       "influenceEnd": null,
       "geography": "Los Angeles, California",
@@ -4458,12 +4458,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hip-hop jazz",
         "Conscious rap"
       ],
@@ -4501,12 +4501,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Disco"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1977,
       "influenceEnd": null,
       "geography": "New York",
@@ -4547,12 +4547,12 @@
       "birthYear": 1984,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "EDM"
       ],
       "influenceStart": 2007,
@@ -4589,13 +4589,13 @@
       "birthYear": 1942,
       "deathYear": 2018,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "Gospel"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1967,
       "influenceEnd": 2018,
       "geography": "Detroit, Michigan; Memphis, Tennessee",
@@ -4641,12 +4641,12 @@
       "birthYear": 1947,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "ECM jazz",
         "Europeisk jazz"
       ],
@@ -4684,12 +4684,12 @@
       "birthYear": 1924,
       "deathYear": 2012,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Bluegrass"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1945,
       "influenceEnd": 2012,
       "geography": "Nashville, Tennessee; North Carolina",
@@ -4724,12 +4724,12 @@
       "birthYear": 1971,
       "deathYear": 1996,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Gangsta rap",
         "Conscious rap"
       ],
@@ -4777,12 +4777,12 @@
       "birthYear": 1947,
       "deathYear": 2021,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Reggae"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1963,
       "influenceEnd": 2021,
       "geography": "Kingston, Jamaica",
@@ -4817,10 +4817,10 @@
       "birthYear": 1915,
       "deathYear": 1998,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Crooner",
         "Tin Pan Alley"
       ],
@@ -4868,13 +4868,13 @@
       "birthYear": 1924,
       "deathYear": 1972,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Bebop",
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1948,
       "influenceEnd": 1972,
       "geography": "New York",
@@ -4909,12 +4909,12 @@
       "birthYear": 1899,
       "deathYear": 1993,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1930,
       "influenceEnd": 1960,
       "geography": "Chicago, Illinois",
@@ -4955,12 +4955,12 @@
       "birthYear": 1915,
       "deathYear": 1973,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Rock and roll"
       ],
       "influenceStart": 1938,
@@ -5004,12 +5004,12 @@
       "birthYear": 1924,
       "deathYear": 2001,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Nashville Sound"
       ],
       "influenceStart": 1953,
@@ -5046,13 +5046,13 @@
       "birthYear": 1975,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop",
         "Neo-soul"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1996,
       "influenceEnd": null,
       "geography": "South Orange, New Jersey",
@@ -5087,12 +5087,12 @@
       "birthYear": 1941,
       "deathYear": 2021,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Latin jazz"
       ],
       "influenceStart": 1968,
@@ -5136,12 +5136,12 @@
       "birthYear": 1945,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country rock",
         "Singer-songwriter",
         "Folk"
@@ -5190,12 +5190,12 @@
       "birthYear": 1887,
       "deathYear": 1975,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Strykeinstrumenter",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hillbilly"
       ],
       "influenceStart": 1922,
@@ -5232,12 +5232,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Jazz-rock"
       ],
       "influenceStart": 1971,
@@ -5280,12 +5280,12 @@
       "birthYear": 1969,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1996,
       "influenceEnd": null,
       "geography": "Brooklyn, New York",
@@ -5330,12 +5330,12 @@
       "birthYear": 1942,
       "deathYear": 2015,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 1970,
@@ -5379,12 +5379,12 @@
       "birthYear": 1940,
       "deathYear": 1993,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Avant-garde"
       ],
       "influenceStart": 1966,
@@ -5421,10 +5421,10 @@
       "birthYear": 1975,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Crooner",
         "Jazz pop"
       ],
@@ -5462,12 +5462,12 @@
       "birthYear": 1901,
       "deathYear": 1971,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "New Orleans jazz",
         "Dixieland"
       ],
@@ -5526,12 +5526,12 @@
       "birthYear": 1941,
       "deathYear": 1967,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1962,
       "influenceEnd": 1967,
       "geography": "Macon, Georgia; Memphis, Tennessee",
@@ -5573,13 +5573,13 @@
       "birthYear": 1974,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Americana"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Alt-country",
         "Singer-songwriter"
       ],
@@ -5623,10 +5623,10 @@
       "birthYear": 1926,
       "deathYear": 2023,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Crooner"
       ],
       "influenceStart": 1951,
@@ -5663,13 +5663,13 @@
       "birthYear": 1991,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Americana"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 2017,
       "influenceEnd": null,
       "geography": "Kentucky",
@@ -5710,12 +5710,12 @@
       "birthYear": 1933,
       "deathYear": 2024,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "British blues",
         "Blues rock"
       ],
@@ -5749,13 +5749,13 @@
       "birthYear": 1981,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Americana"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Singer-songwriter"
       ],
       "influenceStart": 2005,
@@ -5792,12 +5792,12 @@
       "birthYear": 1917,
       "deathYear": 1996,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1938,
       "influenceEnd": 1993,
       "geography": "New York",
@@ -5838,13 +5838,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Motown"
       ],
       "influenceStart": 1964,
@@ -5885,13 +5885,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Motown"
       ],
       "influenceStart": 1969,
@@ -5932,12 +5932,12 @@
       "birthYear": 1962,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop"
       ],
       "influenceStart": 1989,
@@ -5980,12 +5980,12 @@
       "birthYear": 1960,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electronica jazz",
         "Europeisk jazz"
       ],
@@ -6029,12 +6029,12 @@
       "birthYear": 1888,
       "deathYear": 1949,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Texas blues",
         "Country blues"
       ],
@@ -6074,12 +6074,12 @@
       "birthYear": 1948,
       "deathYear": 2012,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Disco"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1975,
       "influenceEnd": 2012,
       "geography": "München, Tyskland; Los Angeles",
@@ -6124,12 +6124,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Reggae"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Ska"
       ],
       "influenceStart": 1962,
@@ -6170,12 +6170,12 @@
       "birthYear": 1908,
       "deathYear": 1975,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Jump blues"
       ],
       "influenceStart": 1938,
@@ -6222,12 +6222,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1993,
       "influenceEnd": null,
       "geography": "Staten Island, New York",
@@ -6268,12 +6268,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Conscious rap",
         "Hip-hop jazz"
       ],
@@ -6317,13 +6317,13 @@
       "birthYear": 1910,
       "deathYear": 1976,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Blues",
         "Chicago blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues"
       ],
       "influenceStart": 1951,
@@ -6364,12 +6364,12 @@
       "birthYear": 1924,
       "deathYear": 1966,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1947,
       "influenceEnd": 1966,
       "geography": "New York",
@@ -6404,12 +6404,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Progressive house",
         "EDM"
       ],
@@ -6453,12 +6453,12 @@
       "birthYear": 1983,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop"
       ],
       "influenceStart": 2005,
@@ -6495,10 +6495,10 @@
       "birthYear": 1939,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Brill Building"
       ],
       "influenceStart": 1959,
@@ -6535,12 +6535,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1986,
       "influenceEnd": 2012,
       "geography": "New York",
@@ -6581,12 +6581,12 @@
       "birthYear": 1899,
       "deathYear": 1974,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Harlem jazz"
       ],
       "influenceStart": 1927,
@@ -6644,12 +6644,12 @@
       "birthYear": 1989,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop",
         "Singer-songwriter"
       ],
@@ -6691,12 +6691,12 @@
       "birthYear": 1929,
       "deathYear": 2006,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Bakersfield Sound",
         "Honky tonk"
       ],
@@ -6740,10 +6740,10 @@
       "birthYear": 1902,
       "deathYear": 1979,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Tin Pan Alley",
         "Musical"
       ],
@@ -6791,10 +6791,10 @@
       "birthYear": 1927,
       "deathYear": 2012,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Crooner"
       ],
       "influenceStart": 1956,
@@ -6831,12 +6831,12 @@
       "birthYear": 1915,
       "deathYear": 1948,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Afrocubansk jazz",
         "Latin jazz"
       ],
@@ -6874,12 +6874,12 @@
       "birthYear": 1972,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Conscious rap"
       ],
       "influenceStart": 1992,
@@ -6916,12 +6916,12 @@
       "birthYear": 1918,
       "deathYear": 1980,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "New Orleans R&B"
       ],
       "influenceStart": 1949,
@@ -6958,12 +6958,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Doo-wop"
       ],
       "influenceStart": 1953,
@@ -7004,12 +7004,12 @@
       "birthYear": 1994,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 2015,
       "influenceEnd": null,
       "geography": "London, England",
@@ -7050,12 +7050,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Gangsta rap"
       ],
       "influenceStart": 1988,
@@ -7103,12 +7103,12 @@
       "birthYear": 1909,
       "deathYear": 1956,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1933,
       "influenceEnd": 1956,
       "geography": "New York",
@@ -7149,12 +7149,12 @@
       "birthYear": 1970,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Conscious rap"
       ],
       "influenceStart": 1989,
@@ -7197,12 +7197,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Bass",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Funk jazz"
       ],
       "influenceStart": 2006,
@@ -7239,13 +7239,13 @@
       "birthYear": 1938,
       "deathYear": 2012,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B",
         "Soul"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Blues rock"
       ],
       "influenceStart": 1955,
@@ -7288,13 +7288,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "Funk"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Psychedelic rock"
       ],
       "influenceStart": 1967,
@@ -7342,12 +7342,12 @@
       "birthYear": 1942,
       "deathYear": 1970,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Blues rock",
         "Psychedelic rock"
       ],
@@ -7396,12 +7396,12 @@
       "birthYear": 1982,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 2010,
       "influenceEnd": null,
       "geography": "Queens, New York",
@@ -7436,13 +7436,13 @@
       "birthYear": 1930,
       "deathYear": 1968,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Blues",
         "Chicago blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues"
       ],
       "influenceStart": 1950,
@@ -7479,10 +7479,10 @@
       "birthYear": 1952,
       "deathYear": 1982,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Europeisk jazz",
         "ECM jazz"
       ],
@@ -7522,12 +7522,12 @@
       "birthYear": 1970,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Techno"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Minimal techno"
       ],
       "influenceStart": 1990,
@@ -7566,12 +7566,12 @@
       "birthYear": 1925,
       "deathYear": 2007,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1949,
       "influenceEnd": 2007,
       "geography": "Montreal, Canada",
@@ -7606,12 +7606,12 @@
       "birthYear": 1961,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 1987,
@@ -7654,12 +7654,12 @@
       "birthYear": 1917,
       "deathYear": 1993,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Afrocubansk jazz"
       ],
       "influenceStart": 1944,
@@ -7707,12 +7707,12 @@
       "birthYear": 1952,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Neotraditional country",
         "Western swing"
       ],
@@ -7757,10 +7757,10 @@
       "birthYear": 1945,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "ECM jazz"
       ],
       "influenceStart": 1970,
@@ -7815,13 +7815,13 @@
       "birthYear": 1942,
       "deathYear": 1999,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "Funk"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1958,
       "influenceEnd": 1999,
       "geography": "Chicago, Illinois",
@@ -7866,12 +7866,12 @@
       "birthYear": 1932,
       "deathYear": 1963,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Nashville Sound"
       ],
       "influenceStart": 1957,
@@ -7923,12 +7923,12 @@
       "birthYear": 1945,
       "deathYear": 1981,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Reggae"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1963,
       "influenceEnd": 1981,
       "geography": "Kingston, Jamaica",
@@ -7974,10 +7974,10 @@
       "birthYear": 1877,
       "deathYear": 1931,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "New Orleans jazz"
       ],
       "influenceStart": 1895,
@@ -8009,13 +8009,13 @@
       "birthYear": 1971,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1997,
       "influenceEnd": null,
       "geography": "Virginia Beach, Virginia",
@@ -8060,10 +8060,10 @@
       "birthYear": 1943,
       "deathYear": 2020,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "ECM jazz",
         "Europeisk jazz"
       ],
@@ -8097,13 +8097,13 @@
       "birthYear": 1939,
       "deathYear": 1984,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1962,
       "influenceEnd": 1984,
       "geography": "Detroit, Michigan; Los Angeles",
@@ -8148,12 +8148,12 @@
       "birthYear": 1911,
       "deathYear": 1998,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Western"
       ],
       "influenceStart": 1938,
@@ -8186,12 +8186,12 @@
       "birthYear": 1925,
       "deathYear": 1982,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Cool jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "West Coast jazz"
       ],
       "influenceStart": 1950,
@@ -8228,12 +8228,12 @@
       "birthYear": 1965,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Gangsta rap",
         "G-funk"
       ],
@@ -8277,12 +8277,12 @@
       "birthYear": 1970,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 1993,
@@ -8326,12 +8326,12 @@
       "birthYear": 1923,
       "deathYear": 1964,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Nashville Sound"
       ],
       "influenceStart": 1953,
@@ -8374,10 +8374,10 @@
       "birthYear": 1890,
       "deathYear": 1967,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Annet",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Symfonisk jazz"
       ],
       "influenceStart": 1920,
@@ -8425,12 +8425,12 @@
       "birthYear": 1977,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Blues rock"
       ],
       "influenceStart": 2001,
@@ -8473,12 +8473,12 @@
       "birthYear": 1909,
       "deathYear": 1986,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1935,
       "influenceEnd": 1955,
       "geography": "New York",
@@ -8520,12 +8520,12 @@
       "birthYear": 1924,
       "deathYear": 1973,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 1943,
@@ -8562,10 +8562,10 @@
       "birthYear": 1965,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Electronic",
         "Avant-garde"
       ],
@@ -8614,12 +8614,12 @@
       "birthYear": 1911,
       "deathYear": 1996,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Bluegrass"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1939,
       "influenceEnd": 1970,
       "geography": "Kentucky; Nashville, Tennessee",
@@ -8661,13 +8661,13 @@
       "birthYear": 1909,
       "deathYear": 1959,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Swing",
         "Cool jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Kansas City jazz"
       ],
       "influenceStart": 1936,
@@ -8710,12 +8710,12 @@
       "birthYear": 1917,
       "deathYear": 1982,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1944,
       "influenceEnd": 1972,
       "geography": "New York",
@@ -8754,12 +8754,12 @@
       "birthYear": 1946,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1967,
       "influenceEnd": null,
       "geography": "Tennessee; Nashville",
@@ -8823,12 +8823,12 @@
       "birthYear": 1944,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Jazz-rock"
       ],
       "influenceStart": 1971,
@@ -8861,15 +8861,15 @@
       "birthYear": 1926,
       "deathYear": 1991,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Bebop",
         "Cool jazz",
         "Modal jazz",
         "Fusion"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1949,
       "influenceEnd": 1991,
       "geography": "New York",
@@ -8929,10 +8929,10 @@
       "birthYear": 1888,
       "deathYear": 1989,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Tin Pan Alley",
         "Musical"
       ],
@@ -8985,13 +8985,13 @@
       "birthYear": 1915,
       "deathYear": 1992,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Bass",
-      "sjangre": [
+      "mainGenre": [
         "Blues",
         "Chicago blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues"
       ],
       "influenceStart": 1948,
@@ -9032,10 +9032,10 @@
       "birthYear": 1942,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Brill Building",
         "Singer-songwriter"
       ],
@@ -9073,12 +9073,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Doo-wop"
       ],
       "influenceStart": 1955,
@@ -9125,12 +9125,12 @@
       "birthYear": 1923,
       "deathYear": 1953,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Honky tonk"
       ],
       "influenceStart": 1947,
@@ -9182,12 +9182,12 @@
       "birthYear": 1907,
       "deathYear": 1998,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Western"
       ],
       "influenceStart": 1932,
@@ -9224,14 +9224,14 @@
       "birthYear": 1926,
       "deathYear": 1967,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop",
         "Modal jazz",
         "Free jazz"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1957,
       "influenceEnd": 1967,
       "geography": "New York",
@@ -9276,12 +9276,12 @@
       "birthYear": 1911,
       "deathYear": 1972,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1947,
       "influenceEnd": 1972,
       "geography": "New Orleans; Chicago, Illinois",
@@ -9322,12 +9322,12 @@
       "birthYear": 1959,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Acid house"
       ],
       "influenceStart": 1986,
@@ -9366,10 +9366,10 @@
       "birthYear": 1903,
       "deathYear": 1931,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Chicago jazz"
       ],
       "influenceStart": 1924,
@@ -9412,12 +9412,12 @@
       "birthYear": 1911,
       "deathYear": 1938,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Delta blues"
       ],
       "influenceStart": 1936,
@@ -9464,13 +9464,13 @@
       "birthYear": 1931,
       "deathYear": 1964,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "Gospel"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1957,
       "influenceEnd": 1964,
       "geography": "Chicago, Illinois; Los Angeles",
@@ -9511,12 +9511,12 @@
       "birthYear": 1925,
       "deathYear": 2015,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues",
         "Memphis blues"
       ],
@@ -9565,13 +9565,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Disco",
         "Funk"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1975,
       "influenceEnd": null,
       "geography": "Miami, Florida",
@@ -9612,12 +9612,12 @@
       "birthYear": 1967,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop"
       ],
       "influenceStart": 1993,
@@ -9654,12 +9654,12 @@
       "birthYear": 1978,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hip-hop jazz"
       ],
       "influenceStart": 2004,
@@ -9703,13 +9703,13 @@
       "birthYear": 1924,
       "deathYear": 2001,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trompet",
-      "sjangre": [
+      "mainGenre": [
         "Bebop",
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1946,
       "influenceEnd": 2001,
       "geography": "New York",
@@ -9740,12 +9740,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Conscious rap"
       ],
       "influenceStart": 1987,
@@ -9788,12 +9788,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "Cool jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Third Stream"
       ],
       "influenceStart": 1952,
@@ -9836,10 +9836,10 @@
       "birthYear": 1945,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Bass",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "ECM jazz",
         "Europeisk jazz"
       ],
@@ -9877,13 +9877,13 @@
       "birthYear": 1924,
       "deathYear": 2007,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop",
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1945,
       "influenceEnd": 2007,
       "geography": "New York",
@@ -9918,12 +9918,12 @@
       "birthYear": 1939,
       "deathYear": 2021,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Annet",
-      "sjangre": [
+      "mainGenre": [
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Wall of Sound",
         "Brill Building"
       ],
@@ -9961,12 +9961,12 @@
       "birthYear": 1915,
       "deathYear": 1959,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Jazz blues"
       ],
       "influenceStart": 1935,
@@ -10018,12 +10018,12 @@
       "birthYear": 1918,
       "deathYear": 2008,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Nashville Sound"
       ],
       "influenceStart": 1945,
@@ -10066,10 +10066,10 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Europeisk jazz"
       ],
       "influenceStart": 1993,
@@ -10113,12 +10113,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1994,
       "influenceEnd": null,
       "geography": "South Orange, New Jersey",
@@ -10159,12 +10159,12 @@
       "birthYear": 1958,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Old school hip-hop"
       ],
       "influenceStart": 1977,
@@ -10207,12 +10207,12 @@
       "birthYear": 1954,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1974,
       "influenceEnd": null,
       "geography": "udefinert",
@@ -10247,12 +10247,12 @@
       "birthYear": 1902,
       "deathYear": 1988,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Delta blues"
       ],
       "influenceStart": 1930,
@@ -10289,12 +10289,12 @@
       "birthYear": 1957,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Old school hip-hop"
       ],
       "influenceStart": 1977,
@@ -10337,12 +10337,12 @@
       "birthYear": 1972,
       "deathYear": 1997,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1994,
       "influenceEnd": 1997,
       "geography": "Brooklyn, New York",
@@ -10381,13 +10381,13 @@
       "birthYear": 1971,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Neo-soul",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1997,
       "influenceEnd": null,
       "geography": "Dallas, Texas",
@@ -10432,13 +10432,13 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "R&B"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Motown"
       ],
       "influenceStart": 1964,
@@ -10485,12 +10485,12 @@
       "birthYear": 1903,
       "deathYear": 1992,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1938,
       "influenceEnd": 1970,
       "geography": "Nashville, Tennessee",
@@ -10536,12 +10536,12 @@
       "birthYear": 1955,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Neotraditional country"
       ],
       "influenceStart": 1976,
@@ -10585,10 +10585,10 @@
       "birthYear": 1984,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Bass",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Post-bop"
       ],
       "influenceStart": 2008,
@@ -10631,12 +10631,12 @@
       "birthYear": 1932,
       "deathYear": 1993,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Texas blues",
         "Electric blues"
       ],
@@ -10674,13 +10674,13 @@
       "birthYear": 1955,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Americana"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Alt-country"
       ],
       "influenceStart": 1986,
@@ -10717,12 +10717,12 @@
       "birthYear": 1938,
       "deathYear": 2020,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop"
       ],
       "influenceStart": 1977,
@@ -10763,10 +10763,10 @@
       "birthYear": 1965,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Drum and bass"
       ],
       "influenceStart": 1994,
@@ -10805,12 +10805,12 @@
       "birthYear": 1943,
       "deathYear": 2017,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Jazz-rock"
       ],
       "influenceStart": 1967,
@@ -10847,12 +10847,12 @@
       "birthYear": 1981,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Progressive house",
         "EDM"
       ],
@@ -10896,12 +10896,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country rock"
       ],
       "influenceStart": 1972,
@@ -10948,12 +10948,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Ambient house",
         "Ambient"
       ],
@@ -10997,12 +10997,12 @@
       "birthYear": 1971,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Hip-hop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Gangsta rap",
         "G-funk"
       ],
@@ -11046,12 +11046,12 @@
       "birthYear": 1893,
       "deathYear": 1929,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Texas blues",
         "Country blues"
       ],
@@ -11099,12 +11099,12 @@
       "birthYear": 1955,
       "deathYear": 2014,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1977,
       "influenceEnd": 2014,
       "geography": "Chicago, Illinois; New York",
@@ -11150,12 +11150,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Funk"
       ],
-      "undersjangre": [
+      "subGenre": [
         "P-Funk",
         "Psychedelic rock"
       ],
@@ -11204,12 +11204,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Hillbilly"
       ],
       "influenceStart": 1927,
@@ -11256,12 +11256,12 @@
       "birthYear": 1930,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1951,
       "influenceEnd": null,
       "geography": "New York",
@@ -11300,13 +11300,13 @@
       "birthYear": 1928,
       "deathYear": 2009,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Blues",
         "Chicago blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues"
       ],
       "influenceStart": 1965,
@@ -11350,14 +11350,14 @@
       "birthYear": 1933,
       "deathYear": 2006,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B",
         "Soul",
         "Funk"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1956,
       "influenceEnd": 2006,
       "geography": "Georgia; Augusta; New York",
@@ -11409,10 +11409,10 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Synth-pop",
         "Electronic"
       ],
@@ -11454,13 +11454,13 @@
       "birthYear": 1981,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "R&B",
         "Soul"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Pop"
       ],
       "influenceStart": 1997,
@@ -11507,13 +11507,13 @@
       "birthYear": 1925,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Bebop",
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1947,
       "influenceEnd": null,
       "geography": "New York",
@@ -11548,12 +11548,12 @@
       "birthYear": 1976,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 2004,
@@ -11596,10 +11596,10 @@
       "birthYear": 1886,
       "deathYear": 1950,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Vaudeville",
         "Tin Pan Alley"
       ],
@@ -11648,12 +11648,12 @@
       "birthYear": 1965,
       "deathYear": null,
       "gender": "kvinne",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop"
       ],
       "influenceStart": 1995,
@@ -11696,10 +11696,10 @@
       "birthYear": 1948,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Ambient",
         "Electronic"
       ],
@@ -11737,12 +11737,12 @@
       "birthYear": 1928,
       "deathYear": 2005,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Soul jazz"
       ],
       "influenceStart": 1956,
@@ -11785,12 +11785,12 @@
       "birthYear": 1919,
       "deathYear": 1990,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Trommer/perkusjon",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1954,
       "influenceEnd": 1990,
       "geography": "New York",
@@ -11831,13 +11831,13 @@
       "birthYear": 1933,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country",
         "Outlaw"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1970,
       "influenceEnd": null,
       "geography": "Texas; Nashville, Tennessee",
@@ -11878,12 +11878,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Soul"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1962,
       "influenceEnd": null,
       "geography": "Memphis, Tennessee",
@@ -11918,12 +11918,12 @@
       "birthYear": 1954,
       "deathYear": 1990,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Texas blues",
         "Blues rock"
       ],
@@ -11961,12 +11961,12 @@
       "birthYear": null,
       "deathYear": null,
       "gender": "annet",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Disco"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1975,
       "influenceEnd": null,
       "geography": "Miami, Florida",
@@ -12007,10 +12007,10 @@
       "birthYear": 1965,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [],
-      "undersjangre": [
+      "mainGenre": [],
+      "subGenre": [
         "Electronic",
         "Ambient"
       ],
@@ -12050,12 +12050,12 @@
       "birthYear": 1905,
       "deathYear": 1975,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Strykeinstrumenter",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Western swing"
       ],
       "influenceStart": 1933,
@@ -12099,12 +12099,12 @@
       "birthYear": 1943,
       "deathYear": 1970,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Blues rock"
       ],
       "influenceStart": 1967,
@@ -12141,12 +12141,12 @@
       "birthYear": 1943,
       "deathYear": 1997,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Country pop",
         "Singer-songwriter",
         "Folk"
@@ -12185,12 +12185,12 @@
       "birthYear": 1927,
       "deathYear": 1996,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Saksofon",
-      "sjangre": [
+      "mainGenre": [
         "Cool jazz"
       ],
-      "undersjangre": [
+      "subGenre": [
         "West Coast jazz"
       ],
       "influenceStart": 1949,
@@ -12227,13 +12227,13 @@
       "birthYear": 1916,
       "deathYear": 1942,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Swing",
         "Bebop"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1939,
       "influenceEnd": 1942,
       "geography": "New York",
@@ -12268,12 +12268,12 @@
       "birthYear": 1953,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues"
       ],
       "influenceStart": 1983,
@@ -12310,12 +12310,12 @@
       "birthYear": 1991,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Elektronisk musikk",
+      "metaGenre": "Elektronisk musikk",
       "instrument": "Elektronisk produksjon",
-      "sjangre": [
+      "mainGenre": [
         "House"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Tropical house",
         "EDM"
       ],
@@ -12359,12 +12359,12 @@
       "birthYear": 1917,
       "deathYear": 2001,
       "gender": "mann",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Gitar",
-      "sjangre": [
+      "mainGenre": [
         "Blues"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Electric blues",
         "Detroit blues"
       ],
@@ -12406,13 +12406,13 @@
       "birthYear": 1940,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Hard bop",
         "Fusion"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Funk jazz",
         "Jazz-rock"
       ],
@@ -12460,14 +12460,14 @@
       "birthYear": 1950,
       "deathYear": null,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Soul",
         "Funk",
         "R&B"
       ],
-      "undersjangre": [],
+      "subGenre": [],
       "influenceStart": 1963,
       "influenceEnd": null,
       "geography": "Detroit, Michigan; Los Angeles",
@@ -12512,12 +12512,12 @@
       "birthYear": 1931,
       "deathYear": 1991,
       "gender": "mann",
-      "genre": "Afroamerikansk populærmusikk",
+      "metaGenre": "Afroamerikansk populærmusikk",
       "instrument": "",
-      "sjangre": [
+      "mainGenre": [
         "Gospel"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Contemporary gospel"
       ],
       "influenceStart": 1960,
@@ -12556,12 +12556,12 @@
       "birthYear": 1928,
       "deathYear": 1975,
       "gender": "mann",
-      "genre": "Country",
+      "metaGenre": "Country",
       "instrument": "Vokal",
-      "sjangre": [
+      "mainGenre": [
         "Country"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Honky tonk"
       ],
       "influenceStart": 1950,
@@ -12598,12 +12598,12 @@
       "birthYear": 1897,
       "deathYear": 1952,
       "gender": "mann",
-      "genre": "Jazz",
+      "metaGenre": "Jazz",
       "instrument": "Piano/keyboards",
-      "sjangre": [
+      "mainGenre": [
         "Swing"
       ],
-      "undersjangre": [
+      "subGenre": [
         "Harlem jazz"
       ],
       "influenceStart": 1923,

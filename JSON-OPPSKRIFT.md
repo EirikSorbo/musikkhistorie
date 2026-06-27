@@ -2,8 +2,8 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.79
-**Sist endret:** 2026-06-26
+**Versjon:** 1.80
+**Sist endret:** 2026-06-27
 
 ---
 
@@ -25,7 +25,7 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 | `subgenres` | objekt | Sjanger- og undersjangerbeskrivelser. Nøkkel = navnet eksakt slik det brukes som tag (`"Blues"`, `"Delta blues"`). |
 | `tech` | array | Teknologiske innovasjoner. Sortert etter `adoptedYear`. |
 
-Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firestore-collection `config`, ikke i denne filen.
+Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Firestore-collection `config`, ikke i denne filen.
 
 ---
 
@@ -37,10 +37,10 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
   "birthYear": 1911,
   "deathYear": 1938,
   "gender": "mann",
-  "genre": "Blues",
+  "metaGenre": "Blues",
   "instrument": "Gitar",
-  "sjangre": ["Blues"],
-  "undersjangre": ["Delta blues", "Akustisk blues"],
+  "mainGenre": ["Blues"],
+  "subGenre": ["Delta blues", "Akustisk blues"],
   "influenceStart": 1936,
   "influenceEnd": 1938,
   "recordLabel": "Vocalion",
@@ -73,10 +73,10 @@ Konfig (`maxTotal`, `genres`, `decades`, `instruments`, grenser) ligger i Firest
 | `birthYear` | number \| null | | 4-sifret årstall. |
 | `deathYear` | number \| null | | 4-sifret årstall. |
 | `gender` | string | ✓ | Én av: `"kvinne"`, `"mann"`, `"annet"`, `"ukjent"`. |
-| `genre` | string | ✓ | **Sjanger fra slektstreet.** Må være én av sjangrene i `GENEALOGY_GENRES` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). Brukes i grenser/kvoter. |
+| `metaGenre` | string | ✓ | **Sjanger fra slektstreet.** Må være én av sjangrene i `GENEALOGY_MAIN_GENRES` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). Brukes i grenser/kvoter. |
 | `instrument` | string | ✓ | Må matche én verdi i `config.instruments` (eks. Vokal, Gitar, Piano/keyboards, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Elektronisk produksjon, Annet). |
-| `sjangre` | array av strings | | **Sjangere fra slektstreet.** Strengene må matche en label i `GENEALOGY` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). |
-| `undersjangre` | array av strings | | **Frie tags.** Hva som helst (Delta blues, Akustisk blues, New Orleans-jazz, …). Brukes til søk og filter. |
+| `mainGenre` | array av strings | | **Sjangere fra slektstreet.** Strengene må matche en label i `GENEALOGY` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). |
+| `subGenre` | array av strings | | **Frie tags.** Hva som helst (Delta blues, Akustisk blues, New Orleans-jazz, …). Brukes til søk og filter. |
 | `influenceStart` | number | ✓ | Året kunstneren begynte å påvirke. Styrer tiår-tilhørighet. |
 | `influenceEnd` | number \| null | | Året innflytelsen tok slutt (eller null hvis aktiv/død). |
 | `recordLabel` | string | | Plateselskap(er) artisten er knyttet til. Fritekst, f.eks. `"Columbia"`, `"Stax / Atlantic"`. |
@@ -245,12 +245,12 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
 - Akademiske artikler: full referanse, gjerne med DOI som `url`.
 
 ### Tagging — sjangre vs. undersjangre
-- **`sjangre`** = en av de ~30 sjangrene fra slektstreet. Disse styrer filtre, søk, spillelister, slektstre-koblinger. Vær konservativ.
-- **`undersjangre`** = frie tags. Brukes til mer spesifikke uttrykk (*Delta blues, Hard bop, Cool jazz, Neo-soul, Acid jazz, …*) eller geografiske/kontekstuelle markører. Bruk samme stavemåte konsekvent — bruk gjerne `subgenres`-objektet til å gi dem beskrivelser.
-- Hvis du er i tvil: er navnet en node i slektstreet? → `sjangre`. Hvis ikke → `undersjangre`.
+- **`mainGenre`** = en av de ~30 sjangrene fra slektstreet. Disse styrer filtre, søk, spillelister, slektstre-koblinger. Vær konservativ.
+- **`subGenre`** = frie tags. Brukes til mer spesifikke uttrykk (*Delta blues, Hard bop, Cool jazz, Neo-soul, Acid jazz, …*) eller geografiske/kontekstuelle markører. Bruk samme stavemåte konsekvent — bruk gjerne `subgenres`-objektet til å gi dem beskrivelser.
+- Hvis du er i tvil: er navnet en node i slektstreet? → `mainGenre`. Hvis ikke → `subGenre`.
 
-### `genre` (sjanger fra slektstreet)
-- Skal alltid være satt. Velges fra `GENEALOGY_GENRES`. Brukes til kvoter (`maxPerGenre`).
+### `metaGenre` (sjanger fra slektstreet)
+- Skal alltid være satt. Velges fra `GENEALOGY_MAIN_GENRES`. Brukes til kvoter (`maxPerMetaGenre`).
 - For artister som krysser sjangere (eks. Ray Charles): velg den dominerende.
 
 ### Influence vs. levetid
@@ -274,10 +274,10 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
       "birthYear": 1894,
       "deathYear": 1937,
       "gender": "kvinne",
-      "genre": "Blues",
+      "metaGenre": "Blues",
       "instrument": "Vokal",
-      "sjangre": ["Blues"],
-      "undersjangre": ["Classic blues", "Vaudeville blues"],
+      "mainGenre": ["Blues"],
+      "subGenre": ["Classic blues", "Vaudeville blues"],
       "influenceStart": 1923,
       "influenceEnd": 1937,
       "recordLabel": "Columbia",
@@ -339,6 +339,7 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
 4. **Tiår + sjangerbeskrivelser** importeres alltid (overskriver eksisterende verdier).
 
 ### Bakoverkompatibilitet
+- Gamle feltnavn `genre` → `metaGenre`, `sjangre` → `mainGenre`, `undersjangre` → `subGenre` leses fortsatt og konverteres automatisk på lesetid (`normalizeArtist`). Gamle JSON-eksporter kan importeres uten endring. (v1.80)
 - Gammel modell med `subgenres` (blandet array) og `keyWorks` (komma­separert streng) leses fortsatt — konverteres automatisk på lesetid.
 - Gammelt `links`-felt konverteres automatisk til `musicExamples` på lesetid (`normalizeArtist`).
 - `recordingYear` i `keyWorks` er fjernet (v1.68). Eksisterende verdier ignoreres.

@@ -2,8 +2,8 @@
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=231";
-import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=190";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=232";
+import { escapeHtml, renderArtistDetail, renderTechDetail, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=190";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
@@ -12,13 +12,13 @@ let techItems = [];
 let api = null;
 let lastSjangerLabel = null;
 
-function showArtistsForGenre({ label }) {
+function showArtistsForMainGenre({ label }) {
   const sj = label.toLowerCase();
   const list = artists
     .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
-      a.genre === label
-      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
-      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj)
+      a.metaGenre === label
+      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
     ))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
@@ -40,7 +40,7 @@ function showArtistsForGenre({ label }) {
   modalOpen(document.getElementById("modal-artistliste"));
 }
 
-function onGenreClick(genre) {
+function onMainGenreClick(genre) {
   const opts = sjangerOpts();
   showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
 }
@@ -49,10 +49,10 @@ function buildLc() {
   return {
     artists,
     techItems,
-    genres: buildGenreList(artists),
+    genres: buildMainGenreList(artists),
     onArtistClick: showArtistDetail,
     onTechClick: showTechDetail,
-    onGenreClick,
+    onMainGenreClick,
   };
 }
 
@@ -91,7 +91,7 @@ function showArtistsForInstrument(instrument) {
   modalOpen(document.getElementById("modal-artistliste"));
 }
 
-function showPlaylistForGenre({ label, fullName, node }) {
+function showPlaylistForMainGenre({ label, fullName, node }) {
   lastSjangerLabel = label;
   const { total, html } = buildPlaylistHtml(node, artists);
   document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
@@ -110,12 +110,12 @@ function build() {
     subgenreDescs: subDescs,
     getArtists: () => artists,
     getTechItems: () => techItems,
-    getGenres: () => buildGenreList(artists),
+    getMainGenres: () => buildMainGenreList(artists),
     onArtistClick: showArtistDetail,
     onTechClick: showTechDetail,
-    onGenreClick,
-    onShowArtists: showArtistsForGenre,
-    onShowPlaylist: showPlaylistForGenre,
+    onMainGenreClick,
+    onShowArtists: showArtistsForMainGenre,
+    onShowPlaylist: showPlaylistForMainGenre,
   });
   requestAnimationFrame(() => api.fit());
 }
@@ -156,12 +156,12 @@ const sjangerOpts = () => ({
   subgenreDescs: subDescs,
   artists,
   techItems,
-  genres: buildGenreList(artists),
+  genres: buildMainGenreList(artists),
   onArtistClick: showArtistDetail,
   onTechClick: showTechDetail,
-  onGenreClick,
-  onShowArtists: showArtistsForGenre,
-  onShowPlaylist: showPlaylistForGenre,
+  onMainGenreClick,
+  onShowArtists: showArtistsForMainGenre,
+  onShowPlaylist: showPlaylistForMainGenre,
 });
 
 document.addEventListener("click", (e) => {

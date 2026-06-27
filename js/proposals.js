@@ -9,7 +9,7 @@
 // ============================================================================
 
 import { addPendingEdit, addTechProposal } from "./store.js";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=231";
+import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=232";
 
 const FIELD_SPECS = {
   artist: [
@@ -23,10 +23,10 @@ const FIELD_SPECS = {
       { value: "annet", label: "Annet" },
       { value: "ukjent", label: "Ukjent" },
     ] },
-    { key: "genre", label: "Metasjanger", type: "text" },
+    { key: "metaGenre", label: "Metasjanger", type: "text" },
     { key: "instrument", label: "Instrument", type: "text" },
-    { key: "sjangre", label: "Sjangre (kommaseparert)", type: "csv" },
-    { key: "undersjangre", label: "Undersjangre (kommaseparert)", type: "csv" },
+    { key: "mainGenre", label: "Sjangre (kommaseparert)", type: "csv" },
+    { key: "subGenre", label: "Undersjangre (kommaseparert)", type: "csv" },
     { key: "influenceStart", label: "Innflytelse fra", type: "number" },
     { key: "influenceEnd", label: "Innflytelse til", type: "number" },
     { key: "recordLabel", label: "Plateselskap", type: "text" },

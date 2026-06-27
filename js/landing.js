@@ -1,10 +1,10 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
 import { DEFAULT_CONFIG, decadesForRange } from "./limits.js";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildGenreList } from "./ui.js?v=231";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=232";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES, renderGenealogy } from "./genealogy.js?v=231";
-import { initExplore } from "./explore.js?v=231";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=231";
+import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=232";
+import { initExplore } from "./explore.js?v=232";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=232";
 
 const clientId = getClientId();
 
@@ -154,12 +154,12 @@ function openSlektstre() {
       subgenreDescs: state.subgenreDescs,
       getArtists: () => state.artists,
       getTechItems: () => state.techItems,
-      getGenres: () => buildGenreList(state.artists),
+      getMainGenres: () => buildMainGenreList(state.artists),
       onArtistClick: openDetail,
       onTechClick: explore.openTechDetail,
-      onGenreClick: explore.onGenreClick,
+      onMainGenreClick: explore.onMainGenreClick,
       onShowArtists: explore.showArtistsForSjanger,
-      onShowPlaylist: explore.showPlaylistForGenre,
+      onShowPlaylist: explore.showPlaylistForMainGenre,
     });
   }
   requestAnimationFrame(() => gxApi.fit());
@@ -254,11 +254,11 @@ function renderFilterResults() {
 
   if (state.filters.sjanger) {
     const sj = state.filters.sjanger.toLowerCase();
-    pool = pool.filter((a) => a.genre === state.filters.sjanger
-      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
-      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj));
+    pool = pool.filter((a) => a.metaGenre === state.filters.sjanger
+      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
   }
-  if (state.filters.genre)      pool = pool.filter((a) => a.genre === state.filters.genre);
+  if (state.filters.genre)      pool = pool.filter((a) => a.metaGenre === state.filters.genre);
   if (state.filters.instrument) pool = pool.filter((a) => a.instrument === state.filters.instrument);
   if (state.filters.decade) {
     const d = Number(state.filters.decade);
@@ -272,8 +272,8 @@ function renderFilterResults() {
         a.name.toLowerCase().includes(q) ||
         a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
         (a.geography || "").toLowerCase().includes(q) ||
-        (a.sjangre || []).some(s => s.toLowerCase().includes(q)) ||
-        (a.undersjangre || []).some(s => s.toLowerCase().includes(q))
+        (a.mainGenre || []).some(s => s.toLowerCase().includes(q)) ||
+        (a.subGenre || []).some(s => s.toLowerCase().includes(q))
     );
   }
 
@@ -327,9 +327,9 @@ function renderList() {
 
 function refreshFilterControls() {
   const { config } = state;
-  fillSelect($("#sp-sjanger"), GENEALOGY_GENRES, { placeholder: "Sjanger" });
-  const GENRE_SHORT = { "Afroamerikansk populærmusikk": "Populærmusikk", "Elektronisk musikk": "Elektronisk" };
-  fillSelect($("#sp-genre"), config.genres.map(g => ({ value: g, label: GENRE_SHORT[g] || g })), { placeholder: "Metasjanger" });
+  fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
+  const META_GENRE_SHORT = { "Afroamerikansk populærmusikk": "Populærmusikk", "Elektronisk musikk": "Elektronisk" };
+  fillSelect($("#sp-genre"), config.metaGenres.map(g => ({ value: g, label: META_GENRE_SHORT[g] || g })), { placeholder: "Metasjanger" });
   fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),

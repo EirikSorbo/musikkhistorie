@@ -88,7 +88,7 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
   }
 }
 
-export function wireAllLinks(container, { artists, techItems, onArtistClick, onTechClick, onGenreClick } = {}) {
+export function wireAllLinks(container, { artists, techItems, onArtistClick, onTechClick, onMainGenreClick } = {}) {
   if (onArtistClick) {
     container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
       link.addEventListener("click", (e) => {
@@ -107,11 +107,11 @@ export function wireAllLinks(container, { artists, techItems, onArtistClick, onT
       });
     });
   }
-  if (onGenreClick) {
+  if (onMainGenreClick) {
     container.querySelectorAll(".genre-link[data-genre]").forEach(link => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        onGenreClick(link.dataset.genre);
+        onMainGenreClick(link.dataset.metaGenre);
       });
     });
   }

@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=231" />
+  <link rel="stylesheet" href="css/styles.css?v=232" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -337,7 +337,7 @@
           <select id="ed-gender" required></select>
         </label>
         <label>Sjanger *
-          <select id="ed-genre" required></select>
+          <select id="ed-metaGenre" required></select>
         </label>
         <label>Instrument
           <select id="ed-instrument"></select>
@@ -355,10 +355,10 @@
           <input type="text" id="ed-recordLabel" placeholder="f.eks. Columbia, Stax" />
         </label>
         <label class="full">Sjangre (fra slektstreet, kommaseparert)
-          <input type="text" id="ed-sjangre" placeholder="f.eks. Blues, Jazz" />
+          <input type="text" id="ed-mainGenre" placeholder="f.eks. Blues, Jazz" />
         </label>
         <label class="full">Undersjangre / tags (frie, kommaseparert)
-          <input type="text" id="ed-undersjangre" placeholder="f.eks. Delta blues, Akustisk blues" />
+          <input type="text" id="ed-subGenre" placeholder="f.eks. Delta blues, Akustisk blues" />
         </label>
         <label class="full">Begrunnelse / hvorfor relevant
           <textarea id="ed-desc" rows="2"></textarea>
@@ -621,6 +621,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/teacher.js?v=231"></script>
+  <script type="module" src="js/teacher.js?v=232"></script>
 </body>
 </html>

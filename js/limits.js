@@ -8,14 +8,14 @@
 export const DEFAULT_CONFIG = {
   maxTotal: 80,
   maxPerDecade: 8,
-  maxPerGenre: 16,
+  maxPerMetaGenre: 16,
   maxPerInstrument: 20,
   decadeLimits: {},
-  genreLimits: {},
+  metaGenreLimits: {},
   instrumentLimits: {},
   voteOutThreshold: 8,
 
-  genres: [
+  metaGenres: [
     "Blues",
     "Country",
     "Jazz",
@@ -64,9 +64,9 @@ export function limitForDecade(config, decade) {
   return Number.isFinite(v) ? v : config.maxPerDecade;
 }
 
-export function limitForGenre(config, genre) {
-  const v = config.genreLimits?.[genre];
-  return Number.isFinite(v) ? v : config.maxPerGenre;
+export function limitForMetaGenre(config, genre) {
+  const v = config.metaGenreLimits?.[genre];
+  return Number.isFinite(v) ? v : config.maxPerMetaGenre;
 }
 
 export function limitForInstrument(config, instrument) {
@@ -110,7 +110,7 @@ export function computeCounts(artists) {
   return {
     total: active.length,
     perDecade: countByDecade(active),
-    perGenre: countBy(active, "genre"),
+    perMetaGenre: countBy(active, "metaGenre"),
     perInstrument: countBy(active, "instrument"),
   };
 }
@@ -136,11 +136,11 @@ export function checkWarnings(artists, config, candidate) {
     }
   }
 
-  const genreCount = counts.perGenre[candidate.genre] || 0;
-  const genreMax = limitForGenre(config, candidate.genre);
-  if (genreCount >= genreMax) {
+  const metaGenreCount = counts.perMetaGenre[candidate.metaGenre] || 0;
+  const metaGenreMax = limitForMetaGenre(config, candidate.metaGenre);
+  if (metaGenreCount >= metaGenreMax) {
     warnings.push(
-      `Sjangeren «${candidate.genre}» har nådd grensen (${genreCount}/${genreMax}).`
+      `Sjangeren «${candidate.metaGenre}» har nådd grensen (${metaGenreCount}/${metaGenreMax}).`
     );
   }
 

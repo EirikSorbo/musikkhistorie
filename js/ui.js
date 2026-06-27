@@ -10,21 +10,21 @@ import {
   genderDistribution,
   activeArtists,
   limitForDecade,
-  limitForGenre,
+  limitForMetaGenre,
   limitForInstrument,
   decadesForRange,
   GENDERS,
 } from "./limits.js";
-import { GENEALOGY_GENRES } from "./genealogy.js?v=231";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=231";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=232";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=232";
 export { linkifyArtists };
 
-export function buildGenreList(artists) {
-  const set = new Set(GENEALOGY_GENRES);
+export function buildMainGenreList(artists) {
+  const set = new Set(GENEALOGY_MAIN_GENRES);
   for (const a of (artists || [])) {
     if (a.status !== "active") continue;
-    for (const s of (a.sjangre || [])) set.add(s);
-    for (const s of (a.undersjangre || [])) set.add(s);
+    for (const s of (a.mainGenre || [])) set.add(s);
+    for (const s of (a.subGenre || [])) set.add(s);
   }
   return [...set];
 }
@@ -40,7 +40,7 @@ function wireLinks(el, lc) {
 }
 
 // Slektstre-sjangrene danner «sjanger»-laget; resten av taggene er undersjangre.
-const SJANGER_SET = new Set(GENEALOGY_GENRES.map((g) => g.toLowerCase()));
+const SJANGER_SET = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
 
 window._modalZ = window._modalZ || 100;
 export function modalOpen(el) { el.style.zIndex = ++window._modalZ; el.classList.add("open"); }
@@ -91,8 +91,8 @@ export function buildKilderList(kilder, label = "Kilder") {
 
 // Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).
 function genreTags(a) {
-  const sjanger = Array.isArray(a.sjangre) ? a.sjangre : [];
-  const under = Array.isArray(a.undersjangre) ? a.undersjangre : [];
+  const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
+  const under = Array.isArray(a.subGenre) ? a.subGenre : [];
   return [
     ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
     ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
@@ -324,21 +324,21 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSub
   const checked = artists.filter((a) => a.status === "active" && a.teacherChecked === true).length;
   const activeArtists = artists.filter(a => a.status === "active");
   const subgenreCount = new Set(
-    activeArtists.flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])])
+    activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])])
   ).size;
 
   const artistsNoSjanger = activeArtists
-    .filter(a => !a.sjangre || a.sjangre.length === 0)
+    .filter(a => !a.mainGenre || a.mainGenre.length === 0)
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
-  const allArtistTags = new Set(activeArtists.flatMap(a => [...(a.sjangre || []), ...(a.undersjangre || [])]));
+  const allArtistTags = new Set(activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])]));
   const orphanedSubgenres = Object.keys(subgenreDescs)
     .filter(s => !allArtistTags.has(s))
     .sort((a, b) => a.localeCompare(b, "no"));
 
   const noSjangerHtml = artistsNoSjanger.length
     ? artistsNoSjanger.map(a =>
-        `<div class="result-row"><span class="result-name">${escapeHtml(a.name)}</span><span class="result-meta">${a.genre ? `<span class="tag">${escapeHtml(a.genre)}</span>` : ""}</span></div>`
+        `<div class="result-row"><span class="result-name">${escapeHtml(a.name)}</span><span class="result-meta">${a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : ""}</span></div>`
       ).join("")
     : `<p class="muted">Ingen.</p>`;
 
@@ -456,8 +456,8 @@ export function renderLimits(el, { artists, config }) {
     )
     .join("");
 
-  const genreRows = config.genres
-    .map((g) => limitRow(g, counts.perGenre[g] || 0, limitForGenre(config, g)))
+  const genreRows = config.metaGenres
+    .map((g) => limitRow(g, counts.perMetaGenre[g] || 0, limitForMetaGenre(config, g)))
     .join("");
 
   const instrumentRows = (config.instruments || [])
@@ -516,8 +516,8 @@ export function renderResultList(el, artists, config, onSelect) {
     const workSnippet = firstTitle
       ? escapeHtml(firstTitle) + (works.length > 1 ? ` <span class="muted">(+${works.length - 1} til)</span>` : "")
       : "";
-    const sjanger = Array.isArray(a.sjangre) ? a.sjangre : [];
-    const under = Array.isArray(a.undersjangre) ? a.undersjangre : [];
+    const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
+    const under = Array.isArray(a.subGenre) ? a.subGenre : [];
     const tags = [
       ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
       ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
@@ -637,11 +637,11 @@ export function renderArtists(el, state) {
   if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
   if (filters.sjanger) {
     const sj = filters.sjanger.toLowerCase();
-    list = list.filter((a) => a.genre === filters.sjanger
-      || (a.sjangre || []).some((s) => s.toLowerCase() === sj)
-      || (a.undersjangre || []).some((s) => s.toLowerCase() === sj));
+    list = list.filter((a) => a.metaGenre === filters.sjanger
+      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
   }
-  if (filters.genre) list = list.filter((a) => a.genre === filters.genre);
+  if (filters.genre) list = list.filter((a) => a.metaGenre === filters.genre);
   if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
   if (filters.decade) {
     const fd = Number(filters.decade);
@@ -649,7 +649,7 @@ export function renderArtists(el, state) {
   }
   if (filters.subgenre) {
     const sg = filters.subgenre;
-    list = list.filter((a) => (a.undersjangre || []).includes(sg) || (a.sjangre || []).includes(sg));
+    list = list.filter((a) => (a.subGenre || []).includes(sg) || (a.mainGenre || []).includes(sg));
   }
   if (filters.search) {
     const q = filters.search.toLowerCase();
@@ -659,8 +659,8 @@ export function renderArtists(el, state) {
         a.name.toLowerCase().includes(q) ||
         a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
         (a.geography || "").toLowerCase().includes(q) ||
-        (a.sjangre || []).some(s => s.toLowerCase().includes(q)) ||
-        (a.undersjangre || []).some(s => s.toLowerCase().includes(q))
+        (a.mainGenre || []).some(s => s.toLowerCase().includes(q)) ||
+        (a.subGenre || []).some(s => s.toLowerCase().includes(q))
     );
   }
 
@@ -861,7 +861,7 @@ function pct(n, max) {
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
 export function showSubsjangerInfo(label, opts = {}) {
-  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
+  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
@@ -878,7 +878,7 @@ export function showSubsjangerInfo(label, opts = {}) {
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
-  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onGenreClick };
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
   mTitle.textContent = label;
   mBody.innerHTML = `
     <p class="gx-desc">${linkDesc(descText, lc)}</p>
@@ -903,8 +903,8 @@ export function buildArtistListRows(list) {
     const years = a.influenceStart
       ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
       : "";
-    const sjanger = Array.isArray(a.sjangre) ? a.sjangre : [];
-    const under = Array.isArray(a.undersjangre) ? a.undersjangre : [];
+    const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
+    const under = Array.isArray(a.subGenre) ? a.subGenre : [];
     const tags = [
       ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
       ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
@@ -928,8 +928,8 @@ export function buildPlaylistHtml(node, artists) {
     `<a href="https://www.youtube.com/results?search_query=${enc(q)}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
 
   const matchesSj = (a) => {
-    if (a.genre === node.l) return true;
-    const all = [...(a.sjangre || []), ...(a.undersjangre || [])];
+    if (a.metaGenre === node.l) return true;
+    const all = [...(a.mainGenre || []), ...(a.subGenre || [])];
     return all.some((s) => String(s).toLowerCase() === sj);
   };
 
@@ -941,7 +941,7 @@ export function buildPlaylistHtml(node, artists) {
   const items = genreArtists.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
-    const sjangerTag = (a.sjangre || [])
+    const sjangerTag = (a.mainGenre || [])
       .map((s) => `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
       .join("");
     (a.musicExamples || []).forEach((m) => {

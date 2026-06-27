@@ -9,9 +9,9 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=231";
+import { fillSelect } from "./ui.js?v=232";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_GENRES } from "./genealogy.js?v=231";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=232";
 
 const state = {
   artists: [],
@@ -24,7 +24,7 @@ const state = {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#in-genre"), GENEALOGY_GENRES, { placeholder: "Velg sjanger …" });
+  fillSelect($("#in-metaGenre"), GENEALOGY_MAIN_GENRES, { placeholder: "Velg sjanger …" });
   fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }
@@ -51,7 +51,7 @@ function setupForm() {
       birthYear: parseInt($("#in-birthyear").value, 10) || null,
       deathYear: parseInt($("#in-deathyear").value, 10) || null,
       gender: $("#in-gender").value,
-      genre: $("#in-genre").value,
+      metaGenre: $("#in-metaGenre").value,
       instrument: $("#in-instrument").value,
       subgenres: $("#in-subgenres").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#in-start").value, 10) || null,
@@ -66,7 +66,7 @@ function setupForm() {
       kilder: collectSources(),
     };
 
-    if (!candidate.name || !candidate.genre || !candidate.influenceStart || !candidate.gender || !candidate.instrument) {
+    if (!candidate.name || !candidate.metaGenre || !candidate.influenceStart || !candidate.gender || !candidate.instrument) {
       return showMsg(msg, "Fyll inn navn, kjønn, sjanger, instrument og startår for innflytelse.", "error");
     }
     if (!candidate.kilder.length) {
