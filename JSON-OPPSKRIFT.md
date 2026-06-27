@@ -2,7 +2,7 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.80
+**Versjon:** 1.81
 **Sist endret:** 2026-06-27
 
 ---
@@ -339,8 +339,8 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
 4. **Tiår + sjangerbeskrivelser** importeres alltid (overskriver eksisterende verdier).
 
 ### Bakoverkompatibilitet
-- Gamle feltnavn `genre` → `metaGenre`, `sjangre` → `mainGenre`, `undersjangre` → `subGenre` leses fortsatt og konverteres automatisk på lesetid (`normalizeArtist`). Gamle JSON-eksporter kan importeres uten endring. (v1.80)
-- Gammel modell med `subgenres` (blandet array) og `keyWorks` (komma­separert streng) leses fortsatt — konverteres automatisk på lesetid.
+- **Feltnavnene `metaGenre`/`mainGenre`/`subGenre` er nå påkrevd.** Eldre filer med `genre`/`sjangre`/`undersjangre` eller kombinert `subgenres`-array importeres **ikke** lenger riktig — kompat-laget ble fjernet (v1.81) etter at dataene ble migrert. Bruk en fersk eksport fra appen som backup.
+- `keyWorks` som komma­separert streng konverteres fortsatt automatisk på lesetid.
 - Gammelt `links`-felt konverteres automatisk til `musicExamples` på lesetid (`normalizeArtist`).
 - `recordingYear` i `keyWorks` er fjernet (v1.68). Eksisterende verdier ignoreres.
 - Når en lærer redigerer og lagrer, skrives det alltid i nytt format.

@@ -28,32 +28,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.36";
-import { isMainGenre } from "./genealogy.js?v=2.36";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.37";
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.
 export function normalizeArtist(a) {
   const out = { ...a };
 
-  // Bakoverkompat: gamle feltnavn → nye (genre→metaGenre, sjangre→mainGenre, undersjangre→subGenre).
-  // Lar appen lese eksisterende Firestore-dokumenter og gamle JSON-eksporter uten datatap.
-  if (out.metaGenre == null && out.genre != null) out.metaGenre = out.genre;
-  if (!Array.isArray(out.mainGenre) && Array.isArray(out.sjangre)) out.mainGenre = out.sjangre;
-  if (!Array.isArray(out.subGenre) && Array.isArray(out.undersjangre)) out.subGenre = out.undersjangre;
-  delete out.genre; delete out.sjangre; delete out.undersjangre;
-
-  // mainGenre + subGenre: del opp `subgenres` hvis ikke allerede satt
-  if (!Array.isArray(out.mainGenre) && !Array.isArray(out.subGenre)) {
-    const subs = Array.isArray(out.subgenres) ? out.subgenres : [];
-    out.mainGenre = subs.filter((s) => isMainGenre(s));
-    out.subGenre = subs.filter((s) => !isMainGenre(s));
-  } else {
-    out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
-    out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];
-  }
-  // For bakoverkompatibilitet i kode som leser begge:
-  out.subgenres = [...out.mainGenre, ...out.subGenre];
+  out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
+  out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];
 
   // keyWorks: streng → array av {title, year?, url?}
   if (typeof out.keyWorks === "string") {
