@@ -9,7 +9,7 @@
 // ============================================================================
 
 import { addPendingEdit, addTechProposal } from "./store.js";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=232";
+import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=233";
 
 const FIELD_SPECS = {
   artist: [

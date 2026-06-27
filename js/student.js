@@ -9,9 +9,8 @@ import {
   getClientId,
 } from "./store.js";
 import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js";
-import { fillSelect } from "./ui.js?v=232";
+import { fillSelect } from "./ui.js?v=233";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=232";
 
 const state = {
   artists: [],
@@ -24,7 +23,7 @@ const state = {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#in-metaGenre"), GENEALOGY_MAIN_GENRES, { placeholder: "Velg sjanger …" });
+  fillSelect($("#in-metaGenre"), config.metaGenres, { placeholder: "Velg metasjanger …" });
   fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }

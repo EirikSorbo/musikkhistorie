@@ -15,8 +15,8 @@ import {
   decadesForRange,
   GENDERS,
 } from "./limits.js";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=232";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=232";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=233";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=233";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {
