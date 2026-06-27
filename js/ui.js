@@ -14,10 +14,10 @@ import {
   limitForInstrument,
   decadesForRange,
   GENDERS,
-} from "./limits.js?v=2.33";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.33";
-import { escapeHtml } from "./util.js?v=2.33";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.33";
+} from "./limits.js?v=2.34";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.34";
+import { escapeHtml } from "./util.js?v=2.34";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.34";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {
@@ -51,6 +51,16 @@ export function modalCloseTop() {
 }
 export function modalCloseAll() {
   document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+}
+
+// Standardoppkobling av en modal: lukk ved klikk på bakgrunnen og på ←-knappen.
+// `onClose` lar f.eks. spilleliste-popupen gå «tilbake» i stedet for å bare lukke.
+export function setupModal(idOrEl, onClose) {
+  const m = typeof idOrEl === "string" ? document.getElementById(idOrEl) : idOrEl;
+  if (!m) return;
+  const close = onClose || (() => modalClose(m));
+  m.addEventListener("click", (e) => { if (e.target === m) close(); });
+  m.querySelector(".modal-close")?.addEventListener("click", close);
 }
 
 // Konverter eksisterende ✕-knapp til ←-tilbakeknapp og injiser ny ✕ for "lukk alle".

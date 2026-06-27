@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, buildKilderList, buildMainGenreList } from "./ui.js?v=2.33";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.33";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, buildKilderList, buildMainGenreList } from "./ui.js?v=2.34";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.34";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -603,12 +603,7 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
-   "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail"].forEach((id) => {
-    const m = document.getElementById(id);
-    if (!m) return;
-    m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); });
-    m.querySelector(".modal-close").addEventListener("click", () => modalClose(m));
-  });
+   "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {

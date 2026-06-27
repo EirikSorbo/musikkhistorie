@@ -2,8 +2,8 @@
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
 import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.33";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.33";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.34";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.34";
 import { CONFIGURED } from "./shared.js";
 
 const subDescs = {};
@@ -74,17 +74,12 @@ function build() {
   requestAnimationFrame(() => api.fit());
 }
 
-// Lukking av artist-liste
-const alModal = document.getElementById("modal-artistliste");
-alModal.addEventListener("click", (e) => { if (e.target === alModal) modalClose(alModal); });
-alModal.querySelector(".modal-close").addEventListener("click", () => modalClose(alModal));
+// Lukking av artist-liste, artist-detalj og sjanger-info
+setupModal("modal-artistliste");
+setupModal("modal-artist-detail");
+setupModal("modal-sjanger");
 
-// Lukking av artist-detalj
-const adModal = document.getElementById("modal-artist-detail");
-adModal.addEventListener("click", (e) => { if (e.target === adModal) modalClose(adModal); });
-adModal.querySelector(".modal-close").addEventListener("click", () => modalClose(adModal));
-
-// Lukking av spilleliste → tilbake til sjanger-popup
+// Spilleliste → går «tilbake» til sjanger-popup ved lukking
 const plModal = document.getElementById("modal-spilleliste");
 const closePl = () => {
   modalClose(plModal);
@@ -97,13 +92,7 @@ const closePl = () => {
 const plCloseBtn = plModal.querySelector(".modal-close");
 plCloseBtn.textContent = "← Tilbake";
 plCloseBtn.className = "btn ghost small";
-plModal.addEventListener("click", (e) => { if (e.target === plModal) closePl(); });
-plCloseBtn.addEventListener("click", closePl);
-
-// Lukking av sjanger-info
-const sjModal = document.getElementById("modal-sjanger");
-sjModal.addEventListener("click", (e) => { if (e.target === sjModal) modalClose(sjModal); });
-sjModal.querySelector(".modal-close").addEventListener("click", () => modalClose(sjModal));
+setupModal(plModal, closePl);
 
 const sjangerOpts = () => ({
   root: document,

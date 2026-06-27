@@ -32,13 +32,13 @@ import {
   rejectPendingEdit,
   approveTech,
 } from "./store.js";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.33";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.33";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.34";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.34";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.33";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.33";
-import { initExplore } from "./explore.js?v=2.33";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.34";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.34";
+import { initExplore } from "./explore.js?v=2.34";
 
 const state = {
   artists: [],
@@ -177,12 +177,7 @@ function setupModals() {
   document.querySelectorAll("[data-open-modal]").forEach((btn) =>
     btn.addEventListener("click", () => openAdminModal(btn.dataset.openModal))
   );
-  document.querySelectorAll(".modal-backdrop").forEach((m) =>
-    m.addEventListener("click", (e) => { if (e.target === m) modalClose(m); })
-  );
-  document.querySelectorAll(".modal-close").forEach((btn) =>
-    btn.addEventListener("click", () => modalClose(btn.closest(".modal-backdrop")))
-  );
+  document.querySelectorAll(".modal-backdrop").forEach((m) => setupModal(m));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") modalCloseTop();
   });
@@ -894,8 +889,7 @@ function renderPodkastAdmin() {
 function setupPodkastAdmin() {
   const modal = document.getElementById("modal-podkast-admin");
   if (!modal) return;
-  modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
-  modal.querySelector(".modal-close").addEventListener("click", () => modalClose(modal));
+  setupModal(modal);
 
   document.getElementById("pod-save").addEventListener("click", async () => {
     const title = document.getElementById("pod-title").value.trim();
@@ -1004,8 +998,7 @@ function fillTechForm(t) {
 function setupTechAdmin() {
   const modal = document.getElementById("modal-tech-admin");
   if (!modal) return;
-  modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
-  modal.querySelector(".modal-close").addEventListener("click", () => modalClose(modal));
+  setupModal(modal);
 
   modal.querySelectorAll(".tech-tab").forEach(btn => {
     btn.addEventListener("click", () => {

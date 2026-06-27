@@ -1,10 +1,10 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.33";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.33";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.34";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.34";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.33";
-import { initExplore } from "./explore.js?v=2.33";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.33";
+import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.34";
+import { initExplore } from "./explore.js?v=2.34";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.34";
 
 const clientId = getClientId();
 
@@ -130,17 +130,8 @@ function setupExplore() {
     document.getElementById("sp-search")?.focus();
   });
 
-  const artisterModal = document.getElementById("modal-artister");
-  if (artisterModal) {
-    artisterModal.addEventListener("click", (e) => { if (e.target === artisterModal) modalClose(artisterModal); });
-    artisterModal.querySelector(".modal-close").addEventListener("click", () => modalClose(artisterModal));
-  }
-
-  const dagensModal = document.getElementById("modal-dagens-navn");
-  if (dagensModal) {
-    dagensModal.addEventListener("click", (e) => { if (e.target === dagensModal) modalClose(dagensModal); });
-    dagensModal.querySelector(".modal-close").addEventListener("click", () => modalClose(dagensModal));
-  }
+  setupModal("modal-artister");
+  setupModal("modal-dagens-navn");
 }
 
 let gxApi = null;
@@ -196,8 +187,7 @@ function applyIncomingFilter() {
 function setupDetailModal() {
   const backdrop = document.getElementById("modal-detail");
   if (!backdrop) return;
-  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) modalClose(backdrop); });
-  backdrop.querySelector(".modal-close").addEventListener("click", () => modalClose(backdrop));
+  setupModal(backdrop);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") modalCloseTop();
   });
@@ -404,11 +394,7 @@ function init() {
   setupExplore();
 
   // Slektstre-modal
-  const slektsModal = document.getElementById("modal-slektstre");
-  if (slektsModal) {
-    slektsModal.addEventListener("click", (e) => { if (e.target === slektsModal) modalClose(slektsModal); });
-    slektsModal.querySelector(".modal-close").addEventListener("click", () => modalClose(slektsModal));
-  }
+  setupModal("modal-slektstre");
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };
