@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=2.34" />
+  <link rel="stylesheet" href="css/styles.css?v=2.35" />
 </head>
 <body>
   <script>if(localStorage.getItem("pensum-role")==="student")document.body.classList.add("role-student")</script>
@@ -61,8 +61,11 @@
         <label>Innflytelse til (år)
           <input type="number" id="in-end" min="1800" max="2030" placeholder="f.eks. 1972" />
         </label>
-        <label class="full">Undersjangre
-          <input type="text" id="in-subgenres" placeholder="f.eks. Delta blues, akustisk blues, country blues" />
+        <label class="full">Sjangre (fra slektstreet, kommaseparert)
+          <input type="text" id="in-mainGenre" placeholder="f.eks. Blues, Jazz" />
+        </label>
+        <label class="full">Undersjangre / tags (frie, kommaseparert)
+          <input type="text" id="in-subGenre" placeholder="f.eks. Delta blues, Akustisk blues" />
         </label>
         <label class="full">Begrunnelse / hvorfor relevant
           <textarea id="in-desc" rows="2" placeholder="Kort om musikkhistorisk betydning …"></textarea>
@@ -109,6 +112,6 @@
 
   </footer>
 
-  <script type="module" src="js/student.js?v=2.34"></script>
+  <script type="module" src="js/student.js?v=2.35"></script>
 </body>
 </html>

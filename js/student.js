@@ -8,8 +8,8 @@ import {
   addArtist,
   getClientId,
 } from "./store.js";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.34";
-import { fillSelect } from "./ui.js?v=2.34";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.35";
+import { fillSelect } from "./ui.js?v=2.35";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
 
 const state = {
@@ -52,7 +52,8 @@ function setupForm() {
       gender: $("#in-gender").value,
       metaGenre: $("#in-metaGenre").value,
       instrument: $("#in-instrument").value,
-      subgenres: $("#in-subgenres").value.split(",").map(s => s.trim()).filter(Boolean),
+      mainGenre: $("#in-mainGenre").value.split(",").map(s => s.trim()).filter(Boolean),
+      subGenre: $("#in-subGenre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#in-start").value, 10) || null,
       influenceEnd: parseInt($("#in-end").value, 10) || null,
       description: $("#in-desc").value.trim(),
