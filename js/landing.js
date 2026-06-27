@@ -1,10 +1,10 @@
 import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.32";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.32";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.33";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, buildMainGenreList } from "./ui.js?v=2.33";
 import { CONFIGURED, $, showSetupBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.32";
-import { initExplore } from "./explore.js?v=2.32";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.32";
+import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.33";
+import { initExplore } from "./explore.js?v=2.33";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.33";
 
 const clientId = getClientId();
 

@@ -14,9 +14,10 @@ import {
   limitForInstrument,
   decadesForRange,
   GENDERS,
-} from "./limits.js?v=2.32";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.32";
-import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.32";
+} from "./limits.js?v=2.33";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.33";
+import { escapeHtml } from "./util.js?v=2.33";
+import { linkifyAll, linkifyArtists, wireAllLinks, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.33";
 export { linkifyArtists };
 
 export function buildMainGenreList(artists) {
@@ -139,14 +140,7 @@ function artistImage(a, big = false) {
   </figure>`;
 }
 
-export function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+export { escapeHtml };
 
 function splitLines(text) {
   return text.split("\n").map(l => l.replace(/^[•\-–]\s*/, "").trim()).filter(Boolean);
