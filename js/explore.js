@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.47";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.47";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.48";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.48";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -38,6 +38,15 @@ const VK_HEAT = {
   "Neo-soul":      [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 3, 3],
   "Trance / DnB":  [0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4],
   "Nu-jazz":       [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3],
+  "Folk":            [0, 0, 0, 0, 2, 3, 4, 2, 1, 1, 1, 1, 1],
+  "Rock'n'roll":     [0, 0, 0, 0, 0, 5, 3, 1, 0, 0, 0, 0, 0],
+  "British invasion":[0, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0],
+  "Blues Rock":      [0, 0, 0, 0, 0, 0, 3, 4, 2, 1, 1, 1, 1],
+  "Fjelljazz":       [0, 0, 0, 0, 0, 0, 0, 3, 3, 2, 2, 2, 2],
+  "Gangsta rap":     [0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 3, 2, 1],
+  "Trap":            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 5],
+  "Elektronika":     [0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 3, 3],
+  "EDM":             [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 5, 4],
 };
 
 // Varmen er redaksjonell og kan ikke utledes fra treet. Varsle derfor i

@@ -1194,6 +1194,7 @@ body.is-teacher #gate { display: none; }
 .gx-f-teal rect   { fill: #ccfbf1; stroke: #0d9488; } .gx-f-teal text   { fill: #134e4a; }
 .gx-f-pink rect   { fill: #fce7f3; stroke: #db2777; } .gx-f-pink text   { fill: #831843; }
 .gx-f-green rect  { fill: #dcfce7; stroke: #16a34a; } .gx-f-green text  { fill: #14532d; }
+.gx-f-rock rect   { fill: #e2e8f0; stroke: #334155; } .gx-f-rock text   { fill: #1e293b; }
 
 .gx-info {
   margin-top: 16px;
@@ -1232,6 +1233,7 @@ body.is-teacher #gate { display: none; }
 .gx-sw.gx-f-teal   { background: #ccfbf1; border-color: #0d9488; }
 .gx-sw.gx-f-pink   { background: #fce7f3; border-color: #db2777; }
 .gx-sw.gx-f-green  { background: #dcfce7; border-color: #16a34a; }
+.gx-sw.gx-f-rock   { background: #e2e8f0; border-color: #334155; }
 .gx-sw-line { width: 18px; height: 0; border-top: 2px dashed #e0a85a; display: inline-block; vertical-align: middle; }
 
 /* Ekstra smal: veldig gamle/små telefoner */
