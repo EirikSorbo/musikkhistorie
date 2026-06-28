@@ -31,14 +31,14 @@ import {
   approvePendingEdit,
   rejectPendingEdit,
   approveTech,
-} from "./store.js?v=2.44";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.44";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, buildPlaylistHtml, buildArtistListRows, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields, fieldLabelFor } from "./ui.js?v=2.44";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.44";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.44";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.44";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.44";
-import { initExplore } from "./explore.js?v=2.44";
+} from "./store.js?v=2.45";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.45";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderDashboard, renderLimits, renderArtists, renderArtistDetail, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal, buildKilderList, buildMainGenreList, fmtCredit, renderEditDiff, wireEditDiff, readApprovedFields } from "./ui.js?v=2.45";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.45";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.45";
+import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=2.45";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.45";
+import { initExplore } from "./explore.js?v=2.45";
 
 const state = {
   artists: [],
@@ -165,8 +165,6 @@ function openAdminModal(id) {
   const el = document.getElementById(id);
   modalOpen(el);
   if (id === "modal-fyllingsgrad") renderLimits($("#modal-limits"), state);
-  if (id === "modal-decade-desc") renderDecadeDescList();
-  if (id === "modal-subgenre-desc") renderSubgenreDescList();
 }
 
 function closeAdminModal(id) {
@@ -1575,93 +1573,5 @@ const GENDERS_EDIT = [
   { value: "annet", label: "Gruppe" },
   { value: "ukjent", label: "Ukjent" },
 ];
-
-// ----------------------------------------------------------------------------
-//  Tiårs- og undersjangerbeskrivelser
-// ----------------------------------------------------------------------------
-
-function renderDecadeDescList() {
-  const el = $("#decade-desc-list");
-  const decades = (state.config?.decades || []).slice().sort((a, b) => a - b);
-  if (!decades.length) { el.innerHTML = `<p class="muted">Ingen tiår definert i innstillingene.</p>`; return; }
-
-  el.innerHTML = decades.map((d) => {
-    const desc = state.decadeDescs[String(d)] || {};
-    return `
-      <div class="desc-edit-item" data-decade="${d}">
-        <h3>${d}-tallet</h3>
-        <label>Samfunnsutvikling
-          <textarea class="dd-society" rows="3" placeholder="Beskriv samfunnsutvikling for ${d}-tallet …">${escapeHtml(desc.society || "")}</textarea>
-        </label>
-        <label>Teknologiutvikling
-          <textarea class="dd-tech" rows="3" placeholder="Beskriv teknologiutvikling for ${d}-tallet …">${escapeHtml(desc.tech || "")}</textarea>
-        </label>
-        <div class="desc-edit-actions">
-          <button type="button" class="btn primary small dd-save">Lagre</button>
-          <span class="dd-msg form-msg ok"></span>
-        </div>
-      </div>`;
-  }).join("");
-
-  el.querySelectorAll(".dd-save").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const item = btn.closest(".desc-edit-item");
-      const decadeId = item.dataset.decade;
-      const society = item.querySelector(".dd-society").value.trim();
-      const tech = item.querySelector(".dd-tech").value.trim();
-      const msg = item.querySelector(".dd-msg");
-      try {
-        await saveDecadeDesc(decadeId, { society, tech });
-        msg.textContent = "Lagret ✓";
-        setTimeout(() => (msg.textContent = ""), 2500);
-      } catch (err) {
-        msg.textContent = "Feil: " + err.message;
-        msg.className = "form-msg error";
-      }
-    });
-  });
-}
-
-function renderSubgenreDescList() {
-  const el = $("#subgenre-desc-list");
-  const allSubs = [...new Set(
-    state.artists.filter(a => a.status === "active")
-      .flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])])
-  )].sort((a, b) => a.localeCompare(b, "no"));
-
-  if (!allSubs.length) { el.innerHTML = `<p class="muted">Ingen undersjangre registrert blant artistene.</p>`; return; }
-
-  el.innerHTML = allSubs.map((s) => {
-    const desc = state.subgenreDescs[s] || {};
-    return `
-      <div class="desc-edit-item" data-subgenre="${escapeHtml(s)}">
-        <h3>${escapeHtml(s)}</h3>
-        <label>Beskrivelse
-          <textarea class="sg-desc" rows="3" placeholder="Beskriv ${s} …">${escapeHtml(desc.description || "")}</textarea>
-        </label>
-        <div class="desc-edit-actions">
-          <button type="button" class="btn primary small sg-save">Lagre</button>
-          <span class="sg-msg form-msg ok"></span>
-        </div>
-      </div>`;
-  }).join("");
-
-  el.querySelectorAll(".sg-save").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const item = btn.closest(".desc-edit-item");
-      const subgenreId = item.dataset.subgenre;
-      const description = item.querySelector(".sg-desc").value.trim();
-      const msg = item.querySelector(".sg-msg");
-      try {
-        await saveSubgenreDesc(subgenreId, { description });
-        msg.textContent = "Lagret ✓";
-        setTimeout(() => (msg.textContent = ""), 2500);
-      } catch (err) {
-        msg.textContent = "Feil: " + err.message;
-        msg.className = "form-msg error";
-      }
-    });
-  });
-}
 
 setupGate();

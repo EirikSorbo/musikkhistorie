@@ -7,8 +7,8 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks, linkifyArtists, wireArtistLinks, wireTechLinks } from "./linkify.js?v=2.44";
-import { escapeHtml } from "./util.js?v=2.44";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.45";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.45";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -83,10 +83,7 @@ export function showSjangerInfo(label, opts = {}) {
   const descFor = () => { const o = subgenreDescs[n.f] || subgenreDescs[n.l]; return (o && o.description) ? o.description : n.d; };
   const descObj = subgenreDescs[n.f] || subgenreDescs[n.l] || {};
   const kilder = Array.isArray(descObj.kilder) ? descObj.kilder : [];
-  const kilderHtml = kilder.length ? `<div class="kilder"><strong>Kilder:</strong><ul>${kilder.map((k) => {
-    const t = escapeHtml(k.text || "");
-    return k.url ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${t}</a></li>` : `<li>${t}</li>`;
-  }).join("")}</ul></div>` : "";
+  const kilderHtml = buildKilderList(kilder, "Kilder");
 
   const btnArea = [
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
@@ -172,8 +169,6 @@ export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtis
   const stage = root.querySelector("#gx-stage");
   const cam = root.querySelector("#gx-cam");
   const modal = root.querySelector("#modal-sjanger");
-  const mTitle = root.querySelector("#sj-title");
-  const mBody = root.querySelector("#sj-body");
 
   const map = {}, kids = {};
   GENEALOGY.forEach((n) => { n.y = RY[n.r]; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
@@ -183,10 +178,6 @@ export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtis
 
   const anc = (id, s = {}) => { parentsOf(map[id]).forEach((p) => { if (!s[p]) { s[p] = 1; anc(p, s); } }); return s; };
   const desc = (id, s = {}) => { kids[id].forEach((c) => { if (!s[c]) { s[c] = 1; desc(c, s); } }); return s; };
-  const descFor = (n) => {
-    const o = subgenreDescs[n.f] || subgenreDescs[n.l];
-    return (o && o.description) ? o.description : n.d;
-  };
 
   cam.innerHTML = "";
 
@@ -247,41 +238,16 @@ export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtis
   }
   const reset = clearLight;
 
-  // Klikk → popup med detaljer
+  // Klikk → popup med detaljer. Bruker den delte showSjangerInfo, så node-klikk
+  // og tag-klikk alltid viser nøyaktig samme popup (én kilde til sannhet).
   function openModal(id) {
     const n = map[id];
-    const inf = n.p.map((p) => escapeHtml(map[p].f)).join(", ") || "—";
-    const grewInto = GENEALOGY.filter((x) => x.p.includes(id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
-    const reactAgainst = n.rx.map((p) => escapeHtml(map[p].f));
-    const reactedBy = GENEALOGY.filter((x) => x.rx.includes(id)).map((x) => escapeHtml(x.f));
-    const btnArea = [
-      (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
-      (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
-    ].filter(Boolean).join(" ");
-    if (mTitle) mTitle.textContent = n.f;
-    if (mBody) {
-      const descObj = subgenreDescs[n.f] || subgenreDescs[n.l] || {};
-      const kilder = Array.isArray(descObj.kilder) ? descObj.kilder : [];
-      const kilderHtml = kilder.length ? `<div class="kilder"><strong>Kilder:</strong><ul>${kilder.map((k) => {
-        const t = escapeHtml(k.text || "");
-        return k.url ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${t}</a></li>` : `<li>${t}</li>`;
-      }).join("")}</ul></div>` : "";
-      mBody.innerHTML = `
-        <p class="gx-era">${escapeHtml(n.era)}</p>
-        <p class="gx-desc">${linkifyAll(descFor(n), { artists: artists.current, techItems: tech.current, genres: genreProxy.current })}</p>
-        <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
-        ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
-        <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
-        ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
-        ${kilderHtml}
-        ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
-      wireAllLinks(mBody, { artists: artists.current, techItems: tech.current, onArtistClick, onTechClick, onMainGenreClick });
-      const b = mBody.querySelector(".gx-artists-btn");
-      if (b) b.addEventListener("click", () => onShowArtists({ label: n.l, fullName: n.f, genre: n.g }));
-      const bp = mBody.querySelector(".gx-playlist-btn");
-      if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
-    }
-    if (modal) { window._modalZ = window._modalZ || 100; modal.style.zIndex = ++window._modalZ; modal.classList.add("open"); }
+    showSjangerInfo(n.l, {
+      root, subgenreDescs,
+      artists: artists.current, techItems: tech.current, genres: genreProxy.current,
+      onArtistClick, onTechClick, onMainGenreClick,
+      onShowArtists, onShowPlaylist,
+    });
   }
 
   GENEALOGY.forEach((n) => {

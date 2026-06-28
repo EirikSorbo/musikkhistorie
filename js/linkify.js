@@ -1,11 +1,4 @@
-function esc(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+import { escapeHtml as esc } from "./util.js?v=2.45";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
@@ -49,10 +42,6 @@ export function linkifyAll(text, { artists, techItems, genres } = {}) {
   }
   result += escaped.slice(last);
   return result;
-}
-
-export function linkifyArtists(text, artists, techItems, genres) {
-  return linkifyAll(text, { artists, techItems, genres });
 }
 
 function isWordChar(ch) {
@@ -111,16 +100,8 @@ export function wireAllLinks(container, { artists, techItems, onArtistClick, onT
     container.querySelectorAll(".genre-link[data-genre]").forEach(link => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        onMainGenreClick(link.dataset.metaGenre);
+        onMainGenreClick(link.dataset.genre);
       });
     });
   }
-}
-
-export function wireArtistLinks(container, artists, onClick) {
-  wireAllLinks(container, { artists, onArtistClick: onClick });
-}
-
-export function wireTechLinks(container, techItems, onClick) {
-  wireAllLinks(container, { techItems, onTechClick: onClick });
 }

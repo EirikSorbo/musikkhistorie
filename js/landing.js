@@ -1,10 +1,10 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.44";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.44";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, escapeHtml, formatInfoText, buildPlaylistHtml, buildArtistListRows, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.44";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.44";
-import { GENEALOGY_MAIN_GENRES, renderGenealogy } from "./genealogy.js?v=2.44";
-import { initExplore } from "./explore.js?v=2.44";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.44";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.45";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.45";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.45";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.45";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.45";
+import { initExplore } from "./explore.js?v=2.45";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.45";
 
 const clientId = getClientId();
 
@@ -134,26 +134,10 @@ function setupExplore() {
   setupModal("modal-dagens-navn");
 }
 
-let gxApi = null;
+// Slektstreet bor på sin egen side (tre.html). «Vis sjangertre →» i Sjangre-
+// popupen navigerer dit i stedet for å åpne en duplikat-modal her.
 function openSlektstre() {
-  const modal = document.getElementById("modal-slektstre");
-  if (!modal) return;
-  modalOpen(modal);
-  if (!gxApi) {
-    gxApi = renderGenealogy({
-      root: document,
-      subgenreDescs: state.subgenreDescs,
-      getArtists: () => state.artists,
-      getTechItems: () => state.techItems,
-      getMainGenres: () => buildMainGenreList(state.artists),
-      onArtistClick: openDetail,
-      onTechClick: explore.openTechDetail,
-      onMainGenreClick: explore.onMainGenreClick,
-      onShowArtists: explore.showArtistsForSjanger,
-      onShowPlaylist: explore.showPlaylistForMainGenre,
-    });
-  }
-  requestAnimationFrame(() => gxApi.fit());
+  window.location.href = "tre.html";
 }
 
 function applyIncomingFilter() {
@@ -204,7 +188,7 @@ function openDagensNavn() {
 
 function hasFilters() {
   const f = state.filters;
-  return !!(f.search || f.sjanger || f.genre || f.instrument || f.decade);
+  return !!(f.search || f.mainGenre || f.metaGenre || f.instrument || f.decade);
 }
 
 let currentPicks = [];
@@ -409,9 +393,6 @@ function init() {
   setupProposeButtons();
   setupDetailModal();
   setupExplore();
-
-  // Slektstre-modal
-  setupModal("modal-slektstre");
 
   if (!CONFIGURED) {
     state.config = { ...DEFAULT_CONFIG };

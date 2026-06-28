@@ -10,9 +10,8 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=2.44";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.44";
-import { linkifyArtists } from "./linkify.js?v=2.44";
+import { decadesForRange } from "./limits.js?v=2.45";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.45";
 import {
   escapeHtml,
   linkDesc,
@@ -22,35 +21,44 @@ import {
   genreTags,
   yearLabel,
   musicExampleLabel,
+  musicExamplesHtml,
   keyWorksText,
   fmtCredit,
   artistImage,
   formatInfoText,
   factsLines,
-} from "./ui-helpers.js?v=2.44";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal } from "./ui-modal.js?v=2.44";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.44";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.44";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.44";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.44";
+  PRIO_ICONS,
+  PRIO_LABELS,
+} from "./ui-helpers.js?v=2.45";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.45";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.45";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.45";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.45";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.45";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
-export { linkifyArtists };
 export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
-export { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal };
+export { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders };
 export { TECH_CATEGORIES, renderTechList, renderTechDetail };
 export { buildTimeline, buildTechTimeline };
 export { renderDashboard, renderLimits };
 export { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
 
+// Memoisert på artist-array-referansen: subscribeArtists bytter referanse ved
+// hver oppdatering, så samme render-pass treffer cachen i stedet for å bygge
+// lista på nytt for hvert klikk/popup.
+let _mainGenreCache = { ref: null, val: null };
 export function buildMainGenreList(artists) {
+  if (artists === _mainGenreCache.ref) return _mainGenreCache.val;
   const set = new Set(GENEALOGY_MAIN_GENRES);
   for (const a of (artists || [])) {
     if (a.status !== "active") continue;
     for (const s of (a.mainGenre || [])) set.add(s);
     for (const s of (a.subGenre || [])) set.add(s);
   }
-  return [...set];
+  const val = [...set];
+  _mainGenreCache = { ref: artists, val };
+  return val;
 }
 
 // ----------------------------------------------------------------------------
@@ -103,9 +111,7 @@ export function renderResultList(el, artists, config, onSelect) {
 // Full innholdsvisning for detaljmodal (kun lesemodus)
 export function renderArtistDetail(el, artist, config, lc) {
   const a = artist;
-  const examplesHtml = (a.musicExamples || [])
-    .map((m) => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
-    .join("");
+  const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
   el.innerHTML = `
     ${artistImage(a, true)}
@@ -134,22 +140,9 @@ export function renderSpotlightCards(el, artists, config, lc) {
 }
 
 function spotlightCard(a, config, lc) {
-  const examplesHtml = (a.musicExamples || [])
-    .map(
-      (m) =>
-        `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">
-          ${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}
-        </a>`
-    )
-    .join("");
+  const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
   const prio = a.priority || 0;
-  const PRIO_LABELS = { 3: "Viktigst", 2: "Viktig", 1: "Mindre viktig" };
-  const PRIO_ICONS = {
-    3: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-    2: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
-    1: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`,
-  };
   const prioTag = prio
     ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
     : "";
@@ -258,14 +251,7 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
   const removed = prio === -1;
   const pending = a.status === "pending";
 
-  const examplesHtml = (a.musicExamples || [])
-    .map(
-      (m) =>
-        `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">
-          ${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}
-        </a>`
-    )
-    .join("");
+  const examplesHtml = musicExamplesHtml(a);
 
   const checked = a.teacherChecked === true;
 
@@ -277,14 +263,6 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
     ? `<span class="badge pending">Venter på godkjenning</span>`
     : "";
 
-  const PRIO_LABELS = { 3: "Viktigst", 2: "Viktig", 1: "Mindre viktig", "-1": "Skjult" };
-  const prioBadge = "";
-  const PRIO_ICONS = {
-    3: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-    2: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
-    1: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`,
-    "-1": `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
-  };
   const prioTag = prio
     ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
     : "";

@@ -5,8 +5,8 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.44";
-import { extractBullets } from "./ui-helpers.js?v=2.44";
+import { escapeHtml } from "./util.js?v=2.45";
+import { extractBullets } from "./ui-helpers.js?v=2.45";
 
 function shortDesc(text) {
   const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();

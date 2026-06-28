@@ -29,7 +29,9 @@ export function setupModal(idOrEl, onClose) {
 }
 
 // Konverter eksisterende ✕-knapp til ←-tilbakeknapp og injiser ny ✕ for "lukk alle".
-function initModalHeaders() {
+// Idempotent (hopper over modaler som allerede har .modal-close-all), så den kan
+// kjøres på nytt etter at flere modaler er injisert dynamisk (se explore.js).
+export function initModalHeaders() {
   document.querySelectorAll(".modal-head").forEach((head) => {
     const closeBtn = head.querySelector(".modal-close");
     if (!closeBtn || head.querySelector(".modal-close-all")) return;

@@ -6,11 +6,11 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.44";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.44";
-import { GENDERS } from "./limits.js?v=2.44";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.45";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.45";
+import { GENDERS } from "./limits.js?v=2.45";
 
-export { escapeHtml };
+export { escapeHtml, buildKilderList };
 
 export const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 
@@ -22,18 +22,6 @@ export function linkDesc(text, lc) {
 export function wireLinks(el, lc) {
   if (!lc) return;
   wireAllLinks(el, lc);
-}
-
-// Bygger en strukturert kilde-liste (brukt på artist, sjanger og tiår).
-export function buildKilderList(kilder, label = "Kilder") {
-  if (!Array.isArray(kilder) || !kilder.length) return "";
-  const items = kilder.map((k) => {
-    const text = escapeHtml(k.text || "");
-    return k.url
-      ? `<li><a href="${escapeHtml(k.url)}" target="_blank" rel="noopener">${text}</a></li>`
-      : `<li>${text}</li>`;
-  }).join("");
-  return `<div class="kilder"><strong>${escapeHtml(label)}:</strong><ul>${items}</ul></div>`;
 }
 
 export const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
@@ -62,6 +50,23 @@ export function musicExampleLabel(m) {
   if (p) return ` (framføring ${p})`;
   return "";
 }
+
+// Delt musikkeksempel-lenkeliste (brukt av detalj-, spotlight- og artistkort).
+export function musicExamplesHtml(a) {
+  return (a.musicExamples || [])
+    .map((m) => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
+    .join("");
+}
+
+// Prioritets-ikoner/-etiketter, delt av spotlight- og artistkort.
+export const PRIO_LABELS = { 3: "Viktigst", 2: "Viktig", 1: "Mindre viktig", "-1": "Skjult" };
+const prioIco = (d) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+export const PRIO_ICONS = {
+  3: prioIco(`<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>`),
+  2: prioIco(`<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>`),
+  1: prioIco(`<path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>`),
+  "-1": prioIco(`<path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>`),
+};
 
 export function keyWorksText(works) {
   if (!Array.isArray(works) || !works.length) return "";

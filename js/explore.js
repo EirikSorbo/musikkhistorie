@@ -1,5 +1,5 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, buildKilderList, buildMainGenreList } from "./ui.js?v=2.44";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.44";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.45";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.45";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -617,6 +617,9 @@ function injectModals() {
   const wrap = document.createElement("div");
   wrap.innerHTML = MODAL_HTML;
   while (wrap.firstElementChild) document.body.appendChild(wrap.firstElementChild);
+  // Gi de nettopp injiserte modalene samme header-behandling (←/✕ lukk alle)
+  // som de statiske, ellers blir headeren inkonsekvent.
+  initModalHeaders();
 }
 
 function wireModals() {
