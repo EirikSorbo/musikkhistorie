@@ -27,14 +27,25 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.48";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.48";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.48";
+import { firebaseConfig } from "./firebase-config.js?v=2.49";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.49";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.49";
+
+// Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
+// vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
+// lenger finnes (Rock flyttet til annet pensum).
+const META_RENAME = {
+  "Afroamerikansk populærmusikk": "R&B",
+  "Elektronisk musikk": "Klubbmusikk",
+};
+const META_DROP = new Set(["Rock"]);
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.
 export function normalizeArtist(a) {
   const out = { ...a };
+
+  if (META_RENAME[out.metaGenre]) out.metaGenre = META_RENAME[out.metaGenre];
 
   out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
   out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];
@@ -130,7 +141,11 @@ function normalizeConfig(d) {
   delete c.genres; delete c.genreLimits; delete c.maxPerGenre;
   // Treet er sannhetskilde: metasjangre derfra skal alltid være med, selv om
   // læreren har lagret en egen liste. Lærertillegg beholdes, treets vinner.
-  const saved = Array.isArray(c.metaGenres) ? c.metaGenres : [];
+  // Lagrede navn migreres gjennom META_RENAME, og utgåtte (META_DROP) fjernes,
+  // så omdøpte/fjernede metasjangre ikke henger igjen fra eldre config.
+  const saved = (Array.isArray(c.metaGenres) ? c.metaGenres : [])
+    .map((m) => META_RENAME[m] || m)
+    .filter((m) => !META_DROP.has(m));
   c.metaGenres = [...new Set([...GENEALOGY_META_GENRES, ...saved])];
   return c;
 }

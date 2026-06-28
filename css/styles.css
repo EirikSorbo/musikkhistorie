@@ -1235,6 +1235,7 @@ body.is-teacher #gate { display: none; }
 .gx-sw.gx-f-green  { background: #dcfce7; border-color: #16a34a; }
 .gx-sw.gx-f-rock   { background: #e2e8f0; border-color: #334155; }
 .gx-sw-line { width: 18px; height: 0; border-top: 2px dashed #e0a85a; display: inline-block; vertical-align: middle; }
+.gx-sw-line.gx-sw-solid { border-top: 2px solid #aebbb1; }
 
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {

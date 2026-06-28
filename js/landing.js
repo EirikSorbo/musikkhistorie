@@ -1,10 +1,10 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.48";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.48";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.48";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.48";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.48";
-import { initExplore } from "./explore.js?v=2.48";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.48";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.49";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.49";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.49";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.49";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.49";
+import { initExplore } from "./explore.js?v=2.49";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.49";
 
 const clientId = getClientId();
 
@@ -302,8 +302,7 @@ function renderList() {
 function refreshFilterControls() {
   const { config } = state;
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
-  const META_GENRE_SHORT = { "Afroamerikansk populærmusikk": "Populærmusikk", "Elektronisk musikk": "Elektronisk" };
-  fillSelect($("#sp-genre"), config.metaGenres.map(g => ({ value: g, label: META_GENRE_SHORT[g] || g })), { placeholder: "Metasjanger" });
+  fillSelect($("#sp-genre"), config.metaGenres.map(g => ({ value: g, label: g })), { placeholder: "Metasjanger" });
   fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
@@ -350,7 +349,7 @@ function setupFilters() {
 // Skjemaversjon i nøkkelen: bump ved feltnavn-endringer på artist/config, så
 // gamle caches (f.eks. fra før «genre»→«metaGenre»/«sjangre»→«mainGenre»-
 // migreringen) ignoreres og appen faller tilbake til ferske Firestore-data.
-const CACHE_SCHEMA  = "v2";
+const CACHE_SCHEMA  = "v3";
 const CACHE_ARTISTS = `pensum_cache_artists_${CACHE_SCHEMA}`;
 const CACHE_CONFIG  = `pensum_cache_config_${CACHE_SCHEMA}`;
 
