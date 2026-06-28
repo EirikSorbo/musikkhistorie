@@ -11,8 +11,8 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=2.51";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.51";
+} from "./limits.js?v=2.52";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.52";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
