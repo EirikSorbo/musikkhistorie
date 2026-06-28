@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=2.52";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.52";
-import { resolveDesc } from "./genre-descriptions.js?v=2.52";
+import { decadesForRange } from "./limits.js?v=2.53";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.53";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.53";
 import {
   escapeHtml,
   linkDesc,
@@ -30,12 +30,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.52";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.52";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.52";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.52";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.52";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.52";
+} from "./ui-helpers.js?v=2.53";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.53";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.53";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.53";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.53";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.53";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
@@ -380,7 +380,7 @@ export function showSubsjangerInfo(label, opts = {}) {
 
   // Frie undersjangre er på «sub»-nivå.
   const resolved = resolveDesc(subgenreDescs, label, "sub");
-  const descText = resolved.description || "Ingen beskrivelse ennå.";
+  const descText = resolved.description;
   const kilder = resolved.kilder;
   wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" });
 
@@ -393,7 +393,7 @@ export function showSubsjangerInfo(label, opts = {}) {
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
   mTitle.textContent = label;
   mBody.innerHTML = `
-    <p class="gx-desc">${linkDesc(descText, lc)}</p>
+    <p class="gx-desc">${descText ? linkDesc(descText, lc) : `<span class="gx-missing">${missingDesc("sub")}</span>`}</p>
     ${buildKilderList(kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireLinks(mBody, lc);

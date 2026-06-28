@@ -7,9 +7,9 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.52";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.52";
-import { resolveDescAny } from "./genre-descriptions.js?v=2.52";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.53";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.53";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.53";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -115,7 +115,7 @@ export function showSjangerInfo(label, opts = {}) {
   mTitle.textContent = n.f;
   mBody.innerHTML = `
     <p class="gx-era">${escapeHtml(n.era)}</p>
-    <p class="gx-desc">${linkifyAll(descText, lc)}</p>
+    <p class="gx-desc">${descText ? linkifyAll(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</p>
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>

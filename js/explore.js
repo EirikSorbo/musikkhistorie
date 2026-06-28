@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.52";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.52";
-import { resolveDesc } from "./genre-descriptions.js?v=2.52";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.53";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.53";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.53";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -573,8 +573,9 @@ function openSubgenreInfo(subgenreId) {
   const s = getState();
   const resolved = resolveDesc(s.subgenreDescs, subgenreId, "sub");
   document.getElementById("sgi-title").textContent = subgenreId;
-  document.getElementById("sgi-desc").textContent = resolved.description || "Ingen beskrivelse ennå.";
-  document.getElementById("sgi-desc").className = resolved.description ? "" : "muted";
+  const sgiDesc = document.getElementById("sgi-desc");
+  sgiDesc.textContent = resolved.description || missingDesc("sub");
+  sgiDesc.className = resolved.description ? "" : "gx-missing";
 
   const artists = s.artists
     .filter(a => a.status === "active" && (a.priority || 0) !== -1 && ((a.subGenre || []).includes(subgenreId) || (a.mainGenre || []).includes(subgenreId)))

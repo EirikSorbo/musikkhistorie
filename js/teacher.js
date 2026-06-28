@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.52";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.52";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.52";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.52";
-import { initExplore } from "./explore.js?v=2.52";
+} from "./store.js?v=2.53";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.53";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.53";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.53";
+import { initExplore } from "./explore.js?v=2.53";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.52";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.52";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.53";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.53";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.52";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.52";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.52";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.52";
+} from "./teacher-content.js?v=2.53";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.53";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.53";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.53";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
