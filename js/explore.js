@@ -1,5 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.50";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.50";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.51";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.51";
+import { resolveDesc } from "./genre-descriptions.js?v=2.51";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -269,9 +270,9 @@ function sjangerOpts() {
     onMainGenreClick,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForMainGenre,
-    onEdit: opts.onSubgenreEdit ? (label) => {
+    onEdit: opts.onSubgenreEdit ? (label, level) => {
       modalClose(document.getElementById("modal-sjanger"));
-      opts.onSubgenreEdit(label);
+      opts.onSubgenreEdit(label, level);
     } : undefined,
     onPropose: opts.onProposeEdit,
     hasPendingEdit: opts.hasPendingEdit,
@@ -570,10 +571,10 @@ function openSubgenreInfo(subgenreId) {
   const modal = document.getElementById("modal-subgenre-info");
   if (!modal) return;
   const s = getState();
-  const desc = s.subgenreDescs[subgenreId];
+  const resolved = resolveDesc(s.subgenreDescs, subgenreId, "sub");
   document.getElementById("sgi-title").textContent = subgenreId;
-  document.getElementById("sgi-desc").textContent = desc?.description || "Ingen beskrivelse ennå.";
-  document.getElementById("sgi-desc").className = desc?.description ? "" : "muted";
+  document.getElementById("sgi-desc").textContent = resolved.description || "Ingen beskrivelse ennå.";
+  document.getElementById("sgi-desc").className = resolved.description ? "" : "muted";
 
   const artists = s.artists
     .filter(a => a.status === "active" && (a.priority || 0) !== -1 && ((a.subGenre || []).includes(subgenreId) || (a.mainGenre || []).includes(subgenreId)))
@@ -615,7 +616,7 @@ function openSubgenreInfo(subgenreId) {
     extra.innerHTML = `<div class="modal-foot-right"><button id="sgi-edit-btn" class="btn ghost small">Rediger</button></div>`;
     extra.querySelector("#sgi-edit-btn").addEventListener("click", () => {
       modalClose(modal);
-      opts.onSubgenreEdit(subgenreId);
+      opts.onSubgenreEdit(subgenreId, "sub");
     });
   }
 

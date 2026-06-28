@@ -5,11 +5,14 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.50";
-import { saveDecadeDesc, saveSubgenreDesc, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.50";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.50";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.50";
-import { $ } from "./shared.js?v=2.50";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.51";
+import { saveDecadeDesc, saveSubgenreLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.51";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.51";
+import { resolveDesc } from "./genre-descriptions.js?v=2.51";
+
+const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.51";
+import { $ } from "./shared.js?v=2.51";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -89,18 +92,20 @@ export function openSingleDecadeModal(decadeId, mode) {
   openAdminModal("modal-decade-single");
 }
 
-export function openSingleSubgenreModal(subgenreId) {
-  const desc = state.subgenreDescs[subgenreId] || {};
-  $("#subgenre-single-title").textContent = subgenreId;
-  $("#ss-desc").value = desc.description || "";
+export function openSingleSubgenreModal(subgenreId, level = "sub") {
+  const resolved = resolveDesc(state.subgenreDescs, subgenreId, level);
+  $("#subgenre-single-title").textContent = `${subgenreId} (${LEVEL_LABEL[level] || level})`;
+  $("#ss-desc").value = resolved.description || "";
   $("#ss-msg").textContent = "";
   const kilderWrap = $("#ss-kilder-rows");
   if (kilderWrap) {
     kilderWrap.innerHTML = "";
-    const kilder = Array.isArray(desc.kilder) ? desc.kilder : [];
+    const kilder = Array.isArray(resolved.kilder) ? resolved.kilder : [];
     (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || "", "ss"));
   }
-  $("#modal-subgenre-single").dataset.subgenre = subgenreId;
+  const modal = $("#modal-subgenre-single");
+  modal.dataset.subgenre = subgenreId;
+  modal.dataset.level = level;
   openAdminModal("modal-subgenre-single");
 }
 
@@ -139,11 +144,12 @@ export function setupSubgenreSingleSave() {
   $("#ss-save").addEventListener("click", async () => {
     const modal = $("#modal-subgenre-single");
     const subgenreId = modal.dataset.subgenre;
+    const level = modal.dataset.level || "sub";
     const description = $("#ss-desc").value.trim();
     const kilder = collectKilderRows($("#ss-kilder-rows"));
     const msg = $("#ss-msg");
     try {
-      await saveSubgenreDesc(subgenreId, { description, kilder });
+      await saveSubgenreLevel(subgenreId, level, { description, kilder });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
       setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);

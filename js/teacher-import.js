@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.50";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.51";
 import {
   addArtist,
   teacherDelete,
@@ -15,9 +15,9 @@ import {
   saveDecadeDesc,
   saveSubgenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.50";
-import { escapeHtml } from "./ui.js?v=2.50";
-import { $ } from "./shared.js?v=2.50";
+} from "./store.js?v=2.51";
+import { escapeHtml } from "./ui.js?v=2.51";
+import { $ } from "./shared.js?v=2.51";
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
@@ -76,7 +76,8 @@ function handleExport() {
 
   const subgenres = {};
   for (const [id, s] of Object.entries(state.subgenreDescs)) {
-    if (s.description) subgenres[id] = { description: s.description };
+    const { id: _omit, ...rest } = s;
+    if (rest.description || rest.meta || rest.main || rest.sub) subgenres[id] = rest;
   }
 
   const tech = state.techItems.map(t => {
@@ -160,7 +161,7 @@ async function importDescriptions({ decades, subgenres }) {
     }
   }
   for (const [id, data] of Object.entries(subgenres || {})) {
-    if (data.description) {
+    if (data.description || data.meta || data.main || data.sub) {
       try { await saveSubgenreDesc(id, data); ok++; }
       catch (e) { fail++; console.error("Sjanger-import feilet for", id, e); }
     }

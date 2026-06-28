@@ -27,9 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.50";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.50";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.50";
+import { firebaseConfig } from "./firebase-config.js?v=2.51";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.51";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.51";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
@@ -408,8 +408,15 @@ export async function saveDecadeDesc(decadeId, data) {
   return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
 }
 
+// Skriver hele subgenre-dokumentet (brukt av import).
 export async function saveSubgenreDesc(subgenreId, data) {
   return setDoc(doc(db, "subgenres", subgenreId), data, { merge: true });
+}
+
+// Skriver beskrivelse for ETT nivå (meta/main/sub) — resten av dokumentet
+// (andre nivåer) beholdes via merge.
+export async function saveSubgenreLevel(subgenreId, level, data) {
+  return setDoc(doc(db, "subgenres", subgenreId), { [level]: data }, { merge: true });
 }
 
 export async function deleteSubgenreDesc(subgenreId) {

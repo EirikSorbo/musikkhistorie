@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.50";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.50";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.50";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.50";
-import { initExplore } from "./explore.js?v=2.50";
+} from "./store.js?v=2.51";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.51";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.51";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.51";
+import { initExplore } from "./explore.js?v=2.51";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.50";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.50";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.51";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.51";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.50";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.50";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.50";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.50";
+} from "./teacher-content.js?v=2.51";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.51";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.51";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.51";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -100,7 +100,7 @@ function startApp() {
     getState: () => state,
     onArtistClick: openDetail,
     onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
-    onSubgenreEdit: (label) => openSingleSubgenreModal(label),
+    onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,
     onTechAdmin: () => openTechAdmin(),

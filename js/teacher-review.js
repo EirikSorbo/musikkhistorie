@@ -5,17 +5,19 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state } from "./teacher-state.js?v=2.50";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.50";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit } from "./store.js?v=2.50";
+import { state } from "./teacher-state.js?v=2.51";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.51";
+import { resolveDesc } from "./genre-descriptions.js?v=2.51";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit } from "./store.js?v=2.51";
 
 function getCurrentEntityValues(entityType, entityId) {
   switch (entityType) {
     case "artist": return state.artists.find(a => a.id === entityId) || {};
     case "tech":   return state.techItems.find(t => t.id === entityId) || {};
     case "subgenre": {
-      const s = state.subgenreDescs[entityId];
-      return { description: s?.description || "" };
+      const d = resolveDesc(state.subgenreDescs, entityId, "main").description
+             || resolveDesc(state.subgenreDescs, entityId, "sub").description;
+      return { description: d || "" };
     }
     case "decade-society": {
       const d = state.decadeDescs[String(entityId)] || {};
