@@ -7,8 +7,8 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.49";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.49";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.50";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.50";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -18,9 +18,9 @@ export const GENEALOGY = [
   { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", d: "Religiøse sanger som blandet europeiske salmer med afrikansk uttrykk.", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
   { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 2, p: ["worksongs"], g: "Blues", era: "ca. 1900", d: "Verdslig, individuell sang om smerte og lengsel. Grunnmuren for nesten all populærmusikk.", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
   { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "purple", cx: 700, r: 2, p: ["vestafrik"], g: "Jazz", era: "1897", d: "Komponert og notert, synkopert pianomusikk. Bindeledd mot jazzen.", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
-  { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 1130, r: 2, p: ["eurofolk"], g: "R&B", era: "1910–50", d: "Låtskriversamlebånd i New York; «the American songbook».", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
+  { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["eurofolk"], g: "R&B", era: "1910–50", d: "Låtskriversamlebånd i New York; «the American songbook».", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
   { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 3, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", d: "Født i New Orleans av ragtime «played hot» + blues. Improvisasjon og swing.", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
-  { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 195, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", d: "De hvites folkemusikk, formet av skotsk-irsk arv, vaudeville og blues.", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
+  { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", d: "De hvites folkemusikk, formet av skotsk-irsk arv, vaudeville og blues.", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
   { id: "gospel", l: "Gospel", f: "Gospel", fam: "red", cx: 1070, r: 3, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", d: "Komponert kirkemusikk med blues-driv. Vugge for soul og R&B.", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", d: "Storband-jazz som ble USAs danse- og popmusikk.", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
   { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 5, p: ["country"], g: "Country", era: "1939", d: "Tradisjonsbundet country med virtuost strengespill.", t: ["Uncle Pen – Bill Monroe (1965)"] },
@@ -38,7 +38,7 @@ export const GENEALOGY = [
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1320, r: 7, p: ["rnb"], g: "R&B", era: "1968", d: "Jamaicansk off-beat med «riddim». Toasting → grunnlaget for rap.", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
   { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", d: "Opprør mot det polerte Nashville-systemet: røffere uttrykk og kunstnerisk frihet.", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
   { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["jazz", "funk"], g: "Jazz", era: "1970", d: "Jazz + rock + funk + verdens folkemusikk. Elektrisk og global.", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
-  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1250, r: 8, p: ["funk", "reggae"], g: "R&B", era: "1973", d: "Bronx-kultur: DJ-ing, MC-ing, breakdance, graffiti. Beat over melodi.", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
+  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1250, r: 9, p: ["funk", "reggae"], g: "R&B", era: "ca. 1979", d: "Bronx-kultur: DJ-ing, MC-ing, breakdance, graffiti. Beat over melodi.", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
   { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1380, r: 8, p: ["funk", "soul"], g: "Klubbmusikk", era: "1974", d: "Four-on-the-floor fra klubbene. Vugge for all klubbmusikk.", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
   { id: "house", l: "House", f: "House", fam: "teal", cx: 1510, r: 9, p: ["disco"], g: "Klubbmusikk", era: "1980", d: "Disco gjenfødt på trommemaskin i Chicago-klubbene.", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles"] },
   { id: "techno", l: "Techno", f: "Techno", fam: "teal", cx: 1380, r: 9, p: ["house", "disco"], g: "Klubbmusikk", era: "1985", d: "Detroits futuristiske, maskinelle svar på house.", t: ["Strings of Life – Derrick May", "Big Fun – Inner City"] },
@@ -51,8 +51,8 @@ export const GENEALOGY = [
   { id: "folk", l: "Folk", f: "Folk (revival)", fam: "amber", cx: 70, r: 7, p: ["eurofolk"], g: "Country", era: "1950–60-tallet", d: "Bevisst gjenoppliving av amerikansk og britisk folkemusikk; vise- og protesttradisjon. Bro mot folkrock, singer-songwriter og americana.", t: ["This Land Is Your Land – Woody Guthrie (1944)", "Blowin' in the Wind – Bob Dylan (1963)"] },
 
   // --- Rock ---
-  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country"], g: null, era: "1955", d: "Afroamerikansk R&B møter hvit country. Ungdomsopprøret som sprengte populærmusikken vidåpen.", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
-  { id: "britinv", l: "British invasion", f: "Blues revival (British invasion)", fam: "blue", cx: 580, r: 7, p: ["chicagoblues"], g: "Blues", era: "1963–66", d: "Britiske band gjenoppdaget og gjenfortolket Chicago-bluesen og rock'n'roll, og sendte den tilbake til USA.", t: ["(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
+  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: null, era: "1955", d: "Afroamerikansk R&B møter hvit country. Ungdomsopprøret som sprengte populærmusikken vidåpen.", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
+  { id: "britinv", l: "British invasion", f: "Blues revival (British invasion)", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll"], g: "Blues", era: "1963–66", d: "Britiske band gjenoppdaget og gjenfortolket Chicago-bluesen og rock'n'roll, og sendte den tilbake til USA.", t: ["(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
   { id: "bluesrock", l: "Blues Rock", f: "Blues rock", fam: "blue", cx: 580, r: 8, p: ["britinv", "chicagoblues"], g: "Blues", era: "sent 1960-tall", d: "Forsterket, virtuos videreføring av bluesen — grunnmuren for hardrock.", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
 
   // --- Fjelljazz (ECM) ---
