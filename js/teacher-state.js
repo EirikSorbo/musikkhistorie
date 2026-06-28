@@ -13,10 +13,10 @@ import {
   setArtistPriority,
   updateArtistFields,
   getClientId,
-} from "./store.js?v=2.53";
-import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=2.53";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.53";
-import { $ } from "./shared.js?v=2.53";
+} from "./store.js?v=2.54";
+import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=2.54";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.54";
+import { $ } from "./shared.js?v=2.54";
 
 export const state = {
   artists: [],

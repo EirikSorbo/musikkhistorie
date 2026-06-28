@@ -4,11 +4,12 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.53";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.53";
-import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.53";
-import { isMainGenre } from "./genealogy.js?v=2.53";
-import { $ } from "./shared.js?v=2.53";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.54";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.54";
+import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.54";
+import { isMainGenre } from "./genealogy.js?v=2.54";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=2.54";
+import { $ } from "./shared.js?v=2.54";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -54,7 +55,11 @@ export function addMainGenreCheckToggle(genre) {
 }
 
 export function openOversikt() {
-  renderDashboard($("#oversikt-body"), { ...state, onSubgenreClick: (s) => ctx.explore.openSubgenreInfo(s) });
+  renderDashboard($("#oversikt-body"), {
+    ...state,
+    onSubgenreClick: (s) => ctx.explore.openSubgenreInfo(s),
+    onEditDesc: (name, level) => openSingleSubgenreModal(name, level),
+  });
   openAdminModal("modal-oversikt");
 }
 

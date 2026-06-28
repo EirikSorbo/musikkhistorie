@@ -11,8 +11,10 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=2.53";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.53";
+} from "./limits.js?v=2.54";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.54";
+import { GENEALOGY, isMainGenre } from "./genealogy.js?v=2.54";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=2.54";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -21,7 +23,7 @@ const GENDER_COLORS = {
   ukjent: "var(--c-ukjent)",
 };
 
-export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSubgenreClick }) {
+export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSubgenreClick, onEditDesc }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => (a.priority || 0) === -1).length;
@@ -52,6 +54,26 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSub
         `<div class="result-row orphan-link" data-subgenre="${escapeHtml(s)}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(s)}</span></div>`
       ).join("")
     : `<p class="muted">Ingen.</p>`;
+
+  // --- Sjangre uten beskrivelse, per nivå ---
+  const byNo = (a, b) => a.localeCompare(b, "no");
+  const metaMissing = (config.metaGenres || [])
+    .filter(n => !resolveDesc(subgenreDescs, n, "meta").description).sort(byNo);
+  const mainMissing = GENEALOGY
+    .filter(n => !resolveDescAny(subgenreDescs, [n.l, n.f], "main").description)
+    .map(n => n.l).sort(byNo);
+  const subTags = [...new Set(activeArtists.flatMap(a => [
+    ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
+    ...(a.subGenre || []),
+  ]))];
+  const subMissing = subTags
+    .filter(n => !resolveDesc(subgenreDescs, n, "sub").description).sort(byNo);
+
+  const missRow = (name, level) =>
+    `<div class="result-row miss-link" data-miss-name="${escapeHtml(name)}" data-miss-level="${level}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(name)}</span></div>`;
+  const missList = (arr, level) => arr.length
+    ? `<div class="result-list">${arr.map(n => missRow(n, level)).join("")}</div>`
+    : `<p class="muted">Ingen – alle har beskrivelse ✓</p>`;
 
   el.innerHTML = `
     <div class="stat-grid">
@@ -89,8 +111,29 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSub
         <button class="btn ghost small" id="ov-btn-orphan-sub" style="margin-top:8px">Undersjangre uten artistkort (${orphanedSubgenres.length})</button>
         <div id="ov-orphan-sub-list" style="display:none;margin-top:10px"></div>
       </div>
+      <div class="stat-card stat-wide" id="ov-miss-card">
+        <div class="stat-label">Sjangre uten beskrivelse — klikk et navn for å redigere</div>
+        <button class="btn ghost small" id="ov-btn-miss-meta">Metasjangre (${metaMissing.length})</button>
+        <div id="ov-miss-meta" style="display:none;margin-top:10px">${missList(metaMissing, "meta")}</div>
+        <button class="btn ghost small" id="ov-btn-miss-main" style="margin-top:8px">Sjangre (${mainMissing.length})</button>
+        <div id="ov-miss-main" style="display:none;margin-top:10px">${missList(mainMissing, "main")}</div>
+        <button class="btn ghost small" id="ov-btn-miss-sub" style="margin-top:8px">Undersjangre (${subMissing.length})</button>
+        <div id="ov-miss-sub" style="display:none;margin-top:10px">${missList(subMissing, "sub")}</div>
+      </div>
     </div>
   `;
+
+  for (const [btn, panel] of [["#ov-btn-miss-meta", "#ov-miss-meta"], ["#ov-btn-miss-main", "#ov-miss-main"], ["#ov-btn-miss-sub", "#ov-miss-sub"]]) {
+    el.querySelector(btn).addEventListener("click", () => {
+      const p = el.querySelector(panel);
+      p.style.display = p.style.display === "none" ? "block" : "none";
+    });
+  }
+  const missCard = el.querySelector("#ov-miss-card");
+  if (onEditDesc) missCard.addEventListener("click", (e) => {
+    const row = e.target.closest("[data-miss-name]");
+    if (row) onEditDesc(row.dataset.missName, row.dataset.missLevel);
+  });
 
   el.querySelector("#ov-btn-no-sjanger").addEventListener("click", () => {
     const panel = el.querySelector("#ov-no-sjanger-list");

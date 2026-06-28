@@ -7,9 +7,9 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.53";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.53";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.53";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.54";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.54";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.54";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -128,7 +128,7 @@ export function showSjangerInfo(label, opts = {}) {
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
   const be = mBody.querySelector(".gx-edit-btn");
-  if (be) be.addEventListener("click", () => onEdit(n.f, "main"));
+  if (be) be.addEventListener("click", () => onEdit(n.l, "main"));
   // Foreslå endring (student)
   const foot = root.querySelector("#sj-foot");
   const propBtn = root.querySelector("#sj-propose");
