@@ -4,11 +4,11 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.46";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.46";
-import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.46";
-import { isMainGenre } from "./genealogy.js?v=2.46";
-import { $ } from "./shared.js?v=2.46";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.47";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.47";
+import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.47";
+import { isMainGenre } from "./genealogy.js?v=2.47";
+import { $ } from "./shared.js?v=2.47";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt

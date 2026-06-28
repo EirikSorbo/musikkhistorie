@@ -27,9 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.46";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.46";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.46";
+import { firebaseConfig } from "./firebase-config.js?v=2.47";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.47";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.47";
 
 // Normaliserer rå Firestore-data til intern ny modell.
 // Idempotent — kan kjøres på data som allerede er i ny form.
@@ -179,8 +179,8 @@ export async function addArtist(data) {
     name: n.name,
     birthYear: n.birthYear ?? null,
     deathYear: n.deathYear ?? null,
-    gender: n.gender,
-    metaGenre: n.metaGenre,
+    gender: n.gender ?? "",
+    metaGenre: n.metaGenre ?? "",
     instrument: n.instrument ?? "",
     mainGenre: n.mainGenre,
     subGenre: n.subGenre,

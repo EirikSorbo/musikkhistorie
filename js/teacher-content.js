@@ -5,11 +5,11 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.46";
-import { saveDecadeDesc, saveSubgenreDesc, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.46";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.46";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.46";
-import { $ } from "./shared.js?v=2.46";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.47";
+import { saveDecadeDesc, saveSubgenreDesc, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.47";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.47";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.47";
+import { $ } from "./shared.js?v=2.47";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

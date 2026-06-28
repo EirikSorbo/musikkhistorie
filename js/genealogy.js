@@ -7,8 +7,8 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.46";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.46";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.47";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.47";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
