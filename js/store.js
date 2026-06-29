@@ -27,9 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.56";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.56";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.56";
+import { firebaseConfig } from "./firebase-config.js?v=2.57";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.57";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.57";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
@@ -96,7 +96,11 @@ const googleProvider = new GoogleAuthProvider();
 
 const artistsCol = collection(db, "artists");
 const decadesCol = collection(db, "decades");
-const subgenresCol = collection(db, "subgenres");
+// Sjangerbeskrivelser (alle nivåer: meta/main/sub). Het tidligere «subgenres»
+// — navnet kolliderte med artistfeltet `subGenre`. `legacySubgenresCol` peker
+// på den gamle samlingen, kun for engangsmigrering (se migrateGenreDescriptions).
+const genreDescsCol = collection(db, "genreDescriptions");
+const legacySubgenresCol = collection(db, "subgenres");
 const podcastsCol = collection(db, "podcasts");
 const techCol = collection(db, "tech");
 const pendingEditsCol = collection(db, "pendingEdits");
@@ -356,12 +360,26 @@ export function subscribeDecades(callback) {
   }, (err) => console.error("Kunne ikke lese tiårsbeskrivelser (sjekk Firestore-regler):", err.message));
 }
 
-export function subscribeSubgenres(callback) {
-  return onSnapshot(subgenresCol, (snapshot) => {
-    const subs = {};
-    snapshot.docs.forEach((d) => { subs[d.id] = { id: d.id, ...d.data() }; });
-    callback(subs);
-  }, (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
+export function subscribeGenreDescs(callback) {
+  // Overgangsløsning: les BÅDE den nye «genreDescriptions» og den gamle
+  // «subgenres». Nye verdier vinner; navn som ennå ikke er migrert dekkes av
+  // legacy. Slik blir det ingen nedetid uansett når Firestore-reglene publiseres
+  // eller migreringen kjøres. Forenkle til kun genreDescriptions når den gamle
+  // samlingen er tømt (se migrateGenreDescriptions).
+  let primary = {}, legacy = {};
+  const emit = () => callback({ ...legacy, ...primary });
+  const toMap = (snapshot) => {
+    const m = {};
+    snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
+    return m;
+  };
+  const unsubPrimary = onSnapshot(genreDescsCol, (snap) => { primary = toMap(snap); emit(); },
+    // Før reglene er publisert mangler lesetilgang her — legacy dekker, så feilen
+    // logges stille (debug) i stedet for å spamme konsollen.
+    (err) => console.debug("genreDescriptions ikke lesbar ennå (faller tilbake til legacy):", err.message));
+  const unsubLegacy = onSnapshot(legacySubgenresCol, (snap) => { legacy = toMap(snap); emit(); },
+    (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
+  return () => { unsubPrimary(); unsubLegacy(); };
 }
 
 export function subscribePodcasts(callback) {
@@ -408,19 +426,38 @@ export async function saveDecadeDesc(decadeId, data) {
   return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
 }
 
-// Skriver hele subgenre-dokumentet (brukt av import).
-export async function saveSubgenreDesc(subgenreId, data) {
-  return setDoc(doc(db, "subgenres", subgenreId), data, { merge: true });
+// Skriver hele sjangerbeskrivelse-dokumentet (brukt av import).
+export async function saveGenreDesc(genreId, data) {
+  return setDoc(doc(db, "genreDescriptions", genreId), data, { merge: true });
 }
 
 // Skriver beskrivelse for ETT nivå (meta/main/sub) — resten av dokumentet
 // (andre nivåer) beholdes via merge.
-export async function saveSubgenreLevel(subgenreId, level, data) {
-  return setDoc(doc(db, "subgenres", subgenreId), { [level]: data }, { merge: true });
+export async function saveGenreDescLevel(genreId, level, data) {
+  return setDoc(doc(db, "genreDescriptions", genreId), { [level]: data }, { merge: true });
 }
 
-export async function deleteSubgenreDesc(subgenreId) {
-  return deleteDoc(doc(db, "subgenres", subgenreId));
+export async function deleteGenreDesc(genreId) {
+  return deleteDoc(doc(db, "genreDescriptions", genreId));
+}
+
+// Engangsmigrering: kopier alle dokumenter fra den gamle «subgenres»-samlingen
+// til «genreDescriptions». Idempotent — hopper over hvis målet alt har data, så
+// den trygt kan kjøres ved hver lærer-oppstart til migreringen er gjort. Kan
+// fjernes når live-dataen er flyttet. Krever lærer-skrivetilgang (Firestore-
+// reglene må tillate skriving til genreDescriptions).
+export async function migrateGenreDescriptions() {
+  const target = await getDocs(genreDescsCol);
+  if (!target.empty) return { migrated: 0, skipped: true };
+  const legacy = await getDocs(legacySubgenresCol);
+  if (legacy.empty) return { migrated: 0, skipped: false };
+  let migrated = 0;
+  for (const d of legacy.docs) {
+    await setDoc(doc(db, "genreDescriptions", d.id), d.data(), { merge: true });
+    migrated++;
+  }
+  console.info(`Migrerte ${migrated} sjangerbeskrivelse(r): subgenres → genreDescriptions.`);
+  return { migrated, skipped: false };
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
@@ -485,7 +522,9 @@ function pendingEditTargetRef(entityType, entityId) {
   switch (entityType) {
     case "artist":         return doc(db, "artists", entityId);
     case "tech":           return doc(db, "tech", entityId);
-    case "subgenre":       return doc(db, "subgenres", entityId);
+    // entityType beholdes som «subgenre» for bakoverkompat med eksisterende
+    // pendingEdits-dokumenter; målet er nå genreDescriptions-samlingen.
+    case "subgenre":       return doc(db, "genreDescriptions", entityId);
     case "decade-society": return doc(db, "decades", String(entityId));
     case "decade-tech":    return doc(db, "decades", String(entityId));
     default:               return null;

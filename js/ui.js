@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=2.56";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.56";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.56";
+import { decadesForRange } from "./limits.js?v=2.57";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.57";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.57";
 import {
   escapeHtml,
   linkDesc,
@@ -30,12 +30,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.56";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.56";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.56";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.56";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.56";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.56";
+} from "./ui-helpers.js?v=2.57";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.57";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.57";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.57";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.57";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.57";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
@@ -372,14 +372,14 @@ export function fillSelect(select, values, { placeholder } = {}) {
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
 export function showSubsjangerInfo(label, opts = {}) {
-  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
   if (!modal || !mTitle || !mBody) return;
 
   // Frie undersjangre er på «sub»-nivå.
-  const resolved = resolveDesc(subgenreDescs, label, "sub");
+  const resolved = resolveDesc(genreDescs, label, "sub");
   const descText = resolved.description;
   const kilder = resolved.kilder;
   wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" });

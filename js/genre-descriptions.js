@@ -1,7 +1,7 @@
 // ============================================================================
 //  SJANGERBESKRIVELSER — oppslag per nivå (INGEN innebygde defaults)
 // ----------------------------------------------------------------------------
-//  Beskrivelser kommer KUN fra data (Firestore-«subgenres» / import-JSON), per
+//  Beskrivelser kommer KUN fra data (Firestore-«genreDescriptions» / import-JSON), per
 //  nivå: doc = sjangernavn, med valgfrie felt meta/main/sub = { description,
 //  kilder }. Eldre flat { description, kilder } leses som delt fallback.
 //  Det finnes BEVISST ingen seed/standardtekst — mangler en beskrivelse, skal

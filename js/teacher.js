@@ -10,22 +10,23 @@ import {
   subscribeArtists,
   subscribeConfig,
   subscribeDecades,
-  subscribeSubgenres,
+  subscribeGenreDescs,
   subscribePodcasts,
   subscribeTech,
   subscribeTeacherChecks,
   subscribePendingEdits,
+  migrateGenreDescriptions,
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.56";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.56";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.56";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.56";
-import { initExplore } from "./explore.js?v=2.56";
+} from "./store.js?v=2.57";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.57";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.57";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.57";
+import { initExplore } from "./explore.js?v=2.57";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.56";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.56";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.57";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.57";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +37,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.56";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.56";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.56";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.56";
+} from "./teacher-content.js?v=2.57";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.57";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.57";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.57";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -130,6 +131,12 @@ function startApp() {
     return;
   }
 
+  // Engangsmigrering av sjangerbeskrivelser (subgenres → genreDescriptions).
+  // Idempotent og kjøres før abonnementene; gjør ingenting når den alt er kjørt.
+  migrateGenreDescriptions().catch((e) =>
+    console.error("Migrering av sjangerbeskrivelser feilet (sjekk Firestore-regler for genreDescriptions):", e.message)
+  );
+
   subscribeConfig((config) => {
     state.config = config;
     refreshControls();
@@ -142,7 +149,7 @@ function startApp() {
     renderAll();
   });
   subscribeDecades((d) => { state.decadeDescs = d; });
-  subscribeSubgenres((s) => { state.subgenreDescs = s; });
+  subscribeGenreDescs((s) => { state.genreDescs = s; });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
   subscribeTech((items) => { state.techItems = items; updatePendingBadge(); renderPendingEditsList(); });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; });

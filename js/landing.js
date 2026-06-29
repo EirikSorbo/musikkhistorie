@@ -1,10 +1,10 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeSubgenres, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.56";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.56";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.56";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.56";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.56";
-import { initExplore } from "./explore.js?v=2.56";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.56";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.57";
+import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.57";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.57";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.57";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.57";
+import { initExplore } from "./explore.js?v=2.57";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.57";
 
 const clientId = getClientId();
 
@@ -12,7 +12,7 @@ const state = {
   artists: [],
   config: null,
   decadeDescs: {},
-  subgenreDescs: {},
+  genreDescs: {},
   podcasts: [],
   techItems: [],
   pendingEdits: [],
@@ -432,7 +432,7 @@ function init() {
     saveCache();
   });
   subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
-  subscribeSubgenres((s) => { state.subgenreDescs = s; renderFilterResults(); });
+  subscribeGenreDescs((s) => { state.genreDescs = s; renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
   subscribeTech((items) => { state.techItems = items.filter((t) => t.status !== "pending"); });
   subscribePendingEdits((edits) => { state.pendingEdits = edits; });

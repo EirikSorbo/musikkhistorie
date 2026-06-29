@@ -69,7 +69,14 @@ service cloud.firestore {
       allow write: if isTeacher();
     }
 
-    // ---- Undersjangerbeskrivelser ----
+    // ---- Sjangerbeskrivelser (alle nivåer: meta/main/sub) ----
+    match /genreDescriptions/{doc} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // ---- Legacy: gammel «subgenres»-samling (erstattet av genreDescriptions).
+    //      Beholdes for engangsmigrering; kan fjernes når dataen er flyttet. ----
     match /subgenres/{doc} {
       allow read: if true;
       allow write: if isTeacher();

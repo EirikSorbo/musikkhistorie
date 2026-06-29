@@ -1,10 +1,10 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeSubgenres, subscribeTech } from "./store.js?v=2.56";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.56";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.56";
-import { CONFIGURED } from "./shared.js?v=2.56";
+import { subscribeArtists, subscribeGenreDescs, subscribeTech } from "./store.js?v=2.57";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.57";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.57";
+import { CONFIGURED } from "./shared.js?v=2.57";
 
 const subDescs = {};
 let artists = [];
@@ -61,7 +61,7 @@ function build() {
   if (api) return;
   api = renderGenealogy({
     root: document,
-    subgenreDescs: subDescs,
+    genreDescs: subDescs,
     getArtists: () => artists,
     getTechItems: () => techItems,
     getMainGenres: () => buildMainGenreList(artists),
@@ -97,7 +97,7 @@ setupModal(plModal, closePl);
 
 const sjangerOpts = () => ({
   root: document,
-  subgenreDescs: subDescs,
+  genreDescs: subDescs,
   artists,
   techItems,
   genres: buildMainGenreList(artists),
@@ -131,7 +131,7 @@ build();
 window.addEventListener("resize", () => { if (api) api.fit(); });
 
 if (CONFIGURED) {
-  subscribeSubgenres((s) => {
+  subscribeGenreDescs((s) => {
     Object.keys(subDescs).forEach((k) => delete subDescs[k]);
     Object.assign(subDescs, s);
   });

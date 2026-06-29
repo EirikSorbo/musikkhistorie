@@ -4,12 +4,12 @@
 //  2D-kart: tid løper nedover, supersjanger bortover. Dra for å panorere,
 //  scroll/knapper for å zoome, hover lyser opp påvirkningslinjene, klikk åpner
 //  panel med beskrivelse + spilleliste. Strukturen er fast og designet for
-//  lesbarhet; beskrivelser kan overstyres fra Firestore (subgenres-samlingen).
+//  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.56";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.56";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.56";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.57";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.57";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.57";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -85,9 +85,9 @@ export function isMainGenre(name) {
 }
 
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
-// opts: { root, subgenreDescs, onShowArtists }
+// opts: { root, genreDescs, onShowArtists }
 export function showSjangerInfo(label, opts = {}) {
-  const { root = document, subgenreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -101,7 +101,7 @@ export function showSjangerInfo(label, opts = {}) {
   const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
   // Tre-noder er på «main»-nivå. Hent beskrivelse/kilder nivå-bevisst (med seed).
-  const resolved = resolveDescAny(subgenreDescs, [n.l, n.f], "main");
+  const resolved = resolveDescAny(genreDescs, [n.l, n.f], "main");
   const descText = resolved.description;
   const kilderHtml = buildKilderList(resolved.kilder, "Kilder");
 
@@ -181,9 +181,9 @@ function el(tag, attrs) {
 
 // ----------------------------------------------------------------------------
 //  Bygger kartet i modal-rotelementet. Returnerer { fit } for å sentrere ved
-//  hver åpning. opts: { root, subgenreDescs, onShowArtists }
+//  hver åpning. opts: { root, genreDescs, onShowArtists }
 // ----------------------------------------------------------------------------
-export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtists, getArtists, getTechItems, getMainGenres, onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist }) {
+export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists, getArtists, getTechItems, getMainGenres, onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist }) {
   const artists = getArtists ? { get current() { return getArtists(); } } : { current: staticArtists || [] };
   const tech = getTechItems ? { get current() { return getTechItems(); } } : { current: [] };
   const genreProxy = getMainGenres ? { get current() { return getMainGenres(); } } : { current: [] };
@@ -264,7 +264,7 @@ export function renderGenealogy({ root, subgenreDescs = {}, artists: staticArtis
   function openModal(id) {
     const n = map[id];
     showSjangerInfo(n.l, {
-      root, subgenreDescs,
+      root, genreDescs,
       artists: artists.current, techItems: tech.current, genres: genreProxy.current,
       onArtistClick, onTechClick, onMainGenreClick,
       onShowArtists, onShowPlaylist,

@@ -5,14 +5,14 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.56";
-import { saveDecadeDesc, saveSubgenreLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.56";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.56";
-import { resolveDesc } from "./genre-descriptions.js?v=2.56";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.57";
+import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.57";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.57";
+import { resolveDesc } from "./genre-descriptions.js?v=2.57";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.56";
-import { $ } from "./shared.js?v=2.56";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.57";
+import { $ } from "./shared.js?v=2.57";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -93,7 +93,7 @@ export function openSingleDecadeModal(decadeId, mode) {
 }
 
 export function openSingleSubgenreModal(subgenreId, level = "sub") {
-  const resolved = resolveDesc(state.subgenreDescs, subgenreId, level);
+  const resolved = resolveDesc(state.genreDescs, subgenreId, level);
   $("#subgenre-single-title").textContent = `${subgenreId} (${LEVEL_LABEL[level] || level})`;
   $("#ss-desc").value = resolved.description || "";
   $("#ss-msg").textContent = "";
@@ -149,7 +149,7 @@ export function setupSubgenreSingleSave() {
     const kilder = collectKilderRows($("#ss-kilder-rows"));
     const msg = $("#ss-msg");
     try {
-      await saveSubgenreLevel(subgenreId, level, { description, kilder });
+      await saveGenreDescLevel(subgenreId, level, { description, kilder });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
       setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);

@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.56";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.57";
 import {
   addArtist,
   teacherDelete,
@@ -13,11 +13,11 @@ import {
   updateTech,
   addTech,
   saveDecadeDesc,
-  saveSubgenreDesc,
+  saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.56";
-import { escapeHtml } from "./ui.js?v=2.56";
-import { $ } from "./shared.js?v=2.56";
+} from "./store.js?v=2.57";
+import { escapeHtml } from "./ui.js?v=2.57";
+import { $ } from "./shared.js?v=2.57";
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
@@ -74,18 +74,28 @@ function handleExport() {
     if (d.society || d.tech) decades[id] = { society: d.society || "", tech: d.tech || "" };
   }
 
-  const subgenres = {};
-  for (const [id, s] of Object.entries(state.subgenreDescs)) {
-    const { id: _omit, ...rest } = s;
-    if (rest.description || rest.meta || rest.main || rest.sub) subgenres[id] = rest;
-  }
+  // Sjangerbeskrivelser eksporteres gruppert pr. nivå (meta → main → sub), så de
+  // få metasjangrene ikke drukner blant de mange undersjangrene i fila. Hvert
+  // navn er fortsatt ÉN post (ett dokument) — det plasseres etter sitt høyeste
+  // nivå når et navn finnes på flere nivåer (f.eks. R&B = meta + main).
+  const LEVEL_ORDER = ["meta", "main", "sub"];
+  const levelRank = (s) => {
+    const i = LEVEL_ORDER.findIndex((lv) => s[lv] && s[lv].description);
+    return i === -1 ? LEVEL_ORDER.length : i; // flat/eldre uten nivå sist
+  };
+  const genreDescriptions = {};
+  Object.entries(state.genreDescs)
+    .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
+    .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub)
+    .sort(([aId, a], [bId, b]) => levelRank(a) - levelRank(b) || aId.localeCompare(bId, "no"))
+    .forEach(([id, rest]) => { genreDescriptions[id] = rest; });
 
   const tech = state.techItems.map(t => {
     const { id, ...rest } = t;
     return rest;
   });
 
-  const data = { artists, decades, subgenres, tech };
+  const data = { artists, decades, genreDescriptions, tech };
 
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
@@ -103,28 +113,29 @@ async function handleImportFile(file) {
   let raw;
   try { raw = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
 
-  let artists, decades, subgenres, tech;
+  let artists, decades, genreDescriptions, tech;
   if (Array.isArray(raw)) {
     artists = raw;
     decades = {};
-    subgenres = {};
+    genreDescriptions = {};
     tech = [];
   } else if (raw && typeof raw === "object" && Array.isArray(raw.artists)) {
     artists = raw.artists;
     decades = raw.decades || {};
-    subgenres = raw.subgenres || {};
+    // Nytt nøkkelnavn er «genreDescriptions»; eldre filer bruker «subgenres».
+    genreDescriptions = raw.genreDescriptions || raw.subgenres || {};
     tech = raw.tech || [];
   } else {
     alert("Ugyldig format — filen må være en array eller et objekt med «artists»."); return;
   }
 
-  pendingImportData = { artists, decades, subgenres, tech };
+  pendingImportData = { artists, decades, genreDescriptions, tech };
   const parts = [];
   const artistCount = artists.filter(a => a.name).length;
   if (artistCount) parts.push(`${artistCount} artister`);
   const decadeCount = Object.keys(decades).length;
   if (decadeCount) parts.push(`${decadeCount} tiårsbeskrivelser`);
-  const subCount = Object.keys(subgenres).length;
+  const subCount = Object.keys(genreDescriptions).length;
   if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
   if (tech.length) parts.push(`${tech.length} teknologier`);
   $("#import-choice-desc").textContent = `Filen inneholder ${parts.join(", ")}.`;
@@ -152,7 +163,7 @@ export function setupImportChoice() {
   });
 }
 
-async function importDescriptions({ decades, subgenres }) {
+async function importDescriptions({ decades, genreDescriptions }) {
   let ok = 0, fail = 0;
   for (const [id, data] of Object.entries(decades || {})) {
     if (data.society || data.tech) {
@@ -160,14 +171,14 @@ async function importDescriptions({ decades, subgenres }) {
       catch (e) { fail++; console.error("Tiår-import feilet for", id, e); }
     }
   }
-  for (const [id, data] of Object.entries(subgenres || {})) {
+  for (const [id, data] of Object.entries(genreDescriptions || {})) {
     if (data.description || data.meta || data.main || data.sub) {
-      try { await saveSubgenreDesc(id, data); ok++; }
+      try { await saveGenreDesc(id, data); ok++; }
       catch (e) { fail++; console.error("Sjanger-import feilet for", id, e); }
     }
   }
   if (fail > 0) {
-    alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'subgenres' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+    alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
     alert(`${ok} beskrivelse(r) importert.`);
   }

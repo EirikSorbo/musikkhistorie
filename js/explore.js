@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.56";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.56";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.56";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.57";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.57";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.57";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -263,7 +263,7 @@ function sjangerOpts() {
   const s = getState();
   return {
     root: document,
-    subgenreDescs: s.subgenreDescs,
+    genreDescs: s.genreDescs,
     artists: s.artists,
     techItems: s.techItems,
     genres: buildMainGenreList(s.artists),
@@ -587,7 +587,7 @@ function openSubgenreInfo(subgenreId) {
   const modal = document.getElementById("modal-subgenre-info");
   if (!modal) return;
   const s = getState();
-  const resolved = resolveDesc(s.subgenreDescs, subgenreId, "sub");
+  const resolved = resolveDesc(s.genreDescs, subgenreId, "sub");
   document.getElementById("sgi-title").textContent = subgenreId;
   const sgiDesc = document.getElementById("sgi-desc");
   sgiDesc.textContent = resolved.description || missingDesc("sub");

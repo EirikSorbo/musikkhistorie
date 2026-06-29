@@ -11,10 +11,10 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=2.56";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.56";
-import { GENEALOGY, isMainGenre } from "./genealogy.js?v=2.56";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=2.56";
+} from "./limits.js?v=2.57";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.57";
+import { GENEALOGY, isMainGenre } from "./genealogy.js?v=2.57";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=2.57";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -23,7 +23,7 @@ const GENDER_COLORS = {
   ukjent: "var(--c-ukjent)",
 };
 
-export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSubgenreClick, onEditDesc }) {
+export function renderDashboard(el, { artists, config, genreDescs = {}, onSubgenreClick, onEditDesc }) {
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
   const removed = artists.filter((a) => (a.priority || 0) === -1).length;
@@ -39,7 +39,7 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSub
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
   const allArtistTags = new Set(activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])]));
-  const orphanedSubgenres = Object.keys(subgenreDescs)
+  const orphanedSubgenres = Object.keys(genreDescs)
     .filter(s => !allArtistTags.has(s))
     .sort((a, b) => a.localeCompare(b, "no"));
 
@@ -58,16 +58,16 @@ export function renderDashboard(el, { artists, config, subgenreDescs = {}, onSub
   // --- Sjangre uten beskrivelse, per nivå ---
   const byNo = (a, b) => a.localeCompare(b, "no");
   const metaMissing = (config.metaGenres || [])
-    .filter(n => !resolveDesc(subgenreDescs, n, "meta").description).sort(byNo);
+    .filter(n => !resolveDesc(genreDescs, n, "meta").description).sort(byNo);
   const mainMissing = GENEALOGY
-    .filter(n => !resolveDescAny(subgenreDescs, [n.l, n.f], "main").description)
+    .filter(n => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
     .map(n => n.l).sort(byNo);
   const subTags = [...new Set(activeArtists.flatMap(a => [
     ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
     ...(a.subGenre || []),
   ]))];
   const subMissing = subTags
-    .filter(n => !resolveDesc(subgenreDescs, n, "sub").description).sort(byNo);
+    .filter(n => !resolveDesc(genreDescs, n, "sub").description).sort(byNo);
 
   const missRow = (name, level) =>
     `<div class="result-row miss-link" data-miss-name="${escapeHtml(name)}" data-miss-level="${level}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(name)}</span></div>`;
