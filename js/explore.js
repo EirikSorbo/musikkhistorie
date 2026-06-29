@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.54";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.54";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.54";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.55";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.55";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.55";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.

@@ -12,9 +12,9 @@
 
 const LVL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 
-// Tydelig feilmelding når en beskrivelse mangler på gjeldende nivå.
+// Tydelig melding når ingen beskrivelse er lagt inn på gjeldende nivå.
 export function missingDesc(level) {
-  return `⚠️ Beskrivelse mangler – ikke synkronisert (${LVL[level] || level})`;
+  return `⚠️ Ingen beskrivelse lagt inn ennå (${LVL[level] || level})`;
 }
 
 function fromOverride(o, level) {
