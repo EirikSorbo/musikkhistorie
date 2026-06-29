@@ -7,9 +7,9 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.64";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.64";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.64";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.65";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.65";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.65";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -60,7 +60,7 @@ export const GENEALOGY = [
   { id: "rock", l: "Rock", f: "Rock", fam: "rock", cx: 445, r: 7, p: ["rocknroll"], g: "Rock", era: "tidlig 1960-tall", t: ["My Generation – The Who (1965)", "Light My Fire – The Doors (1967)"] },
 
   // --- Pop ---
-  { id: "pop", l: "Pop", f: "Pop", fam: "pop", cx: 1000, r: 7, p: ["tinpan", "rnb", "rocknroll"], g: "Pop", era: "1960-tallet", t: ["Be My Baby – The Ronettes (1963)", "Walk On By – Dionne Warwick (1964)"] },
+  { id: "pop", l: "Pop", f: "Pop", fam: "pop", cx: 300, r: 7, p: ["tinpan", "rnb", "rocknroll"], g: "Pop", era: "1960-tallet", t: ["Be My Baby – The Ronettes (1963)", "Walk On By – Dionne Warwick (1964)"] },
 
   // --- Fjelljazz (ECM) ---
   { id: "fjelljazz", l: "Fjelljazz", f: "Fjelljazz (ECM)", fam: "purple", cx: 950, r: 8, p: ["modal", "free"], g: "Jazz", era: "1970-tallet", t: ["Dansere – Jan Garbarek (1976)", "Witchi-Tai-To – Jan Garbarek (1974)"] },
