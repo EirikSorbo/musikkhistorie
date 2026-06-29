@@ -1,13 +1,26 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.60";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.60";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.60";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.61";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.61";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.61";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
 // «Varmen» er derimot redaksjonell: nivå 0–5 for hvor toneangivende sjangeren
 // var det tiåret. Sjangre som mangler i HEAT vises som «ingen data».
 const VK_DECADES = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
-const VK_COLORS = ["#eef3f0", "#d4efe0", "#a3e0c2", "#5cc596", "#23a06d", "#0c7a4f"];
+// Cellene fargelegges i hver sjangers familiefarge (fra slektstreet), mens
+// varmenivået (0–5) styrer lysheten: lyst = lite toneangivende, mørkt = mye.
+// Slik bærer ruten to akser samtidig — hvilken familie (kulør) og hvor sterk
+// (valør). VK_INK er en nøytral grå brukt i nivå-forklaringen.
+const VK_INK = "#5b6b7a";
+const hexToRgb = (h) => { h = h.replace("#", ""); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+const rgbToHex = (c) => "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+function heatColor(famHex, level) {
+  const base = hexToRgb(famHex), white = [255, 255, 255], black = [0, 0, 0];
+  const t = level / 5;                              // 0 (lys) … 1 (mørk)
+  const tint = mix(white, base, 0.12 + 0.88 * t);  // hvitt → familiefarge
+  return rgbToHex(mix(tint, black, 0.12 * t));      // mørkne toppen litt for valør
+}
 const VK_HEAT = {
   "Blues":         [2, 3, 4, 4, 4, 5, 4, 3, 2, 2, 2, 2, 2],
   "Ragtime":       [4, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -545,7 +558,7 @@ function openVarmekart() {
       html += `<div style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
       html += vals.map((v, i) => {
         const has = v != null;
-        const bg = has ? VK_COLORS[v] : "#f5f8f6";
+        const bg = has ? heatColor(rowColor, v) : "#f5f8f6";
         const title = `${sj} · ${meta} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}`;
         return `<div title="${escapeHtml(title)}" style="height:30px;border-radius:6px;background:${bg}${has ? "" : ";border:1px dashed var(--line-strong)"}"></div>`;
       }).join("");
@@ -554,10 +567,10 @@ function openVarmekart() {
   }
   html += `</div></div>`;
 
-  // Forklaring 1: varmenivå.
+  // Forklaring 1: varmenivå (valør) — nøytral grå, da kuløren nå viser familie.
   html += `<div style="display:flex;align-items:center;gap:8px;margin-top:18px;font-size:0.8rem;color:var(--muted);flex-wrap:wrap">`;
-  html += `<span>Mindre</span>`;
-  html += [1, 2, 3, 4, 5].map((v) => `<span style="width:22px;height:14px;border-radius:4px;background:${VK_COLORS[v]}"></span>`).join("");
+  html += `<span>Mindre toneangivende</span>`;
+  html += [1, 2, 3, 4, 5].map((v) => `<span style="width:22px;height:14px;border-radius:4px;background:${heatColor(VK_INK, v)}"></span>`).join("");
   html += `<span>Mer</span>`;
   html += `<span style="margin-left:14px;display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:14px;border-radius:4px;background:#f5f8f6;border:1px dashed var(--line-strong)"></span>ingen data ennå</span>`;
   html += `</div>`;
