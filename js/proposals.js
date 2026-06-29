@@ -8,8 +8,8 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=2.58";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=2.58";
+import { addPendingEdit, addTechProposal } from "./store.js?v=2.59";
+import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=2.59";
 
 const FIELD_SPECS = {
   artist: [

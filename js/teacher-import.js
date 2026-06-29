@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.58";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.59";
 import {
   addArtist,
   teacherDelete,
@@ -15,9 +15,10 @@ import {
   saveDecadeDesc,
   saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.58";
-import { escapeHtml } from "./ui.js?v=2.58";
-import { $ } from "./shared.js?v=2.58";
+} from "./store.js?v=2.59";
+import { escapeHtml } from "./ui.js?v=2.59";
+import { $ } from "./shared.js?v=2.59";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.59";
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
@@ -74,20 +75,23 @@ function handleExport() {
     if (d.society || d.tech) decades[id] = { society: d.society || "", tech: d.tech || "" };
   }
 
-  // Sjangerbeskrivelser eksporteres NESTET pr. nivå (meta → main → sub), så fila
-  // får tydelige bolker i stedet for én lang flat liste. Hvert navn er fortsatt
-  // ÉN post (ett dokument) — det legges under sitt høyeste nivå når et navn
-  // finnes på flere nivåer (f.eks. R&B = meta + main → havner i «meta», med hele
-  // dokumentet intakt). Import (flattenGenreDescriptions) leser både dette og
-  // det gamle flate formatet.
-  const LEVEL_ORDER = ["meta", "main", "sub"];
-  const levelOf = (s) => LEVEL_ORDER.find((lv) => s[lv] && s[lv].description) || "sub";
+  // Sjangerbeskrivelser eksporteres NESTET i tre bolker (meta → main → sub), så
+  // fila blir oversiktlig i stedet for én lang flat liste. Bolken bestemmes av
+  // sjangerens TYPE (samme inndeling som lærer-dashboardet):
+  //   metasjanger (config.metaGenres) → meta
+  //   tre-sjanger  (isMainGenre)       → main
+  //   ellers (fri undersjanger)        → sub
+  // Metasjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
+  // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
+  // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.
+  const metaSet = new Set(state.config?.metaGenres || GENEALOGY_META_GENRES);
+  const sectionOf = (name) => metaSet.has(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
     .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
-    .forEach(([id, rest]) => { genreDescriptions[levelOf(rest)][id] = rest; });
+    .forEach(([id, rest]) => { genreDescriptions[sectionOf(id)][id] = rest; });
 
   const tech = state.techItems.map(t => {
     const { id, ...rest } = t;

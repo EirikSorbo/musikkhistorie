@@ -7,10 +7,10 @@ import {
   subscribeConfig,
   addArtist,
   getClientId,
-} from "./store.js?v=2.58";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.58";
-import { fillSelect } from "./ui.js?v=2.58";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.58";
+} from "./store.js?v=2.59";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.59";
+import { fillSelect } from "./ui.js?v=2.59";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.59";
 
 const state = {
   artists: [],
