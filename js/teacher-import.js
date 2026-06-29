@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.55";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.56";
 import {
   addArtist,
   teacherDelete,
@@ -15,9 +15,9 @@ import {
   saveDecadeDesc,
   saveSubgenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.55";
-import { escapeHtml } from "./ui.js?v=2.55";
-import { $ } from "./shared.js?v=2.55";
+} from "./store.js?v=2.56";
+import { escapeHtml } from "./ui.js?v=2.56";
+import { $ } from "./shared.js?v=2.56";
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",

@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.55";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.55";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.55";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.56";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.56";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.56";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -166,11 +166,13 @@ const MODAL_HTML = `
     </div>
     <div class="genre-tabs">
       <button class="btn ghost small genre-tab active" data-genre-tab="sjangre">Sjangre</button>
+      <button class="btn ghost small genre-tab" data-genre-tab="hoved">Hovedsjangre</button>
       <button class="btn ghost small genre-tab" data-genre-tab="under">Undersjangre</button>
     </div>
     <div id="sl-extra"></div>
     <p class="muted" style="margin-bottom:14px;font-size:0.9rem" id="sl-hint">Trykk på en sjanger for å lese beskrivelsen.</p>
     <div id="sl-chips" class="subgenre-tag-list"></div>
+    <div id="hl-chips" class="subgenre-tag-list" style="display:none"></div>
     <div id="ul-chips" class="subgenre-tag-list" style="display:none"></div>
   </div>
 </div>
@@ -548,6 +550,19 @@ function openSubgenreList() {
       }).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
 
+  // Hovedsjangre (metaGenre): den grøvste grupperingen. Treet gir fasiten
+  // (GENEALOGY_META_GENRES); artist-taggede metaGenre tas med for sikkerhets skyld.
+  const withMetaArtists = new Set(active.map(a => a.metaGenre).filter(Boolean));
+  const meta = [...new Set([...GENEALOGY_META_GENRES, ...withMetaArtists])]
+    .sort((a, b) => a.localeCompare(b, "no"));
+  const hlEl = document.getElementById("hl-chips");
+  hlEl.innerHTML = meta.length
+    ? meta.map((m) => {
+        const empty = !withMetaArtists.has(m);
+        return `<button class="tag tag-sjanger${checkedMainGenres.includes(m) ? " is-checked" : ""}${empty ? " is-empty" : ""}" data-sjanger="${escapeHtml(m)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(m)}</button>`;
+      }).join("")
+    : `<p class="muted">Ingen hovedsjangre registrert ennå.</p>`;
+
   const under = [...new Set(active.flatMap(a => [
     ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
     ...(a.subGenre || []),
@@ -561,6 +576,7 @@ function openSubgenreList() {
   document.querySelectorAll(".genre-tab").forEach(t => t.classList.remove("active"));
   document.querySelector('.genre-tab[data-genre-tab="sjangre"]').classList.add("active");
   slEl.style.display = "";
+  hlEl.style.display = "none";
   ulEl.style.display = "none";
   document.getElementById("sl-hint").textContent = "Trykk på en sjanger for å lese beskrivelsen.";
 
@@ -648,12 +664,15 @@ function wireModals() {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".genre-tab").forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
-      const isSjangre = tab.dataset.genreTab === "sjangre";
-      document.getElementById("sl-chips").style.display = isSjangre ? "" : "none";
-      document.getElementById("ul-chips").style.display = isSjangre ? "none" : "";
-      document.getElementById("sl-hint").textContent = isSjangre
-        ? "Trykk på en sjanger for å lese beskrivelsen."
-        : "Trykk på en undersjanger for å lese beskrivelsen.";
+      const which = tab.dataset.genreTab; // "sjangre" | "hoved" | "under"
+      document.getElementById("sl-chips").style.display = which === "sjangre" ? "" : "none";
+      document.getElementById("hl-chips").style.display = which === "hoved" ? "" : "none";
+      document.getElementById("ul-chips").style.display = which === "under" ? "" : "none";
+      document.getElementById("sl-hint").textContent = {
+        sjangre: "Trykk på en sjanger for å lese beskrivelsen.",
+        hoved: "Trykk på en hovedsjanger for å lese beskrivelsen.",
+        under: "Trykk på en undersjanger for å lese beskrivelsen.",
+      }[which];
     });
   });
 

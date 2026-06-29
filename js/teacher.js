@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.55";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.55";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.55";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.55";
-import { initExplore } from "./explore.js?v=2.55";
+} from "./store.js?v=2.56";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.56";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.56";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.56";
+import { initExplore } from "./explore.js?v=2.56";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.55";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.55";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.56";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.56";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.55";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.55";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.55";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.55";
+} from "./teacher-content.js?v=2.56";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.56";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.56";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.56";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -99,6 +99,7 @@ function startApp() {
   ctx.explore = initExplore({
     getState: () => state,
     onArtistClick: openDetail,
+    onSlektstre: () => { window.location.href = "tre.html"; },
     onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
