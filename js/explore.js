@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.59";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.59";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.59";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.60";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.60";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.60";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -152,7 +152,7 @@ const MODAL_HTML = `
       <h2>Tyngdepunkt gjennom tiårene</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår. Mørkere = mer toneangivende.</p>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter hovedsjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
   </div>
 </div>
@@ -497,32 +497,78 @@ function openVarmekart() {
   const cols = VK_DECADES.length;
   const gridStyle = `display:grid;grid-template-columns:128px repeat(${cols},minmax(32px,1fr));gap:3px`;
 
-  let html = `<div style="overflow-x:auto"><div style="min-width:560px">`;
+  let html = `<div style="overflow-x:auto"><div style="min-width:600px">`;
   html += `<div style="${gridStyle};align-items:end;margin-bottom:3px"><div></div>`;
   html += VK_DECADES.map((d) => `<div style="text-align:center;font-size:0.72rem;color:var(--muted)">${d}</div>`).join("");
   html += `</div>`;
 
   const firstHot = (sj) => { const i = (VK_HEAT[sj] || []).findIndex((v) => v > 0); return i < 0 ? 99 : i; };
-  const rows = [...GENEALOGY_MAIN_GENRES].sort((a, b) => firstHot(a) - firstHot(b) || a.localeCompare(b, "no"));
-  for (const sj of rows) {
-    const vals = VK_HEAT[sj] || VK_DECADES.map(() => null);
-    html += `<div style="${gridStyle};align-items:center;margin-bottom:3px">`;
-    html += `<div style="font-size:0.82rem;color:var(--text);padding-right:8px;line-height:1.2">${escapeHtml(sj)}</div>`;
-    html += vals.map((v, i) => {
-      const has = v != null;
-      const bg = has ? VK_COLORS[v] : "#f5f8f6";
-      const title = `${sj} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}`;
-      return `<div title="${escapeHtml(title)}" style="height:30px;border-radius:6px;background:${bg}${has ? "" : ";border:1px dashed var(--line-strong)"}"></div>`;
-    }).join("");
+
+  // Grupper mainGenre etter metaGenre (supersjanger). Treet gir både
+  // grupperingen (MAIN_GENRE_INFO[sj].meta) og fargene (…​.color), så
+  // varmekartet snakker samme visuelle språk som slektstreet.
+  const groups = new Map();
+  for (const sj of GENEALOGY_MAIN_GENRES) {
+    const meta = MAIN_GENRE_INFO[sj]?.meta || "Andre";
+    if (!groups.has(meta)) groups.set(meta, []);
+    groups.get(meta).push(sj);
+  }
+  // Metaorden følger treet (≈ kronologisk); evt. ukjente legges sist.
+  const metaOrder = [...GENEALOGY_META_GENRES, ...[...groups.keys()].filter((m) => !GENEALOGY_META_GENRES.includes(m))];
+  // Representativ familiefarge for en gruppe = den hyppigste i gruppa.
+  const groupColor = (labels) => {
+    const tally = {};
+    for (const l of labels) { const c = MAIN_GENRE_INFO[l]?.color; if (c) tally[c] = (tally[c] || 0) + 1; }
+    return Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] || FAMILIES.gray.stroke;
+  };
+  const usedFams = new Set();
+
+  let firstGroup = true;
+  for (const meta of metaOrder) {
+    const labels = (groups.get(meta) || []).sort((a, b) => firstHot(a) - firstHot(b) || a.localeCompare(b, "no"));
+    if (!labels.length) continue;
+    const gColor = groupColor(labels);
+
+    // Gruppeoverskrift: farget prikk + supersjanger-navn, tonet skillelinje.
+    html += `<div style="display:flex;align-items:center;gap:9px;margin:${firstGroup ? "6px" : "16px"} 0 6px;padding-bottom:5px;border-bottom:2px solid ${gColor}40">`;
+    html += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
+    html += `<span style="font-size:0.84rem;font-weight:700;color:var(--text)">${escapeHtml(meta)}</span>`;
+    html += `<span style="font-size:0.72rem;color:var(--muted)">${labels.length} sjanger${labels.length === 1 ? "" : "e"}</span>`;
     html += `</div>`;
+    firstGroup = false;
+
+    for (const sj of labels) {
+      const rowColor = MAIN_GENRE_INFO[sj]?.color || gColor;
+      usedFams.add(MAIN_GENRE_INFO[sj]?.fam);
+      const vals = VK_HEAT[sj] || VK_DECADES.map(() => null);
+      html += `<div style="${gridStyle};align-items:center;margin-bottom:3px">`;
+      html += `<div style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
+      html += vals.map((v, i) => {
+        const has = v != null;
+        const bg = has ? VK_COLORS[v] : "#f5f8f6";
+        const title = `${sj} · ${meta} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}`;
+        return `<div title="${escapeHtml(title)}" style="height:30px;border-radius:6px;background:${bg}${has ? "" : ";border:1px dashed var(--line-strong)"}"></div>`;
+      }).join("");
+      html += `</div>`;
+    }
   }
   html += `</div></div>`;
 
+  // Forklaring 1: varmenivå.
   html += `<div style="display:flex;align-items:center;gap:8px;margin-top:18px;font-size:0.8rem;color:var(--muted);flex-wrap:wrap">`;
   html += `<span>Mindre</span>`;
   html += [1, 2, 3, 4, 5].map((v) => `<span style="width:22px;height:14px;border-radius:4px;background:${VK_COLORS[v]}"></span>`).join("");
   html += `<span>Mer</span>`;
   html += `<span style="margin-left:14px;display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:14px;border-radius:4px;background:#f5f8f6;border:1px dashed var(--line-strong)"></span>ingen data ennå</span>`;
+  html += `</div>`;
+
+  // Forklaring 2: fargene = slektstreets familier (kun de som faktisk vises).
+  const famLegend = Object.entries(FAMILIES)
+    .filter(([k]) => usedFams.has(k))
+    .map(([, v]) => `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:3px;border-radius:2px;background:${v.stroke}"></span>${escapeHtml(v.label)}</span>`)
+    .join("");
+  html += `<div style="display:flex;align-items:center;gap:14px;margin-top:8px;font-size:0.78rem;color:var(--muted);flex-wrap:wrap">`;
+  html += `<span>Fargene følger slektstreet:</span>${famLegend}`;
   html += `</div>`;
 
   body.innerHTML = html;

@@ -7,9 +7,9 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.59";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.59";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.59";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.60";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.60";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.60";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -172,6 +172,18 @@ const FAMILIES = {
   gray:   { stroke: "#9bada1", label: "Røtter" },
 };
 const FAM_STROKE = Object.fromEntries(Object.entries(FAMILIES).map(([k, v]) => [k, v.stroke]));
+
+// Fargepaletten + per-sjanger-oppslag eksponeres så andre visninger (f.eks.
+// varmekartet) kan gruppere mainGenre etter metaGenre og fargelegge dem med
+// nøyaktig de samme slektstre-familiefargene.
+export { FAMILIES };
+export const MAIN_GENRE_INFO = Object.fromEntries(
+  GENEALOGY.filter((n) => n.g).map((n) => [n.l, {
+    meta: n.g,                                  // metaGenre / supersjanger
+    fam: n.fam,                                 // familienøkkel i treet
+    color: FAMILIES[n.fam]?.stroke || FAMILIES.gray.stroke,
+  }])
+);
 
 function el(tag, attrs) {
   const e = document.createElementNS(SVGNS, tag);
