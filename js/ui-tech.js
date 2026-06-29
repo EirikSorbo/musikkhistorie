@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.65";
-import { fmtCredit, linkDesc, wireLinks } from "./ui-helpers.js?v=2.65";
+import { escapeHtml } from "./util.js?v=2.66";
+import { fmtCredit, linkDesc, wireLinks } from "./ui-helpers.js?v=2.66";
 
 export const TECH_CATEGORIES = [
   "Opptak og avspilling",

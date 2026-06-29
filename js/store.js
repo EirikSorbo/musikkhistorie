@@ -27,9 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.65";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.65";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.65";
+import { firebaseConfig } from "./firebase-config.js?v=2.66";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.66";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.66";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
