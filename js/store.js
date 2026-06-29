@@ -27,9 +27,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.57";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.57";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.57";
+import { firebaseConfig } from "./firebase-config.js?v=2.58";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.58";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.58";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
@@ -458,6 +458,22 @@ export async function migrateGenreDescriptions() {
   }
   console.info(`Migrerte ${migrated} sjangerbeskrivelse(r): subgenres → genreDescriptions.`);
   return { migrated, skipped: false };
+}
+
+// Engangsopprydding: fjern foreldreløse beskrivelses-dokumenter som ligger under
+// GAMLE metasjanger-navn (META_RENAME-nøkler, f.eks. «Afroamerikansk
+// populærmusikk») eller utgåtte navn (META_DROP). Beskrivelsene hører nå under de
+// nye navnene; de gamle er rene rester etter omdøpingen. Idempotent.
+export async function cleanupRenamedGenreDescs() {
+  const stale = [...Object.keys(META_RENAME), ...META_DROP];
+  let removed = 0;
+  for (const id of stale) {
+    const ref = doc(db, "genreDescriptions", id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) { await deleteDoc(ref); removed++; }
+  }
+  if (removed) console.info(`Ryddet bort ${removed} foreldreløs(e) sjangerbeskrivelse(r) under gamle metasjanger-navn.`);
+  return removed;
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede

@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.57";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.58";
 import {
   addArtist,
   teacherDelete,
@@ -15,9 +15,9 @@ import {
   saveDecadeDesc,
   saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.57";
-import { escapeHtml } from "./ui.js?v=2.57";
-import { $ } from "./shared.js?v=2.57";
+} from "./store.js?v=2.58";
+import { escapeHtml } from "./ui.js?v=2.58";
+import { $ } from "./shared.js?v=2.58";
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
@@ -74,21 +74,20 @@ function handleExport() {
     if (d.society || d.tech) decades[id] = { society: d.society || "", tech: d.tech || "" };
   }
 
-  // Sjangerbeskrivelser eksporteres gruppert pr. nivå (meta → main → sub), så de
-  // få metasjangrene ikke drukner blant de mange undersjangrene i fila. Hvert
-  // navn er fortsatt ÉN post (ett dokument) — det plasseres etter sitt høyeste
-  // nivå når et navn finnes på flere nivåer (f.eks. R&B = meta + main).
+  // Sjangerbeskrivelser eksporteres NESTET pr. nivå (meta → main → sub), så fila
+  // får tydelige bolker i stedet for én lang flat liste. Hvert navn er fortsatt
+  // ÉN post (ett dokument) — det legges under sitt høyeste nivå når et navn
+  // finnes på flere nivåer (f.eks. R&B = meta + main → havner i «meta», med hele
+  // dokumentet intakt). Import (flattenGenreDescriptions) leser både dette og
+  // det gamle flate formatet.
   const LEVEL_ORDER = ["meta", "main", "sub"];
-  const levelRank = (s) => {
-    const i = LEVEL_ORDER.findIndex((lv) => s[lv] && s[lv].description);
-    return i === -1 ? LEVEL_ORDER.length : i; // flat/eldre uten nivå sist
-  };
-  const genreDescriptions = {};
+  const levelOf = (s) => LEVEL_ORDER.find((lv) => s[lv] && s[lv].description) || "sub";
+  const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
     .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub)
-    .sort(([aId, a], [bId, b]) => levelRank(a) - levelRank(b) || aId.localeCompare(bId, "no"))
-    .forEach(([id, rest]) => { genreDescriptions[id] = rest; });
+    .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
+    .forEach(([id, rest]) => { genreDescriptions[levelOf(rest)][id] = rest; });
 
   const tech = state.techItems.map(t => {
     const { id, ...rest } = t;
@@ -108,6 +107,22 @@ function handleExport() {
 
 let pendingImportData = null;
 
+// Gjør sjangerbeskrivelser om til et flatt { navn: dokument }-oppslag uansett
+// kildeformat: nytt nestet { meta:{…}, main:{…}, sub:{…} }, eldre flatt
+// { navn: dokument }, eller legacy «subgenres». Nestet kjennes igjen på at ALLE
+// toppnøkler er meta/main/sub (ingen sjanger heter det).
+function flattenGenreDescriptions(obj) {
+  if (!obj || typeof obj !== "object") return {};
+  const keys = Object.keys(obj);
+  const nested = keys.length > 0 && keys.every((k) => ["meta", "main", "sub"].includes(k));
+  if (!nested) return obj; // alt flatt format
+  const flat = {};
+  for (const lv of ["meta", "main", "sub"]) {
+    for (const [id, doc] of Object.entries(obj[lv] || {})) flat[id] = doc;
+  }
+  return flat;
+}
+
 async function handleImportFile(file) {
   if (!file) return;
   let raw;
@@ -123,7 +138,8 @@ async function handleImportFile(file) {
     artists = raw.artists;
     decades = raw.decades || {};
     // Nytt nøkkelnavn er «genreDescriptions»; eldre filer bruker «subgenres».
-    genreDescriptions = raw.genreDescriptions || raw.subgenres || {};
+    // Nytt format er nestet pr. nivå — flat ut til { navn: dokument }.
+    genreDescriptions = flattenGenreDescriptions(raw.genreDescriptions || raw.subgenres || {});
     tech = raw.tech || [];
   } else {
     alert("Ugyldig format — filen må være en array eller et objekt med «artists»."); return;
