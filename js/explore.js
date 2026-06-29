@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.61";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.61";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.61";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.64";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.64";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.64";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -61,6 +61,8 @@ const VK_HEAT = {
   "Trap":            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 5],
   "Elektronika":     [0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 3, 3],
   "EDM":             [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 5, 4],
+  "Rock":            [0, 0, 0, 0, 0, 1, 5, 5, 4, 3, 3, 2, 2],
+  "Pop":             [0, 0, 0, 0, 0, 1, 4, 3, 4, 5, 5, 5, 5],
 };
 
 // Varmen er redaksjonell og kan ikke utledes fra treet. Varsle derfor i

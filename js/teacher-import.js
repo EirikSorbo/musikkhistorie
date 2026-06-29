@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.61";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.64";
 import {
   addArtist,
   teacherDelete,
@@ -15,10 +15,10 @@ import {
   saveDecadeDesc,
   saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.61";
-import { escapeHtml } from "./ui.js?v=2.61";
-import { $ } from "./shared.js?v=2.61";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.61";
+} from "./store.js?v=2.64";
+import { escapeHtml } from "./ui.js?v=2.64";
+import { $ } from "./shared.js?v=2.64";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.64";
 
 const EXPORT_FIELDS = [
   "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
