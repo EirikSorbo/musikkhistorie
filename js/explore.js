@@ -1,6 +1,6 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.66";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.66";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.66";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.67";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.67";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.67";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -538,20 +538,24 @@ function openVarmekart() {
   };
   const usedFams = new Set();
 
-  let firstGroup = true;
+  let groupIdx = 0;
   for (const meta of metaOrder) {
     const labels = (groups.get(meta) || []).sort((a, b) => firstHot(a) - firstHot(b) || a.localeCompare(b, "no"));
     if (!labels.length) continue;
     const gColor = groupColor(labels);
+    const open = groupIdx === 0;   // akkordeon: bare første metagruppe åpen ved start
 
-    // Gruppeoverskrift: farget prikk + supersjanger-navn, tonet skillelinje.
-    html += `<div style="display:flex;align-items:center;gap:9px;margin:${firstGroup ? "6px" : "16px"} 0 6px;padding-bottom:5px;border-bottom:2px solid ${gColor}40">`;
+    html += `<div class="vk-group">`;
+    // Gruppeoverskrift: klikkbar akkordeon-bryter — caret + farget prikk + navn + antall.
+    html += `<button type="button" class="vk-group-head" aria-expanded="${open}" style="width:100%;display:flex;align-items:center;gap:9px;margin:${groupIdx === 0 ? "6px" : "10px"} 0 6px;padding:4px 0 5px;border:0;border-bottom:2px solid ${gColor}40;background:none;cursor:pointer;text-align:left">`;
+    html += `<span class="vk-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>`;
     html += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
     html += `<span style="font-size:0.84rem;font-weight:700;color:var(--text)">${escapeHtml(meta)}</span>`;
     html += `<span style="font-size:0.72rem;color:var(--muted)">${labels.length} sjanger${labels.length === 1 ? "" : "e"}</span>`;
-    html += `</div>`;
-    firstGroup = false;
+    html += `</button>`;
+    groupIdx++;
 
+    html += `<div class="vk-group-rows" style="display:${open ? "block" : "none"}">`;
     for (const sj of labels) {
       const rowColor = MAIN_GENRE_INFO[sj]?.color || gColor;
       usedFams.add(MAIN_GENRE_INFO[sj]?.fam);
@@ -566,6 +570,8 @@ function openVarmekart() {
       }).join("");
       html += `</div>`;
     }
+    html += `</div>`;   // .vk-group-rows
+    html += `</div>`;   // .vk-group
   }
   html += `</div></div>`;
 
@@ -587,6 +593,25 @@ function openVarmekart() {
   html += `</div>`;
 
   body.innerHTML = html;
+
+  // Akkordeon: klikk på en metagruppe åpner den og lukker de andre (klikk på en
+  // åpen gruppe lukker den). Navigerer via .vk-group-strukturen for å unngå
+  // selector-problemer med metanavn som «R&B».
+  body.querySelectorAll(".vk-group-head").forEach((head) => {
+    head.addEventListener("click", () => {
+      const wasOpen = head.getAttribute("aria-expanded") === "true";
+      body.querySelectorAll(".vk-group").forEach((grp) => {
+        const h = grp.querySelector(".vk-group-head");
+        const rows = grp.querySelector(".vk-group-rows");
+        const isThis = h === head && !wasOpen;
+        h.setAttribute("aria-expanded", isThis ? "true" : "false");
+        const caret = h.querySelector(".vk-caret");
+        if (caret) caret.style.transform = `rotate(${isThis ? 90 : 0}deg)`;
+        if (rows) rows.style.display = isThis ? "block" : "none";
+      });
+    });
+  });
+
   modalOpen(modal);
 }
 
