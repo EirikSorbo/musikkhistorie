@@ -5,7 +5,7 @@
 //  (lagres i Firestore), men dette er utgangspunktet hvis databasen er tom.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.68";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.69";
 
 export const DEFAULT_CONFIG = {
   maxTotal: 80,

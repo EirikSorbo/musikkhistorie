@@ -12,7 +12,9 @@ import {
   doc,
   addDoc,
   setDoc,
+  updateDoc,
   deleteDoc,
+  deleteField,
   getDoc,
   getDocs,
   onSnapshot,
@@ -27,9 +29,9 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.68";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.68";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.68";
+import { firebaseConfig } from "./firebase-config.js?v=2.69";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.69";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.69";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
@@ -474,6 +476,33 @@ export async function cleanupRenamedGenreDescs() {
   }
   if (removed) console.info(`Ryddet bort ${removed} foreldreløs(e) sjangerbeskrivelse(r) under gamle metasjanger-navn.`);
   return removed;
+}
+
+// Engangsopprydding: fjern det UTDATERTE flate toppnivå-feltet (description/kilder)
+// fra genreDescriptions-dokumenter. Det var en legacy-kopi som appen ikke lenger
+// leser (all tekst hentes nå kun fra nivåene meta/main/sub). Her fjernes det også
+// fra dataene, så basen blir ren. VIKTIG: dokumenter som KUN har flat tekst (uten
+// nivå-felt) røres IKKE — der ville fjerning slettet det eneste innholdet; de
+// logges i stedet som advarsel så teksten kan legges inn på riktig nivå manuelt.
+// Idempotent: når det flate feltet er borte, gjør den ingenting.
+export async function cleanupFlatGenreDescs() {
+  const snap = await getDocs(genreDescsCol);
+  let cleaned = 0;
+  const flatOnly = [];
+  for (const d of snap.docs) {
+    const data = d.data();
+    if (data.description === undefined && data.kilder === undefined) continue; // alt rent
+    const hasLevel = ["meta", "main", "sub"].some((lv) => data[lv] && data[lv].description);
+    if (hasLevel) {
+      await updateDoc(d.ref, { description: deleteField(), kilder: deleteField() });
+      cleaned++;
+    } else {
+      flatOnly.push(d.id);
+    }
+  }
+  if (cleaned) console.info(`Ryddet bort utdatert flat beskrivelse fra ${cleaned} sjangerdokument(er).`);
+  if (flatOnly.length) console.warn(`${flatOnly.length} sjangerdokument(er) har KUN flat tekst (ingen nivå) og ble IKKE rørt — legg inn nivå-tekst manuelt: ${flatOnly.join(", ")}`);
+  return { cleaned, flatOnly };
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede

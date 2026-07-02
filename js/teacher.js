@@ -17,17 +17,18 @@ import {
   subscribePendingEdits,
   migrateGenreDescriptions,
   cleanupRenamedGenreDescs,
+  cleanupFlatGenreDescs,
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.68";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.68";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.68";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.68";
-import { initExplore } from "./explore.js?v=2.68";
+} from "./store.js?v=2.69";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.69";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.69";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.69";
+import { initExplore } from "./explore.js?v=2.69";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.68";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.68";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.69";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.69";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -38,10 +39,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.68";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.68";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.68";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.68";
+} from "./teacher-content.js?v=2.69";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.69";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.69";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.69";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -137,6 +138,7 @@ function startApp() {
   // etter migrering, så den også fanger gamle navn som ble kopiert over.
   migrateGenreDescriptions()
     .then(() => cleanupRenamedGenreDescs())
+    .then(() => cleanupFlatGenreDescs())
     .catch((e) =>
       console.error("Migrering/opprydding av sjangerbeskrivelser feilet (sjekk Firestore-regler for genreDescriptions):", e.message)
     );
