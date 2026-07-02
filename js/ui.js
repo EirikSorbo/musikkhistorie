@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=2.69";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.69";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.69";
+import { decadesForRange } from "./limits.js?v=2.70";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.70";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.70";
 import {
   escapeHtml,
   linkDesc,
@@ -30,12 +30,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.69";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.69";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.69";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.69";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.69";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.69";
+} from "./ui-helpers.js?v=2.70";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.70";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.70";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.70";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.70";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.70";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
@@ -376,7 +376,7 @@ export function showSubsjangerInfo(label, opts = {}) {
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
-  if (!modal || !mTitle || !mBody) return;
+  if (!modal || !mTitle || !mBody) return false;
 
   // Frie undersjangre er på «sub»-nivå.
   const resolved = resolveDesc(genreDescs, label, "sub");
@@ -404,6 +404,7 @@ export function showSubsjangerInfo(label, opts = {}) {
   const be = mBody.querySelector(".gx-edit-btn");
   if (be) be.addEventListener("click", () => onEdit(label, "sub"));
   modalOpen(modal);
+  return true;
 }
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
