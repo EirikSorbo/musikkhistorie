@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.73";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.73";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.73";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.73";
-import { initExplore } from "./explore.js?v=2.73";
+} from "./store.js?v=2.74";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.74";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.74";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.74";
+import { initExplore } from "./explore.js?v=2.74";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.73";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.73";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.74";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.74";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.73";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.73";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.73";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.73";
+} from "./teacher-content.js?v=2.74";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.74";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.74";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.74";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -67,12 +67,14 @@ function setupGate() {
       msg.textContent = "";
       document.body.classList.add("is-teacher");
       if (!state.started) startApp();
-    } else if (user) {
+    } else if (user && !user.isAnonymous) {
       signedInNotTeacher = true;
       document.body.classList.remove("is-teacher");
       msg.textContent = `Kontoen ${user.email} har ikke lærertilgang.`;
       signinBtn.textContent = "Logg ut og prøv en annen konto";
     } else {
+      // Ingen bruker ELLER kun den automatiske anonyme økten (stemme-
+      // identitet) — begge betyr «ikke logget inn» for lærer-gaten.
       signedInNotTeacher = false;
       document.body.classList.remove("is-teacher");
       msg.textContent = "";

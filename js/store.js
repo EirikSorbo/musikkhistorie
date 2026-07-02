@@ -24,15 +24,16 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.73";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.73";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.73";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.73";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.73";
+import { firebaseConfig } from "./firebase-config.js?v=2.74";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.74";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.74";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.74";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.74";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
@@ -54,12 +55,51 @@ const pendingEditsCol = collection(db, "pendingEdits");
 const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
-//  ANONYM KLIENT-ID
-//  Vi krever ikke innlogging, men gir hver nettleser en tilfeldig id som
-//  lagres lokalt. Brukes kun til å hindre dobbeltstemming fra samme enhet.
+//  STEMME-IDENTITET (anonym innlogging)
+//  Hver nettleser logges inn anonymt hos Firebase — usynlig for studenten,
+//  ingen e-post/passord. uid-en brukes som stemme-identitet, og Firestore-
+//  reglene håndhever at kun EGEN uid kan legges til/fjernes i votedUpBy.
+//  Overgang: hvis anonym innlogging ikke er aktivert i Firebase Console ennå,
+//  faller vi tilbake til den gamle localStorage-ID-en (fungerer kun så lenge
+//  de gamle, slakke reglene er publisert).
 // ----------------------------------------------------------------------------
 
+const AUTH_CONFIGURED = !String(firebaseConfig.apiKey).startsWith("DIN_");
+
+// Hold nettleseren innlogget: logg inn anonymt ved oppstart og på nytt etter
+// utlogging (en lærer som logger ut, får ny anonym økt automatisk).
+if (AUTH_CONFIGURED) {
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      signInAnonymously(auth).catch((e) =>
+        console.warn("Anonym innlogging utilgjengelig (aktiver «Anonymous» i Firebase Console → Authentication → Sign-in method):", e.code)
+      );
+    }
+  });
+}
+
+// Venter på en innlogget bruker (anonym eller Google). Kaster hvis anonym
+// innlogging ikke er aktivert — kalleren håndterer fallback.
+async function ensureAuth() {
+  if (auth.currentUser) return auth.currentUser;
+  const cred = await signInAnonymously(auth);
+  return cred.user;
+}
+
+// Identiteten en stemme registreres med: uid når innlogget, ellers legacy-ID.
+async function voteIdentity() {
+  try {
+    return (await ensureAuth()).uid;
+  } catch {
+    return getClientId();
+  }
+}
+
+// Klient-ID for rendering (hvilke kort har JEG stemt på): uid når innlogget.
+// Beholder localStorage-fallbacken for overgangsfasen og oppsettmodus.
 export function getClientId() {
+  const uid = AUTH_CONFIGURED ? auth.currentUser?.uid : null;
+  if (uid) return uid;
   let id = localStorage.getItem("pensum_client_id");
   if (!id) {
     id = "c_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -181,8 +221,10 @@ export async function addArtistsBulk(list) {
   return list.length;
 }
 
-// Stem frem et forslag ("svært relevant")
-export async function voteUp(artistId, clientId) {
+// Stem frem et forslag ("svært relevant"). Identiteten hentes internt
+// (uid fra anonym innlogging) — reglene avviser alt annet enn egen uid.
+export async function voteUp(artistId) {
+  const clientId = await voteIdentity();
   const ref = doc(db, "artists", artistId);
   return runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
@@ -193,8 +235,9 @@ export async function voteUp(artistId, clientId) {
   });
 }
 
-// Angre positiv stemme
-export async function undoVoteUp(artistId, clientId) {
+// Angre positiv stemme (kan bare fjerne egen uid)
+export async function undoVoteUp(artistId) {
+  const clientId = await voteIdentity();
   const ref = doc(db, "artists", artistId);
   return runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);

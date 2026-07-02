@@ -4,6 +4,9 @@
 //  Kjør:  npm run test:rules   (krever `npm install` og Java for emulatoren)
 //  Verifiserer at firestore.rules matcher appens faktiske skrivinger — det er
 //  denne typen test som fanger drift mellom regelfila og datamodellen.
+//
+//  Identitetsmodell: studenter er ANONYMT innlogget (uid uten e-postclaim);
+//  lærer er Google-innlogget med e-post i isTeacher()-lista.
 // ============================================================================
 
 import { test, before, after } from "node:test";
@@ -40,7 +43,10 @@ before(async () => {
 
 after(async () => { await env.cleanup(); });
 
-function studentDb() { return env.unauthenticatedContext().firestore(); }
+// Uinnlogget klient (skal ikke kunne skrive noe lenger).
+function unauthDb() { return env.unauthenticatedContext().firestore(); }
+// Anonymt innlogget student: uid uten e-postclaim.
+function anonDb(uid = "anon-1") { return env.authenticatedContext(uid).firestore(); }
 function teacherDb() {
   return env.authenticatedContext("teacher-uid", { email: "eirik.sorbo@gmail.com" }).firestore();
 }
@@ -48,63 +54,87 @@ function otherUserDb() {
   return env.authenticatedContext("other-uid", { email: "ikke-laerer@example.com" }).firestore();
 }
 
-test("student kan lese artister", async () => {
-  await assertSucceeds(studentDb().collection("artists").get());
-});
-
-test("student kan sende inn forslag slik appen skriver det", async () => {
-  await assertSucceeds(studentDb().collection("artists").add(studentArtist));
-});
-
-test("student kan IKKE sende inn med status active", async () => {
-  await assertFails(studentDb().collection("artists").add({ ...studentArtist, status: "active" }));
-});
-
-test("student kan IKKE sende inn uten metaGenre", async () => {
-  const { metaGenre, ...uten } = studentArtist;
-  await assertFails(studentDb().collection("artists").add(uten));
-});
-
-test("student kan stemme (votedUpBy), men ikke endre status eller innhold", async () => {
+// Seed et artistdokument utenom reglene.
+async function seedArtist(id, extra = {}) {
   await env.withSecurityRulesDisabled(async (ctx) => {
-    await ctx.firestore().collection("artists").doc("a1")
-      .set({ ...studentArtist, status: "active" });
+    await ctx.firestore().collection("artists").doc(id)
+      .set({ ...studentArtist, status: "active", ...extra });
   });
-  const ref = studentDb().collection("artists").doc("a1");
-  await assertSucceeds(ref.update({ votedUpBy: ["c_123"] }));
+}
+
+test("alle kan lese artister (også uinnlogget)", async () => {
+  await assertSucceeds(unauthDb().collection("artists").get());
+});
+
+test("anonym student kan sende inn forslag slik appen skriver det", async () => {
+  await assertSucceeds(anonDb().collection("artists").add(studentArtist));
+});
+
+test("uinnlogget kan IKKE sende inn forslag", async () => {
+  await assertFails(unauthDb().collection("artists").add(studentArtist));
+});
+
+test("student kan IKKE sende inn med status active eller uten metaGenre", async () => {
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, status: "active" }));
+  const { metaGenre, ...uten } = studentArtist;
+  await assertFails(anonDb().collection("artists").add(uten));
+});
+
+test("stemme: kan legge til og fjerne EGEN uid", async () => {
+  await seedArtist("a1", { votedUpBy: ["c_gammel"] });
+  const ref = anonDb("anon-1").collection("artists").doc("a1");
+  await assertSucceeds(ref.update({ votedUpBy: ["c_gammel", "anon-1"] }));
+  await assertSucceeds(ref.update({ votedUpBy: ["c_gammel"] }));
+});
+
+test("stemme: kan IKKE røre andres stemmer eller stemme i bulk", async () => {
+  await seedArtist("a2", { votedUpBy: ["c_gammel", "anon-2"] });
+  const ref = anonDb("anon-1").collection("artists").doc("a2");
+  await assertFails(ref.update({ votedUpBy: [] }));                                   // tømme
+  await assertFails(ref.update({ votedUpBy: ["c_gammel"] }));                         // fjerne andres
+  await assertFails(ref.update({ votedUpBy: ["c_gammel", "anon-2", "x1", "x2"] }));   // dikte opp
+  await assertFails(ref.update({ votedUpBy: ["c_gammel", "anon-2", "anon-9"] }));     // stemme for andre
+  await assertFails(ref.update({ votedUpBy: ["anon-1"] }));                           // bytte alt mot egen
+});
+
+test("stemme: uinnlogget kan ikke stemme; status/innhold låst for alle unntatt lærer", async () => {
+  await seedArtist("a3");
+  await assertFails(unauthDb().collection("artists").doc("a3").update({ votedUpBy: ["u1"] }));
+  const ref = anonDb("anon-1").collection("artists").doc("a3");
   await assertFails(ref.update({ status: "removed" }));
   await assertFails(ref.update({ name: "Hærverk" }));
   await assertFails(ref.update({ priority: 3 }));
   await assertFails(ref.delete());
 });
 
-test("lærer kan endre alt; innlogget ikke-lærer kan ikke", async () => {
-  await env.withSecurityRulesDisabled(async (ctx) => {
-    await ctx.firestore().collection("artists").doc("a2")
-      .set({ ...studentArtist, status: "active" });
-  });
-  await assertSucceeds(teacherDb().collection("artists").doc("a2").update({ status: "removed", removedBy: "teacher" }));
-  await assertFails(otherUserDb().collection("artists").doc("a2").update({ status: "removed" }));
+test("lærer kan endre alt; innlogget ikke-lærer (Google) kan ikke", async () => {
+  await seedArtist("a4");
+  await assertSucceeds(teacherDb().collection("artists").doc("a4").update({ status: "removed", removedBy: "teacher" }));
+  await assertFails(otherUserDb().collection("artists").doc("a4").update({ status: "removed" }));
 });
 
 test("kun lærer kan skrive config/decades/genreDescriptions/podcasts", async () => {
   for (const col of ["config", "decades", "genreDescriptions", "podcasts"]) {
-    await assertFails(studentDb().collection(col).doc("x").set({ a: 1 }));
+    await assertFails(anonDb().collection(col).doc("x").set({ a: 1 }));
     await assertSucceeds(teacherDb().collection(col).doc("x").set({ a: 1 }));
   }
 });
 
-test("student kan foreslå nytt tech-kort (pending), men ikke aktivt", async () => {
-  await assertSucceeds(studentDb().collection("tech").add({ name: "Mikrofon", status: "pending" }));
-  await assertFails(studentDb().collection("tech").add({ name: "Mikrofon", status: "active" }));
+test("tech-forslag: anonym kan opprette pending, ikke aktivt; uinnlogget avvises", async () => {
+  await assertSucceeds(anonDb().collection("tech").add({ name: "Mikrofon", status: "pending" }));
+  await assertFails(anonDb().collection("tech").add({ name: "Mikrofon", status: "active" }));
+  await assertFails(unauthDb().collection("tech").add({ name: "Mikrofon", status: "pending" }));
 });
 
-test("student kan opprette pendingEdit slik appen skriver det", async () => {
-  await assertSucceeds(studentDb().collection("pendingEdits").add({
+test("pendingEdits: anonym kan opprette slik appen skriver det; uinnlogget avvises", async () => {
+  await assertSucceeds(anonDb().collection("pendingEdits").add({
     entityType: "subgenre", entityId: "Blues", entityName: "Blues",
     proposedFields: { description: "Ny tekst" }, proposedBy: "Anonym", level: "main",
   }));
-  await assertFails(studentDb().collection("pendingEdits").add({
+  await assertFails(unauthDb().collection("pendingEdits").add({
+    entityType: "subgenre", entityId: "Blues", proposedFields: { description: "x" },
+  }));
+  await assertFails(anonDb().collection("pendingEdits").add({
     entityType: "noe-annet", entityId: "x", proposedFields: {},
   }));
 });

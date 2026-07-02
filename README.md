@@ -82,10 +82,13 @@ er lærer-skjult (`priority: -1`) vises for studenter og teller mot grensene.
    Kopier verdiene fra `firebaseConfig`-objektet du får.
 5. Lim dem inn i `js/firebase-config.js` (erstatt `DIN_API_KEY` osv.).
 
-### Lærer-innlogging (Google)
+### Innlogging (Google for lærer + anonym for stemming)
 
 6. Slå på Google-innlogging: **Build → Authentication → Get started →**
    **Sign-in method → Google → Enable**. Velg et støtte-e-postnavn og lagre.
+   Slå samtidig på **Anonymous → Enable** i samme liste — appen logger hver
+   student-nettleser inn anonymt (usynlig) og bruker uid-en som
+   stemme-identitet. Uten Anonymous aktivert feiler stemming og innsending.
 7. Sett din lærer-e-post **to steder** (samme adresse begge steder):
    - `js/firebase-config.js` → `TEACHER_EMAILS`
    - `firestore.rules` → funksjonen `isTeacher()`
@@ -142,16 +145,22 @@ Tiår: 1900–2020.
 
 ## Sikkerhet – det du bør vite
 
-- Studenter trenger ikke innlogging: alle med lenken kan lese, foreslå og stemme.
+- Studenter trenger ikke synlig innlogging: appen logger nettleseren inn
+  **anonymt** (Firebase Auth) i bakgrunnen. Alle med lenken kan lese, foreslå
+  og stemme.
+- **Stemmene er uid-beskyttet:** Firestore-reglene tillater kun å legge til
+  eller fjerne *sin egen* uid i stemmelista. Ingen kan røre andres stemmer
+  eller fylle på falske. (Én person kan fortsatt stemme fra flere
+  nettlesere/inkognito — «én stemme per person» krever ekte innlogging.)
 - Lærerfunksjoner (godkjenn, skjul, slett, endre grenser) krever innlogging
   med en godkjent Google-konto. Sikkerheten ligger i `firestore.rules`, ikke i
   nettleseren – en student kan ikke utføre lærerhandlinger selv om de finner
   lærersiden, fordi databasen avviser det uten en godkjent konto.
-- «Svært relevant»-stemmene er *ikke* beskyttet mot manipulering: uten
-  innlogging kan ikke databasen vite hvem som stemmer. Planlagt løsning er
-  anonym Firebase Auth + uid-baserte regler.
 - Alle studentleverte URL-er vaskes (kun `http/https`) før de settes inn som
   lenker/bilder, så `javascript:`-lenker ikke kan kjøre skript.
+- Personvern: den anonyme uid-en er en pseudonym identifikator (ingen navn,
+  e-post eller lignende). Navnefeltet i skjemaene er valgfritt og kan stå som
+  «Anonym». Firestore-data lagres i EU-region.
 - `firebaseConfig`-nøklene er ikke hemmelige (de ligger uansett i nettleseren),
   så det er trygt å legge prosjektet i et offentlig GitHub-repo.
 

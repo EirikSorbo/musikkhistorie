@@ -1,13 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.73";
-import { DEFAULT_CONFIG, decadesForRange, isVisible } from "./limits.js?v=2.73";
-import { debounce } from "./util.js?v=2.73";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.73";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.73";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.73";
-import { initExplore } from "./explore.js?v=2.73";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.73";
-
-const clientId = getClientId();
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.74";
+import { DEFAULT_CONFIG, decadesForRange, isVisible } from "./limits.js?v=2.74";
+import { debounce } from "./util.js?v=2.74";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.74";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.74";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.74";
+import { initExplore } from "./explore.js?v=2.74";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.74";
 
 const state = {
   artists: [],
@@ -19,7 +17,7 @@ const state = {
   pendingEdits: [],
   filters: { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
   isTeacher: false,
-  clientId,
+  clientId: getClientId(),
 };
 
 function hasPendingEdit(entityType, entityId) {
@@ -33,8 +31,8 @@ const voteFailed = (err) => {
   alert("Kunne ikke registrere stemmen (" + (err?.message || err) + "). Prøv igjen.");
 };
 const handlers = {
-  voteUp: (id) => voteUp(id, clientId).catch(voteFailed),
-  undoVoteUp: (id) => undoVoteUp(id, clientId).catch(voteFailed),
+  voteUp: (id) => voteUp(id).catch(voteFailed),
+  undoVoteUp: (id) => undoVoteUp(id).catch(voteFailed),
 };
 
 let explore = null;
@@ -424,6 +422,15 @@ function init() {
       banner.textContent = `Kunne ikke laste data fra databasen (${e.detail?.code || "ukjent feil"}). Firestore-reglene tillater trolig ikke lesing uten innlogging. Publiser oppdaterte regler i Firebase Console.`;
       banner.className = "banner banner-error";
       banner.style.display = "block";
+    }
+  });
+
+  // Når anonym innlogging er klar, blir uid stemme-identiteten. Oppdater
+  // clientId og re-render så «Angre stemme»-tilstanden vises riktig.
+  onAuthChange((user) => {
+    if (user && user.uid !== state.clientId) {
+      state.clientId = user.uid;
+      renderList();
     }
   });
 

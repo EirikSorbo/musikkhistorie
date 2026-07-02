@@ -3,17 +3,18 @@ rules_version = '2';
 // ============================================================================
 //  Firestore-sikkerhetsregler
 // ----------------------------------------------------------------------------
-//  Studenter trenger IKKE innlogging: alle med lenken kan lese, foreslå og
-//  stemme. Lærerhandlinger (godkjenn, avvis, slett, endre grenser) krever
-//  innlogging med en godkjent Google-konto.
+//  Studenter trenger ikke synlig innlogging: appen logger hver nettleser inn
+//  ANONYMT (Firebase Auth), og uid-en brukes som stemme-identitet. Reglene
+//  håndhever at man kun kan legge til/fjerne SIN EGEN uid i votedUpBy.
+//  Lærerhandlinger (godkjenn, avvis, slett, endre grenser) krever innlogging
+//  med en godkjent Google-konto.
+//
+//  KREVER at «Anonymous» er aktivert: Firebase Console → Authentication →
+//  Sign-in method → Anonymous → Enable. Uten det feiler stemming/innsending.
 //
 //  VIKTIG: Denne fila må holdes i synk med det som er PUBLISERT i Firebase
 //  Console (Firestore → Rules → Publish). Lærer-e-postene i isTeacher() må
 //  matche TEACHER_EMAILS i js/firebase-config.js.
-//
-//  Kjent begrensning (bevisst utsatt): uten innlogging kan ikke reglene
-//  verifisere HVEM som stemmer — votedUpBy kan manipuleres av alle med
-//  lenken. Løsningen er anonym Firebase Auth + uid-baserte regler.
 // ============================================================================
 
 service cloud.firestore {
@@ -29,11 +30,35 @@ service cloud.firestore {
 
     // ---- Forslag (artister) ----
     match /artists/{id} {
+
+      // Stemmelister som mengder, før og etter endringen. get() med default
+      // dekker eldre dokumenter som skulle mangle feltet.
+      function oldVotes() {
+        return resource.data.get("votedUpBy", []).toSet();
+      }
+      function newVotes() {
+        return request.resource.data.votedUpBy.toSet();
+      }
+      // En gyldig stemme-endring er NØYAKTIG én av:
+      //  • legge til sin egen uid (stemme)
+      //  • fjerne sin egen uid (angre)
+      // Alt annet — andres uid-er, flere om gangen, tømming — avvises.
+      function isOwnVoteChange() {
+        return request.resource.data.votedUpBy is list && (
+          (newVotes().difference(oldVotes()) == [request.auth.uid].toSet() &&
+           oldVotes().difference(newVotes()).size() == 0) ||
+          (newVotes().difference(oldVotes()).size() == 0 &&
+           oldVotes().difference(newVotes()) == [request.auth.uid].toSet())
+        );
+      }
+
       allow read: if true;
 
-      // Studenter kan sende inn forslag; de opprettes alltid som "pending"
-      // og uten stemmer. Lærer kan opprette uten feltrestriksjoner (import).
+      // Studenter (anonymt innlogget) kan sende inn forslag; de opprettes
+      // alltid som "pending" og uten stemmer. Lærer kan opprette uten
+      // feltrestriksjoner (import).
       allow create: if isTeacher() || (
+        request.auth != null &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
@@ -44,11 +69,14 @@ service cloud.firestore {
         request.resource.data.votedUpBy.size() == 0
       );
 
-      // Studenter kan KUN endre stemmelista («Svært relevant» / angre).
+      // Studenter kan KUN endre stemmelista, og KUN sin egen uid.
       // Alt annet (status, prioritet, innhold) krever lærer.
-      allow update: if isTeacher() ||
+      allow update: if isTeacher() || (
+        request.auth != null &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(["votedUpBy"]);
+          .hasOnly(["votedUpBy"]) &&
+        isOwnVoteChange()
+      );
 
       allow delete: if isTeacher();
     }
@@ -80,9 +108,10 @@ service cloud.firestore {
     // ---- Teknologiske innovasjoner ----
     match /tech/{doc} {
       allow read: if true;
-      // Studenter kan foreslå nye innovasjonskort med status:"pending".
-      // Lærer kan endre/slette alt, samt opprette uten restriksjoner.
+      // Studenter (anonymt innlogget) kan foreslå nye innovasjonskort med
+      // status:"pending". Lærer kan endre/slette alt og opprette fritt.
       allow create: if isTeacher() || (
+        request.auth != null &&
         request.resource.data.status == "pending" &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
@@ -92,10 +121,12 @@ service cloud.firestore {
     }
 
     // ---- Endringsforslag (foreslåtte endringer på eksisterende kort) ----
-    // Hvem som helst kan opprette et forslag. Bare lærer kan endre eller slette.
+    // Innloggede (anonymt holder) kan opprette forslag. Bare lærer kan
+    // endre eller slette.
     match /pendingEdits/{doc} {
       allow read: if true;
       allow create: if (
+        request.auth != null &&
         request.resource.data.entityType in ["artist", "tech", "subgenre", "decade-society", "decade-tech"] &&
         request.resource.data.entityId is string &&
         request.resource.data.proposedFields is map
