@@ -5,15 +5,15 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.74";
-import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.74";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, buildMainGenreList, setupModal, modalOpen, techImage } from "./ui.js?v=2.74";
-import { resolveDesc } from "./genre-descriptions.js?v=2.74";
-import { safeUrl } from "./util.js?v=2.74";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.75";
+import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.75";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, buildMainGenreList, setupModal, modalOpen, techImage } from "./ui.js?v=2.75";
+import { resolveDesc } from "./genre-descriptions.js?v=2.75";
+import { safeUrl } from "./util.js?v=2.75";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.74";
-import { $ } from "./shared.js?v=2.74";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.75";
+import { $ } from "./shared.js?v=2.75";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

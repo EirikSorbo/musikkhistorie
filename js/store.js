@@ -8,6 +8,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   collection,
   doc,
   addDoc,
@@ -29,18 +32,35 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.74";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.74";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.74";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.74";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.74";
+import { firebaseConfig } from "./firebase-config.js?v=2.75";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.75";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.75";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.75";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.75";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
 export { normalizeArtist };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+// Persistent lokal cache: Firestore lagrer dokumentene i IndexedDB og gjenopptar
+// lyttere med resume-token, slik at kun ENDREDE dokumenter faktureres ved
+// gjenbesøk/reload i stedet for hele kolleksjonen på nytt (kutter storparten av
+// lesene og holder oss trygt innenfor gratiskvoten for et helt kull).
+// persistentMultipleTabManager håndterer flere åpne faner. Faller tilbake til
+// minne-cache i nettlesere uten IndexedDB (f.eks. eldre Safari privat modus),
+// så appen alltid initialiserer.
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  });
+} catch (e) {
+  console.warn("Persistent Firestore-cache utilgjengelig – bruker minne-cache:", e?.message || e);
+  db = getFirestore(app);
+}
+
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
