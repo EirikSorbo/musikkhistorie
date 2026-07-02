@@ -12,9 +12,7 @@ import {
   doc,
   addDoc,
   setDoc,
-  updateDoc,
   deleteDoc,
-  deleteField,
   getDoc,
   getDocs,
   onSnapshot,
@@ -30,11 +28,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.72";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.72";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.72";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.72";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.72";
+import { firebaseConfig } from "./firebase-config.js?v=2.73";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.73";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.73";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.73";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.73";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
@@ -48,10 +46,8 @@ const googleProvider = new GoogleAuthProvider();
 const artistsCol = collection(db, "artists");
 const decadesCol = collection(db, "decades");
 // Sjangerbeskrivelser (alle nivåer: meta/main/sub). Het tidligere «subgenres»
-// — navnet kolliderte med artistfeltet `subGenre`. `legacySubgenresCol` peker
-// på den gamle samlingen, kun for engangsmigrering (se migrateGenreDescriptions).
+// — navnet kolliderte med artistfeltet `subGenre`; migrert 2026-07.
 const genreDescsCol = collection(db, "genreDescriptions");
-const legacySubgenresCol = collection(db, "subgenres");
 const podcastsCol = collection(db, "podcasts");
 const techCol = collection(db, "tech");
 const pendingEditsCol = collection(db, "pendingEdits");
@@ -264,25 +260,11 @@ export function subscribeDecades(callback) {
 }
 
 export function subscribeGenreDescs(callback) {
-  // Overgangsløsning: les BÅDE den nye «genreDescriptions» og den gamle
-  // «subgenres». Nye verdier vinner; navn som ennå ikke er migrert dekkes av
-  // legacy. Slik blir det ingen nedetid uansett når Firestore-reglene publiseres
-  // eller migreringen kjøres. Forenkle til kun genreDescriptions når den gamle
-  // samlingen er tømt (se migrateGenreDescriptions).
-  let primary = {}, legacy = {};
-  const emit = () => callback({ ...legacy, ...primary });
-  const toMap = (snapshot) => {
+  return onSnapshot(genreDescsCol, (snapshot) => {
     const m = {};
     snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
-    return m;
-  };
-  const unsubPrimary = onSnapshot(genreDescsCol, (snap) => { primary = toMap(snap); emit(); },
-    // Før reglene er publisert mangler lesetilgang her — legacy dekker, så feilen
-    // logges stille (debug) i stedet for å spamme konsollen.
-    (err) => console.debug("genreDescriptions ikke lesbar ennå (faller tilbake til legacy):", err.message));
-  const unsubLegacy = onSnapshot(legacySubgenresCol, (snap) => { legacy = toMap(snap); emit(); },
-    (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
-  return () => { unsubPrimary(); unsubLegacy(); };
+    callback(m);
+  }, (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
 }
 
 export function subscribePodcasts(callback) {
@@ -342,80 +324,6 @@ export async function saveGenreDescLevel(genreId, level, data) {
 
 export async function deleteGenreDesc(genreId) {
   return deleteDoc(doc(db, "genreDescriptions", genreId));
-}
-
-// Engangsmigrering: kopier alle dokumenter fra den gamle «subgenres»-samlingen
-// til «genreDescriptions». Idempotent — hopper over hvis målet alt har data, så
-// den trygt kan kjøres ved hver lærer-oppstart til migreringen er gjort. Kan
-// fjernes når live-dataen er flyttet. Krever lærer-skrivetilgang (Firestore-
-// reglene må tillate skriving til genreDescriptions).
-export async function migrateGenreDescriptions() {
-  const target = await getDocs(genreDescsCol);
-  const legacy = await getDocs(legacySubgenresCol);
-  if (!target.empty) {
-    // Status-melding for pensjonering av migreringskoden: når legacy melder 0
-    // (eller bare utdaterte kopier), kan dobbeltlyttingen og denne funksjonen
-    // fjernes helt (og «subgenres»-samlingen slettes i Firebase Console).
-    console.info(
-      `Sjangerbeskrivelse-migrering: FERDIG. genreDescriptions har ${target.size} dokument(er); ` +
-      `legacy «subgenres» har ${legacy.size} dokument(er) igjen` +
-      (legacy.size ? " (kun gamle kopier — kan slettes i Firebase Console)." : ".")
-    );
-    return { migrated: 0, skipped: true, legacyCount: legacy.size };
-  }
-  if (legacy.empty) return { migrated: 0, skipped: false, legacyCount: 0 };
-  let migrated = 0;
-  for (const d of legacy.docs) {
-    await setDoc(doc(db, "genreDescriptions", d.id), d.data(), { merge: true });
-    migrated++;
-  }
-  console.info(`Migrerte ${migrated} sjangerbeskrivelse(r): subgenres → genreDescriptions.`);
-  return { migrated, skipped: false, legacyCount: legacy.size };
-}
-
-// Engangsopprydding: fjern foreldreløse beskrivelses-dokumenter som ligger under
-// GAMLE metasjanger-navn (META_RENAME-nøkler, f.eks. «Afroamerikansk
-// populærmusikk»). Beskrivelsene hører nå under de nye navnene; de gamle er
-// rene rester etter omdøpingen. Idempotent. NB: kun omdøpte navn — «Rock» er
-// gjeninnført i treet og skal IKKE ryddes bort (tidligere bug: en Rock-
-// beskrivelse ble slettet ved hver lærer-oppstart).
-export async function cleanupRenamedGenreDescs() {
-  const stale = Object.keys(META_RENAME);
-  let removed = 0;
-  for (const id of stale) {
-    const ref = doc(db, "genreDescriptions", id);
-    const snap = await getDoc(ref);
-    if (snap.exists()) { await deleteDoc(ref); removed++; }
-  }
-  if (removed) console.info(`Ryddet bort ${removed} foreldreløs(e) sjangerbeskrivelse(r) under gamle metasjanger-navn.`);
-  return removed;
-}
-
-// Engangsopprydding: fjern det UTDATERTE flate toppnivå-feltet (description/kilder)
-// fra genreDescriptions-dokumenter. Det var en legacy-kopi som appen ikke lenger
-// leser (all tekst hentes nå kun fra nivåene meta/main/sub). Her fjernes det også
-// fra dataene, så basen blir ren. VIKTIG: dokumenter som KUN har flat tekst (uten
-// nivå-felt) røres IKKE — der ville fjerning slettet det eneste innholdet; de
-// logges i stedet som advarsel så teksten kan legges inn på riktig nivå manuelt.
-// Idempotent: når det flate feltet er borte, gjør den ingenting.
-export async function cleanupFlatGenreDescs() {
-  const snap = await getDocs(genreDescsCol);
-  let cleaned = 0;
-  const flatOnly = [];
-  for (const d of snap.docs) {
-    const data = d.data();
-    if (data.description === undefined && data.kilder === undefined) continue; // alt rent
-    const hasLevel = ["meta", "main", "sub"].some((lv) => data[lv] && data[lv].description);
-    if (hasLevel) {
-      await updateDoc(d.ref, { description: deleteField(), kilder: deleteField() });
-      cleaned++;
-    } else {
-      flatOnly.push(d.id);
-    }
-  }
-  if (cleaned) console.info(`Ryddet bort utdatert flat beskrivelse fra ${cleaned} sjangerdokument(er).`);
-  if (flatOnly.length) console.warn(`${flatOnly.length} sjangerdokument(er) har KUN flat tekst (ingen nivå) og ble IKKE rørt — legg inn nivå-tekst manuelt: ${flatOnly.join(", ")}`);
-  return { cleaned, flatOnly };
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede

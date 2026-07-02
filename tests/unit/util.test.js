@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl } from "../../js/util.js?v=2.72";
+import { escapeHtml, safeUrl } from "../../js/util.js?v=2.73";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(

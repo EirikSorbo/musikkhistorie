@@ -71,13 +71,6 @@ service cloud.firestore {
       allow write: if isTeacher();
     }
 
-    // ---- Legacy: gammel «subgenres»-samling (erstattet av genreDescriptions).
-    //      Beholdes for engangsmigrering; kan fjernes når dataen er flyttet. ----
-    match /subgenres/{doc} {
-      allow read: if true;
-      allow write: if isTeacher();
-    }
-
     // ---- Podkast-episoder ----
     match /podcasts/{doc} {
       allow read: if true;
