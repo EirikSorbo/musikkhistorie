@@ -4,12 +4,14 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.71";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.71";
-import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.71";
-import { isMainGenre } from "./genealogy.js?v=2.71";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=2.71";
-import { $ } from "./shared.js?v=2.71";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.72";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.72";
+import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.72";
+import { isMainGenre } from "./genealogy.js?v=2.72";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=2.72";
+import { GENDERS } from "./limits.js?v=2.72";
+import { debounce } from "./util.js?v=2.72";
+import { $ } from "./shared.js?v=2.72";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -22,14 +24,18 @@ export function openDetail(artist) {
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
   const checkBtn = document.getElementById("detail-check-btn");
-  const checked = artist.teacherChecked === true;
-  checkBtn.textContent = checked ? "✓ Sjekket" : "Sjekk";
-  checkBtn.className = `btn ghost small ${checked ? "accent" : ""}`;
+  const setBtn = (checked) => {
+    checkBtn.textContent = checked ? "✓ Sjekket" : "Sjekk";
+    checkBtn.className = `btn ghost small ${checked ? "accent" : ""}`;
+  };
+  setBtn(artist.teacherChecked === true);
   checkBtn.onclick = () => {
-    updateArtistFields(artist.id, { teacherChecked: !artist.teacherChecked });
-    const nowChecked = !artist.teacherChecked;
-    checkBtn.textContent = nowChecked ? "✓ Sjekket" : "Sjekk";
-    checkBtn.className = `btn ghost small ${nowChecked ? "accent" : ""}`;
+    // Les FERSK tilstand fra state — closure-objektet `artist` oppdateres ikke
+    // av sanntidslytteren, så uten dette kunne knappen ikke slås av igjen.
+    const cur = state.artists.find((x) => x.id === artist.id) || artist;
+    const next = !(cur.teacherChecked === true);
+    updateArtistFields(artist.id, { teacherChecked: next });
+    setBtn(next);
   };
   modalOpen(modal);
 }
@@ -80,7 +86,8 @@ export function setupFilters() {
   $("#f-decade").addEventListener("change", (e) => { state.filters.decade = e.target.value; renderList(); });
   $("#f-instrument").addEventListener("change", (e) => { state.filters.instrument = e.target.value; renderList(); });
   $("#f-subgenre").addEventListener("change", (e) => { state.filters.subgenre = e.target.value; renderList(); });
-  $("#f-search").addEventListener("input", (e) => { state.filters.search = e.target.value; renderList(); });
+  const searchRender = debounce(renderList, 200);
+  $("#f-search").addEventListener("input", (e) => { state.filters.search = e.target.value; searchRender(); });
   document.querySelectorAll("#t-prio-bar .prio-filter-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const p = parseInt(btn.dataset.prio, 10);
@@ -119,13 +126,6 @@ export function setupFilters() {
 //  Rediger artist
 // ----------------------------------------------------------------------------
 
-const GENDERS_EDIT = [
-  { value: "kvinne", label: "Kvinne" },
-  { value: "mann", label: "Mann" },
-  { value: "annet", label: "Gruppe" },
-  { value: "ukjent", label: "Ukjent" },
-];
-
 export function openEditModal(artistId) {
   const a = state.artists.find((x) => x.id === artistId);
   if (!a) return;
@@ -146,7 +146,7 @@ export function openEditModal(artistId) {
   $("#ed-image-url").value = a.imageUrl || "";
   $("#ed-image-credit").value = a.imageCredit || "";
 
-  fillSelect($("#ed-gender"), GENDERS_EDIT, { placeholder: "Velg kjønn …" });
+  fillSelect($("#ed-gender"), GENDERS, { placeholder: "Velg kjønn …" });
   $("#ed-gender").value = a.gender || "";
   fillSelect($("#ed-metaGenre"), c.metaGenres, { placeholder: "Velg sjanger …" });
   $("#ed-metaGenre").value = a.metaGenre || "";

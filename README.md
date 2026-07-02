@@ -1,8 +1,8 @@
 # Pensumforslag – Populærmusikkhistorie
 
-En liten webapp der studentene i klassen kan foreslå artister/musikere til
-pensum, legge inn relevant informasjon og musikklenker, se kjønnsfordeling, og
-stemme ut forslag de mener ikke hører hjemme. Læreren har egne adminfunksjoner.
+En webapp der studentene i klassen kan foreslå artister/musikere til pensum,
+legge inn relevant informasjon og musikklenker, utforske sjangre/tiår/teknologi,
+og stemme frem forslag de mener er viktige. Læreren har egne adminfunksjoner.
 
 Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 
@@ -10,55 +10,62 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 
 ## Funksjoner
 
-- **Foreslå artist** med navn, fødselsår, kjønn, sjanger, tiår, geografi,
-  begrunnelse, sentrale verk og lenker til musikkeksempler.
-- **Grenser** på antall: totalt, per tiår og per sjanger. Et forslag avvises
-  automatisk hvis en grense er nådd.
+- **Foreslå artist** med navn, fødselsår, kjønn, sjanger, instrument, geografi,
+  begrunnelse, sentrale verk, musikkeksempler, bilde og kilder. Nye forslag
+  venter på lærergodkjenning.
+- **Endringsforslag**: studenter kan foreslå endringer på eksisterende artist-,
+  teknologi-, sjanger- og tiårskort; læreren godkjenner/avviser felt for felt.
+- **Utforsk**: sjangertre («slektstre»), varmekart, sjangerbeskrivelser i tre
+  nivåer (meta/main/sub), tiårskontekst (samfunn + teknologi), teknologikort
+  og podkast-episoder.
+- **Grenser** på antall: totalt, per tiår, per sjanger og per instrument.
+  Grensene er *myke* – studenten får en advarsel når en grense er nådd, men
+  forslaget blokkeres ikke.
 - **Sanntid**: alle ser nye forslag umiddelbart (Firebase Firestore).
-- **Kjønnsfordeling** vist som stolpe + tall/prosent.
-- **Fyllingsgrad** per tiår og sjanger.
-- **Stem ut**: studenter markerer «ikke relevant». Når nok stemmer er samlet,
-  fjernes forslaget automatisk.
-- **Lærermodus** (Google-innlogging): veto/fjern, gjenopprett (med beskyttelse
-  mot ny utstemming), slett permanent, og juster alle grenser/sjangre/tiår.
+- **Stem frem**: studenter markerer forslag som «svært relevant».
+- **Kjønnsfordeling** og **fyllingsgrad** i lærerens oversikt.
+- **Lærermodus** (Google-innlogging): godkjenn/avvis, prioriter, skjul for
+  studenter, rediger, slett, import/eksport (JSON) og alle grenser.
 
 ---
 
 ## Arkitektur
 
-Tre sider med felles datalag:
+Fire sider med felles datalag. Rene HTML/JS ES-moduler uten byggesteg.
 
 ```
-index.html            Forside: live oversikt + inngang til student/lærer
-student.html          Studentside: foreslå artist, se liste, stemme
-teacher.html          Lærerside (Google-innlogging): admin, veto, grenser
+index.html            Forside: utforsk-kort, artistsøk, dagens artist
+student.html          Studentside: foreslå artist
+teacher.html          Lærerside (Google-innlogging): admin, godkjenning, grenser
+tre.html              Slektstre-siden (sjangerkart i musicmap-stil)
 css/styles.css        Styling (lyst, moderne tema)
 js/
   firebase-config.js  Firebase-nøkler + lærer-e-poster  ← DU FYLLER INN
-  shared.js           Delte hjelpere (oppsett-sjekk, banner)
+  shared.js           Delte hjelpere (oppsett-sjekk, banner, $)
+  util.js             Avhengighetsfrie hjelpere (escapeHtml, safeUrl, debounce)
   store.js            Datalag mot Firestore (sanntid, CRUD, stemming)
-  limits.js           Grenser, standardkonfig, telling, kjønnsstatistikk
-  ui.js               Rendering (rene funksjoner)
-  landing.js          Forside-logikk
-  student.js          Studentside-logikk (skjema, filtre, stemming)
-  teacher.js          Lærerside-logikk (innlogging, admin, veto)
+  artist-schema.js    ÉN sannhetskilde for artistfeltene (nøkler/etiketter/typer)
+  artist-normalize.js Normalisering av artistdata (ren, enhetstestbar)
+  import-format.js    Parselogikk for import-JSON (ren, enhetstestbar)
+  limits.js           Grenser, standardkonfig, telling, isVisible, statistikk
+  genealogy.js        Slektstreet — sannhetskilde for sjangre (mainGenre/metaGenre)
+  genre-descriptions.js  Nivådelte sjangerbeskrivelser (meta/main/sub)
+  linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
+  ui.js               Rendering + re-eksport-knutepunkt for ui-*-modulene
+  ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff
+  explore.js          Utforsk-modalene (tiår, sjangre, varmekart, podkast …)
+  proposals.js        Endringsforslag-editoren (student)
+  landing.js / student.js / tre.js   Side-logikk
+  teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler)
+tests/                Enhetstester (node --test) + regeltester (emulator)
 firestore.rules       Sikkerhetsregler for databasen
+bump.sh               Setter ?v=… (cache-busting) fra js/version.js
 ```
 
-Alle sidene deler `store.js`, `limits.js` og `ui.js`, så datamodell og
-grenselogikk finnes kun ett sted.
-
-**Datamodell (Firestore):**
-
-- Samling `artists` – ett dokument per forslag:
-  `name, birthYear, gender, genre, decade, description, keyWorks, geography,
-  links[], proposedBy, status (active|removed), removedBy, teacherProtected,
-  votedOutBy[], createdAt`
-- Samling `config`, dokument `settings`:
-  `maxTotal, maxPerDecade, maxPerGenre, voteOutThreshold, genres[], decades[]`
-
-Bare forslag med `status: "active"` teller mot grensene – utstemte/fjernede
-frigjør plass igjen.
+**Datamodell (Firestore):** samlingene `artists`, `config`, `decades`,
+`genreDescriptions`, `tech`, `podcasts` og `pendingEdits`. Artistfeltene er
+definert i `js/artist-schema.js`. Bare forslag med `status: "active"` som ikke
+er lærer-skjult (`priority: -1`) vises for studenter og teller mot grensene.
 
 ---
 
@@ -83,7 +90,8 @@ frigjør plass igjen.
    - `js/firebase-config.js` → `TEACHER_EMAILS`
    - `firestore.rules` → funksjonen `isTeacher()`
 8. Legg inn sikkerhetsreglene: **Firestore → Rules**, lim inn innholdet fra
-   `firestore.rules`, og trykk **Publish**.
+   `firestore.rules`, og trykk **Publish**. VIKTIG: gjenta dette hver gang
+   `firestore.rules` endres i repoet — fila og konsollen må være i synk.
 9. Når appen ligger på en nettadresse (f.eks. GitHub Pages), legg domenet til
    under **Authentication → Settings → Authorized domains** (f.eks.
    `ditt-brukernavn.github.io`). `localhost` er godkjent fra før.
@@ -101,33 +109,49 @@ velg `main`-branchen og rot-mappa. Du får en URL som
 `https://ditt-brukernavn.github.io/repo-navn/`. Husk å legge dette domenet til
 under Authentication → Authorized domains (se punkt 9 over).
 
-**Firebase Hosting** (alternativ): `npm install -g firebase-tools`,
-`firebase login`, `firebase init hosting` (public-mappe `.`, ikke SPA-rewrite),
-`firebase deploy`.
+**Cache-busting:** ved hver endring, bump `VERSION` i `js/version.js` og kjør
+`./bump.sh` (oppdaterer alle `?v=`-referanser). En pre-push-hook
+(`.githooks/pre-push`, aktiveres med `git config core.hooksPath .githooks`)
+nekter push hvis versjonene er i utakt.
+
+---
+
+## Testing
+
+- **Enhetstester** (ingen avhengigheter): `npm test` — kjører `node --test`
+  på ren logikk (normalisering, diff, grenser, linkify, importformat).
+- **Regeltester** (Firestore-emulator): `npm run test:rules` — krever
+  `npm install` (henter `firebase-tools` og `@firebase/rules-unit-testing`)
+  og Java. Verifiserer at `firestore.rules` tillater/avviser riktig.
 
 ---
 
 ## Standardgrenser (kan endres i lærermodus)
 
-| Innstilling            | Standard |
-|------------------------|----------|
-| Maks totalt            | 80       |
-| Maks per tiår          | 8        |
-| Maks per sjanger       | 16       |
-| Stemmer for utstemming | 8        |
+| Innstilling         | Standard |
+|---------------------|----------|
+| Maks totalt         | 80       |
+| Maks per tiår       | 8        |
+| Maks per sjanger    | 16       |
+| Maks per instrument | 20       |
 
-Sjangre: Blues · Country · Jazz · Afroamerikansk populærmusikk · Elektronisk musikk
-Tiår: 1900–2020
+Metasjangre hentes automatisk fra slektstreet (`js/genealogy.js`).
+Tiår: 1900–2020.
 
 ---
 
 ## Sikkerhet – det du bør vite
 
 - Studenter trenger ikke innlogging: alle med lenken kan lese, foreslå og stemme.
-- Lærerfunksjoner (veto, gjenopprett, slett, endre grenser) krever innlogging
+- Lærerfunksjoner (godkjenn, skjul, slett, endre grenser) krever innlogging
   med en godkjent Google-konto. Sikkerheten ligger i `firestore.rules`, ikke i
   nettleseren – en student kan ikke utføre lærerhandlinger selv om de finner
   lærersiden, fordi databasen avviser det uten en godkjent konto.
+- «Svært relevant»-stemmene er *ikke* beskyttet mot manipulering: uten
+  innlogging kan ikke databasen vite hvem som stemmer. Planlagt løsning er
+  anonym Firebase Auth + uid-baserte regler.
+- Alle studentleverte URL-er vaskes (kun `http/https`) før de settes inn som
+  lenker/bilder, så `javascript:`-lenker ikke kan kjøre skript.
 - `firebaseConfig`-nøklene er ikke hemmelige (de ligger uansett i nettleseren),
   så det er trygt å legge prosjektet i et offentlig GitHub-repo.
 

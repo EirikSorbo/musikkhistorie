@@ -5,7 +5,7 @@
 //  (lagres i Firestore), men dette er utgangspunktet hvis databasen er tom.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.71";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.72";
 
 export const DEFAULT_CONFIG = {
   maxTotal: 80,
@@ -15,7 +15,6 @@ export const DEFAULT_CONFIG = {
   decadeLimits: {},
   metaGenreLimits: {},
   instrumentLimits: {},
-  voteOutThreshold: 8,
 
   // Én sannhetskilde: de brede metasjangrene utledes fra slektstreet.
   // Læreren kan fortsatt overstyre lista i admin (lagres i Firestore).
@@ -52,9 +51,15 @@ export const GENDERS = [
 //  TELLING OG GRENSESJEKK
 // ----------------------------------------------------------------------------
 
-// Bare aktive, synlige forslag teller mot grensene. Skjulte/utstemte frigjør plass.
+// Synlig for studenter: aktiv status og ikke lærer-skjult (priority -1).
+// Delt predikat — brukes av alle student-visninger og tellinger.
+export function isVisible(a) {
+  return a.status === "active" && (a.priority || 0) !== -1;
+}
+
+// Bare aktive, synlige forslag teller mot grensene. Skjulte frigjør plass.
 export function activeArtists(artists) {
-  return artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+  return artists.filter(isVisible);
 }
 
 export function limitForDecade(config, decade) {
@@ -164,9 +169,4 @@ export function genderDistribution(artists) {
     else dist.ukjent += 1;
   }
   return { ...dist, total: active.length };
-}
-
-export function decadeFromYear(year) {
-  if (!year) return null;
-  return Math.floor(year / 10) * 10;
 }

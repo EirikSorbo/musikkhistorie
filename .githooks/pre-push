@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# ---------------------------------------------------------------------------
+#  Pre-push-sjekk: nekter push hvis noen ?v=-referanser (cache-busting) i
+#  HTML/JS ikke matcher VERSION i js/version.js. Retting: kjør ./bump.sh.
+#  Aktiveres med:  git config core.hooksPath .githooks
+# ---------------------------------------------------------------------------
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"')
+[ -n "$VER" ] || { echo "pre-push: fant ikke VERSION i js/version.js"; exit 1; }
+
+bad=$(grep -rHoE '\?v=[0-9][0-9.]*' js/*.js ./*.html tests/*/*.js | grep -v "?v=$VER" || true)
+if [ -n "$bad" ]; then
+  echo "pre-push: cache-busting er i utakt med js/version.js (v$VER):"
+  echo "$bad" | head -20
+  echo
+  echo "Kjør ./bump.sh og commit på nytt."
+  exit 1
+fi

@@ -6,11 +6,11 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList } from "./util.js?v=2.71";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.71";
-import { GENDERS } from "./limits.js?v=2.71";
+import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=2.72";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.72";
+import { GENDERS } from "./limits.js?v=2.72";
 
-export { escapeHtml, buildKilderList };
+export { escapeHtml, buildKilderList, safeUrl };
 
 export const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 
@@ -54,7 +54,8 @@ export function musicExampleLabel(m) {
 // Delt musikkeksempel-lenkeliste (brukt av detalj-, spotlight- og artistkort).
 export function musicExamplesHtml(a) {
   return (a.musicExamples || [])
-    .map((m) => `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
+    .filter((m) => safeUrl(m.url))
+    .map((m) => `<a href="${escapeHtml(safeUrl(m.url))}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
     .join("");
 }
 
@@ -74,8 +75,9 @@ export function keyWorksText(works) {
     const t = escapeHtml(w.title || "");
     const y = yearLabel(w);
     const ySuffix = y ? ` ${y}` : "";
-    return w.url
-      ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${t}</a>${ySuffix}`
+    const url = safeUrl(w.url);
+    return url
+      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${t}</a>${ySuffix}`
       : `${t}${ySuffix}`;
   }).join(", ");
 }
@@ -87,9 +89,10 @@ export function fmtCredit(raw) {
 }
 
 export function artistImage(a, big = false) {
-  if (!a.imageUrl) return "";
+  const url = safeUrl(a.imageUrl);
+  if (!url) return "";
   return `<figure class="artist-image ${big ? "big" : ""}">
-    <img src="${escapeHtml(a.imageUrl)}" alt="${escapeHtml(a.name)}" loading="lazy" />
+    <img src="${escapeHtml(url)}" alt="${escapeHtml(a.name)}" loading="lazy" />
     ${fmtCredit(a.imageCredit)}
   </figure>`;
 }

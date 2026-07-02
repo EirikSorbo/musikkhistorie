@@ -12,8 +12,8 @@ cd "$(dirname "$0")"
 VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"')
 [ -n "$VER" ] || { echo "Fant ikke VERSION i js/version.js"; exit 1; }
 
-for f in js/*.js *.html; do
+for f in js/*.js *.html tests/*/*.js; do
   perl -i -pe "s/\?v=[0-9][0-9.]*/?v=$VER/g" "$f"
 done
 
-echo "Satt ?v=$VER i alle js/*.js og *.html"
+echo "Satt ?v=$VER i alle js/*.js, *.html og tests/*/*.js"

@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=2.71";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.71";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.71";
+import { decadesForRange, isVisible } from "./limits.js?v=2.72";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.72";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.72";
 import {
   escapeHtml,
   linkDesc,
@@ -30,17 +30,17 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.71";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.71";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail } from "./ui-tech.js?v=2.71";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.71";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.71";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.71";
+} from "./ui-helpers.js?v=2.72";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.72";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.72";
+import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.72";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.72";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.72";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders };
-export { TECH_CATEGORIES, renderTechList, renderTechDetail };
+export { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage };
 export { buildTimeline, buildTechTimeline };
 export { renderDashboard, renderLimits };
 export { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
@@ -172,6 +172,13 @@ function spotlightCard(a, config, lc) {
   `;
 }
 
+// Én tilfeldig sorteringsnøkkel per artist per sidelast (se renderArtists).
+const _sessionOrder = new Map();
+function sessionOrderKey(id) {
+  if (!_sessionOrder.has(id)) _sessionOrder.set(id, Math.random());
+  return _sessionOrder.get(id);
+}
+
 export function renderArtists(el, state) {
   const { artists, filters, isTeacher, clientId, config, handlers } = state;
 
@@ -219,10 +226,10 @@ export function renderArtists(el, state) {
   if (hasFilter) {
     list.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   } else {
-    for (let i = list.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [list[i], list[j]] = [list[j], list[i]];
-    }
+    // Tilfeldig, men STABIL rekkefølge: hver artist får én tilfeldig nøkkel
+    // per sidelast. Uten dette stokket lista seg om ved hver sanntids-
+    // oppdatering (f.eks. når noen stemte), og kortene hoppet rundt.
+    list.sort((a, b) => sessionOrderKey(a.id) - sessionOrderKey(b.id));
   }
 
   if (list.length === 0) {
@@ -382,7 +389,7 @@ export function showSubsjangerInfo(label, opts = {}) {
   const resolved = resolveDesc(genreDescs, label, "sub");
   const descText = resolved.description;
   const kilder = resolved.kilder;
-  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" });
+  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, "sub");
 
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
@@ -413,6 +420,51 @@ export function showSubsjangerInfo(label, opts = {}) {
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
   const be = mBody.querySelector(".gx-edit-btn");
   if (be) be.addEventListener("click", () => onEdit(label, "sub"));
+  modalOpen(modal);
+  return true;
+}
+
+// Vis HOVEDSJANGER-beskrivelse (meta-nivå) i #modal-sjanger. Før fantes det
+// ingen visning av meta-nivået — tekstene kunne redigeres, men ble aldri vist.
+export function showMetaInfo(label, opts = {}) {
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
+  const modal = root.querySelector("#modal-sjanger");
+  const mTitle = root.querySelector("#sj-title");
+  const mBody = root.querySelector("#sj-body");
+  if (!modal || !mTitle || !mBody) return false;
+
+  const resolved = resolveDesc(genreDescs, label, "meta");
+  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, "meta");
+
+  const btnArea = [
+    onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
+    onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+    onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
+  ].filter(Boolean).join(" ");
+
+  // Noen hovedsjangre er OGSÅ tre-noder (Blues, Jazz, Gospel …) — tilby
+  // snarvei til sjanger-visningen, samme mønster som sub/main-kollisjoner.
+  const alsoMainGenre = isMainGenre(label);
+  const seeGenreBtn = alsoMainGenre
+    ? `<button type="button" class="btn ghost small gx-see-genre-btn" style="margin-bottom:10px">Se «${escapeHtml(label)}» (sjanger)</button>`
+    : "";
+
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  mTitle.textContent = `${label} (hovedsjanger)`;
+  mBody.innerHTML = `
+    ${seeGenreBtn}
+    <p class="gx-desc">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc("meta")}</span>`}</p>
+    ${buildKilderList(resolved.kilder, "Kilder")}
+    ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
+  wireLinks(mBody, lc);
+  const sg = mBody.querySelector(".gx-see-genre-btn");
+  if (sg) sg.addEventListener("click", () => showSjangerInfo(label, opts));
+  const b = mBody.querySelector(".gx-artists-btn");
+  if (b) b.addEventListener("click", () => onShowArtists({ label }));
+  const bp = mBody.querySelector(".gx-playlist-btn");
+  if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
+  const be = mBody.querySelector(".gx-edit-btn");
+  if (be) be.addEventListener("click", () => onEdit(label, "meta"));
   modalOpen(modal);
   return true;
 }
@@ -448,7 +500,7 @@ const byInfluenceThenName = (a, b) =>
 export function artistsInGenre(artists, label) {
   const sj = label.toLowerCase();
   return (artists || [])
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && (
+    .filter((a) => isVisible(a) && (
       a.metaGenre === label
       || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
       || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
@@ -459,7 +511,7 @@ export function artistsInGenre(artists, label) {
 // Aktive, synlige artister på et instrument.
 export function artistsByInstrument(artists, instrument) {
   return (artists || [])
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.instrument === instrument)
+    .filter((a) => isVisible(a) && a.instrument === instrument)
     .sort(byInfluenceThenName);
 }
 
@@ -505,7 +557,7 @@ export function buildPlaylistHtml(node, artists) {
   };
 
   const genreArtists = (artists || [])
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && matchesSj(a))
+    .filter((a) => isVisible(a) && matchesSj(a))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
 
   const seen = new Set();

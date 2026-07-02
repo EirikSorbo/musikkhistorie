@@ -5,14 +5,15 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.71";
-import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.71";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, fmtCredit, buildMainGenreList, setupModal, modalOpen } from "./ui.js?v=2.71";
-import { resolveDesc } from "./genre-descriptions.js?v=2.71";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.72";
+import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.72";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, buildMainGenreList, setupModal, modalOpen, techImage } from "./ui.js?v=2.72";
+import { resolveDesc } from "./genre-descriptions.js?v=2.72";
+import { safeUrl } from "./util.js?v=2.72";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.71";
-import { $ } from "./shared.js?v=2.71";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.72";
+import { $ } from "./shared.js?v=2.72";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -237,9 +238,7 @@ export function renderTechAdmin() {
   }
   el.className = "tech-grid";
   el.innerHTML = filtered.map(t => {
-    const img = t.imageUrl
-      ? `<figure class="artist-image"><img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name)}" loading="lazy" />${fmtCredit(t.imageCredit)}</figure>`
-      : "";
+    const img = techImage(t);
     const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
     const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
     return `<article class="card" data-tech-id="${escapeHtml(t.id)}">
@@ -355,6 +354,7 @@ export function renderPodkastAdmin() {
   el.innerHTML = state.podcasts.map((ep) => {
     const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
     const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
+    const audio = safeUrl(ep.audioUrl);
     return `
       <article class="podkast-episode">
         <div class="podkast-header">
@@ -362,7 +362,7 @@ export function renderPodkastAdmin() {
           ${duration}
         </div>
         ${desc}
-        ${ep.audioUrl ? `<audio controls preload="none" src="${escapeHtml(ep.audioUrl)}"></audio>` : ""}
+        ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
         <div class="podkast-actions">
           <button class="btn ghost small btn-danger-text" data-pod-delete="${ep.id}">Slett</button>
         </div>

@@ -5,18 +5,20 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state } from "./teacher-state.js?v=2.71";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.71";
-import { resolveDesc } from "./genre-descriptions.js?v=2.71";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit } from "./store.js?v=2.71";
+import { state } from "./teacher-state.js?v=2.72";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.72";
+import { resolveDesc } from "./genre-descriptions.js?v=2.72";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=2.72";
 
-function getCurrentEntityValues(entityType, entityId) {
+function getCurrentEntityValues(edit) {
+  const { entityType, entityId } = edit;
   switch (entityType) {
     case "artist": return state.artists.find(a => a.id === entityId) || {};
     case "tech":   return state.techItems.find(t => t.id === entityId) || {};
     case "subgenre": {
-      const d = resolveDesc(state.genreDescs, entityId, "main").description
-             || resolveDesc(state.genreDescs, entityId, "sub").description;
+      // Les fra SAMME nivå som forslaget gjelder, så diffen viser riktig
+      // eksisterende tekst (før: alltid main med sub som fallback).
+      const d = resolveDesc(state.genreDescs, entityId, genreEditLevel(edit)).description;
       return { description: d || "" };
     }
     case "decade-society": {
@@ -90,7 +92,7 @@ function openDiffModal(editId) {
     `Foreslått av ${edit.proposedBy || "Anonym"}. Klikk ✓ på radene du vil godta, ✕ på de du vil avvise. Velg «Lagre valgte endringer» til slutt.`;
   document.getElementById("diff-msg").textContent = "";
 
-  const current = getCurrentEntityValues(edit.entityType, edit.entityId);
+  const current = getCurrentEntityValues(edit);
   const body = document.getElementById("diff-body");
   body.innerHTML = renderEditDiff(edit.entityType, current, edit.proposedFields);
   wireEditDiff(body);

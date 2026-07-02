@@ -7,9 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.71";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.71";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.71";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.72";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.72";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.72";
+import { modalOpen, modalClose } from "./ui-modal.js?v=2.72";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -135,28 +136,29 @@ export function showSjangerInfo(label, opts = {}) {
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
   const be = mBody.querySelector(".gx-edit-btn");
   if (be) be.addEventListener("click", () => onEdit(n.l, "main"));
-  // Foreslå endring (student)
+  // Foreslå endring (student). entityId = n.l — SAMME dokument-ID som lærer-
+  // redigering bruker (tidligere n.f, som traff et annet dokument). Nivået
+  // «main» følger med så godkjenning skriver til riktig nivåfelt.
   const foot = root.querySelector("#sj-foot");
   const propBtn = root.querySelector("#sj-propose");
   if (foot && propBtn) {
     if (onPropose) {
-      const locked = hasPendingEdit?.("subgenre", n.f);
+      const locked = hasPendingEdit?.("subgenre", n.l);
       foot.style.display = "";
       propBtn.disabled = !!locked;
       propBtn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
       propBtn.onclick = () => onPropose({
         entityType: "subgenre",
-        entityId: n.f,
+        entityId: n.l,
         entityName: n.f,
+        level: "main",
         currentValues: { description: descText || "" },
       });
     } else {
       foot.style.display = "none";
     }
   }
-  window._modalZ = window._modalZ || 100;
-  modal.style.zIndex = ++window._modalZ;
-  modal.classList.add("open");
+  modalOpen(modal);
   return true;
 }
 
@@ -299,10 +301,10 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
 
   // Lukking av popup
   if (modal) {
-    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+    modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
     const cl = modal.querySelector(".modal-close");
-    if (cl) cl.addEventListener("click", () => modal.classList.remove("open"));
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") modal.classList.remove("open"); });
+    if (cl) cl.addEventListener("click", () => modalClose(modal));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") modalClose(modal); });
   }
 
   // Pan / zoom

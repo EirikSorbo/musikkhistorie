@@ -5,40 +5,26 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.71";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.72";
 import {
-  addArtist,
-  teacherDelete,
+  addArtistsBulk,
   deleteAllArtists,
   updateTech,
   addTech,
   saveDecadeDesc,
   saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.71";
-import { escapeHtml } from "./ui.js?v=2.71";
-import { $ } from "./shared.js?v=2.71";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.71";
+} from "./store.js?v=2.72";
+import { escapeHtml } from "./ui.js?v=2.72";
+import { $ } from "./shared.js?v=2.72";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.72";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.72";
+import { flattenGenreDescriptions } from "./import-format.js?v=2.72";
 
-const EXPORT_FIELDS = [
-  "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
-  "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
-  "geography", "description", "keyWorks", "musicExamples", "kilder",
-  "imageUrl", "imageCredit", "proposedBy", "priority", "teacherChecked",
-];
-
-const MERGE_LABELS = {
-  birthYear: "Fødselsår", deathYear: "Dødsår", gender: "Kjønn",
-  metaGenre: "Metasjanger", instrument: "Instrument",
-  mainGenre: "Sjangre", subGenre: "Undersjangre",
-  influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
-  recordLabel: "Plateselskap",
-  geography: "Geografi", description: "Beskrivelse",
-  keyWorks: "Sentrale verk", musicExamples: "Musikkeksempler", kilder: "Kilder",
-  imageUrl: "Bilde-URL", imageCredit: "Bildekreditering",
-};
-
-const COMPARE_FIELDS = Object.keys(MERGE_LABELS);
+// Feltlister og etiketter kommer fra det delte artist-skjemaet.
+const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
+const MERGE_LABELS = ARTIST_LABELS;
+const COMPARE_FIELDS = ARTIST_COMPARE_FIELDS;
 
 const mergeState = { queue: [], newArtists: [], index: 0 };
 
@@ -110,22 +96,6 @@ function handleExport() {
 }
 
 let pendingImportData = null;
-
-// Gjør sjangerbeskrivelser om til et flatt { navn: dokument }-oppslag uansett
-// kildeformat: nytt nestet { meta:{…}, main:{…}, sub:{…} }, eldre flatt
-// { navn: dokument }, eller legacy «subgenres». Nestet kjennes igjen på at ALLE
-// toppnøkler er meta/main/sub (ingen sjanger heter det).
-function flattenGenreDescriptions(obj) {
-  if (!obj || typeof obj !== "object") return {};
-  const keys = Object.keys(obj);
-  const nested = keys.length > 0 && keys.every((k) => ["meta", "main", "sub"].includes(k));
-  if (!nested) return obj; // alt flatt format
-  const flat = {};
-  for (const lv of ["meta", "main", "sub"]) {
-    for (const [id, doc] of Object.entries(obj[lv] || {})) flat[id] = doc;
-  }
-  return flat;
-}
 
 async function handleImportFile(file) {
   if (!file) return;
@@ -225,25 +195,17 @@ async function importTechItems(techArray) {
 
 async function handleReplace(data) {
   if (!confirm("Dette sletter ALLE eksisterende artister og erstatter med filen. Er du sikker?")) return;
-  let deleted = 0;
-  for (const a of state.artists) {
-    await teacherDelete(a.id);
-    deleted++;
+  const toAdd = data
+    .filter((a) => a.name)
+    .map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }));
+  try {
+    const deleted = await deleteAllArtists();
+    const added = await addArtistsBulk(toAdd);
+    alert(`${deleted} slettet, ${added} importert.`);
+  } catch (err) {
+    console.error("Import feilet:", err);
+    alert("Import feilet: " + err.message);
   }
-  let added = 0, failed = 0;
-  for (const a of data) {
-    if (!a.name) continue;
-    try {
-      await addArtist({ proposedBy: "Eirik Sørbø", status: "active", ...a });
-      added++;
-    } catch (err) {
-      failed++;
-      console.error("Import feilet for", a.name, err);
-    }
-  }
-  const parts = [`${deleted} slettet`, `${added} importert`];
-  if (failed) parts.push(`${failed} mislyktes`);
-  alert(parts.join(", ") + ".");
 }
 
 async function handleMergeFile(data) {
@@ -360,12 +322,11 @@ async function bulkMerge(choice) {
 
 async function finishMerge() {
   closeAdminModal("modal-merge");
-  let added = 0, updated = 0;
+  let updated = 0;
 
-  for (const a of mergeState.newArtists) {
-    await addArtist({ proposedBy: "Eirik Sørbø", status: "active", ...a });
-    added++;
-  }
+  const added = await addArtistsBulk(
+    mergeState.newArtists.map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }))
+  );
   for (const item of mergeState.queue) {
     if (Object.keys(item.resolved).length) {
       await updateArtistFields(item.existing.id, item.resolved);

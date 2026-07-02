@@ -5,18 +5,11 @@
 //  ui.js, så teacher.js og proposals.js importerer dem derfra som før.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.71";
+import { escapeHtml } from "./util.js?v=2.72";
+import { ARTIST_LABELS } from "./artist-schema.js?v=2.72";
 
 const FIELD_LABELS = {
-  artist: {
-    name: "Navn", birthYear: "Fødselsår", deathYear: "Dødsår", gender: "Kjønn",
-    metaGenre: "Metasjanger", instrument: "Instrument",
-    mainGenre: "Sjangre", subGenre: "Undersjangre",
-    influenceStart: "Innflytelse fra", influenceEnd: "Innflytelse til",
-    recordLabel: "Plateselskap", geography: "Geografi", description: "Beskrivelse",
-    keyWorks: "Sentrale verk", musicExamples: "Musikkeksempler", kilder: "Kilder",
-    imageUrl: "Bilde-URL", imageCredit: "Bildekreditering",
-  },
+  artist: ARTIST_LABELS,
   tech: {
     name: "Navn", category: "Kategori", adoptedYear: "Innført år",
     adoptedLabel: "Tidsangivelse", decade: "Tiår", description: "Beskrivelse",
@@ -40,7 +33,9 @@ export function fieldLabelFor(entityType, key) {
 }
 
 // Hjelper som viser/skjuler #sj-foot i sjanger-modalen og binder klikk.
-export function wireProposeFoot(root, onPropose, hasPendingEdit, entityType, entityId, entityName, currentValues) {
+// `level` (meta/main/sub) følger med sjangerbeskrivelse-forslag, så
+// godkjenningen vet hvilket nivåfelt teksten skal skrives til.
+export function wireProposeFoot(root, onPropose, hasPendingEdit, entityType, entityId, entityName, currentValues, level) {
   const foot = root.querySelector("#sj-foot");
   const btn = root.querySelector("#sj-propose");
   if (!foot || !btn) return;
@@ -49,7 +44,7 @@ export function wireProposeFoot(root, onPropose, hasPendingEdit, entityType, ent
   foot.style.display = "";
   btn.disabled = !!locked;
   btn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
-  btn.onclick = () => onPropose({ entityType, entityId, entityName, currentValues });
+  btn.onclick = () => onPropose({ entityType, entityId, entityName, currentValues, level });
 }
 
 // Deep-equal for primitiver, arrays, og enkle objekter (verdens-modellen vår).

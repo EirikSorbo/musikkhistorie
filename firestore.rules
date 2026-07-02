@@ -4,12 +4,16 @@ rules_version = '2';
 //  Firestore-sikkerhetsregler
 // ----------------------------------------------------------------------------
 //  Studenter trenger IKKE innlogging: alle med lenken kan lese, foreslå og
-//  stemme. Lærerhandlinger (veto, gjenopprett, slett, endre grenser) krever
+//  stemme. Lærerhandlinger (godkjenn, avvis, slett, endre grenser) krever
 //  innlogging med en godkjent Google-konto.
 //
-//  VIKTIG: Sett din(e) lærer-e-post(er) i isTeacher() under – den SAMME listen
-//  som i js/firebase-config.js (TEACHER_EMAILS). Husk å trykke «Publish» etter
-//  endring.
+//  VIKTIG: Denne fila må holdes i synk med det som er PUBLISERT i Firebase
+//  Console (Firestore → Rules → Publish). Lærer-e-postene i isTeacher() må
+//  matche TEACHER_EMAILS i js/firebase-config.js.
+//
+//  Kjent begrensning (bevisst utsatt): uten innlogging kan ikke reglene
+//  verifisere HVEM som stemmer — votedUpBy kan manipuleres av alle med
+//  lenken. Løsningen er anonym Firebase Auth + uid-baserte regler.
 // ============================================================================
 
 service cloud.firestore {
@@ -27,33 +31,25 @@ service cloud.firestore {
     match /artists/{id} {
       allow read: if true;
 
-      // Hvem som helst kan opprette et forslag, men feltene må være gyldige.
-      // Lærer kan opprette uten feltrestriksjoner (import).
+      // Studenter kan sende inn forslag; de opprettes alltid som "pending"
+      // og uten stemmer. Lærer kan opprette uten feltrestriksjoner (import).
       allow create: if isTeacher() || (
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
-        request.resource.data.genre is string &&
+        request.resource.data.metaGenre is string &&
         request.resource.data.influenceStart is number &&
-        request.resource.data.status == "active" &&
-        request.resource.data.votedOutBy.size() == 0
+        request.resource.data.status == "pending" &&
+        request.resource.data.votedUpBy is list &&
+        request.resource.data.votedUpBy.size() == 0
       );
 
-      // Oppdatering:
-      //  • Lærer kan endre alt.
-      //  • Student (uten innlogging) kan KUN stemme: endre votedOutBy/status/
-      //    removedBy, ikke røre lærer-beskyttelse, og ikke sette removedBy til
-      //    "teacher".
-      allow update: if isTeacher() || (
+      // Studenter kan KUN endre stemmelista («Svært relevant» / angre).
+      // Alt annet (status, prioritet, innhold) krever lærer.
+      allow update: if isTeacher() ||
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(["votedOutBy", "votedUpBy", "status", "removedBy"]) &&
-        request.resource.data.teacherProtected == resource.data.teacherProtected &&
-        !("teacherVetoed" in request.resource.data.diff(resource.data).affectedKeys()) &&
-        (request.resource.data.removedBy == null ||
-         request.resource.data.removedBy == "votes")
-      );
+          .hasOnly(["votedUpBy"]);
 
-      // Bare lærer kan slette permanent
       allow delete: if isTeacher();
     }
 

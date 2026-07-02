@@ -1,10 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.71";
-import { DEFAULT_CONFIG, decadesForRange } from "./limits.js?v=2.71";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.71";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.71";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.71";
-import { initExplore } from "./explore.js?v=2.71";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.71";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId } from "./store.js?v=2.72";
+import { DEFAULT_CONFIG, decadesForRange, isVisible } from "./limits.js?v=2.72";
+import { debounce } from "./util.js?v=2.72";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.72";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.72";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.72";
+import { initExplore } from "./explore.js?v=2.72";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.72";
 
 const clientId = getClientId();
 
@@ -25,9 +26,15 @@ function hasPendingEdit(entityType, entityId) {
   return state.pendingEdits.some((p) => p.entityType === entityType && String(p.entityId) === String(entityId));
 }
 
+// Feil ved stemming skal ikke svelges stille — da tror studenten at stemmen
+// ble registrert.
+const voteFailed = (err) => {
+  console.error("Stemme feilet:", err);
+  alert("Kunne ikke registrere stemmen (" + (err?.message || err) + "). Prøv igjen.");
+};
 const handlers = {
-  voteUp: (id) => voteUp(id, clientId),
-  undoVoteUp: (id) => undoVoteUp(id, clientId),
+  voteUp: (id) => voteUp(id, clientId).catch(voteFailed),
+  undoVoteUp: (id) => undoVoteUp(id, clientId).catch(voteFailed),
 };
 
 let explore = null;
@@ -195,7 +202,7 @@ let currentPicks = [];
 
 function renderSpotlight() {
   if (!state.config) return;
-  const pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+  const pool = state.artists.filter(isVisible);
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   currentPicks = shuffled.slice(0, 1);
   renderSpotlightCards($("#spotlight"), currentPicks, state.config, explore.buildLinkCtx());
@@ -204,7 +211,7 @@ function renderSpotlight() {
 let dagensArtistId = null;
 function renderDagensArtist() {
   if (!state.config) return;
-  const pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+  const pool = state.artists.filter(isVisible);
   if (!pool.length) return;
   if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
   const artist = pool.find((a) => a.id === dagensArtistId) || pool[0];
@@ -224,7 +231,7 @@ function renderFilterResults() {
     return;
   }
 
-  let pool = state.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+  let pool = state.artists.filter(isVisible);
 
   if (state.filters.mainGenre) {
     const sj = state.filters.mainGenre.toLowerCase();
@@ -321,13 +328,16 @@ function updatePrioButtons() {
 }
 
 function setupFilters() {
+  // Søket debounces så ikke hele lista re-rendres (inkl. linkifisering av
+  // alle beskrivelser) for hvert eneste tastetrykk.
+  const rerender = () => { renderFilterResults(); renderList(); };
+  const rerenderDebounced = debounce(rerender, 200);
   ["sp-search", "sp-sjanger", "sp-genre", "sp-instrument", "sp-decade"].forEach((id) => {
     const el = document.getElementById(id);
     el.addEventListener(id === "sp-search" ? "input" : "change", (e) => {
       const key = id.replace("sp-", "");
       state.filters[key] = e.target.value;
-      renderFilterResults();
-      renderList();
+      (id === "sp-search" ? rerenderDebounced : rerender)();
     });
   });
   document.querySelectorAll("#sp-prio-bar .prio-filter-btn").forEach((btn) => {

@@ -1,6 +1,8 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.71";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.71";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.71";
+import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.72";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.72";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.72";
+import { isVisible } from "./limits.js?v=2.72";
+import { safeUrl } from "./util.js?v=2.72";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -479,6 +481,7 @@ function renderPodkastList() {
   el.innerHTML = s.podcasts.map((ep) => {
     const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
     const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
+    const audio = safeUrl(ep.audioUrl);
     return `
       <article class="podkast-episode">
         <div class="podkast-header">
@@ -486,7 +489,7 @@ function renderPodkastList() {
           ${duration}
         </div>
         ${desc}
-        ${ep.audioUrl ? `<audio controls preload="none" src="${escapeHtml(ep.audioUrl)}"></audio>` : ""}
+        ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
       </article>`;
   }).join("");
 }
@@ -619,7 +622,7 @@ function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
   const s = getState();
-  const active = s.artists.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+  const active = s.artists.filter(isVisible);
   const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
 
   // Tre-drevet: alle sjangre fra treet vises alltid. De artist-taggede er en
@@ -638,6 +641,7 @@ function openSubgenreList() {
 
   // Hovedsjangre (metaGenre): den grøvste grupperingen. Treet gir fasiten
   // (GENEALOGY_META_GENRES); artist-taggede metaGenre tas med for sikkerhets skyld.
+  // data-meta (ikke data-sjanger) → klikk åpner META-nivåets beskrivelse.
   const withMetaArtists = new Set(active.map(a => a.metaGenre).filter(Boolean));
   const meta = [...new Set([...GENEALOGY_META_GENRES, ...withMetaArtists])]
     .sort((a, b) => a.localeCompare(b, "no"));
@@ -645,7 +649,7 @@ function openSubgenreList() {
   hlEl.innerHTML = meta.length
     ? meta.map((m) => {
         const empty = !withMetaArtists.has(m);
-        return `<button class="tag tag-sjanger${checkedMainGenres.includes(m) ? " is-checked" : ""}${empty ? " is-empty" : ""}" data-sjanger="${escapeHtml(m)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(m)}</button>`;
+        return `<button class="tag tag-sjanger${checkedMainGenres.includes(m) ? " is-checked" : ""}${empty ? " is-empty" : ""}" data-meta="${escapeHtml(m)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(m)}</button>`;
       }).join("")
     : `<p class="muted">Ingen hovedsjangre registrert ennå.</p>`;
 
@@ -680,7 +684,7 @@ function openSubgenreInfo(subgenreId) {
   sgiDesc.className = resolved.description ? "" : "gx-missing";
 
   const artists = s.artists
-    .filter(a => a.status === "active" && (a.priority || 0) !== -1 && ((a.subGenre || []).includes(subgenreId) || (a.mainGenre || []).includes(subgenreId)))
+    .filter(a => isVisible(a) && ((a.subGenre || []).includes(subgenreId) || (a.mainGenre || []).includes(subgenreId)))
     .sort((a, b) => a.name.localeCompare(b.name, "no"));
 
   const el = document.getElementById("sgi-artists");
@@ -798,6 +802,13 @@ function wireModals() {
   }
 
   document.addEventListener("click", (e) => {
+    const metaBtn = e.target.closest("[data-meta]");
+    if (metaBtn) {
+      const name = metaBtn.dataset.meta;
+      showMetaInfo(name, sjangerOpts());
+      if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
+      return;
+    }
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
       const name = sjBtn.dataset.sjanger;

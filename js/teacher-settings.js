@@ -5,10 +5,10 @@
 //  grenser. Lagrer hele config-objektet via updateConfig.
 // ============================================================================
 
-import { state, int, splitList, setupModals } from "./teacher-state.js?v=2.71";
-import { updateConfig } from "./store.js?v=2.71";
-import { escapeHtml } from "./ui.js?v=2.71";
-import { CONFIGURED, $ } from "./shared.js?v=2.71";
+import { state, int, splitList, setupModals } from "./teacher-state.js?v=2.72";
+import { updateConfig } from "./store.js?v=2.72";
+import { escapeHtml } from "./ui.js?v=2.72";
+import { CONFIGURED, $ } from "./shared.js?v=2.72";
 
 export function setupAdmin() {
   setupModals();
@@ -33,7 +33,6 @@ async function saveSection(section) {
   if (section === "general") {
     updates = {
       maxTotal: int($("#cfg-total").value, state.config.maxTotal),
-      voteOutThreshold: int($("#cfg-threshold").value, state.config.voteOutThreshold),
     };
   } else if (section === "decade") {
     updates = {
@@ -64,7 +63,6 @@ async function saveSection(section) {
 export function fillAdminForm() {
   const c = state.config;
   $("#cfg-total").value = c.maxTotal;
-  $("#cfg-threshold").value = c.voteOutThreshold;
   $("#mdec-default").value = c.maxPerDecade;
   $("#mdec-decades").value = c.decades.join(", ");
   $("#mgen-default").value = c.maxPerMetaGenre;

@@ -20,6 +20,7 @@ import {
   onSnapshot,
   runTransaction,
   serverTimestamp,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth,
@@ -29,67 +30,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.71";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.71";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.71";
+import { firebaseConfig } from "./firebase-config.js?v=2.72";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.72";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.72";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.72";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.72";
 
-// Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
-// vises riktig uten å skrive om databasen). META_DROP = metasjangre som ikke
-// lenger finnes (Rock flyttet til annet pensum).
-const META_RENAME = {
-  "Afroamerikansk populærmusikk": "R&B",
-  "Elektronisk musikk": "Klubbmusikk",
-};
-const META_DROP = new Set(["Rock"]);
-
-// Normaliserer rå Firestore-data til intern ny modell.
-// Idempotent — kan kjøres på data som allerede er i ny form.
-export function normalizeArtist(a) {
-  const out = { ...a };
-
-  if (META_RENAME[out.metaGenre]) out.metaGenre = META_RENAME[out.metaGenre];
-
-  out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
-  out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];
-
-  // keyWorks: streng → array av {title, year?, url?}
-  if (typeof out.keyWorks === "string") {
-    out.keyWorks = out.keyWorks
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((title) => ({ title }));
-  } else if (!Array.isArray(out.keyWorks)) {
-    out.keyWorks = [];
-  }
-
-  // kilder: array av strenger → array av {text, url?}
-  if (Array.isArray(out.kilder)) {
-    out.kilder = out.kilder.map((k) =>
-      typeof k === "string" ? { text: k } : { text: k.text || "", url: k.url || "" }
-    ).filter((k) => k.text);
-  } else {
-    out.kilder = [];
-  }
-
-  // musicExamples: bakoverkompatibilitet fra gamle «links»
-  if (!Array.isArray(out.musicExamples)) {
-    const old = Array.isArray(out.links) ? out.links : [];
-    out.musicExamples = old.map((l) => ({
-      label: l.label || "",
-      url: l.url || "",
-      year: l.year || null,
-      performanceYear: l.performanceYear || null,
-    })).filter((m) => m.url);
-  }
-  delete out.links;
-
-  // Bilder
-  out.imageUrl = out.imageUrl || "";
-  out.imageCredit = out.imageCredit || "";
-
-  return out;
-}
+// Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
+// re-eksporteres her så eksisterende importer fortsatt virker.
+export { normalizeArtist };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -147,11 +96,10 @@ function normalizeConfig(d) {
   delete c.genres; delete c.genreLimits; delete c.maxPerGenre;
   // Treet er sannhetskilde: metasjangre derfra skal alltid være med, selv om
   // læreren har lagret en egen liste. Lærertillegg beholdes, treets vinner.
-  // Lagrede navn migreres gjennom META_RENAME, og utgåtte (META_DROP) fjernes,
-  // så omdøpte/fjernede metasjangre ikke henger igjen fra eldre config.
+  // Lagrede navn migreres gjennom META_RENAME, så omdøpte metasjangre ikke
+  // henger igjen fra eldre config.
   const saved = (Array.isArray(c.metaGenres) ? c.metaGenres : [])
-    .map((m) => META_RENAME[m] || m)
-    .filter((m) => !META_DROP.has(m));
+    .map((m) => META_RENAME[m] || m);
   c.metaGenres = [...new Set([...GENEALOGY_META_GENRES, ...saved])];
   return c;
 }
@@ -193,61 +141,48 @@ export function signOutTeacher() {
 //  STUDENTHANDLINGER
 // ----------------------------------------------------------------------------
 
-// Legg inn et nytt forslag. Normaliserer inn til ny modell før skriving.
-export async function addArtist(data) {
+// Bygger Firestore-dokumentet for en artist ut fra skjemaet (artist-schema.js)
+// + systemfeltene. Delt av addArtist og addArtistsBulk.
+function buildArtistDoc(data) {
   const n = normalizeArtist(data);
-  return addDoc(artistsCol, {
-    name: n.name,
-    birthYear: n.birthYear ?? null,
-    deathYear: n.deathYear ?? null,
-    gender: n.gender ?? "",
-    metaGenre: n.metaGenre ?? "",
-    instrument: n.instrument ?? "",
-    mainGenre: n.mainGenre,
-    subGenre: n.subGenre,
-    influenceStart: n.influenceStart ?? null,
-    influenceEnd: n.influenceEnd ?? null,
-    recordLabel: n.recordLabel ?? "",
-    description: n.description ?? "",
-    keyWorks: n.keyWorks,
-    kilder: n.kilder,
-    imageUrl: n.imageUrl,
-    imageCredit: n.imageCredit,
-    geography: n.geography ?? "",
-    musicExamples: n.musicExamples ?? [],
-    proposedBy: n.proposedBy ?? "Anonym",
-    status: data.status === "active" ? "active" : "pending",
-    removedBy: null,
-    teacherProtected: false,
+  const docData = {};
+  for (const f of ARTIST_FIELDS) {
+    docData[f.key] = n[f.key] ?? emptyValueFor(f.type);
+  }
+  // Status bevares ved lærer-import (active/removed); alt annet → pending.
+  const status = ["active", "removed"].includes(data.status) ? data.status : "pending";
+  return {
+    ...docData,
+    proposedBy: n.proposedBy || "Anonym",
+    status,
+    removedBy: status === "removed" ? "teacher" : null,
     teacherChecked: n.teacherChecked || false,
     priority: n.priority || 0,
-    votedOutBy: [],
     votedUpBy: [],
     addedYear: new Date().getFullYear(),
     createdAt: serverTimestamp(),
-  });
+  };
 }
 
-// Stem ut et forslag ("ikke relevant"). Auto-fjernes ved nådd terskel.
-// Bruker transaksjon for å lese fersk tilstand og unngå kappløp.
-export async function voteOut(artistId, clientId, threshold) {
-  const ref = doc(db, "artists", artistId);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) return;
-    const a = snap.data();
-    const voters = new Set(a.votedOutBy || []);
-    voters.add(clientId);
-    const votedOutBy = [...voters];
+// Legg inn et nytt forslag. Normaliserer inn til ny modell før skriving.
+export async function addArtist(data) {
+  return addDoc(artistsCol, buildArtistDoc(data));
+}
 
-    const update = { votedOutBy };
-    // Auto-fjern bare hvis ikke lærer-beskyttet og terskel nådd
-    if (!a.teacherProtected && votedOutBy.length >= threshold) {
-      update.status = "removed";
-      update.removedBy = "votes";
+// Firestore tillater maks 500 operasjoner per batch.
+const BATCH_LIMIT = 500;
+
+// Legg inn mange artister på én gang (import). Batchet — dramatisk raskere
+// enn å skrive ett og ett dokument.
+export async function addArtistsBulk(list) {
+  for (let i = 0; i < list.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const data of list.slice(i, i + BATCH_LIMIT)) {
+      batch.set(doc(artistsCol), buildArtistDoc(data));
     }
-    tx.update(ref, update);
-  });
+    await batch.commit();
+  }
+  return list.length;
 }
 
 // Stem frem et forslag ("svært relevant")
@@ -273,38 +208,9 @@ export async function undoVoteUp(artistId, clientId) {
   });
 }
 
-// Angre egen utstemming
-export async function undoVoteOut(artistId, clientId) {
-  const ref = doc(db, "artists", artistId);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) return;
-    const a = snap.data();
-    const votedOutBy = (a.votedOutBy || []).filter((id) => id !== clientId);
-
-    const update = { votedOutBy };
-    // Hvis forslaget var fjernet av stemmer og nå er under terskel, gjenåpne
-    if (a.removedBy === "votes") {
-      update.status = "active";
-      update.removedBy = null;
-    }
-    tx.update(ref, update);
-  });
-}
-
 // ----------------------------------------------------------------------------
 //  LÆRERHANDLINGER (krever lærerkode i appen)
 // ----------------------------------------------------------------------------
-
-// Lærer fjerner et forslag (veto)
-export async function teacherRemove(artistId) {
-  const ref = doc(db, "artists", artistId);
-  return setDoc(
-    ref,
-    { status: "removed", removedBy: "teacher" },
-    { merge: true }
-  );
-}
 
 // Lærer godkjenner et ventende forslag
 export async function teacherApprove(artistId) {
@@ -316,16 +222,6 @@ export async function teacherApprove(artistId) {
 export async function teacherReject(artistId) {
   const ref = doc(db, "artists", artistId);
   return setDoc(ref, { status: "removed", removedBy: "teacher" }, { merge: true });
-}
-
-// Lærer gjenoppretter et fjernet forslag og beskytter det mot ny auto-fjerning
-export async function teacherRestore(artistId) {
-  const ref = doc(db, "artists", artistId);
-  return setDoc(
-    ref,
-    { status: "active", removedBy: null, teacherProtected: true },
-    { merge: true }
-  );
 }
 
 // Sett prioritetsnivå (3=viktigst, 2=viktig, 1=mindre viktig, 0=ingen)
@@ -343,11 +239,16 @@ export async function updateArtistFields(artistId, fields) {
   return setDoc(doc(db, "artists", artistId), fields, { merge: true });
 }
 
-// Slett alle artister (full reset)
+// Slett alle artister (full reset). Batchet.
 export async function deleteAllArtists() {
   const snapshot = await getDocs(artistsCol);
-  const deletes = snapshot.docs.map(d => deleteDoc(d.ref));
-  return Promise.all(deletes);
+  const docs = snapshot.docs;
+  for (let i = 0; i < docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const d of docs.slice(i, i + BATCH_LIMIT)) batch.delete(d.ref);
+    await batch.commit();
+  }
+  return docs.length;
 }
 
 // ----------------------------------------------------------------------------
@@ -450,24 +351,36 @@ export async function deleteGenreDesc(genreId) {
 // reglene må tillate skriving til genreDescriptions).
 export async function migrateGenreDescriptions() {
   const target = await getDocs(genreDescsCol);
-  if (!target.empty) return { migrated: 0, skipped: true };
   const legacy = await getDocs(legacySubgenresCol);
-  if (legacy.empty) return { migrated: 0, skipped: false };
+  if (!target.empty) {
+    // Status-melding for pensjonering av migreringskoden: når legacy melder 0
+    // (eller bare utdaterte kopier), kan dobbeltlyttingen og denne funksjonen
+    // fjernes helt (og «subgenres»-samlingen slettes i Firebase Console).
+    console.info(
+      `Sjangerbeskrivelse-migrering: FERDIG. genreDescriptions har ${target.size} dokument(er); ` +
+      `legacy «subgenres» har ${legacy.size} dokument(er) igjen` +
+      (legacy.size ? " (kun gamle kopier — kan slettes i Firebase Console)." : ".")
+    );
+    return { migrated: 0, skipped: true, legacyCount: legacy.size };
+  }
+  if (legacy.empty) return { migrated: 0, skipped: false, legacyCount: 0 };
   let migrated = 0;
   for (const d of legacy.docs) {
     await setDoc(doc(db, "genreDescriptions", d.id), d.data(), { merge: true });
     migrated++;
   }
   console.info(`Migrerte ${migrated} sjangerbeskrivelse(r): subgenres → genreDescriptions.`);
-  return { migrated, skipped: false };
+  return { migrated, skipped: false, legacyCount: legacy.size };
 }
 
 // Engangsopprydding: fjern foreldreløse beskrivelses-dokumenter som ligger under
 // GAMLE metasjanger-navn (META_RENAME-nøkler, f.eks. «Afroamerikansk
-// populærmusikk») eller utgåtte navn (META_DROP). Beskrivelsene hører nå under de
-// nye navnene; de gamle er rene rester etter omdøpingen. Idempotent.
+// populærmusikk»). Beskrivelsene hører nå under de nye navnene; de gamle er
+// rene rester etter omdøpingen. Idempotent. NB: kun omdøpte navn — «Rock» er
+// gjeninnført i treet og skal IKKE ryddes bort (tidligere bug: en Rock-
+// beskrivelse ble slettet ved hver lærer-oppstart).
 export async function cleanupRenamedGenreDescs() {
-  const stale = [...Object.keys(META_RENAME), ...META_DROP];
+  const stale = Object.keys(META_RENAME);
   let removed = 0;
   for (const id of stale) {
     const ref = doc(db, "genreDescriptions", id);
@@ -526,15 +439,25 @@ export function subscribePendingEdits(callback) {
 
 // Legg inn et endringsforslag. `proposedFields` skal kun inneholde feltene
 // som faktisk er endret — UI-koden gjør differansen mot dagens verdier.
-export async function addPendingEdit({ entityType, entityId, entityName, proposedFields, proposedBy }) {
+// `level` (meta/main/sub) brukes kun av entityType "subgenre", så godkjenning
+// vet hvilket nivåfelt i genreDescriptions teksten skal skrives til.
+export async function addPendingEdit({ entityType, entityId, entityName, proposedFields, proposedBy, level }) {
   return addDoc(pendingEditsCol, {
     entityType,
     entityId,
     entityName: entityName || "",
     proposedFields: proposedFields || {},
     proposedBy: proposedBy || "Anonym",
+    ...(level ? { level } : {}),
     createdAt: serverTimestamp(),
   });
+}
+
+// Nivået et sjangerbeskrivelse-forslag hører til. Eldre forslag mangler
+// level-feltet — da gjettes det ut fra om navnet er en tre-sjanger.
+export function genreEditLevel(edit) {
+  if (edit.level) return edit.level;
+  return isMainGenre(edit.entityId) ? "main" : "sub";
 }
 
 // Lærer godkjenner valgte felter. `approvedKeys` er liste over feltnøklene
@@ -546,9 +469,15 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
   if (!snap.exists()) return;
   const data = snap.data();
 
-  const toApply = {};
+  let toApply = {};
   for (const k of approvedKeys || []) {
     if (k in (data.proposedFields || {})) toApply[k] = data.proposedFields[k];
+  }
+
+  // Sjangerbeskrivelser er nivådelte ({ meta/main/sub: { description, … } });
+  // et flatt description-felt leses ikke av appen. Pakk derfor inn i riktig nivå.
+  if (data.entityType === "subgenre" && Object.keys(toApply).length) {
+    toApply = { [genreEditLevel(data)]: toApply };
   }
 
   const targetRef = pendingEditTargetRef(data.entityType, data.entityId);

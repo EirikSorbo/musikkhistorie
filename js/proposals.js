@@ -8,33 +8,28 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=2.71";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=2.71";
+import { addPendingEdit, addTechProposal } from "./store.js?v=2.72";
+import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=2.72";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=2.72";
+import { GENDERS } from "./limits.js?v=2.72";
+
+// Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
+// «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
+// hovedskjemaene og kan ikke foreslås her.
+const ARTIST_PROPOSAL_SPECS = ARTIST_FIELDS
+  .filter((f) => f.type !== "complex")
+  .map((f) => {
+    if (f.type === "gender") {
+      return { ...f, type: "select", options: [{ value: "", label: "Velg…" }, ...GENDERS] };
+    }
+    if (f.type === "csv") {
+      return { ...f, label: `${f.label} (kommaseparert)` };
+    }
+    return { ...f };
+  });
 
 const FIELD_SPECS = {
-  artist: [
-    { key: "name", label: "Navn", type: "text" },
-    { key: "birthYear", label: "Fødselsår", type: "number" },
-    { key: "deathYear", label: "Dødsår", type: "number" },
-    { key: "gender", label: "Kjønn", type: "select", options: [
-      { value: "", label: "Velg…" },
-      { value: "mann", label: "Mann" },
-      { value: "kvinne", label: "Kvinne" },
-      { value: "annet", label: "Annet" },
-      { value: "ukjent", label: "Ukjent" },
-    ] },
-    { key: "metaGenre", label: "Metasjanger", type: "text" },
-    { key: "instrument", label: "Instrument", type: "text" },
-    { key: "mainGenre", label: "Sjangre (kommaseparert)", type: "csv" },
-    { key: "subGenre", label: "Undersjangre (kommaseparert)", type: "csv" },
-    { key: "influenceStart", label: "Innflytelse fra", type: "number" },
-    { key: "influenceEnd", label: "Innflytelse til", type: "number" },
-    { key: "recordLabel", label: "Plateselskap", type: "text" },
-    { key: "geography", label: "Virkested", type: "text" },
-    { key: "description", label: "Beskrivelse", type: "textarea", full: true },
-    { key: "imageUrl", label: "Bilde-URL", type: "text", full: true },
-    { key: "imageCredit", label: "Bildekreditering", type: "text", full: true },
-  ],
+  artist: ARTIST_PROPOSAL_SPECS,
   tech: [
     { key: "name", label: "Navn", type: "text" },
     { key: "category", label: "Kategori", type: "select", options: [
@@ -155,6 +150,7 @@ export function openProposalEditor(config) {
         entityName: config.entityName,
         proposedFields: diff,
         proposedBy: document.getElementById("prop-by").value.trim() || "Anonym",
+        level: config.level,
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg success";
