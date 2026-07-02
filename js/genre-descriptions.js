@@ -3,7 +3,8 @@
 // ----------------------------------------------------------------------------
 //  Beskrivelser kommer KUN fra data (Firestore-«genreDescriptions» / import-JSON), per
 //  nivå: doc = sjangernavn, med valgfrie felt meta/main/sub = { description,
-//  kilder }. Eldre flat { description, kilder } leses som delt fallback.
+//  kilder }. Det finnes INGEN fallback: hvert nivå leses kun fra sitt eget
+//  felt (meta/main/sub). Et eldre flatt { description } brukes IKKE.
 //  Det finnes BEVISST ingen seed/standardtekst — mangler en beskrivelse, skal
 //  det vises en tydelig feilmelding (missingDesc), ikke en fallback som skjuler
 //  at sjangeren ikke er synkronisert. Nivå: meta (metasjanger), main (tre-
@@ -19,8 +20,9 @@ export function missingDesc(level) {
 
 function fromOverride(o, level) {
   if (!o) return null;
+  // KUN nivå-spesifikk tekst. Ingen fallback til flat/annet nivå — mangler
+  // beskrivelsen på DETTE nivået, skal kalleren vise missingDesc (bevisst valg).
   if (o[level] && o[level].description) return { description: o[level].description, kilder: o[level].kilder || [] };
-  if (o.description) return { description: o.description, kilder: o.kilder || [] }; // eldre flat (delt)
   return null;
 }
 
