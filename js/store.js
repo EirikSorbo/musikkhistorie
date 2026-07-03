@@ -32,11 +32,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.76";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.76";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.76";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.76";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.76";
+import { firebaseConfig } from "./firebase-config.js?v=2.77";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.77";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.77";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.77";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.77";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.77";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
@@ -445,9 +446,14 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
   if (!snap.exists()) return;
   const data = snap.data();
 
+  // Hviteliste: kun felter som lovlig kan foreslås for denne entityType-en
+  // slipper gjennom. Stopper at et pendingEdit smugler privilegiefelter
+  // (status, priority, votedUpBy, teacherChecked …) inn i måldokumentet via en
+  // lærer som godkjenner uvitende.
+  const allowed = PROPOSABLE_KEYS[data.entityType] || [];
   let toApply = {};
   for (const k of approvedKeys || []) {
-    if (k in (data.proposedFields || {})) toApply[k] = data.proposedFields[k];
+    if (allowed.includes(k) && k in (data.proposedFields || {})) toApply[k] = data.proposedFields[k];
   }
 
   // Sjangerbeskrivelser er nivådelte ({ meta/main/sub: { description, … } });

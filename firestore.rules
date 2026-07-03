@@ -55,10 +55,19 @@ service cloud.firestore {
       allow read: if true;
 
       // Studenter (anonymt innlogget) kan sende inn forslag; de opprettes
-      // alltid som "pending" og uten stemmer. Lærer kan opprette uten
-      // feltrestriksjoner (import).
+      // alltid som "pending", uten stemmer og uten lærer-privilegier. Kun
+      // kjente felter tillates (hasOnly), og de store tekst-/listefeltene har
+      // størrelsestak — så ingen kan blåse opp dokumentene og tære på kvoten.
+      // Lærer kan opprette uten feltrestriksjoner (import).
       allow create: if isTeacher() || (
         request.auth != null &&
+        request.resource.data.keys().hasOnly([
+          "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
+          "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
+          "geography", "description", "keyWorks", "musicExamples", "kilder",
+          "imageUrl", "imageCredit", "proposedBy", "status", "removedBy",
+          "teacherChecked", "priority", "votedUpBy", "addedYear", "createdAt"
+        ]) &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
@@ -66,7 +75,16 @@ service cloud.firestore {
         request.resource.data.influenceStart is number &&
         request.resource.data.status == "pending" &&
         request.resource.data.votedUpBy is list &&
-        request.resource.data.votedUpBy.size() == 0
+        request.resource.data.votedUpBy.size() == 0 &&
+        request.resource.data.get("priority", 0) == 0 &&
+        request.resource.data.get("teacherChecked", false) == false &&
+        request.resource.data.get("removedBy", null) == null &&
+        request.resource.data.get("description", "").size() <= 5000 &&
+        request.resource.data.get("imageUrl", "").size() <= 2000 &&
+        request.resource.data.get("proposedBy", "").size() <= 100 &&
+        request.resource.data.get("keyWorks", []).size() <= 50 &&
+        request.resource.data.get("musicExamples", []).size() <= 50 &&
+        request.resource.data.get("kilder", []).size() <= 50
       );
 
       // Studenter kan KUN endre stemmelista, og KUN sin egen uid.
@@ -112,10 +130,17 @@ service cloud.firestore {
       // status:"pending". Lærer kan endre/slette alt og opprette fritt.
       allow create: if isTeacher() || (
         request.auth != null &&
+        request.resource.data.keys().hasOnly([
+          "name", "category", "decade", "adoptedYear", "adoptedLabel",
+          "description", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt"
+        ]) &&
         request.resource.data.status == "pending" &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
-        request.resource.data.name.size() <= 120
+        request.resource.data.name.size() <= 120 &&
+        request.resource.data.get("description", "").size() <= 5000 &&
+        request.resource.data.get("imageUrl", "").size() <= 2000 &&
+        request.resource.data.get("proposedBy", "").size() <= 100
       );
       allow update, delete: if isTeacher();
     }
@@ -127,9 +152,17 @@ service cloud.firestore {
       allow read: if true;
       allow create: if (
         request.auth != null &&
+        request.resource.data.keys().hasOnly([
+          "entityType", "entityId", "entityName", "proposedFields",
+          "proposedBy", "level", "createdAt"
+        ]) &&
         request.resource.data.entityType in ["artist", "tech", "subgenre", "decade-society", "decade-tech"] &&
         request.resource.data.entityId is string &&
-        request.resource.data.proposedFields is map
+        request.resource.data.entityId.size() <= 200 &&
+        request.resource.data.proposedFields is map &&
+        request.resource.data.proposedFields.size() <= 30 &&
+        request.resource.data.get("entityName", "").size() <= 200 &&
+        request.resource.data.get("proposedBy", "").size() <= 100
       );
       allow update, delete: if isTeacher();
     }

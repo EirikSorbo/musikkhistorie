@@ -5,8 +5,9 @@
 //  ui.js, så teacher.js og proposals.js importerer dem derfra som før.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.76";
-import { ARTIST_LABELS } from "./artist-schema.js?v=2.76";
+import { escapeHtml } from "./util.js?v=2.77";
+import { ARTIST_LABELS } from "./artist-schema.js?v=2.77";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.77";
 
 const FIELD_LABELS = {
   artist: ARTIST_LABELS,
@@ -96,7 +97,13 @@ function formatDiffValue(v) {
 // og en .diff-action-knapp som veksler tilstand mellom none/approved/rejected.
 // Kalleren binder klikk-handler og leser ut valgte felter ved lagring.
 export function renderEditDiff(entityType, currentValues, proposedFields) {
-  const keys = Object.keys(proposedFields || {});
+  // Vis kun felter som lovlig kan foreslås for denne entityType-en. Nøkler
+  // utenfor lista kan bare stamme fra et smuglet forslag (ikke fra editoren),
+  // og de ville uansett blitt filtrert bort i approvePendingEdit. Ukjent
+  // entityType (skal ikke skje) → vis alt, men godkjenning skriver ingenting.
+  const allowed = PROPOSABLE_KEYS[entityType];
+  const keys = Object.keys(proposedFields || {})
+    .filter((k) => !allowed || allowed.includes(k));
   if (!keys.length) {
     return `<p class="muted empty">Ingen endringer i dette forslaget.</p>`;
   }

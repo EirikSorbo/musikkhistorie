@@ -80,6 +80,21 @@ test("student kan IKKE sende inn med status active eller uten metaGenre", async 
   await assertFails(anonDb().collection("artists").add(uten));
 });
 
+test("student kan IKKE plante lærer-privilegier ved oppretting", async () => {
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, priority: 3 }));
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, teacherChecked: true }));
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, removedBy: "teacher" }));
+});
+
+test("student kan IKKE smugle ukjente felter eller oppblåse dokumentet", async () => {
+  // Ukjent felt blokkeres av hasOnly
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, hackerField: "x" }));
+  // Overdimensjonert tekstfelt blokkeres av størrelsestaket
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, description: "x".repeat(5001) }));
+  // Lærer har ingen slike restriksjoner (import)
+  await assertSucceeds(teacherDb().collection("artists").add({ ...studentArtist, description: "x".repeat(5001) }));
+});
+
 test("stemme: kan legge til og fjerne EGEN uid", async () => {
   await seedArtist("a1", { votedUpBy: ["c_gammel"] });
   const ref = anonDb("anon-1").collection("artists").doc("a1");
@@ -136,5 +151,9 @@ test("pendingEdits: anonym kan opprette slik appen skriver det; uinnlogget avvis
   }));
   await assertFails(anonDb().collection("pendingEdits").add({
     entityType: "noe-annet", entityId: "x", proposedFields: {},
+  }));
+  // Ukjent felt blokkeres av hasOnly
+  await assertFails(anonDb().collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", proposedFields: { description: "x" }, hacker: 1,
   }));
 });

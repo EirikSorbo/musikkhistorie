@@ -7,7 +7,7 @@ import {
   computeCounts,
   checkWarnings,
   genderDistribution,
-} from "../../js/limits.js?v=2.76";
+} from "../../js/limits.js?v=2.77";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);
