@@ -5,7 +5,7 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=2.75";
+import { safeUrl } from "./util.js?v=2.76";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen).
@@ -22,8 +22,13 @@ export function normalizeArtist(a) {
 
   if (META_RENAME[out.metaGenre]) out.metaGenre = META_RENAME[out.metaGenre];
 
-  out.mainGenre = Array.isArray(out.mainGenre) ? out.mainGenre : [];
-  out.subGenre = Array.isArray(out.subGenre) ? out.subGenre : [];
+  // Behold kun rene, ikke-tomme tekster i sjangerarrayene. null/tall/nestede
+  // lister/objekter (f.eks. fra en håndredigert importfil) ville ellers bli
+  // liggende og krasje sjanger-filter/søk nedstrøms (s.toLowerCase()).
+  const cleanGenres = (v) =>
+    Array.isArray(v) ? v.filter((s) => typeof s === "string" && s.trim()) : [];
+  out.mainGenre = cleanGenres(out.mainGenre);
+  out.subGenre = cleanGenres(out.subGenre);
 
   // keyWorks: streng → array av {title, year?, url?}
   if (typeof out.keyWorks === "string") {

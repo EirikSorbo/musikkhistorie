@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=2.75";
+import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=2.76";
 
 test("idempotent på allerede normalisert artist", () => {
   const a = {
@@ -23,6 +23,15 @@ test("metaGenre omdøpes via META_RENAME", () => {
   for (const [old, ny] of Object.entries(META_RENAME)) {
     assert.equal(normalizeArtist({ metaGenre: old }).metaGenre, ny);
   }
+});
+
+test("søppel i mainGenre/subGenre filtreres bort (hindrer nedstrøms krasj)", () => {
+  const n = normalizeArtist({
+    mainGenre: ["Blues", null, "", "  ", 42, ["nested"], { x: 1 }],
+    subGenre: [null, "Delta blues"],
+  });
+  assert.deepEqual(n.mainGenre, ["Blues"]);
+  assert.deepEqual(n.subGenre, ["Delta blues"]);
 });
 
 test("keyWorks som streng splittes til objekter", () => {

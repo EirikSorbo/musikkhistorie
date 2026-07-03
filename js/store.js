@@ -32,11 +32,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.75";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.75";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.75";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.75";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.75";
+import { firebaseConfig } from "./firebase-config.js?v=2.76";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.76";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.76";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.76";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.76";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
@@ -214,8 +214,13 @@ function buildArtistDoc(data) {
     removedBy: status === "removed" ? "teacher" : null,
     teacherChecked: n.teacherChecked || false,
     priority: n.priority || 0,
-    votedUpBy: [],
-    addedYear: new Date().getFullYear(),
+    // Bevar innkommende stemmer ved lærer-import (tapsfri backup/restore).
+    // Studentinnsending kan IKKE smugle inn stemmer: skjemaet setter aldri
+    // votedUpBy, og Firestore-reglene krever tom votedUpBy for ikke-lærere.
+    votedUpBy: Array.isArray(n.votedUpBy)
+      ? n.votedUpBy.filter((v) => typeof v === "string")
+      : [],
+    addedYear: Number.isInteger(n.addedYear) ? n.addedYear : new Date().getFullYear(),
     createdAt: serverTimestamp(),
   };
 }

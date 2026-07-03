@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.75";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.76";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -14,12 +14,12 @@ import {
   saveDecadeDesc,
   saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.75";
-import { escapeHtml } from "./ui.js?v=2.75";
-import { $ } from "./shared.js?v=2.75";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.75";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.75";
-import { flattenGenreDescriptions } from "./import-format.js?v=2.75";
+} from "./store.js?v=2.76";
+import { escapeHtml } from "./ui.js?v=2.76";
+import { $ } from "./shared.js?v=2.76";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.76";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.76";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=2.76";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -51,9 +51,13 @@ export function setupDataButtons() {
   $("#merge-next").addEventListener("click", advanceMerge);
 }
 
-function handleExport() {
+// Bygger hele eksport-objektet fra gjeldende state. Delt av den manuelle
+// «Eksporter»-knappen og av auto-sikkerhetskopien før «Erstatt alle».
+// Tar med ALLE artister uansett status (også ventende forslag) og alle
+// eksportfelter (inkl. votedUpBy), så backupen er komplett og tapsfri —
+// deleteAllArtists sletter hele artistsamlingen, så alt her må bevares.
+function buildExportData() {
   const artists = state.artists
-    .filter((a) => a.status === "active" || a.status === "removed")
     .map((a) => Object.fromEntries(EXPORT_FIELDS.map((f) => [f, a[f] ?? null])));
 
   const decades = {};
@@ -84,18 +88,42 @@ function handleExport() {
     return rest;
   });
 
-  const data = { artists, decades, genreDescriptions, tech };
+  return { artists, decades, genreDescriptions, tech };
+}
 
+function dateStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Laster ned et objekt som en JSON-fil i lærerens nettleser.
+function downloadJson(data, filename) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href     = url;
-  link.download = `musikkhistorie-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = filename;
   link.click();
-  URL.revokeObjectURL(url);
+  // Revoker sent — å revokere synkront rett etter click() kan avbryte selve
+  // nedlastingen i enkelte nettlesere.
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function handleExport() {
+  downloadJson(buildExportData(), `musikkhistorie-${dateStamp()}.json`);
 }
 
 let pendingImportData = null;
+
+// Bygger en lesbar norsk feilrapport fra validateArtistsForImport, med
+// radnummer, så læreren kan rette filen. Understreker at ingenting er endret.
+function formatImportErrors(errors) {
+  const shown = errors.slice(0, 12).map((e) =>
+    `• Rad ${e.row}${e.name ? ` («${e.name}»)` : ""}: ${e.problems.join(" ")}`
+  );
+  const more = errors.length > 12 ? `\n… og ${errors.length - 12} rad(er) til.` : "";
+  return `Importen ble avbrutt — ${errors.length} rad(er) har feil, og INGENTING er endret:\n\n` +
+         `${shown.join("\n")}${more}\n\nRett opp filen og prøv igjen.`;
+}
 
 async function handleImportFile(file) {
   if (!file) return;
@@ -119,6 +147,12 @@ async function handleImportFile(file) {
     alert("Ugyldig format — filen må være en array eller et objekt med «artists»."); return;
   }
 
+  // Valider HELE artistlista før noe kan skrives/slettes. Slår feil her ⇒
+  // ingenting røres, og «Erstatt alle» kan ikke slette dagens data og så
+  // feile på en skjev fil.
+  const { ok, errors } = validateArtistsForImport(artists);
+  if (!ok) { alert(formatImportErrors(errors)); return; }
+
   pendingImportData = { artists, decades, genreDescriptions, tech };
   const parts = [];
   const artistCount = artists.filter(a => a.name).length;
@@ -136,9 +170,13 @@ export function setupImportChoice() {
   $("#import-replace").addEventListener("click", async () => {
     closeAdminModal("modal-import-choice");
     if (pendingImportData) {
-      await handleReplace(pendingImportData.artists);
-      await importDescriptions(pendingImportData);
-      await importTechItems(pendingImportData.tech);
+      // Bare importer beskrivelser/teknologi hvis selve erstatningen faktisk
+      // ble gjennomført (læreren kan ha avbrutt bekreftelsen).
+      const didReplace = await handleReplace(pendingImportData.artists);
+      if (didReplace) {
+        await importDescriptions(pendingImportData);
+        await importTechItems(pendingImportData.tech);
+      }
     }
     pendingImportData = null;
   });
@@ -193,18 +231,43 @@ async function importTechItems(techArray) {
   if (added || updated) alert(`Teknologi: ${added} nye, ${updated} oppdaterte.`);
 }
 
+// Erstatter hele artistsamlingen. Lista er allerede validert i
+// handleImportFile, så «slett-så-feil»-scenarioet er umulig her. I tillegg
+// lastes en full sikkerhetskopi av dagens data ned FØR slettingen, som et
+// ekstra sikkerhetsnett dersom skrivingen skulle feile midtveis.
+// Returnerer true hvis erstatningen ble gjennomført, false hvis avbrutt/feilet.
 async function handleReplace(data) {
-  if (!confirm("Dette sletter ALLE eksisterende artister og erstatter med filen. Er du sikker?")) return;
   const toAdd = data
     .filter((a) => a.name)
     .map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }));
+  // Ikke la en tom eller feil fil tømme hele basen ved et uhell.
+  if (!toAdd.length) {
+    alert("Filen inneholder ingen gyldige artister. «Erstatt alle» er avbrutt for å unngå å tømme databasen.");
+    return false;
+  }
+  if (!confirm(
+    `Dette sletter alle ${state.artists.length} eksisterende artister ` +
+    `(inkludert stemmer og ventende forslag) og erstatter dem med ${toAdd.length} fra filen.\n\n` +
+    `En full sikkerhetskopi av dagens data lastes ned først.\n\nFortsette?`
+  )) return false;
+  // Last ned backupen og KREV at læreren bekrefter at fila faktisk kom før vi
+  // sletter — en programmatisk nedlasting kan bli blokkert stille, og da skal
+  // vi ikke slette noe.
+  downloadJson(buildExportData(), `musikkhistorie-BACKUP-${dateStamp()}.json`);
+  if (!confirm(
+    "En sikkerhetskopi skal nå ligge i Nedlastinger (musikkhistorie-BACKUP-…).\n\n" +
+    "Bekreft at du finner filen der FØR vi sletter. Trykk Avbryt hvis den mangler."
+  )) return false;
   try {
     const deleted = await deleteAllArtists();
     const added = await addArtistsBulk(toAdd);
     alert(`${deleted} slettet, ${added} importert.`);
+    return true;
   } catch (err) {
     console.error("Import feilet:", err);
-    alert("Import feilet: " + err.message);
+    alert("Import feilet: " + err.message +
+      "\n\nBruk sikkerhetskopien fra Nedlastinger for å gjenopprette (Importer → Erstatt alle).");
+    return false;
   }
 }
 

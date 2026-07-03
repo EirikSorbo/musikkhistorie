@@ -55,8 +55,10 @@ export const ARTIST_COMPARE_FIELDS = ARTIST_FIELDS
 
 // Felter som tas med i JSON-eksport, i tillegg til skjemafeltene:
 // forslagsstiller + lærer-metadata + status (så skjulte ikke gjenoppstår
-// som aktive ved re-import).
+// som aktive ved re-import) + votedUpBy/addedYear, så en eksport→import er
+// tapsfri: studentstemmer og opprettelsesår overlever en backup/restore.
 export const ARTIST_EXPORT_FIELDS = [
   ...ARTIST_FIELDS.map((f) => f.key),
   "proposedBy", "priority", "teacherChecked", "status",
+  "votedUpBy", "addedYear",
 ];
