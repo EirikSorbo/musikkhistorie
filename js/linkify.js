@@ -1,29 +1,45 @@
-import { escapeHtml as esc } from "./util.js?v=2.77";
+import { escapeHtml as esc } from "./util.js?v=2.78";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
 
-export function linkifyAll(text, { artists, techItems, genres } = {}) {
+// Lenkemålene (aktive artister, tech, sjangre) filtreres, sorteres og escapes
+// LIKT for hver eneste beskrivelse i et render-pass. Vi forbereder dem derfor
+// én gang per link-kontekst og memoiserer på kontekst-referansen: buildLinkCtx()
+// lager et nytt objekt ved hvert render-pass, så cachen invalideres naturlig når
+// dataene endres, og WeakMap slipper gamle kontekster til søppelrydding.
+const _targetsCache = new WeakMap();
+
+function prepareTargets(ctx) {
+  const cached = _targetsCache.get(ctx);
+  if (cached) return cached;
+  const artists = (ctx.artists || [])
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.name && !SKIP.has(a.name.toLowerCase()))
+    .sort((a, b) => b.name.length - a.name.length)
+    .map((a) => ({ id: a.id, nameEsc: esc(a.name) }));
+  const techItems = (ctx.techItems || [])
+    .filter((t) => t.name && !SKIP.has(t.name.toLowerCase()))
+    .sort((a, b) => b.name.length - a.name.length)
+    .map((t) => ({ id: t.id, nameEsc: esc(t.name) }));
+  const genres = (ctx.genres || [])
+    .filter((g) => !SKIP.has(g.toLowerCase()))
+    .sort((a, b) => b.length - a.length)
+    .map((g) => ({ id: g, nameEsc: esc(g) }));
+  const prep = { artists, techItems, genres };
+  _targetsCache.set(ctx, prep);
+  return prep;
+}
+
+export function linkifyAll(text, ctx = {}) {
   if (!text) return esc(text);
   const escaped = esc(text);
   const markers = [];
   const lower = escaped.toLowerCase();
 
-  const activeArtists = (artists || []).filter(a => a.status === "active" && (a.priority || 0) !== -1 && a.name && !SKIP.has(a.name.toLowerCase()));
-  activeArtists.sort((a, b) => b.name.length - a.name.length);
-  for (const a of activeArtists) {
-    findMatches(lower, escaped, esc(a.name), a.id, "artist", markers);
-  }
-
-  const techs = (techItems || []).filter(t => t.name && !SKIP.has(t.name.toLowerCase())).slice().sort((a, b) => b.name.length - a.name.length);
-  for (const t of techs) {
-    findMatches(lower, escaped, esc(t.name), t.id, "tech", markers);
-  }
-
-  const genreList = (genres || []).filter(g => !SKIP.has(g.toLowerCase())).slice().sort((a, b) => b.length - a.length);
-  for (const g of genreList) {
-    findMatches(lower, escaped, esc(g), g, "genre", markers);
-  }
+  const { artists, techItems, genres } = prepareTargets(ctx);
+  for (const a of artists) findMatches(lower, escaped, a.nameEsc, a.id, "artist", markers);
+  for (const t of techItems) findMatches(lower, escaped, t.nameEsc, t.id, "tech", markers);
+  for (const g of genres) findMatches(lower, escaped, g.nameEsc, g.id, "genre", markers);
 
   if (!markers.length) return escaped;
   markers.sort((a, b) => a.start - b.start);

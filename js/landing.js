@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.77";
-import { DEFAULT_CONFIG, decadesForRange, isVisible } from "./limits.js?v=2.77";
-import { debounce } from "./util.js?v=2.77";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.77";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.77";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.77";
-import { initExplore } from "./explore.js?v=2.77";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.77";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.78";
+import { DEFAULT_CONFIG, decadesForRange, isVisible } from "./limits.js?v=2.78";
+import { debounce, throttle } from "./util.js?v=2.78";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.78";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.78";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.78";
+import { initExplore } from "./explore.js?v=2.78";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.78";
 
 const state = {
   artists: [],
@@ -101,8 +101,7 @@ function setupTagFilters() {
       state.filters.search = val;
       $("#sp-search").value = val;
     }
-    renderFilterResults();
-    renderList();
+    renderArtistViews();
     modalOpen(document.getElementById("modal-artister"));
   });
 }
@@ -130,10 +129,7 @@ function setupExplore() {
   if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);
 
   const btnArtister = document.getElementById("btn-artister");
-  if (btnArtister) btnArtister.addEventListener("click", () => {
-    modalOpen(document.getElementById("modal-artister"));
-    document.getElementById("sp-search")?.focus();
-  });
+  if (btnArtister) btnArtister.addEventListener("click", openArtistModal);
 
   setupModal("modal-artister");
   setupModal("modal-dagens-navn");
@@ -158,8 +154,7 @@ function applyIncomingFilter() {
     if (sj) $("#sp-sjanger").value = sj;
     if (g) $("#sp-genre").value = g;
     if (inst) $("#sp-instrument").value = inst;
-    renderFilterResults();
-    renderList();
+    renderArtistViews();
     if (artistId) {
       const a = state.artists.find((x) => x.id === artistId);
       if (a) { openDetail(a); return true; }
@@ -304,6 +299,31 @@ function renderList() {
   renderArtists($("#artist-list"), { ...state, handlers, linkCtx: explore.buildLinkCtx() });
 }
 
+// Forslag-lista og filterresultatene bor begge inne i #modal-artister. Å bygge
+// dem (linkifisering av alle kort) er det tyngste arbeidet på siden, og det er
+// bortkastet når modalen er lukket — som den er det meste av tiden. Sanntids-
+// callbacks bygger derfor bare når modalen faktisk er åpen; ellers bygges lista
+// idet modalen åpnes.
+function isArtistModalOpen() {
+  const m = document.getElementById("modal-artister");
+  return !!m && m.classList.contains("open");
+}
+
+function renderArtistViews() {
+  renderFilterResults();
+  renderList();
+}
+
+function renderArtistViewsIfVisible() {
+  if (isArtistModalOpen()) renderArtistViews();
+}
+
+function openArtistModal() {
+  renderArtistViews();
+  modalOpen(document.getElementById("modal-artister"));
+  document.getElementById("sp-search")?.focus();
+}
+
 function refreshFilterControls() {
   const { config } = state;
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
@@ -412,8 +432,9 @@ function init() {
   loadCache();
   if (state.config && state.artists.length) {
     refreshFilterControls();
-    renderList();
     renderDagensArtist();
+    // #artist-list bygges når #modal-artister åpnes (openArtistModal), ikke her
+    // — den er skjult ved sidelast, så å bygge alle kortene nå er bortkastet.
   }
 
   document.addEventListener("firestore-error", (e) => {
@@ -430,26 +451,30 @@ function init() {
   onAuthChange((user) => {
     if (user && user.uid !== state.clientId) {
       state.clientId = user.uid;
-      renderList();
+      renderArtistViewsIfVisible();
     }
   });
 
   subscribeConfig((config) => {
     state.config = config;
     refreshFilterControls();
-    renderFilterResults();
-    renderList();
+    renderArtistViewsIfVisible();
     saveCache();
   });
-  subscribeArtists((artists) => {
-    state.artists = artists;
-    renderFilterResults();
-    renderList();
+  // Hver stemme fra hvem som helst i kullet fyrer dette snapshotet. Throttle
+  // slår sammen en byge til jevnlige oppdateringer i stedet for én full
+  // ombygging per stemme, og lista bygges bare når modalen faktisk er åpen.
+  const applyArtistSnapshot = throttle(() => {
+    renderArtistViewsIfVisible();
     renderDagensArtist();
     saveCache();
+  }, 400);
+  subscribeArtists((artists) => {
+    state.artists = artists;
+    applyArtistSnapshot();
   });
-  subscribeDecades((d) => { state.decadeDescs = d; renderFilterResults(); });
-  subscribeGenreDescs((s) => { state.genreDescs = s; renderFilterResults(); });
+  subscribeDecades((d) => { state.decadeDescs = d; if (isArtistModalOpen()) renderFilterResults(); });
+  subscribeGenreDescs((s) => { state.genreDescs = s; if (isArtistModalOpen()) renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
   subscribeTech((items) => { state.techItems = items.filter((t) => t.status !== "pending"); });
   subscribePendingEdits((edits) => { state.pendingEdits = edits; });

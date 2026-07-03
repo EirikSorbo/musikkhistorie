@@ -33,6 +33,31 @@ export function debounce(fn, ms = 200) {
   };
 }
 
+// Kjører umiddelbart på første kall, så maks én gang per `ms`. I motsetning
+// til debounce fryser IKKE en vedvarende strøm av kall utdata (siste kall i
+// vinduet kjøres på slutten). Brukt på Firestore-snapshot-stormen når mange
+// stemmer samtidig, så lista oppdateres jevnlig i stedet for én gang per stemme.
+export function throttle(fn, ms = 400) {
+  // -Infinity: første kall fyrer alltid umiddelbart, uansett klokkeverdi.
+  let last = -Infinity, timer = null, lastArgs = null;
+  return (...args) => {
+    lastArgs = args;
+    const now = Date.now();
+    const remaining = ms - (now - last);
+    if (remaining <= 0) {
+      if (timer) { clearTimeout(timer); timer = null; }
+      last = now;
+      fn(...lastArgs);
+    } else if (!timer) {
+      timer = setTimeout(() => {
+        last = Date.now();
+        timer = null;
+        fn(...lastArgs);
+      }, remaining);
+    }
+  };
+}
+
 // Strukturert kilde-liste (artist, sjanger, tiår, slektstre). Lagt her — uten
 // avhengigheter — så både genealogy og ui-helpers kan dele samme implementasjon.
 export function buildKilderList(kilder, label = "Kilder") {

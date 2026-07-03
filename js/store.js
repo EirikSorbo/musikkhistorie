@@ -32,12 +32,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.77";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.77";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.77";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.77";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.77";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.77";
+import { firebaseConfig } from "./firebase-config.js?v=2.78";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.78";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.78";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.78";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.78";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.78";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
