@@ -4,14 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.78";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.78";
-import { escapeHtml, renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.78";
-import { isMainGenre } from "./genealogy.js?v=2.78";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=2.78";
-import { GENDERS } from "./limits.js?v=2.78";
-import { debounce } from "./util.js?v=2.78";
-import { $ } from "./shared.js?v=2.78";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.79";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.79";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.79";
+import { isMainGenre } from "./genealogy.js?v=2.79";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=2.79";
+import { GENDERS } from "./limits.js?v=2.79";
+import { debounce } from "./util.js?v=2.79";
+import { $ } from "./shared.js?v=2.79";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.79";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -169,109 +170,19 @@ export function openEditModal(artistId) {
   openAdminModal("modal-edit");
 }
 
-function buildEditMusicExampleRows(examples) {
-  const wrap = $("#ed-me-rows");
-  wrap.innerHTML = "";
-  (examples.length ? examples : [{ label: "", url: "", year: "", performanceYear: "" }]).forEach((m) =>
-    addEditMusicExampleRow(m.label || "", m.url || "", m.year || "", m.performanceYear || "")
-  );
-}
+// Rad-editorene bor nå i den delte row-editor.js (spec-drevet, med escaping).
+// Disse er tynne innpakninger mot rediger-modalens wrap-er.
+function buildEditMusicExampleRows(examples) { buildRows($("#ed-me-rows"), MUSIC_SPEC, examples); }
+function addEditMusicExampleRow(v) { addRow($("#ed-me-rows"), MUSIC_SPEC, v || {}); }
+function collectEditMusicExamples() { return collectRows($("#ed-me-rows"), MUSIC_SPEC); }
 
-function addEditMusicExampleRow(label = "", url = "", year = "", perfYear = "") {
-  const wrap = $("#ed-me-rows");
-  const row = document.createElement("div");
-  row.className = "me-row";
-  row.innerHTML = `
-    <input type="text" class="me-label" placeholder="Tittel" value="${escapeHtml(label)}">
-    <input type="number" class="me-year" placeholder="Årstall" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
-    <input type="url" class="me-url" placeholder="https://…" value="${escapeHtml(url)}">
-    <input type="number" class="me-perf-year" placeholder="Framf.år" min="1800" max="2030" value="${escapeHtml(String(perfYear || ""))}" title="Året for framføring/konsert (kun hvis annet enn utgivelsesår)">
-    <button type="button" class="btn ghost small remove-me">✕</button>
-  `;
-  row.querySelector(".remove-me").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
-}
+function buildEditSourceRows(kilder) { buildRows($("#ed-source-rows"), SOURCE_SPEC, kilder); }
+function addEditSourceRow(v) { addRow($("#ed-source-rows"), SOURCE_SPEC, v || {}); }
+function collectEditSources() { return collectRows($("#ed-source-rows"), SOURCE_SPEC); }
 
-function buildEditSourceRows(kilder) {
-  const wrap = $("#ed-source-rows");
-  wrap.innerHTML = "";
-  (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addEditSourceRow(k.text || "", k.url || ""));
-}
-
-function addEditSourceRow(text = "", url = "") {
-  const wrap = $("#ed-source-rows");
-  const row = document.createElement("div");
-  row.className = "source-row";
-  row.innerHTML = `
-    <input type="text" class="source-text" placeholder="Kilde …" value="${escapeHtml(text)}">
-    <input type="url" class="source-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
-    <button type="button" class="btn ghost small remove-source">✕</button>
-  `;
-  row.querySelector(".remove-source").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
-}
-
-function buildEditWorkRows(works) {
-  const wrap = $("#ed-work-rows");
-  wrap.innerHTML = "";
-  (works.length ? works : [{ title: "", year: "", url: "" }])
-    .forEach((w) => addEditWorkRow(w.title || "", w.year || "", w.url || ""));
-}
-
-function addEditWorkRow(title = "", year = "", url = "") {
-  const wrap = $("#ed-work-rows");
-  const row = document.createElement("div");
-  row.className = "work-row";
-  row.innerHTML = `
-    <input type="text" class="work-title" placeholder="Tittel" value="${escapeHtml(title)}">
-    <input type="number" class="work-year" placeholder="Utgivelsesår" min="1800" max="2030" value="${escapeHtml(String(year || ""))}">
-    <input type="url" class="work-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
-    <button type="button" class="btn ghost small remove-work">✕</button>
-  `;
-  row.querySelector(".remove-work").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
-}
-
-function collectEditMusicExamples() {
-  return [...$("#ed-me-rows").querySelectorAll(".me-row")]
-    .map((r) => {
-      const label = r.querySelector(".me-label").value.trim();
-      const url = r.querySelector(".me-url").value.trim();
-      const yearStr = r.querySelector(".me-year").value.trim();
-      const perfYearStr = r.querySelector(".me-perf-year").value.trim();
-      const out = { label, url };
-      const yr = parseInt(yearStr, 10);
-      if (Number.isFinite(yr)) out.year = yr;
-      const pyr = parseInt(perfYearStr, 10);
-      if (Number.isFinite(pyr)) out.performanceYear = pyr;
-      return out;
-    })
-    .filter((m) => m.url);
-}
-
-function collectEditSources() {
-  return [...$("#ed-source-rows").querySelectorAll(".source-row")]
-    .map((r) => ({
-      text: r.querySelector(".source-text").value.trim(),
-      url: r.querySelector(".source-url").value.trim(),
-    }))
-    .filter((k) => k.text);
-}
-
-function collectEditWorks() {
-  return [...$("#ed-work-rows").querySelectorAll(".work-row")]
-    .map((r) => {
-      const title = r.querySelector(".work-title").value.trim();
-      const yearStr = r.querySelector(".work-year").value.trim();
-      const url = r.querySelector(".work-url").value.trim();
-      const out = { title };
-      const yr = parseInt(yearStr, 10);
-      if (Number.isFinite(yr)) out.year = yr;
-      if (url) out.url = url;
-      return out;
-    })
-    .filter((w) => w.title);
-}
+function buildEditWorkRows(works) { buildRows($("#ed-work-rows"), WORK_SPEC, works); }
+function addEditWorkRow(v) { addRow($("#ed-work-rows"), WORK_SPEC, v || {}); }
+function collectEditWorks() { return collectRows($("#ed-work-rows"), WORK_SPEC); }
 
 export function setupEditForm() {
   if (!$("#edit-form")) return;

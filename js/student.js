@@ -7,10 +7,11 @@ import {
   subscribeConfig,
   addArtist,
   getClientId,
-} from "./store.js?v=2.78";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.78";
-import { fillSelect } from "./ui.js?v=2.78";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.78";
+} from "./store.js?v=2.79";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.79";
+import { fillSelect } from "./ui.js?v=2.79";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.79";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.79";
 
 const state = {
   artists: [],
@@ -35,6 +36,7 @@ function refreshControls() {
 function setupForm() {
   const form = $("#add-form");
   const msg = $("#form-msg");
+  const submitBtn = form.querySelector('button[type="submit"]');
 
   $("#add-work").addEventListener("click", () => addWorkRow());
   $("#add-me").addEventListener("click", () => addMusicExampleRow());
@@ -73,6 +75,18 @@ function setupForm() {
       return showMsg(msg, "Legg til minst én kilde.", "error");
     }
 
+    // Årstall-rekkefølge: hindrer at artisten stille forsvinner fra tiårsfiltre.
+    if (candidate.influenceEnd && candidate.influenceStart && candidate.influenceEnd < candidate.influenceStart) {
+      return showMsg(msg, "«Innflytelse til»-året kan ikke være før «fra»-året.", "error");
+    }
+    if (candidate.deathYear && candidate.birthYear && candidate.deathYear < candidate.birthYear) {
+      return showMsg(msg, "Dødsår kan ikke være før fødselsår.", "error");
+    }
+
+    // Rader med innhold men ugyldig/manglende lenke droppes ellers stille.
+    const rowErr = validateExampleRows() || validateSourceRows();
+    if (rowErr) return showMsg(msg, rowErr, "error");
+
     if (!CONFIGURED) {
       return showMsg(
         msg,
@@ -81,8 +95,18 @@ function setupForm() {
       );
     }
 
+    // Myk duplikatsjekk — navnekollisjoner kan være legitime, så vi lar
+    // studenten sende inn likevel etter en bekreftelse.
+    const dup = findDuplicate(candidate.name);
+    if (dup && !confirm(`«${candidate.name}» ser ut til å finnes fra før${dup.status === "pending" ? " (venter på godkjenning)" : ""}. Sende inn likevel?`)) {
+      return;
+    }
+
     const { warnings } = checkWarnings(state.artists, state.config, candidate);
 
+    submitBtn.disabled = true;
+    const origText = submitBtn.textContent;
+    submitBtn.textContent = "Sender …";
     try {
       await addArtist(candidate);
       form.reset();
@@ -97,100 +121,64 @@ function setupForm() {
       }
     } catch (err) {
       showMsg(msg, "Noe gikk galt: " + err.message, "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = origText;
     }
   });
 }
 
-function addMusicExampleRow(label = "", url = "", year = "", perfYear = "") {
-  const wrap = $("#me-rows");
-  const row = document.createElement("div");
-  row.className = "me-row";
-  row.innerHTML = `
-    <input type="text" class="me-label" placeholder="Tittel (f.eks. «Hellhound on My Trail»)" value="${label}">
-    <input type="number" class="me-year" placeholder="Årstall" min="1800" max="2030" value="${year}">
-    <input type="url" class="me-url" placeholder="https://youtube.com/…" value="${url}">
-    <input type="number" class="me-perf-year" placeholder="Framf.år" min="1800" max="2030" value="${perfYear}" title="Året for framføring/konsert (kun hvis annet enn utgivelsesår)">
-    <button type="button" class="btn ghost small remove-me">✕</button>
-  `;
-  row.querySelector(".remove-me").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
-}
-function resetMusicExampleRows() {
-  $("#me-rows").innerHTML = "";
-  addMusicExampleRow();
-}
-function collectMusicExamples() {
-  return [...document.querySelectorAll(".me-row")]
-    .map((r) => {
-      const label = r.querySelector(".me-label").value.trim();
-      const url = r.querySelector(".me-url").value.trim();
-      const yearStr = r.querySelector(".me-year").value.trim();
-      const perfYearStr = r.querySelector(".me-perf-year").value.trim();
-      const out = { label, url };
-      const yr = parseInt(yearStr, 10);
-      if (Number.isFinite(yr)) out.year = yr;
-      const pyr = parseInt(perfYearStr, 10);
-      if (Number.isFinite(pyr)) out.performanceYear = pyr;
-      return out;
-    })
-    .filter((m) => m.url);
+// http/https-sjekk (samme regel som safeUrl bruker ved lagring).
+function isHttpUrl(u) {
+  return /^https?:\/\//i.test((u || "").trim());
 }
 
-function addWorkRow(title = "", year = "", url = "") {
-  const wrap = $("#work-rows");
-  const row = document.createElement("div");
-  row.className = "work-row";
-  row.innerHTML = `
-    <input type="text" class="work-title" placeholder="Tittel (f.eks. «Cross Road Blues»)" value="${title}">
-    <input type="number" class="work-year" placeholder="Årstall" min="1800" max="2030" value="${year}">
-    <input type="url" class="work-url" placeholder="https://… (valgfritt)" value="${url}">
-    <button type="button" class="btn ghost small remove-work">✕</button>
-  `;
-  row.querySelector(".remove-work").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
-}
-function resetWorkRows() {
-  $("#work-rows").innerHTML = "";
-  addWorkRow();
-}
-function collectWorks() {
-  return [...document.querySelectorAll("#work-rows .work-row")]
-    .map((r) => {
-      const title = r.querySelector(".work-title").value.trim();
-      const yearStr = r.querySelector(".work-year").value.trim();
-      const url = r.querySelector(".work-url").value.trim();
-      const out = { title };
-      const yr = parseInt(yearStr, 10);
-      if (Number.isFinite(yr)) out.year = yr;
-      if (url) out.url = url;
-      return out;
-    })
-    .filter((w) => w.title);
+// En musikkeksempel-rad med tittel men uten gyldig lenke ville blitt droppet
+// stille av normaliseringen — flagg den i stedet.
+function validateExampleRows() {
+  for (const r of document.querySelectorAll("#me-rows .me-row")) {
+    const label = r.querySelector(".me-label").value.trim();
+    const url = r.querySelector(".me-url").value.trim();
+    if (!label && !url) continue;
+    if (!isHttpUrl(url)) {
+      return `Musikkeksempelet ${label ? `«${label}»` : "(uten tittel)"} mangler en gyldig lenke (må starte med https://).`;
+    }
+  }
+  return null;
 }
 
-function addSourceRow(text = "", url = "") {
-  const wrap = $("#source-rows");
-  const row = document.createElement("div");
-  row.className = "source-row";
-  row.innerHTML = `
-    <input type="text" class="source-text" placeholder="F.eks. «Ward, Brian. Just My Soul Responding. 1998.»" value="${text}">
-    <input type="url" class="source-url" placeholder="https://… (valgfritt)" value="${url}">
-    <button type="button" class="btn ghost small remove-source">✕</button>
-  `;
-  row.querySelector(".remove-source").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
+// En kilde-rad med lenke men uten tekst ville blitt droppet (teksten er det
+// som lagres); en ugyldig lenke ville blitt fjernet stille.
+function validateSourceRows() {
+  for (const r of document.querySelectorAll("#source-rows .source-row")) {
+    const text = r.querySelector(".source-text").value.trim();
+    const url = r.querySelector(".source-url").value.trim();
+    if (!text && !url) continue;
+    if (!text) return "En kilde har en lenke, men mangler tekst. Skriv inn kildehenvisningen.";
+    if (url && !isHttpUrl(url)) return `Kilden «${text}» har en ugyldig lenke (må starte med https://). Fjern eller rett lenken.`;
+  }
+  return null;
 }
-function resetSourceRows() {
-  $("#source-rows").innerHTML = "";
+
+// Case-insensitiv navnematch mot eksisterende (ikke-fjernede) forslag.
+function findDuplicate(name) {
+  const n = (name || "").trim().toLowerCase();
+  return state.artists.find((a) => a.status !== "removed" && (a.name || "").trim().toLowerCase() === n);
 }
-function collectSources() {
-  return [...document.querySelectorAll("#source-rows .source-row")]
-    .map((r) => ({
-      text: r.querySelector(".source-text").value.trim(),
-      url: r.querySelector(".source-url").value.trim(),
-    }))
-    .filter((k) => k.text);
-}
+
+// Rad-editorene (verk/musikkeksempler/kilder) bor nå i den delte row-editor.js
+// (spec-drevet, med escaping). Disse er tynne innpakninger mot skjemaets wrap-er.
+function addMusicExampleRow(v) { return addRow($("#me-rows"), MUSIC_SPEC, v || {}); }
+function resetMusicExampleRows() { buildRows($("#me-rows"), MUSIC_SPEC); }
+function collectMusicExamples() { return collectRows($("#me-rows"), MUSIC_SPEC); }
+
+function addWorkRow(v) { return addRow($("#work-rows"), WORK_SPEC, v || {}); }
+function resetWorkRows() { buildRows($("#work-rows"), WORK_SPEC); }
+function collectWorks() { return collectRows($("#work-rows"), WORK_SPEC); }
+
+function addSourceRow(v) { return addRow($("#source-rows"), SOURCE_SPEC, v || {}); }
+function resetSourceRows() { buildRows($("#source-rows"), SOURCE_SPEC); }
+function collectSources() { return collectRows($("#source-rows"), SOURCE_SPEC); }
 
 // ----------------------------------------------------------------------------
 //  Hjelpere + oppstart

@@ -5,8 +5,8 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.78";
-import { extractBullets } from "./ui-helpers.js?v=2.78";
+import { escapeHtml } from "./util.js?v=2.79";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=2.79";
 
 function shortDesc(text) {
   const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
@@ -81,6 +81,42 @@ export function buildTimeline(text, decadeId) {
     desc: shortDesc(ev.text),
   }));
   return buildProportionalTimeline(items, startYear);
+}
+
+// Delt tiårs-render: samfunn/teknologi-tekst + tidslinjer + «les mer»-knapper.
+// Kalt fra forsidens tiårsvisning (explore) OG lærer-tiårsmodalen (også etter
+// lagring), så de tre tidligere kopiene holdes ett sted. `refs` er DOM-elementer
+// (ulike ID-prefikser dv-/ds- per bruk); manglende refs hoppes over.
+export function renderDecadeSections(refs, desc, decadeId, techItems, { isSociety = true, onTechClick, onMore } = {}) {
+  const noText = "Ingen beskrivelse ennå.";
+  if (refs.societyEl) {
+    refs.societyEl.innerHTML = desc.society ? formatInfoText(desc.society) : noText;
+    refs.societyEl.className = "info-text" + (desc.society ? "" : " muted");
+  }
+  if (refs.techEl) {
+    refs.techEl.innerHTML = desc.tech ? formatInfoText(desc.tech) : noText;
+    refs.techEl.className = "info-text" + (desc.tech ? "" : " muted");
+  }
+  if (refs.societyTl) refs.societyTl.innerHTML = buildTimeline(desc.society, decadeId);
+  if (refs.techTl) {
+    refs.techTl.innerHTML = buildTechTimeline(techItems, decadeId);
+    if (onTechClick) {
+      refs.techTl.querySelectorAll("[data-tech-id]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const t = techItems.find((x) => x.id === el.dataset.techId);
+          if (t) onTechClick(t);
+        });
+      });
+    }
+  }
+  if (refs.societyMoreBtn) {
+    refs.societyMoreBtn.style.display = desc.societyMore && isSociety ? "" : "none";
+    if (onMore) refs.societyMoreBtn.onclick = () => onMore("society", desc.societyMore);
+  }
+  if (refs.techMoreBtn) {
+    refs.techMoreBtn.style.display = desc.techMore && !isSociety ? "" : "none";
+    if (onMore) refs.techMoreBtn.onclick = () => onMore("tech", desc.techMore);
+  }
 }
 
 export function buildTechTimeline(techItems, decadeId) {

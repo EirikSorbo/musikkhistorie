@@ -1,10 +1,10 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeTech } from "./store.js?v=2.78";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.78";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.78";
-import { CONFIGURED } from "./shared.js?v=2.78";
+import { subscribeArtists, subscribeGenreDescs, subscribeTech } from "./store.js?v=2.79";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=2.79";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=2.79";
+import { CONFIGURED } from "./shared.js?v=2.79";
 
 const subDescs = {};
 let artists = [];
@@ -92,7 +92,9 @@ const closePl = () => {
 };
 const plCloseBtn = plModal.querySelector(".modal-close");
 plCloseBtn.textContent = "← Tilbake";
-plCloseBtn.className = "btn ghost small";
+// classList.add (ikke className=) så .modal-close beholdes — ellers finner
+// setupModal ingen lukkeknapp å binde closePl til, og «← Tilbake» blir død.
+plCloseBtn.classList.add("btn", "ghost", "small");
 setupModal(plModal, closePl);
 
 const sjangerOpts = () => ({
@@ -136,5 +138,6 @@ if (CONFIGURED) {
     Object.assign(subDescs, s);
   });
   subscribeArtists((a) => { artists = a; });
-  subscribeTech((t) => { techItems = t; });
+  // Skjul ikke-godkjente (pending) innovasjonskort for studenter, som på forsiden.
+  subscribeTech((t) => { techItems = t.filter((x) => x.status !== "pending"); });
 }

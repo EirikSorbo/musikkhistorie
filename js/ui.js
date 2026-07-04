@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { decadesForRange, isVisible } from "./limits.js?v=2.78";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.78";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.78";
+import { isVisible, filterArtists } from "./limits.js?v=2.79";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.79";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.79";
 import {
   escapeHtml,
   linkDesc,
@@ -30,18 +30,18 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.78";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.78";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.78";
-import { buildTimeline, buildTechTimeline } from "./ui-timeline.js?v=2.78";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.78";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.78";
+} from "./ui-helpers.js?v=2.79";
+import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.79";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.79";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.79";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.79";
+import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.79";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders };
 export { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage };
-export { buildTimeline, buildTechTimeline };
+export { buildTimeline, buildTechTimeline, renderDecadeSections };
 export { renderDashboard, renderLimits };
 export { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
 
@@ -192,35 +192,9 @@ export function renderArtists(el, state) {
     list = list.filter((a) => a.status !== "pending");
   }
   if (filters.hideChecked) list = list.filter((a) => !a.teacherChecked);
-  if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
-  if (filters.mainGenre) {
-    const sj = filters.mainGenre.toLowerCase();
-    list = list.filter((a) => a.metaGenre === filters.mainGenre
-      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
-      || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
-  }
-  if (filters.metaGenre) list = list.filter((a) => a.metaGenre === filters.metaGenre);
-  if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
-  if (filters.decade) {
-    const fd = Number(filters.decade);
-    list = list.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(fd));
-  }
-  if (filters.subgenre) {
-    const sg = filters.subgenre;
-    list = list.filter((a) => (a.subGenre || []).includes(sg) || (a.mainGenre || []).includes(sg));
-  }
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    const qn = q.replace(/[.\-]/g, "");
-    list = list.filter(
-      (a) =>
-        a.name.toLowerCase().includes(q) ||
-        a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
-        (a.geography || "").toLowerCase().includes(q) ||
-        (a.mainGenre || []).some(s => s.toLowerCase().includes(q)) ||
-        (a.subGenre || []).some(s => s.toLowerCase().includes(q))
-    );
-  }
+  // Delt innholdsfilter (sjanger/meta/instrument/undersjanger/prioritet/tiår/søk)
+  // — samme funksjon som forsidens filterresultater bruker.
+  list = filterArtists(list, filters);
 
   const hasFilter = filters.search || filters.mainGenre || filters.metaGenre || filters.instrument || filters.decade || filters.subgenre || filters.priority;
   if (hasFilter) {
@@ -378,18 +352,19 @@ export function fillSelect(select, values, { placeholder } = {}) {
 }
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
-export function showSubsjangerInfo(label, opts = {}) {
+// Felles visning av sjangerbeskrivelse på ETT nivå (sub eller meta) i
+// #modal-sjanger. showSubsjangerInfo og showMetaInfo var før nesten linje-for-
+// linje like; de er nå tynne innpakninger rundt denne. (showSjangerInfo i
+// genealogy.js er egen fordi den også viser tre-relasjoner.)
+function showGenreLevelInfo(label, level, opts = {}) {
   const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
   if (!modal || !mTitle || !mBody) return false;
 
-  // Frie undersjangre er på «sub»-nivå.
-  const resolved = resolveDesc(genreDescs, label, "sub");
-  const descText = resolved.description;
-  const kilder = resolved.kilder;
-  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, "sub");
+  const resolved = resolveDesc(genreDescs, label, level);
+  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, level);
 
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
@@ -397,63 +372,17 @@ export function showSubsjangerInfo(label, opts = {}) {
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
-  // Finnes en hovedsjanger med SAMME navn (datadrevet via treet)? Da tilbyr vi en
-  // snarvei til sjanger-beskrivelsen. Variabelt — ingen hardkodet navneliste.
-  const alsoMainGenre = isMainGenre(label);
-  const seeGenreBtn = alsoMainGenre
+  // Finnes en hovedsjanger (tre-node) med SAMME navn? Tilby snarvei til
+  // sjanger-beskrivelsen. Datadrevet via treet — ingen hardkodet navneliste.
+  const seeGenreBtn = isMainGenre(label)
     ? `<button type="button" class="btn ghost small gx-see-genre-btn" style="margin-bottom:10px">Se «${escapeHtml(label)}» (sjanger)</button>`
     : "";
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
-  mTitle.textContent = label;
+  mTitle.textContent = level === "meta" ? `${label} (hovedsjanger)` : label;
   mBody.innerHTML = `
     ${seeGenreBtn}
-    <p class="gx-desc">${descText ? linkDesc(descText, lc) : `<span class="gx-missing">${missingDesc("sub")}</span>`}</p>
-    ${buildKilderList(kilder, "Kilder")}
-    ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
-  wireLinks(mBody, lc);
-  const sg = mBody.querySelector(".gx-see-genre-btn");
-  if (sg) sg.addEventListener("click", () => showSjangerInfo(label, opts));
-  const b = mBody.querySelector(".gx-artists-btn");
-  if (b) b.addEventListener("click", () => onShowArtists({ label }));
-  const bp = mBody.querySelector(".gx-playlist-btn");
-  if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
-  const be = mBody.querySelector(".gx-edit-btn");
-  if (be) be.addEventListener("click", () => onEdit(label, "sub"));
-  modalOpen(modal);
-  return true;
-}
-
-// Vis HOVEDSJANGER-beskrivelse (meta-nivå) i #modal-sjanger. Før fantes det
-// ingen visning av meta-nivået — tekstene kunne redigeres, men ble aldri vist.
-export function showMetaInfo(label, opts = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
-  const modal = root.querySelector("#modal-sjanger");
-  const mTitle = root.querySelector("#sj-title");
-  const mBody = root.querySelector("#sj-body");
-  if (!modal || !mTitle || !mBody) return false;
-
-  const resolved = resolveDesc(genreDescs, label, "meta");
-  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, "meta");
-
-  const btnArea = [
-    onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
-    onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
-    onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
-  ].filter(Boolean).join(" ");
-
-  // Noen hovedsjangre er OGSÅ tre-noder (Blues, Jazz, Gospel …) — tilby
-  // snarvei til sjanger-visningen, samme mønster som sub/main-kollisjoner.
-  const alsoMainGenre = isMainGenre(label);
-  const seeGenreBtn = alsoMainGenre
-    ? `<button type="button" class="btn ghost small gx-see-genre-btn" style="margin-bottom:10px">Se «${escapeHtml(label)}» (sjanger)</button>`
-    : "";
-
-  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
-  mTitle.textContent = `${label} (hovedsjanger)`;
-  mBody.innerHTML = `
-    ${seeGenreBtn}
-    <p class="gx-desc">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc("meta")}</span>`}</p>
+    <p class="gx-desc">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc(level)}</span>`}</p>
     ${buildKilderList(resolved.kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireLinks(mBody, lc);
@@ -464,9 +393,19 @@ export function showMetaInfo(label, opts = {}) {
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
   const be = mBody.querySelector(".gx-edit-btn");
-  if (be) be.addEventListener("click", () => onEdit(label, "meta"));
+  if (be) be.addEventListener("click", () => onEdit(label, level));
   modalOpen(modal);
   return true;
+}
+
+// Frie undersjangre er på «sub»-nivå.
+export function showSubsjangerInfo(label, opts = {}) {
+  return showGenreLevelInfo(label, "sub", opts);
+}
+
+// Hovedsjanger-beskrivelse (meta-nivå).
+export function showMetaInfo(label, opts = {}) {
+  return showGenreLevelInfo(label, "meta", opts);
 }
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.

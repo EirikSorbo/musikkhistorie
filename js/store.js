@@ -15,11 +15,13 @@ import {
   doc,
   addDoc,
   setDoc,
+  updateDoc,
   deleteDoc,
   getDoc,
   getDocs,
   onSnapshot,
-  runTransaction,
+  arrayUnion,
+  arrayRemove,
   serverTimestamp,
   writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -32,12 +34,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.78";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.78";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.78";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.78";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.78";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.78";
+import { firebaseConfig } from "./firebase-config.js?v=2.79";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.79";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.79";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.79";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.79";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.79";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
@@ -249,49 +251,39 @@ export async function addArtistsBulk(list) {
 
 // Stem frem et forslag ("svært relevant"). Identiteten hentes internt
 // (uid fra anonym innlogging) — reglene avviser alt annet enn egen uid.
+// arrayUnion er atomisk på serversiden: ingen transaksjon/retry ved mange
+// samtidige stemmer, og et gjentatt klikk (uid allerede i lista) blir en
+// ekte no-op i stedet for en falsk feilmelding.
 export async function voteUp(artistId) {
   const clientId = await voteIdentity();
-  const ref = doc(db, "artists", artistId);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) return;
-    const voters = new Set(snap.data().votedUpBy || []);
-    voters.add(clientId);
-    tx.update(ref, { votedUpBy: [...voters] });
-  });
+  return updateDoc(doc(db, "artists", artistId), { votedUpBy: arrayUnion(clientId) });
 }
 
-// Angre positiv stemme (kan bare fjerne egen uid)
+// Angre positiv stemme (arrayRemove fjerner kun egen uid, atomisk).
 export async function undoVoteUp(artistId) {
   const clientId = await voteIdentity();
-  const ref = doc(db, "artists", artistId);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) return;
-    const votedUpBy = (snap.data().votedUpBy || []).filter((id) => id !== clientId);
-    tx.update(ref, { votedUpBy });
-  });
+  return updateDoc(doc(db, "artists", artistId), { votedUpBy: arrayRemove(clientId) });
 }
 
 // ----------------------------------------------------------------------------
 //  LÆRERHANDLINGER (krever lærerkode i appen)
 // ----------------------------------------------------------------------------
 
-// Lærer godkjenner et ventende forslag
+// Lærer godkjenner et ventende forslag. updateDoc (ikke setDoc+merge) feiler
+// med not-found hvis dokumentet er slettet i mellomtiden, i stedet for å
+// gjenopplive det som et tomt spøkelsesdokument (f.eks. ved to lærer-faner).
 export async function teacherApprove(artistId) {
-  const ref = doc(db, "artists", artistId);
-  return setDoc(ref, { status: "active" }, { merge: true });
+  return updateDoc(doc(db, "artists", artistId), { status: "active" });
 }
 
 // Lærer avviser et ventende forslag
 export async function teacherReject(artistId) {
-  const ref = doc(db, "artists", artistId);
-  return setDoc(ref, { status: "removed", removedBy: "teacher" }, { merge: true });
+  return updateDoc(doc(db, "artists", artistId), { status: "removed", removedBy: "teacher" });
 }
 
 // Sett prioritetsnivå (3=viktigst, 2=viktig, 1=mindre viktig, 0=ingen)
 export async function setArtistPriority(artistId, level) {
-  return setDoc(doc(db, "artists", artistId), { priority: level }, { merge: true });
+  return updateDoc(doc(db, "artists", artistId), { priority: level });
 }
 
 // Lærer sletter et forslag permanent
@@ -299,9 +291,9 @@ export async function teacherDelete(artistId) {
   return deleteDoc(doc(db, "artists", artistId));
 }
 
-// Oppdater enkeltfelt på en artist (brukt av merge)
+// Oppdater enkeltfelt på en eksisterende artist (brukt av merge-import).
 export async function updateArtistFields(artistId, fields) {
-  return setDoc(doc(db, "artists", artistId), fields, { merge: true });
+  return updateDoc(doc(db, "artists", artistId), fields);
 }
 
 // Slett alle artister (full reset). Batchet.
@@ -464,6 +456,15 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
 
   const targetRef = pendingEditTargetRef(data.entityType, data.entityId);
   if (targetRef && Object.keys(toApply).length) {
+    // artist/tech MÅ finnes fra før — ellers ville merge opprettet et tomt
+    // spøkelsesdokument (uten navn/status) hvis forslaget godkjennes etter at
+    // målet er slettet. genreDescriptions/decades kan derimot opprettes ved
+    // første beskrivelse, så der er merge riktig.
+    const mustExist = data.entityType === "artist" || data.entityType === "tech";
+    if (mustExist) {
+      const targetSnap = await getDoc(targetRef);
+      if (!targetSnap.exists()) { await deleteDoc(editRef); return; }
+    }
     await setDoc(targetRef, toApply, { merge: true });
   }
   await deleteDoc(editRef);
@@ -500,7 +501,7 @@ export async function addTechProposal(data) {
 }
 
 export async function approveTech(techId) {
-  return setDoc(doc(db, "tech", techId), { status: "active" }, { merge: true });
+  return updateDoc(doc(db, "tech", techId), { status: "active" });
 }
 
 const teacherChecksRef = doc(db, "config", "teacherChecks");
@@ -514,3 +515,9 @@ export function subscribeTeacherChecks(callback) {
 export async function setTeacherChecks(data) {
   return setDoc(teacherChecksRef, data, { merge: true });
 }
+
+// Signal til den innebygde last-vakten (i HTML) om at datalaget — og dermed
+// Firebase-SDK fra gstatic — faktisk lastet. Blir dette flagget aldri satt
+// (f.eks. brannmur/captive portal blokkerer gstatic), viser vakten en
+// forklarende melding i stedet for en død side.
+if (typeof window !== "undefined") window.__pensumReady = true;

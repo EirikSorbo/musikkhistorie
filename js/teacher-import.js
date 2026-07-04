@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.78";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.79";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -14,12 +14,12 @@ import {
   saveDecadeDesc,
   saveGenreDesc,
   updateArtistFields,
-} from "./store.js?v=2.78";
-import { escapeHtml } from "./ui.js?v=2.78";
-import { $ } from "./shared.js?v=2.78";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.78";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.78";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=2.78";
+} from "./store.js?v=2.79";
+import { escapeHtml } from "./ui.js?v=2.79";
+import { $ } from "./shared.js?v=2.79";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.79";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.79";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=2.79";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -27,6 +27,14 @@ const MERGE_LABELS = ARTIST_LABELS;
 const COMPARE_FIELDS = ARTIST_COMPARE_FIELDS;
 
 const mergeState = { queue: [], newArtists: [], index: 0 };
+// true mens finishMerge faktisk lagrer — så flette-avbrudd-vakten ikke tolker
+// en normal fullføring som et avbrudd.
+let mergeCommitting = false;
+
+function mergeHasUnsaved() {
+  return mergeState.newArtists.length > 0 ||
+    mergeState.queue.some((it) => it.conflicts.length > 0 || Object.keys(it.resolved).length > 0);
+}
 
 export function setupDataButtons() {
   $("#btn-export").addEventListener("click", handleExport);
@@ -51,6 +59,20 @@ export function setupDataButtons() {
   $("#merge-next").addEventListener("click", advanceMerge);
 }
 
+// Hvilket nivå (meta/main/sub) en sjanger hører til — samme inndeling som
+// lærer-dashboardet. Delt av eksport og import.
+function genreSectionOf(name) {
+  const metaSet = new Set(state.config?.metaGenres || GENEALOGY_META_GENRES);
+  return metaSet.has(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
+}
+
+// Har tiåret noe innhold verdt å eksportere/importere? (samfunn/teknologi,
+// «les mer»-tekstene, eller kilder).
+function hasDecadeContent(d) {
+  return !!(d && (d.society || d.tech || d.societyMore || d.techMore ||
+    (Array.isArray(d.kilder) && d.kilder.length)));
+}
+
 // Bygger hele eksport-objektet fra gjeldende state. Delt av den manuelle
 // «Eksporter»-knappen og av auto-sikkerhetskopien før «Erstatt alle».
 // Tar med ALLE artister uansett status (også ventende forslag) og alle
@@ -62,7 +84,13 @@ function buildExportData() {
 
   const decades = {};
   for (const [id, d] of Object.entries(state.decadeDescs)) {
-    if (d.society || d.tech) decades[id] = { society: d.society || "", tech: d.tech || "" };
+    if (hasDecadeContent(d)) {
+      decades[id] = {
+        society: d.society || "", tech: d.tech || "",
+        societyMore: d.societyMore || "", techMore: d.techMore || "",
+        kilder: Array.isArray(d.kilder) ? d.kilder : [],
+      };
+    }
   }
 
   // Sjangerbeskrivelser eksporteres NESTET i tre bolker (meta → main → sub), så
@@ -74,14 +102,12 @@ function buildExportData() {
   // Metasjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
   // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
   // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.
-  const metaSet = new Set(state.config?.metaGenres || GENEALOGY_META_GENRES);
-  const sectionOf = (name) => metaSet.has(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
     .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
-    .forEach(([id, rest]) => { genreDescriptions[sectionOf(id)][id] = rest; });
+    .forEach(([id, rest]) => { genreDescriptions[genreSectionOf(id)][id] = rest; });
 
   const tech = state.techItems.map(t => {
     const { id, ...rest } = t;
@@ -189,19 +215,39 @@ export function setupImportChoice() {
     }
     pendingImportData = null;
   });
+
+  // Flette-modalen lukkes med backdrop-klikk/Escape (generisk). Lukkes den midt
+  // i konfliktløsingen, gikk nye artister + autofyll tidligere tapt uten spor;
+  // her oppdager vi det og varsler tydelig i stedet.
+  const mergeModal = document.getElementById("modal-merge");
+  if (mergeModal && "MutationObserver" in window) {
+    new MutationObserver(() => {
+      if (!mergeModal.classList.contains("open") && !mergeCommitting && mergeHasUnsaved()) {
+        mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
+        alert("Flettingen ble avbrutt — ingen endringer er lagret. Importer fila på nytt for å prøve igjen.");
+      }
+    }).observe(mergeModal, { attributes: true, attributeFilter: ["class"] });
+  }
 }
 
 async function importDescriptions({ decades, genreDescriptions }) {
   let ok = 0, fail = 0;
   for (const [id, data] of Object.entries(decades || {})) {
-    if (data.society || data.tech) {
+    if (hasDecadeContent(data)) {
       try { await saveDecadeDesc(id, data); ok++; }
       catch (e) { fail++; console.error("Tiår-import feilet for", id, e); }
     }
   }
   for (const [id, data] of Object.entries(genreDescriptions || {})) {
-    if (data.description || data.meta || data.main || data.sub) {
-      try { await saveGenreDesc(id, data); ok++; }
+    // Eldre flat form { description } leses ikke av appen (den leser kun
+    // meta/main/sub). Pakk den inn i riktig nivå før lagring.
+    let toSave = data;
+    if (data && data.description && !data.meta && !data.main && !data.sub) {
+      const { description, ...rest } = data;
+      toSave = { [genreSectionOf(id)]: { description, ...rest } };
+    }
+    if (toSave.description || toSave.meta || toSave.main || toSave.sub) {
+      try { await saveGenreDesc(id, toSave); ok++; }
       catch (e) { fail++; console.error("Sjanger-import feilet for", id, e); }
     }
   }
@@ -384,21 +430,32 @@ async function bulkMerge(choice) {
 }
 
 async function finishMerge() {
+  mergeCommitting = true;
   closeAdminModal("modal-merge");
-  let updated = 0;
-
-  const added = await addArtistsBulk(
-    mergeState.newArtists.map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }))
-  );
-  for (const item of mergeState.queue) {
-    if (Object.keys(item.resolved).length) {
-      await updateArtistFields(item.existing.id, item.resolved);
-      updated++;
+  try {
+    let updated = 0;
+    const added = await addArtistsBulk(
+      mergeState.newArtists.map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }))
+    );
+    for (const item of mergeState.queue) {
+      if (Object.keys(item.resolved).length) {
+        await updateArtistFields(item.existing.id, item.resolved);
+        updated++;
+      }
     }
+    const parts = [];
+    if (added)   parts.push(`${added} nye artister lagt til`);
+    if (updated) parts.push(`${updated} artister oppdatert`);
+    if (parts.length) alert(parts.join(", ") + ".");
+  } catch (err) {
+    // Uten denne ville en skrivefeil midt i flettingen vært helt stille
+    // (modalen er alt lukket, ingen success-alert kommer). Re-import av samme
+    // fil er trygt: alt-lagte artister matches på navn og dupliseres ikke.
+    console.error("Fletting feilet:", err);
+    alert("Flettingen feilet: " + err.message +
+      "\n\nNoen endringer kan være delvis lagret. Importer fila på nytt for å fullføre — allerede lagrede artister dupliseres ikke.");
+  } finally {
+    mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
+    mergeCommitting = false;
   }
-
-  const parts = [];
-  if (added)   parts.push(`${added} nye artister lagt til`);
-  if (updated) parts.push(`${updated} artister oppdatert`);
-  if (parts.length) alert(parts.join(", ") + ".");
 }

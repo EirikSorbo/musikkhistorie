@@ -7,7 +7,8 @@ import {
   computeCounts,
   checkWarnings,
   genderDistribution,
-} from "../../js/limits.js?v=2.78";
+  filterArtists,
+} from "../../js/limits.js?v=2.79";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);
@@ -58,4 +59,25 @@ test("genderDistribution: ukjente kategorier telles som ukjent", () => {
 
 test("voteOutThreshold er fjernet fra standardkonfig", () => {
   assert.equal("voteOutThreshold" in DEFAULT_CONFIG, false);
+});
+
+test("filterArtists: sjanger matcher case-insensitivt i main/sub/meta", () => {
+  const list = [
+    { name: "A", metaGenre: "Blues", mainGenre: ["Delta blues"], subGenre: [], influenceStart: 1930 },
+    { name: "B", metaGenre: "Jazz", mainGenre: ["Bebop"], subGenre: [], influenceStart: 1945 },
+  ];
+  assert.deepEqual(filterArtists(list, { mainGenre: "delta blues" }).map((a) => a.name), ["A"]);
+  assert.deepEqual(filterArtists(list, { metaGenre: "Jazz" }).map((a) => a.name), ["B"]);
+});
+
+test("filterArtists: prioritet, instrument, tiår og søk", () => {
+  const list = [
+    { name: "Robert Johnson", metaGenre: "Blues", instrument: "Gitar", priority: 3, mainGenre: [], subGenre: [], geography: "Mississippi", influenceStart: 1936 },
+    { name: "Bill Evans", metaGenre: "Jazz", instrument: "Piano", priority: 1, mainGenre: [], subGenre: [], geography: "New Jersey", influenceStart: 1958 },
+  ];
+  assert.deepEqual(filterArtists(list, { priority: 3 }).map((a) => a.name), ["Robert Johnson"]);
+  assert.deepEqual(filterArtists(list, { instrument: "Piano" }).map((a) => a.name), ["Bill Evans"]);
+  assert.deepEqual(filterArtists(list, { decade: 1950 }).map((a) => a.name), ["Bill Evans"]);
+  assert.deepEqual(filterArtists(list, { search: "mississippi" }).map((a) => a.name), ["Robert Johnson"]);
+  assert.equal(filterArtists(list, {}).length, 2); // ingen filtre → alt
 });

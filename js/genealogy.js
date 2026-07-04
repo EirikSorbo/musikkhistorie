@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.78";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.78";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.78";
-import { modalOpen, modalClose } from "./ui-modal.js?v=2.78";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.79";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.79";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.79";
+import { modalOpen, modalClose } from "./ui-modal.js?v=2.79";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -53,7 +53,7 @@ export const GENEALOGY = [
   { id: "folk", l: "Folk", f: "Folk (revival)", fam: "amber", cx: 70, r: 7, p: ["eurofolk"], g: "Country", era: "1950–60-tallet", t: ["This Land Is Your Land – Woody Guthrie (1944)", "Blowin' in the Wind – Bob Dylan (1963)"] },
 
   // --- Rock ---
-  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: null, era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
+  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
   { id: "britinv", l: "British invasion", f: "Blues revival (British invasion)", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll"], g: "Blues", era: "1963–66", t: ["(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
   { id: "bluesrock", l: "Blues Rock", f: "Blues rock", fam: "blue", cx: 580, r: 8, p: ["britinv", "chicagoblues", "rock"], g: "Blues", era: "sent 1960-tall", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
 
@@ -299,12 +299,14 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
     g.addEventListener("click", (ev) => { if (moved) return; ev.stopPropagation(); openModal(n.id); });
   });
 
-  // Lukking av popup
+  // Lukking av popup (backdrop-klikk + ✕). Escape håndteres på sidenivå
+  // (tre.js sin modalCloseTop), så vi registrerer IKKE en egen Escape-lytter
+  // her — ellers ville Escape lukket både denne popupen og en stablet modal
+  // (f.eks. artistlista) samtidig.
   if (modal) {
     modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
     const cl = modal.querySelector(".modal-close");
     if (cl) cl.addEventListener("click", () => modalClose(modal));
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") modalClose(modal); });
   }
 
   // Pan / zoom

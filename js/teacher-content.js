@@ -5,21 +5,48 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.78";
-import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.78";
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, buildKilderList, buildMainGenreList, setupModal, modalOpen, techImage } from "./ui.js?v=2.78";
-import { resolveDesc } from "./genre-descriptions.js?v=2.78";
-import { safeUrl } from "./util.js?v=2.78";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.79";
+import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.79";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=2.79";
+import { resolveDesc } from "./genre-descriptions.js?v=2.79";
+import { safeUrl } from "./util.js?v=2.79";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.78";
-import { $ } from "./shared.js?v=2.78";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.79";
+import { $ } from "./shared.js?v=2.79";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=2.79";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
 // ----------------------------------------------------------------------------
 
 let teacherContextMode = "society";
+
+// Delt render for lærer-tiårsmodalen (tekst + tidslinjer + les-mer + kilder-
+// visning). Brukt av openSingleDecadeModal OG etter lagring, så visningen ikke
+// blir stående med utdaterte les-mer-knapper/kilder etter at læreren har lagret.
+function renderDecadeSingleSections(decadeId, desc, isSociety) {
+  renderDecadeSections(
+    {
+      societyEl: $("#ds-society-text"), techEl: $("#ds-tech-text"),
+      societyTl: $("#ds-society-timeline"), techTl: $("#ds-tech-timeline"),
+      societyMoreBtn: $("#ds-society-more-btn"), techMoreBtn: $("#ds-tech-more-btn"),
+    },
+    desc, decadeId, state.techItems,
+    {
+      isSociety,
+      onTechClick: (t) => ctx.explore.openTechDetail(t),
+      onMore: (which, text) => {
+        document.getElementById("dm-title").textContent =
+          `${decadeId}-tallet — ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`;
+        document.getElementById("dm-text").innerHTML = formatInfoText(text);
+        modalOpen(document.getElementById("modal-decade-more"));
+      },
+    }
+  );
+  const kilderEl = $("#ds-kilder-view");
+  if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
+}
 
 export function openSingleDecadeModal(decadeId, mode) {
   if (mode) teacherContextMode = mode;
@@ -28,51 +55,9 @@ export function openSingleDecadeModal(decadeId, mode) {
   const isSociety = teacherContextMode === "society";
   $("#decade-single-title").textContent = `${decadeId}-tallet — ${isSociety ? "samfunn" : "teknologi"}`;
 
-  const noText = "Ingen beskrivelse ennå.";
-  const societyText = $("#ds-society-text");
-  const techText = $("#ds-tech-text");
-  societyText.innerHTML = desc.society ? formatInfoText(desc.society) : noText;
-  societyText.className = "info-text" + (desc.society ? "" : " muted");
-  techText.innerHTML = desc.tech ? formatInfoText(desc.tech) : noText;
-  techText.className = "info-text" + (desc.tech ? "" : " muted");
-
-  const stl = $("#ds-society-timeline");
-  if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
-  const ttl = $("#ds-tech-timeline");
-  if (ttl) {
-    ttl.innerHTML = buildTechTimeline(state.techItems, decadeId);
-    ttl.querySelectorAll("[data-tech-id]").forEach(el => {
-      el.addEventListener("click", () => {
-        const t = state.techItems.find(x => x.id === el.dataset.techId);
-        if (t) ctx.explore.openTechDetail(t);
-      });
-    });
-  }
-
   $("#ds-society-section").style.display = isSociety ? "" : "none";
   $("#ds-tech-section").style.display = isSociety ? "none" : "";
-
-  const moreSociety = $("#ds-society-more-btn");
-  const moreTech = $("#ds-tech-more-btn");
-  if (moreSociety) {
-    moreSociety.style.display = desc.societyMore && isSociety ? "" : "none";
-    moreSociety.onclick = () => {
-      document.getElementById("dm-title").textContent = `${decadeId}-tallet — samfunnsutvikling`;
-      document.getElementById("dm-text").innerHTML = formatInfoText(desc.societyMore);
-      modalOpen(document.getElementById("modal-decade-more"));
-    };
-  }
-  if (moreTech) {
-    moreTech.style.display = desc.techMore && !isSociety ? "" : "none";
-    moreTech.onclick = () => {
-      document.getElementById("dm-title").textContent = `${decadeId}-tallet — teknologiutvikling`;
-      document.getElementById("dm-text").innerHTML = formatInfoText(desc.techMore);
-      modalOpen(document.getElementById("modal-decade-more"));
-    };
-  }
-
-  const kilderEl = $("#ds-kilder-view");
-  if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
+  renderDecadeSingleSections(decadeId, desc, isSociety);
 
   $("#ds-society").value = desc.society || "";
   $("#ds-tech").value = desc.tech || "";
@@ -117,25 +102,15 @@ function buildDecadeKilderRows(kilder) {
   (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(wrap, k.text || "", k.url || "", "ds"));
 }
 
-function addKilderRow(wrap, text = "", url = "", prefix = "ds") {
-  const row = document.createElement("div");
-  row.className = "source-row";
-  row.innerHTML = `
-    <input type="text" class="${prefix}-kilde-text source-text" placeholder="Kilde …" value="${escapeHtml(text)}">
-    <input type="url" class="${prefix}-kilde-url source-url" placeholder="https://… (valgfritt)" value="${escapeHtml(url)}">
-    <button type="button" class="btn ghost small remove-source">✕</button>
-  `;
-  row.querySelector(".remove-source").addEventListener("click", () => row.remove());
-  wrap.appendChild(row);
+// Kilder-radene bruker den delte row-editor.js (samme SOURCE_SPEC som student-
+// og lærer-artistskjemaet). prefix-argumentet beholdes for kall-kompatibilitet,
+// men brukes ikke lenger (de gamle prefiks-klassene var døde).
+function addKilderRow(wrap, text = "", url = "") {
+  return addRow(wrap, SOURCE_SPEC, { text, url });
 }
 
 function collectKilderRows(wrap) {
-  return [...wrap.querySelectorAll(".source-row")]
-    .map((r) => ({
-      text: r.querySelector(".source-text").value.trim(),
-      url: r.querySelector(".source-url").value.trim(),
-    }))
-    .filter((k) => k.text);
+  return collectRows(wrap, SOURCE_SPEC);
 }
 
 export function setupSubgenreSingleSave() {
@@ -183,25 +158,9 @@ export function setupDecadeSingleSave() {
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
 
-      const noText = "Ingen beskrivelse ennå.";
-      const societyText = $("#ds-society-text");
-      const techText = $("#ds-tech-text");
-      societyText.innerHTML = society ? formatInfoText(society) : noText;
-      societyText.className = "info-text" + (society ? "" : " muted");
-      techText.innerHTML = tech ? formatInfoText(tech) : noText;
-      techText.className = "info-text" + (tech ? "" : " muted");
-      const stl2 = $("#ds-society-timeline");
-      if (stl2) stl2.innerHTML = buildTimeline(society, decadeId);
-      const ttl2 = $("#ds-tech-timeline");
-      if (ttl2) {
-        ttl2.innerHTML = buildTechTimeline(state.techItems, decadeId);
-        ttl2.querySelectorAll("[data-tech-id]").forEach(el2 => {
-          el2.addEventListener("click", () => {
-            const t2 = state.techItems.find(x => x.id === el2.dataset.techId);
-            if (t2) ctx.explore.openTechDetail(t2);
-          });
-        });
-      }
+      // Re-render fra de nettopp lagrede verdiene (også les-mer-knapper og
+      // kilder — ikke bare tekst/tidslinjer som før, som ga stale visning).
+      renderDecadeSingleSections(decadeId, { society, tech, societyMore, techMore, kilder }, teacherContextMode === "society");
 
       setTimeout(() => {
         $("#ds-view").style.display = "";

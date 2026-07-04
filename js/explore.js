@@ -1,8 +1,8 @@
-import { escapeHtml, formatInfoText, buildTimeline, buildTechTimeline, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.78";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.78";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.78";
-import { isVisible } from "./limits.js?v=2.78";
-import { safeUrl } from "./util.js?v=2.78";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.79";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.79";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.79";
+import { isVisible } from "./limits.js?v=2.79";
+import { safeUrl } from "./util.js?v=2.79";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -76,6 +76,15 @@ const VK_HEAT = {
     console.warn(
       `Varmekart: ${missing.length} sjanger(e) mangler VK_HEAT-rad i explore.js og vises som «ingen data»:`,
       missing
+    );
+  }
+  // Motsatt vei: VK_HEAT-rader som ikke matcher en tre-sjanger (g≠null) kan
+  // aldri rendres — fanger feilstavinger, omdøpinger og foreldreløse rader.
+  const orphan = Object.keys(VK_HEAT).filter((k) => !GENEALOGY_MAIN_GENRES.includes(k));
+  if (orphan.length) {
+    console.warn(
+      `Varmekart: ${orphan.length} VK_HEAT-rad(er) matcher ingen tre-sjanger og vises aldri:`,
+      orphan
     );
   }
 }
@@ -384,36 +393,23 @@ function openDecadeView(decadeId) {
   if (societySection) societySection.style.display = isSociety ? "" : "none";
   if (techSection) techSection.style.display = isSociety ? "none" : "";
 
-  const societyEl = document.getElementById("dv-society");
-  const techEl = document.getElementById("dv-tech");
-  societyEl.innerHTML = desc.society ? formatInfoText(desc.society) : "Ingen beskrivelse ennå.";
-  societyEl.className = "info-text" + (desc.society ? "" : " muted");
-  techEl.innerHTML = desc.tech ? formatInfoText(desc.tech) : "Ingen beskrivelse ennå.";
-  techEl.className = "info-text" + (desc.tech ? "" : " muted");
-
-  const stl = document.getElementById("dv-society-timeline");
-  if (stl) stl.innerHTML = buildTimeline(desc.society, decadeId);
-  const ttl = document.getElementById("dv-tech-timeline");
-  if (ttl) {
-    ttl.innerHTML = buildTechTimeline(s.techItems, decadeId);
-    ttl.querySelectorAll("[data-tech-id]").forEach(el => {
-      el.addEventListener("click", () => {
-        const t = s.techItems.find(x => x.id === el.dataset.techId);
-        if (t) openTechDetail(t);
-      });
-    });
-  }
-
-  const moreSociety = document.getElementById("dv-society-more");
-  const moreTech = document.getElementById("dv-tech-more");
-  if (moreSociety) {
-    moreSociety.style.display = desc.societyMore && isSociety ? "" : "none";
-    moreSociety.onclick = () => openDecadeMore(`${decadeId}-tallet — samfunnsutvikling`, desc.societyMore);
-  }
-  if (moreTech) {
-    moreTech.style.display = desc.techMore && !isSociety ? "" : "none";
-    moreTech.onclick = () => openDecadeMore(`${decadeId}-tallet — teknologiutvikling`, desc.techMore);
-  }
+  renderDecadeSections(
+    {
+      societyEl: document.getElementById("dv-society"),
+      techEl: document.getElementById("dv-tech"),
+      societyTl: document.getElementById("dv-society-timeline"),
+      techTl: document.getElementById("dv-tech-timeline"),
+      societyMoreBtn: document.getElementById("dv-society-more"),
+      techMoreBtn: document.getElementById("dv-tech-more"),
+    },
+    desc, decadeId, s.techItems,
+    {
+      isSociety,
+      onTechClick: openTechDetail,
+      onMore: (which, text) => openDecadeMore(
+        `${decadeId}-tallet — ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`, text),
+    }
+  );
 
   const propSociety = document.getElementById("dv-society-propose");
   const propTech = document.getElementById("dv-tech-propose");
@@ -626,8 +622,15 @@ function openSubgenreList() {
   const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
 
   // Tre-drevet: alle sjangre fra treet vises alltid. De artist-taggede er en
-  // delmengde (isMainGenre), men tas med for sikkerhets skyld.
-  const withArtists = new Set(active.flatMap(a => (a.mainGenre || []).filter(isMainGenre)));
+  // delmengde (isMainGenre), men tas med for sikkerhets skyld. Kanoniser til
+  // treets stavemåte, ellers gir en fritekst-tagg som «blues» både en ekstra
+  // chip OG at offisielle «Blues» feilaktig vises som tom.
+  const canonMain = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
+  const withArtists = new Set(
+    active.flatMap(a => (a.mainGenre || [])
+      .filter(isMainGenre)
+      .map(s => canonMain.get(s.toLowerCase()) || s))
+  );
   const sjangre = [...new Set([...GENEALOGY_MAIN_GENRES, ...withArtists])]
     .sort((a, b) => a.localeCompare(b, "no"));
   const slEl = document.getElementById("sl-chips");
@@ -642,7 +645,10 @@ function openSubgenreList() {
   // Hovedsjangre (metaGenre): den grøvste grupperingen. Treet gir fasiten
   // (GENEALOGY_META_GENRES); artist-taggede metaGenre tas med for sikkerhets skyld.
   // data-meta (ikke data-sjanger) → klikk åpner META-nivåets beskrivelse.
-  const withMetaArtists = new Set(active.map(a => a.metaGenre).filter(Boolean));
+  const canonMeta = new Map(GENEALOGY_META_GENRES.map((g) => [g.toLowerCase(), g]));
+  const withMetaArtists = new Set(
+    active.map(a => a.metaGenre).filter(Boolean).map(m => canonMeta.get(m.toLowerCase()) || m)
+  );
   const meta = [...new Set([...GENEALOGY_META_GENRES, ...withMetaArtists])]
     .sort((a, b) => a.localeCompare(b, "no"));
   const hlEl = document.getElementById("hl-chips");

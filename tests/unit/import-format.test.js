@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { flattenGenreDescriptions, validateArtistsForImport } from "../../js/import-format.js?v=2.78";
+import { flattenGenreDescriptions, validateArtistsForImport } from "../../js/import-format.js?v=2.79";
 
 test("nestet format (meta/main/sub) flates ut", () => {
   const nested = {

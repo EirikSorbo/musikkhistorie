@@ -5,7 +5,7 @@
 //  (lagres i Firestore), men dette er utgangspunktet hvis databasen er tom.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.78";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.79";
 
 export const DEFAULT_CONFIG = {
   maxTotal: 80,
@@ -86,6 +86,42 @@ export function decadesForRange(startYear, endYear) {
   const result = [];
   for (let d = first; d <= last; d += 10) result.push(d);
   return result;
+}
+
+// Delt innholdsfilter for artistlister (sjanger/meta/instrument/undersjanger/
+// prioritet/tiår/søk). Status-/synlighetsfiltrering gjøres av kalleren FØR dette,
+// siden student- og lærer-visningen har ulike regler der. Ren funksjon —
+// enhetstestbar, og holder filterlogikken ett sted (landing.js + ui.js delte den
+// før i to kopier som allerede hadde driftet fra hverandre).
+export function filterArtists(list, filters = {}) {
+  if (filters.mainGenre) {
+    const sj = filters.mainGenre.toLowerCase();
+    list = list.filter((a) => a.metaGenre === filters.mainGenre
+      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
+  }
+  if (filters.metaGenre) list = list.filter((a) => a.metaGenre === filters.metaGenre);
+  if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
+  if (filters.subgenre) {
+    const sg = filters.subgenre;
+    list = list.filter((a) => (a.subGenre || []).includes(sg) || (a.mainGenre || []).includes(sg));
+  }
+  if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
+  if (filters.decade) {
+    const d = Number(filters.decade);
+    list = list.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(d));
+  }
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    const qn = q.replace(/[.\-]/g, "");
+    list = list.filter((a) =>
+      a.name.toLowerCase().includes(q) ||
+      a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
+      (a.geography || "").toLowerCase().includes(q) ||
+      (a.mainGenre || []).some((s) => s.toLowerCase().includes(q)) ||
+      (a.subGenre || []).some((s) => s.toLowerCase().includes(q)));
+  }
+  return list;
 }
 
 function countBy(list, key) {

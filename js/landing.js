@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.78";
-import { DEFAULT_CONFIG, decadesForRange, isVisible } from "./limits.js?v=2.78";
-import { debounce, throttle } from "./util.js?v=2.78";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.78";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.78";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.78";
-import { initExplore } from "./explore.js?v=2.78";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.78";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.79";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.79";
+import { debounce, throttle } from "./util.js?v=2.79";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.79";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.79";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.79";
+import { initExplore } from "./explore.js?v=2.79";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.79";
 
 const state = {
   artists: [],
@@ -30,9 +30,19 @@ const voteFailed = (err) => {
   console.error("Stemme feilet:", err);
   alert("Kunne ikke registrere stemmen (" + (err?.message || err) + "). Prøv igjen.");
 };
+// Hindrer at et dobbeltklikk sender to skrivinger på samme kort: den andre
+// ville vært en no-op (uid alt lagt til/fjernet) som reglene avviser, og gitt
+// en falsk «kunne ikke registrere»-feil. Én stemmeoperasjon per artist om
+// gangen; knappen får riktig tilstand når snapshotet kommer.
+const voteInFlight = new Set();
+function guardedVote(id, fn) {
+  if (voteInFlight.has(id)) return;
+  voteInFlight.add(id);
+  fn(id).catch(voteFailed).finally(() => voteInFlight.delete(id));
+}
 const handlers = {
-  voteUp: (id) => voteUp(id).catch(voteFailed),
-  undoVoteUp: (id) => undoVoteUp(id).catch(voteFailed),
+  voteUp: (id) => guardedVote(id, voteUp),
+  undoVoteUp: (id) => guardedVote(id, undoVoteUp),
 };
 
 let explore = null;
@@ -63,6 +73,12 @@ function setupProposeButtons() {
     e.stopPropagation();
     const type = btn.dataset.proposeType;
     const id = btn.dataset.proposeId;
+    // Samme pending-lås som detaljvisningen: ikke åpne editoren når det alt
+    // ligger et ubehandlet endringsforslag for entiteten.
+    if (hasPendingEdit(type, id)) {
+      alert("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
+      return;
+    }
     if (type === "artist") {
       const a = state.artists.find((x) => x.id === id);
       if (!a) return;
@@ -224,32 +240,9 @@ function renderFilterResults() {
     return;
   }
 
-  let pool = state.artists.filter(isVisible);
-
-  if (state.filters.mainGenre) {
-    const sj = state.filters.mainGenre.toLowerCase();
-    pool = pool.filter((a) => a.metaGenre === state.filters.mainGenre
-      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
-      || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
-  }
-  if (state.filters.metaGenre)      pool = pool.filter((a) => a.metaGenre === state.filters.metaGenre);
-  if (state.filters.instrument) pool = pool.filter((a) => a.instrument === state.filters.instrument);
-  if (state.filters.decade) {
-    const d = Number(state.filters.decade);
-    pool = pool.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(d));
-  }
-  if (state.filters.search) {
-    const q = state.filters.search.toLowerCase();
-    const qn = q.replace(/[.\-]/g, "");
-    pool = pool.filter(
-      (a) =>
-        a.name.toLowerCase().includes(q) ||
-        a.name.toLowerCase().replace(/[.\-]/g, "").includes(qn) ||
-        (a.geography || "").toLowerCase().includes(q) ||
-        (a.mainGenre || []).some(s => s.toLowerCase().includes(q)) ||
-        (a.subGenre || []).some(s => s.toLowerCase().includes(q))
-    );
-  }
+  // isVisible-filteret (status/synlighet) først, deretter det delte
+  // innholdsfilteret — samme funksjon som «Alle forslag»-lista bruker.
+  const pool = filterArtists(state.artists.filter(isVisible), state.filters);
 
   renderResultList(el, pool, state.config, openDetail);
   renderContextBox();
