@@ -36,14 +36,15 @@ import {
 
 import { firebaseConfig } from "./firebase-config.js?v=2.85";
 import { DEFAULT_CONFIG } from "./limits.js?v=2.85";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.85";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.85";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.85";
+import { isMainGenre } from "./genealogy.js?v=2.85";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=2.85";
+import { normalizeConfig } from "./config-normalize.js?v=2.85";
 import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.85";
 
-// Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
-// re-eksporteres her så eksisterende importer fortsatt virker.
-export { normalizeArtist };
+// Normaliserings-/bygge-logikken bor i artist-normalize.js og
+// config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
+// eksisterende importer fortsatt virker.
+export { normalizeArtist, buildArtistDoc, normalizeConfig };
 
 const app = initializeApp(firebaseConfig);
 
@@ -146,23 +147,6 @@ export function subscribeArtists(callback) {
   });
 }
 
-// Bakoverkompat for config: gamle nøkler → nye (genres→metaGenres osv.).
-function normalizeConfig(d) {
-  const c = { ...d };
-  if (c.metaGenres == null && c.genres != null) c.metaGenres = c.genres;
-  if (c.metaGenreLimits == null && c.genreLimits != null) c.metaGenreLimits = c.genreLimits;
-  if (c.maxPerMetaGenre == null && c.maxPerGenre != null) c.maxPerMetaGenre = c.maxPerGenre;
-  delete c.genres; delete c.genreLimits; delete c.maxPerGenre;
-  // Treet er sannhetskilde: metasjangre derfra skal alltid være med, selv om
-  // læreren har lagret en egen liste. Lærertillegg beholdes, treets vinner.
-  // Lagrede navn migreres gjennom META_RENAME, så omdøpte metasjangre ikke
-  // henger igjen fra eldre config.
-  const saved = (Array.isArray(c.metaGenres) ? c.metaGenres : [])
-    .map((m) => META_RENAME[m] || m);
-  c.metaGenres = [...new Set([...GENEALOGY_META_GENRES, ...saved])];
-  return c;
-}
-
 // Lytter på konfigurasjon. Bruker standardgrenser til læreren lagrer egne.
 // Callback får (config, meta): meta.fallback er true når lesingen FEILET og
 // configen bare er standardverdier — da må admin-lagring blokkeres, ellers
@@ -206,37 +190,15 @@ export function signOutTeacher() {
 //  STUDENTHANDLINGER
 // ----------------------------------------------------------------------------
 
-// Bygger Firestore-dokumentet for en artist ut fra skjemaet (artist-schema.js)
-// + systemfeltene. Delt av addArtist og addArtistsBulk.
-function buildArtistDoc(data) {
-  const n = normalizeArtist(data);
-  const docData = {};
-  for (const f of ARTIST_FIELDS) {
-    docData[f.key] = n[f.key] ?? emptyValueFor(f.type);
-  }
-  // Status bevares ved lærer-import (active/removed); alt annet → pending.
-  const status = ["active", "removed"].includes(data.status) ? data.status : "pending";
-  return {
-    ...docData,
-    proposedBy: n.proposedBy || "Anonym",
-    status,
-    removedBy: status === "removed" ? "teacher" : null,
-    teacherChecked: n.teacherChecked || false,
-    priority: n.priority || 0,
-    // Bevar innkommende stemmer ved lærer-import (tapsfri backup/restore).
-    // Studentinnsending kan IKKE smugle inn stemmer: skjemaet setter aldri
-    // votedUpBy, og Firestore-reglene krever tom votedUpBy for ikke-lærere.
-    votedUpBy: Array.isArray(n.votedUpBy)
-      ? n.votedUpBy.filter((v) => typeof v === "string")
-      : [],
-    addedYear: Number.isInteger(n.addedYear) ? n.addedYear : new Date().getFullYear(),
-    createdAt: serverTimestamp(),
-  };
+// Firestore-dokumentet bygges av buildArtistDoc (artist-normalize.js);
+// serverTimestamp() kan ikke lages i den rene modulen, så det legges på her.
+function artistDocWithTimestamp(data) {
+  return { ...buildArtistDoc(data), createdAt: serverTimestamp() };
 }
 
 // Legg inn et nytt forslag. Normaliserer inn til ny modell før skriving.
 export async function addArtist(data) {
-  return addDoc(artistsCol, buildArtistDoc(data));
+  return addDoc(artistsCol, artistDocWithTimestamp(data));
 }
 
 // Firestore tillater maks 500 operasjoner per batch.
@@ -248,7 +210,7 @@ export async function addArtistsBulk(list) {
   for (let i = 0; i < list.length; i += BATCH_LIMIT) {
     const batch = writeBatch(db);
     for (const data of list.slice(i, i + BATCH_LIMIT)) {
-      batch.set(doc(artistsCol), buildArtistDoc(data));
+      batch.set(doc(artistsCol), artistDocWithTimestamp(data));
     }
     await batch.commit();
   }
@@ -374,9 +336,18 @@ export async function saveDecadeDesc(decadeId, data) {
   return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
 }
 
-// Skriver hele sjangerbeskrivelse-dokumentet (brukt av import).
-export async function saveGenreDesc(genreId, data) {
-  return setDoc(doc(db, "genreDescriptions", genreId), data, { merge: true });
+// Skriver mange dokumenter til én samling i batch (merge-set), i stedet for
+// én og én skriving — dramatisk raskere ved import. entries = [{ id, data }].
+// Returnerer antall skrevne dokumenter.
+export async function saveDocsBulk(collectionName, entries) {
+  for (let i = 0; i < entries.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const { id, data } of entries.slice(i, i + BATCH_LIMIT)) {
+      batch.set(doc(db, collectionName, String(id)), data, { merge: true });
+    }
+    await batch.commit();
+  }
+  return entries.length;
 }
 
 // Skriver beskrivelse for ETT nivå (meta/main/sub) — resten av dokumentet

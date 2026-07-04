@@ -2,7 +2,8 @@ import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, rende
 import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.85";
 import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.85";
 import { isVisible } from "./limits.js?v=2.85";
-import { safeUrl } from "./util.js?v=2.85";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.85";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.85";
 import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.85";
 import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.85";
 import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.85";
@@ -246,55 +247,15 @@ const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Artistliste-popup -->
-<div class="modal-backdrop" id="modal-artistliste">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="al-title"></h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <div id="al-body"></div>
-  </div>
-</div>
+<!-- Artistliste, spilleliste, sjanger-beskrivelse og teknologi-detalj deles
+     med slektstresiden (tre.js) — markupen bor i ui-modal-fragments.js. -->
+${ARTISTLISTE_MODAL_HTML}
 
-<!-- Spilleliste-popup -->
-<div class="modal-backdrop" id="modal-spilleliste">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="pl-title"></h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <div id="pl-body"></div>
-  </div>
-</div>
+${SPILLELISTE_MODAL_HTML}
 
-<!-- Sjanger-beskrivelse -->
-<div class="modal-backdrop" id="modal-sjanger">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="sj-title"></h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <div id="sj-body"></div>
-    <div class="modal-foot-right" id="sj-foot" style="display:none">
-      <button type="button" class="btn ghost small" id="sj-propose">Foreslå endring</button>
-    </div>
-  </div>
-</div>
+${SJANGER_MODAL_HTML}
 
-<!-- Teknologi-detalj -->
-<div class="modal-backdrop" id="modal-tech-detail">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="td-title"></h2>
-      <button class="modal-close btn ghost small">&#x2715;</button>
-    </div>
-    <div id="td-body"></div>
-    <div class="modal-foot-right" id="td-foot" style="display:none">
-      <button type="button" class="btn ghost small" id="td-propose">Foreslå endring</button>
-    </div>
-  </div>
-</div>
+${TECH_DETAIL_MODAL_HTML}
 
 <!-- Det store bildet: samleinngang til alle tidslinjer og visuelle oversikter.
      Målene bor fortsatt der de alltid har bodd (Artister, Sjangre, tiårene) —
@@ -554,20 +515,7 @@ function renderPodkastList() {
     el.innerHTML = `<p class="muted empty" style="background:#fff">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`;
     return;
   }
-  el.innerHTML = s.podcasts.map((ep) => {
-    const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
-    const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
-    const audio = safeUrl(ep.audioUrl);
-    return `
-      <article class="podkast-episode">
-        <div class="podkast-header">
-          <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
-          ${duration}
-        </div>
-        ${desc}
-        ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
-      </article>`;
-  }).join("");
+  el.innerHTML = s.podcasts.map((ep) => podcastEpisodeHtml(ep)).join("");
 }
 
 function openTeknologi() {

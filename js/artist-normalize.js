@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { safeUrl } from "./util.js?v=2.85";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.85";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen).
@@ -75,4 +76,33 @@ export function normalizeArtist(a) {
   out.imageCredit = out.imageCredit || "";
 
   return out;
+}
+
+// Bygger Firestore-dokumentet for en artist ut fra skjemaet (artist-schema.js)
+// + systemfeltene. Delt av addArtist og addArtistsBulk (store.js), som legger
+// på createdAt: serverTimestamp() selv — holdt utenfor her, så modulen forblir
+// avhengighetsfri og enhetstestbar.
+export function buildArtistDoc(data) {
+  const n = normalizeArtist(data);
+  const docData = {};
+  for (const f of ARTIST_FIELDS) {
+    docData[f.key] = n[f.key] ?? emptyValueFor(f.type);
+  }
+  // Status bevares ved lærer-import (active/removed); alt annet → pending.
+  const status = ["active", "removed"].includes(data.status) ? data.status : "pending";
+  return {
+    ...docData,
+    proposedBy: n.proposedBy || "Anonym",
+    status,
+    removedBy: status === "removed" ? "teacher" : null,
+    teacherChecked: n.teacherChecked || false,
+    priority: n.priority || 0,
+    // Bevar innkommende stemmer ved lærer-import (tapsfri backup/restore).
+    // Studentinnsending kan IKKE smugle inn stemmer: skjemaet setter aldri
+    // votedUpBy, og Firestore-reglene krever tom votedUpBy for ikke-lærere.
+    votedUpBy: Array.isArray(n.votedUpBy)
+      ? n.votedUpBy.filter((v) => typeof v === "string")
+      : [],
+    addedYear: Number.isInteger(n.addedYear) ? n.addedYear : new Date().getFullYear(),
+  };
 }

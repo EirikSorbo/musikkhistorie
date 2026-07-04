@@ -81,13 +81,7 @@ export function renderResultList(el, artists, config, onSelect) {
     const workSnippet = firstTitle
       ? escapeHtml(firstTitle) + (works.length > 1 ? ` <span class="muted">(+${works.length - 1} til)</span>` : "")
       : "";
-    const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
-    const under = Array.isArray(a.subGenre) ? a.subGenre : [];
-    const tags = [
-      ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-      ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-      a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
-    ].filter(Boolean).join("");
+    const tags = genreTags(a, { withInstrument: true });
     return `
     <div class="result-row" data-id="${escapeHtml(a.id)}" tabindex="0" role="button">
       <span class="result-name result-link">${escapeHtml(a.name)}</span>
@@ -414,13 +408,7 @@ function buildArtistListRows(list) {
     const years = a.influenceStart
       ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
       : "";
-    const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
-    const under = Array.isArray(a.subGenre) ? a.subGenre : [];
-    const tags = [
-      ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-      ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-      a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
-    ].filter(Boolean).join("");
+    const tags = genreTags(a, { withInstrument: true });
     return `<div class="result-row" data-artist-id="${escapeHtml(a.id)}" tabindex="0" role="button">
       <span class="result-name result-link">${escapeHtml(a.name)}</span>
       <span class="result-meta">
@@ -502,9 +490,7 @@ function buildPlaylistHtml(node, artists) {
   const items = genreArtists.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
-    const sjangerTag = (a.mainGenre || [])
-      .map((s) => `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`)
-      .join("");
+    const sjangerTag = genreTags(a, { withSub: false, extraClass: "tag-pl" });
     (a.musicExamples || []).forEach((m) => {
       const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
       if (seen.has(key)) return;

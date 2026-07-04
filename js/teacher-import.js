@@ -11,8 +11,7 @@ import {
   deleteAllArtists,
   updateTech,
   addTech,
-  saveDecadeDesc,
-  saveGenreDesc,
+  saveDocsBulk,
   updateArtistFields,
 } from "./store.js?v=2.85";
 import { escapeHtml } from "./ui.js?v=2.85";
@@ -242,13 +241,11 @@ export function setupImportChoice() {
 }
 
 async function importDescriptions({ decades, genreDescriptions }) {
-  let ok = 0, fail = 0;
-  for (const [id, data] of Object.entries(decades || {})) {
-    if (hasDecadeContent(data)) {
-      try { await saveDecadeDesc(id, data); ok++; }
-      catch (e) { fail++; console.error("Tiår-import feilet for", id, e); }
-    }
-  }
+  const decadeEntries = Object.entries(decades || {})
+    .filter(([, data]) => hasDecadeContent(data))
+    .map(([id, data]) => ({ id, data }));
+
+  const genreEntries = [];
   for (const [id, data] of Object.entries(genreDescriptions || {})) {
     // Eldre flat form { description } leses ikke av appen (den leser kun
     // meta/main/sub). Pakk den inn i riktig nivå før lagring.
@@ -258,10 +255,18 @@ async function importDescriptions({ decades, genreDescriptions }) {
       toSave = { [genreSectionOf(id)]: { description, ...rest } };
     }
     if (toSave.description || toSave.meta || toSave.main || toSave.sub) {
-      try { await saveGenreDesc(id, toSave); ok++; }
-      catch (e) { fail++; console.error("Sjanger-import feilet for", id, e); }
+      genreEntries.push({ id, data: toSave });
     }
   }
+
+  // Batchet skriving (saveDocsBulk) i stedet for dokument-for-dokument.
+  // En batch er alt-eller-ingenting, så feiltelling skjer per samling.
+  let ok = 0, fail = 0;
+  try { ok += await saveDocsBulk("decades", decadeEntries); }
+  catch (e) { fail += decadeEntries.length; console.error("Tiår-import feilet:", e); }
+  try { ok += await saveDocsBulk("genreDescriptions", genreEntries); }
+  catch (e) { fail += genreEntries.length; console.error("Sjanger-import feilet:", e); }
+
   if (fail > 0) {
     alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
@@ -269,22 +274,32 @@ async function importDescriptions({ decades, genreDescriptions }) {
   }
 }
 
+// Tech kan ikke bulk-skrives generisk: hvert kort må slås opp i state.techItems
+// for å avgjøre add-vs-update. Skrivingene går derfor parallelt med
+// Promise.allSettled, som beholder feilrapportering per dokument.
 async function importTechItems(techArray) {
   if (!techArray || !techArray.length) return;
-  let added = 0, updated = 0;
-  for (const item of techArray) {
-    if (!item.name) continue;
-    const existing = state.techItems.find(t => t.name === item.name);
-    try {
-      if (existing) {
-        await updateTech(existing.id, item);
-        updated++;
-      } else {
-        await addTech(item);
-        added++;
-      }
-    } catch (e) { console.error("Tech-import feilet for", item.name, e); }
-  }
+  const jobs = techArray
+    .filter((item) => item.name)
+    .map((item) => {
+      const existing = state.techItems.find(t => t.name === item.name);
+      return {
+        name: item.name,
+        kind: existing ? "updated" : "added",
+        promise: existing ? updateTech(existing.id, item) : addTech(item),
+      };
+    });
+  const results = await Promise.allSettled(jobs.map((j) => j.promise));
+  let added = 0, updated = 0, fail = 0;
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      jobs[i].kind === "added" ? added++ : updated++;
+    } else {
+      fail++;
+      console.error("Tech-import feilet for", jobs[i].name, r.reason);
+    }
+  });
+  if (fail) alert(`${fail} teknologikort kunne ikke lagres (se konsollen).`);
   if (added || updated) alert(`Teknologi: ${added} nye, ${updated} oppdaterte.`);
 }
 

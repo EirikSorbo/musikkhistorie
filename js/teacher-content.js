@@ -9,7 +9,7 @@ import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?
 import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.85";
 import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=2.85";
 import { resolveDesc } from "./genre-descriptions.js?v=2.85";
-import { safeUrl } from "./util.js?v=2.85";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.85";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.85";
@@ -310,23 +310,7 @@ export function renderPodkastAdmin() {
     el.innerHTML = `<p class="muted empty">Ingen episoder ennå.</p>`;
     return;
   }
-  el.innerHTML = state.podcasts.map((ep) => {
-    const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
-    const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
-    const audio = safeUrl(ep.audioUrl);
-    return `
-      <article class="podkast-episode">
-        <div class="podkast-header">
-          <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
-          ${duration}
-        </div>
-        ${desc}
-        ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
-        <div class="podkast-actions">
-          <button class="btn ghost small btn-danger-text" data-pod-delete="${ep.id}">Slett</button>
-        </div>
-      </article>`;
-  }).join("");
+  el.innerHTML = state.podcasts.map((ep) => podcastEpisodeHtml(ep, { withDelete: true })).join("");
   el.querySelectorAll("[data-pod-delete]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Slette denne episoden?")) return;

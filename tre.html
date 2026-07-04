@@ -53,40 +53,10 @@
 
   <footer class="sitefoot wrap"></footer>
 
-  <!-- Sjanger-popup -->
-  <div class="modal-backdrop" id="modal-sjanger">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="sj-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="sj-body"></div>
-    </div>
-  </div>
+  <!-- Sjanger-, artistliste-, spilleliste- og teknologi-detalj-modalene deles
+       med forsiden og injiseres av tre.js (markup i js/ui-modal-fragments.js). -->
 
-  <!-- Artist-liste-popup -->
-  <div class="modal-backdrop" id="modal-artistliste">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="al-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="al-body"></div>
-    </div>
-  </div>
-
-  <!-- Spilleliste-popup -->
-  <div class="modal-backdrop" id="modal-spilleliste">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="pl-title"></h2>
-        <button class="modal-close btn ghost small">✕</button>
-      </div>
-      <div id="pl-body"></div>
-    </div>
-  </div>
-
-  <!-- Artist-detalj-popup (åpnes fra artistlisten) -->
+  <!-- Artist-detalj-popup (åpnes fra artistlisten; kun denne siden) -->
   <div class="modal-backdrop" id="modal-artist-detail">
     <div class="modal">
       <div class="modal-head">
@@ -94,17 +64,6 @@
         <button class="modal-close btn ghost small">✕</button>
       </div>
       <div id="ad-body"></div>
-    </div>
-  </div>
-
-  <!-- Teknologi-detalj -->
-  <div class="modal-backdrop" id="modal-tech-detail">
-    <div class="modal">
-      <div class="modal-head">
-        <h2 id="td-title"></h2>
-        <button class="modal-close btn ghost small">&#x2715;</button>
-      </div>
-      <div id="td-body"></div>
     </div>
   </div>
 

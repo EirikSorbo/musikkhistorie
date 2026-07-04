@@ -27,13 +27,39 @@ export function wireLinks(el, lc) {
 export const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
 
 // Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).
-export function genreTags(a) {
+// Opsjoner: withInstrument tar med instrument-boblen, withSub kan slå av
+// undersjanger-boblene, extraClass legges på alle boblene (f.eks. "tag-pl"
+// i spillelista).
+export function genreTags(a, { withInstrument = false, withSub = true, extraClass = "" } = {}) {
+  const cls = extraClass ? ` ${extraClass}` : "";
   const sjanger = Array.isArray(a.mainGenre) ? a.mainGenre : [];
-  const under = Array.isArray(a.subGenre) ? a.subGenre : [];
+  const under = withSub && Array.isArray(a.subGenre) ? a.subGenre : [];
   return [
-    ...sjanger.map((s) => `<button class="tag tag-sjanger" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-    ...under.map((s) => `<button class="tag tag-under" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-  ].join("");
+    ...sjanger.map((s) => `<button class="tag tag-sjanger${cls}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+    ...under.map((s) => `<button class="tag tag-under${cls}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
+    withInstrument && a.instrument ? `<button class="tag tag-instrument${cls}" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
+  ].filter(Boolean).join("");
+}
+
+// Podkast-episodekort — delt av student-popupen (explore.js) og lærer-admin
+// (teacher-content.js), så markupen ikke driver fra hverandre. withDelete
+// legger på slett-knappen (data-pod-delete); kalleren kobler lytteren.
+export function podcastEpisodeHtml(ep, { withDelete = false } = {}) {
+  const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
+  const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
+  const audio = safeUrl(ep.audioUrl);
+  return `
+    <article class="podkast-episode">
+      <div class="podkast-header">
+        <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
+        ${duration}
+      </div>
+      ${desc}
+      ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
+      ${withDelete ? `<div class="podkast-actions">
+        <button class="btn ghost small btn-danger-text" data-pod-delete="${escapeHtml(ep.id)}">Slett</button>
+      </div>` : ""}
+    </article>`;
 }
 
 export function yearLabel(w) {
