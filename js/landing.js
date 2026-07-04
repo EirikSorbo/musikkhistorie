@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.83";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.83";
-import { debounce, throttle } from "./util.js?v=2.83";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.83";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.83";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.83";
-import { initExplore } from "./explore.js?v=2.83";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.83";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.84";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.84";
+import { debounce, throttle } from "./util.js?v=2.84";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.84";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.84";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.84";
+import { initExplore } from "./explore.js?v=2.84";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.84";
 
 const state = {
   artists: [],
@@ -50,6 +50,13 @@ let explore = null;
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
   renderArtistDetail($("#detail-body"), artist, state.config, explore.buildLinkCtx());
+  // «Vis i tidslinje» → fokus-API-et: åpner artistens gruppe/seksjoner og
+  // uthever blokkene. Skjules for artister uten startår (de har ingen blokk).
+  const tlBtn = document.getElementById("detail-tidslinje");
+  if (tlBtn) {
+    tlBtn.style.display = Number(artist.influenceStart) > 0 ? "" : "none";
+    tlBtn.onclick = () => explore.openTidslinje({ artistId: artist.id });
+  }
   const btn = document.getElementById("detail-propose");
   if (btn) {
     const locked = hasPendingEdit("artist", artist.id);

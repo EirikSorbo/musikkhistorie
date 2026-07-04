@@ -4,15 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.83";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.83";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.83";
-import { isMainGenre } from "./genealogy.js?v=2.83";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=2.83";
-import { GENDERS } from "./limits.js?v=2.83";
-import { debounce } from "./util.js?v=2.83";
-import { $ } from "./shared.js?v=2.83";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.83";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.84";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.84";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.84";
+import { isMainGenre } from "./genealogy.js?v=2.84";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=2.84";
+import { GENDERS } from "./limits.js?v=2.84";
+import { debounce } from "./util.js?v=2.84";
+import { $ } from "./shared.js?v=2.84";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.84";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -22,6 +22,13 @@ export function openDetail(artist) {
   const modal = document.getElementById("modal-detail");
   document.getElementById("detail-name").textContent = artist.name;
   renderArtistDetail(document.getElementById("detail-body"), artist, state.config, ctx.explore.buildLinkCtx());
+  // «Vis i tidslinje» → fokus-API-et (samme som studentsiden); skjules for
+  // artister uten startår (de har ingen blokk på tidslinjen).
+  const tlBtn = document.getElementById("detail-tidslinje");
+  if (tlBtn) {
+    tlBtn.style.display = Number(artist.influenceStart) > 0 ? "" : "none";
+    tlBtn.onclick = () => ctx.explore.openTidslinje({ artistId: artist.id });
+  }
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
   const checkBtn = document.getElementById("detail-check-btn");

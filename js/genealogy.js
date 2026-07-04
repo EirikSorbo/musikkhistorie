@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.83";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.83";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.83";
-import { modalOpen, modalClose } from "./ui-modal.js?v=2.83";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.84";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.84";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.84";
+import { modalOpen, modalClose } from "./ui-modal.js?v=2.84";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -94,7 +94,7 @@ export function isMainGenre(name) {
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, genreDescs, onShowArtists }
 export function showSjangerInfo(label, opts = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onEdit, onPropose, hasPendingEdit } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -115,6 +115,7 @@ export function showSjangerInfo(label, opts = {}) {
   const btnArea = [
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
     (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+    (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Vis i tidslinje</button>` : "",
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
@@ -134,6 +135,8 @@ export function showSjangerInfo(label, opts = {}) {
   if (b) b.addEventListener("click", () => onShowArtists({ label: n.l }));
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
+  const bt = mBody.querySelector(".gx-timeline-btn");
+  if (bt) bt.addEventListener("click", () => onShowTimeline({ label: n.l }));
   const be = mBody.querySelector(".gx-edit-btn");
   if (be) be.addEventListener("click", () => onEdit(n.l, "main"));
   // Foreslå endring (student). entityId = n.l — SAMME dokument-ID som lærer-

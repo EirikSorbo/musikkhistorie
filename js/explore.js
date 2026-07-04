@@ -1,11 +1,11 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.83";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.83";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.83";
-import { isVisible } from "./limits.js?v=2.83";
-import { safeUrl } from "./util.js?v=2.83";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.83";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.83";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.83";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.84";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.84";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.84";
+import { isVisible } from "./limits.js?v=2.84";
+import { safeUrl } from "./util.js?v=2.84";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.84";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.84";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.84";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -375,6 +375,9 @@ function sjangerOpts() {
     onMainGenreClick,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForMainGenre,
+    // Tidslinjen åpnes OPPÅ sjanger-popupen (modaler stables), fokusert på
+    // denne sjangerens seksjon — ← går tilbake til popupen.
+    onShowTimeline: ({ label }) => openTidslinje({ genre: label }),
     onEdit: opts.onSubgenreEdit ? (label, level) => {
       modalClose(document.getElementById("modal-sjanger"));
       opts.onSubgenreEdit(label, level);

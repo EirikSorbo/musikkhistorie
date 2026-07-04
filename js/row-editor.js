@@ -8,7 +8,7 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=2.83";
+import { escapeHtml } from "./util.js?v=2.84";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph, title?,
 // always? (ta med i output selv når tom — ellers kun hvis utfylt) }.
