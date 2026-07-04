@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=2.79";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=2.80";
 
 const descs = {
   Blues: {

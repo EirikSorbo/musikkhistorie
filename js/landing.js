@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.79";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.79";
-import { debounce, throttle } from "./util.js?v=2.79";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.79";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.79";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.79";
-import { initExplore } from "./explore.js?v=2.79";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.79";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.80";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.80";
+import { debounce, throttle } from "./util.js?v=2.80";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.80";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.80";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.80";
+import { initExplore } from "./explore.js?v=2.80";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.80";
 
 const state = {
   artists: [],
@@ -146,6 +146,10 @@ function setupExplore() {
 
   const btnArtister = document.getElementById("btn-artister");
   if (btnArtister) btnArtister.addEventListener("click", openArtistModal);
+
+  // Tidslinje-inngang fra Artister-modalen (samme delte modal som fra Sjangre).
+  const btnTidslinje = document.getElementById("btn-tidslinje-artister");
+  if (btnTidslinje) btnTidslinje.addEventListener("click", () => explore.openTidslinje());
 
   setupModal("modal-artister");
   setupModal("modal-dagens-navn");

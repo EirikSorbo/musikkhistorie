@@ -14,7 +14,9 @@ cd "$(git rev-parse --show-toplevel)"
 VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"' || true)
 [ -n "$VER" ] || { echo "pre-push: fant ikke VERSION i js/version.js"; exit 1; }
 
-bad=$(grep -rHoE '\?v=[0-9][0-9.]*' js/*.js ./*.html tests/*/*.js | grep -v "?v=$VER" || true)
+# -a: tving tekst-tolkning. Hooken kjører i C-locale der BSD-grep ellers kan
+# feilklassifisere UTF-8-filer (›, ◆ osv.) som binære og skjule treffene.
+bad=$(grep -raHoE '\?v=[0-9][0-9.]*' js/*.js ./*.html tests/*/*.js | grep -av "?v=$VER" || true)
 if [ -n "$bad" ]; then
   echo "pre-push: cache-busting er i utakt med js/version.js (v$VER):"
   echo "$bad" | head -20

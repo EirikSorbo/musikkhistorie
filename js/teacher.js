@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.79";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.79";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.79";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.79";
-import { initExplore } from "./explore.js?v=2.79";
+} from "./store.js?v=2.80";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.80";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.80";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.80";
+import { initExplore } from "./explore.js?v=2.80";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.79";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.79";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.80";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.80";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.79";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.79";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.79";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.79";
+} from "./teacher-content.js?v=2.80";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.80";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.80";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.80";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -111,6 +111,10 @@ function startApp() {
 
   $("#btn-t-society").addEventListener("click", () => ctx.explore.openDecadeList("society"));
   $("#btn-t-tech").addEventListener("click", () => ctx.explore.openDecadeList("tech"));
+  // Tidslinje-inngang fra artistlistas filterrad (samme delte modal som fra
+  // Sjangre-modalen — én implementasjon i explore.js).
+  const btnTid = document.getElementById("btn-tidslinje-artister");
+  if (btnTid) btnTid.addEventListener("click", () => ctx.explore.openTidslinje());
   $("#btn-t-genres").addEventListener("click", ctx.explore.openSubgenreList);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
   $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);

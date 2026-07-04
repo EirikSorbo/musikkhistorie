@@ -5,7 +5,7 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=2.79";
+import { safeUrl } from "./util.js?v=2.80";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen).

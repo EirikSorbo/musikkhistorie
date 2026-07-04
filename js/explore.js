@@ -1,8 +1,9 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.79";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.79";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.79";
-import { isVisible } from "./limits.js?v=2.79";
-import { safeUrl } from "./util.js?v=2.79";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.80";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.80";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.80";
+import { isVisible } from "./limits.js?v=2.80";
+import { safeUrl } from "./util.js?v=2.80";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.80";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -180,6 +181,18 @@ const MODAL_HTML = `
     </div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter hovedsjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
+  </div>
+</div>
+
+<!-- Tidslinje: når var artistene aktive, gruppert per sjanger -->
+<div class="modal-backdrop" id="modal-tidslinje">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Tidslinje — når var artistene aktive?</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode — gruppert etter hovedsjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
+    <div id="tid-body"></div>
   </div>
 </div>
 
@@ -614,6 +627,188 @@ function openVarmekart() {
   modalOpen(modal);
 }
 
+// ----------------------------------------------------------------------------
+//  Tidslinje: når var artistene aktive? Pakket bane-tidslinje gruppert per
+//  tre-sjanger, i metasjanger-akkordeon (samme mønster og fargespråk som
+//  varmekartet). `focus` er valgfritt: { genre } åpner den metagruppen og
+//  scroller til sjangerseksjonen; { artistId } åpner artistens gruppe og
+//  uthever blokkene. Banepakkingen bor i timeline-lanes.js (enhetstestet).
+// ----------------------------------------------------------------------------
+function openTidslinje(focus = {}) {
+  const modal = document.getElementById("modal-tidslinje");
+  if (!modal) return;
+  const body = document.getElementById("tid-body");
+  const s = getState();
+  const nowYear = new Date().getFullYear();
+  const active = s.artists.filter(isVisible);
+
+  // Kanoniser artist-tagger til treets stavemåte (samme som chips-lista).
+  const canonMain = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
+
+  // Fordel artistene i seksjoner: én per tre-sjanger de er tagget med, eller
+  // en «Øvrige»-seksjon under metasjangeren hvis ingen tagg matcher treet —
+  // slik at ALLE synlige artister med startår er med, ingen forsvinner stille.
+  const OTHER = " other:";  // intern nøkkel-prefiks, kolliderer aldri med sjangernavn
+  const sections = new Map();
+  const sectionsPerArtist = new Map();
+  for (const a of active) {
+    const span = resolveSpan(a, nowYear);
+    if (!span) continue;
+    const genres = [...new Set((a.mainGenre || [])
+      .map((g) => canonMain.get(String(g).toLowerCase()))
+      .filter(Boolean))];
+    const keys = genres.length ? genres : [OTHER + (a.metaGenre || "Andre")];
+    for (const key of keys) {
+      if (!sections.has(key)) sections.set(key, []);
+      sections.get(key).push({ id: a.id, name: a.name || "(uten navn)", span });
+    }
+    sectionsPerArtist.set(a.id, keys.length);
+  }
+
+  if (!sections.size) {
+    body.innerHTML = `<p class="muted">Ingen artister med startår ennå.</p>`;
+    modalOpen(modal);
+    return;
+  }
+
+  // Grupper seksjonene under metasjanger, i treets rekkefølge (som varmekartet).
+  const groups = new Map();
+  for (const key of sections.keys()) {
+    const meta = key.startsWith(OTHER) ? key.slice(OTHER.length) : (MAIN_GENRE_INFO[key]?.meta || "Andre");
+    if (!groups.has(meta)) groups.set(meta, []);
+    groups.get(meta).push(key);
+  }
+  const metaOrder = [...GENEALOGY_META_GENRES, ...[...groups.keys()].filter((m) => !GENEALOGY_META_GENRES.includes(m))];
+
+  // Felles tidsakse over alt innhold, i hele tiår.
+  const allSpans = [...sections.values()].flat().map((i) => i.span);
+  const { y0, y1 } = timelineBounds(allSpans, nowYear);
+  const pctOf = (y) => ((y - y0) / (y1 - y0)) * 100;
+  const decades = [];
+  for (let d = y0; d <= y1 - 10; d += 10) decades.push(d);
+
+  const gridHtml = decades.map((d) =>
+    `<div style="position:absolute;top:0;bottom:0;left:${pctOf(d).toFixed(2)}%;width:1px;background:var(--line)"></div>`).join("");
+  const axisHtml = `<div style="position:relative;height:16px;margin-bottom:4px">` + decades.map((d) =>
+    `<span style="position:absolute;left:${pctOf(d).toFixed(2)}%;font-size:0.68rem;color:var(--muted);transform:translateX(-3px)">${d}</span>`).join("") + `</div>`;
+
+  // Fokus: hvilken metagruppe skal stå åpen? (standard: den første)
+  const focusGenre = focus.genre ? (canonMain.get(String(focus.genre).toLowerCase()) || focus.genre) : null;
+  let focusMeta = focusGenre ? (MAIN_GENRE_INFO[focusGenre]?.meta || null) : null;
+  if (!focusMeta && focus.artistId) {
+    for (const [key, items] of sections) {
+      if (items.some((i) => i.id === focus.artistId)) {
+        focusMeta = key.startsWith(OTHER) ? key.slice(OTHER.length) : (MAIN_GENRE_INFO[key]?.meta || "Andre");
+        break;
+      }
+    }
+  }
+
+  const earliest = (key) => Math.min(...sections.get(key).map((i) => i.span.start));
+  const groupColor = (keys) => {
+    const tally = {};
+    for (const k of keys) { const c = MAIN_GENRE_INFO[k]?.color; if (c) tally[c] = (tally[c] || 0) + 1; }
+    return Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] || FAMILIES.gray.stroke;
+  };
+
+  let html = `<div style="overflow-x:auto"><div style="min-width:720px">` + axisHtml;
+  let groupIdx = 0;
+  for (const meta of metaOrder) {
+    const keys = (groups.get(meta) || []).sort((a, b) => earliest(a) - earliest(b) || a.localeCompare(b, "no"));
+    if (!keys.length) continue;
+    const gColor = groupColor(keys);
+    const open = focusMeta ? meta === focusMeta : groupIdx === 0;
+    const artistCount = new Set(keys.flatMap((k) => sections.get(k).map((i) => i.id))).size;
+
+    html += `<div class="tid-group">`;
+    html += `<button type="button" class="tid-group-head" aria-expanded="${open}" style="width:100%;display:flex;align-items:center;gap:9px;margin:${groupIdx === 0 ? "6px" : "10px"} 0 6px;padding:4px 0 5px;border:0;border-bottom:2px solid ${gColor}40;background:none;cursor:pointer;text-align:left">`;
+    html += `<span class="tid-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>`;
+    html += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
+    html += `<span style="font-size:0.84rem;font-weight:700;color:var(--text)">${escapeHtml(meta)}</span>`;
+    html += `<span style="font-size:0.72rem;color:var(--muted)">${artistCount} artist${artistCount === 1 ? "" : "er"}</span>`;
+    html += `</button>`;
+    groupIdx++;
+
+    html += `<div class="tid-group-rows" style="display:${open ? "block" : "none"}">`;
+    for (const key of keys) {
+      const isOther = key.startsWith(OTHER);
+      const label = isOther ? "Øvrige (uten tre-sjanger)" : key;
+      const rowColor = isOther ? FAMILIES.gray.stroke : (MAIN_GENRE_INFO[key]?.color || gColor);
+      const lanes = packLanes(sections.get(key));
+      html += `<div class="tid-section" data-genre="${escapeHtml(isOther ? "" : key)}" style="margin:0 0 10px">`;
+      html += `<div style="font-size:0.8rem;color:var(--text);border-left:3px solid ${rowColor};padding:1px 8px;margin-bottom:4px">${escapeHtml(label)}</div>`;
+      html += `<div style="position:relative;height:${lanes.length * 25}px">${gridHtml}`;
+      lanes.forEach((lane, li) => {
+        for (const it of lane) {
+          const left = pctOf(it.span.start);
+          const width = Math.max(pctOf(it.visualEnd) - left, 1.2);
+          const openEnd = it.span.open;
+          const multi = (sectionsPerArtist.get(it.id) || 1) > 1;
+          const yearsTxt = `${it.span.start}${openEnd ? " → pågår / sluttår ikke satt" : "–" + it.span.end}`;
+          html += `<button type="button" class="tid-bar" data-artist-id="${escapeHtml(it.id)}" title="${escapeHtml(it.name)} · aktiv ${escapeHtml(yearsTxt)}" ` +
+            `style="position:absolute;top:${li * 25 + 1}px;left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;height:21px;` +
+            `background:${rowColor}24;border:1px solid ${rowColor}66;${openEnd ? "border-right:none;border-radius:5px 0 0 5px;" : "border-radius:5px;"}` +
+            `font-size:0.72rem;line-height:19px;padding:0 6px;color:var(--text);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">` +
+            `${escapeHtml(it.name)}${multi ? " ◆" : ""}${openEnd ? `<span style="position:absolute;right:2px;opacity:.7">›</span>` : ""}</button>`;
+        }
+      });
+      html += `</div></div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += `</div></div>`;
+
+  // Forklaring
+  html += `<div style="display:flex;align-items:center;gap:16px;margin-top:14px;font-size:0.78rem;color:var(--muted);flex-wrap:wrap">`;
+  html += `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:26px;height:12px;border-radius:4px;background:var(--line);border:1px solid var(--line-strong)"></span>kjent aktiv-periode</span>`;
+  html += `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:26px;height:12px;border-radius:4px 0 0 4px;background:var(--line);border:1px solid var(--line-strong);border-right:none"></span>› pågår / sluttår ikke satt</span>`;
+  html += `<span>◆ artist i flere sjangre</span>`;
+  html += `</div>`;
+
+  body.innerHTML = html;
+
+  // Akkordeon (samme oppførsel som varmekartet: én gruppe åpen om gangen).
+  body.querySelectorAll(".tid-group-head").forEach((head) => {
+    head.addEventListener("click", () => {
+      const wasOpen = head.getAttribute("aria-expanded") === "true";
+      body.querySelectorAll(".tid-group").forEach((grp) => {
+        const h = grp.querySelector(".tid-group-head");
+        const rows = grp.querySelector(".tid-group-rows");
+        const isThis = h === head && !wasOpen;
+        h.setAttribute("aria-expanded", isThis ? "true" : "false");
+        const caret = h.querySelector(".tid-caret");
+        if (caret) caret.style.transform = `rotate(${isThis ? 90 : 0}deg)`;
+        if (rows) rows.style.display = isThis ? "block" : "none";
+      });
+    });
+  });
+
+  // Klikk på blokk → artistkortet (samme inngang som resten av appen).
+  body.querySelectorAll(".tid-bar").forEach((bar) => {
+    bar.addEventListener("click", () => {
+      const a = s.artists.find((x) => x.id === bar.dataset.artistId);
+      if (a && opts.onArtistClick) opts.onArtistClick(a);
+    });
+  });
+
+  modalOpen(modal);
+
+  // Fokus: scroll til seksjonen/blokkene etter at modalen er synlig.
+  if (focusGenre || focus.artistId) {
+    requestAnimationFrame(() => {
+      let target = null;
+      if (focusGenre) target = body.querySelector(`.tid-section[data-genre="${CSS.escape(focusGenre)}"]`);
+      if (focus.artistId) {
+        body.querySelectorAll(`.tid-bar[data-artist-id="${CSS.escape(focus.artistId)}"]`).forEach((b) => {
+          b.style.outline = `2px solid var(--accent, #2563eb)`;
+          if (!target) target = b;
+        });
+      }
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+}
+
 function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
@@ -748,7 +943,8 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
-   "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail"].forEach((id) => setupModal(id));
+   "modal-tidslinje", "modal-artistliste", "modal-spilleliste", "modal-sjanger",
+   "modal-tech-detail"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -774,14 +970,16 @@ function wireModals() {
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {
-    let btns = `<div style="display:flex;gap:10px;margin-bottom:14px">`;
+    let btns = `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">`;
     if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="flex:1">Vis sjangertre →</button>`;
     btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Vis varmekart →</button>`;
+    btns += `<button class="btn ghost" id="btn-tidslinje" style="flex:1">Vis tidslinje →</button>`;
     btns += `</div>`;
     slExtra.innerHTML = btns;
     const treBtn = slExtra.querySelector("#btn-slektstre");
     if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());
     slExtra.querySelector("#btn-varmekart").addEventListener("click", openVarmekart);
+    slExtra.querySelector("#btn-tidslinje").addEventListener("click", () => openTidslinje());
   }
 
   const tekExtra = document.getElementById("tek-admin-extra");
@@ -849,6 +1047,7 @@ export function initExplore(options) {
     openDecadeList,
     openSubgenreList,
     openVarmekart,
+    openTidslinje,
     openPodkast,
     openTeknologi,
     openTechDetail,
