@@ -140,8 +140,9 @@ function startApp() {
     return;
   }
 
-  subscribeConfig((config) => {
+  subscribeConfig((config, meta) => {
     state.config = config;
+    state.configIsFallback = !!meta?.fallback;
     refreshControls();
     fillAdminForm();
     renderAll();

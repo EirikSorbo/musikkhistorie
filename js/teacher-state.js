@@ -21,6 +21,9 @@ import { $ } from "./shared.js?v=2.85";
 export const state = {
   artists: [],
   config: null,
+  // true når config-lesingen feilet og state.config bare er standardverdier —
+  // da må admin-lagring blokkeres, ellers overskrives de ekte grensene.
+  configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
   podcasts: [],
@@ -38,19 +41,29 @@ export const state = {
 //  - openEditModal: settes av teacher-artists.js, kalles av handlers.edit
 export const ctx = { explore: null, openEditModal: null };
 
+// Feil fra lærerhandlinger (regel-avvisning, utlogget økt, nettverk) skal ikke
+// svelges stille — da tror læreren at klikket ble lagret. Samme prinsipp som
+// voteFailed på forsiden; UI-tilstanden retter seg når neste snapshot kommer.
+export function guardTeacherAction(promise) {
+  return Promise.resolve(promise).catch((err) => {
+    console.error("Lærerhandling feilet:", err);
+    alert("Handlingen ble ikke lagret (" + (err?.message || err) + "). Prøv igjen.");
+  });
+}
+
 export const handlers = {
-  approve:     (id) => teacherApprove(id),
-  reject:      (id) => { if (confirm("Avvise dette forslaget?")) teacherReject(id); },
-  remove:      (id) => setArtistPriority(id, -1),
-  restore:     (id) => setArtistPriority(id, 0),
-  del:         (id) => { if (confirm("Slette dette forslaget permanent?")) teacherDelete(id); },
+  approve:     (id) => guardTeacherAction(teacherApprove(id)),
+  reject:      (id) => { if (confirm("Avvise dette forslaget?")) guardTeacherAction(teacherReject(id)); },
+  remove:      (id) => guardTeacherAction(setArtistPriority(id, -1)),
+  restore:     (id) => guardTeacherAction(setArtistPriority(id, 0)),
+  del:         (id) => { if (confirm("Slette dette forslaget permanent?")) guardTeacherAction(teacherDelete(id)); },
   edit:        (id) => ctx.openEditModal?.(id),
-  priority3:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 3 ? 0 : 3); },
-  priority2:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 2 ? 0 : 2); },
-  priority1:   (id) => { const a = state.artists.find(x => x.id === id); setArtistPriority(id, a?.priority === 1 ? 0 : 1); },
+  priority3:   (id) => { const a = state.artists.find(x => x.id === id); guardTeacherAction(setArtistPriority(id, a?.priority === 3 ? 0 : 3)); },
+  priority2:   (id) => { const a = state.artists.find(x => x.id === id); guardTeacherAction(setArtistPriority(id, a?.priority === 2 ? 0 : 2)); },
+  priority1:   (id) => { const a = state.artists.find(x => x.id === id); guardTeacherAction(setArtistPriority(id, a?.priority === 1 ? 0 : 1)); },
   toggleCheck: (id) => {
     const a = state.artists.find(x => x.id === id);
-    updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) });
+    guardTeacherAction(updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) }));
   },
 };
 

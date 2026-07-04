@@ -12,6 +12,9 @@ cd "$(dirname "$0")"
 VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"')
 [ -n "$VER" ] || { echo "Fant ikke VERSION i js/version.js"; exit 1; }
 
+# nullglob: et mønster uten treff (f.eks. tomt tests/) skal forsvinne, ikke
+# sendes bokstavelig til perl — det ville stoppet løkka midt i en delvis bump.
+shopt -s nullglob
 for f in js/*.js *.html tests/*/*.js; do
   perl -i -pe "s/\?v=[0-9][0-9.]*/?v=$VER/g" "$f"
 done

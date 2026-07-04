@@ -164,16 +164,22 @@ function normalizeConfig(d) {
 }
 
 // Lytter på konfigurasjon. Bruker standardgrenser til læreren lagrer egne.
+// Callback får (config, meta): meta.fallback er true når lesingen FEILET og
+// configen bare er standardverdier — da må admin-lagring blokkeres, ellers
+// kan et påfølgende lagre overskrive de ekte grensene med standard.
+// (At dokumentet ikke finnes ennå er derimot ikke en feil — da ER standard
+// den reelle configen.)
 export function subscribeConfig(callback) {
   return onSnapshot(configRef, (snap) => {
     if (!snap.exists()) {
-      callback({ ...DEFAULT_CONFIG });
+      callback({ ...DEFAULT_CONFIG }, { fallback: false });
     } else {
-      callback({ ...DEFAULT_CONFIG, ...normalizeConfig(snap.data()) });
+      callback({ ...DEFAULT_CONFIG, ...normalizeConfig(snap.data()) }, { fallback: false });
     }
   }, (err) => {
     console.error("Kunne ikke lese konfig – sjekk Firestore-regler:", err.code, err.message);
-    callback({ ...DEFAULT_CONFIG });
+    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
+    callback({ ...DEFAULT_CONFIG }, { fallback: true, error: err });
   });
 }
 
@@ -505,7 +511,7 @@ const teacherChecksRef = doc(db, "config", "teacherChecks");
 export function subscribeTeacherChecks(callback) {
   return onSnapshot(teacherChecksRef, (snap) => {
     callback(snap.exists() ? snap.data() : { genres: [], subgenres: [] });
-  });
+  }, (err) => console.error("Kunne ikke lese teacherChecks (sjekk Firestore-regler):", err.message));
 }
 
 export async function setTeacherChecks(data) {

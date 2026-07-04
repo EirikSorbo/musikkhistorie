@@ -55,9 +55,19 @@ async function saveSection(section) {
   }
 
   if (!CONFIGURED) { msgEl.textContent = "Firebase ikke koblet til."; return; }
-  await updateConfig({ ...state.config, ...updates });
-  msgEl.textContent = "Lagret ✓";
-  setTimeout(() => (msgEl.textContent = ""), 2500);
+  // Fallback-config = standardverdier fordi lesingen feilet. Å lagre nå ville
+  // overskrevet lærerens ekte grenser med standard — blokker og forklar.
+  if (state.configIsFallback) {
+    msgEl.textContent = "Ikke lagret: konfigurasjonen kunne ikke leses fra databasen, så feltene viser standardverdier. Last siden på nytt før du lagrer.";
+    return;
+  }
+  try {
+    await updateConfig({ ...state.config, ...updates });
+    msgEl.textContent = "Lagret ✓";
+    setTimeout(() => (msgEl.textContent = ""), 2500);
+  } catch (err) {
+    msgEl.textContent = "Feil ved lagring: " + (err?.message || err);
+  }
 }
 
 export function fillAdminForm() {

@@ -5,7 +5,7 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state } from "./teacher-state.js?v=2.85";
+import { state, guardTeacherAction } from "./teacher-state.js?v=2.85";
 import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.85";
 import { resolveDesc } from "./genre-descriptions.js?v=2.85";
 import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=2.85";
@@ -120,13 +120,13 @@ export function setupPendingEditsUi() {
       }
       const apprBtn = e.target.closest('[data-action="approve-tech"]');
       if (apprBtn) {
-        await approveTech(apprBtn.dataset.id);
+        await guardTeacherAction(approveTech(apprBtn.dataset.id));
         return;
       }
       const rejBtn = e.target.closest('[data-action="reject-tech"]');
       if (rejBtn) {
         if (confirm("Avvise (slette) dette innovasjonskortet?")) {
-          await deleteTech(rejBtn.dataset.id);
+          await guardTeacherAction(deleteTech(rejBtn.dataset.id));
         }
       }
     });
