@@ -1,4 +1,4 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.85";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.85";
 import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.85";
 import { debounce, throttle } from "./util.js?v=2.85";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.85";
@@ -20,8 +20,26 @@ const state = {
   clientId: getClientId(),
 };
 
+// state.pendingEdits er siste HENTEDE liste (engangs-spørring ved editor-
+// åpning), ikke et sanntidsabonnement — den synkrone sjekken brukes bare
+// kosmetisk (knappetekst). Selve porten er openProposalEditorGuarded, som
+// henter ferskt før editoren åpnes.
 function hasPendingEdit(entityType, entityId) {
   return state.pendingEdits.some((p) => p.entityType === entityType && String(p.entityId) === String(entityId));
+}
+
+async function openProposalEditorGuarded(cfg) {
+  try {
+    state.pendingEdits = await fetchPendingEdits();
+  } catch (err) {
+    // Kunne ikke lese — ikke blokker studenten; et evt. duplikat avvises av lærer.
+    console.warn("Kunne ikke sjekke ventende endringsforslag:", err?.message || err);
+  }
+  if (hasPendingEdit(cfg.entityType, cfg.entityId)) {
+    alert("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
+    return;
+  }
+  openProposalEditor(cfg);
 }
 
 // Feil ved stemming skal ikke svelges stille — da tror studenten at stemmen
@@ -62,7 +80,7 @@ function openDetail(artist) {
     const locked = hasPendingEdit("artist", artist.id);
     btn.disabled = locked;
     btn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
-    btn.onclick = () => openProposalEditor({
+    btn.onclick = () => openProposalEditorGuarded({
       entityType: "artist",
       entityId: artist.id,
       entityName: artist.name,
@@ -80,20 +98,16 @@ function setupProposeButtons() {
     e.stopPropagation();
     const type = btn.dataset.proposeType;
     const id = btn.dataset.proposeId;
-    // Samme pending-lås som detaljvisningen: ikke åpne editoren når det alt
-    // ligger et ubehandlet endringsforslag for entiteten.
-    if (hasPendingEdit(type, id)) {
-      alert("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
-      return;
-    }
+    // Pending-låsen (ikke to åpne forslag for samme entitet) håndheves i
+    // openProposalEditorGuarded, med fersk engangs-spørring.
     if (type === "artist") {
       const a = state.artists.find((x) => x.id === id);
       if (!a) return;
-      openProposalEditor({ entityType: "artist", entityId: a.id, entityName: a.name, currentValues: a });
+      openProposalEditorGuarded({ entityType: "artist", entityId: a.id, entityName: a.name, currentValues: a });
     } else if (type === "tech") {
       const t = state.techItems.find((x) => x.id === id);
       if (!t) return;
-      openProposalEditor({ entityType: "tech", entityId: t.id, entityName: t.name, currentValues: t });
+      openProposalEditorGuarded({ entityType: "tech", entityId: t.id, entityName: t.name, currentValues: t });
     }
   });
 }
@@ -103,7 +117,7 @@ function setupExplore() {
     getState: () => state,
     onArtistClick: openDetail,
     onSlektstre: openSlektstre,
-    onProposeEdit: (cfg) => openProposalEditor(cfg),
+    onProposeEdit: (cfg) => openProposalEditorGuarded(cfg),
     onProposeNewTech: () => openNewTechProposal(),
     hasPendingEdit,
   });
@@ -141,6 +155,12 @@ function openSlektstre() {
   window.location.href = "tre.html";
 }
 
+// Deep-link (?artist=… / ?mainGenre=… / ?metaGenre=… / ?instrument=…).
+// Visningen krever config + artister; i stedet for å polle settes et
+// pending-flagg, og applyPendingDeepLink kalles fra snapshot-callbackene —
+// virker uansett hvor tregt nettet er (ingen 5-sekundersfrist).
+let pendingDeepLink = null;
+
 function applyIncomingFilter() {
   const params = new URLSearchParams(location.search);
   const sj = params.get("mainGenre"), g = params.get("metaGenre"),
@@ -149,23 +169,24 @@ function applyIncomingFilter() {
   state.filters.mainGenre = sj || "";
   state.filters.metaGenre = g || "";
   state.filters.instrument = inst || "";
-  const tryApply = () => {
-    if (!state.config || !state.artists.length) return false;
-    if (sj) $("#sp-sjanger").value = sj;
-    if (g) $("#sp-genre").value = g;
-    if (inst) $("#sp-instrument").value = inst;
-    renderArtistViews();
-    if (artistId) {
-      const a = state.artists.find((x) => x.id === artistId);
-      if (a) { openDetail(a); return true; }
-    }
-    modalOpen(document.getElementById("modal-artister"));
-    return true;
-  };
-  if (!tryApply()) {
-    const iv = setInterval(() => { if (tryApply()) clearInterval(iv); }, 150);
-    setTimeout(() => clearInterval(iv), 5000);
+  pendingDeepLink = { sj, g, inst, artistId };
+  applyPendingDeepLink();
+}
+
+function applyPendingDeepLink() {
+  if (!pendingDeepLink) return;
+  if (!state.config || !state.artists.length) return;
+  const { sj, g, inst, artistId } = pendingDeepLink;
+  pendingDeepLink = null;
+  if (sj) $("#sp-sjanger").value = sj;
+  if (g) $("#sp-genre").value = g;
+  if (inst) $("#sp-instrument").value = inst;
+  renderArtistViews();
+  if (artistId) {
+    const a = state.artists.find((x) => x.id === artistId);
+    if (a) { openDetail(a); return; }
   }
+  modalOpen(document.getElementById("modal-artister"));
 }
 
 function setupDetailModal() {
@@ -441,6 +462,7 @@ function init() {
     // snapshotet ha kommet først og gitt opp; render på nytt nå.
     renderDagensArtist();
     renderArtistViewsIfVisible();
+    applyPendingDeepLink();
     saveCache();
   });
   // Hver stemme fra hvem som helst i kullet fyrer dette snapshotet. Throttle
@@ -454,17 +476,21 @@ function init() {
   subscribeArtists((artists) => {
     state.artists = artists;
     applyArtistSnapshot();
+    // Utenom throttlingen: deep-linken skal åpnes straks data finnes (no-op
+    // når det ikke venter noen).
+    applyPendingDeepLink();
   });
   subscribeDecades((d) => { state.decadeDescs = d; if (isArtistModalOpen()) renderFilterResults(); });
   subscribeGenreDescs((s) => { state.genreDescs = s; if (isArtistModalOpen()) renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
+  // Merk: ikke noe pendingEdits-abonnement her — studentsiden trenger bare
+  // pending-status idet forslags-editoren åpnes (openProposalEditorGuarded).
   // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
   // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
   subscribeTech((items) => {
     state.techItems = items.filter((t) => t.status !== "pending");
     applyArtistSnapshot();
   });
-  subscribePendingEdits((edits) => { state.pendingEdits = edits; });
 
   applyIncomingFilter();
 }

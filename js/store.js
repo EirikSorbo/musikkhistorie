@@ -399,6 +399,14 @@ export async function updateConfig(config) {
 //  ENDRINGSFORSLAG (studentenes foreslåtte endringer på eksisterende kort)
 // ----------------------------------------------------------------------------
 
+// Engangs-henting av alle åpne endringsforslag. Studentsiden bruker denne når
+// forslags-editoren åpnes, i stedet for å holde et sanntidsabonnement på hele
+// samlingen bare for å låse «Foreslå endring»-knappen.
+export async function fetchPendingEdits() {
+  const snapshot = await getDocs(pendingEditsCol);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 // Sanntids-lytter på alle åpne endringsforslag.
 export function subscribePendingEdits(callback) {
   return onSnapshot(pendingEditsCol, (snapshot) => {
