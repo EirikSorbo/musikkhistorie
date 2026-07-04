@@ -4,15 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.84";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.84";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.84";
-import { isMainGenre } from "./genealogy.js?v=2.84";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=2.84";
-import { GENDERS } from "./limits.js?v=2.84";
-import { debounce } from "./util.js?v=2.84";
-import { $ } from "./shared.js?v=2.84";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.84";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.85";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.85";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.85";
+import { isMainGenre } from "./genealogy.js?v=2.85";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=2.85";
+import { GENDERS } from "./limits.js?v=2.85";
+import { debounce } from "./util.js?v=2.85";
+import { $ } from "./shared.js?v=2.85";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.85";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -114,18 +114,6 @@ export function setupFilters() {
   $("#btn-pending").addEventListener("click", () => {
     state.filters.showPending = !state.filters.showPending;
     updatePendingBadge();
-    renderList();
-  });
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-filter-key]");
-    if (!btn) return;
-    const key = btn.dataset.filterKey, val = btn.dataset.filterVal;
-    const sel = { mainGenre: "#f-sjanger", subgenre: "#f-subgenre", instrument: "#f-instrument", metaGenre: "#f-genre" }[key];
-    if (!sel) return;
-    state.filters[key] = val;
-    const elSel = $(sel);
-    if (elSel) elSel.value = val;
     renderList();
   });
 }

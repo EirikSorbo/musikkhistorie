@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=2.84";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.84";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.84";
+import { isVisible, filterArtists } from "./limits.js?v=2.85";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.85";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.85";
 import {
   escapeHtml,
   linkDesc,
@@ -24,26 +24,25 @@ import {
   musicExampleLabel,
   musicExamplesHtml,
   keyWorksText,
-  fmtCredit,
   artistImage,
   formatInfoText,
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.84";
-import { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders } from "./ui-modal.js?v=2.84";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.84";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.84";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.84";
-import { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.84";
+} from "./ui-helpers.js?v=2.85";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.85";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.85";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.85";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.85";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.85";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
-export { escapeHtml, buildKilderList, fmtCredit, formatInfoText };
-export { modalOpen, modalClose, modalCloseTop, modalCloseAll, setupModal, initModalHeaders };
+export { escapeHtml, buildKilderList, formatInfoText };
+export { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders };
 export { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage };
 export { buildTimeline, buildTechTimeline, renderDecadeSections };
 export { renderDashboard, renderLimits };
-export { fieldLabelFor, wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
+export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
 
 // Memoisert på artist-array-referansen: subscribeArtists bytter referanse ved
 // hver oppdatering, så samme render-pass treffer cachen i stedet for å bygge
@@ -410,7 +409,7 @@ export function showMetaInfo(label, opts = {}) {
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
 // Returnerer HTML-streng med rader som har data-artist-id for klikk-kobling.
-export function buildArtistListRows(list) {
+function buildArtistListRows(list) {
   return list.map((a) => {
     const years = a.influenceStart
       ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
@@ -483,7 +482,7 @@ export function openPlaylistModal(fullName, node, artists) {
 }
 
 // Bygger HTML for spilleliste-popup: keyWorks/lenker fra artister, med sjanger-tag per rad.
-export function buildPlaylistHtml(node, artists) {
+function buildPlaylistHtml(node, artists) {
   const enc = encodeURIComponent;
   const sj = (node.l || "").toLowerCase();
   const ytLink = (q, text) =>

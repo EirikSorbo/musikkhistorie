@@ -34,12 +34,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.84";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.84";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.84";
-import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.84";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.84";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.84";
+import { firebaseConfig } from "./firebase-config.js?v=2.85";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.85";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.85";
+import { normalizeArtist, META_RENAME } from "./artist-normalize.js?v=2.85";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=2.85";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.85";
 
 // Normaliseringen bor i artist-normalize.js (ren modul, enhetstestbar);
 // re-eksporteres her så eksisterende importer fortsatt virker.
@@ -338,10 +338,6 @@ export function subscribePodcasts(callback) {
 
 export async function addPodcast(data) {
   return addDoc(podcastsCol, data);
-}
-
-export async function updatePodcast(id, data) {
-  return setDoc(doc(db, "podcasts", id), data, { merge: true });
 }
 
 export async function deletePodcast(id) {

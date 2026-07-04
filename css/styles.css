@@ -18,7 +18,6 @@
   /* Aksent (grønn → emerald → teal) */
   --accent: #16a34a;
   --accent-2: #059669;
-  --accent-3: #0d9488;
   --grad: linear-gradient(135deg, #16a34a 0%, #059669 55%, #0d9488 100%);
 
   --ok: #10b981;
@@ -696,7 +695,7 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .tl-below .tl-label { top: calc(50% + 18px); }
 .tl-above .tl-label { bottom: calc(50% + 18px); }
 .tl-year { display: block; font-weight: 700; font-size: 0.78rem; color: var(--accent); margin-bottom: 2px; }
-.tl-desc { display: block; font-size: 0.75rem; line-height: 1.4; color: var(--fg); opacity: 0.8; }
+.tl-desc { display: block; font-size: 0.75rem; line-height: 1.4; color: var(--text); opacity: 0.8; }
 
 /* Proporsjonal tidslinje */
 .tl-prop .tl-track {

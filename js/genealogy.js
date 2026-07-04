@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.84";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.84";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.84";
-import { modalOpen, modalClose } from "./ui-modal.js?v=2.84";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.85";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.85";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.85";
+import { modalOpen, modalClose } from "./ui-modal.js?v=2.85";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -165,7 +165,7 @@ export function showSjangerInfo(label, opts = {}) {
   return true;
 }
 
-const W = 1660, H = 1180, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
+const W = 1660, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
 const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115, 12: 1210 };
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t", 12: "2010-t" };
 // Sjangerfamilier: strekfarge + etikett til fargeforklaringen. Rekkefølgen her

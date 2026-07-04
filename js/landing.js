@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.84";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.84";
-import { debounce, throttle } from "./util.js?v=2.84";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.84";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.84";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.84";
-import { initExplore } from "./explore.js?v=2.84";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.84";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.85";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.85";
+import { debounce, throttle } from "./util.js?v=2.85";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.85";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.85";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.85";
+import { initExplore } from "./explore.js?v=2.85";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.85";
 
 const state = {
   artists: [],
@@ -95,37 +95,6 @@ function setupProposeButtons() {
       if (!t) return;
       openProposalEditor({ entityType: "tech", entityId: t.id, entityName: t.name, currentValues: t });
     }
-  });
-}
-
-function setupTagFilters() {
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-filter-key]");
-    if (!btn) return;
-    const key = btn.dataset.filterKey;
-    const val = btn.dataset.filterVal;
-    document.getElementById("modal-detail").classList.remove("open");
-    state.filters = { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: "", priority: 0 };
-    $("#sp-search").value = "";
-    $("#sp-sjanger").value = "";
-    $("#sp-genre").value = "";
-    $("#sp-instrument").value = "";
-    $("#sp-decade").value = "";
-    if (key === "mainGenre") {
-      state.filters.mainGenre = val;
-      $("#sp-sjanger").value = val;
-    } else if (key === "metaGenre") {
-      state.filters.metaGenre = val;
-      $("#sp-genre").value = val;
-    } else if (key === "instrument") {
-      state.filters.instrument = val;
-      $("#sp-instrument").value = val;
-    } else if (key === "search") {
-      state.filters.search = val;
-      $("#sp-search").value = val;
-    }
-    renderArtistViews();
-    modalOpen(document.getElementById("modal-artister"));
   });
 }
 
@@ -424,7 +393,6 @@ function loadCache() {
 
 function init() {
   setupFilters();
-  setupTagFilters();
   setupProposeButtons();
   setupDetailModal();
   setupExplore();
