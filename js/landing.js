@@ -2,7 +2,7 @@ import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDesc
 import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.85";
 import { debounce, throttle } from "./util.js?v=2.85";
 import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.85";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.85";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.85";
 import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.85";
 import { initExplore } from "./explore.js?v=2.85";
 import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.85";
@@ -411,16 +411,19 @@ function init() {
     renderDagensArtist();
     // #artist-list bygges når #modal-artister åpnes (openArtistModal), ikke her
     // — den er skjult ved sidelast, så å bygge alle kortene nå er bortkastet.
+  } else {
+    // Førstegangsbesøk uten cache: vis en lasteindikator i listeseksjonene til
+    // første Firestore-snapshot kommer, i stedet for en tom side.
+    const loading = `<p class="muted empty">Laster forslag …</p>`;
+    const section = document.getElementById("dagens-artist-section");
+    if (section) section.style.display = "";
+    const dagens = $("#dagens-artist");
+    if (dagens) dagens.innerHTML = loading;
+    const list = $("#artist-list");
+    if (list) list.innerHTML = loading;
   }
 
-  document.addEventListener("firestore-error", (e) => {
-    const banner = $("#banner");
-    if (banner) {
-      banner.textContent = `Kunne ikke laste data fra databasen (${e.detail?.code || "ukjent feil"}). Firestore-reglene tillater trolig ikke lesing uten innlogging. Publiser oppdaterte regler i Firebase Console.`;
-      banner.className = "banner banner-error";
-      banner.style.display = "block";
-    }
-  });
+  wireFirestoreErrorBanner();
 
   // Når anonym innlogging er klar, blir uid stemme-identiteten. Oppdater
   // clientId og re-render så «Angre stemme»-tilstanden vises riktig.
@@ -434,6 +437,9 @@ function init() {
   subscribeConfig((config) => {
     state.config = config;
     refreshFilterControls();
+    // Dagens artist trenger config — på kald start (uten cache) kan artist-
+    // snapshotet ha kommet først og gitt opp; render på nytt nå.
+    renderDagensArtist();
     renderArtistViewsIfVisible();
     saveCache();
   });
@@ -452,7 +458,12 @@ function init() {
   subscribeDecades((d) => { state.decadeDescs = d; if (isArtistModalOpen()) renderFilterResults(); });
   subscribeGenreDescs((s) => { state.genreDescs = s; if (isArtistModalOpen()) renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
-  subscribeTech((items) => { state.techItems = items.filter((t) => t.status !== "pending"); });
+  // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
+  // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
+  subscribeTech((items) => {
+    state.techItems = items.filter((t) => t.status !== "pending");
+    applyArtistSnapshot();
+  });
   subscribePendingEdits((edits) => { state.pendingEdits = edits; });
 
   applyIncomingFilter();

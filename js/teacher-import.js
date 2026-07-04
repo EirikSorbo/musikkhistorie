@@ -45,7 +45,18 @@ export function setupDataButtons() {
 
   $("#btn-nuke").addEventListener("click", async () => {
     if (!confirm("Er du HELT sikker? Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.")) return;
-    if (!confirm("Siste sjanse — skriv OK i neste boks for å bekrefte.")) return;
+    // Samme sikkerhetsnett som «Erstatt alle»: full backup lastes ned FØR
+    // slettingen, og læreren må aktivt skrive SLETT for å bekrefte.
+    downloadJson(buildExportData(), `musikkhistorie-BACKUP-${dateStamp()}.json`);
+    const svar = prompt(
+      "En sikkerhetskopi skal nå ligge i Nedlastinger (musikkhistorie-BACKUP-…).\n\n" +
+      "Skriv SLETT for å bekrefte at all artistdata skal slettes permanent:"
+    );
+    if (svar === null) return;
+    if (svar.trim().toUpperCase() !== "SLETT") {
+      alert("Sletting avbrutt — du må skrive SLETT for å bekrefte.");
+      return;
+    }
     try {
       await deleteAllArtists();
       alert("All data er slettet.");

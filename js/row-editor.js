@@ -10,32 +10,37 @@
 
 import { escapeHtml } from "./util.js?v=2.85";
 
-// Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph, title?,
+// Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
+// label (aria-label for skjermlesere), title?,
 // always? (ta med i output selv når tom — ellers kun hvis utfylt) }.
+// removeLabel = aria-label på ✕-fjern-knappen.
 export const WORK_SPEC = {
   rowClass: "work-row", removeClass: "remove-work", keepKey: "title",
+  removeLabel: "Fjern verk",
   fields: [
-    { key: "title", cls: "work-title", type: "text", ph: "Tittel (f.eks. «Cross Road Blues»)", always: true },
-    { key: "year",  cls: "work-year",  type: "number", ph: "Årstall" },
-    { key: "url",   cls: "work-url",   type: "url", ph: "https://… (valgfritt)" },
+    { key: "title", cls: "work-title", type: "text", ph: "Tittel (f.eks. «Cross Road Blues»)", label: "Tittel", always: true },
+    { key: "year",  cls: "work-year",  type: "number", ph: "Årstall", label: "Årstall" },
+    { key: "url",   cls: "work-url",   type: "url", ph: "https://… (valgfritt)", label: "Lenke (https)" },
   ],
 };
 
 export const MUSIC_SPEC = {
   rowClass: "me-row", removeClass: "remove-me", keepKey: "url",
+  removeLabel: "Fjern musikkeksempel",
   fields: [
-    { key: "label", cls: "me-label", type: "text", ph: "Tittel (f.eks. «Hellhound on My Trail»)", always: true },
-    { key: "year",  cls: "me-year",  type: "number", ph: "Årstall" },
-    { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", always: true },
-    { key: "performanceYear", cls: "me-perf-year", type: "number", ph: "Framf.år", title: "Året for framføring/konsert (kun hvis annet enn utgivelsesår)" },
+    { key: "label", cls: "me-label", type: "text", ph: "Tittel (f.eks. «Hellhound on My Trail»)", label: "Tittel", always: true },
+    { key: "year",  cls: "me-year",  type: "number", ph: "Årstall", label: "Årstall" },
+    { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
+    { key: "performanceYear", cls: "me-perf-year", type: "number", ph: "Framf.år", label: "Framføringsår", title: "Året for framføring/konsert (kun hvis annet enn utgivelsesår)" },
   ],
 };
 
 export const SOURCE_SPEC = {
   rowClass: "source-row", removeClass: "remove-source", keepKey: "text",
+  removeLabel: "Fjern kilde",
   fields: [
-    { key: "text", cls: "source-text", type: "text", ph: "F.eks. «Ward, Brian. Just My Soul Responding. 1998.»", always: true },
-    { key: "url",  cls: "source-url",  type: "url", ph: "https://… (valgfritt)", always: true },
+    { key: "text", cls: "source-text", type: "text", ph: "F.eks. «Ward, Brian. Just My Soul Responding. 1998.»", label: "Kildetekst", always: true },
+    { key: "url",  cls: "source-url",  type: "url", ph: "https://… (valgfritt)", label: "Lenke (https)", always: true },
   ],
 };
 
@@ -43,6 +48,7 @@ function inputHtml(f, values) {
   const v = values[f.key] == null ? "" : values[f.key];
   const type = f.type === "number" ? "number" : (f.type === "url" ? "url" : "text");
   let html = `<input type="${type}" class="${f.cls}" placeholder="${escapeHtml(f.ph || "")}" value="${escapeHtml(String(v))}"`;
+  if (f.label) html += ` aria-label="${escapeHtml(f.label)}"`;
   if (f.type === "number") html += ` min="1800" max="2030"`;
   if (f.title) html += ` title="${escapeHtml(f.title)}"`;
   return html + ">";
@@ -51,7 +57,7 @@ function inputHtml(f, values) {
 // Ren HTML for én rads innhold (inputs + fjern-knapp). Ingen DOM — testbar.
 export function rowInnerHtml(spec, values = {}) {
   return spec.fields.map((f) => inputHtml(f, values)).join("") +
-    `<button type="button" class="btn ghost small ${spec.removeClass}">✕</button>`;
+    `<button type="button" class="btn ghost small ${spec.removeClass}" aria-label="${escapeHtml(spec.removeLabel || "Fjern rad")}">✕</button>`;
 }
 
 // Legg til én rad i `wrapEl` og koble fjern-knappen.
