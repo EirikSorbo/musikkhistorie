@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.82";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.82";
-import { debounce, throttle } from "./util.js?v=2.82";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.82";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.82";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.82";
-import { initExplore } from "./explore.js?v=2.82";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.82";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.83";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.83";
+import { debounce, throttle } from "./util.js?v=2.83";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.83";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.83";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.83";
+import { initExplore } from "./explore.js?v=2.83";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.83";
 
 const state = {
   artists: [],
@@ -142,6 +142,8 @@ function setupExplore() {
   if (btnKart) btnKart.addEventListener("click", explore.openKart);
   const btnPodkast = document.getElementById("btn-podkast");
   if (btnPodkast) btnPodkast.addEventListener("click", explore.openPodkast);
+  const btnStoreBildet = document.getElementById("btn-store-bildet");
+  if (btnStoreBildet) btnStoreBildet.addEventListener("click", explore.openStoreBildet);
 
   const btnDagens = document.getElementById("btn-dagens-navn");
   if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);

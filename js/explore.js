@@ -1,11 +1,11 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.82";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.82";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.82";
-import { isVisible } from "./limits.js?v=2.82";
-import { safeUrl } from "./util.js?v=2.82";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.82";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.82";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.82";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.83";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.83";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.83";
+import { isVisible } from "./limits.js?v=2.83";
+import { safeUrl } from "./util.js?v=2.83";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.83";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.83";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.83";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -292,6 +292,53 @@ const MODAL_HTML = `
     <div id="td-body"></div>
     <div class="modal-foot-right" id="td-foot" style="display:none">
       <button type="button" class="btn ghost small" id="td-propose">Foreslå endring</button>
+    </div>
+  </div>
+</div>
+
+<!-- Det store bildet: samleinngang til alle tidslinjer og visuelle oversikter.
+     Målene bor fortsatt der de alltid har bodd (Artister, Sjangre, tiårene) —
+     dette er bare én ekstra dør inn, for den som tenker «vis meg helheten»
+     i stedet for «vis meg artister». Gjenbruker dash-kort-utseendet så
+     modalen leses som et mini-dashbord. -->
+<div class="modal-backdrop" id="modal-store-bildet">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Det store bildet</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Tidslinjer, kart og visuelle oversikter — hele historien samlet på ett sted.</p>
+    <div class="dash-grid">
+      <button class="dash-card" id="sb-tidslinje">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
+        <span class="dash-title">Tidslinje</span>
+        <span class="dash-desc">Artistenes aktive år, bane for bane</span>
+      </button>
+      <button class="dash-card" id="sb-slektstre">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/><path d="M12 6v5M12 11c-4 0-7 3-7 7M12 11c4 0 7 3 7 7M12 11v7"/></svg>
+        <span class="dash-title">Slektstre</span>
+        <span class="dash-desc">Sjangrenes slektskap fra røtter til i dag</span>
+      </button>
+      <button class="dash-card" id="sb-varmekart">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        <span class="dash-title">Varmekart</span>
+        <span class="dash-desc">Hvor toneangivende sjangrene var, tiår for tiår</span>
+      </button>
+      <button class="dash-card" id="sb-kart">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span class="dash-title">Kart</span>
+        <span class="dash-desc">Musikkens geografi tiår for tiår</span>
+      </button>
+      <button class="dash-card" id="sb-tech">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path d="M8 7h8M8 11h6"/></svg>
+        <span class="dash-title">Teknologi</span>
+        <span class="dash-desc">Tiår for tiår, med tidslinjer</span>
+      </button>
+      <button class="dash-card" id="sb-society">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
+        <span class="dash-title">Samfunn</span>
+        <span class="dash-desc">Tiår for tiår, med tidslinjer</span>
+      </button>
     </div>
   </div>
 </div>
@@ -647,9 +694,11 @@ function openVarmekart() {
 // ----------------------------------------------------------------------------
 //  Tidslinje: når var artistene aktive? Pakket bane-tidslinje gruppert per
 //  tre-sjanger, i metasjanger-akkordeon (samme mønster og fargespråk som
-//  varmekartet). `focus` er valgfritt: { genre } åpner den metagruppen og
-//  scroller til sjangerseksjonen; { artistId } åpner artistens gruppe og
-//  uthever blokkene. Banepakkingen bor i timeline-lanes.js (enhetstestet).
+//  varmekartet). Hver sjangerseksjon har i tillegg sin egen trekant og starter
+//  lukket, så en åpen metagruppe først viser en ryddig sjangerliste med antall.
+//  `focus` er valgfritt: { genre } åpner den metagruppen + seksjonen og
+//  scroller dit; { artistId } åpner artistens gruppe/seksjoner og uthever
+//  blokkene. Banepakkingen bor i timeline-lanes.js (enhetstestet).
 // ----------------------------------------------------------------------------
 function openTidslinje(focus = {}) {
   const modal = document.getElementById("modal-tidslinje");
@@ -742,7 +791,7 @@ function openTidslinje(focus = {}) {
     html += `<span class="tid-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>`;
     html += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
     html += `<span style="font-size:0.84rem;font-weight:700;color:var(--text)">${escapeHtml(meta)}</span>`;
-    html += `<span style="font-size:0.72rem;color:var(--muted)">${artistCount} artist${artistCount === 1 ? "" : "er"}</span>`;
+    html += `<span style="font-size:0.72rem;color:var(--muted)">${keys.length} sjanger${keys.length === 1 ? "" : "e"} · ${artistCount} artist${artistCount === 1 ? "" : "er"}</span>`;
     html += `</button>`;
     groupIdx++;
 
@@ -751,9 +800,21 @@ function openTidslinje(focus = {}) {
       const isOther = key.startsWith(OTHER);
       const label = isOther ? "Øvrige (uten tre-sjanger)" : key;
       const rowColor = isOther ? FAMILIES.gray.stroke : (MAIN_GENRE_INFO[key]?.color || gColor);
-      const lanes = packLanes(sections.get(key));
+      const secItems = sections.get(key);
+      const lanes = packLanes(secItems);
+      const secCount = new Set(secItems.map((i) => i.id)).size;
+      // Seksjonene starter lukket; fokus åpner den relevante (sjanger-inngang
+      // treffer én seksjon, artist-inngang alle seksjonene artisten står i).
+      const secOpen = focusGenre ? key === focusGenre
+        : focus.artistId ? secItems.some((i) => i.id === focus.artistId)
+        : false;
       html += `<div class="tid-section" data-genre="${escapeHtml(isOther ? "" : key)}" style="margin:0 0 10px">`;
-      html += `<div style="font-size:0.8rem;color:var(--text);border-left:3px solid ${rowColor};padding:1px 8px;margin-bottom:4px">${escapeHtml(label)}</div>`;
+      html += `<button type="button" class="tid-sec-head" aria-expanded="${secOpen}" style="width:100%;display:flex;align-items:center;gap:7px;margin-bottom:4px;padding:1px 8px;border:0;border-left:3px solid ${rowColor};background:none;cursor:pointer;text-align:left">`;
+      html += `<span class="tid-sec-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${secOpen ? 90 : 0}deg)">▶</span>`;
+      html += `<span style="font-size:0.8rem;color:var(--text)">${escapeHtml(label)}</span>`;
+      html += `<span style="font-size:0.72rem;color:var(--muted)">${secCount} artist${secCount === 1 ? "" : "er"}</span>`;
+      html += `</button>`;
+      html += `<div class="tid-sec-rows" style="display:${secOpen ? "block" : "none"}">`;
       html += `<div style="position:relative;height:${lanes.length * 25}px">${gridHtml}`;
       lanes.forEach((lane, li) => {
         for (const it of lane) {
@@ -769,7 +830,7 @@ function openTidslinje(focus = {}) {
             `${escapeHtml(it.name)}${multi ? " ◆" : ""}${openEnd ? `<span style="position:absolute;right:2px;opacity:.7">›</span>` : ""}</button>`;
         }
       });
-      html += `</div></div>`;
+      html += `</div></div></div>`;
     }
     html += `</div></div>`;
   }
@@ -797,6 +858,19 @@ function openTidslinje(focus = {}) {
         if (caret) caret.style.transform = `rotate(${isThis ? 90 : 0}deg)`;
         if (rows) rows.style.display = isThis ? "block" : "none";
       });
+    });
+  });
+
+  // Sjangerseksjonene har egne trekanter: uavhengige brytere (flere kan stå
+  // åpne samtidig), i motsetning til metanivåets én-om-gangen-akkordeon.
+  body.querySelectorAll(".tid-sec-head").forEach((head) => {
+    head.addEventListener("click", () => {
+      const open = head.getAttribute("aria-expanded") !== "true";
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+      const caret = head.querySelector(".tid-sec-caret");
+      if (caret) caret.style.transform = `rotate(${open ? 90 : 0}deg)`;
+      const rows = head.parentElement.querySelector(".tid-sec-rows");
+      if (rows) rows.style.display = open ? "block" : "none";
     });
   });
 
@@ -1046,6 +1120,12 @@ function openSubgenreInfo(subgenreId) {
   modalOpen(modal);
 }
 
+// Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
+// bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
+function openStoreBildet() {
+  modalOpen(document.getElementById("modal-store-bildet"));
+}
+
 function injectModals() {
   const wrap = document.createElement("div");
   wrap.innerHTML = MODAL_HTML;
@@ -1059,7 +1139,7 @@ function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
    "modal-tidslinje", "modal-kart", "modal-artistliste", "modal-spilleliste",
-   "modal-sjanger", "modal-tech-detail"].forEach((id) => setupModal(id));
+   "modal-sjanger", "modal-tech-detail", "modal-store-bildet"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1095,6 +1175,21 @@ function wireModals() {
     if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());
     slExtra.querySelector("#btn-varmekart").addEventListener("click", openVarmekart);
     slExtra.querySelector("#btn-tidslinje").addEventListener("click", () => openTidslinje());
+  }
+
+  // «Det store bildet»-hub: mål-modalene åpnes OPPÅ huben (modaler stables),
+  // så ← i undermodalen går naturlig tilbake hit. Slektstreet bor på egen side
+  // og navigerer bort — knappen skjules om siden ikke ga en handler.
+  const sbModal = document.getElementById("modal-store-bildet");
+  if (sbModal) {
+    sbModal.querySelector("#sb-tidslinje").addEventListener("click", () => openTidslinje());
+    const sbTre = sbModal.querySelector("#sb-slektstre");
+    if (opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
+    else sbTre.style.display = "none";
+    sbModal.querySelector("#sb-varmekart").addEventListener("click", openVarmekart);
+    sbModal.querySelector("#sb-kart").addEventListener("click", openKart);
+    sbModal.querySelector("#sb-tech").addEventListener("click", () => openDecadeList("tech"));
+    sbModal.querySelector("#sb-society").addEventListener("click", () => openDecadeList("society"));
   }
 
   const tekExtra = document.getElementById("tek-admin-extra");
@@ -1164,6 +1259,7 @@ export function initExplore(options) {
     openVarmekart,
     openTidslinje,
     openKart,
+    openStoreBildet,
     openPodkast,
     openTeknologi,
     openTechDetail,

@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.82";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.82";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.82";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.82";
-import { initExplore } from "./explore.js?v=2.82";
+} from "./store.js?v=2.83";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.83";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.83";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.83";
+import { initExplore } from "./explore.js?v=2.83";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.82";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.82";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.83";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.83";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,10 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.82";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.82";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.82";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.82";
+} from "./teacher-content.js?v=2.83";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.83";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.83";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.83";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -118,6 +118,8 @@ function startApp() {
   $("#btn-t-genres").addEventListener("click", ctx.explore.openSubgenreList);
   const btnKart = document.getElementById("btn-t-kart");
   if (btnKart) btnKart.addEventListener("click", ctx.explore.openKart);
+  const btnStoreBildet = document.getElementById("btn-t-store-bildet");
+  if (btnStoreBildet) btnStoreBildet.addEventListener("click", ctx.explore.openStoreBildet);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
   $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);
   setupPodkastAdmin();
