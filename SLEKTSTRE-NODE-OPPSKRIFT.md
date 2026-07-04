@@ -70,10 +70,11 @@ Last `tre.html` i nettleser og sjekk:
 Repoet er auto-push-autorisert. Commit til `main` og `git push` (Pages deployer).
 
 ## 8. Hvis artister skal flyttes til den nye sjangeren
-Artistdata ligger i arbeidsfila `json files/Alt #03.json` (gitignorert) og
-importeres til Firestore via lærer-import. Sett `mainGenre` (og `metaGenre` hvis
-noden har ny `g`) nøyaktig lik tre-verdiene. Verktøyet i `json files/genre-review/`
-validerer mot treet og lager backup før skriving.
+Artistdata redigeres i en fersk eksport fra lærersiden (eller arbeidsfila i
+`json files/`, gitignorert) og importeres til Firestore via lærer-import.
+Sett `mainGenre` (og `metaGenre` hvis noden har ny `g`) nøyaktig lik
+tre-verdiene. Importen validerer hele artistlista før noe skrives, og
+«Erstatt alle» laster ned en full backup før sletting.
 
 ---
 

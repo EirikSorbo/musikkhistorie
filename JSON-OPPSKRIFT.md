@@ -2,8 +2,8 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 1.81
-**Sist endret:** 2026-06-27
+**Versjon:** 2.85 (følger appversjonen i `js/version.js`)
+**Sist endret:** 2026-07-04
 
 ---
 
@@ -11,19 +11,19 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 
 ```json
 {
-  "artists":   [ /* array av artistobjekter */ ],
-  "decades":   { "1920": { ... }, "1930": { ... } },
-  "subgenres": { "Blues": { ... }, "Delta blues": { ... } },
-  "tech":      [ /* array av teknologiobjekter */ ]
+  "artists":           [ /* array av artistobjekter */ ],
+  "decades":           { "1920": { ... }, "1930": { ... } },
+  "genreDescriptions": { "meta": { "Blues": { ... } }, "main": { "Chicago blues": { ... } }, "sub": { "Delta blues": { ... } } },
+  "tech":              [ /* array av teknologiobjekter */ ]
 }
 ```
 
 | Nøkkel | Type | Beskrivelse |
 |---|---|---|
-| `artists` | array | Alle artistforslag. Rekkefølge spiller ingen rolle. |
+| `artists` | array | ALLE artister uansett status — også ventende og fjernede forslag (tapsfri backup). Rekkefølge spiller ingen rolle. |
 | `decades` | objekt | Tiårsbeskrivelser. Nøkkel = tiåret som string ("1920", "1960"). |
-| `subgenres` | objekt | Sjanger- og undersjangerbeskrivelser. Nøkkel = navnet eksakt slik det brukes som tag (`"Blues"`, `"Delta blues"`). |
-| `tech` | array | Teknologiske innovasjoner. Sortert etter `adoptedYear`. |
+| `genreDescriptions` | objekt | Sjangerbeskrivelser, nestet i tre bolker etter sjangertype (`meta`/`main`/`sub`). Se seksjon 3. Eldre filer med flat toppnøkkel `subgenres` leses fortsatt ved import. |
+| `tech` | array | Teknologiske innovasjoner (alle statuser, også pending). Sortert etter `adoptedYear`. |
 
 Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Firestore-collection `config`, ikke i denne filen.
 
@@ -61,7 +61,12 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
   ],
   "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/...",
   "imageCredit": "Hooks Bros. / Public domain, via Wikimedia Commons",
-  "proposedBy": "Eirik Sørbø"
+  "proposedBy": "Eirik Sørbø",
+  "status": "active",
+  "priority": 2,
+  "teacherChecked": true,
+  "votedUpBy": ["a1B2c3EksempelUid"],
+  "addedYear": 2026
 }
 ```
 
@@ -87,7 +92,12 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
 | `kilder` | array av objekter | ✓ | Kilder (minst én). Se under. |
 | `imageUrl` | string | | URL til portrettbilde. Bruk Commons/CC-lisensiert. |
 | `imageCredit` | string | | Fotograf + lisens, vises som bildetekst (eks. *"Carl Van Vechten / Library of Congress, public domain"*). |
-| `proposedBy` | string | | Hvem la inn forslaget. |
+| `proposedBy` | string | | Hvem la inn forslaget. Mangler → `"Anonym"`. |
+| `status` | string | | `"active"`, `"pending"` eller `"removed"`. Eksporten tar med ALLE statuser (også pending). Ved import bevares `active`/`removed`; alt annet (inkl. manglende felt) blir `pending`. |
+| `priority` | number | | Lærerens prioritet: 3=viktigst, 2=viktig, 1=mindre viktig, 0/mangler=ingen. |
+| `teacherChecked` | boolean | | Lærerens «gjennomgått»-hake. |
+| `votedUpBy` | array av strings | | Stemme-identiteter (uid-er). Bevares ved lærer-import, så backup→restore ikke mister studentstemmer. Studentinnsending kan ikke sette feltet (Firestore-reglene krever tom liste). |
+| `addedYear` | number | | Året kortet ble lagt inn. Mangler → settes til inneværende år ved import. |
 
 ### `keyWorks[]`
 
@@ -165,26 +175,57 @@ Tomt felt = ikke vises. «Les mer»-knappen er kun synlig hvis tilhørende `…M
 
 ---
 
-## 3. Sjanger-/undersjangerobjekt
+## 3. Sjangerbeskrivelser (`genreDescriptions`)
 
-Nøkkel = nøyaktig navnet som brukes som tag. Sjangere fra slektstreet bruker label (`"Blues"`) eller fullnavn (`"Rhythm & blues"`). Undersjangere bruker det studenten/læreren skrev (`"Delta blues"`).
+Nestet i tre bolker etter sjangerens TYPE — samme inndeling som lærer-dashbordet:
+
+| Bolk | Innhold |
+|---|---|
+| `meta` | Metasjangre (`config.metaGenres`, f.eks. Blues, Jazz, Gospel). |
+| `main` | Sjangre fra slektstreet som ikke også er metasjanger (Chicago blues, Bebop, …). |
+| `sub` | Frie undersjangere (Delta blues, Vaudeville blues, …). |
+
+Hvert sjangernavn står ÉN gang, i bolken som matcher typen. Verdien er hele dokumentet, som selv er **nivådelt**: nøklene `meta`/`main`/`sub` holder teksten for hvert nivå. Et navn som er både metasjanger og tre-node (f.eks. Blues) ligger i `meta`-bolken, men dokumentet kan ha tekst på flere nivåer:
 
 ```json
-{
-  "description": "Verdslig, individuell sang om smerte og lengsel, født av work songs og spirituals i Mississippi-deltaet rundt 1900. Tolv-takters skjema, blå toner, kall-og-svar-strukturen fra Vest-Afrika. Grunnmuren for jazz, rock, R&B og soul.",
-  "kilder": [
-    { "text": "Wald, E. Escaping the Delta. Amistad, 2004." },
-    { "text": "Palmer, R. Deep Blues. Penguin, 1981." }
-  ]
+"genreDescriptions": {
+  "meta": {
+    "Blues": {
+      "meta": {
+        "description": "Metasjanger-beskrivelsen (vises i metasjanger-popup).",
+        "kilder": [ { "text": "Wald, E. Escaping the Delta. Amistad, 2004." } ]
+      },
+      "main": {
+        "description": "Tre-sjanger-beskrivelsen (vises fra slektstreet/sjangerlista)."
+      }
+    }
+  },
+  "main": {
+    "Chicago blues": {
+      "main": { "description": "Elektrifisert delta-blues i nord …" }
+    }
+  },
+  "sub": {
+    "Delta blues": {
+      "sub": {
+        "description": "Akustisk blues fra Mississippi-deltaet …",
+        "kilder": [ { "text": "Palmer, R. Deep Blues. Penguin, 1981." } ]
+      }
+    }
+  }
 }
 ```
 
+Per nivå:
+
 | Felt | Påkrevd | Notater |
 |---|---|---|
-| `description` | | Beskrivelse av sjangeren. Vises i popup på alle sider. Overstyrer evt. standardbeskrivelsen i `genealogy.js`. |
-| `kilder` | | Kilder spesifikt for sjangeren. |
+| `description` | | Beskrivelse av sjangeren på dette nivået. Vises i popup på alle sider. Overstyrer evt. standardbeskrivelsen i `genealogy.js`. |
+| `kilder` | | Kilder spesifikt for sjangeren, samme form som artistenes `kilder[]`. |
 
-For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, brukes fallback fra `GENEALOGY`-noden (`d`-feltet i `genealogy.js`).
+For sjangere fra slektstreet: mangler `description`, brukes fallback fra `GENEALOGY`-noden (`d`-feltet i `genealogy.js`).
+
+**Bakoverkompat ved import:** eldre filer med flat form (`{ "Blues": { "description": … } }`, evt. under toppnøkkelen `subgenres`) leses fortsatt; flate dokumenter pakkes automatisk inn i riktig nivå ut fra sjangertypen.
 
 ---
 
@@ -200,7 +241,8 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
   "decade": "1940",
   "description": "Lansert 1948 av Columbia Records. Muliggjorde lengre album og bedre lydkvalitet enn 78-plata.",
   "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/...",
-  "imageCredit": "Fotograf / lisens"
+  "imageCredit": "Fotograf / lisens",
+  "status": "active"
 }
 ```
 
@@ -217,6 +259,8 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
 | `description` | string | | Kort beskrivelse av teknologien og dens betydning. |
 | `imageUrl` | string | | URL til bilde. Bruk CC-lisensierte bilder. |
 | `imageCredit` | string | | Fotograf + lisens, vises som bildetekst. |
+| `status` | string | | `"active"` eller `"pending"` (studentforslag som venter på lærergodkjenning). Manglende felt regnes som aktiv. Eksporten tar med alle, også pending. |
+| `proposedBy` | string | | Hvem foreslo kortet (settes på studentforslag). |
 
 ### Kategorier
 
@@ -226,7 +270,7 @@ For sjangere fra slektstreet: hvis `subgenres["Blues"]` ikke har `description`, 
 | Kringkasting og spredning | Radio, TV, MTV, satellitt, fildeling, strømming osv. |
 | Instrumenter og lydutstyr | El-gitar, synther, trommemaskiner, MIDI, el-piano osv. |
 
-Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
+Tech-data eksporteres/importeres sammen med resten av datasettet (under `tech`-nøkkelen). Ved import matches eksisterende kort på `name` (oppdateres); ukjente navn legges til som nye.
 
 ---
 
@@ -246,7 +290,7 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
 
 ### Tagging — sjangre vs. undersjangre
 - **`mainGenre`** = en av de ~30 sjangrene fra slektstreet. Disse styrer filtre, søk, spillelister, slektstre-koblinger. Vær konservativ.
-- **`subGenre`** = frie tags. Brukes til mer spesifikke uttrykk (*Delta blues, Hard bop, Cool jazz, Neo-soul, Acid jazz, …*) eller geografiske/kontekstuelle markører. Bruk samme stavemåte konsekvent — bruk gjerne `subgenres`-objektet til å gi dem beskrivelser.
+- **`subGenre`** = frie tags. Brukes til mer spesifikke uttrykk (*Delta blues, Hard bop, Cool jazz, Neo-soul, Acid jazz, …*) eller geografiske/kontekstuelle markører. Bruk samme stavemåte konsekvent — bruk gjerne `genreDescriptions.sub` til å gi dem beskrivelser.
 - Hvis du er i tvil: er navnet en node i slektstreet? → `mainGenre`. Hvis ikke → `subGenre`.
 
 ### `metaGenre` (sjanger fra slektstreet)
@@ -297,7 +341,12 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
       ],
       "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/22/Bessie_Smith_%281936%29.jpg",
       "imageCredit": "Carl Van Vechten / Library of Congress, public domain",
-      "proposedBy": "Eirik Sørbø"
+      "proposedBy": "Eirik Sørbø",
+      "status": "active",
+      "priority": 3,
+      "teacherChecked": false,
+      "votedUpBy": [],
+      "addedYear": 2026
     }
   ],
   "decades": {
@@ -312,18 +361,27 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
       ]
     }
   },
-  "subgenres": {
-    "Blues": {
-      "description": "Verdslig, individuell sang om smerte og lengsel, født av work songs og spirituals i Mississippi-deltaet rundt 1900.",
-      "kilder": [
-        { "text": "Wald, E. Escaping the Delta. Amistad, 2004." }
-      ]
+  "genreDescriptions": {
+    "meta": {
+      "Blues": {
+        "meta": {
+          "description": "Verdslig, individuell sang om smerte og lengsel, født av work songs og spirituals i Mississippi-deltaet rundt 1900.",
+          "kilder": [
+            { "text": "Wald, E. Escaping the Delta. Amistad, 2004." }
+          ]
+        }
+      }
     },
-    "Classic blues": {
-      "description": "Den tidlige innspilte bluesen sunget av kvinner — vaudeville-skolert, teatralsk og storband-akkompagnert. Mamie Smith, Ma Rainey og Bessie Smith definerte sjangeren på 1920-tallet.",
-      "kilder": [
-        { "text": "Davis, A. Blues Legacies and Black Feminism. Pantheon, 1998." }
-      ]
+    "main": {},
+    "sub": {
+      "Classic blues": {
+        "sub": {
+          "description": "Den tidlige innspilte bluesen sunget av kvinner — vaudeville-skolert, teatralsk og storband-akkompagnert. Mamie Smith, Ma Rainey og Bessie Smith definerte sjangeren på 1920-tallet.",
+          "kilder": [
+            { "text": "Davis, A. Blues Legacies and Black Feminism. Pantheon, 1998." }
+          ]
+        }
+      }
     }
   }
 }
@@ -333,13 +391,15 @@ Startdata finnes i `data/musikkhistorie.json` (under `tech`-nøkkelen).
 
 ## Import-/eksport-flyt
 
-1. **Eksport** (lærersiden → «Eksporter»): `musikkhistorie-YYYY-MM-DD.json` med alle tre seksjoner.
-2. **Import** (lærersiden → «Importer»): velg fil. Får valget *Erstatt* eller *Slå sammen*.
-3. **Slå sammen**: artister matches på navn (case-insensitive). Tomme felter fylles automatisk fra importfilen. Konflikter løses interaktivt eller med *Behold alle*/*Importer alle*.
-4. **Tiår + sjangerbeskrivelser** importeres alltid (overskriver eksisterende verdier).
+1. **Eksport** (lærersiden → «Eksporter»): `musikkhistorie-YYYY-MM-DD.json` med alle fire seksjoner. Tar med ALLE artister og tech-kort uansett status — også ventende forslag — så eksporten er en komplett, tapsfri backup.
+2. **Import** (lærersiden → «Importer»): velg fil. Hele artistlista valideres FØR noe skrives eller slettes; feil rapporteres med radnummer og ingenting endres. Deretter valget *Erstatt* eller *Slå sammen*.
+3. **Erstatt alle**: laster ned en full sikkerhetskopi av dagens data og krever bekreftelse på at fila faktisk kom, FØR noe slettes.
+4. **Slå sammen**: artister matches på navn (case-insensitive). Tomme felter fylles automatisk fra importfilen. Konflikter løses interaktivt eller med *Behold alle*/*Importer alle*.
+5. **Tiår + sjangerbeskrivelser** importeres alltid (overskriver eksisterende verdier). **Tech** matches på navn (oppdater/legg til).
 
 ### Bakoverkompatibilitet
-- **Feltnavnene `metaGenre`/`mainGenre`/`subGenre` er nå påkrevd.** Eldre filer med `genre`/`sjangre`/`undersjangre` eller kombinert `subgenres`-array importeres **ikke** lenger riktig — kompat-laget ble fjernet (v1.81) etter at dataene ble migrert. Bruk en fersk eksport fra appen som backup.
+- **Feltnavnene `metaGenre`/`mainGenre`/`subGenre` er nå påkrevd.** Eldre filer med `genre`/`sjangre`/`undersjangre` eller kombinert `subgenres`-array importeres **ikke** lenger riktig — kompat-laget ble fjernet etter at dataene ble migrert (2026-06). Bruk en fersk eksport fra appen som backup.
+- Sjangerbeskrivelser: både nestet `genreDescriptions` (dagens format), flat `genreDescriptions` og legacy toppnøkkel `subgenres` leses ved import.
 - `keyWorks` som komma­separert streng konverteres fortsatt automatisk på lesetid.
 - Gammelt `links`-felt konverteres automatisk til `musicExamples` på lesetid (`normalizeArtist`).
 - `recordingYear` i `keyWorks` er fjernet (v1.68). Eksisterende verdier ignoreres.
