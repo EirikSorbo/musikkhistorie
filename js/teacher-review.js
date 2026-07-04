@@ -162,7 +162,7 @@ export function setupPendingEditsUi() {
   if (rejectAllBtn) rejectAllBtn.addEventListener("click", async () => {
     if (!activeEditId) return;
     if (!confirm("Avvise hele dette forslaget uten å lagre noe?")) return;
-    await rejectPendingEdit(activeEditId);
+    await guardTeacherAction(rejectPendingEdit(activeEditId));
     modalClose(diffModal);
     activeEditId = null;
   });

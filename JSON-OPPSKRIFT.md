@@ -93,7 +93,7 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
 | `imageUrl` | string | | URL til portrettbilde. Bruk Commons/CC-lisensiert. |
 | `imageCredit` | string | | Fotograf + lisens, vises som bildetekst (eks. *"Carl Van Vechten / Library of Congress, public domain"*). |
 | `proposedBy` | string | | Hvem la inn forslaget. Mangler → `"Anonym"`. |
-| `status` | string | | `"active"`, `"pending"` eller `"removed"`. Eksporten tar med ALLE statuser (også pending). Ved import bevares `active`/`removed`; alt annet (inkl. manglende felt) blir `pending`. |
+| `status` | string | | `"active"`, `"pending"` eller `"removed"`. Eksporten tar med ALLE statuser (også pending). Ved lærer-import beholdes `active`/`removed`/`pending`; **mangler feltet, settes kortet til `active`** (importen regnes som lærergodkjent); ugyldige verdier blir `pending`. |
 | `priority` | number | | Lærerens prioritet: 3=viktigst, 2=viktig, 1=mindre viktig, 0/mangler=ingen. |
 | `teacherChecked` | boolean | | Lærerens «gjennomgått»-hake. |
 | `votedUpBy` | array av strings | | Stemme-identiteter (uid-er). Bevares ved lærer-import, så backup→restore ikke mister studentstemmer. Studentinnsending kan ikke sette feltet (Firestore-reglene krever tom liste). |

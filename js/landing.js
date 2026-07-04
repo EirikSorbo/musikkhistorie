@@ -9,7 +9,13 @@ import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.85";
 
 const state = {
   artists: [],
+  // true etter første artist-snapshot — skiller «laster fortsatt» fra
+  // «datasettet er faktisk tomt» (placeholder-opprydding i renderDagensArtist).
+  artistsLoaded: false,
   config: null,
+  // true når config-lesingen feilet og state.config bare er standardverdier —
+  // da skal den ikke caches (ville overskrevet en tidligere ekte config).
+  configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
   podcasts: [],
@@ -226,7 +232,18 @@ let dagensArtistId = null;
 function renderDagensArtist() {
   if (!state.config) return;
   const pool = state.artists.filter(isVisible);
-  if (!pool.length) return;
+  if (!pool.length) {
+    // Første snapshot har kommet og datasettet ER tomt (ikke bare «laster»):
+    // rydd bort «Laster forslag …»-placeholderen og skjul seksjonen igjen,
+    // ellers blir den stående for alltid.
+    if (state.artistsLoaded) {
+      const section = document.getElementById("dagens-artist-section");
+      if (section) section.style.display = "none";
+      const el = $("#dagens-artist");
+      if (el) el.innerHTML = "";
+    }
+    return;
+  }
   if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
   const artist = pool.find((a) => a.id === dagensArtistId) || pool[0];
   const section = document.getElementById("dagens-artist-section");
@@ -394,7 +411,10 @@ function purgeLegacyCache() {
 function saveCache() {
   try {
     localStorage.setItem(CACHE_ARTISTS, JSON.stringify(state.artists));
-    if (state.config) localStorage.setItem(CACHE_CONFIG, JSON.stringify(state.config));
+    // Fallback-config (lesefeil → standardverdier) caches ikke — den ville
+    // overskrevet en tidligere cachet EKTE config, og neste kalde last hadde
+    // vist standardgrenser til Firestore svarte.
+    if (state.config && !state.configIsFallback) localStorage.setItem(CACHE_CONFIG, JSON.stringify(state.config));
   } catch { /* full storage */ }
 }
 
@@ -455,8 +475,9 @@ function init() {
     }
   });
 
-  subscribeConfig((config) => {
+  subscribeConfig((config, meta) => {
     state.config = config;
+    state.configIsFallback = !!meta?.fallback;
     refreshFilterControls();
     // Dagens artist trenger config — på kald start (uten cache) kan artist-
     // snapshotet ha kommet først og gitt opp; render på nytt nå.
@@ -475,6 +496,7 @@ function init() {
   }, 400);
   subscribeArtists((artists) => {
     state.artists = artists;
+    state.artistsLoaded = true;
     applyArtistSnapshot();
     // Utenom throttlingen: deep-linken skal åpnes straks data finnes (no-op
     // når det ikke venter noen).

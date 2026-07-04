@@ -4,7 +4,7 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge } from "./teacher-state.js?v=2.85";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge, guardTeacherAction } from "./teacher-state.js?v=2.85";
 import { updateArtistFields, setTeacherChecks } from "./store.js?v=2.85";
 import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=2.85";
 import { isMainGenre } from "./genealogy.js?v=2.85";
@@ -42,7 +42,7 @@ export function openDetail(artist) {
     // av sanntidslytteren, så uten dette kunne knappen ikke slås av igjen.
     const cur = state.artists.find((x) => x.id === artist.id) || artist;
     const next = !(cur.teacherChecked === true);
-    updateArtistFields(artist.id, { teacherChecked: next });
+    guardTeacherAction(updateArtistFields(artist.id, { teacherChecked: next }));
     setBtn(next);
   };
   modalOpen(modal);
