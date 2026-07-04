@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.80";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.80";
-import { debounce, throttle } from "./util.js?v=2.80";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.80";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.80";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.80";
-import { initExplore } from "./explore.js?v=2.80";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.80";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, subscribePendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.81";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.81";
+import { debounce, throttle } from "./util.js?v=2.81";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.81";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.81";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.81";
+import { initExplore } from "./explore.js?v=2.81";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.81";
 
 const state = {
   artists: [],
@@ -138,6 +138,8 @@ function setupExplore() {
   if (btnTech) btnTech.addEventListener("click", () => explore.openDecadeList("tech"));
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
+  const btnKart = document.getElementById("btn-kart");
+  if (btnKart) btnKart.addEventListener("click", explore.openKart);
   const btnPodkast = document.getElementById("btn-podkast");
   if (btnPodkast) btnPodkast.addEventListener("click", explore.openPodkast);
 

@@ -2,8 +2,8 @@
 //  DELTE HJELPERE — brukes av alle sider
 // ============================================================================
 
-import { firebaseConfig } from "./firebase-config.js?v=2.80";
-import { VERSION } from "./version.js?v=2.80";
+import { firebaseConfig } from "./firebase-config.js?v=2.81";
+import { VERSION } from "./version.js?v=2.81";
 
 export const CONFIGURED = !String(firebaseConfig.apiKey).startsWith("DIN_");
 

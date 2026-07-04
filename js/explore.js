@@ -1,9 +1,11 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.80";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.80";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.80";
-import { isVisible } from "./limits.js?v=2.80";
-import { safeUrl } from "./util.js?v=2.80";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.80";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.81";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.81";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.81";
+import { isVisible } from "./limits.js?v=2.81";
+import { safeUrl } from "./util.js?v=2.81";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.81";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.81";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.81";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -181,6 +183,21 @@ const MODAL_HTML = `
     </div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter hovedsjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
+  </div>
+</div>
+
+<!-- Kart: musikkens geografi (Nord-Amerika + utenfor-kartet-chips) -->
+<div class="modal-backdrop" id="modal-kart">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Musikkens geografi</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Hvor artistene virket. Større prikk = flere artister; stiplet ring = diffust område (f.eks. en delstat). Storbyområder er samlet (Brooklyn → New York). Velg et tiår for å se tyngdepunktet flytte seg — trykk på en prikk for artistene.</p>
+    <div id="kart-decades" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div id="kart-svg"></div>
+    <div id="kart-abroad" style="margin-top:14px"></div>
+    <div id="kart-footer" style="margin-top:10px;font-size:0.78rem;color:var(--muted)"></div>
   </div>
 </div>
 
@@ -809,6 +826,104 @@ function openTidslinje(focus = {}) {
   }
 }
 
+// ----------------------------------------------------------------------------
+//  Kart: musikkens geografi. Nord-Amerika-utsnitt (Natural Earth-omriss i
+//  geo-map-data.js) med én prikk per sted (geo-places.js kobler geography-
+//  tekstene til koordinater). Tiårsfilter viser migrasjonen; steder utenfor
+//  utsnittet (Oslo, London …) vises som klikkbare chips under kartet, så de
+//  ikke forsvinner stille. Klikk på prikk/chip → artistliste → artistkort.
+// ----------------------------------------------------------------------------
+let kartDecade = null;   // null = alle tiår
+
+function openKart() {
+  const modal = document.getElementById("modal-kart");
+  if (!modal) return;
+  renderKart();
+  modalOpen(modal);
+  // Hold tabellen i synk: nye steder i dataene skal legges til i PLACES.
+  const unknown = unknownPlaces(getState().artists.filter(isVisible));
+  if (unknown.length) {
+    console.warn(`Kart: ${unknown.length} sted(er) mangler i PLACES (js/geo-places.js) og vises som «ikke plassert»:`, unknown);
+  }
+}
+
+function renderKart() {
+  const s = getState();
+  const active = s.artists.filter(isVisible);
+  const { onMap, abroad, unplaced } = aggregatePlaces(active, { decade: kartDecade });
+  const DOT = "#1d4ed8";   // én kulør — størrelse bærer informasjonen
+
+  // Tiårsvelger (Alle + tiårene fra varmekartet, samme tidsrom)
+  const decEl = document.getElementById("kart-decades");
+  decEl.innerHTML = [null, ...VK_DECADES].map((d) =>
+    `<button type="button" class="btn ghost small kart-dec${d === kartDecade ? " active" : ""}" data-dec="${d ?? ""}"` +
+    `${d === kartDecade ? ' style="background:var(--accent,#1d4ed8);color:#fff"' : ""}>${d == null ? "Alle tiår" : d + "-t."}</button>`
+  ).join("");
+  decEl.querySelectorAll(".kart-dec").forEach((b) => b.addEventListener("click", () => {
+    kartDecade = b.dataset.dec === "" ? null : Number(b.dataset.dec);
+    renderKart();
+  }));
+
+  // Kartet: landomriss + prikker. Radius ~ kvadratrot av antall (arealet
+  // skalerer da med antallet); tekstetikett på de største.
+  const r = (n) => Math.min(3 + 2.1 * Math.sqrt(n), 17);
+  let svg = `<div style="overflow-x:auto"><svg viewBox="0 0 ${MAP_VIEW.w} ${MAP_VIEW.h}" style="width:100%;min-width:560px;display:block" role="img" aria-label="Kart over Nord-Amerika med artistenes virkesteder">`;
+  svg += MAP_COUNTRIES.map((c) =>
+    `<path d="${c.d}" style="fill:var(--bg-soft,#eef1f4);stroke:var(--line-strong,#cbd5df);stroke-width:0.7" />`).join("");
+  const placed = onMap.map((p, i) => ({ ...p, ...projectPoint(p.lat, p.lng), i }));
+  // Store prikker tegnes først så små forblir klikkbare oppå.
+  placed.sort((a, b) => b.count - a.count);
+  svg += placed.map((p) => {
+    const style = p.region
+      ? `fill:${DOT};fill-opacity:0.10;stroke:${DOT};stroke-width:1.2;stroke-dasharray:4 3`
+      : `fill:${DOT};fill-opacity:0.68;stroke:#fff;stroke-width:1`;
+    return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r(p.count).toFixed(1)}" data-place="${p.i}" style="${style};cursor:pointer"><title>${escapeHtml(`${p.label} · ${p.count} artist${p.count === 1 ? "" : "er"}`)}</title></circle>`;
+  }).join("");
+  svg += placed.filter((p) => p.count >= 6).map((p) =>
+    `<text x="${(p.x + r(p.count) + 3).toFixed(1)}" y="${(p.y + 3.5).toFixed(1)}" style="font-size:13px;fill:var(--text,#1f2937);pointer-events:none">${escapeHtml(p.label)}</text>`).join("");
+  svg += `</svg></div>`;
+  document.getElementById("kart-svg").innerHTML = svg;
+  document.getElementById("kart-svg").querySelectorAll("[data-place]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const p = placed.find((x) => String(x.i) === el.dataset.place);
+      if (p) openArtistListModal(p.label, p.artists, opts.onArtistClick, "Ingen artister her i valgt tiår.");
+    });
+  });
+
+  // Utenfor kartet: klikkbare chips, samme oppførsel som prikkene.
+  const abEl = document.getElementById("kart-abroad");
+  abEl.innerHTML = abroad.length
+    ? `<p class="muted" style="font-size:0.82rem;margin-bottom:6px">Også knyttet til steder utenfor kartet:</p>` +
+      `<div style="display:flex;gap:6px;flex-wrap:wrap">` +
+      abroad.map((p, i) =>
+        `<button type="button" class="tag tag-sjanger" data-abroad="${i}" title="${escapeHtml(p.abroad)}">${escapeHtml(p.label)} (${p.count})</button>`).join("") +
+      `</div>`
+    : "";
+  abEl.querySelectorAll("[data-abroad]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const p = abroad[Number(el.dataset.abroad)];
+      if (p) openArtistListModal(`${p.label} (${p.abroad})`, p.artists, opts.onArtistClick, "Ingen artister her i valgt tiår.");
+    });
+  });
+
+  // Ærlig fotnote: artister uten plasserbart sted (klikkbar liste).
+  const footEl = document.getElementById("kart-footer");
+  const unplacedCount = unplaced.reduce((sum, u) => sum + u.count, 0);
+  footEl.innerHTML = unplacedCount
+    ? `<button type="button" class="btn ghost small" id="kart-unplaced">${unplacedCount} artist${unplacedCount === 1 ? "" : "er"} uten plasserbart sted →</button>`
+    : "";
+  const upBtn = footEl.querySelector("#kart-unplaced");
+  if (upBtn) upBtn.addEventListener("click", () => {
+    const all = [];
+    const seen = new Set();
+    for (const u of unplaced) for (const a of u.artists) {
+      const k = a.id ?? a;
+      if (!seen.has(k)) { seen.add(k); all.push(a); }
+    }
+    openArtistListModal("Uten plasserbart sted", all, opts.onArtistClick, "Ingen.");
+  });
+}
+
 function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
@@ -943,8 +1058,8 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
-   "modal-tidslinje", "modal-artistliste", "modal-spilleliste", "modal-sjanger",
-   "modal-tech-detail"].forEach((id) => setupModal(id));
+   "modal-tidslinje", "modal-kart", "modal-artistliste", "modal-spilleliste",
+   "modal-sjanger", "modal-tech-detail"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1048,6 +1163,7 @@ export function initExplore(options) {
     openSubgenreList,
     openVarmekart,
     openTidslinje,
+    openKart,
     openPodkast,
     openTeknologi,
     openTechDetail,
