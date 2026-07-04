@@ -141,6 +141,9 @@ body.is-teacher .show-removed { display: inline-flex; }
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
 }
+/* .btn på <a> (f.eks. «Foreslå en artist →», «← Til startsiden»): oppfør deg
+   som knapp, ikke lenke. Skopet til ankere så <button>-layout ikke røres. */
+a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .btn:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 .btn.primary {
@@ -622,8 +625,17 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .role-gate-card h2 { margin: 0 0 4px; }
 .role-gate-card .btn { width: 100%; padding: 12px; font-size: 1rem; }
 
-body.role-student .nav-teacher { display: none; }
+/* Studenter får et rent dashbord uten faner: hele nav-lenkeraden skjules
+   (Foreslå nås via knapp i Artister-modalen; tilbake-veien på undersider er
+   .student-back + brand-lenken). Lærer/uvalgt rolle ser fanene som før. */
+body.role-student .nav a { display: none; }
 body.role-student .version-tag { display: none; }
+
+/* «← Til startsiden» på skjemasiden — kun synlig for studenter (andre har
+   faner). a.btn.student-back er strengt mer spesifikk enn a.btn-regelen, så
+   skjulingen vinner uavhengig av kilderekkefølge. */
+a.btn.student-back { display: none; }
+body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px; }
 
 /* ----- Modaler ----- */
 .modal-backdrop {
