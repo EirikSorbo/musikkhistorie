@@ -34,12 +34,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.87";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.87";
-import { isMainGenre } from "./genealogy.js?v=2.87";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=2.87";
-import { normalizeConfig } from "./config-normalize.js?v=2.87";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.87";
+import { firebaseConfig } from "./firebase-config.js?v=2.88";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.88";
+import { isMainGenre } from "./genealogy.js?v=2.88";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=2.88";
+import { normalizeConfig } from "./config-normalize.js?v=2.88";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.88";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så

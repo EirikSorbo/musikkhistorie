@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.87";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.87";
-import { debounce, throttle } from "./util.js?v=2.87";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.87";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.87";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.87";
-import { initExplore } from "./explore.js?v=2.87";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.87";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.88";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.88";
+import { debounce, throttle } from "./util.js?v=2.88";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.88";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.88";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.88";
+import { initExplore } from "./explore.js?v=2.88";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.88";
 
 const state = {
   artists: [],

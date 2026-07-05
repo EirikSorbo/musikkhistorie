@@ -1,12 +1,13 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.87";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.87";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.87";
-import { isVisible } from "./limits.js?v=2.87";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.87";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.87";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.87";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.87";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.87";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.88";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.88";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.88";
+import { isVisible } from "./limits.js?v=2.88";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.88";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.88";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.88";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.88";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.88";
+import { renderSjangerhimmel } from "./constellation.js?v=2.88";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -202,6 +203,19 @@ const MODAL_HTML = `
   </div>
 </div>
 
+<!-- Sjangerhimmel: konstellasjonskart — artister som satellitter rundt
+     sjangrene sine; bro-artister spennes ut mellom klyngene (constellation.js) -->
+<div class="modal-backdrop" id="modal-sjangerhimmel">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Sjangerhimmelen</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Hver stjerne er en sjanger, hver prikk en artist. De uthevede trådene er artister med flere sjangre — broene i historien. Zoom for navn; trykk på en prikk for artistkortet.</p>
+    <div id="sh-body"></div>
+  </div>
+</div>
+
 <!-- Tidslinje: når var artistene aktive, gruppert per sjanger -->
 <div class="modal-backdrop" id="modal-tidslinje">
   <div class="modal modal-wide">
@@ -289,6 +303,11 @@ ${TECH_DETAIL_MODAL_HTML}
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span class="dash-title">Kart</span>
         <span class="dash-desc">Musikkens geografi tiår for tiår</span>
+      </button>
+      <button class="dash-card" id="sb-himmel">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>
+        <span class="dash-title">Sjangerhimmel</span>
+        <span class="dash-desc">Artistene som stjernebilder rundt sjangrene sine</span>
       </button>
     </div>
   </div>
@@ -1067,6 +1086,19 @@ function openStoreBildet() {
   modalOpen(document.getElementById("modal-store-bildet"));
 }
 
+// Sjangerhimmelen: konstellasjonskartet rendres på nytt ved hver åpning (samme
+// mønster som kartet), så det alltid speiler gjeldende artistdata. Artist- og
+// sjangerklikk åpner de vanlige modalene OPPÅ himmelen — ← går tilbake hit.
+function openSjangerhimmel() {
+  const modal = document.getElementById("modal-sjangerhimmel");
+  if (!modal) return;
+  renderSjangerhimmel(document.getElementById("sh-body"), getState().artists.filter(isVisible), {
+    onArtistClick: opts.onArtistClick,
+    onGenreClick: onMainGenreClick,
+  });
+  modalOpen(modal);
+}
+
 function injectModals() {
   const wrap = document.createElement("div");
   wrap.innerHTML = MODAL_HTML;
@@ -1079,8 +1111,8 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
-   "modal-tidslinje", "modal-kart", "modal-artistliste", "modal-spilleliste",
-   "modal-sjanger", "modal-tech-detail", "modal-store-bildet"].forEach((id) => setupModal(id));
+   "modal-tidslinje", "modal-kart", "modal-sjangerhimmel", "modal-artistliste",
+   "modal-spilleliste", "modal-sjanger", "modal-tech-detail", "modal-store-bildet"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1129,6 +1161,7 @@ function wireModals() {
     else sbTre.style.display = "none";
     sbModal.querySelector("#sb-varmekart").addEventListener("click", openVarmekart);
     sbModal.querySelector("#sb-kart").addEventListener("click", openKart);
+    sbModal.querySelector("#sb-himmel").addEventListener("click", openSjangerhimmel);
   }
 
   const tekExtra = document.getElementById("tek-admin-extra");
