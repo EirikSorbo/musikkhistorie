@@ -1,12 +1,12 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.85";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.85";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.85";
-import { isVisible } from "./limits.js?v=2.85";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.85";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.85";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.85";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.85";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.85";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.86";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.86";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.86";
+import { isVisible } from "./limits.js?v=2.86";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.86";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.86";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.86";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.86";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.86";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -289,16 +289,6 @@ ${TECH_DETAIL_MODAL_HTML}
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span class="dash-title">Kart</span>
         <span class="dash-desc">Musikkens geografi tiår for tiår</span>
-      </button>
-      <button class="dash-card" id="sb-tech">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path d="M8 7h8M8 11h6"/></svg>
-        <span class="dash-title">Teknologi</span>
-        <span class="dash-desc">Tiår for tiår, med tidslinjer</span>
-      </button>
-      <button class="dash-card" id="sb-society">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
-        <span class="dash-title">Samfunn</span>
-        <span class="dash-desc">Tiår for tiår, med tidslinjer</span>
       </button>
     </div>
   </div>
@@ -1139,8 +1129,6 @@ function wireModals() {
     else sbTre.style.display = "none";
     sbModal.querySelector("#sb-varmekart").addEventListener("click", openVarmekart);
     sbModal.querySelector("#sb-kart").addEventListener("click", openKart);
-    sbModal.querySelector("#sb-tech").addEventListener("click", () => openDecadeList("tech"));
-    sbModal.querySelector("#sb-society").addEventListener("click", () => openDecadeList("society"));
   }
 
   const tekExtra = document.getElementById("tek-admin-extra");
@@ -1209,7 +1197,6 @@ export function initExplore(options) {
     openSubgenreList,
     openVarmekart,
     openTidslinje,
-    openKart,
     openStoreBildet,
     openPodkast,
     openTeknologi,
