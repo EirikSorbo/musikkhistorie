@@ -6,8 +6,8 @@
 //  Re-eksporteres fra store.js, så eksisterende importer fortsatt virker.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.86";
-import { META_RENAME } from "./artist-normalize.js?v=2.86";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=2.87";
+import { META_RENAME } from "./artist-normalize.js?v=2.87";
 
 // Bakoverkompat for config: gamle nøkler → nye (genres→metaGenres osv.).
 export function normalizeConfig(d) {

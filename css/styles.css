@@ -1216,7 +1216,8 @@ body.is-teacher #gate { display: none; }
 }
 .gx-info h3 { margin: 0 0 2px; font-size: 1.05rem; }
 .gx-era { font-size: 0.8rem; color: var(--muted-2); margin: 0 0 8px; }
-.gx-desc { font-size: 0.92rem; line-height: 1.55; margin: 0 0 10px; color: var(--text); }
+/* pre-line: lange metasjanger-tekster bruker \n\n som avsnittsskille i data. */
+.gx-desc { font-size: 0.92rem; line-height: 1.55; margin: 0 0 10px; color: var(--text); white-space: pre-line; }
 .gx-rel { font-size: 0.85rem; color: var(--muted); margin: 0 0 4px; }
 .gx-rel strong { color: var(--text); font-weight: 600; }
 .gx-tracks { margin: 6px 0 12px; padding-left: 18px; }
