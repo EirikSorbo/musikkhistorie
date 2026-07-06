@@ -1282,6 +1282,7 @@ body.is-teacher #gate { display: none; }
   border-radius: 999px; background: #fff; color: var(--text); cursor: pointer;
 }
 .sh-chip.off { opacity: 0.35; }
+.sh-chip.solo { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); font-weight: 500; }
 .sh-chip-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .sh-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
 .sh-bro-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text); cursor: pointer; }

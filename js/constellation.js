@@ -16,8 +16,8 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.93";
-import { escapeHtml } from "./ui-helpers.js?v=2.93";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.94";
+import { escapeHtml } from "./ui-helpers.js?v=2.94";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -377,12 +377,37 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     drawAllBridges();
     if (focusedId) setFocus(focusedId);
   }
+  // Familie-chips med tredelt veksling PER chip:
+  //   1. trykk → vis KUN denne familien (de andre dempes)
+  //   2. trykk → skjul denne familien (de andre vises)
+  //   3. trykk → tilbake til standard (alle vises)
+  // Å trykke en annen chip starter dens egen syklus på trinn 1.
   const chipBox = container.querySelector("#sh-chips");
+  const chipEls = new Map();
+  let filterMode = "default", filterFam = null;   // "default" | "solo" | "hide"
+  function applyFilter() {
+    activeFams.clear();
+    if (filterMode === "solo") activeFams.add(filterFam);
+    else if (filterMode === "hide") { for (const f of famsPresent) if (f !== filterFam) activeFams.add(f); }
+    else for (const f of famsPresent) activeFams.add(f);
+    for (const [f, b] of chipEls) {
+      b.classList.toggle("solo", filterMode === "solo" && f === filterFam);
+      b.classList.toggle("off", (filterMode === "solo" && f !== filterFam) || (filterMode === "hide" && f === filterFam));
+    }
+    updateFamVis();
+  }
   for (const f of famsPresent) {
     const b = document.createElement("button");
     b.type = "button"; b.className = "sh-chip";
+    b.title = "Klikk: vis kun denne → skjul denne → vis alle";
     b.innerHTML = `<span class="sh-chip-dot" style="background:${famColor(f)}"></span>${escapeHtml(FAMILIES[f]?.label || f)}`;
-    b.addEventListener("click", () => { activeFams.has(f) ? activeFams.delete(f) : activeFams.add(f); b.classList.toggle("off"); updateFamVis(); });
+    b.addEventListener("click", () => {
+      if (filterFam !== f || filterMode === "default") { filterMode = "solo"; filterFam = f; }
+      else if (filterMode === "solo") filterMode = "hide";     // filterFam blir stående
+      else { filterMode = "default"; filterFam = null; }        // hide → standard
+      applyFilter();
+    });
+    chipEls.set(f, b);
     chipBox.appendChild(b);
   }
   container.querySelector("#sh-bro").addEventListener("change", (e) => { showAllBridges = e.target.checked; drawAllBridges(); });
