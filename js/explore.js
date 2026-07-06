@@ -1,13 +1,13 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.88";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.88";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.88";
-import { isVisible } from "./limits.js?v=2.88";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.88";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.88";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.88";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.88";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.88";
-import { renderSjangerhimmel } from "./constellation.js?v=2.88";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.89";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.89";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.89";
+import { isVisible } from "./limits.js?v=2.89";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.89";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.89";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.89";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.89";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.89";
+import { renderSjangerhimmel } from "./constellation.js?v=2.89";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -211,7 +211,7 @@ const MODAL_HTML = `
       <h2>Sjangerhimmelen</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Hver stjerne er en sjanger, hver prikk en artist. De uthevede trådene er artister med flere sjangre — broene i historien. Zoom for navn; trykk på en prikk for artistkortet.</p>
+    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Sjangrene står i slektstreets rekkefølge. Hold over (eller trykk på) en stjerne — artistene spretter frem, og bro-artister skyter en tråd til de andre sjangrene sine. Trykk på en prikk for artistkortet.</p>
     <div id="sh-body"></div>
   </div>
 </div>

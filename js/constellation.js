@@ -1,35 +1,35 @@
 // ============================================================================
-//  SJANGERHIMMELEN — konstellasjonskart over artister og sjangre.
+//  SJANGERHIMMELEN — stjernekart i slektstreets rekkefølge.
 //
-//  Hver tre-sjanger (mainGenre med g≠null i GENEALOGY) er en «stjerne» hvis
-//  størrelse viser antall artister; artistene er satellitter rundt. Poenget
-//  med kartet er bro-artistene: de med flere mainGenre spennes fysisk ut
-//  mellom stjernene sine og binder klyngene sammen — noe verken tidslinjen,
-//  varmekartet eller slektstreet viser.
+//  Samme oppsett som sjangertreet (js/genealogy.js): tid nedover, familier
+//  bortover. Vi LESER bare GENEALOGY (cx/rad/foreldre) — treet self (tre.html)
+//  røres ikke. Hver sjanger er en «stjerne» plassert der noden står i treet, med
+//  svake avstamningslinjer som tegner skjelettet.
 //
-//  Artister UTEN tre-sjanger (kun metaGenre, f.eks. croonerne og europeisk
-//  jazz) utelates ikke: de tegnes som hule ringer løst knyttet til familien
-//  sin, så hullene i sjangertaggingen er synlige i stedet for stille borte.
+//  I ro vises BARE sjangerstjernene (rolig, lesbart). Når du holder over (eller
+//  trykker på mobil) en stjerne, spretter sjangerens artister frem som et
+//  stjernebilde rundt den — så du aldri ser mer enn én sjangers navn om gangen
+//  (maks ~42 i stedet for 257 oppå hverandre). Bro-artister (flere mainGenre)
+//  skyter samtidig en tråd til de ANDRE sjangrene sine, som lyser opp — broene
+//  i historien, uten permanent floke.
 //
-//  Fargene og grupperingen (familie/anker) kommer fra slektstreet
-//  (MAIN_GENRE_INFO/FAMILIES), så kartet snakker samme visuelle språk som
-//  varmekartet og tidslinjen. Layouten er en liten egen kraftsimulering
-//  (fjær + frastøting) — ingen avhengigheter, animert med rAF til den roer
-//  seg. Zoom styrer navnevisning: stjernenavn alltid, bro-artister fra
-//  ZOOM_MID, alle navn fra ZOOM_FAR (CSS-klasser sh-zmid/sh-zfar).
+//  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
+//  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.88";
-import { escapeHtml } from "./ui-helpers.js?v=2.88";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.89";
+import { escapeHtml } from "./ui-helpers.js?v=2.89";
 
-const W = 900, H = 470, SVGNS = "http://www.w3.org/2000/svg";
-const ZOOM_MIN = 0.7, ZOOM_MAX = 5, ZOOM_MID = 1.5, ZOOM_FAR = 2.6;
+const SVGNS = "http://www.w3.org/2000/svg";
+// Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
+// komprimert vertikalt (64 px mot treets 95) så hele kartet får plass i modalen
+// uten scroll — fokus-zoom tar seg av lesbarheten i detalj.
+const ROW_Y = (r) => 55 + r * 64;
+const VBW = 1660, VBH = 900;
+const ZOOM_MIN = 0.7, ZOOM_MAX = 7;
 
-// Kanoniser tagger til treets stavemåte (samme mønster som tidslinjen).
 const canonMain = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
 const canonMeta = new Map(GENEALOGY_META_GENRES.map((g) => [g.toLowerCase(), g]));
-
-// Representativ familie per metaGenre (hyppigste blant metaens tre-sjangre) —
-// brukes til å plassere artister som bare har metaGenre.
+// Familie per metaGenre (hyppigst blant metaens tre-sjangre) — for løse artister.
 const META_FAM = (() => {
   const tally = new Map();
   for (const info of Object.values(MAIN_GENRE_INFO)) {
@@ -37,166 +37,11 @@ const META_FAM = (() => {
     tally.get(info.meta)[info.fam] = (tally.get(info.meta)[info.fam] || 0) + 1;
   }
   const out = {};
-  for (const [meta, fams] of tally) {
-    out[meta] = Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
-  }
+  for (const [meta, fams] of tally) out[meta] = Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
   return out;
 })();
 
 const famColor = (fam) => FAMILIES[fam]?.stroke || FAMILIES.gray.stroke;
-const hubR = (count) => 7 + Math.sqrt(count) * 1.9;
-
-// ----------------------------------------------------------------------------
-//  Graf: anker per familie (usynlig, fast), stjerne per sjanger med artister,
-//  node per artist. Lenker: artist→stjerne (én per sjanger — broene får
-//  flere), stjerne→anker, og artist-uten-sjanger→anker (løs, stiplet).
-// ----------------------------------------------------------------------------
-function buildGraph(artists) {
-  const hubArtists = new Map();
-  const artistNodes = [];
-  for (const a of artists) {
-    const genres = [...new Set((a.mainGenre || [])
-      .map((g) => canonMain.get(String(g).toLowerCase()))
-      .filter(Boolean))];
-    let fam;
-    if (genres.length) {
-      fam = MAIN_GENRE_INFO[genres[0]]?.fam || "gray";
-      for (const g of genres) {
-        if (!hubArtists.has(g)) hubArtists.set(g, []);
-        hubArtists.get(g).push(a);
-      }
-    } else {
-      const metaRaw = Array.isArray(a.metaGenre) ? a.metaGenre[0] : a.metaGenre;
-      const meta = metaRaw ? canonMeta.get(String(metaRaw).toLowerCase()) : null;
-      fam = META_FAM[meta] || "gray";
-    }
-    artistNodes.push({
-      type: "artist", artist: a, name: a.name || "(uten navn)",
-      genres, fam, bridge: genres.length > 1, loose: !genres.length,
-      x: 0, y: 0, vx: 0, vy: 0,
-    });
-  }
-
-  const hubNodes = [...hubArtists.entries()].map(([genre, list]) => ({
-    type: "hub", genre, count: list.length,
-    fam: MAIN_GENRE_INFO[genre]?.fam || "gray",
-    x: 0, y: 0, vx: 0, vy: 0,
-  }));
-
-  const famCount = {};
-  for (const n of artistNodes) famCount[n.fam] = (famCount[n.fam] || 0) + 1;
-  const famsPresent = Object.keys(FAMILIES).filter(
-    (f) => famCount[f] || hubNodes.some((h) => h.fam === f)
-  );
-
-  // Deterministisk stjerneplassering: en stabil ring der hver familie får sin
-  // egen bue (bredde ∝ antall sjangre i familien) og stjernene innen familien
-  // fordeles jevnt langs buen, sortert etter størrelse. Stjernene PINNES (fx/fy)
-  // — bare artistene simuleres rundt dem. Det fjerner både at knutepunkter
-  // slynges ut i hjørnene og at kartet ser helt ulikt ut hver gang det åpnes,
-  // slik de andre visningene (tidslinje, tre, varmekart) også er forutsigbare.
-  // Rekkefølgen følger FAMILIES → samme orden som fargeforklaringen.
-  const hubsByFam = {};
-  for (const f of famsPresent) hubsByFam[f] = [];
-  for (const h of hubNodes) hubsByFam[h.fam].push(h);
-  for (const f of famsPresent) {
-    hubsByFam[f].sort((a, b) => b.count - a.count || a.genre.localeCompare(b.genre, "no"));
-  }
-  const famWeight = (f) => Math.max(hubsByFam[f].length, 1);   // ≥1 så rene løs-familier også får plass
-  const totalWeight = famsPresent.reduce((s, f) => s + famWeight(f), 0) || 1;
-
-  const cx = W / 2, cy = H / 2, RX = W * 0.40, RY = H * 0.39;
-  const famCentroid = {};
-  let angle = -Math.PI / 2;   // start øverst
-  for (const f of famsPresent) {
-    const span = (famWeight(f) / totalWeight) * 2 * Math.PI;
-    const hubs = hubsByFam[f];
-    const pad = Math.min(span * 0.18, 0.14);   // liten luft mot nabofamiliene
-    const a0 = angle + pad, a1 = angle + span - pad;
-    hubs.forEach((h, i) => {
-      const t = hubs.length === 1 ? 0.5 : i / (hubs.length - 1);
-      const a = a0 + t * (a1 - a0);
-      h.fx = cx + Math.cos(a) * RX;
-      h.fy = cy + Math.sin(a) * RY;
-      h.x = h.fx; h.y = h.fy; h.fixed = true;
-    });
-    const mid = angle + span / 2;
-    // Familiesentroide litt innenfor ringen — mål for de løse (kun-metaGenre).
-    famCentroid[f] = { x: cx + Math.cos(mid) * RX * 0.82, y: cy + Math.sin(mid) * RY * 0.82 };
-    angle += span;
-  }
-
-  const hubByGenre = new Map(hubNodes.map((h) => [h.genre, h]));
-
-  // Startposisjoner: artistene sås like innenfor hjemme-stjernen sin (mot
-  // sentrum), så de faller raskt på plass i stedet for å nøste opp kaos.
-  for (const n of artistNodes) {
-    const home = n.loose ? famCentroid[n.fam] : hubByGenre.get(n.genres[0]);
-    const base = home || { x: cx, y: cy };
-    n.x = base.x + (cx - base.x) * 0.15 + (Math.random() - 0.5) * 40;
-    n.y = base.y + (cy - base.y) * 0.15 + (Math.random() - 0.5) * 40;
-  }
-
-  const links = [];
-  for (const n of artistNodes) {
-    if (n.loose) { links.push({ a: n, b: famCentroid[n.fam] || { x: cx, y: cy }, len: 34, k: 0.22, kind: "loose" }); continue; }
-    // Bro-artister forankres i PRIMÆRsjangeren (første tagg, som også gir
-    // familiefargen): den lenken er stiv og kort, mens lenkene til de øvrige
-    // sjangrene er svake, lange tråder som viser broen som en korde over kartet
-    // uten å dra artisten vekk fra hjemmeklyngen — i stedet for at 42 % av
-    // artistene samler seg i én midtfloke.
-    n.genres.forEach((g, i) => {
-      const primary = i === 0;
-      links.push({ a: n, b: hubByGenre.get(g), len: primary ? 30 : 150,
-        k: primary ? 0.5 : 0.06, kind: "member", bridge: n.bridge && !primary });
-    });
-  }
-
-  return { artistNodes, hubNodes, links };
-}
-
-// ----------------------------------------------------------------------------
-//  Kraftsimulering: bare ARTISTENE beveger seg — stjernene er pinnet (fixed).
-//  Fjærlenkene trekker artistene til hjemme-stjernen (og svakt mot bro-stjernen),
-//  og en kortrekkende artist-mot-artist-frastøting hindrer at prikkene legger
-//  seg oppå hverandre. Ingen krefter på de faste stjernene.
-// ----------------------------------------------------------------------------
-function simTick(nodes, links, alpha) {
-  for (const l of links) {
-    const dx = l.b.x - l.a.x, dy = l.b.y - l.a.y;
-    const d = Math.max(Math.hypot(dx, dy), 1);
-    const f = ((d - l.len) / d) * l.k * alpha;
-    if (!l.a.fixed) { l.a.vx += dx * f; l.a.vy += dy * f; }
-    if (l.b.vx !== undefined && !l.b.fixed) { l.b.vx -= dx * f; l.b.vy -= dy * f; }
-  }
-  for (let i = 0; i < nodes.length; i++) {
-    const ni = nodes[i];
-    if (ni.fixed) continue;
-    for (let j = i + 1; j < nodes.length; j++) {
-      const nj = nodes[j];
-      if (nj.fixed) continue;
-      let dx = nj.x - ni.x, dy = nj.y - ni.y;
-      let d2 = dx * dx + dy * dy;
-      if (d2 < 1) { dx = (Math.random() - 0.5); dy = (Math.random() - 0.5); d2 = 1; }
-      if (d2 > 55 * 55) continue;   // kun lokal anti-overlapp — kortrekkende
-      const f = (-15 / d2) * alpha;
-      const fx = dx * f, fy = dy * f;
-      ni.vx += fx; ni.vy += fy;
-      nj.vx -= fx; nj.vy -= fy;
-    }
-  }
-  for (const n of nodes) {
-    if (n.fixed) { n.vx = 0; n.vy = 0; continue; }
-    n.x = Math.min(W - 16, Math.max(16, n.x + n.vx));
-    n.y = Math.min(H - 14, Math.max(14, n.y + n.vy));
-    n.vx *= 0.6; n.vy *= 0.6;
-  }
-}
-
-// Ett rAF-håndtak per container, så en gjenåpning av modalen ikke etterlater
-// en gammel simulering som skriver til utbyttede DOM-noder.
-const rafHandles = new WeakMap();
-
 const el = (tag, attrs = {}) => {
   const e = document.createElementNS(SVGNS, tag);
   for (const k in attrs) e.setAttribute(k, attrs[k]);
@@ -204,218 +49,337 @@ const el = (tag, attrs = {}) => {
 };
 
 // ----------------------------------------------------------------------------
-//  Hovedinngang: render kontroller + SVG + forklaring inn i `container`.
-//  onArtistClick(artist) og onGenreClick(genre) åpnes OPPÅ modalen (z-stack),
-//  samme navigasjonsmønster som tidslinjen og kartet.
+//  Bygg grafen: sjangernoder (fra GENEALOGY) med artistene sine, i treets
+//  posisjoner. Bro-artister får en dott per sjanger de er tagget i, hver med
+//  peker til sine ANDRE sjangre (for trådene som lyser opp ved fokus).
+// ----------------------------------------------------------------------------
+function buildGraph(artists) {
+  const nodeById = new Map();
+  for (const n of GENEALOGY) {
+    nodeById.set(n.id, {
+      id: n.id, label: n.l, fam: n.fam, isGenre: !!n.g,
+      x: n.cx, y: ROW_Y(n.r), parents: n.p || [], reactions: n.rx || [],
+      artists: [],
+    });
+  }
+  // Slå artist-tagger til node-id via label.
+  const nodeByLabel = new Map();
+  for (const node of nodeById.values()) if (node.isGenre) nodeByLabel.set(node.label.toLowerCase(), node);
+
+  const loose = [];
+  for (const a of artists) {
+    const genreNodes = [...new Set((a.mainGenre || [])
+      .map((g) => canonMain.get(String(g).toLowerCase()))
+      .filter(Boolean)
+      .map((lbl) => nodeByLabel.get(lbl.toLowerCase()))
+      .filter(Boolean))];
+    if (!genreNodes.length) { loose.push(a); continue; }
+    for (const node of genreNodes) node.artists.push({ artist: a, others: genreNodes.filter((n) => n !== node) });
+  }
+
+  const genres = [...nodeById.values()].filter((n) => n.isGenre && n.artists.length);
+  const roots = [...nodeById.values()].filter((n) => !n.isGenre || !n.artists.length);
+  return { nodeById, genres, roots, loose, allNodes: [...nodeById.values()] };
+}
+
+const starR = (count) => 9 + Math.sqrt(count) * 2.3;
+
+// Phyllotaxis-utlegg: jevn «solsikke»-spredning av artistene rundt stjernen,
+// stabil (deterministisk) og kompakt uansett antall.
+function fanOffset(i, n) {
+  const golden = 2.399963229728653;
+  const rad = 30 + 18 * Math.sqrt(i);
+  const a = i * golden;
+  return { dx: Math.cos(a) * rad, dy: Math.sin(a) * rad, a };
+}
+
+// Ett rAF/håndtak-sett per container, så gjenåpning ikke lekker lyttere.
+const teardown = new WeakMap();
+
 // ----------------------------------------------------------------------------
 export function renderSjangerhimmel(container, artists, { onArtistClick, onGenreClick } = {}) {
-  if (rafHandles.has(container)) cancelAnimationFrame(rafHandles.get(container));
-  if (!artists.length) {
-    container.innerHTML = `<p class="muted">Ingen artister ennå.</p>`;
-    return;
-  }
-  const { artistNodes, hubNodes, links } = buildGraph(artists);
-  const nodes = [...hubNodes, ...artistNodes];
-  const bridges = artistNodes.filter((n) => n.bridge).length;
-  const loose = artistNodes.filter((n) => n.loose).length;
+  teardown.get(container)?.();
+  if (!artists.length) { container.innerHTML = `<p class="muted">Ingen artister ennå.</p>`; return; }
 
-  const famsPresent = Object.keys(FAMILIES).filter((f) => nodes.some((n) => n.fam === f));
+  const { genres, roots, loose } = buildGraph(artists);
+  const famsPresent = Object.keys(FAMILIES).filter((f) => genres.some((n) => n.fam === f));
+  const bridgeCount = new Set(
+    genres.flatMap((n) => n.artists.filter((m) => m.others.length).map((m) => m.artist))
+  ).size;
+
   container.innerHTML = `
     <div class="sh-chips" id="sh-chips"></div>
     <div class="sh-toolbar">
-      <label class="sh-bro-toggle"><input type="checkbox" id="sh-bro"> Kun bro-artister (${bridges})</label>
-      <span class="sh-counts">${artistNodes.length} artister · ${hubNodes.length} sjangre${loose ? ` · ${loose} uten tre-sjanger` : ""}</span>
+      <label class="sh-bro-toggle"><input type="checkbox" id="sh-bro"> Vis alle broer (${bridgeCount})</label>
+      <span class="sh-counts">${genres.length} sjangre · hold over en stjerne for artistene${loose.length ? ` · <button type="button" id="sh-loose" class="sh-linkbtn">${loose.length} uten tre-sjanger</button>` : ""}</span>
       <span class="sh-zoom-btns">
         <button type="button" class="btn ghost small" id="sh-zoom-out" aria-label="Zoom ut">−</button>
         <button type="button" class="btn ghost small" id="sh-zoom-in" aria-label="Zoom inn">+</button>
-        <button type="button" class="btn ghost small" id="sh-zoom-reset" aria-label="Nullstill zoom">⟲</button>
+        <button type="button" class="btn ghost small" id="sh-zoom-reset" aria-label="Nullstill">⟲</button>
       </span>
     </div>
-    <div id="sh-svg-wrap"></div>
+    <div id="sh-svg-wrap">
+      <div id="sh-focus-panel" class="sh-focus-panel" hidden></div>
+    </div>
     <div class="sh-legend">
+      <span><span class="sh-lg-star"></span>sjanger (større = flere artister)</span>
       <span><span class="sh-lg-dot"></span>artist</span>
-      <span><span class="sh-lg-dot sh-lg-bridge"></span>flere sjangre (bro)</span>
-      <span><span class="sh-lg-dot sh-lg-loose"></span>kun hovedsjanger</span>
-      <span>større stjerne = flere artister</span>
+      <span><span class="sh-lg-thread"></span>bro til annen sjanger</span>
+      <span>hold over / trykk en stjerne</span>
     </div>`;
 
-  const svg = el("svg", { id: "sh-svg", viewBox: `0 0 ${W} ${H}`, role: "img",
-    "aria-label": "Konstellasjonskart der artister grupperes rundt sjangrene sine" });
-  svg.style.width = "100%";
-  svg.style.display = "block";
-  container.querySelector("#sh-svg-wrap").appendChild(svg);
-  const root = el("g");
-  svg.appendChild(root);
+  const svg = el("svg", { id: "sh-svg", viewBox: `0 0 ${VBW} ${VBH}`,
+    preserveAspectRatio: "xMidYMid meet", role: "img",
+    "aria-label": "Stjernekart over sjangrene i slektstreets rekkefølge; hold over en sjanger for artistene" });
+  svg.style.width = "100%"; svg.style.display = "block";
+  container.querySelector("#sh-svg-wrap").prepend(svg);
+  const root = el("g"); svg.appendChild(root);
 
-  // Lenker tegnes under nodene. Fargen følger stjernens familie, så en bro
-  // som krysser familier bærer begge fargene sine synlig.
-  const linkG = el("g");
-  root.appendChild(linkG);
-  // Tegn bro-lenkene sist, så de ligger oppå de svake medlemslenkene.
-  const drawnLinks = links
-    .filter((l) => l.kind !== "spine")
-    .sort((a, b) => (a.bridge ? 1 : 0) - (b.bridge ? 1 : 0))
-    .map((l) => {
-    const line = el("line", { stroke: l.kind === "loose" ? "var(--muted-2,#7d9885)" : famColor(l.b.fam),
-      "stroke-width": l.bridge ? 1.5 : 0.8 });
-    if (l.kind === "loose") line.setAttribute("stroke-dasharray", "2 4");
-    linkG.appendChild(line);
-    return { l, line };
-  });
+  // --- Lag: avstamningslinjer (skjelett), stjerner, tråder, artister ---------
+  const lineageG = el("g"); root.appendChild(lineageG);
+  const threadG = el("g"); root.appendChild(threadG);
+  const starG = el("g"); root.appendChild(starG);
+  const artistG = el("g"); root.appendChild(artistG);
 
-  const hubG = el("g");
-  root.appendChild(hubG);
-  const drawnHubs = hubNodes.map((n) => {
-    const g = el("g", { class: "sh-node" });
-    const c = el("circle", { r: hubR(n.count).toFixed(1), fill: famColor(n.fam), "fill-opacity": "0.88" });
-    const title = el("title");
-    title.textContent = `${n.genre} · ${n.count} artist${n.count === 1 ? "" : "er"}`;
-    const label = el("text", { class: "sh-hlbl", y: (hubR(n.count) + 12).toFixed(1), "text-anchor": "middle" });
-    label.textContent = n.genre;
-    g.append(c, title, label);
-    g.addEventListener("click", () => onGenreClick?.(n.genre));
-    hubG.appendChild(g);
-    return { n, g };
-  });
+  const nodeById = new Map([...genres, ...roots].map((n) => [n.id, n]));
+  // Avstamning: forelder→node som svak heltrukken; motreaksjon (rx) svak stiplet.
+  for (const n of [...genres, ...roots]) {
+    for (const pid of n.parents) {
+      const p = nodeById.get(pid); if (!p) continue;
+      lineageG.appendChild(el("line", { x1: p.x, y1: p.y, x2: n.x, y2: n.y,
+        stroke: "var(--line-strong,#ccddd2)", "stroke-width": 1.4, "stroke-opacity": 0.55 }));
+    }
+    for (const rid of n.reactions) {
+      const p = nodeById.get(rid); if (!p) continue;
+      lineageG.appendChild(el("line", { x1: p.x, y1: p.y, x2: n.x, y2: n.y,
+        stroke: "#d97706", "stroke-width": 1.2, "stroke-opacity": 0.4, "stroke-dasharray": "5 5" }));
+    }
+  }
 
-  const artG = el("g");
-  root.appendChild(artG);
-  const drawnArtists = artistNodes.map((n) => {
-    const g = el("g", { class: "sh-node" });
-    const c = el("circle", {
-      r: n.bridge ? 5.5 : 4,
-      fill: n.loose ? "var(--bg-soft,#f2f6f3)" : famColor(n.fam),
-      stroke: n.loose ? famColor(n.fam) : n.bridge ? "var(--text,#101a13)" : "none",
-      "stroke-width": n.loose ? 1.5 : n.bridge ? 1.2 : 0,
+  // Røtter: små, nøytrale «opphavs»-stjerner (ingen artister, ikke fokuserbare).
+  for (const n of roots) {
+    const g = el("g", { class: "sh-root" });
+    g.appendChild(el("circle", { cx: n.x, cy: n.y, r: 6, fill: "var(--muted-2,#7d9885)", "fill-opacity": 0.5 }));
+    const t = el("text", { class: "sh-rootlbl", x: n.x, y: n.y - 12, "text-anchor": "middle" });
+    t.textContent = n.label; g.appendChild(t);
+    starG.appendChild(g);
+  }
+
+  // Sjangerstjerner + (skjulte) artist-stjernebilder.
+  const starEls = new Map();     // id → { circle, halo, group(artistG-child), members:[{dot,label,x,y,others}] }
+  for (const n of genres) {
+    const members = n.artists
+      .slice()
+      .sort((a, b) => (a.artist.name || "").localeCompare(b.artist.name || "", "no"));
+
+    // Skjult artist-gruppe for denne sjangeren.
+    const ag = el("g", { class: "sh-artgroup", "data-genre": n.id }); ag.style.display = "none";
+    const memberEls = members.map((m, i) => {
+      const { dx, dy } = fanOffset(i, members.length);
+      const x = n.x + dx, y = n.y + dy;
+      const isBridge = m.others.length > 0;
+      const dot = el("circle", { cx: x, cy: y, r: isBridge ? 6.5 : 5,
+        fill: isBridge ? famColor(n.fam) : famColor(n.fam),
+        stroke: isBridge ? "var(--text,#101a13)" : "#fff", "stroke-width": isBridge ? 1.6 : 1,
+        class: "sh-artdot", "data-name": m.artist.name || "" });
+      dot.style.cursor = "pointer";
+      dot.addEventListener("click", (e) => { e.stopPropagation(); onArtistClick?.(m.artist); });
+      const anchor = dx >= 0 ? "start" : "end";
+      const lbl = el("text", { class: "sh-artlbl", x: x + (dx >= 0 ? 8 : -8), y: y + 3.5, "text-anchor": anchor });
+      lbl.textContent = m.artist.name || "(uten navn)";
+      const title = el("title"); title.textContent = `${m.artist.name}${isBridge ? " · også " + m.others.map((o) => o.label).join(", ") : ""}`;
+      dot.appendChild(title);
+      ag.append(dot, lbl);
+      return { x, y, others: m.others, isBridge };
     });
-    const title = el("title");
-    title.textContent = `${n.name} · ${n.loose ? "kun hovedsjanger" : n.genres.join(" + ")}`;
-    const label = el("text", { class: `sh-albl${n.bridge ? " sh-br" : ""}`, y: -8, "text-anchor": "middle" });
-    label.textContent = n.name;
-    g.append(c, title, label);
-    g.addEventListener("click", () => onArtistClick?.(n.artist));
-    artG.appendChild(g);
-    return { n, g };
-  });
+    artistG.appendChild(ag);
 
-  function positionAll() {
-    for (const { l, line } of drawnLinks) {
-      line.setAttribute("x1", l.a.x.toFixed(1)); line.setAttribute("y1", l.a.y.toFixed(1));
-      line.setAttribute("x2", l.b.x.toFixed(1)); line.setAttribute("y2", l.b.y.toFixed(1));
-    }
-    for (const { n, g } of [...drawnHubs, ...drawnArtists]) {
-      g.setAttribute("transform", `translate(${n.x.toFixed(1)},${n.y.toFixed(1)})`);
-    }
+    // Selve stjernen.
+    const sg = el("g", { class: "sh-star", "data-genre": n.id }); sg.style.cursor = "pointer";
+    const halo = el("circle", { cx: n.x, cy: n.y, r: starR(n.artists.length) + 7, class: "sh-halo",
+      fill: famColor(n.fam), "fill-opacity": 0 });
+    const circle = el("circle", { cx: n.x, cy: n.y, r: starR(n.artists.length), fill: famColor(n.fam), "fill-opacity": 0.9 });
+    const lbl = el("text", { class: "sh-starlbl", x: n.x, y: n.y + starR(n.artists.length) + 20, "text-anchor": "middle" });
+    lbl.textContent = n.label;
+    sg.append(halo, circle, lbl);
+    starG.appendChild(sg);
+    starEls.set(n.id, { node: n, sg, circle, halo, ag, members: memberEls });
   }
 
-  // Simulér animert til systemet har roet seg (alpha-nedkjøling som d3).
-  let alpha = 1;
-  const loop = () => {
-    for (let i = 0; i < 4 && alpha > 0.02; i++) {
-      simTick(nodes, links, alpha);
-      alpha *= 0.982;
-    }
-    positionAll();
-    if (alpha > 0.02) rafHandles.set(container, requestAnimationFrame(loop));
-    else rafHandles.delete(container);
+  // ---- Zoom-tilstand (delt av fokus-zoom og manuell pan/zoom nedenfor) ------
+  let k = 1, tx = 0, ty = 0, animTimer = 0;
+  const apply = () => root.setAttribute("transform", `translate(${tx.toFixed(1)},${ty.toFixed(1)}) scale(${k.toFixed(3)})`);
+  const animateTo = (nk, ntx, nty) => {
+    root.style.transition = "transform .32s ease";
+    k = nk; tx = ntx; ty = nty; apply();
+    clearTimeout(animTimer); animTimer = setTimeout(() => { root.style.transition = ""; }, 360);
   };
-  loop();
+  const stopAnim = () => { root.style.transition = ""; };
+  // Zoom inn på én sjangers stjernebilde så navnene blir lesbare.
+  const fitToFocus = (s) => {
+    let x0 = s.node.x, y0 = s.node.y, x1 = s.node.x, y1 = s.node.y;
+    for (const m of s.members) { x0 = Math.min(x0, m.x); y0 = Math.min(y0, m.y); x1 = Math.max(x1, m.x); y1 = Math.max(y1, m.y); }
+    x0 -= 180; x1 += 180; y0 -= 70; y1 += 70;   // rom til navnene
+    const bw = x1 - x0, bh = y1 - y0, cxb = (x0 + x1) / 2, cyb = (y0 + y1) / 2;
+    const nk = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(VBW / bw, VBH / bh)));
+    animateTo(nk, VBW / 2 - cxb * nk, VBH / 2 - cyb * nk);
+  };
 
-  // ---- Zoom og panorering (hjul, dra, knip og knapper) --------------------
-  let k = 1, tx = 0, ty = 0;
-  function applyTransform() {
-    root.setAttribute("transform", `translate(${tx.toFixed(1)},${ty.toFixed(1)}) scale(${k.toFixed(3)})`);
-    svg.classList.toggle("sh-zmid", k >= ZOOM_MID);
-    svg.classList.toggle("sh-zfar", k >= ZOOM_FAR);
+  // --- Fokus: lys opp én sjanger, vis artistene, tegn broer til andre --------
+  const focusPanel = container.querySelector("#sh-focus-panel");
+  let focusedId = null, locked = false, didAutoZoom = false;
+  const activeFams = new Set(famsPresent);
+  let showAllBridges = false;
+
+  function clearThreads() { while (threadG.firstChild) threadG.removeChild(threadG.firstChild); }
+
+  function drawAllBridges() {
+    clearThreads();
+    if (!showAllBridges) return;
+    for (const { node, members } of starEls.values()) {
+      if (!activeFams.has(node.fam)) continue;
+      for (const m of members) {
+        if (!m.isBridge) continue;
+        for (const o of m.others) {
+          if (!activeFams.has(o.fam)) continue;
+          threadG.appendChild(el("line", { x1: m.x, y1: m.y, x2: o.x, y2: o.y,
+            stroke: famColor(o.fam), "stroke-width": 1, "stroke-opacity": 0.16 }));
+        }
+      }
+    }
   }
-  // Skjermpiksler → viewBox-koordinater. SVG-en beholder viewBox-forholdet,
-  // så én felles skala (bredde) gjelder begge akser.
+
+  function setFocus(id, lock) {
+    if (focusedId && focusedId !== id) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
+    focusedId = id; locked = lock;
+    // Nullstill uthevede stjerner
+    for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
+    clearThreads();
+    drawAllBridges();
+
+    const s = starEls.get(id);
+    if (!s) { focusPanel.hidden = true; return; }
+    s.ag.style.display = "";
+    // Navn vises først når man låser (klikk/tap → zoom inn); hover er en rask
+    // forhåndsvisning med prikker + broer, uten navnestabling på oversiktszoom.
+    s.ag.classList.toggle("sh-locked", lock);
+    s.sg.classList.add("sh-hot");
+    s.halo.setAttribute("fill-opacity", 0.1);
+
+    // Broer fra denne sjangeren → andre stjerner lyser opp.
+    const linked = new Set();
+    for (const m of s.members) {
+      if (!m.isBridge) continue;
+      for (const o of m.others) {
+        linked.add(o.id);
+        threadG.appendChild(el("line", { x1: m.x, y1: m.y, x2: o.x, y2: o.y,
+          stroke: famColor(o.fam), "stroke-width": 1.6, "stroke-opacity": 0.7, class: "sh-thread" }));
+      }
+    }
+    for (const oid of linked) starEls.get(oid)?.sg.classList.add("sh-linked");
+
+    // Mini-panel: navn + antall + «les om sjangeren».
+    const bridges = s.members.filter((m) => m.isBridge).length;
+    focusPanel.hidden = false;
+    focusPanel.innerHTML =
+      `<span class="sh-fp-dot" style="background:${famColor(s.node.fam)}"></span>` +
+      `<strong>${escapeHtml(s.node.label)}</strong> <span class="sh-fp-meta">${s.members.length} artist${s.members.length === 1 ? "" : "er"}${bridges ? ` · ${bridges} bro` : ""}</span>` +
+      `<button type="button" class="sh-linkbtn" id="sh-fp-open">les om sjangeren →</button>` +
+      (locked ? `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>` : "");
+    focusPanel.querySelector("#sh-fp-open")?.addEventListener("click", (e) => { e.stopPropagation(); onGenreClick?.(s.node.label); });
+    focusPanel.querySelector("#sh-fp-close")?.addEventListener("click", (e) => { e.stopPropagation(); clearFocus(); });
+
+    // Klikk/tap zoomer inn på stjernebildet; hover er bare en rask forhåndsvisning.
+    if (lock) { fitToFocus(s); didAutoZoom = true; }
+  }
+
+  function clearFocus() {
+    if (focusedId) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
+    focusedId = null; locked = false;
+    for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
+    focusPanel.hidden = true;
+    drawAllBridges();
+    if (didAutoZoom) { animateTo(1, 0, 0); didAutoZoom = false; }
+  }
+
+  // Hover (desktop) previews; klikk/tap låser (fungerer på mobil).
+  for (const s of starEls.values()) {
+    s.sg.addEventListener("pointerenter", (e) => { if (e.pointerType !== "touch" && !locked) setFocus(s.node.id, false); });
+    s.sg.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch" && !locked) clearFocus(); });
+    s.sg.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (locked && focusedId === s.node.id) clearFocus();
+      else setFocus(s.node.id, true);
+    });
+  }
+
+  // ---- Zoom og panorering (hjul, dra, knip, knapper) ------------------------
   const toView = (e) => {
     const r = svg.getBoundingClientRect();
-    const scale = W / r.width;
-    return { x: (e.clientX - r.left) * scale, y: (e.clientY - r.top) * scale };
+    // meet-skalering: passer høyden når container er bredere enn viewBox-forhold.
+    const scale = Math.min(r.width / VBW, r.height / VBH);
+    const offX = (r.width - VBW * scale) / 2, offY = (r.height - VBH * scale) / 2;
+    return { x: (e.clientX - r.left - offX) / scale, y: (e.clientY - r.top - offY) / scale };
   };
-  function zoomAt(px, py, factor) {
+  const zoomAt = (px, py, factor) => {
+    stopAnim();
     const k2 = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, k * factor));
-    tx = px - ((px - tx) / k) * k2;
-    ty = py - ((py - ty) / k) * k2;
-    k = k2;
-    applyTransform();
-  }
-  svg.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    const p = toView(e);
-    zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0018));
-  }, { passive: false });
+    tx = px - ((px - tx) / k) * k2; ty = py - ((py - ty) / k) * k2; k = k2; apply();
+  };
+  const onWheel = (e) => { e.preventDefault(); const p = toView(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0016)); };
+  svg.addEventListener("wheel", onWheel, { passive: false });
 
-  const pointers = new Map();
-  let pinchDist = 0;
-  svg.addEventListener("pointerdown", (e) => {
-    svg.setPointerCapture(e.pointerId);
-    pointers.set(e.pointerId, toView(e));
-    if (pointers.size === 2) {
-      const [p1, p2] = [...pointers.values()];
-      pinchDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-    }
-  });
+  const pointers = new Map(); let pinch = 0, panMoved = false;
+  svg.addEventListener("pointerdown", (e) => { stopAnim(); svg.setPointerCapture(e.pointerId); pointers.set(e.pointerId, toView(e)); panMoved = false;
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = Math.hypot(b.x - a.x, b.y - a.y); } });
   svg.addEventListener("pointermove", (e) => {
     if (!pointers.has(e.pointerId)) return;
-    const prev = pointers.get(e.pointerId);
-    const p = toView(e);
-    pointers.set(e.pointerId, p);
-    if (pointers.size === 1) {
-      tx += p.x - prev.x; ty += p.y - prev.y;
-      applyTransform();
-    } else if (pointers.size === 2) {
-      const [p1, p2] = [...pointers.values()];
-      const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-      if (pinchDist > 0) zoomAt((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, d / pinchDist);
-      pinchDist = d;
-    }
+    const prev = pointers.get(e.pointerId), p = toView(e); pointers.set(e.pointerId, p);
+    if (pointers.size === 1) { const dx = p.x - prev.x, dy = p.y - prev.y; if (Math.abs(dx) + Math.abs(dy) > 1) panMoved = true; tx += dx * k; ty += dy * k; apply(); }
+    else if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(b.x - a.x, b.y - a.y); if (pinch > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, d / pinch); pinch = d; }
   });
-  const endPointer = (e) => { pointers.delete(e.pointerId); pinchDist = 0; };
-  svg.addEventListener("pointerup", endPointer);
-  svg.addEventListener("pointercancel", endPointer);
+  const endPtr = (e) => { pointers.delete(e.pointerId); pinch = 0; };
+  svg.addEventListener("pointerup", endPtr); svg.addEventListener("pointercancel", endPtr);
+  // Klikk på tom himmel (uten å ha panorert) lukker fokus.
+  svg.addEventListener("click", (e) => { if (!panMoved && e.target === svg || e.target === root) clearFocus(); });
 
-  container.querySelector("#sh-zoom-in").addEventListener("click", () => zoomAt(W / 2, H / 2, 1.4));
-  container.querySelector("#sh-zoom-out").addEventListener("click", () => zoomAt(W / 2, H / 2, 1 / 1.4));
-  container.querySelector("#sh-zoom-reset").addEventListener("click", () => { k = 1; tx = 0; ty = 0; applyTransform(); });
+  container.querySelector("#sh-zoom-in").addEventListener("click", () => zoomAt(VBW / 2, VBH / 2, 1.4));
+  container.querySelector("#sh-zoom-out").addEventListener("click", () => zoomAt(VBW / 2, VBH / 2, 1 / 1.4));
+  container.querySelector("#sh-zoom-reset").addEventListener("click", () => { k = 1; tx = 0; ty = 0; apply(); });
 
-  // ---- Filtre: familie-chips + «kun bro-artister» --------------------------
-  const activeFams = new Set(famsPresent);
-  let broOnly = false;
-  function updateVis() {
-    const on = (f) => activeFams.has(f);
-    for (const { n, g } of drawnArtists) {
-      g.setAttribute("opacity", ((on(n.fam) ? 1 : 0.06) * (broOnly && !n.bridge ? 0.1 : 1)).toFixed(2));
+  // ---- Familie-chips + «vis alle broer» -------------------------------------
+  function updateFamVis() {
+    for (const s of starEls.values()) {
+      const on = activeFams.has(s.node.fam);
+      s.sg.setAttribute("opacity", on ? 1 : 0.12);
+      s.ag.setAttribute("opacity", on ? 1 : 0.12);
     }
-    for (const { n, g } of drawnHubs) g.setAttribute("opacity", on(n.fam) ? "1" : "0.06");
-    // Bro-trådene bærer hele poenget, så bare de tegnes tydelig. Primær- og
-    // løse lenker holdes nesten usynlige — artistene leses da som prikk-klynger
-    // rundt stjernen sin, ikke som et tett spindelvev. Broene ligger oppå.
-    for (const { l, line } of drawnLinks) {
-      let o = on(l.a.fam) && on(l.b.fam) ? (l.bridge ? 0.6 : l.kind === "loose" ? 0.1 : 0.05) : 0.012;
-      if (broOnly && !l.bridge) o = Math.min(o, 0.02);
-      line.setAttribute("stroke-opacity", o.toFixed(2));
-    }
+    drawAllBridges();
+    if (focusedId) setFocus(focusedId, locked);
   }
-  updateVis();
-
   const chipBox = container.querySelector("#sh-chips");
   for (const f of famsPresent) {
     const b = document.createElement("button");
-    b.type = "button";
-    b.className = "sh-chip";
+    b.type = "button"; b.className = "sh-chip";
     b.innerHTML = `<span class="sh-chip-dot" style="background:${famColor(f)}"></span>${escapeHtml(FAMILIES[f]?.label || f)}`;
-    b.addEventListener("click", () => {
-      activeFams.has(f) ? activeFams.delete(f) : activeFams.add(f);
-      b.classList.toggle("off");
-      updateVis();
-    });
+    b.addEventListener("click", () => { activeFams.has(f) ? activeFams.delete(f) : activeFams.add(f); b.classList.toggle("off"); updateFamVis(); });
     chipBox.appendChild(b);
   }
-  container.querySelector("#sh-bro").addEventListener("change", (e) => {
-    broOnly = e.target.checked;
-    updateVis();
+  container.querySelector("#sh-bro").addEventListener("change", (e) => { showAllBridges = e.target.checked; drawAllBridges(); });
+
+  // Løse artister (kun metaGenre): enkel navneliste i fokus-panelet.
+  container.querySelector("#sh-loose")?.addEventListener("click", () => {
+    focusPanel.hidden = false; locked = true; focusedId = null; clearThreads();
+    const names = loose.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "no"));
+    focusPanel.innerHTML = `<strong>Uten tre-sjanger (${names.length})</strong> <span class="sh-fp-meta">kun hovedsjanger satt</span>` +
+      `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>` +
+      `<div class="sh-loose-list">` + names.map((a, i) => `<button type="button" class="sh-linkbtn sh-loose-item" data-i="${i}">${escapeHtml(a.name || "(uten navn)")}</button>`).join("") + `</div>`;
+    focusPanel.querySelector("#sh-fp-close").addEventListener("click", clearFocus);
+    focusPanel.querySelectorAll(".sh-loose-item").forEach((btn) => btn.addEventListener("click", () => onArtistClick?.(names[+btn.dataset.i])));
+  });
+
+  apply();
+  teardown.set(container, () => {
+    svg.removeEventListener("wheel", onWheel);
   });
 }

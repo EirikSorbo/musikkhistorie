@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rowInnerHtml, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC } from "../../js/row-editor.js?v=2.88";
+import { rowInnerHtml, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC } from "../../js/row-editor.js?v=2.89";
 
 test("rowInnerHtml escaper verdier (lukker XSS-fella)", () => {
   const html = rowInnerHtml(SOURCE_SPEC, { text: `"><img src=x onerror=alert(1)>`, url: "https://ex.com" });
