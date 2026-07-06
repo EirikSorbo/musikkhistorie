@@ -1301,7 +1301,10 @@ body.is-teacher #gate { display: none; }
 #sh-svg .sh-starlbl { font-size: 21px; fill: var(--text); paint-order: stroke; stroke: var(--bg-soft, #f2f6f3); stroke-width: 4px; }
 #sh-svg .sh-rootlbl { font-size: 15px; fill: var(--muted); paint-order: stroke; stroke: var(--bg-soft, #f2f6f3); stroke-width: 3px; }
 #sh-svg .sh-artlbl { display: none; font-size: 13px; fill: var(--text); paint-order: stroke; stroke: var(--bg-soft, #f2f6f3); stroke-width: 2.5px; }
+/* Alle navn ved berøringsfokus; ellers kun det man holder over (sh-show). */
 #sh-svg .sh-artgroup.sh-locked .sh-artlbl { display: block; }
+#sh-svg .sh-artlbl.sh-show { display: block; font-weight: 700; stroke-width: 3.5px; }
+#sh-svg .sh-artdot { transition: r .08s; }
 #sh-svg .sh-star .sh-halo { transition: fill-opacity .12s; }
 #sh-svg .sh-star.sh-hot .sh-starlbl { font-weight: 700; }
 #sh-svg .sh-star.sh-linked .sh-starlbl { font-weight: 700; }

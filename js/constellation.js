@@ -16,8 +16,8 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.89";
-import { escapeHtml } from "./ui-helpers.js?v=2.89";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.90";
+import { escapeHtml } from "./ui-helpers.js?v=2.90";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -111,7 +111,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     <div class="sh-chips" id="sh-chips"></div>
     <div class="sh-toolbar">
       <label class="sh-bro-toggle"><input type="checkbox" id="sh-bro"> Vis alle broer (${bridgeCount})</label>
-      <span class="sh-counts">${genres.length} sjangre · hold over en stjerne for artistene${loose.length ? ` · <button type="button" id="sh-loose" class="sh-linkbtn">${loose.length} uten tre-sjanger</button>` : ""}</span>
+      <span class="sh-counts">${genres.length} sjangre · klikk en stjerne for artistene${loose.length ? ` · <button type="button" id="sh-loose" class="sh-linkbtn">${loose.length} uten tre-sjanger</button>` : ""}</span>
       <span class="sh-zoom-btns">
         <button type="button" class="btn ghost small" id="sh-zoom-out" aria-label="Zoom ut">−</button>
         <button type="button" class="btn ghost small" id="sh-zoom-in" aria-label="Zoom inn">+</button>
@@ -125,7 +125,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
       <span><span class="sh-lg-star"></span>sjanger (større = flere artister)</span>
       <span><span class="sh-lg-dot"></span>artist</span>
       <span><span class="sh-lg-thread"></span>bro til annen sjanger</span>
-      <span>hold over / trykk en stjerne</span>
+      <span>klikk en stjerne · hold over en prikk for navn</span>
     </div>`;
 
   const svg = el("svg", { id: "sh-svg", viewBox: `0 0 ${VBW} ${VBH}`,
@@ -178,19 +178,26 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
       const { dx, dy } = fanOffset(i, members.length);
       const x = n.x + dx, y = n.y + dy;
       const isBridge = m.others.length > 0;
-      const dot = el("circle", { cx: x, cy: y, r: isBridge ? 6.5 : 5,
-        fill: isBridge ? famColor(n.fam) : famColor(n.fam),
+      const baseR = isBridge ? 6.5 : 5;
+      const dot = el("circle", { cx: x, cy: y, r: baseR, fill: famColor(n.fam),
         stroke: isBridge ? "var(--text,#101a13)" : "#fff", "stroke-width": isBridge ? 1.6 : 1,
         class: "sh-artdot", "data-name": m.artist.name || "" });
       dot.style.cursor = "pointer";
-      dot.addEventListener("click", (e) => { e.stopPropagation(); onArtistClick?.(m.artist); });
       const anchor = dx >= 0 ? "start" : "end";
-      const lbl = el("text", { class: "sh-artlbl", x: x + (dx >= 0 ? 8 : -8), y: y + 3.5, "text-anchor": anchor });
+      const lbl = el("text", { class: "sh-artlbl", x: x + (dx >= 0 ? 9 : -9), y: y + 3.5, "text-anchor": anchor });
       lbl.textContent = m.artist.name || "(uten navn)";
       const title = el("title"); title.textContent = `${m.artist.name}${isBridge ? " · også " + m.others.map((o) => o.label).join(", ") : ""}`;
       dot.appendChild(title);
+      // Hold musen over en prikk → navnet (og prikken forstørres og løftes fram).
+      // Berøring hopper over dette (mobil viser alle navn ved fokus, se setFocus).
+      dot.addEventListener("pointerenter", (e) => {
+        if (e.pointerType === "touch") return;
+        lbl.classList.add("sh-show"); dot.setAttribute("r", baseR + 2.5); ag.appendChild(lbl);
+      });
+      dot.addEventListener("pointerleave", () => { lbl.classList.remove("sh-show"); dot.setAttribute("r", baseR); });
+      dot.addEventListener("click", (e) => { e.stopPropagation(); onArtistClick?.(m.artist); });
       ag.append(dot, lbl);
-      return { x, y, others: m.others, isBridge };
+      return { x, y, others: m.others, isBridge, dot, lbl };
     });
     artistG.appendChild(ag);
 
@@ -207,7 +214,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   }
 
   // ---- Zoom-tilstand (delt av fokus-zoom og manuell pan/zoom nedenfor) ------
-  let k = 1, tx = 0, ty = 0, animTimer = 0;
+  let k = 1, tx = 0, ty = 0, animTimer = 0, lastPointerType = "mouse";
   const apply = () => root.setAttribute("transform", `translate(${tx.toFixed(1)},${ty.toFixed(1)}) scale(${k.toFixed(3)})`);
   const animateTo = (nk, ntx, nty) => {
     root.style.transition = "transform .32s ease";
@@ -227,7 +234,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
 
   // --- Fokus: lys opp én sjanger, vis artistene, tegn broer til andre --------
   const focusPanel = container.querySelector("#sh-focus-panel");
-  let focusedId = null, locked = false, didAutoZoom = false;
+  let focusedId = null, didAutoZoom = false;
   const activeFams = new Set(famsPresent);
   let showAllBridges = false;
 
@@ -249,9 +256,9 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     }
   }
 
-  function setFocus(id, lock) {
+  function setFocus(id) {
     if (focusedId && focusedId !== id) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
-    focusedId = id; locked = lock;
+    focusedId = id;
     // Nullstill uthevede stjerner
     for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
     clearThreads();
@@ -260,9 +267,11 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     const s = starEls.get(id);
     if (!s) { focusPanel.hidden = true; return; }
     s.ag.style.display = "";
-    // Navn vises først når man låser (klikk/tap → zoom inn); hover er en rask
-    // forhåndsvisning med prikker + broer, uten navnestabling på oversiktszoom.
-    s.ag.classList.toggle("sh-locked", lock);
+    // Klikk åpner sjangeren og den BLIR stående (ikke hover — da forsvant den
+    // idet man beveget musen mot en artist). På desktop vises prikkene, og navn
+    // kommer når man holder over en prikk. Berøring har ingen hover, så da vises
+    // alle navn med én gang (sh-locked).
+    s.ag.classList.toggle("sh-locked", lastPointerType === "touch");
     s.sg.classList.add("sh-hot");
     s.halo.setAttribute("fill-opacity", 0.1);
 
@@ -283,33 +292,30 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     focusPanel.hidden = false;
     focusPanel.innerHTML =
       `<span class="sh-fp-dot" style="background:${famColor(s.node.fam)}"></span>` +
-      `<strong>${escapeHtml(s.node.label)}</strong> <span class="sh-fp-meta">${s.members.length} artist${s.members.length === 1 ? "" : "er"}${bridges ? ` · ${bridges} bro` : ""}</span>` +
+      `<strong>${escapeHtml(s.node.label)}</strong> <span class="sh-fp-meta">${s.members.length} artist${s.members.length === 1 ? "" : "er"}${bridges ? ` · ${bridges} bro` : ""}${lastPointerType === "touch" ? "" : " · hold over en prikk for navn"}</span>` +
       `<button type="button" class="sh-linkbtn" id="sh-fp-open">les om sjangeren →</button>` +
-      (locked ? `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>` : "");
+      `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>`;
     focusPanel.querySelector("#sh-fp-open")?.addEventListener("click", (e) => { e.stopPropagation(); onGenreClick?.(s.node.label); });
     focusPanel.querySelector("#sh-fp-close")?.addEventListener("click", (e) => { e.stopPropagation(); clearFocus(); });
 
-    // Klikk/tap zoomer inn på stjernebildet; hover er bare en rask forhåndsvisning.
-    if (lock) { fitToFocus(s); didAutoZoom = true; }
+    fitToFocus(s); didAutoZoom = true;
   }
 
   function clearFocus() {
     if (focusedId) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
-    focusedId = null; locked = false;
+    focusedId = null;
     for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
     focusPanel.hidden = true;
     drawAllBridges();
     if (didAutoZoom) { animateTo(1, 0, 0); didAutoZoom = false; }
   }
 
-  // Hover (desktop) previews; klikk/tap låser (fungerer på mobil).
+  // Klikk/tap på en stjerne åpner (og BEHOLDER) sjangeren; klikk igjen lukker.
   for (const s of starEls.values()) {
-    s.sg.addEventListener("pointerenter", (e) => { if (e.pointerType !== "touch" && !locked) setFocus(s.node.id, false); });
-    s.sg.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch" && !locked) clearFocus(); });
     s.sg.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (locked && focusedId === s.node.id) clearFocus();
-      else setFocus(s.node.id, true);
+      if (focusedId === s.node.id) clearFocus();
+      else setFocus(s.node.id);
     });
   }
 
@@ -330,7 +336,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   svg.addEventListener("wheel", onWheel, { passive: false });
 
   const pointers = new Map(); let pinch = 0, panMoved = false;
-  svg.addEventListener("pointerdown", (e) => { stopAnim(); svg.setPointerCapture(e.pointerId); pointers.set(e.pointerId, toView(e)); panMoved = false;
+  svg.addEventListener("pointerdown", (e) => { lastPointerType = e.pointerType || "mouse"; stopAnim(); try { svg.setPointerCapture(e.pointerId); } catch {} pointers.set(e.pointerId, toView(e)); panMoved = false;
     if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = Math.hypot(b.x - a.x, b.y - a.y); } });
   svg.addEventListener("pointermove", (e) => {
     if (!pointers.has(e.pointerId)) return;
@@ -341,7 +347,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   const endPtr = (e) => { pointers.delete(e.pointerId); pinch = 0; };
   svg.addEventListener("pointerup", endPtr); svg.addEventListener("pointercancel", endPtr);
   // Klikk på tom himmel (uten å ha panorert) lukker fokus.
-  svg.addEventListener("click", (e) => { if (!panMoved && e.target === svg || e.target === root) clearFocus(); });
+  svg.addEventListener("click", (e) => { if (!panMoved && (e.target === svg || e.target === root)) clearFocus(); });
 
   container.querySelector("#sh-zoom-in").addEventListener("click", () => zoomAt(VBW / 2, VBH / 2, 1.4));
   container.querySelector("#sh-zoom-out").addEventListener("click", () => zoomAt(VBW / 2, VBH / 2, 1 / 1.4));
