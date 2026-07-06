@@ -16,8 +16,8 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.90";
-import { escapeHtml } from "./ui-helpers.js?v=2.90";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.91";
+import { escapeHtml } from "./ui-helpers.js?v=2.91";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -335,16 +335,33 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   const onWheel = (e) => { e.preventDefault(); const p = toView(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0016)); };
   svg.addEventListener("wheel", onWheel, { passive: false });
 
-  const pointers = new Map(); let pinch = 0, panMoved = false;
-  svg.addEventListener("pointerdown", (e) => { lastPointerType = e.pointerType || "mouse"; stopAnim(); try { svg.setPointerCapture(e.pointerId); } catch {} pointers.set(e.pointerId, toView(e)); panMoved = false;
-    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = Math.hypot(b.x - a.x, b.y - a.y); } });
+  // VIKTIG: IKKE fang pekeren på pointerdown — det svelger `click` på stjernene
+  // (særlig Safari/Mac), så «ingenting skjer». Vi fanger den først når en ekte
+  // dra-bevegelse starter (over terskel), slik at vanlige klikk går rett gjennom.
+  const pointers = new Map(); let pinch = 0, panMoved = false, captured = false;
+  svg.addEventListener("pointerdown", (e) => {
+    lastPointerType = e.pointerType || "mouse"; stopAnim();
+    pointers.set(e.pointerId, toView(e)); panMoved = false;
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = Math.hypot(b.x - a.x, b.y - a.y); }
+  });
+  const grab = (id) => { if (!captured) { try { svg.setPointerCapture(id); } catch {} captured = true; } };
   svg.addEventListener("pointermove", (e) => {
     if (!pointers.has(e.pointerId)) return;
-    const prev = pointers.get(e.pointerId), p = toView(e); pointers.set(e.pointerId, p);
-    if (pointers.size === 1) { const dx = p.x - prev.x, dy = p.y - prev.y; if (Math.abs(dx) + Math.abs(dy) > 1) panMoved = true; tx += dx * k; ty += dy * k; apply(); }
-    else if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(b.x - a.x, b.y - a.y); if (pinch > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, d / pinch); pinch = d; }
+    const prev = pointers.get(e.pointerId), p = toView(e);
+    if (pointers.size === 1) {
+      if (!panMoved) {
+        if (Math.abs(p.x - prev.x) + Math.abs(p.y - prev.y) < 4) return;   // fortsatt et «klikk»
+        panMoved = true; grab(e.pointerId);
+      }
+      tx += p.x - prev.x; ty += p.y - prev.y; apply();          // dra i viewBox-enheter (ikke ·k)
+      pointers.set(e.pointerId, p);
+    } else if (pointers.size === 2) {
+      pointers.set(e.pointerId, p); panMoved = true; grab(e.pointerId);
+      const [a, b] = [...pointers.values()]; const d = Math.hypot(b.x - a.x, b.y - a.y);
+      if (pinch > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, d / pinch); pinch = d;
+    }
   });
-  const endPtr = (e) => { pointers.delete(e.pointerId); pinch = 0; };
+  const endPtr = (e) => { pointers.delete(e.pointerId); pinch = 0; if (!pointers.size) captured = false; };
   svg.addEventListener("pointerup", endPtr); svg.addEventListener("pointercancel", endPtr);
   // Klikk på tom himmel (uten å ha panorert) lukker fokus.
   svg.addEventListener("click", (e) => { if (!panMoved && (e.target === svg || e.target === root)) clearFocus(); });
@@ -361,7 +378,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
       s.ag.setAttribute("opacity", on ? 1 : 0.12);
     }
     drawAllBridges();
-    if (focusedId) setFocus(focusedId, locked);
+    if (focusedId) setFocus(focusedId);
   }
   const chipBox = container.querySelector("#sh-chips");
   for (const f of famsPresent) {
