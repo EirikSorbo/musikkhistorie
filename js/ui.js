@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=2.91";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.91";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.91";
+import { isVisible, filterArtists } from "./limits.js?v=2.93";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.93";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.93";
 import {
   escapeHtml,
   linkDesc,
@@ -29,12 +29,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.91";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.91";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.91";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.91";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.91";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.91";
+} from "./ui-helpers.js?v=2.93";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.93";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.93";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.93";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.93";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.93";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };

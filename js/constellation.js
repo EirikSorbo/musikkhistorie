@@ -6,18 +6,18 @@
 //  røres ikke. Hver sjanger er en «stjerne» plassert der noden står i treet, med
 //  svake avstamningslinjer som tegner skjelettet.
 //
-//  I ro vises BARE sjangerstjernene (rolig, lesbart). Når du holder over (eller
+//  I ro vises BARE sjangerstjernene (rolig, lesbart). Når du klikker (eller
 //  trykker på mobil) en stjerne, spretter sjangerens artister frem som et
-//  stjernebilde rundt den — så du aldri ser mer enn én sjangers navn om gangen
-//  (maks ~42 i stedet for 257 oppå hverandre). Bro-artister (flere mainGenre)
-//  skyter samtidig en tråd til de ANDRE sjangrene sine, som lyser opp — broene
-//  i historien, uten permanent floke.
+//  stjernebilde: tråder går fra stjernen ut til HVER artist — bare til denne
+//  stjernen, også for bro-artister som hører til flere (ellers ble det en floke
+//  på tvers). Du ser aldri mer enn én sjangers navn om gangen (~42 mot 257).
+//  Alle kryssforbindelser mellom sjangre finnes via «Vis alle broer»-bryteren.
 //
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.91";
-import { escapeHtml } from "./ui-helpers.js?v=2.91";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.93";
+import { escapeHtml } from "./ui-helpers.js?v=2.93";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -124,7 +124,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     <div class="sh-legend">
       <span><span class="sh-lg-star"></span>sjanger (større = flere artister)</span>
       <span><span class="sh-lg-dot"></span>artist</span>
-      <span><span class="sh-lg-thread"></span>bro til annen sjanger</span>
+      <span><span class="sh-lg-bridge"></span>artist i flere sjangre</span>
       <span>klikk en stjerne · hold over en prikk for navn</span>
     </div>`;
 
@@ -275,17 +275,14 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     s.sg.classList.add("sh-hot");
     s.halo.setAttribute("fill-opacity", 0.1);
 
-    // Broer fra denne sjangeren → andre stjerner lyser opp.
-    const linked = new Set();
+    // Tråder fra DENNE stjernen ut til HVER av artistene sine — sjangerens eget
+    // stjernebilde. Bro-artister (flere mainGenre) knyttes også bare til denne
+    // stjernen her, ikke til de andre sjangrene sine (det ville laget en floke
+    // på tvers). Alle kryssforbindelser finnes fortsatt via «Vis alle broer».
     for (const m of s.members) {
-      if (!m.isBridge) continue;
-      for (const o of m.others) {
-        linked.add(o.id);
-        threadG.appendChild(el("line", { x1: m.x, y1: m.y, x2: o.x, y2: o.y,
-          stroke: famColor(o.fam), "stroke-width": 1.6, "stroke-opacity": 0.7, class: "sh-thread" }));
-      }
+      threadG.appendChild(el("line", { x1: s.node.x, y1: s.node.y, x2: m.x, y2: m.y,
+        stroke: famColor(s.node.fam), "stroke-width": 1.1, "stroke-opacity": 0.45, class: "sh-thread" }));
     }
-    for (const oid of linked) starEls.get(oid)?.sg.classList.add("sh-linked");
 
     // Mini-panel: navn + antall + «les om sjangeren».
     const bridges = s.members.filter((m) => m.isBridge).length;

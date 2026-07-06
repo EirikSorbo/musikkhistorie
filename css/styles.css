@@ -1313,6 +1313,7 @@ body.is-teacher #gate { display: none; }
 .sh-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .sh-lg-star { width: 13px; height: 13px; border-radius: 50%; background: var(--muted-2); flex: none; }
 .sh-lg-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted-2); flex: none; }
+.sh-lg-bridge { width: 11px; height: 11px; border-radius: 50%; background: var(--muted-2); box-shadow: 0 0 0 1.5px var(--text); flex: none; }
 .sh-lg-thread { width: 18px; height: 0; border-top: 2px solid var(--muted-2); flex: none; }
 /* Fokus-panel: flyter øverst i kartet, viser valgt sjanger. */
 .sh-focus-panel {
