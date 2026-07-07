@@ -1,13 +1,13 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.94";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.94";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.94";
-import { isVisible } from "./limits.js?v=2.94";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.94";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.94";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.94";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.94";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.94";
-import { renderSjangerhimmel } from "./constellation.js?v=2.94";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.95";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.95";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.95";
+import { isVisible } from "./limits.js?v=2.95";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.95";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.95";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.95";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.95";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.95";
+import { renderSjangerhimmel } from "./constellation.js?v=2.95";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -284,6 +284,11 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
     <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Tidslinjer, kart og visuelle oversikter — hele historien samlet på ett sted.</p>
     <div class="dash-grid">
+      <button class="dash-card" id="sb-rotter">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c0 3-2.5 4.5-4 7"/><path d="M12 11c0 3 2.5 4.5 4 7"/><path d="M12 11v7"/><circle cx="12" cy="19.5" r="1.3"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>
+        <span class="dash-title">Røtter</span>
+        <span class="dash-desc">Opphavet før 1910 — der alt begynner</span>
+      </button>
       <button class="dash-card" id="sb-tidslinje">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
         <span class="dash-title">Tidslinje</span>
@@ -312,6 +317,80 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="modal-rotter">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Røtter før 1910</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="rotter-body" class="rotter"></div>
+  </div>
+</div>
+`;
+
+// «Hør:»-lenker i røtter-fortellingen peker til YouTube-søk (samme valg som
+// resten av appen — brukeren foretrekker søkelenker framfor harde URL-er).
+const ytSearch = (q) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+
+// Redaksjonell inngangstekst til røttene (før ca. 1910). Statisk, forfattet
+// prosa — de lange linjene fra vestafrikanske/europeiske tradisjoner og
+// slaveriet fram til de første bluesinnspillingene. Redigeres her i koden.
+const ROTTER_BODY = `
+  <p class="rotter-intro">All musikken i dette pensumet — blues, jazz, country, gospel, R&amp;B — vokser ut av noe eldre enn selve platene. Røttene ligger i møtet mellom vestafrikanske musikktradisjoner og europeisk folke- og salmemusikk i USA, formet av slaveriet. Her er de lange linjene fra 1600-tallet fram til de første bluesplatene rundt 1900–1910.</p>
+
+  <section class="rotter-sec">
+    <h3>Afrikanske røtter og slaveriet</h3>
+    <p>Gjennom den transatlantiske slavehandelen ble afrikanere ført til Amerika i millioner. De brakte med seg musikalske grunntrekk som skulle prege all senere amerikansk populærmusikk: <strong>call-and-response</strong> (forsanger og svar-kor), kryssrytmer og synkopering, <strong>bøyde og «blå» toner</strong>, og musikk vevd inn i arbeid, religion og fellesskap. Slaveeierne forbød ofte tromming — av frykt for kommunikasjon og opprør — så rytmen overlevde i klapping, stamping og stemmebruk.</p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Congo Square</h3>
+    <p>I New Orleans fantes et sjeldent unntak: <strong>Congo Square</strong> (Place Congo). Her fikk slavebundne og frie svarte samles på søndager for å tromme, danse og synge i afrikansk tradisjon. Byen ble et møtepunkt der afrikansk, karibisk, fransk og spansk musikk smeltet sammen — grunnlaget for at nettopp New Orleans senere fødte jazzen.</p>
+    <p class="rotter-listen">Hør: <a href="${ytSearch("Congo Square African drumming New Orleans")}" target="_blank" rel="noopener">Congo Square-tromming</a></p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Work songs og field hollers</h3>
+    <p>På markene, og senere på jernbaner og lenkegjenger, holdt <strong>arbeidssanger</strong> takten og lettet slitet — i call-and-response. <strong>Field hollers</strong> var derimot ensomme, frie soloutrop: lange, bøyde, klagende melodilinjer. Denne uttrykksfulle, halvt snakkende solostemmen er en direkte forløper til bluesens vokal.</p>
+    <p class="rotter-listen">Hør: <a href="${ytSearch("Alan Lomax prison work song field holler")}" target="_blank" rel="noopener">arbeidssang / field holler (Lomax-opptak)</a></p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Spirituals og den svarte kirken</h3>
+    <p>Da mange slavebundne ble kristnet, smeltet bibeltekster sammen med afrikansk musikkform til <strong>spirituals</strong> — «sorrow songs» som «Swing Low, Sweet Chariot» og «Wade in the Water», ofte med skjulte budskap om frihet og flukt. Etter borgerkrigen brakte <strong>Fisk Jubilee Singers</strong> (fra 1871) spirituals ut til konsertscenen verden over. Kirken ble arnestedet som senere fødte <strong>gospel</strong>.</p>
+    <p class="rotter-listen">Hør: <a href="${ytSearch("Swing Low Sweet Chariot Fisk Jubilee Singers")}" target="_blank" rel="noopener">Swing Low, Sweet Chariot</a></p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Minstrel-show — den problematiske arven</h3>
+    <p>Amerikas første virkelige popkultur-industri var også dypt rasistisk. Fra 1830-tallet opptrådte hvite artister i <strong>blackface</strong> i <strong>minstrel-show</strong> og karikerte svarte mennesker (Thomas «Daddy» Rice' «Jim Crow»). Formen var enormt populær og formet notesalg, scene og sang (blant annet Stephen Fosters sanger). Den sementerte nedverdigende stereotypier — samtidig som den, paradoksalt nok, mot slutten av 1800-tallet ble en av de få inngangene svarte utøvere selv fikk til den kommersielle scenen. Amerikansk populærmusikks framvekst kan ikke forstås uten denne betente arven.</p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Ragtime</h3>
+    <p>Rundt 1897–1918 ble <strong>ragtime</strong> den første svartutviklede musikkformen som erobret hele Amerika — synkopert pianomusikk solgt som noter. <strong>Scott Joplin</strong> ga ut «Maple Leaf Rag» (1899) og «The Entertainer» (1902). De «raggede» (forskjøvne) rytmene ble en direkte byggestein i tidlig jazz.</p>
+    <p class="rotter-listen">Hør: <a href="${ytSearch("Scott Joplin Maple Leaf Rag")}" target="_blank" rel="noopener">Maple Leaf Rag</a> · <a href="${ytSearch("Scott Joplin The Entertainer")}" target="_blank" rel="noopener">The Entertainer</a></p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Bluesens fødsel (ca. 1900)</h3>
+    <p>I sørstatene, særlig <strong>Mississippi-deltaet</strong>, tok bluesen form rundt 1900 av field hollers, arbeidssanger og spirituals: 12-takters form, AAB-tekstlinjer og blå toner, gjerne med én sanger og gitar. <strong>W.&nbsp;C. Handy</strong> noterte og publiserte «Memphis Blues» (1912) og «St. Louis Blues» (1914) og løftet bluesen inn i notehandelen. Herfra går linjene videre til jazz, R&amp;B, rock og det meste av vestlig populærmusikk.</p>
+    <p class="rotter-listen">Hør: <a href="${ytSearch("W.C. Handy St. Louis Blues Bessie Smith")}" target="_blank" rel="noopener">St. Louis Blues</a></p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Tidlig innspillingsteknologi</h3>
+    <p>Parallelt endret <strong>innspilt lyd</strong> alt. Edisons fonograf (1877) og voksylindre, og senere Emile Berliners <strong>grammofon</strong> med flate plater (1890-årene), gjorde at musikk kunne spres og bevares. Notehandelen i <strong>Tin Pan Alley</strong> (New York, fra 1880-årene) industrialiserte sangskrivingen. Selve platebransjen for svart musikk — «race records» — kom først rundt 1920 med Mamie Smiths «Crazy Blues», men det tekniske grunnlaget ble lagt her. Fra nå av er musikkhistorien i stor grad en historie om innspillinger.</p>
+  </section>
+
+  <div class="rotter-foot">
+    <p class="muted">Røttene er selve premisset for de «lange linjene». Vil du se hvordan de vokser videre?</p>
+    <div class="rotter-links">
+      <button class="btn ghost" id="rotter-tre">Se slektstreet →</button>
+      <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen →</button>
+    </div>
+  </div>
 `;
 
 let opts = null;
@@ -1086,6 +1165,26 @@ function openStoreBildet() {
   modalOpen(document.getElementById("modal-store-bildet"));
 }
 
+// Røtter før 1910: statisk forfattet fortelling. Innholdet fylles inn én gang
+// og «Se slektstre/tidslinje»-knappene kobles da (åpnes OPPÅ røtter-modalen).
+function openRotter() {
+  const modal = document.getElementById("modal-rotter");
+  if (!modal) return;
+  const body = document.getElementById("rotter-body");
+  if (body && !body.dataset.filled) {
+    body.innerHTML = ROTTER_BODY;
+    body.dataset.filled = "1";
+    const treBtn = body.querySelector("#rotter-tre");
+    if (treBtn) {
+      if (opts.onSlektstre) treBtn.addEventListener("click", () => opts.onSlektstre());
+      else treBtn.style.display = "none";
+    }
+    const tlBtn = body.querySelector("#rotter-tidslinje");
+    if (tlBtn) tlBtn.addEventListener("click", () => openTidslinje());
+  }
+  modalOpen(modal);
+}
+
 // Sjangerhimmelen: konstellasjonskartet rendres på nytt ved hver åpning (samme
 // mønster som kartet), så det alltid speiler gjeldende artistdata. Artist- og
 // sjangerklikk åpner de vanlige modalene OPPÅ himmelen — ← går tilbake hit.
@@ -1112,7 +1211,8 @@ function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
    "modal-tidslinje", "modal-kart", "modal-sjangerhimmel", "modal-artistliste",
-   "modal-spilleliste", "modal-sjanger", "modal-tech-detail", "modal-store-bildet"].forEach((id) => setupModal(id));
+   "modal-spilleliste", "modal-sjanger", "modal-tech-detail", "modal-store-bildet",
+   "modal-rotter"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1155,6 +1255,7 @@ function wireModals() {
   // og navigerer bort — knappen skjules om siden ikke ga en handler.
   const sbModal = document.getElementById("modal-store-bildet");
   if (sbModal) {
+    sbModal.querySelector("#sb-rotter").addEventListener("click", openRotter);
     sbModal.querySelector("#sb-tidslinje").addEventListener("click", () => openTidslinje());
     const sbTre = sbModal.querySelector("#sb-slektstre");
     if (opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());

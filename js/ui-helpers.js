@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=2.94";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.94";
-import { GENDERS } from "./limits.js?v=2.94";
+import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=2.95";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.95";
+import { GENDERS } from "./limits.js?v=2.95";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -78,11 +78,54 @@ export function musicExampleLabel(m) {
 }
 
 // Delt musikkeksempel-lenkeliste (brukt av detalj-, spotlight- og artistkort).
+// Hvert eksempel pakkes i .me-item slik at en valgfri «Hør etter:»-anvisning
+// (m.note — kontekstualisert lytting) kan vises rett under lyttelenka. Uten
+// note ser lenka ut som før (pill i .links-raden).
 export function musicExamplesHtml(a) {
   return (a.musicExamples || [])
     .filter((m) => safeUrl(m.url))
-    .map((m) => `<a href="${escapeHtml(safeUrl(m.url))}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`)
+    .map((m) => {
+      const link = `<a href="${escapeHtml(safeUrl(m.url))}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`;
+      const cue = m.note
+        ? `<span class="listen-cue"><strong>Hør etter:</strong> ${escapeHtml(m.note)}</span>`
+        : "";
+      return `<span class="me-item">${link}${cue}</span>`;
+    })
     .join("");
+}
+
+// Beslektede artister — utledet naboliste for «oppdag ny musikk». Rangerer
+// andre synlige artister på musikalsk slektskap (delte under-/hovedsjangre,
+// samme metasjanger som lett bonus) med nærhet i tid som tiebreaker. Krever
+// minst én delt hoved- eller undersjanger, så lista aldri blir tilfeldig.
+export function relatedArtists(artist, all, { limit = 5 } = {}) {
+  if (!artist || !Array.isArray(all)) return [];
+  const sub = new Set(Array.isArray(artist.subGenre) ? artist.subGenre : []);
+  const main = new Set(Array.isArray(artist.mainGenre) ? artist.mainGenre : []);
+  const meta = artist.metaGenre || null;
+  const start = artist.influenceStart || null;
+
+  const scored = [];
+  for (const b of all) {
+    if (!b || b.id === artist.id) continue;
+    if (b.status && b.status !== "active") continue;   // ikke ventende
+    if ((b.priority || 0) === -1) continue;            // ikke skjulte
+    const bSub = Array.isArray(b.subGenre) ? b.subGenre : [];
+    const bMain = Array.isArray(b.mainGenre) ? b.mainGenre : [];
+    const subShared = bSub.filter((s) => sub.has(s)).length;
+    const mainShared = bMain.filter((s) => main.has(s)).length;
+    let score = subShared * 5 + mainShared * 3;
+    if (meta && b.metaGenre === meta) score += 1;      // svak metasjanger-fallback
+    if (!score) continue;                              // må dele minst metasjanger
+    const diff = start && b.influenceStart ? Math.abs(start - b.influenceStart) : null;
+    if (diff != null) score += Math.max(0, 2 - diff / 15);  // nærhet i tid
+    scored.push({ a: b, score, diff: diff == null ? Infinity : diff });
+  }
+  scored.sort((x, y) =>
+    y.score - x.score ||
+    x.diff - y.diff ||
+    x.a.name.localeCompare(y.a.name, "no"));
+  return scored.slice(0, limit).map((s) => s.a);
 }
 
 // Prioritets-ikoner/-etiketter, delt av spotlight- og artistkort.

@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=2.94";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.94";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.94";
+import { isVisible, filterArtists } from "./limits.js?v=2.95";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.95";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.95";
 import {
   escapeHtml,
   linkDesc,
@@ -23,18 +23,19 @@ import {
   yearLabel,
   musicExampleLabel,
   musicExamplesHtml,
+  relatedArtists,
   keyWorksText,
   artistImage,
   formatInfoText,
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.94";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.94";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.94";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.94";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.94";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.94";
+} from "./ui-helpers.js?v=2.95";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.95";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.95";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.95";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.95";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.95";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -107,6 +108,22 @@ export function renderArtistDetail(el, artist, config, lc) {
   const a = artist;
   const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
+
+  // Beslektede artister — oppdagelsessti fra ett kort til nabolaget (kun i
+  // detaljvisningen, så oversiktsgrid-et ikke blir tett). Klikk bytter fokus.
+  const related = relatedArtists(a, lc?.artists || [], { limit: 5 });
+  const relatedHtml = related.length
+    ? `<div class="related">
+        <h4 class="related-head">Beslektede artister</h4>
+        <div class="related-list">
+          ${related.map((r) => {
+            const g = (Array.isArray(r.mainGenre) && r.mainGenre[0]) ? r.mainGenre[0] : (r.metaGenre || "");
+            return `<button type="button" class="related-chip" data-related-id="${escapeHtml(String(r.id))}">${escapeHtml(r.name)}${g ? `<span class="related-tag">${escapeHtml(g)}</span>` : ""}</button>`;
+          }).join("")}
+        </div>
+      </div>`
+    : "";
+
   el.innerHTML = `
     ${artistImage(a, true)}
     ${factsLines(a)}
@@ -118,8 +135,16 @@ export function renderArtistDetail(el, artist, config, lc) {
     ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
     ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
     ${kilderHtml(a.kilder)}
+    ${relatedHtml}
   `;
   wireLinks(el, lc);
+
+  el.querySelectorAll("[data-related-id]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const r = (lc?.artists || []).find((x) => String(x.id) === btn.dataset.relatedId);
+      if (r) lc?.onArtistClick?.(r);
+    });
+  });
 }
 
 // Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
