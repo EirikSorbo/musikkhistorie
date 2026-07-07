@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=2.95";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.95";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.95";
+import { isVisible, filterArtists } from "./limits.js?v=2.96";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.96";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.96";
 import {
   escapeHtml,
   linkDesc,
@@ -23,19 +23,20 @@ import {
   yearLabel,
   musicExampleLabel,
   musicExamplesHtml,
-  relatedArtists,
+  relatedArtistsHtml,
+  wireRelated,
   keyWorksText,
   artistImage,
   formatInfoText,
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.95";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.95";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.95";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.95";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.95";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.95";
+} from "./ui-helpers.js?v=2.96";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.96";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.96";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.96";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.96";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.96";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -109,20 +110,9 @@ export function renderArtistDetail(el, artist, config, lc) {
   const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
 
-  // Beslektede artister — oppdagelsessti fra ett kort til nabolaget (kun i
-  // detaljvisningen, så oversiktsgrid-et ikke blir tett). Klikk bytter fokus.
-  const related = relatedArtists(a, lc?.artists || [], { limit: 5 });
-  const relatedHtml = related.length
-    ? `<div class="related">
-        <h4 class="related-head">Beslektede artister</h4>
-        <div class="related-list">
-          ${related.map((r) => {
-            const g = (Array.isArray(r.mainGenre) && r.mainGenre[0]) ? r.mainGenre[0] : (r.metaGenre || "");
-            return `<button type="button" class="related-chip" data-related-id="${escapeHtml(String(r.id))}">${escapeHtml(r.name)}${g ? `<span class="related-tag">${escapeHtml(g)}</span>` : ""}</button>`;
-          }).join("")}
-        </div>
-      </div>`
-    : "";
+  // Beslektede artister — oppdagelsessti fra ett kort til nabolaget. Klikk
+  // bytter fokus. Delt hjelper (samme blokk brukes på spotlight-/dagens-kort).
+  const relatedHtml = relatedArtistsHtml(a, lc);
 
   el.innerHTML = `
     ${artistImage(a, true)}
@@ -138,13 +128,7 @@ export function renderArtistDetail(el, artist, config, lc) {
     ${relatedHtml}
   `;
   wireLinks(el, lc);
-
-  el.querySelectorAll("[data-related-id]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const r = (lc?.artists || []).find((x) => String(x.id) === btn.dataset.relatedId);
-      if (r) lc?.onArtistClick?.(r);
-    });
-  });
+  wireRelated(el, lc);
 }
 
 // Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
@@ -156,6 +140,7 @@ export function renderSpotlightCards(el, artists, config, lc) {
   }
   el.innerHTML = artists.map((a) => spotlightCard(a, config, lc)).join("");
   wireLinks(el, lc);
+  wireRelated(el, lc);
 }
 
 function spotlightCard(a, config, lc) {
@@ -182,6 +167,7 @@ function spotlightCard(a, config, lc) {
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
+      ${relatedArtistsHtml(a, lc)}
       <footer class="card-foot">
         <div class="spacer"></div>
         <button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>

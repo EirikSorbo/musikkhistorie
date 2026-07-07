@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=2.95";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.95";
-import { GENDERS } from "./limits.js?v=2.95";
+import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=2.96";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.96";
+import { GENDERS } from "./limits.js?v=2.96";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -126,6 +126,32 @@ export function relatedArtists(artist, all, { limit = 5 } = {}) {
     x.diff - y.diff ||
     x.a.name.localeCompare(y.a.name, "no"));
   return scored.slice(0, limit).map((s) => s.a);
+}
+
+// Ferdig «Beslektede artister»-blokk (delt av detaljkort og spotlight-/dagens-
+// kort). Tom streng når ingen slektninger finnes. Krever lc.artists (full liste).
+export function relatedArtistsHtml(a, lc, { limit = 5 } = {}) {
+  const related = relatedArtists(a, lc?.artists || [], { limit });
+  if (!related.length) return "";
+  return `<div class="related">
+      <h4 class="related-head">Beslektede artister</h4>
+      <div class="related-list">
+        ${related.map((r) => {
+          const g = (Array.isArray(r.mainGenre) && r.mainGenre[0]) ? r.mainGenre[0] : (r.metaGenre || "");
+          return `<button type="button" class="related-chip" data-related-id="${escapeHtml(String(r.id))}">${escapeHtml(r.name)}${g ? `<span class="related-tag">${escapeHtml(g)}</span>` : ""}</button>`;
+        }).join("")}
+      </div>
+    </div>`;
+}
+
+// Kobler klikk på beslektet-chips i `el` til lc.onArtistClick (bytter fokus).
+export function wireRelated(el, lc) {
+  el.querySelectorAll("[data-related-id]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const r = (lc?.artists || []).find((x) => String(x.id) === btn.dataset.relatedId);
+      if (r) lc?.onArtistClick?.(r);
+    });
+  });
 }
 
 // Prioritets-ikoner/-etiketter, delt av spotlight- og artistkort.
