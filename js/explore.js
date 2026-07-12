@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.1";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.1";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.1";
-import { isVisible } from "./limits.js?v=3.1";
-import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.1";
-import { renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.1";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.1";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.1";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.1";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.1";
-import { renderSjangerhimmel } from "./constellation.js?v=3.1";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.2";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.2";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.2";
+import { isVisible } from "./limits.js?v=3.2";
+import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.2";
+import { renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.2";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.2";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.2";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.2";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.2";
+import { renderSjangerhimmel } from "./constellation.js?v=3.2";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -290,6 +290,11 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
     <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Tidslinjer, kart og visuelle oversikter — hele historien samlet på ett sted.</p>
     <div class="dash-grid">
+      <button class="dash-card" id="sb-om-historie">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#4d7c0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M8 2v4l4 4 4-4V2"/><path d="M8 22v-4l4-4 4 4v4"/></svg>
+        <span class="dash-title">Om historie</span>
+        <span class="dash-desc">Hvorfor musikkhistorie — og hva en historie egentlig er</span>
+      </button>
       <button class="dash-card" id="sb-rotter">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c0 3-2.5 4.5-4 7"/><path d="M12 11c0 3 2.5 4.5 4 7"/><path d="M12 11v7"/><circle cx="12" cy="19.5" r="1.3"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>
         <span class="dash-title">Røtter</span>
@@ -329,6 +334,19 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
+<!-- Om historie: forfattet, hardkodet prosa (samme mønster som Røtter) —
+     introduksjonen til musikkhistorie fra MUR114: hvorfor faget, fortellinger
+     og identitet, hvem som forteller, alternative linser og begrepene. -->
+<div class="modal-backdrop" id="modal-om-historie">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Om historie</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="om-historie-body" class="rotter"></div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-rotter">
   <div class="modal">
     <div class="modal-head">
@@ -359,6 +377,65 @@ ${TECH_DETAIL_MODAL_HTML}
 // «Hør:»-lenker i røtter-fortellingen peker til YouTube-søk (samme valg som
 // resten av appen — brukeren foretrekker søkelenker framfor harde URL-er).
 const ytSearch = (q) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+
+// «Om historie»: introduksjonen til musikkhistorie (fra MUR114-kompendiet,
+// uten formalitetene) — hvorfor faget, fortellinger og identitet, hvem som
+// forteller, alternative linser og begrepsavklaringene, med en utvidet del om
+// historiebevissthet. Statisk, forfattet prosa — redigeres her i koden.
+const OM_HISTORIE_BODY = `
+  <p class="rotter-intro">Hvorfor musikkhistorie? Fordi vi skal snakke og lytte oss gjennom det siste drøye århundrets absolutte toppunkter: de største, mest kreative, mest innflytelsesrike og mest virtuose musikerne og formidlerne — de som har preget <strong>ikke bare hva vi lytter til, men hva vi lytter etter</strong>. Premissleverandørene. Historieskaperne. De rebelske nytenkerne og de kompromissløse perfeksjonistene. Og vi skal ikke bare lære <em>om</em> dem — vi skal <strong>lære av dem</strong>: prøve å forstå ikke bare hva de gjorde, men <em>hvorfor</em>, og hvordan det endte opp med å påvirke oss, her og nå. For musikkhistorie er ikke bare historien om musikk. Det er <strong>historien om oss</strong>.</p>
+
+  <section class="rotter-sec">
+    <h3>Alt er fortellinger</h3>
+    <p>På mange måter kan vi si at <em>alt</em> er historier og fortellinger. Hver av oss bærer på de <strong>små fortellingene</strong> — ferien, hunden som veltet en hel melkekartong den gangen på hytta. De <strong>viktige fortellingene</strong> som har preget oss: da vi ble født, da foreldrene våre ble skilt, da farfar døde for tidlig. De <strong>vage fortellingene</strong>, der alle husker hendelsen litt forskjellig — som da du fikk skylda for noe en annen gjorde. De <strong>vakre</strong> og de <strong>stygge</strong>. Og over dem igjen: de <strong>store, felles fortellingene</strong> — om Abraham som var villig til å ofre sønnen sin, om Buddha som ga avkall på all rikdom, om den tomme graven — og de <strong>ideologiske og motstridende</strong>, der samme hendelse fortelles som et grusomt terrorangrep av noen og som en vellykket hellig krig av andre.</p>
+    <p>Tenk på hva du ville spurt om hvis du fikk møte en musiker du ser opp til. Sannsynligvis en variant av: <em>hva gjorde du for å komme dit du er?</em> Med andre ord: hva er <em>din</em> historie — og hva kan jeg lære av den? Det kollektive er nøyaktig samme spørsmål i stort: hva er <em>vår</em> historie, og hva kan vi lære av den?</p>
+    <p><strong>Vi er våre egne fortellinger — vi er historie.</strong> Uten historie, uten en fortid, har vi ingen identitet; da er vi bare kropper som beveger seg tilfeldig rundt på en stein i universet. Vi <em>er</em> fortellingene vi har fortalt, og vi <em>blir</em> fortellingene vi forteller.</p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Hvem forteller — og hva fortelles ikke?</h3>
+    <p>Prøv en liten øvelse: skriv (eller bare tenk gjennom) noen setninger som oppsummerer din egen historie. Se så på alt du <em>ikke</em> tok med. Hvordan hadde fortellingen sett ut om den bare handlet om familiesituasjonen din? Bare om musikken? Bare om gamingen? Og hvem forteller? Ville bestevennen din fortalt den samme fortellingen om deg? Moren din? Eksen din?</p>
+    <p>Nøyaktig det samme gjelder når noen forteller en musikkhistorie: <strong>Hva fortelles — og hvorfor? Hva fortelles <em>ikke</em>? Hvem forteller — og hvem slipper ikke til?</strong> Og det trengs en viss ydmykhet overfor ord som «først», «best» og «mest innflytelsesrik»: det er ofte en sammenheng mellom dem, men ikke alltid — noen hadde bare flaks, eller var sleipe nok.</p>
+    <p>Historien skaper oss, ikke bare som enkeltpersoner, men som fellesskap. Da trenger vi noe felles — en nesten umulig oppgave, for hva er felles for hvem? Målet er likevel et <strong>felles referansegrunnlag</strong> og en felles identitet, med rom for individuelle vektlegginger — og med et jevnlig blikk til siden, mot det som faller utenfor. Dette pensumet er et slikt utvalg, og ethvert utvalg er ett av mange mulige. Ser du at noe vesentlig mangler, foreslå det.</p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Samme historie, andre linser</h3>
+    <p>Historien er ikke alltid pen — den kan være forferdelig stygg. Det skal vi også snakke om, for hvis vi glemmer det stygge, kan det fort skje igjen. Hvilke fortellinger som fortelles, og hvilken linse man ser dem gjennom, er alltid en avveining — de samme hendelsene blir helt forskjellige historier gjennom ulike linser:</p>
+    <p><strong>Frigjøring og undertrykkelse.</strong> Arbeidssangene som holdt slavene oppe på plantasjene, og forbudet mot afroamerikanske kulturuttrykk. Blackface-tradisjonen og minstrel shows som latterliggjorde afroamerikanere og bagatelliserte slavetilværelsen. Historiene om hvordan turnerende afroamerikanske musikere ble behandlet, og radiostasjonene som nektet å spille musikken deres — med egne, adskilte Billboard-lister. Billie Holidays «Strange Fruit» og Sam Cookes «A Change Is Gonna Come». Og mønsteret som gjentar seg: hvite artister som kopierer afroamerikansk musikk og sitter igjen med pengene — swing-æraens jazz, rock som hvit r&amp;b, techno og EDM bygget på svart house.</p>
+    <p class="rotter-listen">Hør: <a href="${ytSearch("Billie Holiday Strange Fruit")}" target="_blank" rel="noopener">Strange Fruit</a> · <a href="${ytSearch("Sam Cooke A Change Is Gonna Come")}" target="_blank" rel="noopener">A Change Is Gonna Come</a></p>
+    <p><strong>Kvinnene i musikken.</strong> Ma Rainey med glitter og bling i bluesens spede begynnelse; Bessie Smith og Big Mama Thornton som la grunnlaget for moderne blues; Billie Holiday som torde å ta de afroamerikanskes rettigheter inn i musikken; Maybelle Carter som revolusjonerte gitarteknikken i countrymusikken; Janis Joplin som kom dundrende inn på rockescenen i 1967 med sin blues-tilnærming; Joni Mitchell som synger om å måtte gi bort datteren sin fordi musikklivet ikke lot seg forene med å være mor; Madonna som redefinerte kvinners makt i popmusikken og tok et slags offentlig eierskap over egen seksualitet; Björk som sprenger konvensjonene for bruk av musikkteknologi; Taylor Swift som trakk musikken sin fra Spotify for å tvinge frem bedre avtaler, og som spiller inn albumene sine på nytt for å eie dem selv. Og herhjemme: Susanne Sundfør som tok et oppgjør med kategoriseringene i Spellemannsprisen — live, i beste sendetid — og Tora Dahle Aagård, en av de hippeste bluesgitaristene i Norge akkurat nå. Samtidig løper en mørkere tråd gjennom det hele: hvordan kvinner igjen og igjen presses til å spille på kropp for å oppnå suksess.</p>
+    <p><strong>Musikk som bærer av tekst.</strong> Sanger som identitets- og nyhetsbærere i ulike kulturer — <em>griotene</em> i Vest-Afrika, <em>trubadurene</em> i Europa — en tradisjon amerikansk country har ført videre. Protestsangene på 50- og 60-tallet som bar frem en hel fredsbevegelse, og singer/songwriter-tradisjonen med noen av de vakreste tekstene i populærmusikkhistorien.</p>
+    <p>Eller helt andre linser igjen: musikk gjennom <strong>teknologiutviklingen</strong>, musikk som <strong>industri</strong>, musikk som noe <strong>kollektivt</strong>. Ingen av linsene er «den riktige» — men hvilken du velger, avgjør hvilken historie du får.</p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Sju begreper å tenke med</h3>
+    <p>Til slutt litt historieteknikk — noen distinksjoner som er greie å ha med seg, med samme eksempel hele veien:</p>
+    <p><strong>Hendelser</strong> er begivenheter som skjer i tid og rom. De er ikke fortellinger eller historie i seg selv — de er råmaterialet historien bygges av. <em>I 1959 ga Miles Davis ut Kind of Blue.</em></p>
+    <p><strong>Fortellinger</strong> er hendelser satt sammen i en meningsgivende rekkefølge, individuelle eller kollektive. <em>Utgivelsen av Kind of Blue etablerte for alvor Miles Davis som jazzpioner, og albumet står som en av de mest innflytelsesrike innspillingene i jazzhistorien.</em></p>
+    <p><strong>Narrativ</strong> er den «større fortellingen» som mange enkeltfortellinger bygger opp under — ikke bare hva som skjer, men hva innholdet er med på å etablere. <em>Når fortellingen om Miles Davis som kanskje tidenes viktigste jazzmusiker gjenfortelles, opprettholdes både at jazzen tilhører afroamerikanerne — og at jazzen i stor grad er utviklet og definert av menn.</em></p>
+    <p><strong>Historie</strong> er å sette hendelser inn i en sammenheng som gir mening — og en fagdisiplin for systematisk fremstilling av fortiden, med krav til metode, kildekritikk og refleksjon: å analysere og forklare hendelser og narrativer på en måte som er etterprøvbar og begrunnet i kilder.</p>
+    <p><strong>Erindring</strong> handler om hvordan fortiden <em>huskes</em>, individuelt og kollektivt. Ikke en «lagret hukommelse», men en aktiv prosess der fortiden gis mening i lys av nåtiden og fremtiden — som familiens minner om krigen, eller nasjonale minnedager.</p>
+    <p><strong>Historiebruk</strong> handler om hvordan fortiden <em>brukes</em> i praksis: vitenskapelig (historikernes arbeid), politisk (legitimering og maktkamp), moralsk (skyld og ansvar), identitetsskapende — eller kommersielt, som i turisme, film og populærkultur.</p>
+    <p><strong>Historiebevissthet</strong> er bevisstheten om samspillet mellom fortid, nåtid og fremtid — det største av begrepene, og det får derfor et eget avsnitt.</p>
+  </section>
+
+  <section class="rotter-sec">
+    <h3>Historiebevissthet — fortid, nåtid og fremtid i samspill</h3>
+    <p>Historiebevissthet handler om at de tre tidene aldri opptrer alene: <strong>forståelsen av fortiden former hvordan vi tolker nåtiden og hva vi forventer av fremtiden</strong> — og det går også motsatt vei. Det er nåtidens spørsmål som avgjør hva vi leter etter i fortiden, og hvilke deler av den vi løfter frem. Historien «ligger» altså ikke bare der bak oss, ferdig fortalt; den gjenfortelles hele tiden av noen som står et bestemt sted og ser i en bestemt retning.</p>
+    <p>I musikken er dette samspillet overalt. Hva vi regner som «ekte» eller «viktig» musikk i dag, er formet av fortellingene om tidligere tiår — og hver gang en artist samples, hylles eller gjenutgis, er det nåtiden som velger hvilken fortid som skal leve videre. Retrobølger og sampling er pågående samtaler med fortiden. Strømmetjenestene har gjort hele musikkhistorien tilgjengelig samtidig, slik at katalogen konkurrerer med det nye — fortiden er blitt en del av nåtidens lydbilde på en måte ingen tidligere generasjon har opplevd.</p>
+    <p>Og for deg som utøver: du står selv midt i denne strømmen. Musikken du lager i dag, er morgendagens historie, og fortellingen du velger å fortelle om deg selv og musikken din — hvor du kommer fra, hvem du bygger på, hva du bryter med — er din egen historiebruk. Historiebevissthet er å vite hvilke skuldre du står på, å vite at kanonen du har arvet er konstruert og kunne stille spørsmål ved den — og å vite at du selv er med på å avgjøre hva som fortelles videre. Det er kanskje det viktigste dette emnet prøver å bygge.</p>
+  </section>
+
+  <div class="rotter-foot">
+    <p class="muted">Klar for selve historien? Start der alt begynner.</p>
+    <div class="rotter-links">
+      <button class="btn ghost" id="omh-rotter">Røtter før 1910</button>
+      <button class="btn ghost" id="omh-historier">Sjangerhistoriene</button>
+    </div>
+  </div>
+`;
 
 // Redaksjonell inngangstekst til røttene (før ca. 1910). Statisk, forfattet
 // prosa — de lange linjene fra vestafrikanske/europeiske tradisjoner og
@@ -1179,6 +1256,22 @@ function openStoreBildet() {
   modalOpen(document.getElementById("modal-store-bildet"));
 }
 
+// Om historie: statisk forfattet introduksjon (fra MUR114, uten formaliteter).
+// Innholdet fylles inn én gang; foten lenker videre til Røtter og
+// Sjangerhistoriene (åpnes OPPÅ denne modalen, ← går tilbake).
+function openOmHistorie() {
+  const modal = document.getElementById("modal-om-historie");
+  if (!modal) return;
+  const body = document.getElementById("om-historie-body");
+  if (body && !body.dataset.filled) {
+    body.innerHTML = OM_HISTORIE_BODY;
+    body.dataset.filled = "1";
+    body.querySelector("#omh-rotter")?.addEventListener("click", openRotter);
+    body.querySelector("#omh-historier")?.addEventListener("click", () => openHistorier());
+  }
+  modalOpen(modal);
+}
+
 // Røtter før 1910: statisk forfattet fortelling. Innholdet fylles inn én gang
 // og «Se slektstre/tidslinje»-knappene kobles da (åpnes OPPÅ røtter-modalen).
 function openRotter() {
@@ -1275,7 +1368,7 @@ function wireModals() {
    "modal-decade-more", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
    "modal-varmekart", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
-   "modal-store-bildet", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+   "modal-store-bildet", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1311,6 +1404,7 @@ function wireModals() {
   // og navigerer bort — knappen skjules om siden ikke ga en handler.
   const sbModal = document.getElementById("modal-store-bildet");
   if (sbModal) {
+    sbModal.querySelector("#sb-om-historie").addEventListener("click", openOmHistorie);
     sbModal.querySelector("#sb-rotter").addEventListener("click", openRotter);
     sbModal.querySelector("#sb-historier").addEventListener("click", () => openHistorier());
     sbModal.querySelector("#sb-tidslinje").addEventListener("click", () => openTidslinje());
