@@ -518,6 +518,21 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .rotter-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .rotter-links .btn { flex: 1; min-width: 160px; }
 
+/* Sjangerhistorier — seks fortellinger i Det store bildet + lærer-editor */
+.hist-intro { margin-bottom: 12px; font-size: 0.9rem; }
+.hist-chips { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.hist-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.story-body h3 { margin: 18px 0 6px; font-size: 1.02rem; color: var(--text); }
+.story-body h3:first-child { margin-top: 0; }
+.story-body p { margin: 0 0 10px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
+.story-body ul, .story-body ol { margin: 0 0 10px; padding-left: 20px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
+.story-body li { margin-bottom: 3px; }
+.story-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.story-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+#se-text { width: 100%; min-height: 420px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; line-height: 1.55; }
+.story-preview { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-height: 480px; overflow-y: auto; background: #fff; }
+@media (max-width: 900px) { .story-edit-grid { grid-template-columns: 1fr; } }
+
 .kilder { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 .kilder ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 

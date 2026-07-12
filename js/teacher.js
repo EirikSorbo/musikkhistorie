@@ -18,14 +18,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=2.96";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.96";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=2.96";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.96";
-import { initExplore } from "./explore.js?v=2.96";
+} from "./store.js?v=2.97";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.97";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=2.97";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=2.97";
+import { initExplore } from "./explore.js?v=2.97";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.96";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.96";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=2.97";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=2.97";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -36,10 +36,12 @@ import {
   openPodkastAdmin,
   renderPodkastAdmin,
   setupPodkastAdmin,
-} from "./teacher-content.js?v=2.96";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.96";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.96";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.96";
+  openStoryEditor,
+  setupStoryEditor,
+} from "./teacher-content.js?v=2.97";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=2.97";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=2.97";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=2.97";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -97,6 +99,7 @@ function startApp() {
   setupDecadeSingleSave();
   setupPendingEditsUi();
   setupSubgenreSingleSave();
+  setupStoryEditor();
 
   ctx.explore = initExplore({
     getState: () => state,
@@ -104,6 +107,7 @@ function startApp() {
     onSlektstre: () => { window.location.href = "tre.html"; },
     onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
+    onStoryEdit: (genre) => openStoryEditor(genre),
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,
     onTechAdmin: () => openTechAdmin(),

@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=2.96" />
+  <link rel="stylesheet" href="css/styles.css?v=2.97" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -269,6 +269,34 @@
           <button type="button" id="save-instrument" class="btn primary">Lagre</button>
           <span id="msg-instrument" class="form-msg ok"></span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rediger sjangerhistorie (markdown-light med live forhåndsvisning).
+       Åpnes fra «Rediger»-knappen i historie-modalen i Det store bildet. -->
+  <div class="modal-backdrop" id="modal-story-edit">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 id="se-title">Rediger historie</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" id="se-status" style="margin-bottom:10px"></p>
+      <div class="story-toolbar">
+        <button type="button" class="btn ghost small" id="se-bold" title="Fet skrift (**tekst**)"><strong>B</strong></button>
+        <button type="button" class="btn ghost small" id="se-italic" title="Kursiv (*tekst*)"><em>K</em></button>
+        <button type="button" class="btn ghost small" id="se-h3" title="Mellomtittel (### Tittel)">Mellomtittel</button>
+        <button type="button" class="btn ghost small" id="se-ul" title="Punktliste (- punkt)">• Liste</button>
+        <button type="button" class="btn ghost small" id="se-ol" title="Nummerert liste (1. punkt)">1. Liste</button>
+      </div>
+      <div class="story-edit-grid">
+        <textarea id="se-text" spellcheck="false"></textarea>
+        <div id="se-preview" class="story-body story-preview"></div>
+      </div>
+      <div class="admin-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;align-items:center">
+        <span id="se-msg" class="form-msg"></span>
+        <button type="button" id="se-reset" class="btn danger">Tilbakestill til standardtekst</button>
+        <button type="button" id="se-save" class="btn primary">Lagre</button>
       </div>
     </div>
   </div>
@@ -613,7 +641,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=2.96"></script>
-  <script type="module" src="js/teacher.js?v=2.96"></script>
+  <script src="js/load-guard.js?v=2.97"></script>
+  <script type="module" src="js/teacher.js?v=2.97"></script>
 </body>
 </html>

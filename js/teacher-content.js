@@ -5,16 +5,17 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.96";
-import { saveDecadeDesc, saveGenreDescLevel, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.96";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=2.96";
-import { resolveDesc } from "./genre-descriptions.js?v=2.96";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.96";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.97";
+import { saveDecadeDesc, saveGenreDescLevel, saveStoryBody, clearStory, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=2.97";
+import { renderStoryHtml, storyFor } from "./story-format.js?v=2.97";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=2.97";
+import { resolveDesc } from "./genre-descriptions.js?v=2.97";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.97";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.96";
-import { $ } from "./shared.js?v=2.96";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=2.96";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.97";
+import { $ } from "./shared.js?v=2.97";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=2.97";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -350,5 +351,110 @@ export function setupPodkastAdmin() {
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";
     }
+  });
+}
+
+// ----------------------------------------------------------------------------
+//  Sjangerhistorier — markdown-light-editor med live forhåndsvisning
+// ----------------------------------------------------------------------------
+//  Åpnes fra «Rediger»-knappen i historie-modalen (explore.js → onStoryEdit).
+//  Teksten lagres som story-felt på metasjangerens genreDescriptions-dokument
+//  og overstyrer standardteksten i stories-default.js; «Tilbakestill» fjerner
+//  feltet så standardteksten gjelder igjen. Forhåndsvisningen bruker samme
+//  renderStoryHtml som studentvisningen — det du ser er det studentene får.
+
+let storyGenre = null;
+
+function storyLinkCtx() {
+  return { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) };
+}
+
+function renderStoryPreview() {
+  const el = $("#se-preview");
+  if (el) el.innerHTML = renderStoryHtml($("#se-text").value, storyLinkCtx());
+}
+
+export function openStoryEditor(genre) {
+  storyGenre = genre;
+  $("#se-title").textContent = `Rediger historie — ${genre}`;
+  const story = storyFor(genre, state.genreDescs);
+  $("#se-text").value = story ? story.body : "";
+  const msg = $("#se-msg");
+  msg.textContent = "";
+  msg.className = "form-msg";
+  $("#se-status").textContent = story && story.custom
+    ? "Redigert versjon — overstyrer standardteksten."
+    : "Standardtekst — «Lagre» oppretter en redigert versjon som overstyrer den.";
+  $("#se-reset").style.display = story && story.custom ? "" : "none";
+  renderStoryPreview();
+  openAdminModal("modal-story-edit");
+}
+
+// Omslutt markeringen med et tegnpar (**fet** / *kursiv*).
+function seWrap(marker) {
+  const ta = $("#se-text");
+  const { selectionStart: s, selectionEnd: e, value: v } = ta;
+  const sel = v.slice(s, e) || "tekst";
+  ta.setRangeText(marker + sel + marker, s, e, "select");
+  ta.focus();
+  renderStoryPreview();
+}
+
+// Sett blokkprefiks (mellomtittel/liste) på hver markerte linje. Eksisterende
+// blokkprefiks byttes ut, så knappene ikke stabler `- ### - tekst`.
+function sePrefix(prefixFor) {
+  const ta = $("#se-text");
+  const { selectionStart: s, selectionEnd: e, value: v } = ta;
+  const start = v.lastIndexOf("\n", s - 1) + 1;
+  const endIdx = v.indexOf("\n", e);
+  const end = endIdx === -1 ? v.length : endIdx;
+  let n = 0;
+  const out = v.slice(start, end).split("\n")
+    .map((l) => l.trim() ? prefixFor(n++) + l.replace(/^\s*(#{2,4}|[-•]|\d+[.)])\s+/, "") : l)
+    .join("\n");
+  ta.setRangeText(out, start, end, "select");
+  ta.focus();
+  renderStoryPreview();
+}
+
+export function setupStoryEditor() {
+  const ta = $("#se-text");
+  if (!ta) return;
+
+  let t;
+  ta.addEventListener("input", () => { clearTimeout(t); t = setTimeout(renderStoryPreview, 250); });
+
+  $("#se-bold").addEventListener("click", () => seWrap("**"));
+  $("#se-italic").addEventListener("click", () => seWrap("*"));
+  $("#se-h3").addEventListener("click", () => sePrefix(() => "### "));
+  $("#se-ul").addEventListener("click", () => sePrefix(() => "- "));
+  $("#se-ol").addEventListener("click", () => sePrefix((i) => `${i + 1}. `));
+
+  $("#se-save").addEventListener("click", async () => {
+    const body = ta.value.trim();
+    const msg = $("#se-msg");
+    if (!body) {
+      msg.textContent = "Historien kan ikke være tom — bruk «Tilbakestill til standardtekst» i stedet.";
+      msg.className = "form-msg error";
+      return;
+    }
+    msg.textContent = "Lagrer …";
+    msg.className = "form-msg ok";
+    try {
+      await saveStoryBody(storyGenre, body);
+      closeAdminModal("modal-story-edit");
+      if (ctx.explore && ctx.explore.openHistorier) ctx.explore.openHistorier(storyGenre);
+    } catch (err) {
+      console.error("Historie-lagring feilet:", err);
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
+  });
+
+  $("#se-reset").addEventListener("click", async () => {
+    if (!confirm(`Slette den redigerte versjonen av «${storyGenre}» og gå tilbake til standardteksten?`)) return;
+    try { await clearStory(storyGenre); } catch { /* ingen overstyring å fjerne */ }
+    closeAdminModal("modal-story-edit");
+    if (ctx.explore && ctx.explore.openHistorier) ctx.explore.openHistorier(storyGenre);
   });
 }

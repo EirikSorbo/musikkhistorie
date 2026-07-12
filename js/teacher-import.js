@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.96";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.97";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -13,12 +13,12 @@ import {
   addTech,
   saveDocsBulk,
   updateArtistFields,
-} from "./store.js?v=2.96";
-import { escapeHtml } from "./ui.js?v=2.96";
-import { $ } from "./shared.js?v=2.96";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.96";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.96";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=2.96";
+} from "./store.js?v=2.97";
+import { escapeHtml } from "./ui.js?v=2.97";
+import { $ } from "./shared.js?v=2.97";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.97";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.97";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=2.97";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -112,10 +112,12 @@ function buildExportData() {
   // Metasjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
   // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
   // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.
+  // story = lærer-redigert sjangerhistorie (overstyrer stories-default.js) —
+  // må med i backupen, ellers går redigeringene tapt ved «Erstatt alle».
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
-    .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub)
+    .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub || rest.story)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
     .forEach(([id, rest]) => { genreDescriptions[genreSectionOf(id)][id] = rest; });
 
@@ -254,7 +256,7 @@ async function importDescriptions({ decades, genreDescriptions }) {
       const { description, ...rest } = data;
       toSave = { [genreSectionOf(id)]: { description, ...rest } };
     }
-    if (toSave.description || toSave.meta || toSave.main || toSave.sub) {
+    if (toSave.description || toSave.meta || toSave.main || toSave.sub || toSave.story) {
       genreEntries.push({ id, data: toSave });
     }
   }

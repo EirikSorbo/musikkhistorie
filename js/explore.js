@@ -1,13 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.96";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.96";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.96";
-import { isVisible } from "./limits.js?v=2.96";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=2.96";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.96";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.96";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.96";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.96";
-import { renderSjangerhimmel } from "./constellation.js?v=2.96";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.97";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.97";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.97";
+import { isVisible } from "./limits.js?v=2.97";
+import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=2.97";
+import { renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=2.97";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.97";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.97";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.97";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.97";
+import { renderSjangerhimmel } from "./constellation.js?v=2.97";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -289,6 +290,11 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-title">Røtter</span>
         <span class="dash-desc">Opphavet før 1910 — der alt begynner</span>
       </button>
+      <button class="dash-card" id="sb-historier">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span class="dash-title">Sjangerhistorier</span>
+        <span class="dash-desc">Seks fortellinger — hele pensumet i sammenheng</span>
+      </button>
       <button class="dash-card" id="sb-tidslinje">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
         <span class="dash-title">Tidslinje</span>
@@ -325,6 +331,22 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="rotter-body" class="rotter"></div>
+  </div>
+</div>
+
+<!-- Sjangerhistorier: seks forfattede fortellinger (én per metasjanger) som
+     til sammen dekker pensumet. Én modal med sjanger-chips øverst — samme
+     leseflate uansett historie, og bytte skjer uten modal-stabling. -->
+<div class="modal-backdrop" id="modal-historier">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Sjangerhistorier</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted hist-intro">Seks fortellinger som til sammen dekker hele pensumet — trykk på navnene underveis for å åpne artistkortene.</p>
+    <div class="hist-chips" id="hist-chips"></div>
+    <div id="hist-extra"></div>
+    <div id="hist-body" class="story-body"></div>
   </div>
 </div>
 `;
@@ -1185,6 +1207,55 @@ function openRotter() {
   modalOpen(modal);
 }
 
+// Sjangerhistoriene: standardtekst fra stories-default.js, overstyrt av
+// lærer-redigert versjon i genreDescs (se storyFor). Rendres på nytt ved hvert
+// chip-bytte OG hver åpning, så lærer-lagring slår gjennom umiddelbart.
+// Artist-/sjangernavn i teksten lenkes og åpner kortene OPPÅ historien.
+let currentStoryGenre = null;
+
+function renderHistorie(genre) {
+  currentStoryGenre = genre;
+  const modal = document.getElementById("modal-historier");
+  modal.querySelectorAll(".hist-chip").forEach((b) =>
+    b.classList.toggle("active", b.dataset.story === genre));
+
+  const story = storyFor(genre, getState().genreDescs);
+  const lc = buildLinkCtx();
+  const body = document.getElementById("hist-body");
+  body.innerHTML = story
+    ? renderStoryHtml(story.body, lc)
+    : `<p class="muted">Ingen historie for ${escapeHtml(genre)} ennå.</p>`;
+  wireLinks(body, lc);
+
+  // Lærer: rediger-knapp over teksten (samme mønster som sgi-edit-btn).
+  const extra = document.getElementById("hist-extra");
+  extra.innerHTML = "";
+  if (opts.onStoryEdit) {
+    extra.innerHTML = `<div class="modal-foot-right" style="margin:0 0 10px">
+      <button class="btn ghost small" id="hist-edit-btn">Rediger${story && story.custom ? "" : " (standardtekst)"}</button>
+    </div>`;
+    extra.querySelector("#hist-edit-btn").addEventListener("click", () => opts.onStoryEdit(genre));
+  }
+
+  const box = modal.querySelector(".modal");
+  if (box) box.scrollTop = 0;
+}
+
+function openHistorier(genre) {
+  const modal = document.getElementById("modal-historier");
+  if (!modal) return;
+  const chips = document.getElementById("hist-chips");
+  if (!chips.dataset.filled) {
+    chips.innerHTML = STORY_ORDER.map((g) =>
+      `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("");
+    chips.querySelectorAll(".hist-chip").forEach((b) =>
+      b.addEventListener("click", () => renderHistorie(b.dataset.story)));
+    chips.dataset.filled = "1";
+  }
+  renderHistorie(typeof genre === "string" ? genre : (currentStoryGenre || STORY_ORDER[0]));
+  modalOpen(modal);
+}
+
 // Sjangerhimmelen: konstellasjonskartet rendres på nytt ved hver åpning (samme
 // mønster som kartet), så det alltid speiler gjeldende artistdata. Artist- og
 // sjangerklikk åpner de vanlige modalene OPPÅ himmelen — ← går tilbake hit.
@@ -1212,7 +1283,7 @@ function wireModals() {
    "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
    "modal-tidslinje", "modal-kart", "modal-sjangerhimmel", "modal-artistliste",
    "modal-spilleliste", "modal-sjanger", "modal-tech-detail", "modal-store-bildet",
-   "modal-rotter"].forEach((id) => setupModal(id));
+   "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1256,6 +1327,7 @@ function wireModals() {
   const sbModal = document.getElementById("modal-store-bildet");
   if (sbModal) {
     sbModal.querySelector("#sb-rotter").addEventListener("click", openRotter);
+    sbModal.querySelector("#sb-historier").addEventListener("click", () => openHistorier());
     sbModal.querySelector("#sb-tidslinje").addEventListener("click", () => openTidslinje());
     const sbTre = sbModal.querySelector("#sb-slektstre");
     if (opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
@@ -1332,6 +1404,7 @@ export function initExplore(options) {
     openVarmekart,
     openTidslinje,
     openStoreBildet,
+    openHistorier,
     openPodkast,
     openTeknologi,
     openTechDetail,

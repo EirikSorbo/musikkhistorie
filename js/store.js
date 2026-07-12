@@ -17,6 +17,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   getDoc,
   getDocs,
   onSnapshot,
@@ -34,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.96";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.96";
-import { isMainGenre } from "./genealogy.js?v=2.96";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=2.96";
-import { normalizeConfig } from "./config-normalize.js?v=2.96";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.96";
+import { firebaseConfig } from "./firebase-config.js?v=2.97";
+import { DEFAULT_CONFIG } from "./limits.js?v=2.97";
+import { isMainGenre } from "./genealogy.js?v=2.97";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=2.97";
+import { normalizeConfig } from "./config-normalize.js?v=2.97";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.97";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -358,6 +359,23 @@ export async function saveGenreDescLevel(genreId, level, data) {
 
 export async function deleteGenreDesc(genreId) {
   return deleteDoc(doc(db, "genreDescriptions", genreId));
+}
+
+// Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som
+// story-felt på metasjangerens genreDescriptions-dokument — samme
+// Firestore-regler og eksport/import som beskrivelsene, ingen egen samling.
+// updatedAt som ISO-streng (ikke serverTimestamp) så feltet overlever
+// JSON-eksport → import uten å endre type.
+export async function saveStoryBody(genreId, body) {
+  return setDoc(doc(db, "genreDescriptions", genreId),
+    { story: { body, updatedAt: new Date().toISOString() } }, { merge: true });
+}
+
+// Fjerner lærer-overstyringen — appen faller tilbake til standardteksten i
+// stories-default.js. updateDoc feiler om dokumentet ikke finnes, men da
+// finnes heller ingen overstyring å fjerne; kalleren kan trygt ignorere det.
+export async function clearStory(genreId) {
+  return updateDoc(doc(db, "genreDescriptions", genreId), { story: deleteField() });
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
