@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=2.99";
-import { DEFAULT_CONFIG } from "./limits.js?v=2.99";
-import { isMainGenre } from "./genealogy.js?v=2.99";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=2.99";
-import { normalizeConfig } from "./config-normalize.js?v=2.99";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=2.99";
+import { firebaseConfig } from "./firebase-config.js?v=3.0";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.0";
+import { isMainGenre } from "./genealogy.js?v=3.0";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.0";
+import { normalizeConfig } from "./config-normalize.js?v=3.0";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.0";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -359,6 +359,24 @@ export async function saveGenreDescLevel(genreId, level, data) {
 
 export async function deleteGenreDesc(genreId) {
   return deleteDoc(doc(db, "genreDescriptions", genreId));
+}
+
+// Engangs-opprydding (idempotent): hovedsjanger-beskrivelsene på meta-nivå er
+// pensjonert (v2.99) — de dekkes nå av sjangerhistoriene. Fjern det døde
+// `meta`-feltet fra genreDescriptions-dokumentene. RØRER KUN `meta`; `main`,
+// `sub`, `story` (og alt annet) står urørt — Blues/Jazz osv. er både meta OG
+// main. Dokumenter uten `meta` hoppes over, så den kan trygt kjøre ved hver
+// lærer-oppstart. Returnerer antall opprydda dokumenter.
+export async function purgeMetaGenreDescs() {
+  const snapshot = await getDocs(genreDescsCol);
+  const withMeta = snapshot.docs.filter((d) => d.data().meta !== undefined);
+  if (!withMeta.length) return 0;
+  await Promise.all(withMeta.map((d) => updateDoc(d.ref, { meta: deleteField() })));
+  console.info(
+    `Fjernet dødt meta-felt fra ${withMeta.length} genreDescriptions-dokument(er):`,
+    withMeta.map((d) => d.id)
+  );
+  return withMeta.length;
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

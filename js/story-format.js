@@ -12,10 +12,10 @@
 //  Escaping skjer INNE i linkifyAll — rå tekst må aldri rett inn i HTML her.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=2.99";
-import { DEFAULT_STORIES } from "./stories-default.js?v=2.99";
+import { linkifyAll } from "./linkify.js?v=3.0";
+import { DEFAULT_STORIES } from "./stories-default.js?v=3.0";
 
-export { STORY_ORDER } from "./stories-default.js?v=2.99";
+export { STORY_ORDER } from "./stories-default.js?v=3.0";
 
 // Inline-formatering: **fet** og *kursiv*. Tokeniseres i ett pass så en
 // stjerne inni fet tekst ikke re-tolkes; hvert tekstsegment linkifiseres

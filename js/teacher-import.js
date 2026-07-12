@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=2.99";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.0";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -13,12 +13,12 @@ import {
   addTech,
   saveDocsBulk,
   updateArtistFields,
-} from "./store.js?v=2.99";
-import { escapeHtml } from "./ui.js?v=2.99";
-import { $ } from "./shared.js?v=2.99";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=2.99";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=2.99";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=2.99";
+} from "./store.js?v=3.0";
+import { escapeHtml } from "./ui.js?v=3.0";
+import { $ } from "./shared.js?v=3.0";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.0";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.0";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.0";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -248,15 +248,22 @@ async function importDescriptions({ decades, genreDescriptions }) {
     .map(([id, data]) => ({ id, data }));
 
   const genreEntries = [];
-  for (const [id, data] of Object.entries(genreDescriptions || {})) {
+  for (const [id, entry] of Object.entries(genreDescriptions || {})) {
+    // Meta-nivået (hovedsjanger-beskrivelse) er pensjonert (v2.99) — dropp det
+    // fra gamle backuper, ellers gjenopplives det og purgeMetaGenreDescs måtte
+    // slette det på nytt ved neste oppstart.
+    let data = entry;
+    if (data && data.meta) { const { meta, ...rest } = data; data = rest; }
     // Eldre flat form { description } leses ikke av appen (den leser kun
-    // meta/main/sub). Pakk den inn i riktig nivå før lagring.
+    // main/sub). Pakk den inn i riktig nivå før lagring. Meta-nivået er
+    // pensjonert, så en flat beskrivelse for en hovedsjanger legges på main.
     let toSave = data;
-    if (data && data.description && !data.meta && !data.main && !data.sub) {
+    if (data && data.description && !data.main && !data.sub) {
       const { description, ...rest } = data;
-      toSave = { [genreSectionOf(id)]: { description, ...rest } };
+      const lvl = genreSectionOf(id);
+      toSave = { [lvl === "meta" ? "main" : lvl]: { description, ...rest } };
     }
-    if (toSave.description || toSave.meta || toSave.main || toSave.sub || toSave.story) {
+    if (toSave.description || toSave.main || toSave.sub || toSave.story) {
       genreEntries.push({ id, data: toSave });
     }
   }
