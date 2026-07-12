@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.2";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.2";
-import { debounce, throttle } from "./util.js?v=3.2";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.2";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.2";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.2";
-import { initExplore } from "./explore.js?v=3.2";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.2";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.3";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.3";
+import { debounce, throttle } from "./util.js?v=3.3";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.3";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.3";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.3";
+import { initExplore } from "./explore.js?v=3.3";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.3";
 
 const state = {
   artists: [],
@@ -18,6 +18,10 @@ const state = {
   configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
+  // Innholdssidene (Om historie, Røtter) + varmekartet fra content-samlingen.
+  // contentLoaded skiller «laster fortsatt» fra «mangler faktisk tekst».
+  content: {},
+  contentLoaded: false,
   podcasts: [],
   techItems: [],
   pendingEdits: [],
@@ -476,6 +480,12 @@ function init() {
   // Tiårsbeskrivelsene brukes av Samfunn/Teknologi-modalene (explore.js) —
   // filterresultatene viser ikke lenger tiårsforklaring.
   subscribeDecades((d) => { state.decadeDescs = d; });
+  // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
+  subscribeContent((c) => {
+    state.content = c;
+    state.contentLoaded = true;
+    explore?.contentChanged?.();
+  });
   subscribeGenreDescs((s) => { state.genreDescs = s; if (isArtistModalOpen()) renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
   // Merk: ikke noe pendingEdits-abonnement her — studentsiden trenger bare

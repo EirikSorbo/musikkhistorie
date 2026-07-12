@@ -11,22 +11,24 @@ import {
   subscribeConfig,
   subscribeDecades,
   subscribeGenreDescs,
+  subscribeContent,
   subscribePodcasts,
   subscribeTech,
   subscribeTeacherChecks,
   subscribePendingEdits,
+  saveVarmekart,
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.2";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.2";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.2";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.2";
-import { initExplore } from "./explore.js?v=3.2";
+} from "./store.js?v=3.3";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.3";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.3";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.3";
+import { initExplore } from "./explore.js?v=3.3";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=3.2";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.2";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=3.3";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.3";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -38,11 +40,12 @@ import {
   renderPodkastAdmin,
   setupPodkastAdmin,
   openStoryEditor,
+  openPageEditor,
   setupStoryEditor,
-} from "./teacher-content.js?v=3.2";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.2";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.2";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.2";
+} from "./teacher-content.js?v=3.3";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.3";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.3";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.3";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -109,6 +112,14 @@ function startApp() {
     onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
     onStoryEdit: (genre) => openStoryEditor(genre),
+    onPageEdit: (pageId) => openPageEditor(pageId),
+    // Varmekart-redigering: celleklikk sender hele den nye raden hit; hele
+    // heat-kartet skrives (full overskriving — se saveVarmekart).
+    onHeatEdit: (genre, values) => {
+      const heat = { ...(state.content?.varmekart?.heat || {}) };
+      heat[genre] = values;
+      return saveVarmekart(heat);
+    },
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,
     onTechAdmin: () => openTechAdmin(),
@@ -157,6 +168,13 @@ function startApp() {
   });
   subscribeDecades((d) => { state.decadeDescs = d; });
   subscribeGenreDescs((s) => { state.genreDescs = s; });
+  subscribeContent((c) => {
+    state.content = c;
+    state.contentLoaded = true;
+    // Åpne innholdsvisninger (sider/varmekart) re-rendres så import/
+    // redigering slår gjennom umiddelbart.
+    ctx.explore?.contentChanged?.();
+  });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
   subscribeTech((items) => { state.techItems = items; updatePendingBadge(); renderPendingEditsList(); });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; });

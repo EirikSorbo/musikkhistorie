@@ -128,8 +128,8 @@ test("lærer kan endre alt; innlogget ikke-lærer (Google) kan ikke", async () =
   await assertFails(otherUserDb().collection("artists").doc("a4").update({ status: "removed" }));
 });
 
-test("kun lærer kan skrive config/decades/genreDescriptions/podcasts", async () => {
-  for (const col of ["config", "decades", "genreDescriptions", "podcasts"]) {
+test("kun lærer kan skrive config/decades/genreDescriptions/podcasts/content", async () => {
+  for (const col of ["config", "decades", "genreDescriptions", "podcasts", "content"]) {
     await assertFails(anonDb().collection(col).doc("x").set({ a: 1 }));
     await assertSucceeds(teacherDb().collection(col).doc("x").set({ a: 1 }));
   }

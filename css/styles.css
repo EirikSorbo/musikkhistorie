@@ -507,13 +507,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .related-tag { font-size: 0.72rem; font-weight: 500; color: var(--muted-2); }
 
 /* Røtter før 1910 — forfattet fortelling (#9) */
-.rotter-intro { font-size: 0.95rem; color: var(--text); line-height: 1.6; margin: 0 0 6px; }
-.rotter-sec { margin-top: 18px; }
-.rotter-sec h3 { margin: 0 0 6px; font-size: 1.02rem; color: var(--text); }
-.rotter-sec p { margin: 0 0 6px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
-.rotter-listen { font-size: 0.84rem; color: var(--muted); }
-.rotter-listen a { color: var(--accent); font-weight: 500; text-decoration: none; }
-.rotter-listen a:hover { text-decoration: underline; }
+/* Navigasjonsfot på innholdssidene (Om historie, Røtter) — selve teksten
+   rendres som .story-body fra Firestore-innholdet. */
 .rotter-foot { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 14px; }
 .rotter-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .rotter-links .btn { flex: 1; min-width: 160px; }
@@ -527,6 +522,9 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .story-body p { margin: 0 0 10px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
 .story-body ul, .story-body ol { margin: 0 0 10px; padding-left: 20px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
 .story-body li { margin-bottom: 3px; }
+/* [tekst](url)-lenker i historier/sider (f.eks. «Hør:»-lenkene) */
+.story-body a { color: var(--accent); font-weight: 500; text-decoration: none; }
+.story-body a:hover { text-decoration: underline; }
 .story-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .story-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 #se-text { width: 100%; min-height: 420px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; line-height: 1.55; }

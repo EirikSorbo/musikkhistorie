@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.2";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.3";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -13,12 +13,16 @@ import {
   addTech,
   saveDocsBulk,
   updateArtistFields,
-} from "./store.js?v=3.2";
-import { escapeHtml } from "./ui.js?v=3.2";
-import { $ } from "./shared.js?v=3.2";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.2";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.2";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.2";
+  saveVarmekart,
+  addPodcast,
+  updatePodcast,
+  updateConfig,
+} from "./store.js?v=3.3";
+import { escapeHtml } from "./ui.js?v=3.3";
+import { $ } from "./shared.js?v=3.3";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.3";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.3";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.3";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -106,14 +110,14 @@ function buildExportData() {
   // Sjangerbeskrivelser eksporteres NESTET i tre bolker (meta → main → sub), så
   // fila blir oversiktlig i stedet for én lang flat liste. Bolken bestemmes av
   // sjangerens TYPE (samme inndeling som lærer-dashboardet):
-  //   metasjanger (config.metaGenres) → meta
+  //   hovedsjanger (config.metaGenres) → meta
   //   tre-sjanger  (isMainGenre)       → main
   //   ellers (fri undersjanger)        → sub
-  // Metasjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
+  // Hovedsjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
   // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
   // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.
-  // story = lærer-redigert sjangerhistorie (overstyrer stories-default.js) —
-  // må med i backupen, ellers går redigeringene tapt ved «Erstatt alle».
+  // story = sjangerhistorien (eneste kilde — ingen standardtekst i koden) —
+  // må med i backupen, ellers går tekstene tapt ved «Erstatt alle».
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
@@ -126,7 +130,25 @@ function buildExportData() {
     return rest;
   });
 
-  return { artists, decades, genreDescriptions, tech };
+  // Innholdssidene (Om historie, Røtter) og varmekartet — fra content-
+  // samlingen, så backupen inneholder ALT pensuminnhold (koden har ingen
+  // fallback-tekster). Podkast-metadata og config/grensene tas også med.
+  const pages = {};
+  for (const [id, docData] of Object.entries(state.content || {})) {
+    if (id !== "varmekart" && docData?.body) pages[id] = docData;
+  }
+  const varmekart = state.content?.varmekart?.heat
+    ? { heat: state.content.varmekart.heat, updatedAt: state.content.varmekart.updatedAt || null }
+    : null;
+
+  const podcasts = state.podcasts.map((p) => {
+    const { id, ...rest } = p;
+    return rest;
+  });
+
+  const out = { artists, decades, genreDescriptions, tech, pages, podcasts, config: state.config || null };
+  if (varmekart) out.varmekart = varmekart;
+  return out;
 }
 
 function dateStamp() {
@@ -163,43 +185,74 @@ function formatImportErrors(errors) {
          `${shown.join("\n")}${more}\n\nRett opp filen og prøv igjen.`;
 }
 
+// Innholdsdeler en importfil kan bære utover artistene.
+const CONTENT_KEYS = ["decades", "genreDescriptions", "subgenres", "tech", "pages", "varmekart", "podcasts", "config"];
+
+function importParts(data) {
+  const parts = [];
+  const artistCount = (data.artists || []).filter(a => a.name).length;
+  if (artistCount) parts.push(`${artistCount} artister`);
+  const decadeCount = Object.keys(data.decades || {}).length;
+  if (decadeCount) parts.push(`${decadeCount} tiårsbeskrivelser`);
+  const subCount = Object.keys(data.genreDescriptions || {}).length;
+  if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
+  if ((data.tech || []).length) parts.push(`${data.tech.length} teknologier`);
+  const pageCount = Object.keys(data.pages || {}).length;
+  if (pageCount) parts.push(`${pageCount} innholdsside(r)`);
+  if (data.varmekart?.heat) parts.push(`varmekart (${Object.keys(data.varmekart.heat).length} sjangre)`);
+  if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
+  if (data.config) parts.push("innstillinger/grenser");
+  return parts;
+}
+
 async function handleImportFile(file) {
   if (!file) return;
   let raw;
   try { raw = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
 
-  let artists, decades, genreDescriptions, tech;
+  let data;
   if (Array.isArray(raw)) {
-    artists = raw;
-    decades = {};
-    genreDescriptions = {};
-    tech = [];
-  } else if (raw && typeof raw === "object" && Array.isArray(raw.artists)) {
-    artists = raw.artists;
-    decades = raw.decades || {};
-    // Nytt nøkkelnavn er «genreDescriptions»; eldre filer bruker «subgenres».
-    // Nytt format er nestet pr. nivå — flat ut til { navn: dokument }.
-    genreDescriptions = flattenGenreDescriptions(raw.genreDescriptions || raw.subgenres || {});
-    tech = raw.tech || [];
+    data = { artists: raw, decades: {}, genreDescriptions: {}, tech: [] };
+  } else if (raw && typeof raw === "object" &&
+             (Array.isArray(raw.artists) || CONTENT_KEYS.some((k) => raw[k]))) {
+    // Filer UTEN artister godtas også — rene innholdsfiler (sider, varmekart,
+    // historier/beskrivelser, podkaster, config).
+    data = {
+      artists: Array.isArray(raw.artists) ? raw.artists : [],
+      decades: raw.decades || {},
+      // Nytt nøkkelnavn er «genreDescriptions»; eldre filer bruker «subgenres».
+      // Nytt format er nestet pr. nivå — flat ut til { navn: dokument }.
+      genreDescriptions: flattenGenreDescriptions(raw.genreDescriptions || raw.subgenres || {}),
+      tech: raw.tech || [],
+      pages: raw.pages || {},
+      varmekart: raw.varmekart || null,
+      podcasts: raw.podcasts || [],
+      config: raw.config || null,
+    };
   } else {
-    alert("Ugyldig format — filen må være en array eller et objekt med «artists»."); return;
+    alert("Ugyldig format — filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
   }
 
   // Valider HELE artistlista før noe kan skrives/slettes. Slår feil her ⇒
   // ingenting røres, og «Erstatt alle» kan ikke slette dagens data og så
   // feile på en skjev fil.
-  const { ok, errors } = validateArtistsForImport(artists);
+  const { ok, errors } = validateArtistsForImport(data.artists);
   if (!ok) { alert(formatImportErrors(errors)); return; }
 
-  pendingImportData = { artists, decades, genreDescriptions, tech };
-  const parts = [];
-  const artistCount = artists.filter(a => a.name).length;
-  if (artistCount) parts.push(`${artistCount} artister`);
-  const decadeCount = Object.keys(decades).length;
-  if (decadeCount) parts.push(`${decadeCount} tiårsbeskrivelser`);
-  const subCount = Object.keys(genreDescriptions).length;
-  if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
-  if (tech.length) parts.push(`${tech.length} teknologier`);
+  const parts = importParts(data);
+  if (!parts.length) { alert("Fila inneholder ikke noe å importere."); return; }
+
+  // Ren innholdsfil (ingen artister): erstatt/flett-valget gjelder bare
+  // artistlista — importer innholdet direkte etter én bekreftelse.
+  if (!data.artists.length) {
+    if (!confirm(`Importere ${parts.join(", ")}?\n\nEksisterende innhold med samme navn overskrives.`)) return;
+    await importDescriptions(data);
+    await importTechItems(data.tech);
+    await importExtras(data);
+    return;
+  }
+
+  pendingImportData = data;
   $("#import-choice-desc").textContent = `Filen inneholder ${parts.join(", ")}.`;
   openAdminModal("modal-import-choice");
 }
@@ -208,12 +261,13 @@ export function setupImportChoice() {
   $("#import-replace").addEventListener("click", async () => {
     closeAdminModal("modal-import-choice");
     if (pendingImportData) {
-      // Bare importer beskrivelser/teknologi hvis selve erstatningen faktisk
-      // ble gjennomført (læreren kan ha avbrutt bekreftelsen).
+      // Bare importer beskrivelser/teknologi/innhold hvis selve erstatningen
+      // faktisk ble gjennomført (læreren kan ha avbrutt bekreftelsen).
       const didReplace = await handleReplace(pendingImportData.artists);
       if (didReplace) {
         await importDescriptions(pendingImportData);
         await importTechItems(pendingImportData.tech);
+        await importExtras(pendingImportData);
       }
     }
     pendingImportData = null;
@@ -224,6 +278,7 @@ export function setupImportChoice() {
       await handleMergeFile(pendingImportData.artists);
       await importDescriptions(pendingImportData);
       await importTechItems(pendingImportData.tech);
+      await importExtras(pendingImportData);
     }
     pendingImportData = null;
   });
@@ -280,6 +335,55 @@ async function importDescriptions({ decades, genreDescriptions }) {
     alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
     alert(`${ok} beskrivelse(r) importert.`);
+  }
+}
+
+// Innholdssider, varmekart, podkaster og config fra importfila. Podkaster
+// oppdateres på tittel-match (så en re-import ikke dupliserer episoder);
+// config skrives i sin helhet når fila har den.
+async function importExtras({ pages, varmekart, podcasts, config }) {
+  const done = [];
+  const failed = [];
+
+  const pageEntries = Object.entries(pages || {})
+    .filter(([id, d]) => id !== "varmekart" && d && typeof d.body === "string" && d.body.trim())
+    .map(([id, d]) => ({ id, data: { body: d.body, updatedAt: d.updatedAt || new Date().toISOString() } }));
+  if (pageEntries.length) {
+    try { await saveDocsBulk("content", pageEntries); done.push(`${pageEntries.length} innholdsside(r)`); }
+    catch (e) { console.error("Side-import feilet:", e); failed.push("innholdssidene"); }
+  }
+
+  if (varmekart && varmekart.heat && typeof varmekart.heat === "object") {
+    try { await saveVarmekart(varmekart.heat); done.push(`varmekartet (${Object.keys(varmekart.heat).length} sjangre)`); }
+    catch (e) { console.error("Varmekart-import feilet:", e); failed.push("varmekartet"); }
+  }
+
+  if (Array.isArray(podcasts) && podcasts.length) {
+    try {
+      const byTitle = new Map(state.podcasts.map((p) => [String(p.title || "").trim().toLowerCase(), p]));
+      let n = 0;
+      for (const ep of podcasts) {
+        const title = String(ep?.title || "").trim();
+        if (!title) continue;
+        const { id: _omit, ...epData } = ep;
+        const existing = byTitle.get(title.toLowerCase());
+        if (existing) await updatePodcast(existing.id, epData);
+        else await addPodcast(epData);
+        n++;
+      }
+      if (n) done.push(`${n} podkastepisode(r)`);
+    } catch (e) { console.error("Podkast-import feilet:", e); failed.push("podkastene"); }
+  }
+
+  if (config && typeof config === "object") {
+    try { await updateConfig(config); done.push("innstillinger/grenser"); }
+    catch (e) { console.error("Config-import feilet:", e); failed.push("innstillingene"); }
+  }
+
+  if (failed.length) {
+    alert(`Kunne ikke importere ${failed.join(", ")}.\n\nSannsynlig årsak: Firestore-reglene er ikke publisert for 'content'-samlingen.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+  } else if (done.length) {
+    alert(`Importert: ${done.join(", ")}.`);
   }
 }
 

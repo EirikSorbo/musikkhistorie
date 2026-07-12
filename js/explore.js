@@ -1,19 +1,21 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.2";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.2";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.2";
-import { isVisible } from "./limits.js?v=3.2";
-import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.2";
-import { renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.2";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.2";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.2";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.2";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.2";
-import { renderSjangerhimmel } from "./constellation.js?v=3.2";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.3";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.3";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.3";
+import { isVisible } from "./limits.js?v=3.3";
+import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.3";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.3";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.3";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.3";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.3";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.3";
+import { renderSjangerhimmel } from "./constellation.js?v=3.3";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
-// «Varmen» er derimot redaksjonell: nivå 0–5 for hvor toneangivende sjangeren
-// var det tiåret. Sjangre som mangler i HEAT vises som «ingen data».
+// «Varmen» er redaksjonell: nivå 0–5 for hvor toneangivende sjangeren var det
+// tiåret. Nivåene bor i Firestore (content/varmekart.heat, importert fra
+// innholds-JSON eller redigert via celleklikk som lærer) — sjangre uten data
+// vises som «ingen data».
 const VK_DECADES = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
 // Cellene fargelegges i hver sjangers familiefarge (fra slektstreet), mens
 // varmenivået (0–5) styrer lysheten: lyst = lite toneangivende, mørkt = mye.
@@ -29,72 +31,6 @@ function heatColor(famHex, level) {
   const tint = mix(white, base, 0.12 + 0.88 * t);  // hvitt → familiefarge
   return rgbToHex(mix(tint, black, 0.12 * t));      // mørkne toppen litt for valør
 }
-const VK_HEAT = {
-  "Blues":         [2, 3, 4, 4, 4, 5, 4, 3, 2, 2, 2, 2, 2],
-  "Ragtime":       [4, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  "Tin Pan Alley": [0, 3, 4, 4, 4, 3, 1, 0, 0, 0, 0, 0, 0],
-  "Jazz":          [0, 2, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2],
-  "Country":       [0, 0, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-  "Gospel":        [0, 0, 0, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2],
-  "Swing":         [0, 0, 1, 4, 5, 2, 1, 0, 0, 0, 0, 0, 0],
-  "Bluegrass":     [0, 0, 0, 0, 2, 3, 3, 2, 2, 2, 2, 2, 2],
-  "Honky tonk":    [0, 0, 0, 0, 3, 4, 3, 2, 1, 1, 1, 1, 1],
-  "Bebop":         [0, 0, 0, 0, 3, 5, 3, 1, 1, 1, 1, 1, 1],
-  "R&B":           [0, 0, 0, 0, 3, 4, 4, 3, 3, 3, 3, 3, 3],
-  "Nashville":     [0, 0, 0, 0, 0, 2, 4, 3, 3, 2, 2, 2, 2],
-  "Chicago blues": [0, 0, 0, 0, 1, 4, 4, 2, 2, 1, 1, 1, 1],
-  "Cool jazz":     [0, 0, 0, 0, 0, 3, 3, 1, 1, 1, 1, 1, 1],
-  "Hard bop":      [0, 0, 0, 0, 0, 2, 4, 2, 1, 1, 1, 1, 1],
-  "Soul":          [0, 0, 0, 0, 0, 1, 5, 4, 2, 2, 2, 2, 2],
-  "Modal jazz":    [0, 0, 0, 0, 0, 1, 3, 2, 1, 1, 1, 1, 1],
-  "Free jazz":     [0, 0, 0, 0, 0, 0, 3, 2, 1, 1, 1, 1, 1],
-  "Funk":          [0, 0, 0, 0, 0, 0, 2, 4, 3, 2, 2, 2, 2],
-  "Reggae":        [0, 0, 0, 0, 0, 0, 2, 4, 3, 2, 2, 2, 2],
-  "Outlaw":        [0, 0, 0, 0, 0, 0, 0, 3, 2, 1, 1, 1, 1],
-  "Fusion":        [0, 0, 0, 0, 0, 0, 1, 4, 3, 2, 2, 2, 2],
-  "Hip-hop":       [0, 0, 0, 0, 0, 0, 0, 2, 4, 5, 5, 5, 5],
-  "Disco":         [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0, 0],
-  "House":         [0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4],
-  "Techno":        [0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 4, 4, 4],
-  "Americana":     [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3],
-  "Neo-soul":      [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 3, 3],
-  "Trance / DnB":  [0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4],
-  "Nu-jazz":       [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3],
-  "Folk":            [0, 0, 0, 0, 2, 3, 4, 2, 1, 1, 1, 1, 1],
-  "Rock'n'roll":     [0, 0, 0, 0, 0, 5, 3, 1, 0, 0, 0, 0, 0],
-  "British invasion":[0, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0],
-  "Blues Rock":      [0, 0, 0, 0, 0, 0, 3, 4, 2, 1, 1, 1, 1],
-  "Fjelljazz":       [0, 0, 0, 0, 0, 0, 0, 3, 3, 2, 2, 2, 2],
-  "Gangsta rap":     [0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 3, 2, 1],
-  "Trap":            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 5],
-  "Elektronika":     [0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 3, 3],
-  "EDM":             [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 5, 4],
-  "Rock":            [0, 0, 0, 0, 0, 1, 5, 5, 4, 3, 3, 2, 2],
-  "Pop":             [0, 0, 0, 0, 0, 1, 4, 3, 4, 5, 5, 5, 5],
-};
-
-// Varmen er redaksjonell og kan ikke utledes fra treet. Varsle derfor i
-// konsollen om sjangre (noder) som mangler en VK_HEAT-rad, så de ikke stille
-// vises som «ingen data» i varmekartet.
-{
-  const missing = GENEALOGY_MAIN_GENRES.filter((sj) => !VK_HEAT[sj]);
-  if (missing.length) {
-    console.warn(
-      `Varmekart: ${missing.length} sjanger(e) mangler VK_HEAT-rad i explore.js og vises som «ingen data»:`,
-      missing
-    );
-  }
-  // Motsatt vei: VK_HEAT-rader som ikke matcher en tre-sjanger (g≠null) kan
-  // aldri rendres — fanger feilstavinger, omdøpinger og foreldreløse rader.
-  const orphan = Object.keys(VK_HEAT).filter((k) => !GENEALOGY_MAIN_GENRES.includes(k));
-  if (orphan.length) {
-    console.warn(
-      `Varmekart: ${orphan.length} VK_HEAT-rad(er) matcher ingen tre-sjanger og vises aldri:`,
-      orphan
-    );
-  }
-}
-
 const MODAL_HTML = `
 <!-- Teknologi -->
 <div class="modal-backdrop" id="modal-teknologi">
@@ -186,6 +122,19 @@ const MODAL_HTML = `
     </div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter hovedsjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
+  </div>
+</div>
+
+<!-- Varmekart-redigering (lærer): klikk på en celle åpner nivåvelgeren -->
+<div class="modal-backdrop" id="modal-vk-edit">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <h2 id="vke-title"></h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:12px;font-size:0.86rem">Hvor toneangivende var sjangeren dette tiåret? 0 = ikke toneangivende, 5 = mest. «Ingen data» fjerner verdien.</p>
+    <div id="vke-buttons" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div id="vke-msg" class="form-msg" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -334,16 +283,25 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
-<!-- Om historie: forfattet, hardkodet prosa (samme mønster som Røtter) —
-     introduksjonen til musikkhistorie fra MUR114: hvorfor faget, fortellinger
-     og identitet, hvem som forteller, alternative linser og begrepene. -->
+<!-- Innholdssidene «Om historie» og «Røtter før 1910»: teksten bor i
+     Firestore (content/omHistorie og content/rotter, markdown-light) og
+     rendres ved hver åpning — ingen hardkodet tekst i koden. Foten er
+     navigasjon (kode), ikke innhold. -->
 <div class="modal-backdrop" id="modal-om-historie">
   <div class="modal">
     <div class="modal-head">
       <h2>Om historie</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="om-historie-body" class="rotter"></div>
+    <div id="omh-extra"></div>
+    <div id="om-historie-body" class="story-body"></div>
+    <div class="rotter-foot">
+      <p class="muted">Klar for selve historien? Start der alt begynner.</p>
+      <div class="rotter-links">
+        <button class="btn ghost" id="omh-rotter">Røtter før 1910</button>
+        <button class="btn ghost" id="omh-historier">Sjangerhistoriene</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -353,7 +311,15 @@ ${TECH_DETAIL_MODAL_HTML}
       <h2>Røtter før 1910</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="rotter-body" class="rotter"></div>
+    <div id="rotter-extra"></div>
+    <div id="rotter-body" class="story-body"></div>
+    <div class="rotter-foot">
+      <p class="muted">Røttene er selve premisset for de «lange linjene». Vil du se hvordan de vokser videre?</p>
+      <div class="rotter-links">
+        <button class="btn ghost" id="rotter-tre">Se slektstreet</button>
+        <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -372,129 +338,6 @@ ${TECH_DETAIL_MODAL_HTML}
     <div id="hist-body" class="story-body"></div>
   </div>
 </div>
-`;
-
-// «Hør:»-lenker i røtter-fortellingen peker til YouTube-søk (samme valg som
-// resten av appen — brukeren foretrekker søkelenker framfor harde URL-er).
-const ytSearch = (q) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
-
-// «Om historie»: introduksjonen til musikkhistorie (fra MUR114-kompendiet,
-// uten formalitetene) — hvorfor faget, fortellinger og identitet, hvem som
-// forteller, alternative linser og begrepsavklaringene, med en utvidet del om
-// historiebevissthet. Statisk, forfattet prosa — redigeres her i koden.
-const OM_HISTORIE_BODY = `
-  <p class="rotter-intro">Hvorfor musikkhistorie? Fordi vi skal snakke og lytte oss gjennom det siste drøye århundrets absolutte toppunkter: de største, mest kreative, mest innflytelsesrike og mest virtuose musikerne og formidlerne — de som har preget <strong>ikke bare hva vi lytter til, men hva vi lytter etter</strong>. Premissleverandørene. Historieskaperne. De rebelske nytenkerne og de kompromissløse perfeksjonistene. Og vi skal ikke bare lære <em>om</em> dem — vi skal <strong>lære av dem</strong>: prøve å forstå ikke bare hva de gjorde, men <em>hvorfor</em>, og hvordan det endte opp med å påvirke oss, her og nå. For musikkhistorie er ikke bare historien om musikk. Det er <strong>historien om oss</strong>.</p>
-
-  <section class="rotter-sec">
-    <h3>Alt er fortellinger</h3>
-    <p>På mange måter kan vi si at <em>alt</em> er historier og fortellinger. Hver av oss bærer på de <strong>små fortellingene</strong> — ferien, hunden som veltet en hel melkekartong den gangen på hytta. De <strong>viktige fortellingene</strong> som har preget oss: da vi ble født, da foreldrene våre ble skilt, da farfar døde for tidlig. De <strong>vage fortellingene</strong>, der alle husker hendelsen litt forskjellig — som da du fikk skylda for noe en annen gjorde. De <strong>vakre</strong> og de <strong>stygge</strong>. Og over dem igjen: de <strong>store, felles fortellingene</strong> — om Abraham som var villig til å ofre sønnen sin, om Buddha som ga avkall på all rikdom, om den tomme graven — og de <strong>ideologiske og motstridende</strong>, der samme hendelse fortelles som et grusomt terrorangrep av noen og som en vellykket hellig krig av andre.</p>
-    <p>Tenk på hva du ville spurt om hvis du fikk møte en musiker du ser opp til. Sannsynligvis en variant av: <em>hva gjorde du for å komme dit du er?</em> Med andre ord: hva er <em>din</em> historie — og hva kan jeg lære av den? Det kollektive er nøyaktig samme spørsmål i stort: hva er <em>vår</em> historie, og hva kan vi lære av den?</p>
-    <p><strong>Vi er våre egne fortellinger — vi er historie.</strong> Uten historie, uten en fortid, har vi ingen identitet; da er vi bare kropper som beveger seg tilfeldig rundt på en stein i universet. Vi <em>er</em> fortellingene vi har fortalt, og vi <em>blir</em> fortellingene vi forteller.</p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Hvem forteller — og hva fortelles ikke?</h3>
-    <p>Prøv en liten øvelse: skriv (eller bare tenk gjennom) noen setninger som oppsummerer din egen historie. Se så på alt du <em>ikke</em> tok med. Hvordan hadde fortellingen sett ut om den bare handlet om familiesituasjonen din? Bare om musikken? Bare om gamingen? Og hvem forteller? Ville bestevennen din fortalt den samme fortellingen om deg? Moren din? Eksen din?</p>
-    <p>Nøyaktig det samme gjelder når noen forteller en musikkhistorie: <strong>Hva fortelles — og hvorfor? Hva fortelles <em>ikke</em>? Hvem forteller — og hvem slipper ikke til?</strong> Og det trengs en viss ydmykhet overfor ord som «først», «best» og «mest innflytelsesrik»: det er ofte en sammenheng mellom dem, men ikke alltid — noen hadde bare flaks, eller var sleipe nok.</p>
-    <p>Historien skaper oss, ikke bare som enkeltpersoner, men som fellesskap. Da trenger vi noe felles — en nesten umulig oppgave, for hva er felles for hvem? Målet er likevel et <strong>felles referansegrunnlag</strong> og en felles identitet, med rom for individuelle vektlegginger — og med et jevnlig blikk til siden, mot det som faller utenfor. Dette pensumet er et slikt utvalg, og ethvert utvalg er ett av mange mulige. Ser du at noe vesentlig mangler, foreslå det.</p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Samme historie, andre linser</h3>
-    <p>Historien er ikke alltid pen — den kan være forferdelig stygg. Det skal vi også snakke om, for hvis vi glemmer det stygge, kan det fort skje igjen. Hvilke fortellinger som fortelles, og hvilken linse man ser dem gjennom, er alltid en avveining — de samme hendelsene blir helt forskjellige historier gjennom ulike linser:</p>
-    <p><strong>Frigjøring og undertrykkelse.</strong> Arbeidssangene som holdt slavene oppe på plantasjene, og forbudet mot afroamerikanske kulturuttrykk. Blackface-tradisjonen og minstrel shows som latterliggjorde afroamerikanere og bagatelliserte slavetilværelsen. Historiene om hvordan turnerende afroamerikanske musikere ble behandlet, og radiostasjonene som nektet å spille musikken deres — med egne, adskilte Billboard-lister. Billie Holidays «Strange Fruit» og Sam Cookes «A Change Is Gonna Come». Og mønsteret som gjentar seg: hvite artister som kopierer afroamerikansk musikk og sitter igjen med pengene — swing-æraens jazz, rock som hvit r&amp;b, techno og EDM bygget på svart house.</p>
-    <p class="rotter-listen">Hør: <a href="${ytSearch("Billie Holiday Strange Fruit")}" target="_blank" rel="noopener">Strange Fruit</a> · <a href="${ytSearch("Sam Cooke A Change Is Gonna Come")}" target="_blank" rel="noopener">A Change Is Gonna Come</a></p>
-    <p><strong>Kvinnene i musikken.</strong> Ma Rainey med glitter og bling i bluesens spede begynnelse; Bessie Smith og Big Mama Thornton som la grunnlaget for moderne blues; Billie Holiday som torde å ta de afroamerikanskes rettigheter inn i musikken; Maybelle Carter som revolusjonerte gitarteknikken i countrymusikken; Janis Joplin som kom dundrende inn på rockescenen i 1967 med sin blues-tilnærming; Joni Mitchell som synger om å måtte gi bort datteren sin fordi musikklivet ikke lot seg forene med å være mor; Madonna som redefinerte kvinners makt i popmusikken og tok et slags offentlig eierskap over egen seksualitet; Björk som sprenger konvensjonene for bruk av musikkteknologi; Taylor Swift som trakk musikken sin fra Spotify for å tvinge frem bedre avtaler, og som spiller inn albumene sine på nytt for å eie dem selv. Og herhjemme: Susanne Sundfør som tok et oppgjør med kategoriseringene i Spellemannsprisen — live, i beste sendetid — og Tora Dahle Aagård, en av de hippeste bluesgitaristene i Norge akkurat nå. Samtidig løper en mørkere tråd gjennom det hele: hvordan kvinner igjen og igjen presses til å spille på kropp for å oppnå suksess.</p>
-    <p><strong>Musikk som bærer av tekst.</strong> Sanger som identitets- og nyhetsbærere i ulike kulturer — <em>griotene</em> i Vest-Afrika, <em>trubadurene</em> i Europa — en tradisjon amerikansk country har ført videre. Protestsangene på 50- og 60-tallet som bar frem en hel fredsbevegelse, og singer/songwriter-tradisjonen med noen av de vakreste tekstene i populærmusikkhistorien.</p>
-    <p>Eller helt andre linser igjen: musikk gjennom <strong>teknologiutviklingen</strong>, musikk som <strong>industri</strong>, musikk som noe <strong>kollektivt</strong>. Ingen av linsene er «den riktige» — men hvilken du velger, avgjør hvilken historie du får.</p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Sju begreper å tenke med</h3>
-    <p>Til slutt litt historieteknikk — noen distinksjoner som er greie å ha med seg, med samme eksempel hele veien:</p>
-    <p><strong>Hendelser</strong> er begivenheter som skjer i tid og rom. De er ikke fortellinger eller historie i seg selv — de er råmaterialet historien bygges av. <em>I 1959 ga Miles Davis ut Kind of Blue.</em></p>
-    <p><strong>Fortellinger</strong> er hendelser satt sammen i en meningsgivende rekkefølge, individuelle eller kollektive. <em>Utgivelsen av Kind of Blue etablerte for alvor Miles Davis som jazzpioner, og albumet står som en av de mest innflytelsesrike innspillingene i jazzhistorien.</em></p>
-    <p><strong>Narrativ</strong> er den «større fortellingen» som mange enkeltfortellinger bygger opp under — ikke bare hva som skjer, men hva innholdet er med på å etablere. <em>Når fortellingen om Miles Davis som kanskje tidenes viktigste jazzmusiker gjenfortelles, opprettholdes både at jazzen tilhører afroamerikanerne — og at jazzen i stor grad er utviklet og definert av menn.</em></p>
-    <p><strong>Historie</strong> er å sette hendelser inn i en sammenheng som gir mening — og en fagdisiplin for systematisk fremstilling av fortiden, med krav til metode, kildekritikk og refleksjon: å analysere og forklare hendelser og narrativer på en måte som er etterprøvbar og begrunnet i kilder.</p>
-    <p><strong>Erindring</strong> handler om hvordan fortiden <em>huskes</em>, individuelt og kollektivt. Ikke en «lagret hukommelse», men en aktiv prosess der fortiden gis mening i lys av nåtiden og fremtiden — som familiens minner om krigen, eller nasjonale minnedager.</p>
-    <p><strong>Historiebruk</strong> handler om hvordan fortiden <em>brukes</em> i praksis: vitenskapelig (historikernes arbeid), politisk (legitimering og maktkamp), moralsk (skyld og ansvar), identitetsskapende — eller kommersielt, som i turisme, film og populærkultur.</p>
-    <p><strong>Historiebevissthet</strong> er bevisstheten om samspillet mellom fortid, nåtid og fremtid — det største av begrepene, og det får derfor et eget avsnitt.</p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Historiebevissthet — fortid, nåtid og fremtid i samspill</h3>
-    <p>Historiebevissthet handler om at de tre tidene aldri opptrer alene: <strong>forståelsen av fortiden former hvordan vi tolker nåtiden og hva vi forventer av fremtiden</strong> — og det går også motsatt vei. Det er nåtidens spørsmål som avgjør hva vi leter etter i fortiden, og hvilke deler av den vi løfter frem. Historien «ligger» altså ikke bare der bak oss, ferdig fortalt; den gjenfortelles hele tiden av noen som står et bestemt sted og ser i en bestemt retning.</p>
-    <p>I musikken er dette samspillet overalt. Hva vi regner som «ekte» eller «viktig» musikk i dag, er formet av fortellingene om tidligere tiår — og hver gang en artist samples, hylles eller gjenutgis, er det nåtiden som velger hvilken fortid som skal leve videre. Retrobølger og sampling er pågående samtaler med fortiden. Strømmetjenestene har gjort hele musikkhistorien tilgjengelig samtidig, slik at katalogen konkurrerer med det nye — fortiden er blitt en del av nåtidens lydbilde på en måte ingen tidligere generasjon har opplevd.</p>
-    <p>Og for deg som utøver: du står selv midt i denne strømmen. Musikken du lager i dag, er morgendagens historie, og fortellingen du velger å fortelle om deg selv og musikken din — hvor du kommer fra, hvem du bygger på, hva du bryter med — er din egen historiebruk. Historiebevissthet er å vite hvilke skuldre du står på, å vite at kanonen du har arvet er konstruert og kunne stille spørsmål ved den — og å vite at du selv er med på å avgjøre hva som fortelles videre. Det er kanskje det viktigste dette emnet prøver å bygge.</p>
-  </section>
-
-  <div class="rotter-foot">
-    <p class="muted">Klar for selve historien? Start der alt begynner.</p>
-    <div class="rotter-links">
-      <button class="btn ghost" id="omh-rotter">Røtter før 1910</button>
-      <button class="btn ghost" id="omh-historier">Sjangerhistoriene</button>
-    </div>
-  </div>
-`;
-
-// Redaksjonell inngangstekst til røttene (før ca. 1910). Statisk, forfattet
-// prosa — de lange linjene fra vestafrikanske/europeiske tradisjoner og
-// slaveriet fram til de første bluesinnspillingene. Redigeres her i koden.
-const ROTTER_BODY = `
-  <p class="rotter-intro">All musikken i dette pensumet — blues, jazz, country, gospel, R&amp;B — vokser ut av noe eldre enn selve platene. Røttene ligger i møtet mellom vestafrikanske musikktradisjoner og europeisk folke- og salmemusikk i USA, formet av slaveriet. Her er de lange linjene fra 1600-tallet fram til de første bluesplatene rundt 1900–1910.</p>
-
-  <section class="rotter-sec">
-    <h3>Afrikanske røtter og slaveriet</h3>
-    <p>Gjennom den transatlantiske slavehandelen ble afrikanere ført til Amerika i millioner. De brakte med seg musikalske grunntrekk som skulle prege all senere amerikansk populærmusikk: <strong>call-and-response</strong> (forsanger og svar-kor), kryssrytmer og synkopering, <strong>bøyde og «blå» toner</strong>, og musikk vevd inn i arbeid, religion og fellesskap. Slaveeierne forbød ofte tromming — av frykt for kommunikasjon og opprør — så rytmen overlevde i klapping, stamping og stemmebruk.</p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Congo Square</h3>
-    <p>I New Orleans fantes et sjeldent unntak: <strong>Congo Square</strong> (Place Congo). Her fikk slavebundne og frie svarte samles på søndager for å tromme, danse og synge i afrikansk tradisjon. Byen ble et møtepunkt der afrikansk, karibisk, fransk og spansk musikk smeltet sammen — grunnlaget for at nettopp New Orleans senere fødte jazzen.</p>
-    <p class="rotter-listen">Hør: <a href="${ytSearch("Congo Square African drumming New Orleans")}" target="_blank" rel="noopener">Congo Square-tromming</a></p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Work songs og field hollers</h3>
-    <p>På markene, og senere på jernbaner og lenkegjenger, holdt <strong>arbeidssanger</strong> takten og lettet slitet — i call-and-response. <strong>Field hollers</strong> var derimot ensomme, frie soloutrop: lange, bøyde, klagende melodilinjer. Denne uttrykksfulle, halvt snakkende solostemmen er en direkte forløper til bluesens vokal.</p>
-    <p class="rotter-listen">Hør: <a href="${ytSearch("Alan Lomax prison work song field holler")}" target="_blank" rel="noopener">arbeidssang / field holler (Lomax-opptak)</a></p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Spirituals og den svarte kirken</h3>
-    <p>Da mange slavebundne ble kristnet, smeltet bibeltekster sammen med afrikansk musikkform til <strong>spirituals</strong> — «sorrow songs» som «Swing Low, Sweet Chariot» og «Wade in the Water», ofte med skjulte budskap om frihet og flukt. Etter borgerkrigen brakte <strong>Fisk Jubilee Singers</strong> (fra 1871) spirituals ut til konsertscenen verden over. Kirken ble arnestedet som senere fødte <strong>gospel</strong>.</p>
-    <p class="rotter-listen">Hør: <a href="${ytSearch("Swing Low Sweet Chariot Fisk Jubilee Singers")}" target="_blank" rel="noopener">Swing Low, Sweet Chariot</a></p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Minstrel-show — den problematiske arven</h3>
-    <p>Amerikas første virkelige popkultur-industri var også dypt rasistisk. Fra 1830-tallet opptrådte hvite artister i <strong>blackface</strong> i <strong>minstrel-show</strong> og karikerte svarte mennesker (Thomas «Daddy» Rice' «Jim Crow»). Formen var enormt populær og formet notesalg, scene og sang (blant annet Stephen Fosters sanger). Den sementerte nedverdigende stereotypier — samtidig som den, paradoksalt nok, mot slutten av 1800-tallet ble en av de få inngangene svarte utøvere selv fikk til den kommersielle scenen. Amerikansk populærmusikks framvekst kan ikke forstås uten denne betente arven.</p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Ragtime</h3>
-    <p>Rundt 1897–1918 ble <strong>ragtime</strong> den første svartutviklede musikkformen som erobret hele Amerika — synkopert pianomusikk solgt som noter. <strong>Scott Joplin</strong> ga ut «Maple Leaf Rag» (1899) og «The Entertainer» (1902). De «raggede» (forskjøvne) rytmene ble en direkte byggestein i tidlig jazz.</p>
-    <p class="rotter-listen">Hør: <a href="${ytSearch("Scott Joplin Maple Leaf Rag")}" target="_blank" rel="noopener">Maple Leaf Rag</a> · <a href="${ytSearch("Scott Joplin The Entertainer")}" target="_blank" rel="noopener">The Entertainer</a></p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Bluesens fødsel (ca. 1900)</h3>
-    <p>I sørstatene, særlig <strong>Mississippi-deltaet</strong>, tok bluesen form rundt 1900 av field hollers, arbeidssanger og spirituals: 12-takters form, AAB-tekstlinjer og blå toner, gjerne med én sanger og gitar. <strong>W.&nbsp;C. Handy</strong> noterte og publiserte «Memphis Blues» (1912) og «St. Louis Blues» (1914) og løftet bluesen inn i notehandelen. Herfra går linjene videre til jazz, R&amp;B, rock og det meste av vestlig populærmusikk.</p>
-    <p class="rotter-listen">Hør: <a href="${ytSearch("W.C. Handy St. Louis Blues Bessie Smith")}" target="_blank" rel="noopener">St. Louis Blues</a></p>
-  </section>
-
-  <section class="rotter-sec">
-    <h3>Tidlig innspillingsteknologi</h3>
-    <p>Parallelt endret <strong>innspilt lyd</strong> alt. Edisons fonograf (1877) og voksylindre, og senere Emile Berliners <strong>grammofon</strong> med flate plater (1890-årene), gjorde at musikk kunne spres og bevares. Notehandelen i <strong>Tin Pan Alley</strong> (New York, fra 1880-årene) industrialiserte sangskrivingen. Selve platebransjen for svart musikk — «race records» — kom først rundt 1920 med Mamie Smiths «Crazy Blues», men det tekniske grunnlaget ble lagt her. Fra nå av er musikkhistorien i stor grad en historie om innspillinger.</p>
-  </section>
-
-  <div class="rotter-foot">
-    <p class="muted">Røttene er selve premisset for de «lange linjene». Vil du se hvordan de vokser videre?</p>
-    <div class="rotter-links">
-      <button class="btn ghost" id="rotter-tre">Se slektstreet</button>
-      <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen</button>
-    </div>
-  </div>
 `;
 
 let opts = null;
@@ -724,19 +567,50 @@ function renderTeknologiList(category) {
   renderTechList(el, s.techItems, category || "", buildLinkCtx());
 }
 
-function openVarmekart() {
-  const modal = document.getElementById("modal-varmekart");
-  if (!modal) return;
+// Rad-oppslag: alltid 13 celler (VK_DECADES), manglende/korte rader fylles
+// med null («ingen data») — så cellene alltid kan klikkes og redigeres.
+function vkRow(heat, sj) {
+  const raw = heat?.[sj];
+  return VK_DECADES.map((_, i) => {
+    const v = Array.isArray(raw) ? raw[i] : null;
+    return Number.isInteger(v) && v >= 0 && v <= 5 ? v : null;
+  });
+}
+
+// Husker hvilken metagruppe som står åpen, så redigering (som re-rendrer
+// gjennom contentChanged) ikke klapper akkordeonen sammen igjen.
+let vkOpenMeta = null;
+
+function renderVarmekartBody() {
   const body = document.getElementById("vk-body");
+  if (!body) return;
+  const s = getState();
+  const heat = s.content?.varmekart?.heat || null;
+  const hasData = !!heat && Object.keys(heat).length > 0;
   const cols = VK_DECADES.length;
   const gridStyle = `display:grid;grid-template-columns:128px repeat(${cols},minmax(32px,1fr));gap:3px`;
 
-  let html = `<div style="overflow-x:auto"><div style="min-width:600px">`;
+  let html = "";
+  if (!hasData) {
+    html += `<p class="gx-missing" style="margin-bottom:14px">${s.contentLoaded
+      ? "Varmekart-nivåene er ikke lagt inn ennå. Læreren legger dem inn via innholds-importen" + (opts.onHeatEdit ? " — eller ved å trykke på cellene under" : "") + "."
+      : "Laster innhold …"}</p>`;
+  }
+  html += `<div style="overflow-x:auto"><div style="min-width:600px">`;
   html += `<div style="${gridStyle};align-items:end;margin-bottom:3px"><div></div>`;
   html += VK_DECADES.map((d) => `<div style="text-align:center;font-size:0.72rem;color:var(--muted)">${d}</div>`).join("");
   html += `</div>`;
 
-  const firstHot = (sj) => { const i = (VK_HEAT[sj] || []).findIndex((v) => v > 0); return i < 0 ? 99 : i; };
+  const firstHot = (sj) => { const i = vkRow(heat, sj).findIndex((v) => v > 0); return i < 0 ? 99 : i; };
+
+  // Datadrevne konsistensvarsler (bare når data finnes): tre-sjangre uten rad
+  // vises som «ingen data»; rader uten tre-sjanger kan aldri rendres.
+  if (hasData) {
+    const missing = GENEALOGY_MAIN_GENRES.filter((sj) => !heat[sj]);
+    if (missing.length) console.warn(`Varmekart: ${missing.length} sjanger(e) mangler rad i content/varmekart og vises som «ingen data»:`, missing);
+    const orphan = Object.keys(heat).filter((k) => !GENEALOGY_MAIN_GENRES.includes(k));
+    if (orphan.length) console.warn(`Varmekart: ${orphan.length} rad(er) i content/varmekart matcher ingen tre-sjanger og vises aldri:`, orphan);
+  }
 
   // Grupper mainGenre etter metaGenre (supersjanger). Treet gir både
   // grupperingen (MAIN_GENRE_INFO[sj].meta) og fargene (…​.color), så
@@ -762,9 +636,10 @@ function openVarmekart() {
     const labels = (groups.get(meta) || []).sort((a, b) => firstHot(a) - firstHot(b) || a.localeCompare(b, "no"));
     if (!labels.length) continue;
     const gColor = groupColor(labels);
-    const open = groupIdx === 0;   // akkordeon: bare første metagruppe åpen ved start
+    // Akkordeon: gruppa som sist sto åpen (redigering re-rendrer), ellers første.
+    const open = vkOpenMeta ? meta === vkOpenMeta : groupIdx === 0;
 
-    html += `<div class="vk-group">`;
+    html += `<div class="vk-group" data-vk-meta="${escapeHtml(meta)}">`;
     // Gruppeoverskrift: klikkbar akkordeon-bryter — caret + farget prikk + navn + antall.
     html += `<button type="button" class="vk-group-head" aria-expanded="${open}" style="width:100%;display:flex;align-items:center;gap:9px;margin:${groupIdx === 0 ? "6px" : "10px"} 0 6px;padding:4px 0 5px;border:0;border-bottom:2px solid ${gColor}40;background:none;cursor:pointer;text-align:left">`;
     html += `<span class="vk-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>`;
@@ -778,14 +653,17 @@ function openVarmekart() {
     for (const sj of labels) {
       const rowColor = MAIN_GENRE_INFO[sj]?.color || gColor;
       usedFams.add(MAIN_GENRE_INFO[sj]?.fam);
-      const vals = VK_HEAT[sj] || VK_DECADES.map(() => null);
+      const vals = vkRow(heat, sj);
       html += `<div style="${gridStyle};align-items:center;margin-bottom:3px">`;
       html += `<div style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
       html += vals.map((v, i) => {
         const has = v != null;
         const bg = has ? heatColor(rowColor, v) : "#f5f8f6";
-        const title = `${sj} · ${meta} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}`;
-        return `<div title="${escapeHtml(title)}" style="height:30px;border-radius:6px;background:${bg}${has ? "" : ";border:1px dashed var(--line-strong)"}"></div>`;
+        const title = `${sj} · ${meta} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}${opts.onHeatEdit ? " · klikk for å endre" : ""}`;
+        // Lærer: cellene er klikkbare (nivåvelger). Student: rene ruter.
+        return opts.onHeatEdit
+          ? `<button type="button" class="vk-cell" data-vk-genre="${escapeHtml(sj)}" data-vk-idx="${i}" title="${escapeHtml(title)}" style="height:30px;border-radius:6px;padding:0;cursor:pointer;background:${bg};border:${has ? "1px solid transparent" : "1px dashed var(--line-strong)"}"></button>`
+          : `<div title="${escapeHtml(title)}" style="height:30px;border-radius:6px;background:${bg}${has ? "" : ";border:1px dashed var(--line-strong)"}"></div>`;
       }).join("");
       html += `</div>`;
     }
@@ -819,6 +697,7 @@ function openVarmekart() {
   body.querySelectorAll(".vk-group-head").forEach((head) => {
     head.addEventListener("click", () => {
       const wasOpen = head.getAttribute("aria-expanded") === "true";
+      vkOpenMeta = wasOpen ? "__ingen" : (head.closest(".vk-group")?.dataset.vkMeta || null);
       body.querySelectorAll(".vk-group").forEach((grp) => {
         const h = grp.querySelector(".vk-group-head");
         const rows = grp.querySelector(".vk-group-rows");
@@ -831,6 +710,59 @@ function openVarmekart() {
     });
   });
 
+  // Lærer: klikk på en celle åpner nivåvelgeren.
+  if (opts.onHeatEdit) {
+    body.querySelectorAll(".vk-cell").forEach((cell) => {
+      cell.addEventListener("click", () =>
+        openVkEdit(cell.dataset.vkGenre, Number(cell.dataset.vkIdx)));
+    });
+  }
+}
+
+function openVarmekart() {
+  const modal = document.getElementById("modal-varmekart");
+  if (!modal) return;
+  vkOpenMeta = null;   // frisk åpning: første gruppe åpen
+  renderVarmekartBody();
+  modalOpen(modal);
+}
+
+// Nivåvelgeren (lærer): «Blues · 1950-tallet» med knappene 0–5 + «Ingen
+// data». Lagring skjer via opts.onHeatEdit(sjanger, nyRad) — hele raden
+// sendes, så datalaget slipper å kjenne tiårsindeksen. Snapshotet oppdaterer
+// state.content → contentChanged() → varmekartet re-rendres bak velgeren.
+function openVkEdit(genre, idx) {
+  const modal = document.getElementById("modal-vk-edit");
+  if (!modal) return;
+  const heat = getState().content?.varmekart?.heat || {};
+  const row = vkRow(heat, genre);
+  const current = row[idx];
+  document.getElementById("vke-title").textContent = `${genre} · ${VK_DECADES[idx]}-tallet`;
+  const msg = document.getElementById("vke-msg");
+  msg.textContent = "";
+  msg.className = "form-msg";
+  const btns = document.getElementById("vke-buttons");
+  btns.innerHTML = [0, 1, 2, 3, 4, 5].map((v) =>
+    `<button type="button" class="btn ${current === v ? "primary" : "ghost"}" data-vke-level="${v}" style="min-width:44px">${v}</button>`
+  ).join("") +
+    `<button type="button" class="btn ${current == null ? "primary" : "ghost"}" data-vke-level="" style="flex:1">Ingen data</button>`;
+  btns.querySelectorAll("[data-vke-level]").forEach((b) => {
+    b.addEventListener("click", async () => {
+      const level = b.dataset.vkeLevel === "" ? null : Number(b.dataset.vkeLevel);
+      const newRow = row.slice();
+      newRow[idx] = level;
+      msg.textContent = "Lagrer …";
+      msg.className = "form-msg ok";
+      try {
+        await opts.onHeatEdit(genre, newRow);
+        modalClose(modal);
+      } catch (err) {
+        console.error("Varmekart-lagring feilet:", err);
+        msg.textContent = "Feil: " + (err?.message || err);
+        msg.className = "form-msg error";
+      }
+    });
+  });
   modalOpen(modal);
 }
 
@@ -1256,46 +1188,57 @@ function openStoreBildet() {
   modalOpen(document.getElementById("modal-store-bildet"));
 }
 
-// Om historie: statisk forfattet introduksjon (fra MUR114, uten formaliteter).
-// Innholdet fylles inn én gang; foten lenker videre til Røtter og
-// Sjangerhistoriene (åpnes OPPÅ denne modalen, ← går tilbake).
+// Innholdssidene «Om historie» (omHistorie) og «Røtter før 1910» (rotter):
+// teksten bor i Firestore (content/<id>.body, markdown-light) og rendres ved
+// hver åpning, så import/redigering slår gjennom umiddelbart. INGEN fallback-
+// tekst i koden (brukervalg) — mangler teksten, sies det tydelig ifra i
+// stedet for å vise en utdatert reserve.
+function renderPage(pageId, bodyElId, extraElId) {
+  const body = document.getElementById(bodyElId);
+  if (!body) return;
+  const s = getState();
+  const page = pageFor(pageId, s.content);
+  if (page) {
+    const lc = buildLinkCtx();
+    body.innerHTML = renderStoryHtml(page.body, lc);
+    wireLinks(body, lc);
+  } else {
+    body.innerHTML = `<p class="gx-missing">${s.contentLoaded
+      ? "Teksten er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen."
+      : "Laster innhold …"}</p>`;
+  }
+  // Lærer: rediger-knapp over teksten (samme mønster som historiene).
+  const extra = document.getElementById(extraElId);
+  if (extra) {
+    extra.innerHTML = "";
+    if (opts.onPageEdit) {
+      extra.innerHTML = `<div class="modal-foot-right" style="margin:0 0 10px">
+        <button class="btn ghost small" data-page-edit="${pageId}">Rediger</button>
+      </div>`;
+      extra.querySelector("[data-page-edit]").addEventListener("click", () => opts.onPageEdit(pageId));
+    }
+  }
+}
+
 function openOmHistorie() {
   const modal = document.getElementById("modal-om-historie");
   if (!modal) return;
-  const body = document.getElementById("om-historie-body");
-  if (body && !body.dataset.filled) {
-    body.innerHTML = OM_HISTORIE_BODY;
-    body.dataset.filled = "1";
-    body.querySelector("#omh-rotter")?.addEventListener("click", openRotter);
-    body.querySelector("#omh-historier")?.addEventListener("click", () => openHistorier());
-  }
+  renderPage("omHistorie", "om-historie-body", "omh-extra");
   modalOpen(modal);
 }
 
-// Røtter før 1910: statisk forfattet fortelling. Innholdet fylles inn én gang
-// og «Se slektstre/tidslinje»-knappene kobles da (åpnes OPPÅ røtter-modalen).
 function openRotter() {
   const modal = document.getElementById("modal-rotter");
   if (!modal) return;
-  const body = document.getElementById("rotter-body");
-  if (body && !body.dataset.filled) {
-    body.innerHTML = ROTTER_BODY;
-    body.dataset.filled = "1";
-    const treBtn = body.querySelector("#rotter-tre");
-    if (treBtn) {
-      if (opts.onSlektstre) treBtn.addEventListener("click", () => opts.onSlektstre());
-      else treBtn.style.display = "none";
-    }
-    const tlBtn = body.querySelector("#rotter-tidslinje");
-    if (tlBtn) tlBtn.addEventListener("click", () => openTidslinje());
-  }
+  renderPage("rotter", "rotter-body", "rotter-extra");
   modalOpen(modal);
 }
 
-// Sjangerhistoriene: standardtekst fra stories-default.js, overstyrt av
-// lærer-redigert versjon i genreDescs (se storyFor). Rendres på nytt ved hvert
-// chip-bytte OG hver åpning, så lærer-lagring slår gjennom umiddelbart.
-// Artist-/sjangernavn i teksten lenkes og åpner kortene OPPÅ historien.
+// Sjangerhistoriene: teksten bor i Firestore (genreDescriptions/<sjanger>
+// .story.body — importert eller lærer-redigert; se storyFor). INGEN
+// standardtekst i koden. Rendres på nytt ved hvert chip-bytte OG hver åpning,
+// så lærer-lagring slår gjennom umiddelbart. Artist-/sjangernavn i teksten
+// lenkes og åpner kortene OPPÅ historien.
 let currentStoryGenre = null;
 
 function renderHistorie(genre) {
@@ -1309,7 +1252,7 @@ function renderHistorie(genre) {
   const body = document.getElementById("hist-body");
   body.innerHTML = story
     ? renderStoryHtml(story.body, lc)
-    : `<p class="muted">Ingen historie for ${escapeHtml(genre)} ennå.</p>`;
+    : `<p class="gx-missing">Historien om ${escapeHtml(genre)} er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen.</p>`;
   wireLinks(body, lc);
 
   // Lærer: rediger-knapp over teksten (samme mønster som sgi-edit-btn).
@@ -1317,7 +1260,7 @@ function renderHistorie(genre) {
   extra.innerHTML = "";
   if (opts.onStoryEdit) {
     extra.innerHTML = `<div class="modal-foot-right" style="margin:0 0 10px">
-      <button class="btn ghost small" id="hist-edit-btn">Rediger${story && story.custom ? "" : " (standardtekst)"}</button>
+      <button class="btn ghost small" id="hist-edit-btn">${story ? "Rediger" : "Skriv historien"}</button>
     </div>`;
     extra.querySelector("#hist-edit-btn").addEventListener("click", () => opts.onStoryEdit(genre));
   }
@@ -1366,9 +1309,19 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
-   "modal-varmekart", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
+   "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+
+  // Innholdssidenes navigasjonsføtter (statisk markup — innholdet bor i Firestore).
+  document.getElementById("omh-rotter")?.addEventListener("click", openRotter);
+  document.getElementById("omh-historier")?.addEventListener("click", () => openHistorier());
+  const rotterTre = document.getElementById("rotter-tre");
+  if (rotterTre) {
+    if (opts.onSlektstre) rotterTre.addEventListener("click", () => opts.onSlektstre());
+    else rotterTre.style.display = "none";
+  }
+  document.getElementById("rotter-tidslinje")?.addEventListener("click", () => openTidslinje());
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1475,6 +1428,16 @@ function wireModals() {
   });
 }
 
+// Kalles av sidene når content-snapshotet endres (import, redigering,
+// celleklikk): re-rendrer innholdsvisninger som står åpne, så endringen
+// slår gjennom uten å lukke/åpne modalen.
+function contentChanged() {
+  const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
+  if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
+  if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");
+  if (isOpen("modal-varmekart")) renderVarmekartBody();
+}
+
 export function initExplore(options) {
   opts = options;
   injectModals();
@@ -1485,6 +1448,8 @@ export function initExplore(options) {
     openVarmekart,
     openTidslinje,
     openStoreBildet,
+    openOmHistorie,
+    openRotter,
     openHistorier,
     openPodkast,
     openTeknologi,
@@ -1494,5 +1459,6 @@ export function initExplore(options) {
     showPlaylistForMainGenre,
     onMainGenreClick,
     openSubgenreInfo,
+    contentChanged,
   };
 }

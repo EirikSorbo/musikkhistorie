@@ -111,8 +111,14 @@ service cloud.firestore {
       allow write: if isTeacher();
     }
 
-    // ---- Sjangerbeskrivelser (alle nivåer: meta/main/sub) ----
+    // ---- Sjangerbeskrivelser (main/sub + story-feltet) ----
     match /genreDescriptions/{doc} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // ---- Innhold: sidene «Om historie»/«Røtter» og varmekartet ----
+    match /content/{doc} {
       allow read: if true;
       allow write: if isTeacher();
     }

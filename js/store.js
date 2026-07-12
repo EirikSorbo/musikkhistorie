@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.2";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.2";
-import { isMainGenre } from "./genealogy.js?v=3.2";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.2";
-import { normalizeConfig } from "./config-normalize.js?v=3.2";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.2";
+import { firebaseConfig } from "./firebase-config.js?v=3.3";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.3";
+import { isMainGenre } from "./genealogy.js?v=3.3";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.3";
+import { normalizeConfig } from "./config-normalize.js?v=3.3";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.3";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -77,6 +77,8 @@ const genreDescsCol = collection(db, "genreDescriptions");
 const podcastsCol = collection(db, "podcasts");
 const techCol = collection(db, "tech");
 const pendingEditsCol = collection(db, "pendingEdits");
+// Innholdssider (Om historie, Røtter) og varmekartet — se INNHOLD-seksjonen.
+const contentCol = collection(db, "content");
 const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
@@ -309,6 +311,11 @@ export async function addPodcast(data) {
   return addDoc(podcastsCol, data);
 }
 
+// Import-oppdatering av eksisterende episode (matchet på tittel i importen).
+export async function updatePodcast(id, data) {
+  return setDoc(doc(db, "podcasts", id), data, { merge: true });
+}
+
 export async function deletePodcast(id) {
   return deleteDoc(doc(db, "podcasts", id));
 }
@@ -380,7 +387,7 @@ export async function purgeMetaGenreDescs() {
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som
-// story-felt på metasjangerens genreDescriptions-dokument — samme
+// story-felt på hovedsjangerens genreDescriptions-dokument — samme
 // Firestore-regler og eksport/import som beskrivelsene, ingen egen samling.
 // updatedAt som ISO-streng (ikke serverTimestamp) så feltet overlever
 // JSON-eksport → import uten å endre type.
@@ -389,11 +396,50 @@ export async function saveStoryBody(genreId, body) {
     { story: { body, updatedAt: new Date().toISOString() } }, { merge: true });
 }
 
-// Fjerner lærer-overstyringen — appen faller tilbake til standardteksten i
-// stories-default.js. updateDoc feiler om dokumentet ikke finnes, men da
-// finnes heller ingen overstyring å fjerne; kalleren kan trygt ignorere det.
+// Sletter historien. Det finnes ingen standardtekst i koden, så historien
+// vises som manglende til ny tekst lagres eller importeres. updateDoc feiler
+// om dokumentet ikke finnes, men da finnes heller ingen tekst å slette;
+// kalleren kan trygt ignorere det.
 export async function clearStory(genreId) {
   return updateDoc(doc(db, "genreDescriptions", genreId), { story: deleteField() });
+}
+
+// ----------------------------------------------------------------------------
+//  INNHOLD (content-samlingen): innholdssidene «Om historie» (omHistorie) og
+//  «Røtter før 1910» (rotter) som markdown-light-body, og varmekartets
+//  varmenivåer (varmekart.heat = { sjanger: [13 nivåer 0–5 eller null] }).
+//  Alt pensuminnhold bor i Firestore — ingen fallback-tekster i koden.
+// ----------------------------------------------------------------------------
+
+export function subscribeContent(callback) {
+  return onSnapshot(contentCol, (snapshot) => {
+    const content = {};
+    snapshot.docs.forEach((d) => { content[d.id] = d.data(); });
+    callback(content);
+  }, (err) => {
+    console.error("Kunne ikke lese innhold (sjekk Firestore-regler):", err.code, err.message);
+    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
+  });
+}
+
+// Lagrer en innholdsside (editor og import). updatedAt fra data beholdes ved
+// import (så backupens tidsstempel overlever), ellers settes nå-tidspunktet.
+export async function savePage(pageId, data) {
+  return setDoc(doc(db, "content", pageId),
+    { ...data, updatedAt: data.updatedAt || new Date().toISOString() });
+}
+
+// Sletter en innholdsside — vises som manglende til ny tekst lagres/importeres.
+export async function deletePage(pageId) {
+  return deleteDoc(doc(db, "content", pageId));
+}
+
+// Lagrer HELE varmekartet (full overskriving, ikke merge): sjangernavn kan
+// inneholde tegn som er kronglete i felt-stier (f.eks. «Trance / DnB»), og
+// radene er små — å skrive hele dokumentet er enklest og trygt.
+export async function saveVarmekart(heat) {
+  return setDoc(doc(db, "content", "varmekart"),
+    { heat, updatedAt: new Date().toISOString() });
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
