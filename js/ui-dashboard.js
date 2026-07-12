@@ -11,10 +11,10 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=3.0";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.0";
-import { GENEALOGY, isMainGenre } from "./genealogy.js?v=3.0";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.0";
+} from "./limits.js?v=3.1";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.1";
+import { GENEALOGY, isMainGenre } from "./genealogy.js?v=3.1";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.1";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",

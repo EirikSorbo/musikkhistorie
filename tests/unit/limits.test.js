@@ -8,7 +8,7 @@ import {
   checkWarnings,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=3.0";
+} from "../../js/limits.js?v=3.1";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);

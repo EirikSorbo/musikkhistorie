@@ -16,8 +16,8 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.0";
-import { escapeHtml } from "./ui-helpers.js?v=3.0";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.1";
+import { escapeHtml } from "./ui-helpers.js?v=3.1";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -136,7 +136,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   const root = el("g"); svg.appendChild(root);
 
   // --- Lag: avstamningslinjer (skjelett), stjerner, tråder, artister ---------
-  const lineageG = el("g"); root.appendChild(lineageG);
+  const lineageG = el("g", { class: "sh-lineage" }); root.appendChild(lineageG);
   const threadG = el("g"); root.appendChild(threadG);
   const starG = el("g"); root.appendChild(starG);
   const artistG = el("g"); root.appendChild(artistG);
@@ -265,7 +265,10 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     drawAllBridges();
 
     const s = starEls.get(id);
-    if (!s) { focusPanel.hidden = true; return; }
+    if (!s) { svg.classList.remove("sh-focusmode"); focusPanel.hidden = true; return; }
+    // Fokusmodus: CSS gråner alle ANDRE stjerner (+ røtter/skjelett), så
+    // artist-prikkene som spretter frem skiller seg tydelig fra stjernene.
+    svg.classList.add("sh-focusmode");
     s.ag.style.display = "";
     // Klikk åpner sjangeren og den BLIR stående (ikke hover — da forsvant den
     // idet man beveget musen mot en artist). På desktop vises prikkene, og navn
@@ -301,6 +304,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   function clearFocus() {
     if (focusedId) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
     focusedId = null;
+    svg.classList.remove("sh-focusmode");
     for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
     focusPanel.hidden = true;
     drawAllBridges();
@@ -414,7 +418,8 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
 
   // Løse artister (kun metaGenre): enkel navneliste i fokus-panelet.
   container.querySelector("#sh-loose")?.addEventListener("click", () => {
-    focusPanel.hidden = false; locked = true; focusedId = null; clearThreads();
+    clearFocus();   // rydder evt. åpen stjerne (tråder, gråtone, zoom)
+    focusPanel.hidden = false;
     const names = loose.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "no"));
     focusPanel.innerHTML = `<strong>Uten tre-sjanger (${names.length})</strong> <span class="sh-fp-meta">kun hovedsjanger satt</span>` +
       `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>` +

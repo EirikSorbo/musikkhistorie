@@ -1339,6 +1339,15 @@ body.is-teacher #gate { display: none; }
 #sh-svg .sh-star.sh-hot .sh-starlbl { font-weight: 700; }
 #sh-svg .sh-star.sh-linked .sh-starlbl { font-weight: 700; }
 #sh-svg .sh-star.sh-linked circle:not(.sh-halo) { stroke: var(--text); stroke-width: 2px; }
+/* Fokusmodus (én stjerne valgt): alle ANDRE stjerner + røtter + skjelett gråes
+   ut, så sjangerens artist-prikker står tydelig frem. Den valgte stjernen
+   (.sh-hot) beholder familiefargen som anker for stjernebildet.
+   NB: ingen transition på fill her — Chrome låser transisjonen på startverdien
+   når fill går fra presentasjonsattributt til CSS-verdi (gråtonen slo aldri inn). */
+#sh-svg.sh-focusmode .sh-star:not(.sh-hot) circle:not(.sh-halo) { fill: var(--muted-2, #7d9885); fill-opacity: 0.3; }
+#sh-svg.sh-focusmode .sh-star:not(.sh-hot) .sh-starlbl { fill: var(--muted); opacity: 0.55; }
+#sh-svg.sh-focusmode .sh-root { opacity: 0.35; }
+#sh-svg.sh-focusmode .sh-lineage { opacity: 0.4; }
 .sh-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 0.78rem; color: var(--muted); }
 .sh-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .sh-lg-star { width: 13px; height: 13px; border-radius: 50%; background: var(--muted-2); flex: none; }
