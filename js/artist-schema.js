@@ -19,7 +19,7 @@ export const ARTIST_FIELDS = [
   { key: "birthYear",      label: "Fødselsår",        type: "number" },
   { key: "deathYear",      label: "Dødsår",           type: "number" },
   { key: "gender",         label: "Kjønn",            type: "gender" },
-  { key: "metaGenre",      label: "Metasjanger",      type: "text" },
+  { key: "metaGenre",      label: "Hovedsjanger",      type: "text" },
   { key: "instrument",     label: "Instrument",       type: "text" },
   { key: "mainGenre",      label: "Sjangre",          type: "csv" },
   { key: "subGenre",       label: "Undersjangre",     type: "csv" },

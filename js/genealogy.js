@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.97";
-import { escapeHtml, buildKilderList } from "./util.js?v=2.97";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.97";
-import { modalOpen, modalClose } from "./ui-modal.js?v=2.97";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=2.98";
+import { escapeHtml, buildKilderList } from "./util.js?v=2.98";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=2.98";
+import { modalOpen, modalClose } from "./ui-modal.js?v=2.98";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -113,9 +113,9 @@ export function showSjangerInfo(label, opts = {}) {
   const kilderHtml = buildKilderList(resolved.kilder, "Kilder");
 
   const btnArea = [
-    (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
-    (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
-    (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Vis i tidslinje</button>` : "",
+    (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
+    (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
+    (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Tidslinje</button>` : "",
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 

@@ -5,10 +5,10 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=2.97";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.97";
-import { resolveDesc } from "./genre-descriptions.js?v=2.97";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=2.97";
+import { state, guardTeacherAction } from "./teacher-state.js?v=2.98";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=2.98";
+import { resolveDesc } from "./genre-descriptions.js?v=2.98";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=2.98";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;
@@ -59,7 +59,7 @@ export function renderPendingEditsList() {
       <td>${escapeHtml(e.entityName || e.entityId)}</td>
       <td>${fieldCount} felt</td>
       <td class="muted">${escapeHtml(e.proposedBy || "Anonym")}</td>
-      <td><button type="button" class="btn ghost small" data-action="open-edit" data-id="${escapeHtml(e.id)}">Se forslag →</button></td>
+      <td><button type="button" class="btn ghost small" data-action="open-edit" data-id="${escapeHtml(e.id)}">Se forslag</button></td>
     </tr>`;
   });
   const techRows = newTech.map((t) => `<tr class="pending-row" data-tech-id="${escapeHtml(t.id)}">

@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.97";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.97";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.97";
-import { isVisible } from "./limits.js?v=2.97";
-import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=2.97";
-import { renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=2.97";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.97";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.97";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.97";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.97";
-import { renderSjangerhimmel } from "./constellation.js?v=2.97";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, showMetaInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=2.98";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.98";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.98";
+import { isVisible } from "./limits.js?v=2.98";
+import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=2.98";
+import { renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=2.98";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=2.98";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=2.98";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=2.98";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=2.98";
+import { renderSjangerhimmel } from "./constellation.js?v=2.98";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -149,14 +149,14 @@ const MODAL_HTML = `
       <h4 class="info-label">Samfunnsutvikling</h4>
       <div id="dv-society-timeline"></div>
       <div id="dv-society" class="info-text"></div>
-      <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer →</button>
+      <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer</button>
       <button class="btn ghost small" id="dv-society-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div class="info-section" id="dv-tech-section">
       <h4 class="info-label">Teknologiutvikling</h4>
       <div id="dv-tech-timeline"></div>
       <div id="dv-tech" class="info-text"></div>
-      <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer →</button>
+      <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer</button>
       <button class="btn ghost small" id="dv-tech-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div id="dv-kilder"></div>
@@ -212,7 +212,7 @@ const MODAL_HTML = `
       <h2>Sjangerhimmelen</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Sjangrene står i slektstreets rekkefølge. Klikk (eller trykk på) en stjerne — sjangerens artister spretter frem, forbundet med stjernen. Hold musen over en prikk for navnet; klikk prikken for artistkortet. «Vis alle broer» viser artistene som hører til flere sjangre.</p>
+    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Sjangrene står i slektstreets rekkefølge. Klikk (eller trykk på) en stjerne — sjangerens artister spretter frem, forbundet med stjernen. Hold musen over en prikk for navnet; klikk prikken for artistkortet. «Alle broer» viser artistene som hører til flere sjangre.</p>
     <div id="sh-body"></div>
   </div>
 </div>
@@ -236,16 +236,21 @@ const MODAL_HTML = `
       <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div class="genre-tabs">
-      <button class="btn ghost small genre-tab active" data-genre-tab="sjangre">Sjangre</button>
-      <button class="btn ghost small genre-tab" data-genre-tab="hoved">Hovedsjangre</button>
-      <button class="btn ghost small genre-tab" data-genre-tab="under">Undersjangre</button>
-    </div>
     <div id="sl-extra"></div>
     <p class="muted" style="margin-bottom:14px;font-size:0.9rem" id="sl-hint">Trykk på en sjanger for å lese beskrivelsen.</p>
     <div id="sl-chips" class="subgenre-tag-list"></div>
-    <div id="hl-chips" class="subgenre-tag-list" style="display:none"></div>
-    <div id="ul-chips" class="subgenre-tag-list" style="display:none"></div>
+  </div>
+</div>
+
+<!-- Undersjangre (åpnes fra Sjangre-modalen, oppå den) -->
+<div class="modal-backdrop" id="modal-undersjangre">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Undersjangre</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en undersjanger for å lese beskrivelsen.</p>
+    <div id="ul-chips" class="subgenre-tag-list"></div>
   </div>
 </div>
 
@@ -409,8 +414,8 @@ const ROTTER_BODY = `
   <div class="rotter-foot">
     <p class="muted">Røttene er selve premisset for de «lange linjene». Vil du se hvordan de vokser videre?</p>
     <div class="rotter-links">
-      <button class="btn ghost" id="rotter-tre">Se slektstreet →</button>
-      <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen →</button>
+      <button class="btn ghost" id="rotter-tre">Se slektstreet</button>
+      <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen</button>
     </div>
   </div>
 `;
@@ -506,7 +511,7 @@ function openDecadeList(mode) {
   const techExtra = document.getElementById("dl-tech-extra");
   if (techExtra) {
     if (mode === "tech") {
-      techExtra.innerHTML = `<button class="btn ghost" id="dl-btn-innovasjon" style="width:100%;margin-bottom:14px">Vis innovasjonskort →</button>`;
+      techExtra.innerHTML = `<button class="btn ghost" id="dl-btn-innovasjon" style="width:100%;margin-bottom:14px">Innovasjonskort</button>`;
       techExtra.querySelector("#dl-btn-innovasjon").addEventListener("click", () => openTeknologi());
     } else {
       techExtra.innerHTML = "";
@@ -1045,7 +1050,7 @@ function renderKart() {
   const footEl = document.getElementById("kart-footer");
   const unplacedCount = unplaced.reduce((sum, u) => sum + u.count, 0);
   footEl.innerHTML = unplacedCount
-    ? `<button type="button" class="btn ghost small" id="kart-unplaced">${unplacedCount} artist${unplacedCount === 1 ? "" : "er"} uten plasserbart sted →</button>`
+    ? `<button type="button" class="btn ghost small" id="kart-unplaced">${unplacedCount} artist${unplacedCount === 1 ? "" : "er"} uten plasserbart sted</button>`
     : "";
   const upBtn = footEl.querySelector("#kart-unplaced");
   if (upBtn) upBtn.addEventListener("click", () => {
@@ -1087,23 +1092,17 @@ function openSubgenreList() {
       }).join("")
     : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
 
-  // Hovedsjangre (metaGenre): den grøvste grupperingen. Treet gir fasiten
-  // (GENEALOGY_META_GENRES); artist-taggede metaGenre tas med for sikkerhets skyld.
-  // data-meta (ikke data-sjanger) → klikk åpner META-nivåets beskrivelse.
-  const canonMeta = new Map(GENEALOGY_META_GENRES.map((g) => [g.toLowerCase(), g]));
-  const withMetaArtists = new Set(
-    active.map(a => a.metaGenre).filter(Boolean).map(m => canonMeta.get(m.toLowerCase()) || m)
-  );
-  const meta = [...new Set([...GENEALOGY_META_GENRES, ...withMetaArtists])]
-    .sort((a, b) => a.localeCompare(b, "no"));
-  const hlEl = document.getElementById("hl-chips");
-  hlEl.innerHTML = meta.length
-    ? meta.map((m) => {
-        const empty = !withMetaArtists.has(m);
-        return `<button class="tag tag-sjanger${checkedMainGenres.includes(m) ? " is-checked" : ""}${empty ? " is-empty" : ""}" data-meta="${escapeHtml(m)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(m)}</button>`;
-      }).join("")
-    : `<p class="muted">Ingen hovedsjangre registrert ennå.</p>`;
+  modalOpen(modal);
+}
 
+// Undersjangre: frie tags fra artistene, i egen modal oppå Sjangre-modalen
+// (før en fane i samme modal — nå en egen inngang via «Undersjangere»-knappen).
+function openUndersjangre() {
+  const modal = document.getElementById("modal-undersjangre");
+  if (!modal) return;
+  const s = getState();
+  const active = s.artists.filter(isVisible);
+  const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
   const under = [...new Set(active.flatMap(a => [
     ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
     ...(a.subGenre || []),
@@ -1111,15 +1110,8 @@ function openSubgenreList() {
   const ulEl = document.getElementById("ul-chips");
   const checkedSubs = checkedState?.subgenres || [];
   ulEl.innerHTML = under.length
-    ? under.map((s) => `<button class="tag tag-under ${checkedSubs.includes(s) ? "is-checked" : ""}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")
+    ? under.map((u) => `<button class="tag tag-under ${checkedSubs.includes(u) ? "is-checked" : ""}" data-under="${escapeHtml(u)}">${escapeHtml(u)}</button>`).join("")
     : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
-
-  document.querySelectorAll(".genre-tab").forEach(t => t.classList.remove("active"));
-  document.querySelector('.genre-tab[data-genre-tab="sjangre"]').classList.add("active");
-  slEl.style.display = "";
-  hlEl.style.display = "none";
-  ulEl.style.display = "none";
-  document.getElementById("sl-hint").textContent = "Trykk på en sjanger for å lese beskrivelsen.";
 
   modalOpen(modal);
 }
@@ -1143,7 +1135,7 @@ function openSubgenreInfo(subgenreId) {
     el.innerHTML = "";
   } else {
     el.innerHTML = `
-      <button class="btn ghost small sgi-toggle" style="margin-top:12px">Vis artister (${artists.length})</button>
+      <button class="btn ghost small sgi-toggle" style="margin-top:12px">Artister (${artists.length})</button>
       <div class="sgi-list" style="display:none;margin-top:10px">
         ${artists.map(a => `<div class="result-row sgi-artist-row" data-id="${escapeHtml(a.id)}">
           <span class="result-name">${escapeHtml(a.name)}</span>
@@ -1158,7 +1150,7 @@ function openSubgenreInfo(subgenreId) {
       const list = el.querySelector(".sgi-list");
       const visible = list.style.display !== "none";
       list.style.display = visible ? "none" : "block";
-      e.target.textContent = visible ? `Vis artister (${artists.length})` : "Skjul artister";
+      e.target.textContent = visible ? `Artister (${artists.length})` : "Skjul artister";
     });
     el.querySelectorAll(".sgi-artist-row").forEach((row) => {
       row.addEventListener("click", () => {
@@ -1280,10 +1272,10 @@ function injectModals() {
 
 function wireModals() {
   ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
-   "modal-decade-more", "modal-subgenre-list", "modal-subgenre-info", "modal-varmekart",
-   "modal-tidslinje", "modal-kart", "modal-sjangerhimmel", "modal-artistliste",
-   "modal-spilleliste", "modal-sjanger", "modal-tech-detail", "modal-store-bildet",
-   "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+   "modal-decade-more", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
+   "modal-varmekart", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
+   "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
+   "modal-store-bildet", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
   const dvBack = document.getElementById("dv-back");
   if (dvBack) dvBack.addEventListener("click", () => {
@@ -1291,30 +1283,23 @@ function wireModals() {
     modalOpen(document.getElementById("modal-decade-list"));
   });
 
-  document.querySelectorAll(".genre-tab").forEach(tab => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".genre-tab").forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-      const which = tab.dataset.genreTab; // "sjangre" | "hoved" | "under"
-      document.getElementById("sl-chips").style.display = which === "sjangre" ? "" : "none";
-      document.getElementById("hl-chips").style.display = which === "hoved" ? "" : "none";
-      document.getElementById("ul-chips").style.display = which === "under" ? "" : "none";
-      document.getElementById("sl-hint").textContent = {
-        sjangre: "Trykk på en sjanger for å lese beskrivelsen.",
-        hoved: "Trykk på en hovedsjanger for å lese beskrivelsen.",
-        under: "Trykk på en undersjanger for å lese beskrivelsen.",
-      }[which];
-    });
-  });
-
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {
-    let btns = `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">`;
-    if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="flex:1">Vis sjangertre →</button>`;
-    btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Vis varmekart →</button>`;
-    btns += `<button class="btn ghost" id="btn-tidslinje" style="flex:1">Vis tidslinje →</button>`;
+    // To innganger øverst: Hovedsjangere → sjangerhistoriene (én fortelling
+    // per hovedsjanger), Undersjangere → chip-lista i egen modal. Deretter de
+    // visuelle oversiktene.
+    let btns = `<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">`;
+    btns += `<button class="btn ghost" id="btn-hovedsjangere" style="flex:1">Hovedsjangere</button>`;
+    btns += `<button class="btn ghost" id="btn-undersjangere" style="flex:1">Undersjangere</button>`;
+    btns += `</div>`;
+    btns += `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">`;
+    if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
+    btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Varmekart</button>`;
+    btns += `<button class="btn ghost" id="btn-tidslinje" style="flex:1">Tidslinje</button>`;
     btns += `</div>`;
     slExtra.innerHTML = btns;
+    slExtra.querySelector("#btn-hovedsjangere").addEventListener("click", () => openHistorier());
+    slExtra.querySelector("#btn-undersjangere").addEventListener("click", openUndersjangre);
     const treBtn = slExtra.querySelector("#btn-slektstre");
     if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());
     slExtra.querySelector("#btn-varmekart").addEventListener("click", openVarmekart);
@@ -1339,13 +1324,13 @@ function wireModals() {
 
   const tekExtra = document.getElementById("tek-admin-extra");
   if (opts.onTechAdmin && tekExtra) {
-    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-admin" style="width:100%;margin-bottom:14px">Vis teknologikort (admin) →</button>`;
+    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-admin" style="width:100%;margin-bottom:14px">Teknologikort (admin)</button>`;
     tekExtra.querySelector("#btn-tech-admin").addEventListener("click", () => {
       modalClose(document.getElementById("modal-teknologi"));
       opts.onTechAdmin();
     });
   } else if (opts.onProposeNewTech && tekExtra) {
-    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-new" style="width:100%;margin-bottom:14px">Foreslå nytt innovasjonskort →</button>`;
+    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-new" style="width:100%;margin-bottom:14px">Foreslå nytt innovasjonskort</button>`;
     tekExtra.querySelector("#btn-tech-new").addEventListener("click", () => opts.onProposeNewTech());
   }
 

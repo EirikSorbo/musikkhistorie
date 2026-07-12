@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=2.97";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=2.98";
 
 const descs = {
   Blues: {
@@ -21,7 +21,7 @@ test("resolveDescAny prøver navnene i rekkefølge", () => {
 });
 
 test("missingDesc navngir nivået", () => {
-  assert.ok(missingDesc("meta").includes("metasjanger"));
+  assert.ok(missingDesc("meta").includes("hovedsjanger"));
   assert.ok(missingDesc("main").includes("sjanger"));
   assert.ok(missingDesc("sub").includes("undersjanger"));
 });

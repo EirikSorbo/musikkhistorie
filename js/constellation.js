@@ -16,8 +16,8 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.97";
-import { escapeHtml } from "./ui-helpers.js?v=2.97";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=2.98";
+import { escapeHtml } from "./ui-helpers.js?v=2.98";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -110,7 +110,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   container.innerHTML = `
     <div class="sh-chips" id="sh-chips"></div>
     <div class="sh-toolbar">
-      <label class="sh-bro-toggle"><input type="checkbox" id="sh-bro"> Vis alle broer (${bridgeCount})</label>
+      <label class="sh-bro-toggle"><input type="checkbox" id="sh-bro"> Alle broer (${bridgeCount})</label>
       <span class="sh-counts">${genres.length} sjangre · klikk en stjerne for artistene${loose.length ? ` · <button type="button" id="sh-loose" class="sh-linkbtn">${loose.length} uten tre-sjanger</button>` : ""}</span>
       <span class="sh-zoom-btns">
         <button type="button" class="btn ghost small" id="sh-zoom-out" aria-label="Zoom ut">−</button>
@@ -290,7 +290,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     focusPanel.innerHTML =
       `<span class="sh-fp-dot" style="background:${famColor(s.node.fam)}"></span>` +
       `<strong>${escapeHtml(s.node.label)}</strong> <span class="sh-fp-meta">${s.members.length} artist${s.members.length === 1 ? "" : "er"}${bridges ? ` · ${bridges} bro` : ""}${lastPointerType === "touch" ? "" : " · hold over en prikk for navn"}</span>` +
-      `<button type="button" class="sh-linkbtn" id="sh-fp-open">les om sjangeren →</button>` +
+      `<button type="button" class="sh-linkbtn" id="sh-fp-open">les om sjangeren</button>` +
       `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>`;
     focusPanel.querySelector("#sh-fp-open")?.addEventListener("click", (e) => { e.stopPropagation(); onGenreClick?.(s.node.label); });
     focusPanel.querySelector("#sh-fp-close")?.addEventListener("click", (e) => { e.stopPropagation(); clearFocus(); });

@@ -11,7 +11,7 @@
 //  sjanger), sub (fri undersjanger).
 // ============================================================================
 
-const LVL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
+const LVL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
 
 // Tydelig melding når ingen beskrivelse er lagt inn på gjeldende nivå.
 export function missingDesc(level) {

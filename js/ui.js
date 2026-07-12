@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=2.97";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.97";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.97";
+import { isVisible, filterArtists } from "./limits.js?v=2.98";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.98";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.98";
 import {
   escapeHtml,
   linkDesc,
@@ -31,12 +31,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.97";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.97";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.97";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.97";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.97";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.97";
+} from "./ui-helpers.js?v=2.98";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.98";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.98";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.98";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.98";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.98";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -78,18 +78,12 @@ export function renderResultList(el, artists, config, onSelect) {
     (a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no")
   );
   el.innerHTML = sorted.map((a) => {
-    const works = Array.isArray(a.keyWorks) ? a.keyWorks : [];
-    const firstTitle = works[0]?.title || "";
-    const workSnippet = firstTitle
-      ? escapeHtml(firstTitle) + (works.length > 1 ? ` <span class="muted">(+${works.length - 1} til)</span>` : "")
-      : "";
     const tags = genreTags(a, { withInstrument: true });
     return `
     <div class="result-row" data-id="${escapeHtml(a.id)}" tabindex="0" role="button">
       <span class="result-name result-link">${escapeHtml(a.name)}</span>
       <span class="result-meta">
         ${tags}
-        ${workSnippet ? `<span class="result-work">${workSnippet}</span>` : ""}
       </span>
       <span class="result-arrow">›</span>
     </div>`;
@@ -371,8 +365,8 @@ function showGenreLevelInfo(label, level, opts = {}) {
   wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, level);
 
   const btnArea = [
-    onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Vis artister</button>` : "",
-    onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Vis spilleliste</button>` : "",
+    onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
+    onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 

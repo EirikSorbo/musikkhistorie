@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.97";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.97";
-import { debounce, throttle } from "./util.js?v=2.97";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, formatInfoText, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.97";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.97";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.97";
-import { initExplore } from "./explore.js?v=2.97";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.97";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=2.98";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=2.98";
+import { debounce, throttle } from "./util.js?v=2.98";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=2.98";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.98";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.98";
+import { initExplore } from "./explore.js?v=2.98";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=2.98";
 
 const state = {
   artists: [],
@@ -203,7 +203,7 @@ function setupDetailModal() {
 }
 
 function openDagensNavn() {
-  renderSpotlight();
+  renderDagensArtist();
   modalOpen(document.getElementById("modal-dagens-navn"));
 }
 
@@ -216,37 +216,26 @@ function hasFilters() {
   return !!(f.search || f.mainGenre || f.metaGenre || f.instrument || f.decade);
 }
 
-let currentPicks = [];
-
-function renderSpotlight() {
-  if (!state.config) return;
-  const pool = state.artists.filter(isVisible);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  currentPicks = shuffled.slice(0, 1);
-  renderSpotlightCards($("#spotlight"), currentPicks, state.config, explore.buildLinkCtx());
-}
-
+// Dagens artist bor i sin egen modal (åpnes fra «Finn artister»): én fast
+// tilfeldig trukket artist per sidelast; «Ny artist» trekker på nytt.
 let dagensArtistId = null;
 function renderDagensArtist() {
   if (!state.config) return;
+  const el = $("#spotlight");
+  if (!el) return;
   const pool = state.artists.filter(isVisible);
   if (!pool.length) {
-    // Første snapshot har kommet og datasettet ER tomt (ikke bare «laster»):
-    // rydd bort «Laster forslag …»-placeholderen og skjul seksjonen igjen,
-    // ellers blir den stående for alltid.
-    if (state.artistsLoaded) {
-      const section = document.getElementById("dagens-artist-section");
-      if (section) section.style.display = "none";
-      const el = $("#dagens-artist");
-      if (el) el.innerHTML = "";
-    }
+    el.innerHTML = `<p class="muted empty">${state.artistsLoaded ? "Ingen artister ennå." : "Laster forslag …"}</p>`;
     return;
   }
   if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
   const artist = pool.find((a) => a.id === dagensArtistId) || pool[0];
-  const section = document.getElementById("dagens-artist-section");
-  if (section) section.style.display = "";
-  renderSpotlightCards($("#dagens-artist"), [artist], state.config, explore.buildLinkCtx());
+  renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
+}
+
+function isDagensModalOpen() {
+  const m = document.getElementById("modal-dagens-navn");
+  return !!m && m.classList.contains("open");
 }
 
 function renderFilterResults() {
@@ -256,7 +245,6 @@ function renderFilterResults() {
 
   if (!hasFilters()) {
     el.innerHTML = "";
-    clearContextBox();
     return;
   }
 
@@ -265,42 +253,6 @@ function renderFilterResults() {
   const pool = filterArtists(state.artists.filter(isVisible), state.filters);
 
   renderResultList(el, pool, state.config, openDetail);
-  renderContextBox();
-}
-
-function getContextBox() {
-  let box = document.getElementById("context-box");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "context-box";
-    box.className = "context-box";
-    const filterResults = document.getElementById("filter-results");
-    filterResults.parentNode.insertBefore(box, filterResults);
-  }
-  return box;
-}
-
-function clearContextBox() {
-  const box = document.getElementById("context-box");
-  if (box) box.innerHTML = "";
-}
-
-function renderContextBox() {
-  const box = getContextBox();
-  const parts = [];
-
-  if (state.filters.decade) {
-    const d = state.decadeDescs[state.filters.decade];
-    if (d && (d.society || d.tech)) {
-      let html = `<div class="context-card"><h3>${state.filters.decade}-tallet</h3>`;
-      if (d.society) html += `<div><strong>Samfunnsutvikling:</strong>${formatInfoText(d.society)}</div>`;
-      if (d.tech) html += `<div><strong>Teknologiutvikling:</strong>${formatInfoText(d.tech)}</div>`;
-      html += `</div>`;
-      parts.push(html);
-    }
-  }
-
-  box.innerHTML = parts.join("");
 }
 
 // ----------------------------------------------------------------------------
@@ -309,7 +261,15 @@ function renderContextBox() {
 
 function renderList() {
   if (!state.config) return;
-  renderArtists($("#artist-list"), { ...state, handlers, linkCtx: explore.buildLinkCtx() });
+  const el = $("#artist-list");
+  if (!el) return;
+  // Med aktive filtre vises KUN den kompakte resultatlista (#filter-results) —
+  // de fulle artistkortene under skapte dobbel visning av samme treff.
+  if (hasFilters()) {
+    el.innerHTML = "";
+    return;
+  }
+  renderArtists(el, { ...state, handlers, linkCtx: explore.buildLinkCtx() });
 }
 
 // Forslag-lista og filterresultatene bor begge inne i #modal-artister. Å bygge
@@ -340,7 +300,7 @@ function openArtistModal() {
 function refreshFilterControls() {
   const { config } = state;
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
-  fillSelect($("#sp-genre"), config.metaGenres.map(g => ({ value: g, label: g })), { placeholder: "Metasjanger" });
+  fillSelect($("#sp-genre"), config.metaGenres.map(g => ({ value: g, label: g })), { placeholder: "Hovedsjanger" });
   fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
@@ -363,10 +323,19 @@ function setupFilters() {
   // alle beskrivelser) for hvert eneste tastetrykk.
   const rerender = () => { renderFilterResults(); renderList(); };
   const rerenderDebounced = debounce(rerender, 200);
-  ["sp-search", "sp-sjanger", "sp-genre", "sp-instrument", "sp-decade"].forEach((id) => {
+  // Eksplisitt kobling element → filternøkkel: filterArtists leser mainGenre/
+  // metaGenre, ikke element-id-ene (sjanger/genre) — å utlede nøkkelen fra
+  // id-en gjorde at sjanger- og hovedsjangervalget aldri traff filteret.
+  const FILTER_KEYS = {
+    "sp-search": "search",
+    "sp-sjanger": "mainGenre",
+    "sp-genre": "metaGenre",
+    "sp-instrument": "instrument",
+    "sp-decade": "decade",
+  };
+  Object.entries(FILTER_KEYS).forEach(([id, key]) => {
     const el = document.getElementById(id);
     el.addEventListener(id === "sp-search" ? "input" : "change", (e) => {
-      const key = id.replace("sp-", "");
       state.filters[key] = e.target.value;
       (id === "sp-search" ? rerenderDebounced : rerender)();
     });
@@ -380,7 +349,17 @@ function setupFilters() {
       renderList();
     });
   });
-  $("#sp-shuffle").addEventListener("click", renderSpotlight);
+  $("#sp-shuffle").addEventListener("click", () => {
+    const pool = state.artists.filter(isVisible);
+    if (!pool.length) return;
+    // Trekk en annen artist enn den som vises (når det finnes flere).
+    let pick = pool[Math.floor(Math.random() * pool.length)];
+    while (pool.length > 1 && pick.id === dagensArtistId) {
+      pick = pool[Math.floor(Math.random() * pool.length)];
+    }
+    dagensArtistId = pick.id;
+    renderDagensArtist();
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -447,19 +426,13 @@ function init() {
   loadCache();
   if (state.config && state.artists.length) {
     refreshFilterControls();
-    renderDagensArtist();
     // #artist-list bygges når #modal-artister åpnes (openArtistModal), ikke her
     // — den er skjult ved sidelast, så å bygge alle kortene nå er bortkastet.
   } else {
-    // Førstegangsbesøk uten cache: vis en lasteindikator i listeseksjonene til
+    // Førstegangsbesøk uten cache: vis en lasteindikator i listeseksjonen til
     // første Firestore-snapshot kommer, i stedet for en tom side.
-    const loading = `<p class="muted empty">Laster forslag …</p>`;
-    const section = document.getElementById("dagens-artist-section");
-    if (section) section.style.display = "";
-    const dagens = $("#dagens-artist");
-    if (dagens) dagens.innerHTML = loading;
     const list = $("#artist-list");
-    if (list) list.innerHTML = loading;
+    if (list) list.innerHTML = `<p class="muted empty">Laster forslag …</p>`;
   }
 
   wireFirestoreErrorBanner();
@@ -477,9 +450,9 @@ function init() {
     state.config = config;
     state.configIsFallback = !!meta?.fallback;
     refreshFilterControls();
-    // Dagens artist trenger config — på kald start (uten cache) kan artist-
-    // snapshotet ha kommet først og gitt opp; render på nytt nå.
-    renderDagensArtist();
+    // Dagens artist-modalen kan stå åpen med «Laster …» på kald start — på
+    // config-ankomst kan den nå rendres ferdig.
+    if (isDagensModalOpen()) renderDagensArtist();
     renderArtistViewsIfVisible();
     applyPendingDeepLink();
     saveCache();
@@ -489,7 +462,7 @@ function init() {
   // ombygging per stemme, og lista bygges bare når modalen faktisk er åpen.
   const applyArtistSnapshot = throttle(() => {
     renderArtistViewsIfVisible();
-    renderDagensArtist();
+    if (isDagensModalOpen()) renderDagensArtist();
     saveCache();
   }, 400);
   subscribeArtists((artists) => {
@@ -500,7 +473,9 @@ function init() {
     // når det ikke venter noen).
     applyPendingDeepLink();
   });
-  subscribeDecades((d) => { state.decadeDescs = d; if (isArtistModalOpen()) renderFilterResults(); });
+  // Tiårsbeskrivelsene brukes av Samfunn/Teknologi-modalene (explore.js) —
+  // filterresultatene viser ikke lenger tiårsforklaring.
+  subscribeDecades((d) => { state.decadeDescs = d; });
   subscribeGenreDescs((s) => { state.genreDescs = s; if (isArtistModalOpen()) renderFilterResults(); });
   subscribePodcasts((pods) => { state.podcasts = pods; });
   // Merk: ikke noe pendingEdits-abonnement her — studentsiden trenger bare

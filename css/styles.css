@@ -597,15 +597,9 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .card.is-checked { border-left: 3px solid #22c55e; }
 .tag.is-checked { outline: 2px solid #22c55e; outline-offset: -2px; }
 
-.priority-filter-bar {
-  display: flex; align-items: center; gap: 6px;
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-}
-/* I lærerens listehode flyter prio-baren inline ved siden av h2,
-   ikke som absolutt-sentrert over filterraden. */
-.list-head .priority-filter-bar {
-  position: static; transform: none;
-}
+/* Flyter inline med resten av hodet. (Var absolutt-sentrert i «Finn
+   artister»-hodet, men med tre knapper der kolliderte baren med dem.) */
+.priority-filter-bar { display: flex; align-items: center; gap: 6px; }
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; border-radius: 10px;
@@ -720,6 +714,8 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   position: relative;
 }
 .modal-head h2 { margin: 0; font-size: 1.1rem; flex: 1; }
+/* «Finn artister» har mange hode-elementer — la dem bryte pent på smale skjermer. */
+#modal-artister .modal-head { flex-wrap: wrap; gap: 8px; }
 .modal-head .modal-close,
 .modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
 .modal-head .modal-close { margin-right: 4px; }
@@ -832,8 +828,6 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* ----- Teknologi-kort ----- */
 .tech-category-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
 .tech-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.genre-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-.genre-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
 .tag-tech-year { color: var(--accent); background: #eff6ff; border-color: #bfdbfe; font-weight: 600; }
 .tag-tech-cat { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
@@ -1121,19 +1115,6 @@ body.is-teacher #gate { display: none; }
 .desc-edit-item textarea { font-size: 0.88rem; }
 .desc-edit-actions { display: flex; align-items: center; gap: 12px; }
 
-/* ----- Kontekstboks (forside) ----- */
-.context-box { margin-bottom: 8px; }
-.context-card {
-  background: var(--surface);
-  border: 1px solid #a7f3d0;
-  border-left: 4px solid var(--accent);
-  border-radius: var(--radius-sm);
-  padding: 16px 20px;
-  margin-bottom: 10px;
-}
-.context-card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--accent-2); }
-.context-card p { margin: 0 0 6px; font-size: 0.9rem; color: var(--text); line-height: 1.55; }
-.context-card p:last-child { margin-bottom: 0; }
 
 @media (max-width: 560px) {
   .cta-grid { grid-template-columns: 1fr; }

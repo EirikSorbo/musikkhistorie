@@ -7,11 +7,11 @@ import {
   subscribeConfig,
   addArtist,
   getClientId,
-} from "./store.js?v=2.97";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.97";
-import { fillSelect } from "./ui.js?v=2.97";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.97";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.97";
+} from "./store.js?v=2.98";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=2.98";
+import { fillSelect } from "./ui.js?v=2.98";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=2.98";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=2.98";
 
 const state = {
   artists: [],
@@ -24,7 +24,7 @@ const state = {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#in-metaGenre"), config.metaGenres, { placeholder: "Velg metasjanger …" });
+  fillSelect($("#in-metaGenre"), config.metaGenres, { placeholder: "Velg hovedsjanger …" });
   fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }

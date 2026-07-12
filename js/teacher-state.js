@@ -13,10 +13,10 @@ import {
   setArtistPriority,
   updateArtistFields,
   getClientId,
-} from "./store.js?v=2.97";
-import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=2.97";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.97";
-import { $ } from "./shared.js?v=2.97";
+} from "./store.js?v=2.98";
+import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=2.98";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=2.98";
+import { $ } from "./shared.js?v=2.98";
 
 export const state = {
   artists: [],
@@ -142,7 +142,7 @@ export function renderAll() {
 export function refreshControls() {
   const { config } = state;
   fillSelect($("#f-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Alle sjangre" });
-  fillSelect($("#f-genre"), config.metaGenres, { placeholder: "Alle metasjangre" });
+  fillSelect($("#f-genre"), config.metaGenres, { placeholder: "Alle hovedsjangre" });
   fillSelect(
     $("#f-decade"),
     config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
