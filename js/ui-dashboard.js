@@ -11,10 +11,10 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=2.98";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.98";
-import { GENEALOGY, isMainGenre } from "./genealogy.js?v=2.98";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=2.98";
+} from "./limits.js?v=2.99";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=2.99";
+import { GENEALOGY, isMainGenre } from "./genealogy.js?v=2.99";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=2.99";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -56,9 +56,9 @@ export function renderDashboard(el, { artists, config, genreDescs = {}, onSubgen
     : `<p class="muted">Ingen.</p>`;
 
   // --- Sjangre uten beskrivelse, per nivå ---
+  // Hovedsjangere (meta) spores ikke lenger — de har ikke egne beskrivelser,
+  // men dekkes av de seks sjangerhistoriene (v2.99).
   const byNo = (a, b) => a.localeCompare(b, "no");
-  const metaMissing = (config.metaGenres || [])
-    .filter(n => !resolveDesc(genreDescs, n, "meta").description).sort(byNo);
   const mainMissing = GENEALOGY
     .filter(n => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
     .map(n => n.l).sort(byNo);
@@ -113,9 +113,7 @@ export function renderDashboard(el, { artists, config, genreDescs = {}, onSubgen
       </div>
       <div class="stat-card stat-wide" id="ov-miss-card">
         <div class="stat-label">Sjangre uten beskrivelse — klikk et navn for å redigere</div>
-        <button class="btn ghost small" id="ov-btn-miss-meta">Metasjangre (${metaMissing.length})</button>
-        <div id="ov-miss-meta" style="display:none;margin-top:10px">${missList(metaMissing, "meta")}</div>
-        <button class="btn ghost small" id="ov-btn-miss-main" style="margin-top:8px">Sjangre (${mainMissing.length})</button>
+        <button class="btn ghost small" id="ov-btn-miss-main">Sjangre (${mainMissing.length})</button>
         <div id="ov-miss-main" style="display:none;margin-top:10px">${missList(mainMissing, "main")}</div>
         <button class="btn ghost small" id="ov-btn-miss-sub" style="margin-top:8px">Undersjangre (${subMissing.length})</button>
         <div id="ov-miss-sub" style="display:none;margin-top:10px">${missList(subMissing, "sub")}</div>
@@ -123,7 +121,7 @@ export function renderDashboard(el, { artists, config, genreDescs = {}, onSubgen
     </div>
   `;
 
-  for (const [btn, panel] of [["#ov-btn-miss-meta", "#ov-miss-meta"], ["#ov-btn-miss-main", "#ov-miss-main"], ["#ov-btn-miss-sub", "#ov-miss-sub"]]) {
+  for (const [btn, panel] of [["#ov-btn-miss-main", "#ov-miss-main"], ["#ov-btn-miss-sub", "#ov-miss-sub"]]) {
     el.querySelector(btn).addEventListener("click", () => {
       const p = el.querySelector(panel);
       p.style.display = p.style.display === "none" ? "block" : "none";

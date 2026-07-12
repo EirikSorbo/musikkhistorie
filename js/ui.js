@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=2.98";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.98";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.98";
+import { isVisible, filterArtists } from "./limits.js?v=2.99";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=2.99";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=2.99";
 import {
   escapeHtml,
   linkDesc,
@@ -31,12 +31,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=2.98";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.98";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.98";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.98";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.98";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.98";
+} from "./ui-helpers.js?v=2.99";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=2.99";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=2.99";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=2.99";
+import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=2.99";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=2.99";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -350,10 +350,10 @@ export function fillSelect(select, values, { placeholder } = {}) {
 }
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
-// Felles visning av sjangerbeskrivelse på ETT nivå (sub eller meta) i
-// #modal-sjanger. showSubsjangerInfo og showMetaInfo var før nesten linje-for-
-// linje like; de er nå tynne innpakninger rundt denne. (showSjangerInfo i
-// genealogy.js er egen fordi den også viser tre-relasjoner.)
+// Felles visning av sjangerbeskrivelse på ETT nivå i #modal-sjanger.
+// Brukes nå kun av showSubsjangerInfo (sub) — meta-nivået (hovedsjanger) har
+// ikke lenger egne beskrivelser; hovedsjangere peker til sjangerhistoriene.
+// (showSjangerInfo i genealogy.js er egen fordi den også viser tre-relasjoner.)
 function showGenreLevelInfo(label, level, opts = {}) {
   const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
@@ -399,11 +399,6 @@ function showGenreLevelInfo(label, level, opts = {}) {
 // Frie undersjangre er på «sub»-nivå.
 export function showSubsjangerInfo(label, opts = {}) {
   return showGenreLevelInfo(label, "sub", opts);
-}
-
-// Hovedsjanger-beskrivelse (meta-nivå).
-export function showMetaInfo(label, opts = {}) {
-  return showGenreLevelInfo(label, "meta", opts);
 }
 
 // Bygger en slim artist-liste (result-row) for sjanger-popup og slektstre.
