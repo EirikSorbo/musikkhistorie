@@ -19,11 +19,11 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=3.10";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.10";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.10";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.10";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.10";
+} from "./limits.js?v=3.11";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.11";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.11";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.11";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.11";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -93,7 +93,6 @@ export function renderDashboard(el, {
     .sort((a, b) => b.n - a.n || byNo(a.l, b.l));
   const maxGenre = Math.max(1, ...genreCounts.map((g) => g.n));
   const covered = genreCounts.filter((g) => g.n > 0).length;
-  const emptyGenres = genreCounts.filter((g) => g.n === 0).map((g) => g.l).sort(byNo);
 
   // --- Hovedsjangre (metaGenre-feltet: hver artist teller nøyaktig én gang) -
   const metaCounts = (config.metaGenres || GENEALOGY_META_GENRES)
@@ -175,9 +174,6 @@ export function renderDashboard(el, {
     </button>
   </div>`;
 
-  const genreChip = (name) =>
-    `<button type="button" class="ov-chip ov-zero" data-ov-genre="${escapeHtml(name)}">${escapeHtml(name)}</button>`;
-
   const histCols = decades.map((d) => {
     const n = counts.perDecade[d] || 0;
     return `<button type="button" class="ov-hist-col" data-ov-decade="${d}" title="${d}-tallet: ${n} artister — klikk for liste">
@@ -200,24 +196,22 @@ export function renderDashboard(el, {
 
   el.innerHTML = `
     <div class="ov-kick">Pensumets form</div>
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-num">${counts.total}<span>/${config.maxTotal}</span></div>
-        <div class="stat-label">Artister i pensumet</div>
-        <div class="bar"><div class="bar-fill" style="width:${pct(counts.total, config.maxTotal)}%"></div></div>
+    <div class="ov-kpis">
+      <div class="ov-kpi">
+        <span class="ov-kpi-n">${counts.total}</span>
+        <span class="ov-kpi-l">Artister</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-num">${covered}<span>/${genreCounts.length}</span></div>
-        <div class="stat-label">Sjangre i treet med artister</div>
-        <div class="bar"><div class="bar-fill" style="width:${pct(covered, genreCounts.length)}%"></div></div>
+      <div class="ov-kpi">
+        <span class="ov-kpi-n">${covered}</span>
+        <span class="ov-kpi-l">Sjangre</span>
       </div>
-      <button type="button" class="stat-card ov-click" data-ov-open="tech">
-        <div class="stat-num">${techCount}</div>
-        <div class="stat-label">Innovasjonskort</div>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="tech">
+        <span class="ov-kpi-n">${techCount}</span>
+        <span class="ov-kpi-l">Innovasjonskort</span>
       </button>
-      <button type="button" class="stat-card ov-click" data-ov-open="subgenres">
-        <div class="stat-num">${subTags.length}</div>
-        <div class="stat-label">Undersjangre</div>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="subgenres">
+        <span class="ov-kpi-n">${subTags.length}</span>
+        <span class="ov-kpi-l">Undersjangre</span>
       </button>
     </div>
 
@@ -226,31 +220,30 @@ export function renderDashboard(el, {
       <div class="ov-hist">${histCols}</div>
     </div>
 
+    <div class="stat-card ov-block">
+      <div class="stat-label">Sjangre i slektstreet (${genreCounts.length}) — sortert etter antall artistkort, klikk for beskrivelse og artister</div>
+      <div class="ov-genre-cols">${genreCounts.map((g) =>
+        distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`)).join("")}</div>
+    </div>
+
     <div class="ov-two">
       <div class="stat-card ov-block" style="margin-top:0">
         <div class="stat-label">Per hovedsjanger — klikk for artistliste</div>
         <div class="ov-rows">${metaCounts.map((m) =>
           distRow(m.g, m.n, maxMeta, `data-ov-meta="${escapeHtml(m.g)}"`)).join("")}</div>
       </div>
-      <div class="ov-col">
-        <div class="stat-card">
-          <div class="stat-label">Kjønnsfordeling</div>
-          ${renderGenderChart(dist)}
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Instrument — klikk for artistliste</div>
-          <div class="ov-chips">${instruments.map((i) => {
-            const n = counts.perInstrument[i] || 0;
-            return `<button type="button" class="ov-chip${n ? "" : " ov-zero"}" data-ov-instr="${escapeHtml(i)}">${escapeHtml(i)} <strong>${n}</strong></button>`;
-          }).join("")}</div>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Kjønnsfordeling</div>
+        ${renderGenderChart(dist)}
       </div>
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Sjangre i slektstreet (${genreCounts.length}) — sortert etter antall artistkort, klikk for beskrivelse og artister</div>
-      <div class="ov-genre-cols">${genreCounts.map((g) =>
-        distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`)).join("")}</div>
+      <div class="stat-label">Instrument — klikk for artistliste</div>
+      <div class="ov-chips">${instruments.map((i) => {
+        const n = counts.perInstrument[i] || 0;
+        return `<button type="button" class="ov-chip${n ? "" : " ov-zero"}" data-ov-instr="${escapeHtml(i)}">${escapeHtml(i)} <strong>${n}</strong></button>`;
+      }).join("")}</div>
     </div>
 
     <div class="ov-kick">Hull og skjevheter</div>
@@ -261,12 +254,6 @@ export function renderDashboard(el, {
           ? `<div class="ov-chips">${thinDecades.map((d) =>
               `<button type="button" class="ov-chip ov-zero" data-ov-decade="${d}">${d} <strong>${counts.perDecade[d] || 0}</strong></button>`).join("")}</div>`
           : `<p class="muted">Ingen — alle tiår har minst to artister.</p>`}
-      </div>
-      <div class="ov-gap">
-        <div class="ov-gap-t">Tomme greiner i treet <span>${emptyGenres.length}</span></div>
-        ${emptyGenres.length
-          ? `<div class="ov-chips">${emptyGenres.map(genreChip).join("")}</div>`
-          : `<p class="muted">Ingen — alle sjangre har artister.</p>`}
       </div>
       <div class="ov-gap">
         <div class="ov-gap-t">Artister uten sjanger <span>${artistsNoSjanger.length}</span></div>

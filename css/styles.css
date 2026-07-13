@@ -294,18 +294,33 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .ov-kick:first-child { margin-top: 0; }
 .ov-kick::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-button.stat-card.ov-click {
+/* Kompakte nøkkeltall — fire på én rad, «vanlig» tekststørrelse */
+.ov-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.ov-kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
   font-family: inherit;
   text-align: left;
-  cursor: pointer;
+}
+.ov-kpi-n {
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--text);
-  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+  font-variant-numeric: tabular-nums;
 }
-button.stat-card.ov-click:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
-}
+.ov-kpi-l { font-size: 0.85rem; color: var(--muted); }
+button.ov-kpi { cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s; }
+button.ov-kpi:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 
 .ov-block { margin-top: 12px; }
 .ov-two {
@@ -315,7 +330,6 @@ button.stat-card.ov-click:hover {
   margin-top: 12px;
   align-items: start;
 }
-.ov-col { display: grid; gap: 12px; }
 
 /* Tiår-histogram */
 .ov-hist { display: flex; align-items: flex-end; gap: 6px; height: 130px; margin-top: 10px; }
@@ -452,6 +466,7 @@ button.stat-card.ov-click:hover {
 .ov-expand { margin-top: 10px; }
 
 @media (max-width: 720px) {
+  .ov-kpis { grid-template-columns: repeat(2, 1fr); }
   .ov-two { grid-template-columns: 1fr; }
   .ov-genre-cols { column-count: 2; }
   .ov-hist { height: 100px; gap: 4px; }
