@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.22";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.22";
-import { isMainGenre } from "./genealogy.js?v=3.22";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.22";
-import { normalizeConfig } from "./config-normalize.js?v=3.22";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.22";
+import { firebaseConfig } from "./firebase-config.js?v=3.23";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.23";
+import { isMainGenre } from "./genealogy.js?v=3.23";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.23";
+import { normalizeConfig } from "./config-normalize.js?v=3.23";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.23";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -399,6 +399,29 @@ export async function purgeMetaGenreDescs() {
     withMeta.map((d) => d.id)
   );
   return withMeta.length;
+}
+
+// Engangs-opprydding (idempotent): det gamle FLATE `description`-feltet er dødt.
+// Appen leser KUN nivåfeltene (meta/main/sub) via resolveDesc — aldri det flate
+// (se genre-descriptions.js). Feltet ble liggende igjen fra den opprinnelige
+// flate datamodellen og dupliserer nivåteksten (noen har alt DIVERGERT, f.eks.
+// Gospel/R&B). Fjern `description` KUN fra dokumenter som har et nivåfelt (main
+// eller sub), så ingen tekst går tapt: et evt. umigrert flat-ONLY-dokument
+// røres ikke — importen migrerer det til riktig nivå i stedet. Idempotent: kan
+// trygt kjøre ved hver lærer-oppstart. Returnerer antall opprydda dokumenter.
+export async function purgeFlatGenreDescs() {
+  const snapshot = await getDocs(genreDescsCol);
+  const stale = snapshot.docs.filter((d) => {
+    const x = d.data();
+    return x.description !== undefined && (x.main !== undefined || x.sub !== undefined);
+  });
+  if (!stale.length) return 0;
+  await Promise.all(stale.map((d) => updateDoc(d.ref, { description: deleteField() })));
+  console.info(
+    `Fjernet dødt flatt description-felt fra ${stale.length} genreDescriptions-dokument(er):`,
+    stale.map((d) => d.id)
+  );
+  return stale.length;
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

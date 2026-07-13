@@ -7,8 +7,8 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderStoryHtml, STORY_ORDER } from "../../js/story-format.js?v=3.22";
-import { GENEALOGY_MAIN_GENRES } from "../../js/genealogy.js?v=3.22";
+import { renderStoryHtml, STORY_ORDER } from "../../js/story-format.js?v=3.23";
+import { GENEALOGY_MAIN_GENRES } from "../../js/genealogy.js?v=3.23";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
 let pakke = null;

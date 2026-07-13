@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.22";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.23";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,12 +17,12 @@ import {
   addPodcast,
   updatePodcast,
   updateConfig,
-} from "./store.js?v=3.22";
-import { escapeHtml } from "./ui.js?v=3.22";
-import { $ } from "./shared.js?v=3.22";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.22";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.22";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.22";
+} from "./store.js?v=3.23";
+import { escapeHtml } from "./ui.js?v=3.23";
+import { $ } from "./shared.js?v=3.23";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.23";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.23";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.23";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -121,7 +121,15 @@ function buildExportData() {
   // må med i backupen, ellers går tekstene tapt ved «Erstatt alle».
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
-    .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
+    .map(([id, s]) => {
+      const { id: _omit, ...rest } = s;
+      // Dropp det DØDE flate `description`-feltet når et nivåfelt finnes: appen
+      // leser kun nivåene, og backupen skal ikke bære duplisert/stale tekst
+      // videre (import ville ellers re-lagret det). Et umigrert flat-ONLY-
+      // dokument beholder teksten, så importen kan pakke den inn i riktig nivå.
+      if (rest.description && (rest.main || rest.sub)) { const { description: _dead, ...r } = rest; return [id, r]; }
+      return [id, rest];
+    })
     .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub || rest.story)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
     .forEach(([id, rest]) => { genreDescriptions[genreSectionOf(id)][id] = rest; });
@@ -330,6 +338,11 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
       const { description, ...rest } = data;
       const lvl = genreSectionOf(id);
       toSave = { [lvl === "meta" ? "main" : lvl]: { description, ...rest } };
+    } else if (data && data.description) {
+      // Har alt et nivåfelt: det flate `description`-feltet er dødt og duplisert
+      // (kan være stale) — dropp det så en gammel backup ikke re-lagrer det.
+      const { description: _dead, ...rest } = data;
+      toSave = rest;
     }
     if (toSave.description || toSave.main || toSave.sub || toSave.story) {
       genreEntries.push({ id, data: toSave });

@@ -23,14 +23,15 @@ import {
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.22";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.22";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.22";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.22";
-import { initExplore } from "./explore.js?v=3.22";
+  purgeFlatGenreDescs,
+} from "./store.js?v=3.23";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.23";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.23";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.23";
+import { initExplore } from "./explore.js?v=3.23";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.22";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.22";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.23";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.23";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -46,11 +47,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.22";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.22";
-import { renderDesk } from "./teacher-desk.js?v=3.22";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.22";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.22";
+} from "./teacher-content.js?v=3.23";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.23";
+import { renderDesk } from "./teacher-desk.js?v=3.23";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.23";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.23";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -206,9 +207,11 @@ function startApp() {
   // før første snapshot lander.
   refreshDesk();
 
-  // Engangs (idempotent): fjern det pensjonerte meta-feltet fra
-  // genreDescriptions. Fire-and-forget — skal ikke blokkere oppstart.
+  // Engangs (idempotent): fjern det pensjonerte meta-feltet OG det døde flate
+  // description-feltet fra genreDescriptions. Fire-and-forget — skal ikke
+  // blokkere oppstart.
   purgeMetaGenreDescs().catch((e) => console.warn("Meta-opprydding feilet:", e?.message || e));
+  purgeFlatGenreDescs().catch((e) => console.warn("Flat-felt-opprydding feilet:", e?.message || e));
 
   // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
   // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.
