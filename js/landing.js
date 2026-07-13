@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.08";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.08";
-import { debounce, throttle } from "./util.js?v=3.08";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.08";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.08";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.08";
-import { initExplore } from "./explore.js?v=3.08";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.08";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.09";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.09";
+import { debounce, throttle } from "./util.js?v=3.09";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.09";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.09";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.09";
+import { initExplore } from "./explore.js?v=3.09";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.09";
 
 const state = {
   artists: [],
@@ -382,19 +382,23 @@ function setupFilters() {
       renderList();
     });
   });
-  $("#sp-shuffle").addEventListener("click", () => {
-    const pool = state.artists.filter(isVisible);
-    if (!pool.length) return;
-    // Trekk en annen artist enn den som vises (når det finnes flere).
-    let pick = pool[Math.floor(Math.random() * pool.length)];
-    while (pool.length > 1 && pick.id === dagensArtistId) {
-      pick = pool[Math.floor(Math.random() * pool.length)];
-    }
-    dagensArtistId = pick.id;
-    // Ny trekning gjelder begge visningene (modalen og seksjonen på forsiden).
-    renderDagensModal();
-    renderDagensSection();
-  });
+  // «Vis ny artist» (seksjonen på forsiden) og «Ny artist» (modalen) deler
+  // trekningen, så begge visningene alltid viser samme artist.
+  $("#sp-shuffle").addEventListener("click", shuffleDagens);
+  document.getElementById("btn-dagens-ny")?.addEventListener("click", shuffleDagens);
+}
+
+function shuffleDagens() {
+  const pool = state.artists.filter(isVisible);
+  if (!pool.length) return;
+  // Trekk en annen artist enn den som vises (når det finnes flere).
+  let pick = pool[Math.floor(Math.random() * pool.length)];
+  while (pool.length > 1 && pick.id === dagensArtistId) {
+    pick = pool[Math.floor(Math.random() * pool.length)];
+  }
+  dagensArtistId = pick.id;
+  renderDagensModal();
+  renderDagensSection();
 }
 
 // ----------------------------------------------------------------------------

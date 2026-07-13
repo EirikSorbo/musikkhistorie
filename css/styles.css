@@ -943,6 +943,7 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 .explore-btns .btn { font-size: 0.9rem; }
 
 .section-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 10px; }
+.dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .dash-card {

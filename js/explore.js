@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.08";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.08";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.08";
-import { isVisible } from "./limits.js?v=3.08";
-import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.08";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.08";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.08";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.08";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.08";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.08";
-import { renderSjangerhimmel } from "./constellation.js?v=3.08";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.09";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.09";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.09";
+import { isVisible } from "./limits.js?v=3.09";
+import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.09";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.09";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.09";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.09";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.09";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.09";
+import { renderSjangerhimmel } from "./constellation.js?v=3.09";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
