@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.23";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.23";
-import { isMainGenre } from "./genealogy.js?v=3.23";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.23";
-import { normalizeConfig } from "./config-normalize.js?v=3.23";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.23";
+import { firebaseConfig } from "./firebase-config.js?v=3.24";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.24";
+import { isMainGenre } from "./genealogy.js?v=3.24";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.24";
+import { normalizeConfig } from "./config-normalize.js?v=3.24";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.24";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -401,24 +401,29 @@ export async function purgeMetaGenreDescs() {
   return withMeta.length;
 }
 
-// Engangs-opprydding (idempotent): det gamle FLATE `description`-feltet er dødt.
-// Appen leser KUN nivåfeltene (meta/main/sub) via resolveDesc — aldri det flate
-// (se genre-descriptions.js). Feltet ble liggende igjen fra den opprinnelige
-// flate datamodellen og dupliserer nivåteksten (noen har alt DIVERGERT, f.eks.
-// Gospel/R&B). Fjern `description` KUN fra dokumenter som har et nivåfelt (main
-// eller sub), så ingen tekst går tapt: et evt. umigrert flat-ONLY-dokument
-// røres ikke — importen migrerer det til riktig nivå i stedet. Idempotent: kan
-// trygt kjøre ved hver lærer-oppstart. Returnerer antall opprydda dokumenter.
+// Engangs-opprydding (idempotent): de gamle FLATE `description`/`kilder`-feltene
+// er døde. Appen leser KUN nivåfeltene (meta/main/sub) via resolveDesc — aldri
+// de flate (se genre-descriptions.js). De ble liggende igjen fra den
+// opprinnelige flate datamodellen og dupliserer nivåteksten/-kildene (noen har
+// alt DIVERGERT, f.eks. Gospel/R&B). En tidligere cleanupFlatGenreDescs (v2.69)
+// gjorde det samme, men ble fjernet (v2.73) og feltene krøp tilbake da gamle
+// backuper ble importert — derfor lukker eksport/import nå også hullet. Fjern
+// de flate feltene KUN fra dokumenter som har et nivåfelt (main eller sub), så
+// ingen tekst går tapt: et evt. umigrert flat-ONLY-dokument røres ikke —
+// importen migrerer det til riktig nivå i stedet. Idempotent: kan trygt kjøre
+// ved hver lærer-oppstart. Returnerer antall opprydda dokumenter.
 export async function purgeFlatGenreDescs() {
   const snapshot = await getDocs(genreDescsCol);
   const stale = snapshot.docs.filter((d) => {
     const x = d.data();
-    return x.description !== undefined && (x.main !== undefined || x.sub !== undefined);
+    const hasLevel = x.main !== undefined || x.sub !== undefined;
+    const hasFlat = x.description !== undefined || x.kilder !== undefined;
+    return hasLevel && hasFlat;
   });
   if (!stale.length) return 0;
-  await Promise.all(stale.map((d) => updateDoc(d.ref, { description: deleteField() })));
+  await Promise.all(stale.map((d) => updateDoc(d.ref, { description: deleteField(), kilder: deleteField() })));
   console.info(
-    `Fjernet dødt flatt description-felt fra ${stale.length} genreDescriptions-dokument(er):`,
+    `Fjernet døde flate description/kilder-felt fra ${stale.length} genreDescriptions-dokument(er):`,
     stale.map((d) => d.id)
   );
   return stale.length;
