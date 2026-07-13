@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.25";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.25";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.25";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.25";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.26";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.26";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.26";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.26";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -46,7 +46,7 @@ export const GENEALOGY = [
   { id: "techno", l: "Techno", f: "Techno", fam: "teal", cx: 1380, r: 9, p: ["house", "disco"], g: "Klubbmusikk", era: "1985", t: ["Strings of Life – Derrick May", "Big Fun – Inner City"] },
   { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["country", "folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
   { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
-  { id: "trance", l: "Trance / DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1510, r: 10, p: ["techno", "house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
+  { id: "trance", l: "Trance & drum'n'bass", f: "Trance & drum'n'bass", fam: "teal", cx: 1510, r: 10, p: ["techno", "house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
   { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 11, p: ["fusion", "techno", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
 
   // --- Folk (revival) ---
@@ -55,7 +55,7 @@ export const GENEALOGY = [
   // --- Rock ---
   { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
   { id: "britinv", l: "British invasion", f: "Blues revival (British invasion)", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll"], g: "Blues", era: "1963–66", t: ["(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
-  { id: "bluesrock", l: "Blues Rock", f: "Blues rock", fam: "blue", cx: 580, r: 8, p: ["britinv", "chicagoblues", "rock"], g: "Blues", era: "sent 1960-tall", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
+  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 8, p: ["britinv", "chicagoblues", "rock"], g: "Blues", era: "sent 1960-tall", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
 
   // --- Rock ---
   { id: "rock", l: "Rock", f: "Rock", fam: "rock", cx: 445, r: 7, p: ["rocknroll"], g: "Rock", era: "tidlig 1960-tall", t: ["My Generation – The Who (1965)", "Light My Fire – The Doors (1967)"] },

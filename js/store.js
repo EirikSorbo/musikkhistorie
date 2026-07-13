@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.25";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.25";
-import { isMainGenre } from "./genealogy.js?v=3.25";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.25";
-import { normalizeConfig } from "./config-normalize.js?v=3.25";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.25";
+import { firebaseConfig } from "./firebase-config.js?v=3.26";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.26";
+import { isMainGenre } from "./genealogy.js?v=3.26";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.26";
+import { normalizeConfig } from "./config-normalize.js?v=3.26";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.26";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -471,12 +471,10 @@ function renameTagsInList(list, renames) {
   return { changed, value: out };
 }
 
-export async function runGenreDuplicateCleanup() {
-  const migRef = doc(db, "config", "migrations");
-  const migSnap = await getDoc(migRef);
-  if (migSnap.exists() && migSnap.data()[GENRE_CLEANUP_FLAG]) return { skipped: true };
-
-  // 1) Døp om artist-tagger (Electronic → Elektronika) på tvers av alle felt.
+// Døper om sjanger-tagger på tvers av ALLE artist-felt (mainGenre/subGenre/
+// metaGenre) i batch. Delt av opprydding- og label-justering-migreringene.
+// Returnerer antall endrede artister.
+async function renameArtistGenreTags(renames) {
   const artistSnap = await getDocs(artistsCol);
   let renamed = 0;
   for (let i = 0; i < artistSnap.docs.length; i += BATCH_LIMIT) {
@@ -485,10 +483,10 @@ export async function runGenreDuplicateCleanup() {
     for (const d of artistSnap.docs.slice(i, i + BATCH_LIMIT)) {
       const a = d.data();
       const upd = {};
-      const mg = renameTagsInList(a.mainGenre, GENRE_TAG_RENAMES);
-      const sg = renameTagsInList(a.subGenre, GENRE_TAG_RENAMES);
+      const mg = renameTagsInList(a.mainGenre, renames);
+      const sg = renameTagsInList(a.subGenre, renames);
       let meta = a.metaGenre;
-      for (const [from, to] of GENRE_TAG_RENAMES) if (meta === from) meta = to;
+      for (const [from, to] of renames) if (meta === from) meta = to;
       if (mg.changed) upd.mainGenre = mg.value;
       if (sg.changed) upd.subGenre = sg.value;
       if (meta !== a.metaGenre) upd.metaGenre = meta;
@@ -496,6 +494,16 @@ export async function runGenreDuplicateCleanup() {
     }
     if (has) await batch.commit();
   }
+  return renamed;
+}
+
+export async function runGenreDuplicateCleanup() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[GENRE_CLEANUP_FLAG]) return { skipped: true };
+
+  // 1) Døp om artist-tagger (Electronic → Elektronika) på tvers av alle felt.
+  const renamed = await renameArtistGenreTags(GENRE_TAG_RENAMES);
 
   // 2) Slett de vedtatte dokumentene. Logg innholdet FØR sletting.
   const gdSnap = await getDocs(genreDescsCol);
@@ -514,6 +522,33 @@ export async function runGenreDuplicateCleanup() {
   await setDoc(migRef, { [GENRE_CLEANUP_FLAG]: new Date().toISOString() }, { merge: true });
   console.info(`Sjangeropprydding fullført: «Electronic»→«Elektronika» på ${renamed} artist(er), ${deleting.length} duplikat/foreldreløse dokument(er) slettet.`);
   return { renamed, deleted: deleting.length };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v3.26): retter node-label ↔ doc-id-uoverensstemmelse for
+//  to tre-noder. Nodenes `l` er nå satt lik `f` (=doc-id) i genealogy.js
+//  («Blues Rock»→«Blues rock», «Trance / DnB»→«Trance & drum'n'bass»), så
+//  rediger-knappen (som bruker n.l som doc-id) treffer riktig dokument. Her
+//  døpes de tilsvarende artist-taggene om så de fortsatt matcher noden. Egen
+//  flagg fra opprydding-migreringen. Idempotent (ingen gamle tagger igjen →
+//  no-op). Se [[pensum-genre-source-of-truth]].
+// ---------------------------------------------------------------------------
+const GENRE_LABEL_ALIGN_FLAG = "genreLabelAlign_2026_07";
+const GENRE_LABEL_ALIGN_RENAMES = [
+  ["Blues Rock", "Blues rock"],
+  ["Trance / DnB", "Trance & drum'n'bass"],
+];
+
+export async function runGenreLabelAlignment() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[GENRE_LABEL_ALIGN_FLAG]) return { skipped: true };
+
+  const renamed = await renameArtistGenreTags(GENRE_LABEL_ALIGN_RENAMES);
+
+  await setDoc(migRef, { [GENRE_LABEL_ALIGN_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Node-label-justering fullført: ${renamed} artist(er) fikk «Blues Rock»→«Blues rock» / «Trance / DnB»→«Trance & drum'n'bass».`);
+  return { renamed };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

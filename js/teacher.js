@@ -25,14 +25,15 @@ import {
   purgeMetaGenreDescs,
   purgeFlatGenreDescs,
   runGenreDuplicateCleanup,
-} from "./store.js?v=3.25";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.25";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.25";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.25";
-import { initExplore } from "./explore.js?v=3.25";
+  runGenreLabelAlignment,
+} from "./store.js?v=3.26";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.26";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.26";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.26";
+import { initExplore } from "./explore.js?v=3.26";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.25";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.25";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.26";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.26";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -48,11 +49,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.25";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.25";
-import { renderDesk } from "./teacher-desk.js?v=3.25";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.25";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.25";
+} from "./teacher-content.js?v=3.26";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.26";
+import { renderDesk } from "./teacher-desk.js?v=3.26";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.26";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.26";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -218,6 +219,10 @@ function startApp() {
   // foreldreløse sjangerdokumenter og slå «Electronic» sammen i «Elektronika».
   // Kjører nøyaktig én gang; se konsoll-loggen for hva den gjorde.
   runGenreDuplicateCleanup().catch((e) => console.warn("Sjangeropprydding feilet:", e?.message || e));
+
+  // Engangs (flagg-guardet): juster de to artist-taggene som fulgte node-labels
+  // som nå er satt lik doc-id-en (Blues rock, Trance & drum'n'bass).
+  runGenreLabelAlignment().catch((e) => console.warn("Node-label-justering feilet:", e?.message || e));
 
   // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
   // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.

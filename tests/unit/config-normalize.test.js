@@ -3,7 +3,7 @@
 // skal aldri nå state), og at instruments-lista vaskes og valideres.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeConfig } from "../../js/config-normalize.js?v=3.25";
+import { normalizeConfig } from "../../js/config-normalize.js?v=3.26";
 
 test("kun instruments slipper gjennom — gamle grense-felter ignoreres", () => {
   const c = normalizeConfig({
