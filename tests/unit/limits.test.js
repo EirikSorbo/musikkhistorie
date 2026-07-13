@@ -2,13 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_CONFIG,
+  DECADES,
   isVisible,
   decadesForRange,
   computeCounts,
-  checkWarnings,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=3.19";
+} from "../../js/limits.js?v=3.20";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);
@@ -37,16 +37,6 @@ test("computeCounts teller kun synlige", () => {
   assert.equal(c.perDecade[1930], 1);
 });
 
-test("checkWarnings varsler ved nådd grense, men blokkerer ikke", () => {
-  const config = { ...DEFAULT_CONFIG, maxTotal: 1, maxPerMetaGenre: 1 };
-  const artists = [{ status: "active", metaGenre: "Blues", instrument: "Gitar", influenceStart: 1930 }];
-  const { warnings } = checkWarnings(artists, config, {
-    metaGenre: "Blues", influenceStart: 1935, instrument: "Vokal",
-  });
-  assert.ok(warnings.some((w) => w.includes("totale")));
-  assert.ok(warnings.some((w) => w.includes("Blues")));
-});
-
 test("genderDistribution: ukjente kategorier telles som ukjent", () => {
   const d = genderDistribution([
     { status: "active", gender: "kvinne" },
@@ -57,8 +47,11 @@ test("genderDistribution: ukjente kategorier telles som ukjent", () => {
   assert.equal(d.total, 2);
 });
 
-test("voteOutThreshold er fjernet fra standardkonfig", () => {
-  assert.equal("voteOutThreshold" in DEFAULT_CONFIG, false);
+test("config er slanket til instrument-vokabularet; tiårene bor i DECADES", () => {
+  assert.deepEqual(Object.keys(DEFAULT_CONFIG), ["instruments"]);
+  assert.ok(DEFAULT_CONFIG.instruments.includes("Gitar"));
+  assert.equal(DECADES[0], 1900);
+  assert.equal(DECADES[DECADES.length - 1], 2020);
 });
 
 test("filterArtists: sjanger matcher case-insensitivt i main/sub/meta", () => {

@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.19";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.20";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,12 +17,12 @@ import {
   addPodcast,
   updatePodcast,
   updateConfig,
-} from "./store.js?v=3.19";
-import { escapeHtml } from "./ui.js?v=3.19";
-import { $ } from "./shared.js?v=3.19";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.19";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.19";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.19";
+} from "./store.js?v=3.20";
+import { escapeHtml } from "./ui.js?v=3.20";
+import { $ } from "./shared.js?v=3.20";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.20";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.20";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.20";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -74,10 +74,11 @@ export function setupDataButtons() {
 }
 
 // Hvilket nivå (meta/main/sub) en sjanger hører til — samme inndeling som
-// lærer-dashboardet. Delt av eksport og import.
+// lærer-dashboardet. Delt av eksport og import. Treet er eneste kilde til
+// metasjangre (config-lista er fjernet, v3.20).
+const META_SET = new Set(GENEALOGY_META_GENRES);
 function genreSectionOf(name) {
-  const metaSet = new Set(state.config?.metaGenres || GENEALOGY_META_GENRES);
-  return metaSet.has(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
+  return META_SET.has(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
 }
 
 // Har tiåret noe innhold verdt å eksportere/importere? (samfunn/teknologi,
@@ -110,9 +111,9 @@ function buildExportData() {
   // Sjangerbeskrivelser eksporteres NESTET i tre bolker (meta → main → sub), så
   // fila blir oversiktlig i stedet for én lang flat liste. Bolken bestemmes av
   // sjangerens TYPE (samme inndeling som lærer-dashboardet):
-  //   hovedsjanger (config.metaGenres) → meta
-  //   tre-sjanger  (isMainGenre)       → main
-  //   ellers (fri undersjanger)        → sub
+  //   hovedsjanger (treets metasjangre) → meta
+  //   tre-sjanger  (isMainGenre)        → main
+  //   ellers (fri undersjanger)         → sub
   // Hovedsjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
   // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
   // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.

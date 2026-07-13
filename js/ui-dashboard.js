@@ -16,14 +16,12 @@ import {
   genderDistribution,
   activeArtists,
   decadesForRange,
-  limitForDecade,
-  limitForMetaGenre,
-  limitForInstrument,
-} from "./limits.js?v=3.19";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow } from "./ui-helpers.js?v=3.19";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.19";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.19";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.19";
+  DECADES,
+} from "./limits.js?v=3.20";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow } from "./ui-helpers.js?v=3.20";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.20";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.20";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.20";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -129,13 +127,13 @@ export function renderDashboard(el, {
   const covered = genreCounts.filter((g) => g.n > 0).length;
 
   // --- Hovedsjangre (metaGenre-feltet: hver artist teller nøyaktig én gang) -
-  const metaCounts = (config.metaGenres || GENEALOGY_META_GENRES)
+  const metaCounts = GENEALOGY_META_GENRES
     .map((g) => ({ g, n: counts.perMetaGenre[g] || 0 }))
     .sort((a, b) => b.n - a.n || byNo(a.g, b.g));
   const maxMeta = Math.max(1, ...metaCounts.map((m) => m.n));
 
   // --- Tiår ------------------------------------------------------------------
-  const decades = config.decades || [];
+  const decades = DECADES;
   const maxDecade = Math.max(1, ...decades.map((d) => counts.perDecade[d] || 0));
   const thinDecades = decades.filter((d) => (counts.perDecade[d] || 0) <= 1);
 
@@ -456,51 +454,3 @@ function renderGenderChart(dist) {
   `;
 }
 
-export function renderLimits(el, { artists, config }) {
-  const counts = computeCounts(artists);
-
-  const decadeRows = config.decades
-    .map((d) =>
-      limitRow(`${d}-tallet`, counts.perDecade[d] || 0, limitForDecade(config, d))
-    )
-    .join("");
-
-  const genreRows = config.metaGenres
-    .map((g) => limitRow(g, counts.perMetaGenre[g] || 0, limitForMetaGenre(config, g)))
-    .join("");
-
-  const instrumentRows = (config.instruments || [])
-    .map((i) => limitRow(i, counts.perInstrument[i] || 0, limitForInstrument(config, i)))
-    .join("");
-
-  el.innerHTML = `
-    <div class="limits-cols">
-      <div>
-        <h3>Per tiår</h3>
-        <div class="limit-list">${decadeRows}</div>
-      </div>
-      <div>
-        <h3>Per sjanger</h3>
-        <div class="limit-list">${genreRows}</div>
-      </div>
-      <div>
-        <h3>Per instrument</h3>
-        <div class="limit-list">${instrumentRows}</div>
-      </div>
-    </div>
-  `;
-}
-
-function limitRow(label, count, max) {
-  const full = count >= max;
-  return `
-    <div class="limit-row ${full ? "full" : ""}">
-      <span class="limit-label">${escapeHtml(label)}</span>
-      <span class="bar small"><span class="bar-fill" style="width:${pct(
-        count,
-        max
-      )}%"></span></span>
-      <span class="limit-count">${count}/${max}${full ? " 🔒" : ""}</span>
-    </div>
-  `;
-}

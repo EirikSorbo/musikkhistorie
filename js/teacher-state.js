@@ -14,10 +14,11 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.19";
-import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.19";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.19";
-import { $ } from "./shared.js?v=3.19";
+} from "./store.js?v=3.20";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.20";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.20";
+import { DECADES } from "./limits.js?v=3.20";
+import { $ } from "./shared.js?v=3.20";
 
 export const state = {
   artists: [],
@@ -108,9 +109,7 @@ export function splitList(v, fallback) {
 // ----------------------------------------------------------------------------
 
 export function openAdminModal(id) {
-  const el = document.getElementById(id);
-  modalOpen(el);
-  if (id === "modal-fyllingsgrad") renderLimits($("#modal-limits"), state);
+  modalOpen(document.getElementById(id));
 }
 
 export function closeAdminModal(id) {
@@ -137,8 +136,6 @@ export function renderList() {
 
 export function renderAll() {
   if (!state.config) return;
-  if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
-    renderLimits($("#modal-limits"), state);
   // Ventende-filteret slås på fra Skrivebordet (som også slår det av igjen).
   // Når siste forslag er behandlet, slås det av automatisk — ellers ville
   // lista stått igjen tom uten noen synlig grunn.
@@ -151,10 +148,10 @@ export function renderAll() {
 export function refreshControls() {
   const { config } = state;
   fillSelect($("#f-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Alle sjangre" });
-  fillSelect($("#f-genre"), config.metaGenres, { placeholder: "Alle hovedsjangre" });
+  fillSelect($("#f-genre"), GENEALOGY_META_GENRES, { placeholder: "Alle hovedsjangre" });
   fillSelect(
     $("#f-decade"),
-    config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
+    DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Alle tiår" }
   );
   fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });

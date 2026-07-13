@@ -4,15 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.19";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.19";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.19";
-import { isMainGenre, edgeKey } from "./genealogy.js?v=3.19";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.19";
-import { GENDERS } from "./limits.js?v=3.19";
-import { debounce } from "./util.js?v=3.19";
-import { $ } from "./shared.js?v=3.19";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.19";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.20";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.20";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.20";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.20";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.20";
+import { GENDERS } from "./limits.js?v=3.20";
+import { debounce } from "./util.js?v=3.20";
+import { $ } from "./shared.js?v=3.20";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.20";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -145,7 +145,7 @@ export function openEditModal(artistId) {
 
   fillSelect($("#ed-gender"), GENDERS, { placeholder: "Velg kjønn …" });
   $("#ed-gender").value = a.gender || "";
-  fillSelect($("#ed-metaGenre"), c.metaGenres, { placeholder: "Velg sjanger …" });
+  fillSelect($("#ed-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg sjanger …" });
   $("#ed-metaGenre").value = a.metaGenre || "";
   fillSelect($("#ed-instrument"), c.instruments || [], { placeholder: "Ingen / ukjent" });
   $("#ed-instrument").value = a.instrument || "";

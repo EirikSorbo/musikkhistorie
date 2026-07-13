@@ -7,11 +7,12 @@ import {
   subscribeConfig,
   addArtist,
   getClientId,
-} from "./store.js?v=3.19";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.19";
-import { fillSelect } from "./ui.js?v=3.19";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.19";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.19";
+} from "./store.js?v=3.20";
+import { GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.20";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=3.20";
+import { fillSelect } from "./ui.js?v=3.20";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.20";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.20";
 
 const state = {
   artists: [],
@@ -24,7 +25,7 @@ const state = {
 
 function refreshControls() {
   const { config } = state;
-  fillSelect($("#in-metaGenre"), config.metaGenres, { placeholder: "Velg hovedsjanger …" });
+  fillSelect($("#in-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg hovedsjanger …" });
   fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }
@@ -102,8 +103,6 @@ function setupForm() {
       return;
     }
 
-    const { warnings } = checkWarnings(state.artists, state.config, candidate);
-
     submitBtn.disabled = true;
     const origText = submitBtn.textContent;
     submitBtn.textContent = "Sender …";
@@ -113,12 +112,7 @@ function setupForm() {
       resetWorkRows();
       resetMusicExampleRows();
       resetSourceRows();
-      const base = `«${candidate.name}» er sendt inn og venter på godkjenning fra lærer`;
-      if (warnings.length) {
-        showMsg(msg, `${base} NB: ${warnings.join(" ")}`, "warn");
-      } else {
-        showMsg(msg, base, "ok");
-      }
+      showMsg(msg, `«${candidate.name}» er sendt inn og venter på godkjenning fra lærer`, "ok");
     } catch (err) {
       showMsg(msg, "Noe gikk galt: " + err.message, "error");
     } finally {

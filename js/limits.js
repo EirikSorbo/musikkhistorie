@@ -1,30 +1,16 @@
 // ============================================================================
-//  GRENSER OG KONFIGURASJON
+//  KONFIGURASJON, VOKABULAR OG TELLING
 // ----------------------------------------------------------------------------
-//  Standardverdier for pensum-grensene. Alle kan endres av lærer i appen
-//  (lagres i Firestore), men dette er utgangspunktet hvis databasen er tom.
+//  Config-en er slanket til det som faktisk er en lærer-innstilling
+//  (instrument-vokabularet). Hovedsjangre utledes alltid fra slektstreet
+//  (GENEALOGY_META_GENRES) og tiårene fra DECADES-konstanten — de er
+//  strukturakser i appen, ikke innstillinger. Grense-apparatet (maks totalt /
+//  per tiår / per sjanger / per instrument + checkWarnings) er fjernet (v3.20):
+//  det hørte til den opprinnelige forslagsfasen med spredningspress, og hadde
+//  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=3.19";
-
 export const DEFAULT_CONFIG = {
-  maxTotal: 80,
-  maxPerDecade: 8,
-  maxPerMetaGenre: 16,
-  maxPerInstrument: 20,
-  decadeLimits: {},
-  metaGenreLimits: {},
-  instrumentLimits: {},
-
-  // Én sannhetskilde: de brede metasjangrene utledes fra slektstreet.
-  // Læreren kan fortsatt overstyre lista i admin (lagres i Firestore).
-  metaGenres: [...GENEALOGY_META_GENRES],
-
-  decades: [
-    1900, 1910, 1920, 1930, 1940, 1950,
-    1960, 1970, 1980, 1990, 2000, 2010, 2020,
-  ],
-
   instruments: [
     "Vokal",
     "Gitar",
@@ -38,6 +24,13 @@ export const DEFAULT_CONFIG = {
     "Annet",
   ],
 };
+
+// Tiårene appen dekker — strukturakse for histogram, filtre, tiårs-
+// beskrivelser og Skrivebordet. Utvides her når 2030-tallet melder seg.
+export const DECADES = [
+  1900, 1910, 1920, 1930, 1940, 1950,
+  1960, 1970, 1980, 1990, 2000, 2010, 2020,
+];
 
 // Kjønnskategorier brukt i skjema og statistikk
 export const GENDERS = [
@@ -60,21 +53,6 @@ export function isVisible(a) {
 // Bare aktive, synlige forslag teller mot grensene. Skjulte frigjør plass.
 export function activeArtists(artists) {
   return artists.filter(isVisible);
-}
-
-export function limitForDecade(config, decade) {
-  const v = config.decadeLimits?.[decade];
-  return Number.isFinite(v) ? v : config.maxPerDecade;
-}
-
-export function limitForMetaGenre(config, genre) {
-  const v = config.metaGenreLimits?.[genre];
-  return Number.isFinite(v) ? v : config.maxPerMetaGenre;
-}
-
-export function limitForInstrument(config, instrument) {
-  const v = config.instrumentLimits?.[instrument];
-  return Number.isFinite(v) ? v : config.maxPerInstrument;
 }
 
 // Regner ut hvilke tiår en innflytelsesperiode spenner over
@@ -152,48 +130,6 @@ export function computeCounts(artists) {
     perMetaGenre: countBy(active, "metaGenre"),
     perInstrument: countBy(active, "instrument"),
   };
-}
-
-// Myk grensesjekk — advarer men blokkerer ikke.
-// Returnerer { warnings: string[] }
-export function checkWarnings(artists, config, candidate) {
-  const counts = computeCounts(artists);
-  const warnings = [];
-
-  if (counts.total >= config.maxTotal) {
-    warnings.push(
-      `Grensen på ${config.maxTotal} totale forslag er nådd (${counts.total} nå).`
-    );
-  }
-
-  const candidateDecades = decadesForRange(candidate.influenceStart, candidate.influenceEnd);
-  for (const d of candidateDecades) {
-    const c = counts.perDecade[d] || 0;
-    const max = limitForDecade(config, d);
-    if (c >= max) {
-      warnings.push(`${d}-tallet har nådd grensen (${c}/${max}).`);
-    }
-  }
-
-  const metaGenreCount = counts.perMetaGenre[candidate.metaGenre] || 0;
-  const metaGenreMax = limitForMetaGenre(config, candidate.metaGenre);
-  if (metaGenreCount >= metaGenreMax) {
-    warnings.push(
-      `Sjangeren «${candidate.metaGenre}» har nådd grensen (${metaGenreCount}/${metaGenreMax}).`
-    );
-  }
-
-  if (candidate.instrument) {
-    const instrCount = counts.perInstrument[candidate.instrument] || 0;
-    const instrMax = limitForInstrument(config, candidate.instrument);
-    if (instrCount >= instrMax) {
-      warnings.push(
-        `Instrumentet «${candidate.instrument}» har nådd grensen (${instrCount}/${instrMax}).`
-      );
-    }
-  }
-
-  return { warnings };
 }
 
 // Kjønnsfordeling blant aktive forslag — { kvinne: n, mann: n, ... , total }

@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.19";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.19";
-import { debounce, throttle } from "./util.js?v=3.19";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.19";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.19";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.19";
-import { initExplore } from "./explore.js?v=3.19";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.19";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.20";
+import { DEFAULT_CONFIG, DECADES, isVisible, filterArtists } from "./limits.js?v=3.20";
+import { debounce, throttle } from "./util.js?v=3.20";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.20";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.20";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.20";
+import { initExplore } from "./explore.js?v=3.20";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.20";
 
 const state = {
   artists: [],
@@ -333,11 +333,11 @@ function openArtistModal() {
 function refreshFilterControls() {
   const { config } = state;
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
-  fillSelect($("#sp-genre"), config.metaGenres.map(g => ({ value: g, label: g })), { placeholder: "Hovedsjanger" });
+  fillSelect($("#sp-genre"), GENEALOGY_META_GENRES.map(g => ({ value: g, label: g })), { placeholder: "Hovedsjanger" });
   fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
-    config.decades.map((d) => ({ value: d, label: `${d}-tallet` })),
+    DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Tiår" }
   );
   if (state.filters.mainGenre)  $("#sp-sjanger").value = state.filters.mainGenre;
