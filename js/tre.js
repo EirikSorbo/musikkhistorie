@@ -1,11 +1,11 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.20";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.20";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.20";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.20";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.20";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.21";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.21";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.21";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.21";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.21";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.
@@ -31,26 +31,15 @@ function onMainGenreClick(genre) {
   showSjangerInfo(genre, opts) || showSubsjangerInfo(genre, opts);
 }
 
-function buildLc() {
-  return {
-    artists,
-    techItems,
-    genres: buildMainGenreList(artists),
-    onArtistClick: showArtistDetail,
-    onTechClick: showTechDetail,
-    onMainGenreClick,
-  };
-}
-
 function showArtistDetail(a) {
   document.getElementById("ad-title").textContent = a.name;
-  renderArtistDetail(document.getElementById("ad-body"), a, {}, buildLc());
+  renderArtistDetail(document.getElementById("ad-body"), a, {}, sjangerOpts());
   modalOpen(document.getElementById("modal-artist-detail"));
 }
 
 function showTechDetail(t) {
   document.getElementById("td-title").textContent = t.name;
-  renderTechDetail(document.getElementById("td-body"), t, buildLc());
+  renderTechDetail(document.getElementById("td-body"), t, sjangerOpts());
   modalOpen(document.getElementById("modal-tech-detail"));
 }
 
@@ -108,6 +97,9 @@ plCloseBtn.textContent = "← Tilbake";
 plCloseBtn.classList.add("btn", "ghost", "small");
 setupModal(plModal, closePl);
 
+// Delt opts/link-kontekst: brukes både som argument til showSjangerInfo/
+// showSubsjangerInfo OG som link-kontekst i artist-/tech-detaljene (de leser
+// bare feltene de trenger, så ekstra callbacks er harmløse).
 const sjangerOpts = () => ({
   root: document,
   genreDescs: subDescs,

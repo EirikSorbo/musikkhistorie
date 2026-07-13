@@ -14,17 +14,17 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.20";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.20";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.20";
-import { DECADES } from "./limits.js?v=3.20";
-import { $ } from "./shared.js?v=3.20";
+} from "./store.js?v=3.21";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.21";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.21";
+import { DECADES } from "./limits.js?v=3.21";
+import { $ } from "./shared.js?v=3.21";
 
 export const state = {
   artists: [],
   config: null,
   // true når config-lesingen feilet og state.config bare er standardverdier —
-  // da må admin-lagring blokkeres, ellers overskrives de ekte grensene.
+  // da må admin-lagring blokkeres, ellers overskrives lærerens ekte config.
   configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
@@ -95,10 +95,6 @@ export function setContentCheck(category, id, on) {
 //  Små hjelpere
 // ----------------------------------------------------------------------------
 
-export function int(v, fallback) {
-  const n = parseInt(v, 10);
-  return Number.isFinite(n) ? n : fallback;
-}
 export function splitList(v, fallback) {
   const parts = v.split(",").map((s) => s.trim()).filter(Boolean);
   return parts.length ? parts : fallback;

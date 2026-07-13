@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=3.20";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.20";
-import { GENDERS } from "./limits.js?v=3.20";
+import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=3.21";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.21";
+import { GENDERS } from "./limits.js?v=3.21";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -26,6 +26,25 @@ export function wireLinks(el, lc) {
 
 export const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
 
+// Delt «Sjekket»-knapp — ÉN kilde til etikett/klasser, så de fire sjekk-flatene
+// (artistdetalj, sjanger-popup, innovasjonskort, koblingskort) og teacherActionRow
+// aldri driver fra hverandre. checkBtnHtml lager markupen; setCheckBtn/
+// toggleCheckBtn oppdaterer en eksisterende knapp optimistisk (modalene re-
+// rendres ikke av snapshotet). `extra` er ekstra klasser (f.eks. «tcr-check»).
+export function checkBtnHtml(checked, extra = "") {
+  const cls = ("btn ghost small " + extra).trim();
+  return `<button type="button" class="${cls}${checked ? " accent" : ""}">${checked ? "✓ Sjekket" : "Sjekk"}</button>`;
+}
+export function setCheckBtn(btn, checked, extra = "") {
+  btn.className = ("btn ghost small " + extra).trim() + (checked ? " accent" : "");
+  btn.textContent = checked ? "✓ Sjekket" : "Sjekk";
+}
+export function toggleCheckBtn(btn, extra = "") {
+  const now = !btn.classList.contains("accent");
+  setCheckBtn(btn, now, extra);
+  return now;
+}
+
 // Delt lærer-knapperad for detaljvisninger (sjanger, historie, røtter,
 // innovasjonskort osv.): Sjekk helt til venstre, Rediger + Slett til høyre —
 // samme mønster som artistkortene. Vises kun når lærer-callbacks finnes, så
@@ -37,7 +56,7 @@ export function teacherActionRow({ checked = false, edit = true, del = false } =
     del ? `<button type="button" class="btn ghost small tcr-del">Slett</button>` : "",
   ].filter(Boolean).join("");
   return `<div class="teacher-card-actions">
-    <button type="button" class="btn ghost small tcr-check${checked ? " accent" : ""}">${checked ? "✓ Sjekket" : "Sjekk"}</button>
+    ${checkBtnHtml(checked, "tcr-check")}
     <div class="spacer"></div>
     ${right}
   </div>`;
@@ -47,12 +66,7 @@ export function teacherActionRow({ checked = false, edit = true, del = false } =
 // re-rendres ikke av snapshotet), og onCheck(nyTilstand) skriver til Firestore.
 export function wireTeacherRow(container, { onCheck, onEdit, onDelete } = {}) {
   const chk = container.querySelector(".tcr-check");
-  if (chk && onCheck) chk.addEventListener("click", () => {
-    const nowChecked = !chk.classList.contains("accent");
-    chk.classList.toggle("accent", nowChecked);
-    chk.textContent = nowChecked ? "✓ Sjekket" : "Sjekk";
-    onCheck(nowChecked);
-  });
+  if (chk && onCheck) chk.addEventListener("click", () => onCheck(toggleCheckBtn(chk, "tcr-check")));
   const edt = container.querySelector(".tcr-edit");
   if (edt && onEdit) edt.addEventListener("click", onEdit);
   const del = container.querySelector(".tcr-del");
@@ -131,7 +145,7 @@ export function musicExamplesHtml(a) {
 // andre synlige artister på musikalsk slektskap (delte under-/hovedsjangre,
 // samme metasjanger som lett bonus) med nærhet i tid som tiebreaker. Krever
 // minst én delt hoved- eller undersjanger, så lista aldri blir tilfeldig.
-export function relatedArtists(artist, all, { limit = 5 } = {}) {
+function relatedArtists(artist, all, { limit = 5 } = {}) {
   if (!artist || !Array.isArray(all)) return [];
   const sub = new Set(Array.isArray(artist.subGenre) ? artist.subGenre : []);
   const main = new Set(Array.isArray(artist.mainGenre) ? artist.mainGenre : []);

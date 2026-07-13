@@ -61,7 +61,7 @@ export function modalCloseTop() {
   if (top) modalClose(top);
 }
 
-export function modalCloseAll() {
+function modalCloseAll() {
   document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
 }
 

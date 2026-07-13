@@ -41,7 +41,7 @@ export const GENDERS = [
 ];
 
 // ----------------------------------------------------------------------------
-//  TELLING OG GRENSESJEKK
+//  TELLING OG STATISTIKK
 // ----------------------------------------------------------------------------
 
 // Synlig for studenter: aktiv status og ikke lærer-skjult (priority -1).
@@ -50,7 +50,7 @@ export function isVisible(a) {
   return a.status === "active" && (a.priority || 0) !== -1;
 }
 
-// Bare aktive, synlige forslag teller mot grensene. Skjulte frigjør plass.
+// Bare aktive, synlige forslag teller i statistikken. Skjulte utelates.
 export function activeArtists(artists) {
   return artists.filter(isVisible);
 }

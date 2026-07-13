@@ -80,7 +80,6 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
   background-clip: text;
   color: transparent;
 }
-.subtitle { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; }
 
 /* ----- Oppsett-banner ----- */
 .banner {
@@ -162,82 +161,13 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .btn.danger:hover { border-color: var(--danger); background: #fff5f5; }
 
 /* ----- Dashboard / stats ----- */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 16px;
-}
 .stat-card {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 14px 18px;
 }
-.stat-wide { grid-column: 1 / -1; }
-.stat-num {
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1.8rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-.stat-num span { font-size: 0.9rem; color: var(--muted-2); font-weight: 500; }
 .stat-label { color: var(--muted); font-size: 0.82rem; margin-bottom: 6px; }
-.stat-link {
-  background: none;
-  border: none;
-  font: inherit;
-  cursor: pointer;
-  color: var(--accent);
-  padding: 0;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-.stat-link:hover { color: var(--accent-2); }
-
-.subgenre-expand {
-  margin-top: 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  animation: rise 0.2s ease both;
-}
-.subgenre-expand h3 { margin: 0 0 10px; font-size: 0.9rem; }
-.subgenre-tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.subgenre-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.subgenre-chip .tag.tag-sub.tag-link {
-  background: #fff;
-  border-color: var(--line-strong);
-  border-radius: 10px;
-  color: var(--muted);
-  font-style: normal;
-  text-align: center;
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  transition: border-color 0.12s, box-shadow 0.12s, color 0.12s;
-}
-.subgenre-chip .tag.tag-sub.tag-link:hover {
-  border-color: var(--accent);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-}
-.subgenre-edit-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-  padding: 2px 4px;
-  border-radius: 50%;
-  line-height: 1;
-  opacity: 0.5;
-  transition: opacity 0.12s;
-}
-.subgenre-edit-btn:hover { opacity: 1; }
 
 /* ----- Bars ----- */
 .bar {
@@ -474,13 +404,12 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 }
 
 /* ----- Skjema ----- */
-.add-grid, .admin-grid {
+.add-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-.admin-grid { grid-template-columns: repeat(4, 1fr); }
-.add-grid label, .admin-grid label {
+.add-grid label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -488,7 +417,7 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   font-weight: 500;
   color: var(--muted);
 }
-.add-grid .full, .admin-grid .full { grid-column: 1 / -1; }
+.add-grid .full { grid-column: 1 / -1; }
 input, select, textarea {
   font: inherit;
   background: var(--surface);
@@ -507,10 +436,9 @@ input:focus, select:focus, textarea:focus {
 textarea { resize: vertical; }
 .field-label { font-size: 0.82rem; font-weight: 500; color: var(--muted); display: block; margin-bottom: 8px; }
 
-.link-row, .me-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.me-row { flex-wrap: wrap; }
-.link-row .link-label, .me-row .me-label { flex: 1; }
-.link-row .link-url, .me-row .me-url { flex: 1.4; }
+.me-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.me-row .me-label { flex: 1; }
+.me-row .me-url { flex: 1.4; }
 .me-row .me-year { flex: 0 0 90px; }
 .me-row .me-perf-year { flex: 0 0 110px; }
 .me-row .me-note { flex: 1 1 100%; }
@@ -600,28 +528,11 @@ textarea { resize: vertical; }
   border-radius: 100px;
   color: var(--muted);
 }
-.tag.tag-sub { color: var(--accent-2); background: #ecfdf5; border-color: #a7f3d0; }
 /* Sjanger = sterkere grønnyanse, undersjanger = lysere */
 .tag.tag-sjanger { color: #065f46; background: #d1fae5; border-color: #6ee7b7; }
 .tag.tag-under { color: var(--accent-2); background: #ecfdf5; border-color: #a7f3d0; }
 button.tag { cursor: pointer; font-family: inherit; line-height: inherit; }
 button.tag:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
-.subgenre-tag-list .tag {
-  background: #fff;
-  border-color: var(--line-strong);
-  border-radius: 10px;
-  color: var(--muted);
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  transition: border-color 0.12s, box-shadow 0.12s, color 0.12s;
-}
-.subgenre-tag-list .tag:hover {
-  border-color: var(--accent);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-  background: #fff;
-}
-button.tag.tag-sub:hover { border-color: var(--accent-2); }
 button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background: #a7f3d0; }
 /* Sjanger uten artister ennå: nedtonet + stiplet, men fortsatt klikkbar for beskrivelsen. */
 .tag.tag-sjanger.is-empty { color: #9ca3af; background: #f3f4f6; border-color: #e5e7eb; border-style: dashed; }
@@ -635,10 +546,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .tag.tag-prio.prio-2 { background: #e0f2fe; border-color: #38bdf8; color: #075985; }
 .tag.tag-prio.prio-1 { background: #f0fdf4; border-color: #86efac; color: #166534; }
 .tag.tag-prio.prio--1 { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
-.tag.gender-kvinne { color: #be185d; background: #fce7f3; border-color: #fbcfe8; }
-.tag.gender-mann { color: #1d4ed8; background: #dbeafe; border-color: #bfdbfe; }
-.tag.gender-annet { color: #b45309; background: #fef3c7; border-color: #fde68a; }
-.tag.gender-ukjent { color: #475569; background: #f1f5f9; border-color: #e2e8f0; }
 
 .desc { margin: 4px 0; font-size: 0.9rem; color: #2c2e44; }
 .works { margin: 0; font-size: 0.85rem; color: var(--muted); }
@@ -768,7 +675,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 }
 .badge.removed { background: #fee2e2; color: var(--danger); }
 .badge.pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-.badge.protected { background: transparent; }
 .badge.prio-3 { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
 .badge.prio-2 { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
 .badge.prio-1 { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
@@ -816,13 +722,10 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 /* ----- Responsiv ----- */
 @media (max-width: 760px) {
   .add-grid { grid-template-columns: 1fr 1fr; }
-  .admin-grid { grid-template-columns: 1fr 1fr; }
-  .limits-cols { grid-template-columns: 1fr 1fr; gap: 22px; }
   .artist-list { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
-  .add-grid, .admin-grid { grid-template-columns: 1fr; }
-  .limits-cols { grid-template-columns: 1fr; }
+  .add-grid { grid-template-columns: 1fr; }
   .brand h1 { font-size: 1.25rem; }
   .panel { padding: 20px; }
 }
@@ -847,8 +750,7 @@ body.role-student .nav .nav-icon { display: none; }
 body.role-student .version-tag { display: none; }
 
 /* «← Til startsiden» på skjemasiden — kun synlig for studenter (andre har
-   faner). a.btn.student-back er strengt mer spesifikk enn a.btn-regelen, så
-   skjulingen vinner uavhengig av kilderekkefølge. */
+   faner). Skjult som standard; body.role-student viser den. */
 a.btn.student-back { display: none; }
 body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px; }
 
@@ -987,7 +889,6 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .diff-table .diff-row.is-rejected .diff-reject { background: #dc2626; color: #fff; border-color: #dc2626; }
 .diff-empty { color: var(--muted); font-style: italic; }
 .diff-full { margin-top: 6px; font-size: 0.88rem; white-space: pre-wrap; }
-.pending-edit-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 600; border: 1px solid #fcd34d; }
 @media (max-width: 640px) {
   .diff-table, .diff-table thead, .diff-table tbody, .diff-table tr, .diff-table td { display: block; }
   .diff-table thead { display: none; }
@@ -1081,27 +982,15 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   color: var(--text);
 }
 .result-row:hover { background: var(--surface-2); border-color: var(--accent); transform: translateX(3px); }
-.result-row.is-static { cursor: default; }
-.result-row.is-static:hover { background: var(--surface); border-color: var(--line); transform: none; }
 .result-name { font-weight: 600; min-width: 130px; flex-shrink: 0; }
 .result-name.result-link { color: var(--text); text-decoration: none; cursor: pointer; }
 .result-name.result-link:hover { color: var(--text); }
-a.tag.tag-link { cursor: pointer; text-decoration: none; }
-a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
 .result-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; flex: 1; }
 .result-meta .tag { padding: 2px 8px; font-size: 0.72rem; }
 .result-arrow { color: var(--accent); font-size: 1.1rem; margin-left: auto; flex-shrink: 0; }
 .result-work { font-size: 0.78rem; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
 
 /* ----- Spotlight (forside) ----- */
-.spotlight-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 28px;
-  margin-bottom: 12px;
-}
-.spotlight-header h2 { margin: 0; }
 .spotlight-grid {
   display: block;
   margin-top: 0;
@@ -1114,9 +1003,6 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 }
 .filter-bar input,
 .filter-bar select { padding: 8px 11px; font-size: 0.88rem; }
-
-.explore-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-.explore-btns .btn { font-size: 0.9rem; }
 
 .section-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 10px; }
 .dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
@@ -1268,16 +1154,6 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 .podkast-desc { font-size: 0.9rem; color: var(--muted); margin: 0 0 10px; }
 .podkast-episode audio { width: 100%; margin-top: 4px; }
 .podkast-episode .podkast-actions { display: flex; gap: 8px; margin-top: 8px; }
-.podkast-drop-zone {
-  border: 2px dashed var(--line-strong);
-  border-radius: var(--radius-sm);
-  padding: 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-.podkast-drop-zone.drag-over { border-color: var(--accent); background: var(--surface-2); }
-.podkast-drop-zone p { margin: 0; pointer-events: none; }
 
 /* ===========================================================================
    Flersides-elementer: navigasjon, forside-hero, lærerport
@@ -1320,43 +1196,6 @@ a.brand { text-decoration: none; color: inherit; display: flex; align-items: cen
 .nav-icon.teacher-only { display: none; }
 body.is-teacher .nav-icon.teacher-only { display: inline-flex; }
 
-/* Forside-hero */
-.hero { text-align: center; padding: 36px 0 12px; }
-.hero h2 {
-  font-size: 2.3rem;
-  margin: 0 0 12px;
-  line-height: 1.12;
-  background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.hero > p { color: var(--muted); max-width: 620px; margin: 0 auto 28px; font-size: 1.02rem; }
-
-.cta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  max-width: 720px;
-  margin: 0 auto;
-}
-.cta-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.cta-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--line-strong); }
-.cta-emoji { font-size: 1.9rem; }
-.cta-card h3 { margin: 10px 0 4px; font-size: 1.1rem; }
-.cta-card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
-
 /* Lærerport (innlogging) */
 .gate { max-width: 430px; margin: 64px auto; }
 .gate-card {
@@ -1376,43 +1215,6 @@ body.is-teacher .nav-icon.teacher-only { display: inline-flex; }
 #teacher-app { display: none; }
 body.is-teacher #teacher-app { display: block; }
 body.is-teacher #gate { display: none; }
-
-/* ----- Kontekst-seksjon (lærer) ----- */
-.context-sub { font-size: 0.88rem; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
-
-/* ----- Beskrivelsesredigering (lærer) ----- */
-.desc-edit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-height: 60vh;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-.desc-edit-item {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  background: var(--surface-2);
-}
-.desc-edit-item h3 { margin: 0 0 10px; font-size: 1rem; }
-.desc-edit-item label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--muted);
-  margin-bottom: 10px;
-}
-.desc-edit-item textarea { font-size: 0.88rem; }
-.desc-edit-actions { display: flex; align-items: center; gap: 12px; }
-
-
-@media (max-width: 560px) {
-  .cta-grid { grid-template-columns: 1fr; }
-  .hero h2 { font-size: 1.85rem; }
-}
 
 /* ===========================================================================
    Mobil – generelle justeringer
@@ -1443,8 +1245,6 @@ body.is-teacher #gate { display: none; }
   .filter-bar input,
   .filter-bar select { width: 100%; }
 
-  .explore-btns { gap: 8px; }
-  .explore-btns .btn { flex: 1; }
   .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .dash-card { padding: 12px 10px; }
   .dash-icon { width: 18px; height: 18px; }
@@ -1458,8 +1258,8 @@ body.is-teacher #gate { display: none; }
   .result-name { min-width: 110px; }
   .result-work { display: none; }
 
-  /* Skjema: lenke-, verk- og kilderader stables vertikalt */
-  .link-row, .me-row { flex-direction: column; }
+  /* Skjema: verk- og kilderader stables vertikalt */
+  .me-row { flex-direction: column; }
   .source-row { flex-direction: column; }
   .work-row { flex-direction: column; }
   .work-row .work-year { flex: 1; }
@@ -1503,7 +1303,6 @@ body.is-teacher #gate { display: none; }
 .gx-ctrl button:hover { border-color: var(--accent); }
 .gx-grid { stroke: var(--line); stroke-width: 1; opacity: 0.6; }
 .gx-decade { font-size: 12px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
-.gx-super { font-size: 13px; font-weight: 600; fill: var(--muted); font-family: "Space Grotesk", "Inter", sans-serif; }
 
 .gx-edge { stroke: #c2cfc7; stroke-width: 1.4; opacity: 0.35; fill: none; transition: opacity 0.15s, stroke-width 0.15s; }
 .gx-edge.gx-hl { opacity: 1; stroke-width: 2.2; }
@@ -1517,9 +1316,7 @@ body.is-teacher #gate { display: none; }
 .gx-node { cursor: pointer; }
 .gx-node rect { fill: transparent !important; stroke: transparent !important; pointer-events: all; }
 .gx-node text { font-size: 13px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
-.gx-node.gx-sel rect { fill: transparent !important; stroke: transparent !important; }
 .gx-dim { opacity: 0.16; }
-.gx-rowlab { font-size: 11px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
 
 /* Touch: mini-kort øverst til venstre i kartet. Vises kun etter et trykk på en
    node på touch-enheter — se selectTouch() i genealogy.js. Første trykk lyser
@@ -1560,24 +1357,11 @@ body.is-teacher #gate { display: none; }
 .gx-f-rock rect   { fill: #e2e8f0; stroke: #334155; } .gx-f-rock text   { fill: #1e293b; }
 .gx-f-pop rect    { fill: #fae8ff; stroke: #c026d3; } .gx-f-pop text    { fill: #701a75; }
 
-.gx-info {
-  margin-top: 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  min-height: 70px;
-}
-.gx-info h3 { margin: 0 0 2px; font-size: 1.05rem; }
 .gx-era { font-size: 0.8rem; color: var(--muted-2); margin: 0 0 8px; }
 /* pre-line: lange metasjanger-tekster bruker \n\n som avsnittsskille i data. */
 .gx-desc { font-size: 0.92rem; line-height: 1.55; margin: 0 0 10px; color: var(--text); white-space: pre-line; }
 .gx-rel { font-size: 0.85rem; color: var(--muted); margin: 0 0 4px; }
 .gx-rel strong { color: var(--text); font-weight: 600; }
-.gx-tracks { margin: 6px 0 12px; padding-left: 18px; }
-.gx-tracks li { font-size: 0.85rem; line-height: 1.6; color: var(--muted); }
-.gx-tracks a { color: var(--accent); text-decoration: none; }
-.gx-tracks a:hover { text-decoration: underline; color: var(--accent-2); }
 .gx-react-rel strong { color: #b4690e; }
 
 /* Spilleliste-popup */
@@ -1614,12 +1398,6 @@ body.is-teacher #gate { display: none; }
   .btn { padding: 8px 13px; }
   .btn.small { padding: 5px 9px; font-size: 0.78rem; }
 }
-
-@keyframes highlightPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
-  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0.35); }
-}
-.highlight-pulse { animation: highlightPulse 0.75s ease 2; }
 
 .artist-link, .tech-link, .genre-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
 .artist-link { color: var(--accent); }
@@ -1679,7 +1457,6 @@ body.is-teacher #gate { display: none; }
 .sh-lg-star { width: 13px; height: 13px; border-radius: 50%; background: var(--muted-2); flex: none; }
 .sh-lg-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted-2); flex: none; }
 .sh-lg-bridge { width: 11px; height: 11px; border-radius: 50%; background: var(--muted-2); box-shadow: 0 0 0 1.5px var(--text); flex: none; }
-.sh-lg-thread { width: 18px; height: 0; border-top: 2px solid var(--muted-2); flex: none; }
 /* Fokus-panel: flyter øverst i kartet, viser valgt sjanger. */
 .sh-focus-panel {
   position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2;

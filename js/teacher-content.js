@@ -5,18 +5,18 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.20";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.20";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.20";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.20";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.20";
-import { resolveDesc } from "./genre-descriptions.js?v=3.20";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.20";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.21";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.21";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.21";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.21";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.21";
+import { resolveDesc } from "./genre-descriptions.js?v=3.21";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn } from "./ui-helpers.js?v=3.21";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.20";
-import { $ } from "./shared.js?v=3.20";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.20";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.21";
+import { $ } from "./shared.js?v=3.21";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.21";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -244,7 +244,7 @@ export function openTechEditor(t) {
 
 let techAdminCat = "";
 
-export function renderTechAdmin() {
+function renderTechAdmin() {
   const el = document.getElementById("tech-admin-list");
   if (!el) return;
   const filtered = techAdminCat ? state.techItems.filter(t => t.category === techAdminCat) : state.techItems;
@@ -265,7 +265,7 @@ export function renderTechAdmin() {
       </header>
       ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) })}</p>` : ""}
       <div class="card-foot teacher-card-actions" style="margin-top:auto;padding-top:8px">
-        <button class="btn ghost small tech-check-btn${(state.teacherChecks?.tech || []).includes(t.id) ? " accent" : ""}">${(state.teacherChecks?.tech || []).includes(t.id) ? "✓ Sjekket" : "Sjekk"}</button>
+        ${checkBtnHtml((state.teacherChecks?.tech || []).includes(t.id), "tech-check-btn")}
         <div class="spacer"></div>
         <button class="btn ghost small tech-edit-btn">Rediger</button>
         <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
@@ -278,10 +278,7 @@ export function renderTechAdmin() {
   el.querySelectorAll(".tech-check-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.closest("[data-tech-id]").dataset.techId;
-      const nowChecked = !btn.classList.contains("accent");
-      btn.classList.toggle("accent", nowChecked);
-      btn.textContent = nowChecked ? "✓ Sjekket" : "Sjekk";
-      setContentCheck("tech", id, nowChecked);
+      setContentCheck("tech", id, toggleCheckBtn(btn, "tech-check-btn"));
     });
   });
 

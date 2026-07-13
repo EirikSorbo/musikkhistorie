@@ -17,11 +17,11 @@ import {
   activeArtists,
   decadesForRange,
   DECADES,
-} from "./limits.js?v=3.20";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow } from "./ui-helpers.js?v=3.20";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.20";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.20";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.20";
+} from "./limits.js?v=3.21";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.21";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.21";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.21";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.21";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -404,9 +404,7 @@ export function renderDashboard(el, {
     if (edgeChk) {
       const card = edgeChk.closest("[data-ov-edge-from]");
       if (card) {
-        const now = !edgeChk.classList.contains("accent");
-        edgeChk.classList.toggle("accent", now);
-        edgeChk.textContent = now ? "✓ Sjekket" : "Sjekk";
+        const now = toggleCheckBtn(edgeChk, "tcr-check");
         onEdgeCheck?.(card.dataset.ovEdgeFrom, card.dataset.ovEdgeTo, now);
       }
       return;

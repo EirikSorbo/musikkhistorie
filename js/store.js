@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.20";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.20";
-import { isMainGenre } from "./genealogy.js?v=3.20";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.20";
-import { normalizeConfig } from "./config-normalize.js?v=3.20";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.20";
+import { firebaseConfig } from "./firebase-config.js?v=3.21";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.21";
+import { isMainGenre } from "./genealogy.js?v=3.21";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.21";
+import { normalizeConfig } from "./config-normalize.js?v=3.21";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.21";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -153,10 +153,10 @@ export function subscribeArtists(callback) {
   });
 }
 
-// Lytter på konfigurasjon. Bruker standardgrenser til læreren lagrer egne.
+// Lytter på konfigurasjon. Bruker standardconfig til læreren lagrer egen.
 // Callback får (config, meta): meta.fallback er true når lesingen FEILET og
 // configen bare er standardverdier — da må admin-lagring blokkeres, ellers
-// kan et påfølgende lagre overskrive de ekte grensene med standard.
+// kan et påfølgende lagre overskrive lærerens ekte config med standard.
 // (At dokumentet ikke finnes ennå er derimot ikke en feil — da ER standard
 // den reelle configen.)
 export function subscribeConfig(callback) {
@@ -318,12 +318,6 @@ export async function saveEdgeDesc(edgeId, data) {
     { ...data, updatedAt: new Date().toISOString() }, { merge: true });
 }
 
-// Sletter en koblingsbeskrivelse — vises som manglende til ny tekst lagres
-// eller importeres (ingen fallback-tekst i koden).
-export async function deleteEdgeDesc(edgeId) {
-  return deleteDoc(doc(db, "edgeDescriptions", edgeId));
-}
-
 export function subscribePodcasts(callback) {
   return onSnapshot(podcastsCol, (snapshot) => {
     const pods = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -387,10 +381,6 @@ export async function saveDocsBulk(collectionName, entries) {
 // (andre nivåer) beholdes via merge.
 export async function saveGenreDescLevel(genreId, level, data) {
   return setDoc(doc(db, "genreDescriptions", genreId), { [level]: data }, { merge: true });
-}
-
-export async function deleteGenreDesc(genreId) {
-  return deleteDoc(doc(db, "genreDescriptions", genreId));
 }
 
 // Engangs-opprydding (idempotent): hovedsjanger-beskrivelsene på meta-nivå er

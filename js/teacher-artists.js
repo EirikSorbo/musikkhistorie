@@ -4,15 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.20";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.20";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.20";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.20";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.20";
-import { GENDERS } from "./limits.js?v=3.20";
-import { debounce } from "./util.js?v=3.20";
-import { $ } from "./shared.js?v=3.20";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.20";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.21";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.21";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.21";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.21";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.21";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.21";
+import { GENDERS } from "./limits.js?v=3.21";
+import { debounce } from "./util.js?v=3.21";
+import { $ } from "./shared.js?v=3.21";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.21";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -32,18 +33,14 @@ export function openDetail(artist) {
   const editBtn = document.getElementById("detail-edit-btn");
   editBtn.onclick = () => { modalClose(modal); openEditModal(artist.id); };
   const checkBtn = document.getElementById("detail-check-btn");
-  const setBtn = (checked) => {
-    checkBtn.textContent = checked ? "✓ Sjekket" : "Sjekk";
-    checkBtn.className = `btn ghost small ${checked ? "accent" : ""}`;
-  };
-  setBtn(artist.teacherChecked === true);
+  setCheckBtn(checkBtn, artist.teacherChecked === true);
   checkBtn.onclick = () => {
     // Les FERSK tilstand fra state — closure-objektet `artist` oppdateres ikke
     // av sanntidslytteren, så uten dette kunne knappen ikke slås av igjen.
     const cur = state.artists.find((x) => x.id === artist.id) || artist;
     const next = !(cur.teacherChecked === true);
     guardTeacherAction(updateArtistFields(artist.id, { teacherChecked: next }));
-    setBtn(next);
+    setCheckBtn(checkBtn, next);
   };
   modalOpen(modal);
 }
@@ -56,15 +53,14 @@ export function addMainGenreCheckToggle(genre) {
   const checked = list.includes(genre);
   const wrap = document.createElement("div");
   wrap.style.cssText = "margin-top:12px";
-  wrap.innerHTML = `<button class="btn ghost small ${checked ? "accent" : ""}" id="sj-check-btn">${checked ? "✓ Sjekket" : "Sjekk"}</button>`;
+  wrap.innerHTML = checkBtnHtml(checked);
   body.appendChild(wrap);
-  wrap.querySelector("#sj-check-btn").addEventListener("click", () => {
-    const cur = [...(state.teacherChecks[field] || [])];
-    const idx = cur.indexOf(genre);
-    const btn = wrap.querySelector("#sj-check-btn");
-    if (idx >= 0) { cur.splice(idx, 1); btn.textContent = "Sjekk"; btn.className = "btn ghost small"; }
-    else { cur.push(genre); btn.textContent = "✓ Sjekket"; btn.className = "btn ghost small accent"; }
-    setTeacherChecks({ [field]: cur });
+  const btn = wrap.querySelector("button");
+  btn.addEventListener("click", () => {
+    const now = toggleCheckBtn(btn);
+    const cur = new Set(state.teacherChecks[field] || []);
+    now ? cur.add(genre) : cur.delete(genre);
+    setTeacherChecks({ [field]: [...cur] });
   });
 }
 

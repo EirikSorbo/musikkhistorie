@@ -1,8 +1,8 @@
-# Pensumforslag – Populærmusikkhistorie
+# Populærmusikkhistorie – pensum-app
 
-En webapp der studentene i klassen kan foreslå artister/musikere til pensum,
-legge inn relevant informasjon og musikklenker, utforske sjangre/tiår/teknologi,
-og stemme frem forslag de mener er viktige. Læreren har egne adminfunksjoner.
+En webapp for et kuratert musikkhistorie-pensum (MUR114). Læreren bygger og
+vedlikeholder innholdet; klassen utforsker det, og kan *justere* det ved å
+stemme frem de viktigste artistene og foreslå det de mener mangler.
 
 Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 
@@ -10,22 +10,26 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 
 ## Funksjoner
 
-- **Foreslå artist** med navn, fødselsår, kjønn, sjanger, instrument, geografi,
-  begrunnelse, sentrale verk, musikkeksempler, bilde og kilder. Nye forslag
-  venter på lærergodkjenning.
+- **Utforsk pensumet** — «Det store bildet» samler inngangene:
+  - **Slektstre** («Carta» i musicmap-stil): sjangrene fra røtter til i dag,
+    med klikkbare *koblinger* mellom dem (hvordan én sjanger påvirket den neste).
+  - **Sjangerhistorier**, **sjangerbeskrivelser** i tre nivåer (meta/main/sub)
+    og **koblingsbeskrivelser** for hver strek i treet.
+  - **Tidslinje**, **varmekart**, **geografisk kart** og **sjangerhimmel**
+    (stjernekart), pluss tiårskontekst (samfunn + teknologi) og teknologikort.
+- **Finn artister**: søk og filtrer på sjanger, hovedsjanger, tiår og instrument;
+  «dagens artist».
+- **Foreslå artist / innovasjon** (justering av pensumet) med navn, årstall,
+  kjønn, sjanger, instrument, geografi, begrunnelse, verk, musikkeksempler,
+  bilde og kilder. Nye forslag venter på lærergodkjenning.
 - **Endringsforslag**: studenter kan foreslå endringer på eksisterende artist-,
   teknologi-, sjanger- og tiårskort; læreren godkjenner/avviser felt for felt.
-- **Utforsk**: sjangertre («slektstre»), varmekart, sjangerbeskrivelser i tre
-  nivåer (meta/main/sub), tiårskontekst (samfunn + teknologi), teknologikort
-  og podkast-episoder.
-- **Grenser** på antall: totalt, per tiår, per sjanger og per instrument.
-  Grensene er *myke* – studenten får en advarsel når en grense er nådd, men
-  forslaget blokkeres ikke.
-- **Sanntid**: alle ser nye forslag umiddelbart (Firebase Firestore).
 - **Stem frem**: studenter markerer forslag som «svært relevant».
-- **Kjønnsfordeling** og **fyllingsgrad** i lærerens oversikt.
-- **Lærermodus** (Google-innlogging): godkjenn/avvis, prioriter, skjul for
-  studenter, rediger, slett, import/eksport (JSON) og alle grenser.
+- **Sanntid**: alle ser endringer umiddelbart (Firebase Firestore).
+- **Lærermodus** (Google-innlogging): Skrivebord med arbeidsflyt-innboks og
+  sjekk-fremdrift per innholdskategori, Oversikt over pensumets form og hull,
+  innholdsredigering (beskrivelser/historier/koblinger/varmekart), godkjenn/
+  avvis/prioriter/skjul/rediger, import/eksport (JSON) og instrument-vokabular.
 
 ---
 
@@ -34,9 +38,9 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 Fire sider med felles datalag. Rene HTML/JS ES-moduler uten byggesteg.
 
 ```
-index.html            Forside: utforsk-kort, artistsøk, dagens artist
+index.html            Forside: Det store bildet, Finn artister, dagens artist
 student.html          Studentside: foreslå artist
-teacher.html          Lærerside (Google-innlogging): admin, godkjenning, grenser
+teacher.html          Lærerside (Google-innlogging): Skrivebord, Oversikt, admin
 tre.html              Slektstre-siden (sjangerkart i musicmap-stil)
 css/styles.css        Styling (lyst, moderne tema)
 js/
@@ -46,14 +50,17 @@ js/
   store.js            Datalag mot Firestore (sanntid, CRUD, stemming)
   artist-schema.js    ÉN sannhetskilde for artistfeltene (nøkler/etiketter/typer)
   artist-normalize.js Normalisering av artistdata (ren, enhetstestbar)
+  config-normalize.js Config-normalisering (instrument-vokabular)
   import-format.js    Parselogikk for import-JSON (ren, enhetstestbar)
-  limits.js           Grenser, standardkonfig, telling, isVisible, statistikk
-  genealogy.js        Slektstreet — sannhetskilde for sjangre (mainGenre/metaGenre)
+  limits.js           Instrument-standard, DECADES, telling, isVisible, statistikk
+  genealogy.js        Slektstreet — sannhetskilde for sjangre + koblinger (edges)
   genre-descriptions.js  Nivådelte sjangerbeskrivelser (meta/main/sub)
+  constellation.js    Sjangerhimmelen (stjernekart)
+  geo-places.js / geo-map-data.js   Geografisk kart
   linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
   ui.js               Rendering + re-eksport-knutepunkt for ui-*-modulene
   ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff
-  explore.js          Utforsk-modalene (tiår, sjangre, varmekart, podkast …)
+  explore.js          Utforsk-modalene (tiår, sjangre, varmekart, kart, podkast …)
   proposals.js        Endringsforslag-editoren (student)
   landing.js / student.js / tre.js   Side-logikk
   teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler)
@@ -62,10 +69,13 @@ firestore.rules       Sikkerhetsregler for databasen
 bump.sh               Setter ?v=… (cache-busting) fra js/version.js
 ```
 
-**Datamodell (Firestore):** samlingene `artists`, `config`, `decades`,
-`genreDescriptions`, `tech`, `podcasts` og `pendingEdits`. Artistfeltene er
-definert i `js/artist-schema.js`. Bare forslag med `status: "active"` som ikke
-er lærer-skjult (`priority: -1`) vises for studenter og teller mot grensene.
+**Datamodell (Firestore):** samlingene `artists`, `config` (instrument-
+vokabular + `teacherChecks`), `decades`, `genreDescriptions`,
+`edgeDescriptions` (koblingstekster), `content` (innholdssider + varmekart),
+`tech`, `podcasts` og `pendingEdits`. Alt pensuminnhold bor i Firestore — ingen
+fallback-tekster i koden. Artistfeltene er definert i `js/artist-schema.js`.
+Bare forslag med `status: "active"` som ikke er lærer-skjult (`priority: -1`)
+vises for studenter.
 
 ---
 
@@ -99,7 +109,8 @@ er lærer-skjult (`priority: -1`) vises for studenter og teller mot grensene.
    under **Authentication → Settings → Authorized domains** (f.eks.
    `ditt-brukernavn.github.io`). `localhost` er godkjent fra før.
 
-Appen er nå klar. Inntil læreren lagrer egne grenser brukes standardverdiene.
+Appen er nå klar. Innhold legges inn i lærermodus eller importeres via en
+innholdspakke-JSON (Innstillinger → Importer).
 
 ---
 
@@ -129,17 +140,12 @@ nekter push hvis versjonene er i utakt.
 
 ---
 
-## Standardgrenser (kan endres i lærermodus)
+## Vokabular og strukturakser
 
-| Innstilling         | Standard |
-|---------------------|----------|
-| Maks totalt         | 80       |
-| Maks per tiår       | 8        |
-| Maks per sjanger    | 16       |
-| Maks per instrument | 20       |
-
-Metasjangre hentes automatisk fra slektstreet (`js/genealogy.js`).
-Tiår: 1900–2020.
+- **Hovedsjangre** utledes fra slektstreet (`js/genealogy.js`).
+- **Tiår** (1900–2020) er `DECADES`-konstanten i `js/limits.js`.
+- **Instrumenter** er den eneste redigerbare lista i innstillingene (styrer
+  nedtrekksmenyene i forslagsskjema og filtre).
 
 ---
 
@@ -169,5 +175,5 @@ Tiår: 1900–2020.
 ## Utforske uten Firebase
 
 Hvis `firebase-config.js` ikke er fylt ut, starter appen i **oppsettmodus**:
-grensesnittet vises med standardgrenser så du kan se hvordan det ser ut, men
+grensesnittet vises med standardoppsett så du kan se hvordan det ser ut, men
 ingenting lagres før databasen er koblet til.

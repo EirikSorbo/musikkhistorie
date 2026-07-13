@@ -4,5 +4,9 @@
 json files/
 data/
 
+# Pedagogiske arbeidsnotater (personlige, ikke del av appen)
+HOR-ETTER-PROMPT.md
+PEDAGOGISKE-POTENSIALER.md
+
 # Test-avhengigheter (regeltester)
 node_modules/

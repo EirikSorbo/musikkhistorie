@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.20";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.20";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.20";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.20";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.21";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.21";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.21";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.21";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -188,7 +188,7 @@ export function showSjangerInfo(label, opts = {}) {
 // fallback i koden; mangler teksten, vises en tydelig mangler-melding (samme
 // prinsipp som sjangerbeskrivelsene). opts: { root, edgeDescs, artists,
 // techItems, genres, onArtistClick, onTechClick, onMainGenreClick, onEditEdge }
-export function showEdgeInfo(fromId, toId, opts = {}) {
+function showEdgeInfo(fromId, toId, opts = {}) {
   const { root = document, edgeDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onEditEdge } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const a = map[fromId], b = map[toId];

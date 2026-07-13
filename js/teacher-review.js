@@ -5,10 +5,10 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=3.20";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=3.20";
-import { resolveDesc } from "./genre-descriptions.js?v=3.20";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=3.20";
+import { state, guardTeacherAction } from "./teacher-state.js?v=3.21";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=3.21";
+import { resolveDesc } from "./genre-descriptions.js?v=3.21";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=3.21";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;
@@ -101,14 +101,8 @@ function openDiffModal(editId) {
 }
 
 export function setupPendingEditsUi() {
-  const listBtn = document.getElementById("btn-pending-edits");
-  if (listBtn) {
-    listBtn.addEventListener("click", () => {
-      renderPendingEditsList();
-      modalOpen(document.getElementById("modal-pending-edits"));
-    });
-  }
-
+  // Endringsforslag åpnes fra Skrivebordets innboks (renderDesk → review-edits);
+  // det gamle «btn-pending-edits»-inngangspunktet finnes ikke lenger i markupen.
   const list = document.getElementById("pending-edits-list");
   if (list) {
     list.addEventListener("click", async (e) => {
