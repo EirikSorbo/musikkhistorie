@@ -694,6 +694,19 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 /* Flyter inline med resten av hodet. (Var absolutt-sentrert i «Finn
    artister»-hodet, men med tre knapper der kolliderte baren med dem.) */
 .priority-filter-bar { display: flex; align-items: center; gap: 6px; }
+/* Viktighetsgrad-filtrene skal stå midtstilt, ikke presses mot høyre.
+   Student («Finn artister»): baren tas ut av flyten og sentreres på
+   tittelraden (.modal-head er position:relative) — h2 blir liggende til
+   venstre og ←/✕ til høyre, baren midt imellom.
+   Lærer (.list-head): .filters fyller hele bredden (flex-basis:100%), så
+   baren får sin egen sentrerte rad mellom «Sorter navn» og filtrene i stedet
+   for å dele rad med tittelen. */
+#modal-artister #sp-prio-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#t-prio-bar { flex: 0 0 100%; justify-content: center; }
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; border-radius: 10px;

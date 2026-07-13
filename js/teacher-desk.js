@@ -13,14 +13,14 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.28";
-import { modalOpen } from "./ui.js?v=3.28";
-import { renderPendingEditsList } from "./teacher-review.js?v=3.28";
-import { openDetail } from "./teacher-artists.js?v=3.28";
-import { openSingleEdgeModal } from "./teacher-content.js?v=3.28";
-import { GENEALOGY, GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre } from "./genealogy.js?v=3.28";
-import { DECADES } from "./limits.js?v=3.28";
-import { escapeHtml, pct } from "./ui-helpers.js?v=3.28";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.29";
+import { modalOpen } from "./ui.js?v=3.29";
+import { renderPendingEditsList } from "./teacher-review.js?v=3.29";
+import { openDetail } from "./teacher-artists.js?v=3.29";
+import { openSingleEdgeModal } from "./teacher-content.js?v=3.29";
+import { GENEALOGY, GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre } from "./genealogy.js?v=3.29";
+import { DECADES } from "./limits.js?v=3.29";
+import { escapeHtml, pct } from "./ui-helpers.js?v=3.29";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -126,7 +126,7 @@ function catCard(cat) {
       <span class="bar small"><span class="bar-fill" style="width:${pct(checkedItems.length, total || 1)}%"></span></span>
     </div>
     <div class="desk-cat-row">
-      <span class="desk-cat-n"><b>${checkedItems.length}</b> / ${total} sjekket</span>
+      <span class="desk-cat-n"><b>${checkedItems.length}</b> / ${total}</span>
       ${unchecked.length
         ? `<button type="button" class="btn ghost small desk-cat-btn" data-desk-toggle="${cat.key}">${open ? "Skjul" : `Usjekkede (${unchecked.length})`}</button>`
         : `<span class="desk-ok">✓</span>`}

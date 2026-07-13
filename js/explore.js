@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.28";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.28";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.28";
-import { isVisible } from "./limits.js?v=3.28";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.28";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.28";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.28";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.28";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.28";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.28";
-import { renderSjangerhimmel } from "./constellation.js?v=3.28";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.29";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.29";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.29";
+import { isVisible } from "./limits.js?v=3.29";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.29";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.29";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.29";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.29";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.29";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.29";
+import { renderSjangerhimmel } from "./constellation.js?v=3.29";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -238,48 +238,84 @@ ${TECH_DETAIL_MODAL_HTML}
       <h2>Det store bildet</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Tidslinjer, kart og visuelle oversikter — hele historien samlet på ett sted.</p>
     <div class="dash-grid">
       <button class="dash-card" id="sb-om-historie">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#4d7c0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M8 2v4l4 4 4-4V2"/><path d="M8 22v-4l4-4 4 4v4"/></svg>
         <span class="dash-title">Om historie</span>
-        <span class="dash-desc">Hvorfor musikkhistorie — og hva en historie egentlig er</span>
+        <span class="dash-desc">Hvorfor musikkhistorie</span>
       </button>
       <button class="dash-card" id="sb-rotter">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c0 3-2.5 4.5-4 7"/><path d="M12 11c0 3 2.5 4.5 4 7"/><path d="M12 11v7"/><circle cx="12" cy="19.5" r="1.3"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>
         <span class="dash-title">Røtter</span>
-        <span class="dash-desc">Opphavet før 1910 — der alt begynner</span>
+        <span class="dash-desc">Opphavet før 1910</span>
       </button>
       <button class="dash-card" id="sb-historier">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span class="dash-title">Sjangerhistorier</span>
-        <span class="dash-desc">Seks fortellinger — hele pensumet i sammenheng</span>
+        <span class="dash-desc">Fremstillingen av de seks hovedsjangrene</span>
       </button>
       <button class="dash-card" id="sb-tidslinje">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
         <span class="dash-title">Tidslinje</span>
-        <span class="dash-desc">Artistenes aktive år, bane for bane</span>
+        <span class="dash-desc">Artistenes aktive år visualisert</span>
       </button>
       <button class="dash-card" id="sb-slektstre">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/><path d="M12 6v5M12 11c-4 0-7 3-7 7M12 11c4 0 7 3 7 7M12 11v7"/></svg>
         <span class="dash-title">Slektstre</span>
-        <span class="dash-desc">Sjangrenes slektskap fra røtter til i dag</span>
+        <span class="dash-desc">Hvordan sjangrene henger sammen</span>
       </button>
       <button class="dash-card" id="sb-varmekart">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
         <span class="dash-title">Varmekart</span>
-        <span class="dash-desc">Hvor toneangivende sjangrene var, tiår for tiår</span>
+        <span class="dash-desc">Hvor toneangivende sjangrene var i ulike tiår</span>
       </button>
       <button class="dash-card" id="sb-kart">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span class="dash-title">Kart</span>
-        <span class="dash-desc">Musikkens geografi tiår for tiår</span>
+        <span class="dash-desc">Musikkens geografi gjennom ulike tiår</span>
       </button>
       <button class="dash-card" id="sb-himmel">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>
         <span class="dash-title">Sjangerhimmel</span>
-        <span class="dash-desc">Artistene som stjernebilder rundt sjangrene sine</span>
+        <span class="dash-desc">Artistene rundt sjangrene sine</span>
       </button>
+      <button class="dash-card" id="sb-guide">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <span class="dash-title">Slik bruker du appen</span>
+        <span class="dash-desc">Kort om funksjonene og tanken bak</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Slik bruker du appen: en kort bruksveiledning for studentene. Dette er
+     app-dokumentasjon (om appen selv), ikke pensuminnhold — derfor hardkodet
+     her, ikke i content-samlingen. Åpnes som siste kort i «Det store bildet». -->
+<div class="modal-backdrop" id="modal-app-guide">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Slik bruker du appen</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="story-body">
+      <p>Dette er ikke en vanlig lærebok, men et levende pensum du selv er med på å forme. Her er det viktigste for å få mest mulig ut av det.</p>
+
+      <h3>Utforsk fra forsiden</h3>
+      <p>Hvert kort på forsiden er sin egen inngang — <b>Artister</b>, <b>Sjangre</b>, <b>Teknologi</b>, <b>Samfunn</b> og <b>Podkast</b>. Begynn hvor du vil; alt henger sammen.</p>
+
+      <h3>Se det store bildet</h3>
+      <p>Bak «Det store bildet» ligger hele historien fremstilt på flere måter: tidslinje, slektstre, varmekart, kart og sjangerhimmel, i tillegg til sjangerhistoriene og røttene. Musikkhistorie har mange dimensjoner — tid, geografi, slektskap og innflytelse — og hver visning viser én av dem. Bytt mellom dem for å se det samme stoffet fra flere vinkler.</p>
+
+      <h3>Du former pensumet</h3>
+      <p>Savner du en artist, eller mener du noe bør endres? Foreslå det, og stem opp forslag du er enig i. Læreren vurderer alt som kommer inn — pensumet blir det dere gjør det til sammen.</p>
+
+      <h3>Prioriter det viktigste</h3>
+      <p>Stjerne-filtrene lar deg vise bare det viktigste når du repeterer, eller alt når du vil gå i dybden.</p>
+
+      <h3>Dagens artist</h3>
+      <p>Trenger du et sted å begynne, gir «Dagens artist» deg én ny hver gang — en enkel måte å bli kjent med bredden på.</p>
+
+      <p>Tanken bak: start med helheten, zoom inn på det som fanger deg, og kom tilbake så ofte du vil. Jo mer du utforsker og bidrar, jo mer får du ut av appen.</p>
     </div>
   </div>
 </div>
@@ -1220,6 +1256,12 @@ function openStoreBildet() {
   modalOpen(document.getElementById("modal-store-bildet"));
 }
 
+// Bruksveiledningen: hardkodet innhold i markupen (app-dokumentasjon, ikke
+// pensum), åpnes OPPÅ huben som de andre kortene — ← går tilbake dit.
+function openAppGuide() {
+  modalOpen(document.getElementById("modal-app-guide"));
+}
+
 // Innholdssidene «Om historie» (omHistorie) og «Røtter før 1910» (rotter):
 // teksten bor i Firestore (content/<id>.body, markdown-light) og rendres ved
 // hver åpning, så import/redigering slår gjennom umiddelbart. INGEN fallback-
@@ -1336,7 +1378,7 @@ function wireModals() {
    "modal-decade-more", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
    "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
-   "modal-store-bildet", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+   "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
   // Innholdssidenes navigasjonsføtter (statisk markup — innholdet bor i Firestore).
   document.getElementById("omh-rotter")?.addEventListener("click", openRotter);
@@ -1392,6 +1434,7 @@ function wireModals() {
     sbModal.querySelector("#sb-varmekart").addEventListener("click", openVarmekart);
     sbModal.querySelector("#sb-kart").addEventListener("click", openKart);
     sbModal.querySelector("#sb-himmel").addEventListener("click", openSjangerhimmel);
+    sbModal.querySelector("#sb-guide").addEventListener("click", openAppGuide);
   }
 
   const tekExtra = document.getElementById("tek-admin-extra");

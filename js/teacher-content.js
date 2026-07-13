@@ -5,18 +5,18 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.28";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.28";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.28";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.28";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.28";
-import { resolveDesc } from "./genre-descriptions.js?v=3.28";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn } from "./ui-helpers.js?v=3.28";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.29";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.29";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.29";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.29";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.29";
+import { resolveDesc } from "./genre-descriptions.js?v=3.29";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn } from "./ui-helpers.js?v=3.29";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.28";
-import { $ } from "./shared.js?v=3.28";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.28";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.29";
+import { $ } from "./shared.js?v=3.29";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.29";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
