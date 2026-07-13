@@ -13,10 +13,10 @@ import {
   setArtistPriority,
   updateArtistFields,
   getClientId,
-} from "./store.js?v=3.13";
-import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.13";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.13";
-import { $ } from "./shared.js?v=3.13";
+} from "./store.js?v=3.14";
+import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.14";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.14";
+import { $ } from "./shared.js?v=3.14";
 
 export const state = {
   artists: [],
@@ -116,30 +116,16 @@ export function renderList() {
   renderArtists($("#artist-list"), { ...state, handlers, linkCtx: ctx.explore ? ctx.explore.buildLinkCtx() : {} });
 }
 
-export function updatePendingBadge() {
-  const count = state.artists.filter(a => a.status === "pending").length;
-  const badge = $("#pending-badge");
-  const btn = $("#btn-pending");
-  if (!btn) return;
-  badge.textContent = count;
-  badge.style.display = count ? "" : "none";
-  btn.classList.toggle("active", !!state.filters.showPending);
-
-  const pendingTech = state.techItems.filter(t => t.status === "pending").length;
-  const editCount = state.pendingEdits.length + pendingTech;
-  const eBadge = $("#pending-edits-badge");
-  const eBtn = $("#btn-pending-edits");
-  if (eBadge && eBtn) {
-    eBadge.textContent = editCount;
-    eBadge.style.display = editCount ? "" : "none";
-  }
-}
-
 export function renderAll() {
   if (!state.config) return;
   if (document.getElementById("modal-fyllingsgrad").classList.contains("open"))
     renderLimits($("#modal-limits"), state);
-  updatePendingBadge();
+  // Ventende-filteret slås på fra Skrivebordet (som også slår det av igjen).
+  // Når siste forslag er behandlet, slås det av automatisk — ellers ville
+  // lista stått igjen tom uten noen synlig grunn.
+  if (state.filters.showPending && !state.artists.some((a) => a.status === "pending")) {
+    state.filters.showPending = false;
+  }
   renderList();
 }
 

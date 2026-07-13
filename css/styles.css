@@ -806,15 +806,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .prio-filter-btn.active--1 { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; box-shadow: 0 0 0 2px #e2e8f0; }
 .prio-filter-btn svg { pointer-events: none; }
 
-.pending-filter { position: relative; }
-.pending-filter.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
-.pending-count {
-  display: inline-flex; align-items: center; justify-content: center;
-  background: #f59e0b; color: #fff; font-size: 0.7rem; font-weight: 700;
-  min-width: 18px; height: 18px; border-radius: 9px; padding: 0 5px;
-  margin-left: 4px;
-}
-.stat-card.stat-pending { border-left: 3px solid #f59e0b; }
 .btn.ghost.accent { color: var(--accent); border-color: var(--accent); }
 .btn.ghost.accent:hover { background: var(--accent); color: #fff; }
 .btn.small.accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; }
@@ -1192,9 +1183,11 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
   padding: 12px 14px;
 }
 .desk-cat-h { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
-.desk-cat-n { font-size: 0.95rem; color: var(--muted); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.desk-cat-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; min-height: 29px; }
+.desk-cat-n { font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .desk-cat-n b { color: var(--text); font-weight: 700; }
-.desk-cat .bar.small { margin-bottom: 10px; display: block; }
+.desk-cat-btn { flex-shrink: 0; }
+.desk-cat .bar.small { display: block; }
 .desk-cat-list { margin-top: 10px; max-height: 250px; overflow-y: auto; }
 .desk-row {
   display: flex;
@@ -1234,8 +1227,8 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
   cursor: pointer;
 }
 .desk-undo-chip:hover { border-color: var(--danger); color: var(--danger); }
-.desk-foot { margin-top: 12px; }
 .desk-ok { font-size: 0.85rem; color: var(--muted-2); }
+.desk-item.active { border-color: var(--accent); background: #f0fdf4; }
 /* Må stå ETTER basisregelen — regler med lik spesifisitet vinner på rekkefølge,
    media query eller ei (720px-blokka øverst i fila taper mot basis her nede). */
 @media (max-width: 720px) {

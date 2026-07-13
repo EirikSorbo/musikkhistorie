@@ -21,14 +21,14 @@ import {
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.13";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.13";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.13";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.13";
-import { initExplore } from "./explore.js?v=3.13";
+} from "./store.js?v=3.14";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.14";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.14";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.14";
+import { initExplore } from "./explore.js?v=3.14";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge, openAdminModal } from "./teacher-state.js?v=3.13";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.13";
+import { state, ctx, renderAll, refreshControls, openAdminModal } from "./teacher-state.js?v=3.14";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.14";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -42,11 +42,11 @@ import {
   openStoryEditor,
   openPageEditor,
   setupStoryEditor,
-} from "./teacher-content.js?v=3.13";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.13";
-import { renderDesk } from "./teacher-desk.js?v=3.13";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.13";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.13";
+} from "./teacher-content.js?v=3.14";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.14";
+import { renderDesk } from "./teacher-desk.js?v=3.14";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.14";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.14";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -184,9 +184,9 @@ function startApp() {
     refreshDesk();
   });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
-  subscribeTech((items) => { state.techItems = items; updatePendingBadge(); renderPendingEditsList(); refreshDesk(); });
+  subscribeTech((items) => { state.techItems = items; renderPendingEditsList(); refreshDesk(); });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; refreshDesk(); });
-  subscribePendingEdits((edits) => { state.pendingEdits = edits; updatePendingBadge(); renderPendingEditsList(); refreshDesk(); });
+  subscribePendingEdits((edits) => { state.pendingEdits = edits; renderPendingEditsList(); refreshDesk(); });
 
   // Tegn Skrivebordet med en gang (tomt/nullstilt) så panelet ikke står blankt
   // før første snapshot lander.

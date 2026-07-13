@@ -14,13 +14,13 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, updatePendingBadge, guardTeacherAction, handlers } from "./teacher-state.js?v=3.13";
-import { contentGaps, modalOpen } from "./ui.js?v=3.13";
-import { setTeacherChecks } from "./store.js?v=3.13";
-import { renderPendingEditsList } from "./teacher-review.js?v=3.13";
-import { openOversikt, openDetail } from "./teacher-artists.js?v=3.13";
-import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=3.13";
-import { escapeHtml, pct } from "./ui-helpers.js?v=3.13";
+import { state, ctx, renderList, guardTeacherAction, handlers } from "./teacher-state.js?v=3.14";
+import { modalOpen } from "./ui.js?v=3.14";
+import { setTeacherChecks } from "./store.js?v=3.14";
+import { renderPendingEditsList } from "./teacher-review.js?v=3.14";
+import { openDetail } from "./teacher-artists.js?v=3.14";
+import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=3.14";
+import { escapeHtml, pct } from "./ui-helpers.js?v=3.14";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -109,11 +109,13 @@ function catCard(cat) {
 
   return `<div class="desk-cat">
     <div class="desk-cat-h">${escapeHtml(cat.label)}</div>
-    <div class="desk-cat-n"><b>${checkedItems.length}</b> / ${total} sjekket</div>
+    <div class="desk-cat-row">
+      <span class="desk-cat-n"><b>${checkedItems.length}</b> / ${total} sjekket</span>
+      ${unchecked.length
+        ? `<button type="button" class="btn ghost small desk-cat-btn" data-desk-toggle="${cat.key}">${open ? "Skjul" : `Usjekkede (${unchecked.length})`}</button>`
+        : `<span class="desk-ok">✓</span>`}
+    </div>
     <div class="bar small"><span class="bar-fill" style="width:${pct(checkedItems.length, total || 1)}%"></span></div>
-    ${unchecked.length
-      ? `<button type="button" class="btn ghost small desk-cat-btn" data-desk-toggle="${cat.key}">${open ? "Skjul" : `Usjekkede (${unchecked.length})`}</button>`
-      : `<span class="desk-ok">Alle sjekket ✓</span>`}
     <div class="desk-cat-list" style="display:${open && unchecked.length ? "block" : "none"}">${rows}${undo}</div>
   </div>`;
 }
@@ -126,15 +128,15 @@ export function renderDesk(el) {
   const pendingEdits = state.pendingEdits.length
     + state.techItems.filter((t) => t.status === "pending").length;
 
-  const item = (icon, count, noun, action) => `
-    <button type="button" class="desk-item" data-desk="${action}">
+  const item = (icon, count, noun, action, active = false) => `
+    <button type="button" class="desk-item${active ? " active" : ""}" data-desk="${action}"${active ? ` title="Viser ventende i lista — klikk for å vise alle igjen"` : ""}>
       <span class="desk-ic">${icon}</span>
       <span class="desk-item-l"><b>${count}</b> ${noun}</span>
     </button>`;
 
   const inbox = [
     pendingArtists
-      ? item(ICON.artist, pendingArtists, pendingArtists === 1 ? "nytt artistforslag" : "nye artistforslag", "review-artists")
+      ? item(ICON.artist, pendingArtists, pendingArtists === 1 ? "nytt artistforslag" : "nye artistforslag", "review-artists", state.filters.showPending)
       : "",
     pendingEdits ? item(ICON.edit, pendingEdits, "endringsforslag", "review-edits") : "",
   ].filter(Boolean).join("");
@@ -149,17 +151,10 @@ export function renderDesk(el) {
     if (!c.items.some((it) => !c.checkedSet.has(it.id))) openPanels.delete(c.key);
   }
 
-  const gaps = contentGaps(state).total;
-
   el.innerHTML = `
     <p class="section-label">Skrivebord</p>
     ${inboxHtml}
     <div class="desk-grid">${cats.map(catCard).join("")}</div>
-    <div class="desk-foot">
-      ${gaps
-        ? `<button type="button" class="btn ghost small" data-desk="open-oversikt">Innhold som mangler (${gaps})</button>`
-        : `<span class="desk-ok">Alt innhold på plass ✓</span>`}
-    </div>
   `;
 
   el.onclick = (e) => {
@@ -185,19 +180,20 @@ export function renderDesk(el) {
     const act = hit("[data-desk]");
     if (!act) return;
     switch (act.dataset.desk) {
-      case "review-artists":
-        // Slå PÅ ventende-filteret (ikke toggle) og hopp til lista.
-        state.filters.showPending = true;
-        updatePendingBadge();
+      case "review-artists": {
+        // Toggle: den gamle «Ventende»-knappen i filterraden er borte, så
+        // kortet er nå eneste bryter — av-og-på her, auto-av i renderAll når
+        // siste forslag er behandlet.
+        const on = !state.filters.showPending;
+        state.filters.showPending = on;
         renderList();
-        document.getElementById("artist-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        renderDesk(el);
+        if (on) document.getElementById("artist-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
         break;
+      }
       case "review-edits":
         renderPendingEditsList();
         modalOpen(document.getElementById("modal-pending-edits"));
-        break;
-      case "open-oversikt":
-        openOversikt();
         break;
     }
   };

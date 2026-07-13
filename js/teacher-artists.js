@@ -4,15 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge, guardTeacherAction } from "./teacher-state.js?v=3.13";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.13";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.13";
-import { isMainGenre } from "./genealogy.js?v=3.13";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=3.13";
-import { GENDERS } from "./limits.js?v=3.13";
-import { debounce } from "./util.js?v=3.13";
-import { $ } from "./shared.js?v=3.13";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.13";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction } from "./teacher-state.js?v=3.14";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.14";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.14";
+import { isMainGenre } from "./genealogy.js?v=3.14";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=3.14";
+import { GENDERS } from "./limits.js?v=3.14";
+import { debounce } from "./util.js?v=3.14";
+import { $ } from "./shared.js?v=3.14";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.14";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -115,12 +115,6 @@ export function setupFilters() {
   const hideChecked = $("#f-hide-checked");
   hideChecked.checked = state.filters.hideChecked;
   hideChecked.addEventListener("change", (e) => { state.filters.hideChecked = e.target.checked; renderList(); });
-
-  $("#btn-pending").addEventListener("click", () => {
-    state.filters.showPending = !state.filters.showPending;
-    updatePendingBadge();
-    renderList();
-  });
 }
 
 // ----------------------------------------------------------------------------
