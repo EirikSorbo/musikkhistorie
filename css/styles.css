@@ -1531,6 +1531,34 @@ body.is-teacher #gate { display: none; }
 .gx-dim { opacity: 0.16; }
 .gx-rowlab { font-size: 11px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
 
+/* Touch: mini-kort nederst til venstre i kartet (klarer zoom-knappene nederst
+   til høyre). Vises kun etter et trykk på en node på touch-enheter — se
+   selectTouch() i genealogy.js. Første trykk lyser opp slekta og viser dette;
+   «Detaljer» (eller et nytt trykk på noden) åpner popupen. */
+.gx-card {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 130px);
+  display: none;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px 6px 11px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 6;
+}
+.gx-card.show { display: flex; }
+.gx-card-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.gx-card-name {
+  font-size: 0.9rem; font-weight: 600; color: var(--text);
+  font-family: "Inter", sans-serif;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gx-card-btn { flex: none; }
+
 .gx-f-gray rect   { fill: #e7ebe8; stroke: #9bada1; } .gx-f-gray text   { fill: #3a4a40; }
 .gx-f-blue rect   { fill: #dbeafe; stroke: #3b82f6; } .gx-f-blue text   { fill: #1e3a8a; }
 .gx-f-amber rect  { fill: #fef3c7; stroke: #d97706; } .gx-f-amber text  { fill: #7c2d12; }

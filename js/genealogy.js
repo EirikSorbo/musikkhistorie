@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.15";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.15";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.15";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.15";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.16";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.16";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.16";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.16";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -281,7 +281,36 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
     GENEALOGY.forEach((n) => gnodes[n.id].classList.remove("gx-dim"));
     edges.forEach((e) => { e.classList.remove("gx-hl", "gx-dim"); e.style.stroke = ""; });
   }
-  const reset = clearLight;
+
+  // --- Touch: uten hover trykker man for å lyse opp. Første trykk på en node
+  //     dimmer alt utenom slekta (nøyaktig som hover på Mac) og viser et lite
+  //     kort nederst; andre trykk på samme node — eller «Detaljer»-knappen —
+  //     åpner popupen. Kun på touch/pen; mus beholder hover + direkte klikk. ---
+  let selectedId = null;
+  let lastPointerType = "mouse";
+  const card = document.createElement("div");
+  card.className = "gx-card";
+  card.innerHTML =
+    `<span class="gx-card-dot"></span>` +
+    `<span class="gx-card-name"></span>` +
+    `<button type="button" class="btn ghost small gx-card-btn">Detaljer</button>`;
+  stage.appendChild(card);
+  const cardDot = card.querySelector(".gx-card-dot");
+  const cardName = card.querySelector(".gx-card-name");
+  card.querySelector(".gx-card-btn").addEventListener("click", (ev) => {
+    ev.stopPropagation();               // ellers ville stage-klikket nullstilt valget
+    if (selectedId) openModal(selectedId);
+  });
+  function showCard(n) {
+    cardName.textContent = n.l;
+    cardDot.style.background = FAM_STROKE[n.fam] || FAM_STROKE.gray;
+    card.classList.add("show");
+  }
+  function selectTouch(id) { selectedId = id; light(id); showCard(map[id]); }
+  function clearTouchSel() { selectedId = null; card.classList.remove("show"); }
+  const isTouch = () => lastPointerType === "touch" || lastPointerType === "pen";
+
+  function reset() { clearLight(); clearTouchSel(); }
 
   // Klikk → popup med detaljer. Bruker den delte showSjangerInfo, så node-klikk
   // og tag-klikk alltid viser nøyaktig samme popup (én kilde til sannhet).
@@ -297,9 +326,17 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
 
   GENEALOGY.forEach((n) => {
     const g = gnodes[n.id];
-    g.addEventListener("mouseenter", () => light(n.id));
-    g.addEventListener("mouseleave", clearLight);
-    g.addEventListener("click", (ev) => { if (moved) return; ev.stopPropagation(); openModal(n.id); });
+    // Hover-lyset skal ikke overstyre et aktivt touch-valg (mus-events kan bli
+    // syntetisert etter et trykk på touch), derfor sjekk selectedId.
+    g.addEventListener("mouseenter", () => { if (!selectedId) light(n.id); });
+    g.addEventListener("mouseleave", () => { if (!selectedId) clearLight(); });
+    g.addEventListener("click", (ev) => {
+      if (moved) return;
+      ev.stopPropagation();
+      if (!isTouch()) { openModal(n.id); return; }   // mus: som før
+      if (selectedId === n.id) openModal(n.id);        // andre trykk → detaljer
+      else selectTouch(n.id);                           // første trykk → lys opp
+    });
   });
 
   // Lukking av popup (backdrop-klikk + ✕). Escape håndteres på sidenivå
@@ -340,6 +377,7 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
 
   let drag = false, sx, sy;
   stage.addEventListener("pointerdown", (ev) => {
+    lastPointerType = ev.pointerType || "mouse";
     drag = true; moved = false; sx = ev.clientX; sy = ev.clientY;
     stage.classList.add("gx-drag");
   });
@@ -351,7 +389,8 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
   });
   window.addEventListener("pointerup", () => { drag = false; stage.classList.remove("gx-drag"); });
   stage.addEventListener("click", (ev) => {
-    if (!ev.target.closest(".gx-node") && !moved) reset();
+    // Trykk på tomt kart (ikke node, ikke mini-kortet) nullstiller lys + valg.
+    if (!ev.target.closest(".gx-node") && !ev.target.closest(".gx-card") && !moved) reset();
   });
 
   // Forklaring: kun strektypene (avstamning vs. motreaksjon). Fargene varsles
