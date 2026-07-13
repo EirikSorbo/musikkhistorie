@@ -4,15 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction } from "./teacher-state.js?v=3.16";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.16";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.16";
-import { isMainGenre } from "./genealogy.js?v=3.16";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=3.16";
-import { GENDERS } from "./limits.js?v=3.16";
-import { debounce } from "./util.js?v=3.16";
-import { $ } from "./shared.js?v=3.16";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.16";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction } from "./teacher-state.js?v=3.17";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.17";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.17";
+import { isMainGenre } from "./genealogy.js?v=3.17";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=3.17";
+import { GENDERS } from "./limits.js?v=3.17";
+import { debounce } from "./util.js?v=3.17";
+import { $ } from "./shared.js?v=3.17";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.17";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt

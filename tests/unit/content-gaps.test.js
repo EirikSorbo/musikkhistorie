@@ -3,7 +3,7 @@
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=3.16";
+import { contentGaps } from "../../js/ui-dashboard.js?v=3.17";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],

@@ -1531,15 +1531,15 @@ body.is-teacher #gate { display: none; }
 .gx-dim { opacity: 0.16; }
 .gx-rowlab { font-size: 11px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
 
-/* Touch: mini-kort nederst til venstre i kartet (klarer zoom-knappene nederst
-   til høyre). Vises kun etter et trykk på en node på touch-enheter — se
-   selectTouch() i genealogy.js. Første trykk lyser opp slekta og viser dette;
-   «Detaljer» (eller et nytt trykk på noden) åpner popupen. */
+/* Touch: mini-kort øverst til venstre i kartet. Vises kun etter et trykk på en
+   node på touch-enheter — se selectTouch() i genealogy.js. Første trykk lyser
+   opp slekta og viser dette; «Detaljer» (eller et nytt trykk på noden) åpner
+   popupen. (Zoom-knappene ligger nederst til høyre, så ingen kollisjon.) */
 .gx-card {
   position: absolute;
   left: 10px;
-  bottom: 10px;
-  max-width: calc(100% - 130px);
+  top: 10px;
+  max-width: calc(100% - 20px);
   display: none;
   align-items: center;
   gap: 9px;
