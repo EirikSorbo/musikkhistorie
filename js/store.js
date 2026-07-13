@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.24";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.24";
-import { isMainGenre } from "./genealogy.js?v=3.24";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.24";
-import { normalizeConfig } from "./config-normalize.js?v=3.24";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.24";
+import { firebaseConfig } from "./firebase-config.js?v=3.25";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.25";
+import { isMainGenre } from "./genealogy.js?v=3.25";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.25";
+import { normalizeConfig } from "./config-normalize.js?v=3.25";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.25";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -427,6 +427,93 @@ export async function purgeFlatGenreDescs() {
     stale.map((d) => d.id)
   );
   return stale.length;
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING: rydder LÆRER-VEDTATTE duplikat-/foreldreløse sjanger-
+//  dokumenter og slår «Electronic» sammen i tre-noden «Elektronika» (godkjent
+//  2026-07-13). Guardet av et flagg i config/migrations → kjører NØYAKTIG ÉN
+//  gang og gjeninnfører seg aldri om læreren senere legger inn en av sjangrene
+//  på nytt. Idempotent uansett (sletting av borte-dokument = no-op). Sletter
+//  INGEN tre-node-beskrivelse: alle mål er verifisert 0-refererte undersjanger-
+//  dokumenter uten node. Logger alt slettet innhold FØR sletting, så det kan
+//  gjenopprettes fra konsollen eller en backup. B1/B2 (Blues Rock, Trance/DnB)
+//  er BEVISST utelatt — de er node-labels som løser rett via treet.
+// ---------------------------------------------------------------------------
+const GENRE_CLEANUP_FLAG = "genreDuplicateCleanup_2026_07";
+
+// «Electronic» (fri undersjanger, 6 artister) slås sammen i «Elektronika»:
+// artistenes tagg døpes om, og det foreldreløse «Electronic»-dokumentet slettes
+// under (Elektronika beholder sin egen beskrivelse — merge-valget).
+const GENRE_TAG_RENAMES = [["Electronic", "Elektronika"]];
+
+// 23 dokumenter uten node OG uten artist-referanse (etter omdøpingen over):
+// 7 variant-duplikater + «Electronic» + 15 rene foreldreløse.
+const GENRE_DOCS_TO_DELETE = [
+  "country blues", "Neo soul", "NuJazz", "Psykedelisk rock", "Electronica jazz",
+  "Electronica", "Elektronisk musikk", "Electronic",
+  "Afroamerikansk populærmusikk", "Alternative country", "Blues revival",
+  "Country folk", "Crossover", "Dixieland", "Electro house", "Funk jazz",
+  "Jazz rap", "M-Base", "Neoclassicism", "New school hip-hop", "No Wave",
+  "Vaudeville blues", "World music",
+];
+
+// Bytter gamle sjangernavn i en tagg-liste og fjerner duplikater underveis.
+function renameTagsInList(list, renames) {
+  if (!Array.isArray(list)) return { changed: false, value: list };
+  let changed = false;
+  const out = [];
+  for (const v of list) {
+    let nv = v;
+    for (const [from, to] of renames) if (v === from) { nv = to; changed = true; }
+    if (out.includes(nv)) changed = true; else out.push(nv);
+  }
+  return { changed, value: out };
+}
+
+export async function runGenreDuplicateCleanup() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[GENRE_CLEANUP_FLAG]) return { skipped: true };
+
+  // 1) Døp om artist-tagger (Electronic → Elektronika) på tvers av alle felt.
+  const artistSnap = await getDocs(artistsCol);
+  let renamed = 0;
+  for (let i = 0; i < artistSnap.docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    let has = false;
+    for (const d of artistSnap.docs.slice(i, i + BATCH_LIMIT)) {
+      const a = d.data();
+      const upd = {};
+      const mg = renameTagsInList(a.mainGenre, GENRE_TAG_RENAMES);
+      const sg = renameTagsInList(a.subGenre, GENRE_TAG_RENAMES);
+      let meta = a.metaGenre;
+      for (const [from, to] of GENRE_TAG_RENAMES) if (meta === from) meta = to;
+      if (mg.changed) upd.mainGenre = mg.value;
+      if (sg.changed) upd.subGenre = sg.value;
+      if (meta !== a.metaGenre) upd.metaGenre = meta;
+      if (Object.keys(upd).length) { batch.update(d.ref, upd); has = true; renamed++; }
+    }
+    if (has) await batch.commit();
+  }
+
+  // 2) Slett de vedtatte dokumentene. Logg innholdet FØR sletting.
+  const gdSnap = await getDocs(genreDescsCol);
+  const byId = Object.fromEntries(gdSnap.docs.map((d) => [d.id, d.data()]));
+  const deleting = GENRE_DOCS_TO_DELETE.filter((id) => id in byId);
+  if (deleting.length) {
+    console.info("Sjangeropprydding — sletter dokumenter (innhold logget for gjenoppretting):",
+      Object.fromEntries(deleting.map((id) => [id, byId[id]])));
+    for (let i = 0; i < deleting.length; i += BATCH_LIMIT) {
+      const batch = writeBatch(db);
+      for (const id of deleting.slice(i, i + BATCH_LIMIT)) batch.delete(doc(db, "genreDescriptions", id));
+      await batch.commit();
+    }
+  }
+
+  await setDoc(migRef, { [GENRE_CLEANUP_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Sjangeropprydding fullført: «Electronic»→«Elektronika» på ${renamed} artist(er), ${deleting.length} duplikat/foreldreløse dokument(er) slettet.`);
+  return { renamed, deleted: deleting.length };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

@@ -24,14 +24,15 @@ import {
   signOutTeacher,
   purgeMetaGenreDescs,
   purgeFlatGenreDescs,
-} from "./store.js?v=3.24";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.24";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.24";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.24";
-import { initExplore } from "./explore.js?v=3.24";
+  runGenreDuplicateCleanup,
+} from "./store.js?v=3.25";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.25";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.25";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.25";
+import { initExplore } from "./explore.js?v=3.25";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.24";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.24";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.25";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.25";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -47,11 +48,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.24";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.24";
-import { renderDesk } from "./teacher-desk.js?v=3.24";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.24";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.24";
+} from "./teacher-content.js?v=3.25";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.25";
+import { renderDesk } from "./teacher-desk.js?v=3.25";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.25";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.25";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -212,6 +213,11 @@ function startApp() {
   // blokkere oppstart.
   purgeMetaGenreDescs().catch((e) => console.warn("Meta-opprydding feilet:", e?.message || e));
   purgeFlatGenreDescs().catch((e) => console.warn("Flat-felt-opprydding feilet:", e?.message || e));
+
+  // Engangs (flagg-guardet i config/migrations): slett vedtatte duplikat-/
+  // foreldreløse sjangerdokumenter og slå «Electronic» sammen i «Elektronika».
+  // Kjører nøyaktig én gang; se konsoll-loggen for hva den gjorde.
+  runGenreDuplicateCleanup().catch((e) => console.warn("Sjangeropprydding feilet:", e?.message || e));
 
   // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
   // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.
