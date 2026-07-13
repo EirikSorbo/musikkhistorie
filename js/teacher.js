@@ -11,6 +11,7 @@ import {
   subscribeConfig,
   subscribeDecades,
   subscribeGenreDescs,
+  subscribeEdgeDescs,
   subscribeContent,
   subscribePodcasts,
   subscribeTech,
@@ -22,19 +23,20 @@ import {
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.17";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.17";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.17";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.17";
-import { initExplore } from "./explore.js?v=3.17";
+} from "./store.js?v=3.18";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.18";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.18";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.18";
+import { initExplore } from "./explore.js?v=3.18";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.17";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.17";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.18";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.18";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
   setupDecadeSingleSave,
   setupSubgenreSingleSave,
+  setupEdgeSingleSave,
   openTechAdmin,
   setupTechAdmin,
   openPodkastAdmin,
@@ -44,11 +46,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.17";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.17";
-import { renderDesk } from "./teacher-desk.js?v=3.17";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.17";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.17";
+} from "./teacher-content.js?v=3.18";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.18";
+import { renderDesk } from "./teacher-desk.js?v=3.18";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.18";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.18";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -106,6 +108,7 @@ function startApp() {
   setupDecadeSingleSave();
   setupPendingEditsUi();
   setupSubgenreSingleSave();
+  setupEdgeSingleSave();
   setupStoryEditor();
 
   ctx.explore = initExplore({
@@ -185,6 +188,7 @@ function startApp() {
   });
   subscribeDecades((d) => { state.decadeDescs = d; });
   subscribeGenreDescs((s) => { state.genreDescs = s; refreshDesk(); });
+  subscribeEdgeDescs((m) => { state.edgeDescs = m; });
   subscribeContent((c) => {
     state.content = c;
     state.contentLoaded = true;

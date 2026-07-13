@@ -14,10 +14,10 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.17";
-import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.17";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.17";
-import { $ } from "./shared.js?v=3.17";
+} from "./store.js?v=3.18";
+import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.18";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.18";
+import { $ } from "./shared.js?v=3.18";
 
 export const state = {
   artists: [],
@@ -27,6 +27,8 @@ export const state = {
   configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
+  // Koblingsbeskrivelser (strekene i slektstreet), doc-ID «fra__til».
+  edgeDescs: {},
   // Innholdssidene (Om historie, Røtter) + varmekartet fra content-samlingen.
   // contentLoaded skiller «laster fortsatt» fra «mangler faktisk tekst».
   content: {},

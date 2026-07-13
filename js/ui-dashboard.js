@@ -19,11 +19,11 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=3.17";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.17";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.17";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.17";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.17";
+} from "./limits.js?v=3.18";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.18";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.18";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.18";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.18";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -65,7 +65,7 @@ function artistRows(list, extraTag = () => "") {
 // rålistene så oppringeren kan vise navn; `total` er summen på tvers av bøtter
 // (en artist som mangler både bilde og kilder teller som to punkter å fylle).
 // Sider (rotter/omHistorie) teller først når innholdet faktisk er lastet.
-export function contentGaps({ artists = [], genreDescs = {}, content = {}, contentLoaded = false }) {
+export function contentGaps({ artists = [], genreDescs = {}, edgeDescs = {}, content = {}, contentLoaded = false }) {
   const active = activeArtists(artists);
   const subTags = [...new Set(active.flatMap((a) => [
     ...(a.mainGenre || []).filter((x) => !isMainGenre(x)),
@@ -78,19 +78,23 @@ export function contentGaps({ artists = [], genreDescs = {}, content = {}, conte
     .map((n) => n.l).sort(byNo);
   const subDesc = subTags
     .filter((n) => !resolveDesc(genreDescs, n, "sub").description).sort(byNo);
+  // Koblingene (strekene) i slektstreet uten beskrivelse i edgeDescriptions.
+  const edgeDesc = GENEALOGY_EDGES
+    .filter((e) => !(edgeDescs[edgeKey(e.from, e.to)]?.description));
   const noImage = active.filter((a) => !a.imageUrl).sort(byName);
   const noDesc = active.filter((a) => !(a.description || "").trim()).sort(byName);
   const noMusic = active.filter((a) => !(a.musicExamples || []).length).sort(byName);
   const noSources = active.filter((a) => !(a.kilder || []).length).sort(byName);
-  const total = stories.length + pages.length + mainDesc.length + subDesc.length
+  const total = stories.length + pages.length + mainDesc.length + subDesc.length + edgeDesc.length
     + noImage.length + noDesc.length + noMusic.length + noSources.length;
-  return { stories, pages, mainDesc, subDesc, noImage, noDesc, noMusic, noSources, total };
+  return { stories, pages, mainDesc, subDesc, edgeDesc, noImage, noDesc, noMusic, noSources, total };
 }
 
 export function renderDashboard(el, {
   artists,
   config,
   genreDescs = {},
+  edgeDescs = {},
   techItems = [],
   content = {},
   contentLoaded = false,
@@ -98,6 +102,7 @@ export function renderDashboard(el, {
   countForGenre = () => 0,
   onEditArtist,
   onEditDesc,
+  onEditEdge,
   onShowArtistList,
 }) {
   const active = activeArtists(artists);
@@ -153,7 +158,7 @@ export function renderDashboard(el, {
     .sort(byNo);
 
   // --- Innhold som mangler — samme telling som Skrivebordet (contentGaps) ------
-  const gaps = contentGaps({ artists, genreDescs, content, contentLoaded });
+  const gaps = contentGaps({ artists, genreDescs, edgeDescs, content, contentLoaded });
   const storiesMissing = gaps.stories;
   const pageStatus = (id) => (contentLoaded ? !!pageFor(id, content) : null);
   const rotterOk = pageStatus("rotter");
@@ -216,6 +221,27 @@ export function renderDashboard(el, {
 
   const noSjangerX = expandList(artistRows(artistsNoSjanger), artistsNoSjanger.length);
   const orphanX = expandList(orphanedSubgenres.map((s) => nameRow(s, `data-ov-subinfo="${escapeHtml(s)}"`)).join(""), orphanedSubgenres.length);
+
+  // --- Sjangerkoblinger (strekene i slektstreet) -----------------------------
+  // Lista viser ALLE koblinger (ikke bare manglende) — dette er lærerens eneste
+  // redigeringsflate for koblingstekstene, så også skrevne må kunne åpnes.
+  // Manglende først. Merket ⚠/✓ + «motreaksjon» der det gjelder.
+  const nodeById = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
+  const edgeMissingSet = new Set(gaps.edgeDesc.map((e) => edgeKey(e.from, e.to)));
+  const edgeRows = [...GENEALOGY_EDGES]
+    .sort((a, b) => {
+      const am = edgeMissingSet.has(edgeKey(a.from, a.to)) ? 0 : 1;
+      const bm = edgeMissingSet.has(edgeKey(b.from, b.to)) ? 0 : 1;
+      return am - bm || byNo(nodeById[a.from].l, nodeById[b.from].l) || byNo(nodeById[a.to].l, nodeById[b.to].l);
+    })
+    .map((e) => {
+      const missing = edgeMissingSet.has(edgeKey(e.from, e.to));
+      const meta = `${missing ? `<span class="tag" style="color:var(--danger)">⚠ mangler</span>` : `<span class="tag">✓</span>`}${e.react ? `<span class="tag">motreaksjon</span>` : ""}`;
+      return nameRow(`${nodeById[e.from].l} → ${nodeById[e.to].l}`,
+        `data-ov-edge-from="${escapeHtml(e.from)}" data-ov-edge-to="${escapeHtml(e.to)}"`, meta);
+    }).join("");
+  const edgesFilled = GENEALOGY_EDGES.length - gaps.edgeDesc.length;
+  const edgeX = expandList(edgeRows, GENEALOGY_EDGES.length);
 
   el.innerHTML = `
     <div class="ov-kick">Pensumets form</div>
@@ -307,6 +333,13 @@ export function renderDashboard(el, {
         mainMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="main"`)).join(""))}
       ${missItem("Undersjangre uten beskrivelse", subMissing.length,
         subMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="sub"`)).join(""))}
+      <div class="ov-miss-item">
+        <button type="button" class="ov-miss-head" ${edgeX.btn}>
+          <span>Sjangerkoblinger (strekene i slektstreet)</span>
+          <span class="ov-count ${gaps.edgeDesc.length ? "ov-warn" : "ov-ok"}">${edgesFilled}/${GENEALOGY_EDGES.length}</span>
+        </button>
+        ${edgeX.panel}
+      </div>
       ${missItem("Artister uten beskrivelse", noDesc.length, artistRows(noDesc))}
       ${missItem("Artister uten bilde", noImage.length, artistRows(noImage))}
       ${missItem("Artister uten musikkeksempler", noMusic.length, artistRows(noMusic))}
@@ -357,6 +390,9 @@ export function renderDashboard(el, {
 
     const desc = hit("[data-ov-desc]");
     if (desc) return onEditDesc?.(desc.dataset.ovDesc, desc.dataset.ovLevel);
+
+    const edge = hit("[data-ov-edge-from]");
+    if (edge) return onEditEdge?.(edge.dataset.ovEdgeFrom, edge.dataset.ovEdgeTo);
 
     const open = hit("[data-ov-open]");
     if (open) return open.dataset.ovOpen === "tech" ? explore?.openTeknologi() : explore?.openSubgenreList();

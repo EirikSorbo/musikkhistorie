@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.17";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.17";
-import { isMainGenre } from "./genealogy.js?v=3.17";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.17";
-import { normalizeConfig } from "./config-normalize.js?v=3.17";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.17";
+import { firebaseConfig } from "./firebase-config.js?v=3.18";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.18";
+import { isMainGenre } from "./genealogy.js?v=3.18";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.18";
+import { normalizeConfig } from "./config-normalize.js?v=3.18";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.18";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -74,6 +74,9 @@ const decadesCol = collection(db, "decades");
 // Sjangerbeskrivelser (alle nivåer: meta/main/sub). Het tidligere «subgenres»
 // — navnet kolliderte med artistfeltet `subGenre`; migrert 2026-07.
 const genreDescsCol = collection(db, "genreDescriptions");
+// Koblingsbeskrivelser (strekene i slektstreet). Doc-ID = edgeKey(fra, til),
+// f.eks. "blues__jazz" — se GENEALOGY_EDGES/edgeKey i genealogy.js.
+const edgeDescsCol = collection(db, "edgeDescriptions");
 const podcastsCol = collection(db, "podcasts");
 const techCol = collection(db, "tech");
 const pendingEditsCol = collection(db, "pendingEdits");
@@ -297,6 +300,28 @@ export function subscribeGenreDescs(callback) {
     snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
     callback(m);
   }, (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
+}
+
+export function subscribeEdgeDescs(callback) {
+  return onSnapshot(edgeDescsCol, (snapshot) => {
+    const m = {};
+    snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
+    callback(m);
+  }, (err) => console.error("Kunne ikke lese koblingsbeskrivelser (sjekk Firestore-regler):", err.message));
+}
+
+// Lagrer beskrivelsen for én kobling (strek i treet). updatedAt som ISO-streng
+// (ikke serverTimestamp) så feltet overlever JSON-eksport → import uten å
+// endre type — samme regel som story-feltet.
+export async function saveEdgeDesc(edgeId, data) {
+  return setDoc(doc(db, "edgeDescriptions", edgeId),
+    { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+}
+
+// Sletter en koblingsbeskrivelse — vises som manglende til ny tekst lagres
+// eller importeres (ingen fallback-tekst i koden).
+export async function deleteEdgeDesc(edgeId) {
+  return deleteDoc(doc(db, "edgeDescriptions", edgeId));
 }
 
 export function subscribePodcasts(callback) {

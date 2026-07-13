@@ -3,7 +3,8 @@
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=3.17";
+import { contentGaps } from "../../js/ui-dashboard.js?v=3.18";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.18";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
@@ -57,12 +58,21 @@ test("contentGaps: main-beskrivelse fjerner sjangeren fra mainDesc", () => {
   assert.ok(!withBlues.mainDesc.includes("Blues"));
 });
 
+test("contentGaps: koblingsbeskrivelse fjerner koblingen fra edgeDesc", () => {
+  const empty = contentGaps({ artists: [] });
+  assert.equal(empty.edgeDesc.length, GENEALOGY_EDGES.length);
+  assert.ok(empty.edgeDesc.some((e) => e.from === "blues" && e.to === "jazz"));
+  const withOne = contentGaps({ artists: [], edgeDescs: { [edgeKey("blues", "jazz")]: { description: "b" } } });
+  assert.equal(withOne.edgeDesc.length, GENEALOGY_EDGES.length - 1);
+  assert.ok(!withOne.edgeDesc.some((e) => e.from === "blues" && e.to === "jazz"));
+});
+
 test("contentGaps: total er summen av alle bøtter", () => {
   const g = contentGaps({
     artists: [artist({ name: "X", imageUrl: "" })],
     genreDescs: {}, content: {}, contentLoaded: true,
   });
   const sum = g.stories.length + g.pages.length + g.mainDesc.length + g.subDesc.length
-    + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length;
+    + g.edgeDesc.length + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length;
   assert.equal(g.total, sum);
 });

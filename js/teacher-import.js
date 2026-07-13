@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.17";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.18";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,12 +17,12 @@ import {
   addPodcast,
   updatePodcast,
   updateConfig,
-} from "./store.js?v=3.17";
-import { escapeHtml } from "./ui.js?v=3.17";
-import { $ } from "./shared.js?v=3.17";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.17";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.17";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.17";
+} from "./store.js?v=3.18";
+import { escapeHtml } from "./ui.js?v=3.18";
+import { $ } from "./shared.js?v=3.18";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.18";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.18";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.18";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -125,6 +125,15 @@ function buildExportData() {
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
     .forEach(([id, rest]) => { genreDescriptions[genreSectionOf(id)][id] = rest; });
 
+  // Koblingsbeskrivelser (strekene i slektstreet) — doc-ID «fra__til» beholdes
+  // som nøkkel, så import kan skrive rett tilbake til samme dokumenter.
+  const edgeDescriptions = {};
+  Object.entries(state.edgeDescs || {})
+    .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
+    .filter(([, rest]) => rest.description)
+    .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
+    .forEach(([id, rest]) => { edgeDescriptions[id] = rest; });
+
   const tech = state.techItems.map(t => {
     const { id, ...rest } = t;
     return rest;
@@ -146,7 +155,7 @@ function buildExportData() {
     return rest;
   });
 
-  const out = { artists, decades, genreDescriptions, tech, pages, podcasts, config: state.config || null };
+  const out = { artists, decades, genreDescriptions, edgeDescriptions, tech, pages, podcasts, config: state.config || null };
   if (varmekart) out.varmekart = varmekart;
   return out;
 }
@@ -186,7 +195,7 @@ function formatImportErrors(errors) {
 }
 
 // Innholdsdeler en importfil kan bære utover artistene.
-const CONTENT_KEYS = ["decades", "genreDescriptions", "subgenres", "tech", "pages", "varmekart", "podcasts", "config"];
+const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "subgenres", "tech", "pages", "varmekart", "podcasts", "config"];
 
 function importParts(data) {
   const parts = [];
@@ -196,6 +205,8 @@ function importParts(data) {
   if (decadeCount) parts.push(`${decadeCount} tiårsbeskrivelser`);
   const subCount = Object.keys(data.genreDescriptions || {}).length;
   if (subCount) parts.push(`${subCount} sjangerbeskrivelser`);
+  const edgeCount = Object.keys(data.edgeDescriptions || {}).length;
+  if (edgeCount) parts.push(`${edgeCount} koblingsbeskrivelser`);
   if ((data.tech || []).length) parts.push(`${data.tech.length} teknologier`);
   const pageCount = Object.keys(data.pages || {}).length;
   if (pageCount) parts.push(`${pageCount} innholdsside(r)`);
@@ -223,6 +234,7 @@ async function handleImportFile(file) {
       // Nytt nøkkelnavn er «genreDescriptions»; eldre filer bruker «subgenres».
       // Nytt format er nestet pr. nivå — flat ut til { navn: dokument }.
       genreDescriptions: flattenGenreDescriptions(raw.genreDescriptions || raw.subgenres || {}),
+      edgeDescriptions: raw.edgeDescriptions || {},
       tech: raw.tech || [],
       pages: raw.pages || {},
       varmekart: raw.varmekart || null,
@@ -297,7 +309,7 @@ export function setupImportChoice() {
   }
 }
 
-async function importDescriptions({ decades, genreDescriptions }) {
+async function importDescriptions({ decades, genreDescriptions, edgeDescriptions }) {
   const decadeEntries = Object.entries(decades || {})
     .filter(([, data]) => hasDecadeContent(data))
     .map(([id, data]) => ({ id, data }));
@@ -323,6 +335,12 @@ async function importDescriptions({ decades, genreDescriptions }) {
     }
   }
 
+  // Koblingsbeskrivelser: nøkkelen ER dokument-ID-en («fra__til»); kun
+  // oppføringer med tekst skrives (tomme ville bare skapt spøkelsesdokumenter).
+  const edgeEntries = Object.entries(edgeDescriptions || {})
+    .filter(([, data]) => data && data.description)
+    .map(([id, data]) => ({ id, data }));
+
   // Batchet skriving (saveDocsBulk) i stedet for dokument-for-dokument.
   // En batch er alt-eller-ingenting, så feiltelling skjer per samling.
   let ok = 0, fail = 0;
@@ -330,9 +348,11 @@ async function importDescriptions({ decades, genreDescriptions }) {
   catch (e) { fail += decadeEntries.length; console.error("Tiår-import feilet:", e); }
   try { ok += await saveDocsBulk("genreDescriptions", genreEntries); }
   catch (e) { fail += genreEntries.length; console.error("Sjanger-import feilet:", e); }
+  try { ok += await saveDocsBulk("edgeDescriptions", edgeEntries); }
+  catch (e) { fail += edgeEntries.length; console.error("Koblings-import feilet:", e); }
 
   if (fail > 0) {
-    alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+    alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions', 'edgeDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
     alert(`${ok} beskrivelse(r) importert.`);
   }

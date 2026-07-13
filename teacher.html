@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.17" />
+  <link rel="stylesheet" href="css/styles.css?v=3.18" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -504,6 +504,31 @@
     </div>
   </div>
 
+  <!-- Enkelt koblingsbeskrivelse (strek i slektstreet) -->
+  <div class="modal-backdrop" id="modal-edge-single">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="edge-single-title"></h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" id="edge-single-type" style="margin:0 0 10px"></p>
+      <div class="add-grid" style="grid-template-columns:1fr">
+        <label>Beskrivelse av koblingen
+          <textarea id="es-desc" rows="5" placeholder="Hvordan påvirket den ene sjangeren den andre? Hva ble ført videre — og hva ble nytt?"></textarea>
+        </label>
+        <div>
+          <span class="field-label">Kilder for koblingen</span>
+          <div id="es-kilder-rows"></div>
+          <button type="button" id="es-add-kilder" class="btn ghost small">+ Legg til kilde</button>
+        </div>
+        <div class="add-actions">
+          <button type="button" id="es-save" class="btn primary">Lagre</button>
+          <span id="es-msg" class="form-msg ok"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Podkast-administrasjon -->
   <div class="modal-backdrop" id="modal-podkast-admin">
     <div class="modal modal-wide">
@@ -640,7 +665,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.17"></script>
-  <script type="module" src="js/teacher.js?v=3.17"></script>
+  <script src="js/load-guard.js?v=3.18"></script>
+  <script type="module" src="js/teacher.js?v=3.18"></script>
 </body>
 </html>

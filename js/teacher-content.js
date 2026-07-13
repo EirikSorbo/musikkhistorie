@@ -5,17 +5,18 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.17";
-import { saveDecadeDesc, saveGenreDescLevel, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.17";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.17";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.17";
-import { resolveDesc } from "./genre-descriptions.js?v=3.17";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.17";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.18";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.18";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.18";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.18";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.18";
+import { resolveDesc } from "./genre-descriptions.js?v=3.18";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.18";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.17";
-import { $ } from "./shared.js?v=3.17";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.17";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.18";
+import { $ } from "./shared.js?v=3.18";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.18";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -94,6 +95,53 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
   modal.dataset.subgenre = subgenreId;
   modal.dataset.level = level;
   openAdminModal("modal-subgenre-single");
+}
+
+// Rediger beskrivelsen for én kobling (strek i slektstreet). Doc-ID i
+// edgeDescriptions = edgeKey(fra, til); tittelen viser de fulle navnene.
+export function openSingleEdgeModal(fromId, toId) {
+  const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
+  const a = map[fromId], b = map[toId];
+  if (!a || !b) return;
+  const react = (b.rx || []).includes(fromId);
+  const docData = state.edgeDescs[edgeKey(fromId, toId)] || {};
+  $("#edge-single-title").textContent = `${a.f} → ${b.f}`;
+  $("#edge-single-type").textContent = react
+    ? "Motreaksjon — hvorfor gjorde den nye sjangeren opprør mot den gamle?"
+    : "Avstamning / påvirkning — hva ble ført videre, og hva ble nytt?";
+  $("#es-desc").value = docData.description || "";
+  $("#es-msg").textContent = "";
+  const kilderWrap = $("#es-kilder-rows");
+  if (kilderWrap) {
+    kilderWrap.innerHTML = "";
+    const kilder = Array.isArray(docData.kilder) ? docData.kilder : [];
+    (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || ""));
+  }
+  const modal = $("#modal-edge-single");
+  modal.dataset.edgeFrom = fromId;
+  modal.dataset.edgeTo = toId;
+  openAdminModal("modal-edge-single");
+}
+
+export function setupEdgeSingleSave() {
+  const addKilderBtn = $("#es-add-kilder");
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#es-kilder-rows"), "", ""));
+
+  $("#es-save").addEventListener("click", async () => {
+    const modal = $("#modal-edge-single");
+    const description = $("#es-desc").value.trim();
+    const kilder = collectKilderRows($("#es-kilder-rows"));
+    const msg = $("#es-msg");
+    try {
+      await saveEdgeDesc(edgeKey(modal.dataset.edgeFrom, modal.dataset.edgeTo), { description, kilder });
+      msg.textContent = "Lagret ✓";
+      msg.className = "form-msg ok";
+      setTimeout(() => closeAdminModal("modal-edge-single"), 800);
+    } catch (err) {
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
+  });
 }
 
 function buildDecadeKilderRows(kilder) {

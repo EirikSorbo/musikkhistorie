@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.17";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.17";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.17";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.17";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.18";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.18";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.18";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.18";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -83,6 +83,24 @@ export const GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).ma
 // fra GENEALOGY (≈ kronologisk). Brukes som rader i varmekartet — utvides
 // automatisk når nye supersjangre legges inn i treet.
 export const GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
+
+// Alle koblinger (streker) i treet: avstamning/påvirkning (p) + motreaksjon
+// (rx), i definisjonsrekkefølge. Delt av slektstreets trykkbaner, lærer-
+// oversikten (koblinger uten beskrivelse) og eksport/import.
+export const GENEALOGY_EDGES = (() => {
+  const edges = [];
+  GENEALOGY.forEach((n) => {
+    const ps = n.p.slice();
+    (n.rx || []).forEach((id) => { if (!ps.includes(id)) ps.push(id); });
+    ps.forEach((pid) => edges.push({ from: pid, to: n.id, react: (n.rx || []).includes(pid) }));
+  });
+  return edges;
+})();
+
+// Dokument-ID i Firestore-samlingen edgeDescriptions for koblingen fra → til.
+export function edgeKey(fromId, toId) {
+  return `${fromId}__${toId}`;
+}
 
 // Er navnet en ekte tre-sjanger (mainGenre)? Brukes til å skille mainGenre fra
 // frie undersjangre (subGenre). Delt av store, ui, explore og teacher.
@@ -165,6 +183,60 @@ export function showSjangerInfo(label, opts = {}) {
   return true;
 }
 
+// Vis koblings-beskrivelse (en strek i treet) i #modal-sjanger. Tekstene bor i
+// Firestore-samlingen edgeDescriptions (doc-ID = edgeKey(fra, til)) — ingen
+// fallback i koden; mangler teksten, vises en tydelig mangler-melding (samme
+// prinsipp som sjangerbeskrivelsene). opts: { root, edgeDescs, artists,
+// techItems, genres, onArtistClick, onTechClick, onMainGenreClick, onEditEdge }
+export function showEdgeInfo(fromId, toId, opts = {}) {
+  const { root = document, edgeDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onEditEdge } = opts;
+  const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
+  const a = map[fromId], b = map[toId];
+  if (!a || !b) return false;
+  const modal = root.querySelector("#modal-sjanger");
+  const mTitle = root.querySelector("#sj-title");
+  const mBody = root.querySelector("#sj-body");
+  if (!modal || !mTitle || !mBody) return false;
+
+  const react = (b.rx || []).includes(fromId);
+  const doc = edgeDescs[edgeKey(fromId, toId)] || {};
+  const descText = doc.description || "";
+  const kilderHtml = buildKilderList(doc.kilder, "Kilder");
+
+  // Sjanger-knappene åpner de to sjangrenes egne popuper (samme rute som
+  // sjanger-tags), så koblingen alltid kan leses i sammenheng.
+  const genreBtns = onMainGenreClick
+    ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn ghost small gx-edge-from-btn">Om ${escapeHtml(a.l)}</button>
+        <button type="button" class="btn ghost small gx-edge-to-btn">Om ${escapeHtml(b.l)}</button>
+        ${onEditEdge ? `<button type="button" class="btn ghost small gx-edge-edit-btn">Rediger</button>` : ""}
+      </div>`
+    : "";
+
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  mTitle.textContent = `${a.f} → ${b.f}`;
+  mBody.innerHTML = `
+    <p class="gx-era">${react ? "Motreaksjon" : "Avstamning / påvirkning"} · ${escapeHtml(a.era)} → ${escapeHtml(b.era)}</p>
+    <p class="gx-desc">${descText ? linkifyAll(descText, lc) : `<span class="gx-missing">${missingDesc("kobling")}</span>`}</p>
+    ${kilderHtml}
+    ${genreBtns}`;
+  wireAllLinks(mBody, lc);
+  const bf = mBody.querySelector(".gx-edge-from-btn");
+  if (bf) bf.addEventListener("click", () => onMainGenreClick(a.l));
+  const bt2 = mBody.querySelector(".gx-edge-to-btn");
+  if (bt2) bt2.addEventListener("click", () => onMainGenreClick(b.l));
+  const be2 = mBody.querySelector(".gx-edge-edit-btn");
+  if (be2) be2.addEventListener("click", () => onEditEdge(fromId, toId));
+
+  // «Foreslå endring»-foten gjelder sjangerbeskrivelser — skjul den her, så
+  // den ikke blir stående igjen fra en tidligere sjanger-popup i samme modal.
+  const foot = root.querySelector("#sj-foot");
+  if (foot) foot.style.display = "none";
+
+  modalOpen(modal);
+  return true;
+}
+
 const W = 1660, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
 const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115, 12: 1210 };
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t", 12: "2010-t" };
@@ -207,7 +279,7 @@ function el(tag, attrs) {
 //  Bygger kartet i modal-rotelementet. Returnerer { fit } for å sentrere ved
 //  hver åpning. opts: { root, genreDescs, onShowArtists }
 // ----------------------------------------------------------------------------
-export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists, getArtists, getTechItems, getMainGenres, onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist }) {
+export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists: staticArtists, getArtists, getTechItems, getMainGenres, onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist }) {
   const artists = getArtists ? { get current() { return getArtists(); } } : { current: staticArtists || [] };
   const tech = getTechItems ? { get current() { return getTechItems(); } } : { current: [] };
   const genreProxy = getMainGenres ? { get current() { return getMainGenres(); } } : { current: [] };
@@ -235,7 +307,7 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
   }
 
   // Kanter — heltrukne = avstamning, stiplet = motreaksjon
-  const edges = [];
+  const edges = [], edgeHits = [];
   GENEALOGY.forEach((n) => parentsOf(n).forEach((pid) => {
     const pa = map[pid];
     const reaction = n.rx.includes(pid);
@@ -251,6 +323,12 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
     const path = el("path", { d, class: "gx-edge" + (reaction ? " gx-react" : "") });
     path.dataset.p = pid; path.dataset.c = n.id; path.dataset.fam = n.fam; path.dataset.react = reaction ? "1" : "";
     cam.appendChild(path); edges.push(path);
+    // Usynlig, bred trykkbane oppå streken: en ~1,4 px linje er umulig å
+    // treffe med finger (og fiklete med mus), så denne fanger klikk/hover for
+    // koblingen. Nodene tegnes senere og ligger derfor alltid øverst.
+    const hit = el("path", { d, class: "gx-edge-hit" });
+    hit.dataset.p = pid; hit.dataset.c = n.id;
+    cam.appendChild(hit); edgeHits.push(hit);
   }));
 
   // Noder
@@ -273,6 +351,17 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
     edges.forEach((e) => {
       const on = line[e.dataset.p] && line[e.dataset.c];
       e.classList.toggle("gx-hl", !!on);
+      e.classList.toggle("gx-dim", !on);
+      e.style.stroke = on ? (e.dataset.react ? "#d97706" : (FAM_STROKE[e.dataset.fam] || "")) : "";
+    });
+  }
+  // Utheving av ÉN kobling (hover på trykkbane): de to endepunkt-nodene +
+  // selve streken lyser, alt annet dimmes.
+  function lightEdge(pid, cid) {
+    GENEALOGY.forEach((n) => gnodes[n.id].classList.toggle("gx-dim", n.id !== pid && n.id !== cid));
+    edges.forEach((e) => {
+      const on = e.dataset.p === pid && e.dataset.c === cid;
+      e.classList.toggle("gx-hl", on);
       e.classList.toggle("gx-dim", !on);
       e.style.stroke = on ? (e.dataset.react ? "#d97706" : (FAM_STROKE[e.dataset.fam] || "")) : "";
     });
@@ -324,6 +413,15 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
     });
   }
 
+  // Klikk på strek → koblings-popup (samme modal, delt showEdgeInfo).
+  function openEdgeModal(pid, cid) {
+    showEdgeInfo(pid, cid, {
+      root, edgeDescs,
+      artists: artists.current, techItems: tech.current, genres: genreProxy.current,
+      onArtistClick, onTechClick, onMainGenreClick,
+    });
+  }
+
   GENEALOGY.forEach((n) => {
     const g = gnodes[n.id];
     // Hover-lyset skal ikke overstyre et aktivt touch-valg (mus-events kan bli
@@ -336,6 +434,20 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
       if (!isTouch()) { openModal(n.id); return; }   // mus: som før
       if (selectedId === n.id) openModal(n.id);        // andre trykk → detaljer
       else selectTouch(n.id);                           // første trykk → lys opp
+    });
+  });
+
+  // Trykkbanene: hover lyser opp koblingen (kun mus — touch-valget skal ikke
+  // overstyres), klikk/tap åpner koblings-popupen direkte på begge plattformer
+  // (popupen ER poenget med en strek, i motsetning til nodenes to-trinns-trykk).
+  edgeHits.forEach((h) => {
+    const pid = h.dataset.p, cid = h.dataset.c;
+    h.addEventListener("mouseenter", () => { if (!selectedId) lightEdge(pid, cid); });
+    h.addEventListener("mouseleave", () => { if (!selectedId) clearLight(); });
+    h.addEventListener("click", (ev) => {
+      if (moved) return;
+      ev.stopPropagation();               // ikke la stage-klikket nullstille lyset
+      openEdgeModal(pid, cid);
     });
   });
 
@@ -402,7 +514,8 @@ export function renderGenealogy({ root, genreDescs = {}, artists: staticArtists,
   if (legend) {
     legend.innerHTML =
       `<div class="gx-leg"><span class="gx-sw-line gx-sw-solid"></span>avstamning / påvirkning</div>` +
-      `<div class="gx-leg"><span class="gx-sw-line"></span>motreaksjon</div>`;
+      `<div class="gx-leg"><span class="gx-sw-line"></span>motreaksjon</div>` +
+      `<div class="gx-leg gx-leg-hint">klikk på en strek for å lese om koblingen</div>`;
   }
 
   reset();

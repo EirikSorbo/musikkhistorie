@@ -14,12 +14,12 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.17";
-import { modalOpen } from "./ui.js?v=3.17";
-import { renderPendingEditsList } from "./teacher-review.js?v=3.17";
-import { openDetail } from "./teacher-artists.js?v=3.17";
-import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=3.17";
-import { escapeHtml, pct } from "./ui-helpers.js?v=3.17";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.18";
+import { modalOpen } from "./ui.js?v=3.18";
+import { renderPendingEditsList } from "./teacher-review.js?v=3.18";
+import { openDetail } from "./teacher-artists.js?v=3.18";
+import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=3.18";
+import { escapeHtml, pct } from "./ui-helpers.js?v=3.18";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,

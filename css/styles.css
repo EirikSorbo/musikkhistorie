@@ -1523,6 +1523,10 @@ body.is-teacher #gate { display: none; }
 .gx-edge.gx-hl { opacity: 1; stroke-width: 2.2; }
 .gx-edge.gx-react { stroke: #e0a85a; stroke-dasharray: 6 5; opacity: 0.5; }
 .gx-edge.gx-react.gx-hl { opacity: 1; stroke-width: 2.4; }
+/* Usynlig, bred trykkbane oppå hver strek — fanger klikk/hover for koblingen
+   (en 1,4 px linje er umulig å treffe med finger). pointer-events: stroke gjør
+   den klikkbar selv om streken er gjennomsiktig. */
+.gx-edge-hit { stroke: transparent; stroke-width: 16; fill: none; pointer-events: stroke; cursor: pointer; }
 
 .gx-node { cursor: pointer; }
 .gx-node rect { fill: transparent !important; stroke: transparent !important; pointer-events: all; }
@@ -1600,6 +1604,7 @@ body.is-teacher #gate { display: none; }
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 12px; }
 .gx-missing { color: var(--danger, #dc2626); font-weight: 600; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
+.gx-leg-hint { font-style: italic; color: var(--muted-2); }
 .gx-sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid; }
 .gx-sw.gx-f-gray   { background: #e7ebe8; border-color: #9bada1; }
 .gx-sw.gx-f-blue   { background: #dbeafe; border-color: #3b82f6; }
