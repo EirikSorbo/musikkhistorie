@@ -279,6 +279,185 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
   vertical-align: middle;
 }
 
+/* ----- Oversikt (lærer) — pensumets form / hull / mangler ----- */
+.ov-kick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 26px 0 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.ov-kick:first-child { margin-top: 0; }
+.ov-kick::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+button.stat-card.ov-click {
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+button.stat-card.ov-click:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.ov-block { margin-top: 12px; }
+.ov-two {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 12px;
+  margin-top: 12px;
+  align-items: start;
+}
+.ov-col { display: grid; gap: 12px; }
+
+/* Tiår-histogram */
+.ov-hist { display: flex; align-items: flex-end; gap: 6px; height: 130px; margin-top: 10px; }
+.ov-hist-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.ov-hist-bar {
+  width: 100%;
+  max-width: 30px;
+  background: var(--grad);
+  border-radius: 5px 5px 0 0;
+  transition: opacity 0.12s;
+}
+.ov-hist-col:hover .ov-hist-bar { opacity: 0.7; }
+.ov-hist-bar.ov-thin { background: var(--warn); }
+.ov-hist-val { font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ov-hist-year { font-size: 0.64rem; color: var(--muted-2); }
+
+/* Kompakte fordelings-rader (hovedsjangre + sjangerliste) */
+.ov-rows { display: grid; gap: 8px; margin-top: 10px; }
+.ov-row {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) 1fr 30px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.82rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.ov-row .ov-name {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-row:hover .ov-name { color: var(--accent-2); text-decoration: underline; }
+.ov-row .ov-count { text-align: right; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+.ov-row.ov-zero .ov-name, .ov-row.ov-zero .ov-count { color: var(--warn); }
+.ov-row.ov-zero .bar-fill { background: var(--warn); opacity: 0.45; }
+
+.ov-genre-cols { column-count: 3; column-gap: 28px; margin-top: 10px; }
+.ov-genre-cols .ov-row { break-inside: avoid; margin-bottom: 8px; }
+
+/* Chips (instrument, tomme greiner, tynne tiår, historier) */
+.ov-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ov-chip {
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 4px 11px;
+  border-radius: 100px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.ov-chip strong { color: var(--text); font-weight: 600; }
+.ov-chip:hover { border-color: var(--accent); color: var(--accent-2); }
+.ov-chip.ov-zero { color: #b45309; border-color: #f2ddb0; background: #fffbeb; }
+.ov-chip.ov-zero strong { color: #b45309; }
+.ov-chip.ov-zero:hover { border-color: var(--warn); }
+
+/* Hull-kort */
+.ov-gaps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.ov-gap {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 14px 14px 0;
+  padding: 12px 15px;
+}
+.ov-gap-t {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.ov-gap-t span { color: var(--muted-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+.ov-gap .muted { margin: 0; font-size: 0.8rem; }
+
+/* Innhold som mangler */
+.ov-miss {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.ov-miss-item {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.ov-miss-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.ov-miss-head:hover span:first-child { color: var(--accent-2); }
+.ov-miss-head .ov-count { font-variant-numeric: tabular-nums; color: var(--muted-2); }
+.ov-miss-head .ov-count.ov-warn { color: #b45309; font-weight: 600; }
+.ov-miss-head .ov-count.ov-ok { color: var(--ok); }
+.ov-expand { margin-top: 10px; }
+
+@media (max-width: 720px) {
+  .ov-two { grid-template-columns: 1fr; }
+  .ov-genre-cols { column-count: 2; }
+  .ov-hist { height: 100px; gap: 4px; }
+  .ov-hist-year { display: none; }
+}
+
 /* ----- Grenser ----- */
 .limits-cols {
   display: grid;

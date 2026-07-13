@@ -4,15 +4,15 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge, guardTeacherAction } from "./teacher-state.js?v=3.09";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.09";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose } from "./ui.js?v=3.09";
-import { isMainGenre } from "./genealogy.js?v=3.09";
-import { openSingleSubgenreModal } from "./teacher-content.js?v=3.09";
-import { GENDERS } from "./limits.js?v=3.09";
-import { debounce } from "./util.js?v=3.09";
-import { $ } from "./shared.js?v=3.09";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.09";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, updatePendingBadge, guardTeacherAction } from "./teacher-state.js?v=3.10";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.10";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.10";
+import { isMainGenre } from "./genealogy.js?v=3.10";
+import { openSingleSubgenreModal } from "./teacher-content.js?v=3.10";
+import { GENDERS } from "./limits.js?v=3.10";
+import { debounce } from "./util.js?v=3.10";
+import { $ } from "./shared.js?v=3.10";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.10";
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -71,8 +71,13 @@ export function addMainGenreCheckToggle(genre) {
 export function openOversikt() {
   renderDashboard($("#oversikt-body"), {
     ...state,
-    onSubgenreClick: (s) => ctx.explore.openSubgenreInfo(s),
+    explore: ctx.explore,
+    // Samme telling som artistlista bak sjanger-popupen (meta/main/sub-match),
+    // så tallet i oversikten og lista brukeren klikker seg til stemmer overens.
+    countForGenre: (label) => artistsInGenre(state.artists, label).length,
+    onEditArtist: (id) => openEditModal(id),
     onEditDesc: (name, level) => openSingleSubgenreModal(name, level),
+    onShowArtistList: (title, list) => openArtistListModal(title, list, openDetail, "Ingen artister her ennå."),
   });
   openAdminModal("modal-oversikt");
 }

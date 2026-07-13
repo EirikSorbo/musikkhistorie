@@ -1,20 +1,29 @@
 // ============================================================================
-//  UI — DASHBOARD / GRENSEOVERSIKT
+//  UI — OVERSIKT (lærer)
 // ----------------------------------------------------------------------------
-//  Statistikk-kort: totaltelling, kjønnsfordeling, grenser per tiår/sjanger/
-//  instrument. Re-eksporteres fra ui.js.
+//  Pensum-oversikten i tre seksjoner: FORM (hva pensumet inneholder — tiår,
+//  sjangre, kjønn, instrument), HULL (hvor det er tynt) og MANGLER (innhold
+//  som ikke er skrevet ennå). Ingen arbeidsflyt-tall her — moderering bor i
+//  forslags-flyten. Re-eksporteres fra ui.js.
+//
+//  All klikk-håndtering går via ETT delegert el.onclick (tilordning, ikke
+//  addEventListener — modalen re-rendres ved hver åpning, og en lytter per
+//  åpning ville stablet seg opp).
 // ============================================================================
 
 import {
   computeCounts,
   genderDistribution,
+  activeArtists,
+  decadesForRange,
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=3.09";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.09";
-import { GENEALOGY, isMainGenre } from "./genealogy.js?v=3.09";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.09";
+} from "./limits.js?v=3.10";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.10";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.10";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.10";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.10";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -23,136 +32,325 @@ const GENDER_COLORS = {
   ukjent: "var(--c-ukjent)",
 };
 
-export function renderDashboard(el, { artists, config, genreDescs = {}, onSubgenreClick, onEditDesc }) {
+const byNo = (a, b) => a.localeCompare(b, "no");
+const byName = (a, b) => a.name.localeCompare(b.name, "no");
+const byInfluenceThenName = (a, b) =>
+  (a.influenceStart || 0) - (b.influenceStart || 0) || byName(a, b);
+
+// Kompakt fordelings-rad: navn + søyle + antall. Klikkbar via data-attributt.
+function distRow(label, count, max, attrs) {
+  const zero = count === 0 ? " ov-zero" : "";
+  return `<button type="button" class="ov-row${zero}" ${attrs}>
+    <span class="ov-name">${escapeHtml(label)}</span>
+    <span class="bar small"><span class="bar-fill" style="width:${count ? pct(count, max) : 100}%"></span></span>
+    <span class="ov-count">${count}</span>
+  </button>`;
+}
+
+// Klikkbar navnerad i utvidbare lister (åpner redigering/info).
+function nameRow(name, attrs, metaTag = "") {
+  return `<div class="result-row" ${attrs} style="cursor:pointer">
+    <span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(name)}</span>
+    ${metaTag ? `<span class="result-meta">${metaTag}</span>` : ""}
+  </div>`;
+}
+
+function artistRows(list, extraTag = () => "") {
+  return list.map((a) => nameRow(a.name, `data-ov-artist="${escapeHtml(a.id)}"`,
+    (a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : "") + extraTag(a))).join("");
+}
+
+export function renderDashboard(el, {
+  artists,
+  config,
+  genreDescs = {},
+  techItems = [],
+  content = {},
+  contentLoaded = false,
+  explore,
+  countForGenre = () => 0,
+  onEditArtist,
+  onEditDesc,
+  onShowArtistList,
+}) {
+  const active = activeArtists(artists);
   const counts = computeCounts(artists);
   const dist = genderDistribution(artists);
-  const removed = artists.filter((a) => (a.priority || 0) === -1).length;
-  const pending = artists.filter((a) => a.status === "pending").length;
-  const checked = artists.filter((a) => a.status === "active" && a.teacherChecked === true).length;
-  const activeArtists = artists.filter(a => a.status === "active");
-  const subgenreCount = new Set(
-    activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])])
-  ).size;
 
-  const artistsNoSjanger = activeArtists
-    .filter(a => !a.mainGenre || a.mainGenre.length === 0)
-    .sort((a, b) => a.name.localeCompare(b.name, "no"));
-
-  const allArtistTags = new Set(activeArtists.flatMap(a => [...(a.mainGenre || []), ...(a.subGenre || [])]));
-  const orphanedSubgenres = Object.keys(genreDescs)
-    .filter(s => !allArtistTags.has(s))
-    .sort((a, b) => a.localeCompare(b, "no"));
-
-  const noSjangerHtml = artistsNoSjanger.length
-    ? artistsNoSjanger.map(a =>
-        `<div class="result-row"><span class="result-name">${escapeHtml(a.name)}</span><span class="result-meta">${a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : ""}</span></div>`
-      ).join("")
-    : `<p class="muted">Ingen.</p>`;
-
-  const orphanHtml = orphanedSubgenres.length
-    ? orphanedSubgenres.map(s =>
-        `<div class="result-row orphan-link" data-subgenre="${escapeHtml(s)}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(s)}</span></div>`
-      ).join("")
-    : `<p class="muted">Ingen.</p>`;
-
-  // --- Sjangre uten beskrivelse, per nivå ---
-  // Hovedsjangere (meta) spores ikke lenger — de har ikke egne beskrivelser,
-  // men dekkes av de seks sjangerhistoriene (v2.99).
-  const byNo = (a, b) => a.localeCompare(b, "no");
-  const mainMissing = GENEALOGY
-    .filter(n => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
-    .map(n => n.l).sort(byNo);
-  const subTags = [...new Set(activeArtists.flatMap(a => [
-    ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
+  // --- Nøkkeltall -----------------------------------------------------------
+  // Innovasjonskort uten status-felt regnes som aktive (samme regel som store).
+  const techCount = techItems.filter((t) => t.status !== "pending").length;
+  const subTags = [...new Set(active.flatMap((a) => [
+    ...(a.mainGenre || []).filter((x) => !isMainGenre(x)),
     ...(a.subGenre || []),
   ]))];
-  const subMissing = subTags
-    .filter(n => !resolveDesc(genreDescs, n, "sub").description).sort(byNo);
 
-  const missRow = (name, level) =>
-    `<div class="result-row miss-link" data-miss-name="${escapeHtml(name)}" data-miss-level="${level}" style="cursor:pointer"><span class="result-name" style="text-decoration:underline;color:var(--accent)">${escapeHtml(name)}</span></div>`;
-  const missList = (arr, level) => arr.length
-    ? `<div class="result-list">${arr.map(n => missRow(n, level)).join("")}</div>`
-    : `<p class="muted">Ingen – alle har beskrivelse ✓</p>`;
+  // --- Sjangerliste (treets sjangre, sortert etter antall artistkort) -------
+  // Tellingen (countForGenre) matcher artistlista bak sjanger-popupen, så
+  // tallet her og lista der aldri spriker.
+  const genreCounts = GENEALOGY_MAIN_GENRES
+    .map((l) => ({ l, n: countForGenre(l) }))
+    .sort((a, b) => b.n - a.n || byNo(a.l, b.l));
+  const maxGenre = Math.max(1, ...genreCounts.map((g) => g.n));
+  const covered = genreCounts.filter((g) => g.n > 0).length;
+  const emptyGenres = genreCounts.filter((g) => g.n === 0).map((g) => g.l).sort(byNo);
+
+  // --- Hovedsjangre (metaGenre-feltet: hver artist teller nøyaktig én gang) -
+  const metaCounts = (config.metaGenres || GENEALOGY_META_GENRES)
+    .map((g) => ({ g, n: counts.perMetaGenre[g] || 0 }))
+    .sort((a, b) => b.n - a.n || byNo(a.g, b.g));
+  const maxMeta = Math.max(1, ...metaCounts.map((m) => m.n));
+
+  // --- Tiår ------------------------------------------------------------------
+  const decades = config.decades || [];
+  const maxDecade = Math.max(1, ...decades.map((d) => counts.perDecade[d] || 0));
+  const thinDecades = decades.filter((d) => (counts.perDecade[d] || 0) <= 1);
+
+  // --- Instrument -------------------------------------------------------------
+  // Config-lista pluss eventuelle verdier i bruk som ikke står i config.
+  const instruments = [
+    ...(config.instruments || []),
+    ...Object.keys(counts.perInstrument)
+      .filter((i) => i && i !== "undefined" && !(config.instruments || []).includes(i)),
+  ];
+
+  // --- Hull -------------------------------------------------------------------
+  const artistsNoSjanger = active
+    .filter((a) => !a.mainGenre || a.mainGenre.length === 0)
+    .sort(byName);
+
+  const allArtistTags = new Set(active.flatMap((a) => [...(a.mainGenre || []), ...(a.subGenre || [])]));
+  // Kun ekte undersjangre: tre-sjangre uten artister dekkes av «tomme greiner»,
+  // og meta-/historie-dokumenter i genreDescriptions er ikke undersjangre.
+  const orphanedSubgenres = Object.keys(genreDescs)
+    .filter((s) => !isMainGenre(s) && !GENEALOGY_META_GENRES.includes(s) && !allArtistTags.has(s))
+    .sort(byNo);
+
+  // --- Innhold som mangler ------------------------------------------------------
+  const storiesMissing = STORY_ORDER.filter((g) => !storyFor(g, genreDescs));
+  const pageStatus = (id) => (contentLoaded ? !!pageFor(id, content) : null);
+  const rotterOk = pageStatus("rotter");
+  const omHistorieOk = pageStatus("omHistorie");
+
+  const mainMissing = GENEALOGY
+    .filter((n) => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
+    .map((n) => n.l).sort(byNo);
+  const subMissing = subTags
+    .filter((n) => !resolveDesc(genreDescs, n, "sub").description).sort(byNo);
+
+  const noImage = active.filter((a) => !a.imageUrl).sort(byName);
+  const noDesc = active.filter((a) => !(a.description || "").trim()).sort(byName);
+  const noMusic = active.filter((a) => !(a.musicExamples || []).length).sort(byName);
+  const noSources = active.filter((a) => !(a.kilder || []).length).sort(byName);
+
+  // --- Markup-hjelpere -----------------------------------------------------------
+  let uid = 0;
+  const expandList = (rowsHtml, count) => {
+    const id = `ov-x-${uid++}`;
+    return {
+      btn: `data-ov-toggle="${id}"`,
+      panel: `<div id="${id}" class="ov-expand" style="display:none">${
+        count ? `<div class="result-list">${rowsHtml}</div>` : `<p class="muted">Ingen.</p>`
+      }</div>`,
+    };
+  };
+
+  // Kort i «Innhold som mangler»: teller + utvidbar navneliste.
+  const missItem = (label, count, rowsHtml, okText = "alle har ✓") => {
+    const x = expandList(rowsHtml, count);
+    return `<div class="ov-miss-item">
+      <button type="button" class="ov-miss-head" ${x.btn}>
+        <span>${escapeHtml(label)}</span>
+        <span class="ov-count ${count ? "ov-warn" : "ov-ok"}">${count || okText}</span>
+      </button>
+      ${x.panel}
+    </div>`;
+  };
+
+  // Binært innholdskort (Røtter / Om historie): klikk åpner siden.
+  const pageItem = (label, ok, pageId) => `<div class="ov-miss-item">
+    <button type="button" class="ov-miss-head" data-ov-page="${pageId}">
+      <span>${escapeHtml(label)}</span>
+      <span class="ov-count ${ok === null ? "" : ok ? "ov-ok" : "ov-warn"}">${ok === null ? "…" : ok ? "✓ ferdig" : "mangler"}</span>
+    </button>
+  </div>`;
+
+  const genreChip = (name) =>
+    `<button type="button" class="ov-chip ov-zero" data-ov-genre="${escapeHtml(name)}">${escapeHtml(name)}</button>`;
+
+  const histCols = decades.map((d) => {
+    const n = counts.perDecade[d] || 0;
+    return `<button type="button" class="ov-hist-col" data-ov-decade="${d}" title="${d}-tallet: ${n} artister — klikk for liste">
+      <span class="ov-hist-val">${n}</span>
+      <span class="ov-hist-bar${n <= 1 ? " ov-thin" : ""}" style="height:${Math.max(2, (n / maxDecade) * 100)}%"></span>
+      <span class="ov-hist-year">${d}</span>
+    </button>`;
+  }).join("");
+
+  // Historie-lista er chips (klikk åpner historien), ikke result-list —
+  // panelet bygges manuelt med fast id.
+  const storyChips = storiesMissing.map((g) =>
+    `<button type="button" class="ov-chip ov-zero" data-ov-story="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("");
+  const storyPanel = storiesMissing.length
+    ? `<div id="ov-x-stories" class="ov-expand" style="display:none"><div class="ov-chips">${storyChips}</div></div>`
+    : "";
+
+  const noSjangerX = expandList(artistRows(artistsNoSjanger), artistsNoSjanger.length);
+  const orphanX = expandList(orphanedSubgenres.map((s) => nameRow(s, `data-ov-subinfo="${escapeHtml(s)}"`)).join(""), orphanedSubgenres.length);
 
   el.innerHTML = `
+    <div class="ov-kick">Pensumets form</div>
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-num">${counts.total}<span>/${config.maxTotal}</span></div>
-        <div class="stat-label">Aktive forslag totalt</div>
-        <div class="bar"><div class="bar-fill" style="width:${pct(
-          counts.total,
-          config.maxTotal
-        )}%"></div></div>
-      </div>
-      ${pending ? `<div class="stat-card stat-pending">
-        <div class="stat-num">${pending}</div>
-        <div class="stat-label">Venter på godkjenning</div>
-      </div>` : ""}
-      <div class="stat-card">
-        <div class="stat-num">${removed}</div>
-        <div class="stat-label">Skjult for studenter</div>
+        <div class="stat-label">Artister i pensumet</div>
+        <div class="bar"><div class="bar-fill" style="width:${pct(counts.total, config.maxTotal)}%"></div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-num">${subgenreCount}</div>
+        <div class="stat-num">${covered}<span>/${genreCounts.length}</span></div>
+        <div class="stat-label">Sjangre i treet med artister</div>
+        <div class="bar"><div class="bar-fill" style="width:${pct(covered, genreCounts.length)}%"></div></div>
+      </div>
+      <button type="button" class="stat-card ov-click" data-ov-open="tech">
+        <div class="stat-num">${techCount}</div>
+        <div class="stat-label">Innovasjonskort</div>
+      </button>
+      <button type="button" class="stat-card ov-click" data-ov-open="subgenres">
+        <div class="stat-num">${subTags.length}</div>
         <div class="stat-label">Undersjangre</div>
+      </button>
+    </div>
+
+    <div class="stat-card ov-block">
+      <div class="stat-label">Artister per tiår — teller hele innflytelsesperioden, klikk en søyle for liste</div>
+      <div class="ov-hist">${histCols}</div>
+    </div>
+
+    <div class="ov-two">
+      <div class="stat-card ov-block" style="margin-top:0">
+        <div class="stat-label">Per hovedsjanger — klikk for artistliste</div>
+        <div class="ov-rows">${metaCounts.map((m) =>
+          distRow(m.g, m.n, maxMeta, `data-ov-meta="${escapeHtml(m.g)}"`)).join("")}</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num">${checked}</div>
-        <div class="stat-label">Artistkort sjekket</div>
+      <div class="ov-col">
+        <div class="stat-card">
+          <div class="stat-label">Kjønnsfordeling</div>
+          ${renderGenderChart(dist)}
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Instrument — klikk for artistliste</div>
+          <div class="ov-chips">${instruments.map((i) => {
+            const n = counts.perInstrument[i] || 0;
+            return `<button type="button" class="ov-chip${n ? "" : " ov-zero"}" data-ov-instr="${escapeHtml(i)}">${escapeHtml(i)} <strong>${n}</strong></button>`;
+          }).join("")}</div>
+        </div>
       </div>
-      <div class="stat-card stat-wide">
-        <div class="stat-label">Kjønnsfordeling (aktive)</div>
-        ${renderGenderChart(dist)}
+    </div>
+
+    <div class="stat-card ov-block">
+      <div class="stat-label">Sjangre i slektstreet (${genreCounts.length}) — sortert etter antall artistkort, klikk for beskrivelse og artister</div>
+      <div class="ov-genre-cols">${genreCounts.map((g) =>
+        distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`)).join("")}</div>
+    </div>
+
+    <div class="ov-kick">Hull og skjevheter</div>
+    <div class="ov-gaps">
+      <div class="ov-gap">
+        <div class="ov-gap-t">Tynne tiår <span>${thinDecades.length}</span></div>
+        ${thinDecades.length
+          ? `<div class="ov-chips">${thinDecades.map((d) =>
+              `<button type="button" class="ov-chip ov-zero" data-ov-decade="${d}">${d} <strong>${counts.perDecade[d] || 0}</strong></button>`).join("")}</div>`
+          : `<p class="muted">Ingen — alle tiår har minst to artister.</p>`}
       </div>
-      <div class="stat-card stat-wide">
-        <button class="btn ghost small" id="ov-btn-no-sjanger">Artister uten sjanger (${artistsNoSjanger.length})</button>
-        <div id="ov-no-sjanger-list" style="display:none;margin-top:10px"></div>
-        <button class="btn ghost small" id="ov-btn-orphan-sub" style="margin-top:8px">Undersjangre uten artistkort (${orphanedSubgenres.length})</button>
-        <div id="ov-orphan-sub-list" style="display:none;margin-top:10px"></div>
+      <div class="ov-gap">
+        <div class="ov-gap-t">Tomme greiner i treet <span>${emptyGenres.length}</span></div>
+        ${emptyGenres.length
+          ? `<div class="ov-chips">${emptyGenres.map(genreChip).join("")}</div>`
+          : `<p class="muted">Ingen — alle sjangre har artister.</p>`}
       </div>
-      <div class="stat-card stat-wide" id="ov-miss-card">
-        <div class="stat-label">Sjangre uten beskrivelse — klikk et navn for å redigere</div>
-        <button class="btn ghost small" id="ov-btn-miss-main">Sjangre (${mainMissing.length})</button>
-        <div id="ov-miss-main" style="display:none;margin-top:10px">${missList(mainMissing, "main")}</div>
-        <button class="btn ghost small" id="ov-btn-miss-sub" style="margin-top:8px">Undersjangre (${subMissing.length})</button>
-        <div id="ov-miss-sub" style="display:none;margin-top:10px">${missList(subMissing, "sub")}</div>
+      <div class="ov-gap">
+        <div class="ov-gap-t">Artister uten sjanger <span>${artistsNoSjanger.length}</span></div>
+        ${artistsNoSjanger.length
+          ? `<button type="button" class="btn ghost small" ${noSjangerX.btn}>Vis</button>${noSjangerX.panel}`
+          : `<p class="muted">Ingen — alle artister er plassert.</p>`}
       </div>
+      <div class="ov-gap">
+        <div class="ov-gap-t">Undersjangre uten artistkort <span>${orphanedSubgenres.length}</span></div>
+        ${orphanedSubgenres.length
+          ? `<button type="button" class="btn ghost small" ${orphanX.btn}>Vis</button>${orphanX.panel}`
+          : `<p class="muted">Ingen.</p>`}
+      </div>
+    </div>
+
+    <div class="ov-kick">Innhold som mangler</div>
+    <div class="ov-miss">
+      <div class="ov-miss-item">
+        <button type="button" class="ov-miss-head" ${storiesMissing.length ? `data-ov-toggle="ov-x-stories"` : `data-ov-story="${escapeHtml(STORY_ORDER[0])}"`}>
+          <span>Sjangerhistorier</span>
+          <span class="ov-count ${storiesMissing.length ? "ov-warn" : "ov-ok"}">${STORY_ORDER.length - storiesMissing.length}/${STORY_ORDER.length}</span>
+        </button>
+        ${storyPanel}
+      </div>
+      ${pageItem("Røtter før 1910", rotterOk, "rotter")}
+      ${pageItem("Om historie", omHistorieOk, "omHistorie")}
+      ${missItem("Sjangre uten beskrivelse", mainMissing.length,
+        mainMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="main"`)).join(""))}
+      ${missItem("Undersjangre uten beskrivelse", subMissing.length,
+        subMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="sub"`)).join(""))}
+      ${missItem("Artister uten beskrivelse", noDesc.length, artistRows(noDesc))}
+      ${missItem("Artister uten bilde", noImage.length, artistRows(noImage))}
+      ${missItem("Artister uten musikkeksempler", noMusic.length, artistRows(noMusic))}
+      ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
     </div>
   `;
 
-  for (const [btn, panel] of [["#ov-btn-miss-main", "#ov-miss-main"], ["#ov-btn-miss-sub", "#ov-miss-sub"]]) {
-    el.querySelector(btn).addEventListener("click", () => {
-      const p = el.querySelector(panel);
-      p.style.display = p.style.display === "none" ? "block" : "none";
-    });
-  }
-  const missCard = el.querySelector("#ov-miss-card");
-  if (onEditDesc) missCard.addEventListener("click", (e) => {
-    const row = e.target.closest("[data-miss-name]");
-    if (row) onEditDesc(row.dataset.missName, row.dataset.missLevel);
-  });
+  // --- Delegert klikk-håndtering (én tilordning, overlever re-render) --------
+  el.onclick = (e) => {
+    const hit = (sel) => e.target.closest(sel);
 
-  el.querySelector("#ov-btn-no-sjanger").addEventListener("click", () => {
-    const panel = el.querySelector("#ov-no-sjanger-list");
-    const visible = panel.style.display !== "none";
-    panel.style.display = visible ? "none" : "block";
-    if (!visible) panel.innerHTML = `<div class="result-list">${noSjangerHtml}</div>`;
-  });
-
-  el.querySelector("#ov-btn-orphan-sub").addEventListener("click", () => {
-    const panel = el.querySelector("#ov-orphan-sub-list");
-    const visible = panel.style.display !== "none";
-    panel.style.display = visible ? "none" : "block";
-    if (!visible) {
-      panel.innerHTML = `<div class="result-list">${orphanHtml}</div>`;
-      if (onSubgenreClick) {
-        panel.querySelectorAll(".orphan-link").forEach(row => {
-          row.addEventListener("click", () => onSubgenreClick(row.dataset.subgenre));
-        });
-      }
+    const tog = hit("[data-ov-toggle]");
+    if (tog) {
+      const panel = el.querySelector(`#${tog.dataset.ovToggle}`);
+      if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
+      return;
     }
-  });
+    const artist = hit("[data-ov-artist]");
+    if (artist) return onEditArtist?.(artist.dataset.ovArtist);
+
+    const genre = hit("[data-ov-genre]");
+    if (genre) return explore?.onMainGenreClick(genre.dataset.ovGenre);
+
+    const meta = hit("[data-ov-meta]");
+    if (meta) {
+      const g = meta.dataset.ovMeta;
+      return onShowArtistList?.(g, active.filter((a) => a.metaGenre === g).sort(byInfluenceThenName));
+    }
+    const dec = hit("[data-ov-decade]");
+    if (dec) {
+      const d = Number(dec.dataset.ovDecade);
+      return onShowArtistList?.(`${d}-tallet`,
+        active.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(d)).sort(byInfluenceThenName));
+    }
+    const instr = hit("[data-ov-instr]");
+    if (instr) {
+      const i = instr.dataset.ovInstr;
+      return onShowArtistList?.(i, active.filter((a) => a.instrument === i).sort(byName));
+    }
+    const sub = hit("[data-ov-subinfo]");
+    if (sub) return explore?.openSubgenreInfo(sub.dataset.ovSubinfo);
+
+    const story = hit("[data-ov-story]");
+    if (story) return explore?.openHistorier(story.dataset.ovStory);
+
+    const page = hit("[data-ov-page]");
+    if (page) return page.dataset.ovPage === "rotter" ? explore?.openRotter() : explore?.openOmHistorie();
+
+    const desc = hit("[data-ov-desc]");
+    if (desc) return onEditDesc?.(desc.dataset.ovDesc, desc.dataset.ovLevel);
+
+    const open = hit("[data-ov-open]");
+    if (open) return open.dataset.ovOpen === "tech" ? explore?.openTeknologi() : explore?.openSubgenreList();
+  };
 }
 
 function renderGenderChart(dist) {

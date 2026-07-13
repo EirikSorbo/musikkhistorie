@@ -8,10 +8,10 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=3.09";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.09";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=3.09";
-import { GENDERS } from "./limits.js?v=3.09";
+import { addPendingEdit, addTechProposal } from "./store.js?v=3.10";
+import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.10";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=3.10";
+import { GENDERS } from "./limits.js?v=3.10";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
