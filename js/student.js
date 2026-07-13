@@ -7,11 +7,11 @@ import {
   subscribeConfig,
   addArtist,
   getClientId,
-} from "./store.js?v=3.18";
-import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.18";
-import { fillSelect } from "./ui.js?v=3.18";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.18";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.18";
+} from "./store.js?v=3.19";
+import { checkWarnings, GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.19";
+import { fillSelect } from "./ui.js?v=3.19";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.19";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.19";
 
 const state = {
   artists: [],

@@ -19,11 +19,11 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=3.18";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.18";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.18";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.18";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.18";
+} from "./limits.js?v=3.19";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow } from "./ui-helpers.js?v=3.19";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.19";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.19";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.19";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -95,6 +95,7 @@ export function renderDashboard(el, {
   config,
   genreDescs = {},
   edgeDescs = {},
+  teacherChecks = {},
   techItems = [],
   content = {},
   contentLoaded = false,
@@ -103,6 +104,7 @@ export function renderDashboard(el, {
   onEditArtist,
   onEditDesc,
   onEditEdge,
+  onEdgeCheck,
   onShowArtistList,
 }) {
   const active = activeArtists(artists);
@@ -225,9 +227,12 @@ export function renderDashboard(el, {
   // --- Sjangerkoblinger (strekene i slektstreet) -----------------------------
   // Lista viser ALLE koblinger (ikke bare manglende) — dette er lærerens eneste
   // redigeringsflate for koblingstekstene, så også skrevne må kunne åpnes.
-  // Manglende først. Merket ⚠/✓ + «motreaksjon» der det gjelder.
+  // Hvert kort har samme fot som resten (teacherActionRow): Sjekk til venstre,
+  // Rediger til høyre. «⚠ mangler» = tekst ikke skrevet (egen dimensjon fra
+  // Sjekket, som betyr kvalitetslest). Manglende først, så alfabetisk.
   const nodeById = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const edgeMissingSet = new Set(gaps.edgeDesc.map((e) => edgeKey(e.from, e.to)));
+  const edgeChecks = new Set(teacherChecks.edges || []);
   const edgeRows = [...GENEALOGY_EDGES]
     .sort((a, b) => {
       const am = edgeMissingSet.has(edgeKey(a.from, a.to)) ? 0 : 1;
@@ -236,9 +241,12 @@ export function renderDashboard(el, {
     })
     .map((e) => {
       const missing = edgeMissingSet.has(edgeKey(e.from, e.to));
-      const meta = `${missing ? `<span class="tag" style="color:var(--danger)">⚠ mangler</span>` : `<span class="tag">✓</span>`}${e.react ? `<span class="tag">motreaksjon</span>` : ""}`;
-      return nameRow(`${nodeById[e.from].l} → ${nodeById[e.to].l}`,
-        `data-ov-edge-from="${escapeHtml(e.from)}" data-ov-edge-to="${escapeHtml(e.to)}"`, meta);
+      const checked = edgeChecks.has(edgeKey(e.from, e.to));
+      const tags = `${missing ? `<span class="tag" style="color:var(--danger)">⚠ mangler</span>` : ""}${e.react ? `<span class="tag">motreaksjon</span>` : ""}`;
+      return `<div class="ov-edge-card" data-ov-edge-from="${escapeHtml(e.from)}" data-ov-edge-to="${escapeHtml(e.to)}">
+        <div class="ov-edge-head"><span class="ov-edge-name">${escapeHtml(nodeById[e.from].l)} → ${escapeHtml(nodeById[e.to].l)}</span>${tags}</div>
+        ${teacherActionRow({ checked, edit: true, del: false })}
+      </div>`;
     }).join("");
   const edgesFilled = GENEALOGY_EDGES.length - gaps.edgeDesc.length;
   const edgeX = expandList(edgeRows, GENEALOGY_EDGES.length);
@@ -391,6 +399,21 @@ export function renderDashboard(el, {
     const desc = hit("[data-ov-desc]");
     if (desc) return onEditDesc?.(desc.dataset.ovDesc, desc.dataset.ovLevel);
 
+    // Sjekk-knappen skifter utseende optimistisk (modalen re-rendres ikke) og
+    // skriver til teacherChecks. Håndteres FØR edit-fanget, ellers ville den
+    // også åpnet editoren via kortets data-attributt.
+    const edgeChk = hit(".tcr-check");
+    if (edgeChk) {
+      const card = edgeChk.closest("[data-ov-edge-from]");
+      if (card) {
+        const now = !edgeChk.classList.contains("accent");
+        edgeChk.classList.toggle("accent", now);
+        edgeChk.textContent = now ? "✓ Sjekket" : "Sjekk";
+        onEdgeCheck?.(card.dataset.ovEdgeFrom, card.dataset.ovEdgeTo, now);
+      }
+      return;
+    }
+    // «Rediger»-knappen og klikk ellers på kortet åpner editoren.
     const edge = hit("[data-ov-edge-from]");
     if (edge) return onEditEdge?.(edge.dataset.ovEdgeFrom, edge.dataset.ovEdgeTo);
 

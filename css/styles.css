@@ -756,6 +756,14 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .teacher-card-actions .tcr-del { color: var(--danger); }
 .teacher-card-actions .tcr-del:hover { border-color: var(--danger); background: #fff5f5; }
 
+/* Koblingskort i Oversikt: navn + tagger over en teacher-card-actions-fot.
+   Foten deler klasse (og dermed utseende) med artist-/innovasjonskortene. */
+.ov-edge-card { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; }
+.ov-edge-card:hover { border-color: var(--line-strong); }
+.ov-edge-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ov-edge-name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+.ov-edge-card .teacher-card-actions { margin-top: 10px; }
+
 /* ----- Icon buttons ----- */
 .icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
