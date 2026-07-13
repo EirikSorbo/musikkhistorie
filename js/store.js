@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.26";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.26";
-import { isMainGenre } from "./genealogy.js?v=3.26";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.26";
-import { normalizeConfig } from "./config-normalize.js?v=3.26";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.26";
+import { firebaseConfig } from "./firebase-config.js?v=3.27";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.27";
+import { isMainGenre } from "./genealogy.js?v=3.27";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.27";
+import { normalizeConfig } from "./config-normalize.js?v=3.27";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.27";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -525,18 +525,16 @@ export async function runGenreDuplicateCleanup() {
 }
 
 // ---------------------------------------------------------------------------
-//  ENGANGS-MIGRERING (v3.26): retter node-label ↔ doc-id-uoverensstemmelse for
-//  to tre-noder. Nodenes `l` er nå satt lik `f` (=doc-id) i genealogy.js
-//  («Blues Rock»→«Blues rock», «Trance / DnB»→«Trance & drum'n'bass»), så
-//  rediger-knappen (som bruker n.l som doc-id) treffer riktig dokument. Her
-//  døpes de tilsvarende artist-taggene om så de fortsatt matcher noden. Egen
-//  flagg fra opprydding-migreringen. Idempotent (ingen gamle tagger igjen →
-//  no-op). Se [[pensum-genre-source-of-truth]].
+//  ENGANGS-MIGRERING (v3.26): retter node-label ↔ doc-id for `bluesrock`.
+//  Noden har nå `l = f = «Blues rock»` (=doc-id) i genealogy.js, så rediger-
+//  knappen (som bruker n.l som doc-id) treffer riktig dokument. Her døpes
+//  artist-taggen «Blues Rock»→«Blues rock» så den fortsatt matcher noden.
+//  Idempotent (ingen gammel tagg igjen → no-op). (Trance håndteres av doc-id-
+//  migreringen under — se [[pensum-genre-source-of-truth]].)
 // ---------------------------------------------------------------------------
 const GENRE_LABEL_ALIGN_FLAG = "genreLabelAlign_2026_07";
 const GENRE_LABEL_ALIGN_RENAMES = [
   ["Blues Rock", "Blues rock"],
-  ["Trance / DnB", "Trance & drum'n'bass"],
 ];
 
 export async function runGenreLabelAlignment() {
@@ -547,8 +545,51 @@ export async function runGenreLabelAlignment() {
   const renamed = await renameArtistGenreTags(GENRE_LABEL_ALIGN_RENAMES);
 
   await setDoc(migRef, { [GENRE_LABEL_ALIGN_FLAG]: new Date().toISOString() }, { merge: true });
-  console.info(`Node-label-justering fullført: ${renamed} artist(er) fikk «Blues Rock»→«Blues rock» / «Trance / DnB»→«Trance & drum'n'bass».`);
+  console.info(`Node-label-justering fullført: ${renamed} artist(er) fikk «Blues Rock»→«Blues rock».`);
   return { renamed };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v3.27): Trance-noden beholder en KORT tre-label «Trance &
+//  DnB» (l), men fullnavnet (f) forblir «Trance & drum'n'bass» (modal-tittel).
+//  For at rediger-knappen (n.l = doc-id) skal treffe, flyttes beskrivelsen fra
+//  det gamle doc-id-et «Trance & drum'n'bass» til det nye «Trance & DnB», og
+//  artist-taggen døpes om (fra begge tidligere skrivemåter — «Trance / DnB»
+//  ELLER «Trance & drum'n'bass», avhengig av om v3.26 alt kjørte). Doc-ID kan
+//  ikke ha «/», derfor «&». Flagg-guardet, idempotent. Se
+//  [[pensum-genre-source-of-truth]].
+// ---------------------------------------------------------------------------
+const TRANCE_DOCID_FLAG = "tranceDocIdRename_2026_07";
+const TRANCE_OLD_DOC = "Trance & drum'n'bass";
+const TRANCE_NEW_DOC = "Trance & DnB";
+const TRANCE_TAG_RENAMES = [
+  ["Trance / DnB", TRANCE_NEW_DOC],
+  ["Trance & drum'n'bass", TRANCE_NEW_DOC],
+];
+
+export async function runTranceDocIdMigration() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[TRANCE_DOCID_FLAG]) return { skipped: true };
+
+  // 1) Flytt beskrivelsen til det nye korte doc-id-et (= nodens label). Dropp
+  //    evt. gjenværende døde flate felt så det nye dokumentet fødes rent.
+  const oldRef = doc(db, "genreDescriptions", TRANCE_OLD_DOC);
+  const oldSnap = await getDoc(oldRef);
+  let moved = false;
+  if (oldSnap.exists()) {
+    const { description: _d, kilder: _k, ...clean } = oldSnap.data();
+    await setDoc(doc(db, "genreDescriptions", TRANCE_NEW_DOC), clean, { merge: true });
+    await deleteDoc(oldRef);
+    moved = true;
+  }
+
+  // 2) Døp om artist-taggen (uansett tidligere skrivemåte) til det nye navnet.
+  const renamed = await renameArtistGenreTags(TRANCE_TAG_RENAMES);
+
+  await setDoc(migRef, { [TRANCE_DOCID_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Trance-doc-id-migrering: ${moved ? "«Trance & drum'n'bass» → «Trance & DnB»" : "ingen doc å flytte"}, ${renamed} artist-tagg omdøpt.`);
+  return { moved, renamed };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

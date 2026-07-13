@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.26";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.26";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.26";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.26";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.27";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.27";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.27";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.27";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -46,7 +46,7 @@ export const GENEALOGY = [
   { id: "techno", l: "Techno", f: "Techno", fam: "teal", cx: 1380, r: 9, p: ["house", "disco"], g: "Klubbmusikk", era: "1985", t: ["Strings of Life – Derrick May", "Big Fun – Inner City"] },
   { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["country", "folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
   { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
-  { id: "trance", l: "Trance & drum'n'bass", f: "Trance & drum'n'bass", fam: "teal", cx: 1510, r: 10, p: ["techno", "house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
+  { id: "trance", l: "Trance & DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1510, r: 10, p: ["techno", "house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
   { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 11, p: ["fusion", "techno", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
 
   // --- Folk (revival) ---

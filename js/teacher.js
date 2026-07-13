@@ -26,14 +26,15 @@ import {
   purgeFlatGenreDescs,
   runGenreDuplicateCleanup,
   runGenreLabelAlignment,
-} from "./store.js?v=3.26";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.26";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.26";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.26";
-import { initExplore } from "./explore.js?v=3.26";
+  runTranceDocIdMigration,
+} from "./store.js?v=3.27";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.27";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.27";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.27";
+import { initExplore } from "./explore.js?v=3.27";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.26";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.26";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.27";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.27";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -49,11 +50,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.26";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.26";
-import { renderDesk } from "./teacher-desk.js?v=3.26";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.26";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.26";
+} from "./teacher-content.js?v=3.27";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.27";
+import { renderDesk } from "./teacher-desk.js?v=3.27";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.27";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.27";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -209,20 +210,22 @@ function startApp() {
   // før første snapshot lander.
   refreshDesk();
 
-  // Engangs (idempotent): fjern det pensjonerte meta-feltet OG det døde flate
-  // description-feltet fra genreDescriptions. Fire-and-forget — skal ikke
-  // blokkere oppstart.
-  purgeMetaGenreDescs().catch((e) => console.warn("Meta-opprydding feilet:", e?.message || e));
-  purgeFlatGenreDescs().catch((e) => console.warn("Flat-felt-opprydding feilet:", e?.message || e));
-
-  // Engangs (flagg-guardet i config/migrations): slett vedtatte duplikat-/
-  // foreldreløse sjangerdokumenter og slå «Electronic» sammen i «Elektronika».
-  // Kjører nøyaktig én gang; se konsoll-loggen for hva den gjorde.
-  runGenreDuplicateCleanup().catch((e) => console.warn("Sjangeropprydding feilet:", e?.message || e));
-
-  // Engangs (flagg-guardet): juster de to artist-taggene som fulgte node-labels
-  // som nå er satt lik doc-id-en (Blues rock, Trance & drum'n'bass).
-  runGenreLabelAlignment().catch((e) => console.warn("Node-label-justering feilet:", e?.message || e));
+  // Engangs-vedlikehold ved lærer-oppstart. Kjøres SEKVENSIELT (ikke parallelt)
+  // så migreringer som rører de samme dokumentene (f.eks. flat-purge og Trance-
+  // doc-flyttingen) ikke kappes. Hver er flagg-guardet/idempotent; en feil
+  // isoleres og stopper ikke de neste. Se konsoll-loggen for hva hver gjorde.
+  (async () => {
+    const steps = [
+      ["Meta-opprydding", purgeMetaGenreDescs],
+      ["Flat-felt-opprydding", purgeFlatGenreDescs],
+      ["Sjangeropprydding", runGenreDuplicateCleanup],
+      ["Node-label-justering", runGenreLabelAlignment],
+      ["Trance-doc-id-migrering", runTranceDocIdMigration],
+    ];
+    for (const [navn, fn] of steps) {
+      try { await fn(); } catch (e) { console.warn(`${navn} feilet:`, e?.message || e); }
+    }
+  })();
 
   // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
   // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.
