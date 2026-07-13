@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from "./util.js?v=3.21";
+import { escapeHtml as esc } from "./util.js?v=3.22";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);

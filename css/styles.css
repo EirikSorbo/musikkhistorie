@@ -462,7 +462,12 @@ textarea { resize: vertical; }
   position: relative;
 }
 .list-head h2 { margin: 0; font-size: 1.15rem; }
-.filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* Lærer-filter: to rader — kontroller (søk, tidslinje, avkrysninger, Ny artist)
+   over, rullegardinene under. */
+.filters { display: flex; flex-direction: column; gap: 8px; flex: 1 1 100%; }
+.filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.filter-row--controls .show-removed { white-space: nowrap; }
+.filter-row--selects select { flex: 1 1 130px; min-width: 120px; }
 .filters input, .filters select { padding: 8px 11px; font-size: 0.88rem; }
 
 /* ----- Forslagskort ----- */
@@ -1003,6 +1008,9 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 }
 .filter-bar input,
 .filter-bar select { padding: 8px 11px; font-size: 0.88rem; }
+/* Student «Finn artister»: handlingsknappene på egen rad under tittelen,
+   over filter-raden. */
+.filter-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 
 .section-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 10px; }
 .dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
@@ -1049,7 +1057,7 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* Sjekk-fremdrift per innholdskategori */
 .desk-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-top: 14px;
 }
@@ -1057,11 +1065,15 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 10px 12px;
 }
-.desk-cat-h { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
-.desk-cat-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; min-height: 29px; }
-.desk-cat-n { font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* Tittel + progresjonsstrek på samme rad — holder kortet lavt. Tittelen kan
+   kortes med ellipsis (title-attributt viser full tekst), streken tar resten. */
+.desk-cat-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.desk-cat-h { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desk-cat-top .bar.small { flex: 1; min-width: 34px; }
+.desk-cat-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 29px; flex-wrap: wrap; }
+.desk-cat-n { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .desk-cat-n b { color: var(--text); font-weight: 700; }
 .desk-cat-btn { flex-shrink: 0; }
 .desk-cat .bar.small { display: block; }
@@ -1107,7 +1119,11 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .desk-ok { font-size: 0.85rem; color: var(--muted-2); }
 .desk-item.active { border-color: var(--accent); background: #f0fdf4; }
 /* Må stå ETTER basisregelen — regler med lik spesifisitet vinner på rekkefølge,
-   media query eller ei (720px-blokka øverst i fila taper mot basis her nede). */
+   media query eller ei (720px-blokka øverst i fila taper mot basis her nede).
+   4 kort per rad på brede skjermer, trappes ned til 1 på mobil. */
+@media (max-width: 1000px) {
+  .desk-grid { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 720px) {
   .desk-grid { grid-template-columns: repeat(2, 1fr); }
 }
