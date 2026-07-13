@@ -1,16 +1,16 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.6";
-import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.6";
-import { debounce, throttle } from "./util.js?v=3.6";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.6";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.6";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.6";
-import { initExplore } from "./explore.js?v=3.6";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.6";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.7";
+import { DEFAULT_CONFIG, isVisible, filterArtists } from "./limits.js?v=3.7";
+import { debounce, throttle } from "./util.js?v=3.7";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.7";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.7";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.7";
+import { initExplore } from "./explore.js?v=3.7";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.7";
 
 const state = {
   artists: [],
   // true etter første artist-snapshot — skiller «laster fortsatt» fra
-  // «datasettet er faktisk tomt» (placeholder-opprydding i renderDagensArtist).
+  // «datasettet er faktisk tomt» (placeholder-opprydding i renderDagensSection).
   artistsLoaded: false,
   config: null,
   // true når config-lesingen feilet og state.config bare er standardverdier —
@@ -207,7 +207,7 @@ function setupDetailModal() {
 }
 
 function openDagensNavn() {
-  renderDagensArtist();
+  renderDagensModal();
   modalOpen(document.getElementById("modal-dagens-navn"));
 }
 
@@ -220,20 +220,49 @@ function hasFilters() {
   return !!(f.search || f.mainGenre || f.metaGenre || f.instrument || f.decade);
 }
 
-// Dagens artist bor i sin egen modal (åpnes fra «Finn artister»): én fast
-// tilfeldig trukket artist per sidelast; «Ny artist» trekker på nytt.
+// Dagens artist: én fast tilfeldig trukket artist per sidelast, vist BÅDE i
+// seksjonen under dashbordet og i modalen fra «Finn artister» (samme
+// trekning; «Ny artist» trekker på nytt begge steder).
 let dagensArtistId = null;
-function renderDagensArtist() {
+
+function dagensArtist() {
+  const pool = state.artists.filter(isVisible);
+  if (!pool.length) return null;
+  if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
+  return pool.find((a) => a.id === dagensArtistId) || pool[0];
+}
+
+// Seksjonen under dashbordet — alltid synlig så snart det finnes artister.
+function renderDagensSection() {
+  if (!state.config) return;
+  const section = document.getElementById("dagens-artist-section");
+  const el = $("#dagens-artist");
+  if (!section || !el) return;
+  const artist = dagensArtist();
+  if (!artist) {
+    // Første snapshot har kommet og datasettet ER tomt (ikke bare «laster»):
+    // rydd bort «Laster forslag …»-placeholderen og skjul seksjonen igjen,
+    // ellers blir den stående for alltid.
+    if (state.artistsLoaded) {
+      section.style.display = "none";
+      el.innerHTML = "";
+    }
+    return;
+  }
+  section.style.display = "";
+  renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
+}
+
+// Modalen (åpnes fra «Finn artister»).
+function renderDagensModal() {
   if (!state.config) return;
   const el = $("#spotlight");
   if (!el) return;
-  const pool = state.artists.filter(isVisible);
-  if (!pool.length) {
+  const artist = dagensArtist();
+  if (!artist) {
     el.innerHTML = `<p class="muted empty">${state.artistsLoaded ? "Ingen artister ennå." : "Laster forslag …"}</p>`;
     return;
   }
-  if (!dagensArtistId) dagensArtistId = pool[Math.floor(Math.random() * pool.length)].id;
-  const artist = pool.find((a) => a.id === dagensArtistId) || pool[0];
   renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
 }
 
@@ -362,7 +391,9 @@ function setupFilters() {
       pick = pool[Math.floor(Math.random() * pool.length)];
     }
     dagensArtistId = pick.id;
-    renderDagensArtist();
+    // Ny trekning gjelder begge visningene (modalen og seksjonen på forsiden).
+    renderDagensModal();
+    renderDagensSection();
   });
 }
 
@@ -430,13 +461,19 @@ function init() {
   loadCache();
   if (state.config && state.artists.length) {
     refreshFilterControls();
+    renderDagensSection();
     // #artist-list bygges når #modal-artister åpnes (openArtistModal), ikke her
     // — den er skjult ved sidelast, så å bygge alle kortene nå er bortkastet.
   } else {
-    // Førstegangsbesøk uten cache: vis en lasteindikator i listeseksjonen til
+    // Førstegangsbesøk uten cache: vis en lasteindikator i listeseksjonene til
     // første Firestore-snapshot kommer, i stedet for en tom side.
+    const loading = `<p class="muted empty">Laster forslag …</p>`;
+    const section = document.getElementById("dagens-artist-section");
+    if (section) section.style.display = "";
+    const dagens = $("#dagens-artist");
+    if (dagens) dagens.innerHTML = loading;
     const list = $("#artist-list");
-    if (list) list.innerHTML = `<p class="muted empty">Laster forslag …</p>`;
+    if (list) list.innerHTML = loading;
   }
 
   wireFirestoreErrorBanner();
@@ -454,9 +491,10 @@ function init() {
     state.config = config;
     state.configIsFallback = !!meta?.fallback;
     refreshFilterControls();
-    // Dagens artist-modalen kan stå åpen med «Laster …» på kald start — på
-    // config-ankomst kan den nå rendres ferdig.
-    if (isDagensModalOpen()) renderDagensArtist();
+    // Dagens artist trenger config — på kald start (uten cache) kan artist-
+    // snapshotet ha kommet først og gitt opp; render på nytt nå.
+    renderDagensSection();
+    if (isDagensModalOpen()) renderDagensModal();
     renderArtistViewsIfVisible();
     applyPendingDeepLink();
     saveCache();
@@ -466,7 +504,8 @@ function init() {
   // ombygging per stemme, og lista bygges bare når modalen faktisk er åpen.
   const applyArtistSnapshot = throttle(() => {
     renderArtistViewsIfVisible();
-    if (isDagensModalOpen()) renderDagensArtist();
+    renderDagensSection();
+    if (isDagensModalOpen()) renderDagensModal();
     saveCache();
   }, 400);
   subscribeArtists((artists) => {
