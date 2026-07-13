@@ -5,10 +5,10 @@
 //  grenser. Lagrer hele config-objektet via updateConfig.
 // ============================================================================
 
-import { state, int, splitList, setupModals } from "./teacher-state.js?v=3.4";
-import { updateConfig } from "./store.js?v=3.4";
-import { escapeHtml } from "./ui.js?v=3.4";
-import { CONFIGURED, $ } from "./shared.js?v=3.4";
+import { state, int, splitList, setupModals } from "./teacher-state.js?v=3.5";
+import { updateConfig } from "./store.js?v=3.5";
+import { escapeHtml } from "./ui.js?v=3.5";
+import { CONFIGURED, $ } from "./shared.js?v=3.5";
 
 export function setupAdmin() {
   setupModals();

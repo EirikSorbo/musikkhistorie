@@ -667,7 +667,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 /* Studenter får et rent dashbord uten faner: hele nav-lenkeraden skjules
    (Foreslå nås via knapp i Artister-modalen; tilbake-veien på undersider er
    .student-back + brand-lenken). Lærer/uvalgt rolle ser fanene som før. */
-body.role-student .nav a { display: none; }
+body.role-student .nav .nav-icon { display: none; }
 body.role-student .version-tag { display: none; }
 
 /* «← Til startsiden» på skjemasiden — kun synlig for studenter (andre har
@@ -831,7 +831,6 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .tag-tech-cat { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
 
 /* ----- Innstillinger-knapp i header (lærer) ----- */
-.gear-btn { font-size: 0.82rem; }
 
 /* ----- Innstillinger (lærer) ----- */
 .settings-sections {
@@ -1012,18 +1011,29 @@ a.brand { text-decoration: none; color: inherit; display: flex; align-items: cen
   letter-spacing: 0.01em;
   margin-right: 4px;
 }
-.nav a {
-  text-decoration: none;
+/* Ikonfaner (hjem / lærer / innstillinger) — <a> og <button> deler stil. */
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
   color: var(--muted);
-  font-weight: 500;
-  font-size: 0.9rem;
-  padding: 8px 14px;
-  border-radius: 10px;
+  background: none;
+  text-decoration: none;
   border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
   transition: 0.12s;
 }
-.nav a:hover { color: var(--text); background: var(--surface-2); }
-.nav a.active { color: var(--accent); background: #f0fdf4; border-color: #bbf7d0; }
+.nav-icon svg { display: block; }
+.nav-icon:hover { color: var(--text); background: var(--surface-2); }
+.nav-icon.active { color: var(--accent); background: #f0fdf4; border-color: #bbf7d0; }
+/* Tannhjulet på lærersiden er teacher-only (modalen virker først etter
+   innlogging) — må gjentas her fordi .nav-icon ellers vinner på kilderekkefølge. */
+.nav-icon.teacher-only { display: none; }
+body.is-teacher .nav-icon.teacher-only { display: inline-flex; }
 
 /* Forside-hero */
 .hero { text-align: center; padding: 36px 0 12px; }
@@ -1132,7 +1142,7 @@ body.is-teacher #gate { display: none; }
   }
   .brand h1 { font-size: 1.05rem; }
   .nav { gap: 2px; }
-  .nav a { font-size: 0.8rem; padding: 6px 10px; }
+  .nav-icon { width: 34px; height: 34px; }
   .version-tag { display: none; }
   .wrap { padding: 0 14px; }
   main { padding: 20px 0 50px; }
@@ -1280,7 +1290,7 @@ body.is-teacher #gate { display: none; }
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {
   .brand h1 { font-size: 0.95rem; }
-  .nav a { font-size: 0.76rem; padding: 5px 8px; }
+  .nav-icon { width: 32px; height: 32px; }
   .panel { padding: 14px 12px; }
   .modal { padding: 16px 14px; }
   .btn { padding: 8px 13px; }

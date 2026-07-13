@@ -21,14 +21,14 @@ import {
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.4";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.4";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.4";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.4";
-import { initExplore } from "./explore.js?v=3.4";
+} from "./store.js?v=3.5";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.5";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.5";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.5";
+import { initExplore } from "./explore.js?v=3.5";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge } from "./teacher-state.js?v=3.4";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.4";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge, openAdminModal } from "./teacher-state.js?v=3.5";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.5";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -42,10 +42,10 @@ import {
   openStoryEditor,
   openPageEditor,
   setupStoryEditor,
-} from "./teacher-content.js?v=3.4";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.4";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.4";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.4";
+} from "./teacher-content.js?v=3.5";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.5";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.5";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.5";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -183,6 +183,14 @@ function startApp() {
   // Engangs (idempotent): fjern det pensjonerte meta-feltet fra
   // genreDescriptions. Fire-and-forget — skal ikke blokkere oppstart.
   purgeMetaGenreDescs().catch((e) => console.warn("Meta-opprydding feilet:", e?.message || e));
+
+  // Tannhjul-ikonet på de andre sidene lenker hit med #innstillinger — åpne
+  // innstillingsmodalen når læreren er innlogget. Hashen ryddes bort, så en
+  // refresh ikke gjenåpner modalen.
+  if (location.hash === "#innstillinger") {
+    history.replaceState(null, "", location.pathname);
+    openAdminModal("modal-settings");
+  }
 }
 
 setupGate();
