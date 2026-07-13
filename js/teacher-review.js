@@ -5,10 +5,10 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=3.14";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=3.14";
-import { resolveDesc } from "./genre-descriptions.js?v=3.14";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=3.14";
+import { state, guardTeacherAction } from "./teacher-state.js?v=3.15";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=3.15";
+import { resolveDesc } from "./genre-descriptions.js?v=3.15";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=3.15";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;

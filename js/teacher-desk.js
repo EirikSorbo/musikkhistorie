@@ -14,13 +14,12 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, guardTeacherAction, handlers } from "./teacher-state.js?v=3.14";
-import { modalOpen } from "./ui.js?v=3.14";
-import { setTeacherChecks } from "./store.js?v=3.14";
-import { renderPendingEditsList } from "./teacher-review.js?v=3.14";
-import { openDetail } from "./teacher-artists.js?v=3.14";
-import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=3.14";
-import { escapeHtml, pct } from "./ui-helpers.js?v=3.14";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.15";
+import { modalOpen } from "./ui.js?v=3.15";
+import { renderPendingEditsList } from "./teacher-review.js?v=3.15";
+import { openDetail } from "./teacher-artists.js?v=3.15";
+import { GENEALOGY_MAIN_GENRES, isMainGenre } from "./genealogy.js?v=3.15";
+import { escapeHtml, pct } from "./ui-helpers.js?v=3.15";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -230,10 +229,5 @@ function openItem(key, id) {
 // Sjekk/angre. Artistkort bor på artist-dokumentet (toggleCheck), resten er
 // navnelister i config/teacherChecks. Snapshotet tegner Skrivebordet på nytt.
 function checkItem(key, id, on) {
-  if (key === "artists") return handlers.toggleCheck(id);
-  const cur = state.teacherChecks?.[key] || [];
-  const has = cur.includes(id);
-  if (on === has) return;
-  const next = on ? [...cur, id] : cur.filter((x) => x !== id);
-  guardTeacherAction(setTeacherChecks({ [key]: next }));
+  setContentCheck(key, id, on);
 }

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeConfig } from "../../js/config-normalize.js?v=3.14";
-import { GENEALOGY_META_GENRES } from "../../js/genealogy.js?v=3.14";
-import { META_RENAME } from "../../js/artist-normalize.js?v=3.14";
+import { normalizeConfig } from "../../js/config-normalize.js?v=3.15";
+import { GENEALOGY_META_GENRES } from "../../js/genealogy.js?v=3.15";
+import { META_RENAME } from "../../js/artist-normalize.js?v=3.15";
 
 test("gamle nøkler migreres til nye og fjernes", () => {
   const c = normalizeConfig({

@@ -17,18 +17,19 @@ import {
   subscribeTeacherChecks,
   subscribePendingEdits,
   saveVarmekart,
+  deleteTech,
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.14";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.14";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.14";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.14";
-import { initExplore } from "./explore.js?v=3.14";
+} from "./store.js?v=3.15";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.15";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.15";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.15";
+import { initExplore } from "./explore.js?v=3.15";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal } from "./teacher-state.js?v=3.14";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.14";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.15";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.15";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -42,11 +43,12 @@ import {
   openStoryEditor,
   openPageEditor,
   setupStoryEditor,
-} from "./teacher-content.js?v=3.14";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.14";
-import { renderDesk } from "./teacher-desk.js?v=3.14";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.14";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.14";
+  openTechEditor,
+} from "./teacher-content.js?v=3.15";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.15";
+import { renderDesk } from "./teacher-desk.js?v=3.15";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.15";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.15";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -124,6 +126,14 @@ function startApp() {
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,
     onTechAdmin: () => openTechAdmin(),
+    // Sjekk-knapp i detaljvisningene (sjanger, historie, røtter, innovasjonskort).
+    onCheck: (category, id, on) => setContentCheck(category, id, on),
+    onTechEdit: (t) => openTechEditor(t),
+    onTechDelete: (id) => {
+      if (!confirm("Slette dette innovasjonskortet?")) return false;
+      guardTeacherAction(deleteTech(id));
+      return true;
+    },
   });
 
   $("#btn-t-society").addEventListener("click", () => ctx.explore.openDecadeList("society"));

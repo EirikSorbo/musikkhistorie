@@ -5,17 +5,17 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.14";
-import { saveDecadeDesc, saveGenreDescLevel, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.14";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.14";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.14";
-import { resolveDesc } from "./genre-descriptions.js?v=3.14";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.14";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.15";
+import { saveDecadeDesc, saveGenreDescLevel, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.15";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.15";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.15";
+import { resolveDesc } from "./genre-descriptions.js?v=3.15";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.15";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.14";
-import { $ } from "./shared.js?v=3.14";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.14";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.15";
+import { $ } from "./shared.js?v=3.15";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.15";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -186,6 +186,14 @@ export function openTechAdmin() {
   openAdminModal("modal-tech-admin");
 }
 
+// Åpne tech-admin med skjemaet forhåndsutfylt for ett kort — brukt av
+// «Rediger»-knappen i innovasjonskort-detaljen (explore.onTechEdit).
+export function openTechEditor(t) {
+  openTechAdmin();
+  fillTechForm(t);
+  document.getElementById("tech-name")?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 let techAdminCat = "";
 
 export function renderTechAdmin() {
@@ -208,7 +216,9 @@ export function renderTechAdmin() {
         <div class="meta">${yearTag}${catTag}</div>
       </header>
       ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) })}</p>` : ""}
-      <div class="card-foot" style="margin-top:auto;padding-top:8px">
+      <div class="card-foot teacher-card-actions" style="margin-top:auto;padding-top:8px">
+        <button class="btn ghost small tech-check-btn${(state.teacherChecks?.tech || []).includes(t.id) ? " accent" : ""}">${(state.teacherChecks?.tech || []).includes(t.id) ? "✓ Sjekket" : "Sjekk"}</button>
+        <div class="spacer"></div>
         <button class="btn ghost small tech-edit-btn">Rediger</button>
         <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
       </div>
@@ -216,6 +226,16 @@ export function renderTechAdmin() {
   }).join("");
 
   wireAllLinks(el, ctx.explore ? ctx.explore.buildLinkCtx() : {});
+
+  el.querySelectorAll(".tech-check-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.closest("[data-tech-id]").dataset.techId;
+      const nowChecked = !btn.classList.contains("accent");
+      btn.classList.toggle("accent", nowChecked);
+      btn.textContent = nowChecked ? "✓ Sjekket" : "Sjekk";
+      setContentCheck("tech", id, nowChecked);
+    });
+  });
 
   el.querySelectorAll(".tech-del-btn").forEach(btn => {
     btn.addEventListener("click", async () => {

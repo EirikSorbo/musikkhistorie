@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.14";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.14";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.14";
-import { isVisible } from "./limits.js?v=3.14";
-import { podcastEpisodeHtml, wireLinks } from "./ui-helpers.js?v=3.14";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.14";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.14";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.14";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.14";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.14";
-import { renderSjangerhimmel } from "./constellation.js?v=3.14";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.15";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.15";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.15";
+import { isVisible } from "./limits.js?v=3.15";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.15";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.15";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.15";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.15";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.15";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.15";
+import { renderSjangerhimmel } from "./constellation.js?v=3.15";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -345,6 +345,23 @@ let contextMode = "society";
 
 function getState() { return opts.getState(); }
 
+// Injiserer den delte lærer-knapperaden (Sjekk | Rediger · Slett) i en «extra»-
+// beholder i en detaljmodal. Gjør ingenting for studenter (opts.onCheck
+// mangler). category/id styrer sjekk-lagringen; onEdit/onDelete kobles kun når
+// callbacken finnes (Slett bare for hele enheter, dvs. innovasjonskort).
+function injectTeacherRow(extraEl, { category, id, onEdit = null, onDelete = null }) {
+  if (!extraEl) return;
+  extraEl.innerHTML = "";
+  if (!opts.onCheck) return;
+  const checked = (opts.getCheckedState?.()?.[category] || []).includes(id);
+  extraEl.innerHTML = teacherActionRow({ checked, edit: !!onEdit, del: !!onDelete });
+  wireTeacherRow(extraEl, {
+    onCheck: (on) => opts.onCheck(category, id, on),
+    onEdit,
+    onDelete,
+  });
+}
+
 function buildLinkCtx() {
   const s = getState();
   return {
@@ -401,11 +418,24 @@ function showArtistsForInstrument(instrument) {
 }
 
 function openTechDetail(t) {
+  const modal = document.getElementById("modal-tech-detail");
   document.getElementById("td-title").textContent = t.name;
-  renderTechDetail(document.getElementById("td-body"), t, buildLinkCtx());
+  const body = document.getElementById("td-body");
+  renderTechDetail(body, t, buildLinkCtx());
   const foot = document.getElementById("td-foot");
   const btn = document.getElementById("td-propose");
-  if (foot && btn && opts.onProposeEdit) {
+  if (opts.onCheck) {
+    // Lærer: Sjekk + Rediger + Slett (innovasjonskort er en hel enhet).
+    if (foot) foot.style.display = "none";
+    const extra = document.createElement("div");
+    body.appendChild(extra);
+    injectTeacherRow(extra, {
+      category: "tech",
+      id: t.id,
+      onEdit: opts.onTechEdit ? () => { modalClose(modal); opts.onTechEdit(t); } : null,
+      onDelete: opts.onTechDelete ? () => { if (opts.onTechDelete(t.id)) modalClose(modal); } : null,
+    });
+  } else if (foot && btn && opts.onProposeEdit) {
     foot.style.display = "";
     const locked = opts.hasPendingEdit?.("tech", t.id);
     btn.disabled = !!locked;
@@ -419,7 +449,7 @@ function openTechDetail(t) {
   } else if (foot) {
     foot.style.display = "none";
   }
-  modalOpen(document.getElementById("modal-tech-detail"));
+  modalOpen(modal);
 }
 
 function openDecadeList(mode) {
@@ -1169,15 +1199,13 @@ function openSubgenreInfo(subgenreId) {
     });
   }
 
-  const extra = document.getElementById("sgi-extra");
-  extra.innerHTML = "";
-  if (opts.onSubgenreEdit) {
-    extra.innerHTML = `<div class="modal-foot-right"><button id="sgi-edit-btn" class="btn ghost small">Rediger</button></div>`;
-    extra.querySelector("#sgi-edit-btn").addEventListener("click", () => {
-      modalClose(modal);
-      opts.onSubgenreEdit(subgenreId, "sub");
-    });
-  }
+  injectTeacherRow(document.getElementById("sgi-extra"), {
+    category: "subgenres",
+    id: subgenreId,
+    onEdit: opts.onSubgenreEdit
+      ? () => { modalClose(modal); opts.onSubgenreEdit(subgenreId, "sub"); }
+      : null,
+  });
 
   modalOpen(modal);
 }
@@ -1207,17 +1235,12 @@ function renderPage(pageId, bodyElId, extraElId) {
       ? "Teksten er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen."
       : "Laster innhold …"}</p>`;
   }
-  // Lærer: rediger-knapp over teksten (samme mønster som historiene).
-  const extra = document.getElementById(extraElId);
-  if (extra) {
-    extra.innerHTML = "";
-    if (opts.onPageEdit) {
-      extra.innerHTML = `<div class="modal-foot-right" style="margin:0 0 10px">
-        <button class="btn ghost small" data-page-edit="${pageId}">Rediger</button>
-      </div>`;
-      extra.querySelector("[data-page-edit]").addEventListener("click", () => opts.onPageEdit(pageId));
-    }
-  }
+  // Lærer: Sjekk + Rediger over teksten (delt knapperad).
+  injectTeacherRow(document.getElementById(extraElId), {
+    category: "pages",
+    id: pageId,
+    onEdit: opts.onPageEdit ? () => opts.onPageEdit(pageId) : null,
+  });
 }
 
 function openOmHistorie() {
@@ -1255,15 +1278,13 @@ function renderHistorie(genre) {
     : `<p class="gx-missing">Historien om ${escapeHtml(genre)} er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen.</p>`;
   wireLinks(body, lc);
 
-  // Lærer: rediger-knapp over teksten (samme mønster som sgi-edit-btn).
-  const extra = document.getElementById("hist-extra");
-  extra.innerHTML = "";
-  if (opts.onStoryEdit) {
-    extra.innerHTML = `<div class="modal-foot-right" style="margin:0 0 10px">
-      <button class="btn ghost small" id="hist-edit-btn">${story ? "Rediger" : "Skriv historien"}</button>
-    </div>`;
-    extra.querySelector("#hist-edit-btn").addEventListener("click", () => opts.onStoryEdit(genre));
-  }
+  // Lærer: Sjekk (på hovedsjanger-nivå — historien ER hovedsjangerens innhold)
+  // + Rediger, delt knapperad.
+  injectTeacherRow(document.getElementById("hist-extra"), {
+    category: "metaGenres",
+    id: genre,
+    onEdit: opts.onStoryEdit ? () => opts.onStoryEdit(genre) : null,
+  });
 
   const box = modal.querySelector(".modal");
   if (box) box.scrollTop = 0;

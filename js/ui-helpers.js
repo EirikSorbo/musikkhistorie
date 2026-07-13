@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=3.14";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.14";
-import { GENDERS } from "./limits.js?v=3.14";
+import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=3.15";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.15";
+import { GENDERS } from "./limits.js?v=3.15";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -25,6 +25,39 @@ export function wireLinks(el, lc) {
 }
 
 export const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
+
+// Delt lærer-knapperad for detaljvisninger (sjanger, historie, røtter,
+// innovasjonskort osv.): Sjekk helt til venstre, Rediger + Slett til høyre —
+// samme mønster som artistkortene. Vises kun når lærer-callbacks finnes, så
+// studentvisningen aldri får knappene. Slett tas kun med for hele enheter
+// (innovasjonskort) — sjanger/historie/side har ingen enhet å slette.
+export function teacherActionRow({ checked = false, edit = true, del = false } = {}) {
+  const right = [
+    edit ? `<button type="button" class="btn ghost small tcr-edit">Rediger</button>` : "",
+    del ? `<button type="button" class="btn ghost small tcr-del">Slett</button>` : "",
+  ].filter(Boolean).join("");
+  return `<div class="teacher-card-actions">
+    <button type="button" class="btn ghost small tcr-check${checked ? " accent" : ""}">${checked ? "✓ Sjekket" : "Sjekk"}</button>
+    <div class="spacer"></div>
+    ${right}
+  </div>`;
+}
+
+// Kobler radens tre knapper. Sjekk-knappen skifter utseende optimistisk (modalen
+// re-rendres ikke av snapshotet), og onCheck(nyTilstand) skriver til Firestore.
+export function wireTeacherRow(container, { onCheck, onEdit, onDelete } = {}) {
+  const chk = container.querySelector(".tcr-check");
+  if (chk && onCheck) chk.addEventListener("click", () => {
+    const nowChecked = !chk.classList.contains("accent");
+    chk.classList.toggle("accent", nowChecked);
+    chk.textContent = nowChecked ? "✓ Sjekket" : "Sjekk";
+    onCheck(nowChecked);
+  });
+  const edt = container.querySelector(".tcr-edit");
+  if (edt && onEdit) edt.addEventListener("click", onEdit);
+  const del = container.querySelector(".tcr-del");
+  if (del && onDelete) del.addEventListener("click", onDelete);
+}
 
 // Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).
 // Opsjoner: withInstrument tar med instrument-boblen, withSub kan slå av

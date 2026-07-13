@@ -12,11 +12,12 @@ import {
   teacherDelete,
   setArtistPriority,
   updateArtistFields,
+  setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.14";
-import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.14";
-import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.14";
-import { $ } from "./shared.js?v=3.14";
+} from "./store.js?v=3.15";
+import { renderArtists, renderLimits, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.15";
+import { GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.15";
+import { $ } from "./shared.js?v=3.15";
 
 export const state = {
   artists: [],
@@ -70,6 +71,22 @@ export const handlers = {
     guardTeacherAction(updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) }));
   },
 };
+
+// Sett/fjern «sjekket» for et innholdselement. Artistkort bor på artist-
+// dokumentet (teacherChecked); alle andre kategorier er navnelister i
+// config/teacherChecks (genres/subgenres/metaGenres/tech/decades/pages).
+// Deterministisk (on), så optimistiske knapper i detaljmodalene og Skrivebordet
+// aldri kommer i utakt. Delt av teacher-desk og detaljvisningenes Sjekk-knapp.
+export function setContentCheck(category, id, on) {
+  if (category === "artists") {
+    return guardTeacherAction(updateArtistFields(id, { teacherChecked: on }));
+  }
+  const cur = state.teacherChecks?.[category] || [];
+  const has = cur.includes(id);
+  if (on === has) return Promise.resolve();
+  const next = on ? [...cur, id] : cur.filter((x) => x !== id);
+  return guardTeacherAction(setTeacherChecks({ [category]: next }));
+}
 
 // ----------------------------------------------------------------------------
 //  Små hjelpere

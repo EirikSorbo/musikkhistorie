@@ -751,6 +751,11 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .teacher-actions { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 10px; }
 .ta-left, .ta-center, .ta-right { display: flex; gap: 6px; align-items: center; }
 
+/* Delt lærer-knapperad i detaljvisninger: Sjekk til venstre, Rediger/Slett til høyre. */
+.teacher-card-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.teacher-card-actions .tcr-del { color: var(--danger); }
+.teacher-card-actions .tcr-del:hover { border-color: var(--danger); background: #fff5f5; }
+
 /* ----- Icon buttons ----- */
 .icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
