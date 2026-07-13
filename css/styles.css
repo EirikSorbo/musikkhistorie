@@ -1139,6 +1139,62 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 .section-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 10px; }
 .dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 
+/* ----- Skrivebord (lærer-arbeidsflyt øverst) ----- */
+.desk-sub { font-size: 0.9rem; font-weight: 600; color: var(--text); margin: 0 0 10px; }
+.desk-inbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.desk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 12px 15px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+.desk-item:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.desk-ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--accent-2);
+}
+.desk-ic svg { width: 19px; height: 19px; }
+.desk-item-l { font-size: 0.95rem; color: var(--text); }
+.desk-item-l b { font-weight: 700; }
+.desk-clear {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 2px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.desk-clear svg { width: 21px; height: 21px; color: var(--accent); flex-shrink: 0; }
+
+.desk-card {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+.desk-card-h { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.02em; }
+.desk-progress-row { display: flex; align-items: baseline; gap: 8px; }
+.desk-progress-n { font-size: 1.25rem; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.desk-progress-n b { font-weight: 700; }
+.desk-progress-l { font-size: 0.85rem; color: var(--muted); }
+.desk-card .bar { margin: 10px 0 14px; }
+.desk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.desk-ok { font-size: 0.85rem; color: var(--muted-2); }
+
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .dash-card {
   background: #fff;

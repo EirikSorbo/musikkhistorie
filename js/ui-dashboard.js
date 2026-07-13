@@ -19,11 +19,11 @@ import {
   limitForDecade,
   limitForMetaGenre,
   limitForInstrument,
-} from "./limits.js?v=3.11";
-import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.11";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.11";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.11";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.11";
+} from "./limits.js?v=3.12";
+import { escapeHtml, GENDER_LABEL, pct } from "./ui-helpers.js?v=3.12";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.12";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.12";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.12";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -58,6 +58,33 @@ function nameRow(name, attrs, metaTag = "") {
 function artistRows(list, extraTag = () => "") {
   return list.map((a) => nameRow(a.name, `data-ov-artist="${escapeHtml(a.id)}"`,
     (a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : "") + extraTag(a))).join("");
+}
+
+// Innhold som ikke er skrevet ennå — én sannhetskilde delt av Oversikt (som
+// lister hvert punkt) og Skrivebordet (som bare bruker `.total`). Returnerer
+// rålistene så oppringeren kan vise navn; `total` er summen på tvers av bøtter
+// (en artist som mangler både bilde og kilder teller som to punkter å fylle).
+// Sider (rotter/omHistorie) teller først når innholdet faktisk er lastet.
+export function contentGaps({ artists = [], genreDescs = {}, content = {}, contentLoaded = false }) {
+  const active = activeArtists(artists);
+  const subTags = [...new Set(active.flatMap((a) => [
+    ...(a.mainGenre || []).filter((x) => !isMainGenre(x)),
+    ...(a.subGenre || []),
+  ]))];
+  const stories = STORY_ORDER.filter((g) => !storyFor(g, genreDescs));
+  const pages = contentLoaded ? ["rotter", "omHistorie"].filter((id) => !pageFor(id, content)) : [];
+  const mainDesc = GENEALOGY
+    .filter((n) => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
+    .map((n) => n.l).sort(byNo);
+  const subDesc = subTags
+    .filter((n) => !resolveDesc(genreDescs, n, "sub").description).sort(byNo);
+  const noImage = active.filter((a) => !a.imageUrl).sort(byName);
+  const noDesc = active.filter((a) => !(a.description || "").trim()).sort(byName);
+  const noMusic = active.filter((a) => !(a.musicExamples || []).length).sort(byName);
+  const noSources = active.filter((a) => !(a.kilder || []).length).sort(byName);
+  const total = stories.length + pages.length + mainDesc.length + subDesc.length
+    + noImage.length + noDesc.length + noMusic.length + noSources.length;
+  return { stories, pages, mainDesc, subDesc, noImage, noDesc, noMusic, noSources, total };
 }
 
 export function renderDashboard(el, {
@@ -125,22 +152,18 @@ export function renderDashboard(el, {
     .filter((s) => !isMainGenre(s) && !GENEALOGY_META_GENRES.includes(s) && !allArtistTags.has(s))
     .sort(byNo);
 
-  // --- Innhold som mangler ------------------------------------------------------
-  const storiesMissing = STORY_ORDER.filter((g) => !storyFor(g, genreDescs));
+  // --- Innhold som mangler — samme telling som Skrivebordet (contentGaps) ------
+  const gaps = contentGaps({ artists, genreDescs, content, contentLoaded });
+  const storiesMissing = gaps.stories;
   const pageStatus = (id) => (contentLoaded ? !!pageFor(id, content) : null);
   const rotterOk = pageStatus("rotter");
   const omHistorieOk = pageStatus("omHistorie");
-
-  const mainMissing = GENEALOGY
-    .filter((n) => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
-    .map((n) => n.l).sort(byNo);
-  const subMissing = subTags
-    .filter((n) => !resolveDesc(genreDescs, n, "sub").description).sort(byNo);
-
-  const noImage = active.filter((a) => !a.imageUrl).sort(byName);
-  const noDesc = active.filter((a) => !(a.description || "").trim()).sort(byName);
-  const noMusic = active.filter((a) => !(a.musicExamples || []).length).sort(byName);
-  const noSources = active.filter((a) => !(a.kilder || []).length).sort(byName);
+  const mainMissing = gaps.mainDesc;
+  const subMissing = gaps.subDesc;
+  const noImage = gaps.noImage;
+  const noDesc = gaps.noDesc;
+  const noMusic = gaps.noMusic;
+  const noSources = gaps.noSources;
 
   // --- Markup-hjelpere -----------------------------------------------------------
   let uid = 0;

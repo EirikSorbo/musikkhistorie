@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=3.11";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=3.11";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.11";
+import { isVisible, filterArtists } from "./limits.js?v=3.12";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=3.12";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.12";
 import {
   escapeHtml,
   linkDesc,
@@ -31,19 +31,19 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=3.11";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.11";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.11";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.11";
-import { renderDashboard, renderLimits } from "./ui-dashboard.js?v=3.11";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.11";
+} from "./ui-helpers.js?v=3.12";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.12";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.12";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.12";
+import { renderDashboard, renderLimits, contentGaps } from "./ui-dashboard.js?v=3.12";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.12";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders };
 export { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage };
 export { buildTimeline, buildTechTimeline, renderDecadeSections };
-export { renderDashboard, renderLimits };
+export { renderDashboard, renderLimits, contentGaps };
 export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
 
 // Memoisert på artist-array-referansen: subscribeArtists bytter referanse ved

@@ -1,0 +1,68 @@
+// contentGaps er delt kilde for «Innhold som mangler» i Oversikt og tallet på
+// Skrivebordet. Testene låser tellereglene: hvilke felt/sider/historier som
+// regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { contentGaps } from "../../js/ui-dashboard.js?v=3.12";
+
+const artist = (o) => ({
+  status: "active", priority: 0, mainGenre: [], subGenre: [],
+  imageUrl: "x", description: "d", musicExamples: [{}], kilder: [{}], ...o,
+});
+
+test("contentGaps: artist-mediahull telles per felt", () => {
+  const artists = [
+    artist({ name: "Full" }),
+    artist({ name: "UtenBilde", imageUrl: "" }),
+    artist({ name: "UtenAlt", imageUrl: "", description: "  ", musicExamples: [], kilder: [] }),
+  ];
+  const g = contentGaps({ artists, genreDescs: {}, content: {}, contentLoaded: true });
+  assert.equal(g.noImage.length, 2);
+  assert.equal(g.noDesc.length, 1);
+  assert.equal(g.noMusic.length, 1);
+  assert.equal(g.noSources.length, 1);
+});
+
+test("contentGaps: skjulte og pending artister telles ikke", () => {
+  const artists = [
+    artist({ name: "Skjult", priority: -1, imageUrl: "" }),
+    artist({ name: "Pending", status: "pending", imageUrl: "" }),
+  ];
+  const g = contentGaps({ artists, contentLoaded: true });
+  assert.equal(g.noImage.length, 0);
+});
+
+test("contentGaps: sider telles kun når innhold er lastet", () => {
+  assert.equal(contentGaps({ artists: [], content: {}, contentLoaded: false }).pages.length, 0);
+  assert.deepEqual(
+    contentGaps({ artists: [], content: {}, contentLoaded: true }).pages.sort(),
+    ["omHistorie", "rotter"],
+  );
+  assert.deepEqual(
+    contentGaps({ artists: [], content: { rotter: { body: "x" } }, contentLoaded: true }).pages,
+    ["omHistorie"],
+  );
+});
+
+test("contentGaps: sjangerhistorie regnes som skrevet når story.body finnes", () => {
+  assert.equal(contentGaps({ artists: [], genreDescs: {} }).stories.length, 6);
+  const one = contentGaps({ artists: [], genreDescs: { Blues: { story: { body: "s" } } } });
+  assert.equal(one.stories.length, 5);
+  assert.ok(!one.stories.includes("Blues"));
+});
+
+test("contentGaps: main-beskrivelse fjerner sjangeren fra mainDesc", () => {
+  assert.ok(contentGaps({ artists: [], genreDescs: {} }).mainDesc.includes("Blues"));
+  const withBlues = contentGaps({ artists: [], genreDescs: { Blues: { main: { description: "b" } } } });
+  assert.ok(!withBlues.mainDesc.includes("Blues"));
+});
+
+test("contentGaps: total er summen av alle bøtter", () => {
+  const g = contentGaps({
+    artists: [artist({ name: "X", imageUrl: "" })],
+    genreDescs: {}, content: {}, contentLoaded: true,
+  });
+  const sum = g.stories.length + g.pages.length + g.mainDesc.length + g.subDesc.length
+    + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length;
+  assert.equal(g.total, sum);
+});
