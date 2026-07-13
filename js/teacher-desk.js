@@ -13,14 +13,14 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.27";
-import { modalOpen } from "./ui.js?v=3.27";
-import { renderPendingEditsList } from "./teacher-review.js?v=3.27";
-import { openDetail } from "./teacher-artists.js?v=3.27";
-import { openSingleEdgeModal } from "./teacher-content.js?v=3.27";
-import { GENEALOGY, GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre } from "./genealogy.js?v=3.27";
-import { DECADES } from "./limits.js?v=3.27";
-import { escapeHtml, pct } from "./ui-helpers.js?v=3.27";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=3.28";
+import { modalOpen } from "./ui.js?v=3.28";
+import { renderPendingEditsList } from "./teacher-review.js?v=3.28";
+import { openDetail } from "./teacher-artists.js?v=3.28";
+import { openSingleEdgeModal } from "./teacher-content.js?v=3.28";
+import { GENEALOGY, GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre } from "./genealogy.js?v=3.28";
+import { DECADES } from "./limits.js?v=3.28";
+import { escapeHtml, pct } from "./ui-helpers.js?v=3.28";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,

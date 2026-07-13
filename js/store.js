@@ -35,12 +35,12 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.27";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.27";
-import { isMainGenre } from "./genealogy.js?v=3.27";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.27";
-import { normalizeConfig } from "./config-normalize.js?v=3.27";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.27";
+import { firebaseConfig } from "./firebase-config.js?v=3.28";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.28";
+import { isMainGenre } from "./genealogy.js?v=3.28";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.28";
+import { normalizeConfig } from "./config-normalize.js?v=3.28";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.28";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -590,6 +590,95 @@ export async function runTranceDocIdMigration() {
   await setDoc(migRef, { [TRANCE_DOCID_FLAG]: new Date().toISOString() }, { merge: true });
   console.info(`Trance-doc-id-migrering: ${moved ? "«Trance & drum'n'bass» → «Trance & DnB»" : "ingen doc å flytte"}, ${renamed} artist-tagg omdøpt.`);
   return { moved, renamed };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v3.28): etternølere fra label-omdøpingene + to funn fra
+//  duplikat-revisjonen 2026-07-14. Flagg-guardet, idempotent, logger alt
+//  innhold FØR sletting/flytting (gjenopprettbart fra konsollen).
+//   a) Varmekartet: radnøklene fulgte IKKE med da tre-labelene ble døpt om i
+//      v3.26/3.27 («Blues Rock»→«Blues rock», «Trance / DnB»→«Trance & DnB»).
+//      Oppslaget er case-sensitivt på label (vkRow i explore.js), så begge
+//      sjangrene viste «ingen data» mens nivåene lå bak døde nøkler — og
+//      onHeatEdit sprer gamle nøkler videre ved hver lagring. Finnes den nye
+//      nøkkelen alt (læreren har redigert etter omdøpingen), vinner den, og
+//      den gamle raden slettes uansett.
+//   b) «Outlaw country».main: død, divergert skygge-kopi — visningen løser
+//      alltid label-dokumentet «Outlaw» først (resolveDescAny [l, f]), og
+//      redigering skriver dit. Feltet slettes KUN når «Outlaw» faktisk har en
+//      main-tekst (ellers flyttes teksten dit — invarianten doc-id = n.l).
+//      Sub-feltet består (brukes av subGenre-taggen «Outlaw country»).
+//   c) «Rock»: dokumentet hadde KUN sub-tekst — unåelig fra all UI («Rock»
+//      brukes ikke som subGenre-tagg), mens tre-noden viste «mangler» fordi
+//      main var tom. Teksten ER en sjangerbeskrivelse → flyttes sub→main.
+//      Har main fått tekst i mellomtiden, røres ingenting (logges i stedet).
+// ---------------------------------------------------------------------------
+const CONTENT_KEY_ALIGN_FLAG = "contentKeyAlignment_2026_07";
+const VARMEKART_KEY_RENAMES = [
+  ["Blues Rock", "Blues rock"],
+  ["Trance / DnB", "Trance & DnB"],
+];
+
+export async function runContentKeyAlignment() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[CONTENT_KEY_ALIGN_FLAG]) return { skipped: true };
+
+  // a) Varmekart-nøkler. Hele dokumentet skrives (samme policy som
+  //    saveVarmekart: full overskriving — feltstier er utrygge med «/» i navn).
+  let heatRenamed = 0;
+  const vkRef = doc(db, "content", "varmekart");
+  const vkSnap = await getDoc(vkRef);
+  if (vkSnap.exists() && vkSnap.data().heat) {
+    const heat = { ...vkSnap.data().heat };
+    for (const [oldKey, newKey] of VARMEKART_KEY_RENAMES) {
+      if (!(oldKey in heat)) continue;
+      console.info(`Innholdsnøkkel-justering — varmekartrad «${oldKey}» (logget for gjenoppretting):`, heat[oldKey]);
+      if (!(newKey in heat)) heat[newKey] = heat[oldKey];
+      delete heat[oldKey];
+      heatRenamed++;
+    }
+    if (heatRenamed) await setDoc(vkRef, { heat, updatedAt: new Date().toISOString() });
+  }
+
+  // b) «Outlaw country».main — slett skygge-kopien (eller flytt den til
+  //    label-dokumentet hvis det mot formodning skulle stå uten main-tekst).
+  let outlaw = "uendret";
+  const ocRef = doc(db, "genreDescriptions", "Outlaw country");
+  const ocSnap = await getDoc(ocRef);
+  if (ocSnap.exists() && ocSnap.data().main !== undefined) {
+    console.info("Innholdsnøkkel-justering — «Outlaw country».main (logget for gjenoppretting):", ocSnap.data().main);
+    const oRef = doc(db, "genreDescriptions", "Outlaw");
+    const oSnap = await getDoc(oRef);
+    if (!(oSnap.exists() && oSnap.data().main && oSnap.data().main.description)) {
+      await setDoc(oRef, { main: ocSnap.data().main }, { merge: true });
+      outlaw = "flyttet til «Outlaw»";
+    } else {
+      outlaw = "slettet (skygget av «Outlaw»)";
+    }
+    await updateDoc(ocRef, { main: deleteField() });
+  }
+
+  // c) «Rock»: sub → main.
+  let rock = "uendret";
+  const rockRef = doc(db, "genreDescriptions", "Rock");
+  const rockSnap = await getDoc(rockRef);
+  if (rockSnap.exists() && rockSnap.data().sub && rockSnap.data().sub.description) {
+    const hasMain = rockSnap.data().main && rockSnap.data().main.description;
+    if (hasMain) {
+      rock = "hoppet over (main finnes alt — sub beholdt, vurder manuelt)";
+      console.info("Innholdsnøkkel-justering — «Rock» har BÅDE main og sub; ingenting flyttet:", rockSnap.data());
+    } else {
+      console.info("Innholdsnøkkel-justering — flytter «Rock».sub → main:", rockSnap.data().sub);
+      await setDoc(rockRef, { main: rockSnap.data().sub }, { merge: true });
+      await updateDoc(rockRef, { sub: deleteField() });
+      rock = "sub flyttet til main";
+    }
+  }
+
+  await setDoc(migRef, { [CONTENT_KEY_ALIGN_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Innholdsnøkkel-justering fullført: ${heatRenamed} varmekartrad(er) omdøpt, Outlaw country.main ${outlaw}, Rock ${rock}.`);
+  return { heatRenamed, outlaw, rock };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

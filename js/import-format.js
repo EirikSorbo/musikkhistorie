@@ -15,7 +15,11 @@ export function flattenGenreDescriptions(obj) {
   if (!nested) return obj; // alt flatt format
   const flat = {};
   for (const lv of ["meta", "main", "sub"]) {
-    for (const [id, doc] of Object.entries(obj[lv] || {})) flat[id] = doc;
+    // FLETT ved samme navn i flere bolker (mulig i håndskrevne/gamle filer) —
+    // en ren overskriving ville latt sub-bolkens dokument skygge for main-
+    // bolkens tekst, og main-teksten nådde aldri Firestore (juni 2026-fella).
+    // Nivåfeltene er disjunkte nøkler, så en grunn fletting er tapsfri.
+    for (const [id, doc] of Object.entries(obj[lv] || {})) flat[id] = { ...flat[id], ...doc };
   }
   return flat;
 }

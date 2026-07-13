@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { flattenGenreDescriptions, validateArtistsForImport } from "../../js/import-format.js?v=3.27";
+import { flattenGenreDescriptions, validateArtistsForImport } from "../../js/import-format.js?v=3.28";
 
 test("nestet format (meta/main/sub) flates ut", () => {
   const nested = {
@@ -21,6 +21,19 @@ test("tomt/ugyldig gir tomt objekt", () => {
   assert.deepEqual(flattenGenreDescriptions(null), {});
   assert.deepEqual(flattenGenreDescriptions(undefined), {});
   assert.deepEqual(flattenGenreDescriptions("x"), {});
+});
+
+test("samme navn i to bolker FLETTES — sub-bolken skygger ikke for main-teksten", () => {
+  // Håndskrevne/gamle filer kan ha samme sjanger som separate dokumenter i
+  // main- og sub-bolken. Da skal nivåfeltene slås sammen, ikke overskrives.
+  const nested = {
+    meta: {},
+    main: { Disco: { main: { description: "lang main-tekst" } } },
+    sub: { Disco: { sub: { description: "kort sub-tekst" } } },
+  };
+  const flat = flattenGenreDescriptions(nested);
+  assert.equal(flat.Disco.main.description, "lang main-tekst");
+  assert.equal(flat.Disco.sub.description, "kort sub-tekst");
 });
 
 // --- validateArtistsForImport ---

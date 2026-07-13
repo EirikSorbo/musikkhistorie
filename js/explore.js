@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.27";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.27";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.27";
-import { isVisible } from "./limits.js?v=3.27";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.27";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.27";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.27";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.27";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.27";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.27";
-import { renderSjangerhimmel } from "./constellation.js?v=3.27";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.28";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.28";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.28";
+import { isVisible } from "./limits.js?v=3.28";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.28";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.28";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.28";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.28";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.28";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.28";
+import { renderSjangerhimmel } from "./constellation.js?v=3.28";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -203,7 +203,8 @@ const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Sjanger-info -->
+<!-- Sjanger-info (nås fra lærer-oversiktens rader, f.eks. foreldreløse
+     undersjangre — via explore-API-ets openSubgenreInfo) -->
 <div class="modal-backdrop" id="modal-subgenre-info">
   <div class="modal">
     <div class="modal-head">
@@ -1155,6 +1156,9 @@ function openUndersjangre() {
   modalOpen(modal);
 }
 
+// Sjanger-info-modalen: brukes av lærer-oversikten (data-ov-subinfo-radene,
+// via explore-API-et) — under-chips i student-visningen går i stedet gjennom
+// den delte showSubsjangerInfo (modal-sjanger).
 function openSubgenreInfo(subgenreId) {
   const modal = document.getElementById("modal-subgenre-info");
   if (!modal) return;
@@ -1414,15 +1418,6 @@ function wireModals() {
   }
 
   document.addEventListener("click", (e) => {
-    const metaBtn = e.target.closest("[data-meta]");
-    if (metaBtn) {
-      const name = metaBtn.dataset.meta;
-      // Hovedsjangere har ikke lenger egne beskrivelser — de peker nå til de
-      // seks sjangerhistoriene (v2.99).
-      openHistorier(name);
-      if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
-      return;
-    }
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
       const name = sjBtn.dataset.sjanger;
@@ -1433,19 +1428,14 @@ function wireModals() {
     const underBtn = e.target.closest("[data-under]");
     if (underBtn) {
       const name = underBtn.dataset.under;
-      showSubsjangerInfo(name, sjangerOpts()) || showSjangerInfo(name, sjangerOpts());
+      // Under-chips viser alltid sub-nivået (popupen har selv en «Se (sjanger)»-
+      // snarvei når navnet også er en tre-sjanger).
+      showSubsjangerInfo(name, sjangerOpts());
       if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
       return;
     }
     const inst = e.target.closest("[data-instrument]");
     if (inst) showArtistsForInstrument(inst.dataset.instrument);
-  });
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-subgenre-info]");
-    if (!btn) return;
-    e.stopPropagation();
-    openSubgenreInfo(btn.dataset.subgenreInfo);
   });
 }
 

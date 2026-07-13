@@ -16,8 +16,8 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.27";
-import { escapeHtml } from "./ui-helpers.js?v=3.27";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.28";
+import { escapeHtml } from "./ui-helpers.js?v=3.28";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er

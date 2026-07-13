@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=3.27";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, showSjangerInfo } from "./genealogy.js?v=3.27";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.27";
+import { isVisible, filterArtists } from "./limits.js?v=3.28";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.28";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.28";
 import {
   escapeHtml,
   linkDesc,
@@ -31,12 +31,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=3.27";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.27";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.27";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.27";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.27";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.27";
+} from "./ui-helpers.js?v=3.28";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.28";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.28";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.28";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.28";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.28";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -370,10 +370,13 @@ function showGenreLevelInfo(label, level, opts = {}) {
     onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
-  // Finnes en hovedsjanger (tre-node) med SAMME navn? Tilby snarvei til
-  // sjanger-beskrivelsen. Datadrevet via treet — ingen hardkodet navneliste.
-  const seeGenreBtn = isMainGenre(label)
-    ? `<button type="button" class="btn ghost small gx-see-genre-btn" style="margin-bottom:10px">Se «${escapeHtml(label)}» (sjanger)</button>`
+  // Peker navnet på en tre-sjanger? Tilby snarvei til sjanger-beskrivelsen.
+  // findTreeGenreNode matcher BÅDE label og fullt navn (f.eks. under-chippen
+  // «Outlaw country» → noden «Outlaw»), og snarveien åpner via nodens label,
+  // så oppslaget alltid treffer — datadrevet via treet, ingen hardkodet liste.
+  const treeNode = findTreeGenreNode(label);
+  const seeGenreBtn = treeNode
+    ? `<button type="button" class="btn ghost small gx-see-genre-btn" style="margin-bottom:10px">Se «${escapeHtml(treeNode.l)}» (sjanger)</button>`
     : "";
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
@@ -385,7 +388,7 @@ function showGenreLevelInfo(label, level, opts = {}) {
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireLinks(mBody, lc);
   const sg = mBody.querySelector(".gx-see-genre-btn");
-  if (sg) sg.addEventListener("click", () => showSjangerInfo(label, opts));
+  if (sg) sg.addEventListener("click", () => showSjangerInfo(treeNode.l, opts));
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");

@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.27";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.27";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.27";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.27";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.28";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.28";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.28";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.28";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -109,6 +109,16 @@ export function isMainGenre(name) {
   return MAIN_GENRE_SET.has(String(name).toLowerCase());
 }
 
+// Finn tre-noden (ekte sjanger, g≠null) et navn peker på — matcher både label
+// (l) og fullt navn (f), case-insensitivt. isMainGenre ser kun på labels og
+// er riktig for KLASSIFISERING (tagger skal være l); denne er for NAVIGASJON,
+// der også nodens fulle navn (f.eks. under-chippen «Outlaw country») skal
+// finne frem til sjangerbeskrivelsen.
+export function findTreeGenreNode(name) {
+  const s = String(name).toLowerCase();
+  return GENEALOGY.find((n) => n.g && (n.l.toLowerCase() === s || n.f.toLowerCase() === s)) || null;
+}
+
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, genreDescs, onShowArtists }
 export function showSjangerInfo(label, opts = {}) {
@@ -125,7 +135,8 @@ export function showSjangerInfo(label, opts = {}) {
   const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
   const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
-  // Tre-noder er på «main»-nivå. Hent beskrivelse/kilder nivå-bevisst (med seed).
+  // Tre-noder er på «main»-nivå. Hent beskrivelse/kilder nivå-bevisst — kun
+  // fra data (ingen fallback; mangler teksten, vises missingDesc under).
   const resolved = resolveDescAny(genreDescs, [n.l, n.f], "main");
   const descText = resolved.description;
   const kilderHtml = buildKilderList(resolved.kilder, "Kilder");

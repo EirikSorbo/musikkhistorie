@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.27";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.28";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,12 +17,12 @@ import {
   addPodcast,
   updatePodcast,
   updateConfig,
-} from "./store.js?v=3.27";
-import { escapeHtml } from "./ui.js?v=3.27";
-import { $ } from "./shared.js?v=3.27";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.27";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.27";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.27";
+} from "./store.js?v=3.28";
+import { escapeHtml } from "./ui.js?v=3.28";
+import { $ } from "./shared.js?v=3.28";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.28";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.28";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.28";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -337,11 +337,13 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
     // Eldre flat form { description } leses ikke av appen (den leser kun
     // main/sub). Pakk den inn i riktig nivå før lagring. Meta-nivået er
     // pensjonert, så en flat beskrivelse for en hovedsjanger legges på main.
+    // `story` er et TOPP-nivå-felt og må løftes ut før innpakkingen — ellers
+    // ville den blitt nestet inn i nivåfeltet og blitt usynlig for appen.
     let toSave = data;
     if (data && data.description && !data.main && !data.sub) {
-      const { description, ...rest } = data;
+      const { description, story, ...rest } = data;
       const lvl = genreSectionOf(id);
-      toSave = { [lvl === "meta" ? "main" : lvl]: { description, ...rest } };
+      toSave = { [lvl === "meta" ? "main" : lvl]: { description, ...rest }, ...(story ? { story } : {}) };
     } else if (data && (data.main || data.sub) && (data.description !== undefined || data.kilder !== undefined)) {
       // Har alt et nivåfelt: de flate `description`/`kilder`-feltene er døde og
       // duplisert (kan være stale) — dropp dem så en gammel backup ikke
