@@ -1140,7 +1140,6 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 .dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 
 /* ----- Skrivebord (lærer-arbeidsflyt øverst) ----- */
-.desk-sub { font-size: 0.9rem; font-weight: 600; color: var(--text); margin: 0 0 10px; }
 .desk-inbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
 .desk-item {
   display: flex;
@@ -1179,21 +1178,72 @@ a.tag.tag-link:hover { border-color: var(--accent); color: var(--accent); backgr
 }
 .desk-clear svg { width: 21px; height: 21px; color: var(--accent); flex-shrink: 0; }
 
-.desk-card {
-  margin-top: 16px;
+/* Sjekk-fremdrift per innholdskategori */
+.desk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.desk-cat {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 12px;
+  padding: 12px 14px;
 }
-.desk-card-h { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.02em; }
-.desk-progress-row { display: flex; align-items: baseline; gap: 8px; }
-.desk-progress-n { font-size: 1.25rem; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
-.desk-progress-n b { font-weight: 700; }
-.desk-progress-l { font-size: 0.85rem; color: var(--muted); }
-.desk-card .bar { margin: 10px 0 14px; }
-.desk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.desk-cat-h { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.desk-cat-n { font-size: 0.95rem; color: var(--muted); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.desk-cat-n b { color: var(--text); font-weight: 700; }
+.desk-cat .bar.small { margin-bottom: 10px; display: block; }
+.desk-cat-list { margin-top: 10px; max-height: 250px; overflow-y: auto; }
+.desk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+.desk-row-name {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--accent-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desk-row-name:hover { color: var(--accent); text-decoration-color: var(--accent); }
+.desk-row-check { flex-shrink: 0; }
+.desk-undo { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.desk-undo-l { font-size: 0.72rem; color: var(--muted-2); width: 100%; }
+.desk-undo-chip {
+  font-family: inherit;
+  font-size: 0.74rem;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+.desk-undo-chip:hover { border-color: var(--danger); color: var(--danger); }
+.desk-foot { margin-top: 12px; }
 .desk-ok { font-size: 0.85rem; color: var(--muted-2); }
+/* Må stå ETTER basisregelen — regler med lik spesifisitet vinner på rekkefølge,
+   media query eller ei (720px-blokka øverst i fila taper mot basis her nede). */
+@media (max-width: 720px) {
+  .desk-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .desk-grid { grid-template-columns: 1fr; }
+}
 
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .dash-card {

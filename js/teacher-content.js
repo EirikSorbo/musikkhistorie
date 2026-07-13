@@ -5,17 +5,17 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.12";
-import { saveDecadeDesc, saveGenreDescLevel, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.12";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.12";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.12";
-import { resolveDesc } from "./genre-descriptions.js?v=3.12";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.12";
+import { state, ctx, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.13";
+import { saveDecadeDesc, saveGenreDescLevel, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.13";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.13";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.13";
+import { resolveDesc } from "./genre-descriptions.js?v=3.13";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.13";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.12";
-import { $ } from "./shared.js?v=3.12";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.12";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.13";
+import { $ } from "./shared.js?v=3.13";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.13";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

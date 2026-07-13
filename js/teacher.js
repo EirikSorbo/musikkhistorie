@@ -21,14 +21,14 @@ import {
   signInWithGoogle,
   signOutTeacher,
   purgeMetaGenreDescs,
-} from "./store.js?v=3.12";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.12";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.12";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.12";
-import { initExplore } from "./explore.js?v=3.12";
+} from "./store.js?v=3.13";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.13";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.13";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.13";
+import { initExplore } from "./explore.js?v=3.13";
 
-import { state, ctx, renderAll, refreshControls, updatePendingBadge, openAdminModal } from "./teacher-state.js?v=3.12";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.12";
+import { state, ctx, renderAll, refreshControls, updatePendingBadge, openAdminModal } from "./teacher-state.js?v=3.13";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.13";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -42,11 +42,11 @@ import {
   openStoryEditor,
   openPageEditor,
   setupStoryEditor,
-} from "./teacher-content.js?v=3.12";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.12";
-import { renderDesk } from "./teacher-desk.js?v=3.12";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.12";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.12";
+} from "./teacher-content.js?v=3.13";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.13";
+import { renderDesk } from "./teacher-desk.js?v=3.13";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.13";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.13";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -185,7 +185,7 @@ function startApp() {
   });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
   subscribeTech((items) => { state.techItems = items; updatePendingBadge(); renderPendingEditsList(); refreshDesk(); });
-  subscribeTeacherChecks((checks) => { state.teacherChecks = checks; });
+  subscribeTeacherChecks((checks) => { state.teacherChecks = checks; refreshDesk(); });
   subscribePendingEdits((edits) => { state.pendingEdits = edits; updatePendingBadge(); renderPendingEditsList(); refreshDesk(); });
 
   // Tegn Skrivebordet med en gang (tomt/nullstilt) så panelet ikke står blankt
