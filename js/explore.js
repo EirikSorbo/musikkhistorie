@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.34";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.34";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.34";
-import { isVisible, DECADES } from "./limits.js?v=3.34";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.34";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.34";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.34";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.34";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.34";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.34";
-import { renderSjangerhimmel } from "./constellation.js?v=3.34";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.35";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.35";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.35";
+import { isVisible, DECADES } from "./limits.js?v=3.35";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.35";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.35";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.35";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.35";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.35";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.35";
+import { renderSjangerhimmel } from "./constellation.js?v=3.35";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -74,13 +74,16 @@ const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Enkelt tiår (les) -->
+<!-- Enkelt tiår (les) — tidslinje-stripa øverst er selve tiårsvelgeren -->
 <div class="modal-backdrop" id="modal-decade-view">
   <div class="modal">
     <div class="modal-head">
       <h2 id="dv-title"></h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div class="decade-ribbon" id="dv-ribbon"></div>
+    <div id="dv-extra"></div>
+    <h3 class="dv-decade" id="dv-decade"></h3>
     <div class="info-section" id="dv-society-section">
       <h4 class="info-label">Samfunnsutvikling</h4>
       <div id="dv-society-timeline"></div>
@@ -96,8 +99,9 @@ const MODAL_HTML = `
       <button class="btn ghost small" id="dv-tech-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div id="dv-kilder"></div>
-    <div style="margin-top:16px">
-      <button class="btn ghost small" id="dv-back">← Tilbake til oversikt</button>
+    <div class="dv-nav">
+      <button class="btn ghost small" id="dv-prev"></button>
+      <button class="btn ghost small" id="dv-next"></button>
     </div>
   </div>
 </div>
@@ -362,6 +366,9 @@ ${TECH_DETAIL_MODAL_HTML}
 
 let opts = null;
 let contextMode = "society";
+// Sist viste tiår i Samfunn/Teknologi-visningen — huskes innen økten så
+// «lukk og åpne igjen» fortsetter der studenten slapp.
+let currentDecade = null;
 
 function getState() { return opts.getState(); }
 
@@ -472,8 +479,16 @@ function openTechDetail(t) {
   modalOpen(modal);
 }
 
+// Student: tiårsvelgeren er en klikkbar tidslinje-stripe øverst i selve
+// tiårsvisningen (v3.35) — kortet åpner rett inn i et tiår, uten mellomliste.
+// Lærer beholder knappelista: der er tiårsvalget en inngang til redigering,
+// og muted-stylingen viser hvilke tiår som mangler tekst.
 function openDecadeList(mode) {
   contextMode = mode;
+  if (!opts.onDecadeEdit) {
+    openDecadeView(currentDecade ?? DECADES[0]);
+    return;
+  }
   const s = getState();
   const modal = document.getElementById("modal-decade-list");
   if (!modal) return;
@@ -497,24 +512,52 @@ function openDecadeList(mode) {
     return `<button class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade-view="${d}">${d}-tallet</button>`;
   }).join("");
   el.querySelectorAll("[data-decade-view]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      if (opts.onDecadeEdit) {
-        opts.onDecadeEdit(btn.dataset.decadeView, contextMode);
-      } else {
-        openDecadeView(btn.dataset.decadeView);
-      }
-    });
+    btn.addEventListener("click", () => opts.onDecadeEdit(btn.dataset.decadeView, contextMode));
   });
   modalOpen(modal);
 }
 
 function openDecadeView(decadeId) {
+  renderDecadeView(decadeId);
+  modalOpen(document.getElementById("modal-decade-view"));
+}
+
+function renderDecadeView(decadeId) {
   const modal = document.getElementById("modal-decade-view");
   if (!modal) return;
+  const d = Number(decadeId);
+  currentDecade = d;
   const s = getState();
-  const desc = s.decadeDescs[String(decadeId)] || {};
+  const desc = s.decadeDescs[String(d)] || {};
   const isSociety = contextMode === "society";
-  document.getElementById("dv-title").textContent = `${decadeId}-tallet — ${isSociety ? "samfunn" : "teknologi"}`;
+  document.getElementById("dv-title").textContent = isSociety ? "Samfunn" : "Teknologi";
+  document.getElementById("dv-decade").textContent = `${d}-tallet`;
+
+  // Tidslinje-stripa: alle tiår som klikkbare punkter på én akse, aktivt
+  // tiår uthevet. Re-render (ikke modalOpen) ved bytte — modalen står åpen.
+  const ribbon = document.getElementById("dv-ribbon");
+  if (ribbon) {
+    ribbon.innerHTML = `<div class="dr-track">` + DECADES.map((y) =>
+      `<button type="button" class="dr-node${y === d ? " active" : ""}" data-decade="${y}"` +
+      ` aria-label="${y}-tallet"${y === d ? ` aria-current="true"` : ""}>` +
+      `<span class="dr-dot"></span><span class="dr-year">${y}</span></button>`
+    ).join("") + `</div>`;
+    ribbon.querySelectorAll("[data-decade]").forEach((btn) => {
+      btn.addEventListener("click", () => renderDecadeView(btn.dataset.decade));
+    });
+  }
+
+  // Teknologi har en ekstra inngang til alle innovasjonskortene (lå før i
+  // tiårslista).
+  const extra = document.getElementById("dv-extra");
+  if (extra) {
+    if (isSociety) {
+      extra.innerHTML = "";
+    } else {
+      extra.innerHTML = `<button class="btn ghost" id="dv-btn-innovasjon" style="width:100%;margin:10px 0 2px">Innovasjonskort</button>`;
+      extra.querySelector("#dv-btn-innovasjon").addEventListener("click", () => openTeknologi());
+    }
+  }
 
   const societySection = document.getElementById("dv-society-section");
   const techSection = document.getElementById("dv-tech-section");
@@ -530,12 +573,12 @@ function openDecadeView(decadeId) {
       societyMoreBtn: document.getElementById("dv-society-more"),
       techMoreBtn: document.getElementById("dv-tech-more"),
     },
-    desc, decadeId, s.techItems,
+    desc, d, s.techItems,
     {
       isSociety,
       onTechClick: openTechDetail,
       onMore: (which, text) => openDecadeMore(
-        `${decadeId}-tallet — ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`, text),
+        `${d}-tallet — ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`, text),
     }
   );
 
@@ -543,14 +586,14 @@ function openDecadeView(decadeId) {
   const propTech = document.getElementById("dv-tech-propose");
   if (propSociety) {
     if (isSociety && opts.onProposeEdit) {
-      const locked = opts.hasPendingEdit?.("decade-society", decadeId);
+      const locked = opts.hasPendingEdit?.("decade-society", d);
       propSociety.style.display = "";
       propSociety.disabled = !!locked;
       propSociety.textContent = locked ? "Forslag venter" : "Foreslå endring";
       propSociety.onclick = () => opts.onProposeEdit({
         entityType: "decade-society",
-        entityId: String(decadeId),
-        entityName: `${decadeId}-tallet — samfunn`,
+        entityId: String(d),
+        entityName: `${d}-tallet — samfunn`,
         currentValues: { society: desc.society || "", societyMore: desc.societyMore || "", kilder: desc.kilder || [] },
       });
     } else {
@@ -559,14 +602,14 @@ function openDecadeView(decadeId) {
   }
   if (propTech) {
     if (!isSociety && opts.onProposeEdit) {
-      const locked = opts.hasPendingEdit?.("decade-tech", decadeId);
+      const locked = opts.hasPendingEdit?.("decade-tech", d);
       propTech.style.display = "";
       propTech.disabled = !!locked;
       propTech.textContent = locked ? "Forslag venter" : "Foreslå endring";
       propTech.onclick = () => opts.onProposeEdit({
         entityType: "decade-tech",
-        entityId: String(decadeId),
-        entityName: `${decadeId}-tallet — teknologi`,
+        entityId: String(d),
+        entityName: `${d}-tallet — teknologi`,
         currentValues: { tech: desc.tech || "", techMore: desc.techMore || "", kilder: desc.kilder || [] },
       });
     } else {
@@ -577,8 +620,22 @@ function openDecadeView(decadeId) {
   const kilderEl = document.getElementById("dv-kilder");
   if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
 
-  modalClose(document.getElementById("modal-decade-list"));
-  modalOpen(modal);
+  // Forrige/neste nederst inviterer til å lese tiårene som én fortelling.
+  // visibility (ikke display) i endene, så knappene beholder plassen sin.
+  const idx = DECADES.indexOf(d);
+  const prevBtn = document.getElementById("dv-prev");
+  const nextBtn = document.getElementById("dv-next");
+  if (prevBtn) {
+    prevBtn.style.visibility = idx > 0 ? "" : "hidden";
+    prevBtn.textContent = idx > 0 ? `← ${DECADES[idx - 1]}-tallet` : "";
+    prevBtn.onclick = idx > 0 ? () => renderDecadeView(DECADES[idx - 1]) : null;
+  }
+  if (nextBtn) {
+    const more = idx >= 0 && idx < DECADES.length - 1;
+    nextBtn.style.visibility = more ? "" : "hidden";
+    nextBtn.textContent = more ? `${DECADES[idx + 1]}-tallet →` : "";
+    nextBtn.onclick = more ? () => renderDecadeView(DECADES[idx + 1]) : null;
+  }
 }
 
 function openDecadeMore(title, text) {
@@ -1378,12 +1435,6 @@ function wireModals() {
     else rotterTre.style.display = "none";
   }
   document.getElementById("rotter-tidslinje")?.addEventListener("click", () => openTidslinje());
-
-  const dvBack = document.getElementById("dv-back");
-  if (dvBack) dvBack.addEventListener("click", () => {
-    modalClose(document.getElementById("modal-decade-view"));
-    modalOpen(document.getElementById("modal-decade-list"));
-  });
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {

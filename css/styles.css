@@ -1170,6 +1170,66 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 }
 .decade-list-btn { min-width: 100px; justify-content: center; }
 
+/* Tiårsvelger: klikkbar tidslinje-stripe øverst i Samfunn/Teknologi-
+   visningen (student). Linja tegnes som ::before fra første til siste
+   punktsenter (én kolonnehalvdel inn fra hver side). */
+.decade-ribbon { margin: 6px 0 2px; }
+.dr-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+}
+.dr-track::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: calc(100% / 26);
+  right: calc(100% / 26);
+  height: 2px;
+  background: var(--line-strong);
+  border-radius: 1px;
+}
+.dr-node {
+  position: relative;
+  background: none;
+  border: 0;
+  padding: 5px 0 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font: inherit;
+}
+.dr-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+.dr-node:hover .dr-dot { transform: scale(1.25); }
+.dr-node.active .dr-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.16);
+}
+.dr-year {
+  font-size: 0.66rem;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.dr-node.active .dr-year { color: var(--accent-2); font-weight: 700; }
+.dr-node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+@media (max-width: 480px) {
+  .dr-year { font-size: 0.56rem; letter-spacing: -0.03em; }
+  .dr-dot { width: 10px; height: 10px; }
+  .dr-track::before { top: 9px; }
+}
+.dv-decade { font-size: 1.15rem; margin: 12px 0 2px; }
+.dv-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+
 /* ----- Podkast ----- */
 .podkast-list { display: flex; flex-direction: column; gap: 16px; }
 .podkast-episode {
