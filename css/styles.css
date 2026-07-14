@@ -1081,6 +1081,12 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* Student «Finn artister»: handlingsknappene på egen rad under tittelen,
    over filter-raden. */
 .filter-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+/* Skyver en knapp helt ut til høyre i raden (f.eks. «Foreslå en artist»). */
+.filter-actions .push-right { margin-left: auto; }
+
+/* Sjanger-/undersjanger-boblene: luft både til sidene og mellom radene — de lå
+   tidligere klistret inntil hverandre (lista hadde ingen egen regel). */
+.subgenre-tag-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .section-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 10px; }
 .dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }

@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.45";
-import { escapeHtml } from "./ui-helpers.js?v=3.45";
-import { safeUrl, wikimediaThumb } from "./util.js?v=3.45";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.46";
+import { escapeHtml } from "./ui-helpers.js?v=3.46";
+import { safeUrl, wikimediaThumb } from "./util.js?v=3.46";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -49,38 +49,65 @@ const el = (tag, attrs = {}) => {
   return e;
 };
 
-// Artistbildet (samme URL som artistkortet bruker) som en liten rute OVER navnet
-// ved hover. Bygges først idet musen er der: å laste 250+ bilder på forhånd
-// ville kostet mye båndbredde for noe som vises ett om gangen. Artister uten
-// bilde får som før bare navnet.
-const THUMB = 64;
+// Artistbildet (samme URL som artistkortet bruker) OVER navnet ved hover.
+// Bygges først idet musen er der: å laste 250+ bilder på forhånd ville kostet
+// mye båndbredde for noe som vises ett om gangen. Artister uten bilde får som
+// før bare navnet.
+//
+// Bildet beskjæres IKKE: ruta får bildets egne proporsjoner (liggende bilder
+// blir liggende, stående blir stående), med THUMB_MAX som lengste side. SVG-ens
+// <image> har ingen naturalWidth, så målene leses fra et vanlig Image-objekt på
+// samme URL — nettleseren gjenbruker den samme forespørselen, så det koster
+// ingen ekstra nedlasting. Ruta vises først når målene er kjent (opacity), så
+// den aldri blinker innom feil format.
+const THUMB_MAX = 88;
 let thumbSeq = 0;
 function artistThumb(artist, x, y) {
   const url = safeUrl(artist.imageUrl);
   if (!url) return null;
-  const bx = x - THUMB / 2, by = y - THUMB - 16;      // klar av både prikken og navnet
+
   const g = el("g", { class: "sh-thumb" });
+  g.style.opacity = "0";
   const clipId = `sh-thumb-clip-${++thumbSeq}`;
   const clip = el("clipPath", { id: clipId });
-  clip.appendChild(el("rect", { x: bx, y: by, width: THUMB, height: THUMB, rx: 8 }));
+  const clipRect = el("rect", { rx: 8 });
+  clip.appendChild(clipRect);
   const img = el("image", {
-    x: bx, y: by, width: THUMB, height: THUMB,
-    preserveAspectRatio: "xMidYMid slice",            // fyll ruta, behold proporsjonene
+    preserveAspectRatio: "xMidYMid meet",   // hele bildet, ingen beskjæring
     "clip-path": `url(#${clipId})`,
   });
-  const thumbUrl = wikimediaThumb(url, 160) || url;
-  img.setAttribute("href", thumbUrl);
-  // Samme fallback som <img>-veien har (se ui-helpers.js): svarer Wikimedia med
-  // en feil på thumbnailen, bytt til originalen ÉN gang. Uten dette ble et
-  // avvist thumbnail-svar stående som nettleserens «bilde mangler»-ikon.
-  if (thumbUrl !== url) {
-    img.addEventListener("error", () => img.setAttribute("href", url), { once: true });
-  }
-  const frame = el("rect", {
-    x: bx, y: by, width: THUMB, height: THUMB, rx: 8,
-    fill: "none", stroke: "#fff", "stroke-width": 2,
-  });
+  const frame = el("rect", { rx: 8, fill: "none", stroke: "#fff", "stroke-width": 2 });
   g.append(clip, img, frame);
+
+  // Plasser ruta når vi kjenner bildets format: sentrert over prikken, med
+  // underkanten klar av navnet.
+  const place = (w, h) => {
+    const box = { x: x - w / 2, y: y - h - 16, width: w, height: h };
+    for (const [k, v] of Object.entries(box)) {
+      img.setAttribute(k, v);
+      clipRect.setAttribute(k, v);
+      frame.setAttribute(k, v);
+    }
+    g.style.opacity = "1";
+  };
+
+  const probe = new Image();
+  probe.addEventListener("load", () => {
+    const ratio = (probe.naturalWidth / probe.naturalHeight) || 1;
+    const w = ratio >= 1 ? THUMB_MAX : Math.round(THUMB_MAX * ratio);
+    const h = ratio >= 1 ? Math.round(THUMB_MAX / ratio) : THUMB_MAX;
+    img.setAttribute("href", probe.src);
+    place(w, h);
+  });
+  // Samme fallback som <img>-veien (se ui-helpers.js): svarer Wikimedia med feil
+  // på thumbnailen, prøv originalen ÉN gang. Feiler den også, dropper vi ruta i
+  // stedet for å la nettleserens «bilde mangler»-ikon stå.
+  probe.addEventListener("error", () => {
+    if (probe.src !== url) probe.src = url;
+    else g.remove();
+  });
+  probe.src = wikimediaThumb(url, 160) || url;
+
   return g;
 }
 

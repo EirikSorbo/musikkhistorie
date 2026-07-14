@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.45";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.45";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.45";
-import { isVisible, DECADES } from "./limits.js?v=3.45";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.45";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.45";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.45";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.45";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.45";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.45";
-import { renderSjangerhimmel } from "./constellation.js?v=3.45";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.46";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.46";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.46";
+import { isVisible, DECADES } from "./limits.js?v=3.46";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.46";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.46";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.46";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.46";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.46";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.46";
+import { renderSjangerhimmel } from "./constellation.js?v=3.46";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -1395,15 +1395,21 @@ function wireModals() {
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {
-    // To innganger øverst: Hovedsjangere → sjangerhistoriene (én fortelling
-    // per hovedsjanger), Undersjangere → chip-lista i egen modal. Deretter de
-    // visuelle oversiktene.
-    let btns = `<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">`;
+    // Sjangertreet er hovedinngangen — egen rad øverst, grønn og i full bredde.
+    // Under: Hovedsjangere → sjangerhistoriene (én fortelling per hovedsjanger)
+    // og Undersjangere → chip-lista i egen modal. Nederst de visuelle
+    // oversiktene. De fire nederste deler bredden likt (flex:1, to per rad).
+    let btns = "";
+    if (opts.onSlektstre) {
+      btns += `<div style="display:flex;margin-bottom:10px">`;
+      btns += `<button class="btn primary" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
+      btns += `</div>`;
+    }
+    btns += `<div style="display:flex;gap:10px;margin-bottom:10px">`;
     btns += `<button class="btn ghost" id="btn-hovedsjangere" style="flex:1">Hovedsjangere</button>`;
     btns += `<button class="btn ghost" id="btn-undersjangere" style="flex:1">Undersjangere</button>`;
     btns += `</div>`;
-    btns += `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">`;
-    if (opts.onSlektstre) btns += `<button class="btn ghost" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
+    btns += `<div style="display:flex;gap:10px;margin-bottom:14px">`;
     btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Varmekart</button>`;
     btns += `<button class="btn ghost" id="btn-tidslinje" style="flex:1">Tidslinje</button>`;
     btns += `</div>`;

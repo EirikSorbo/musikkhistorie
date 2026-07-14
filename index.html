@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.45" />
+  <link rel="stylesheet" href="css/styles.css?v=3.46" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -105,10 +105,12 @@
         </div>
         <button class="modal-close btn ghost small">✕</button>
       </div>
+      <!-- Tidslinje er den grønne (primære) handlingen her; «Foreslå en artist»
+           er hvit som «Dagens artist» og skyves helt til høyre i raden. -->
       <div class="filter-actions">
-        <a class="btn primary small" id="btn-foreslaa" href="student.html">Foreslå en artist</a>
         <button type="button" class="btn ghost small" id="btn-dagens-navn">Dagens artist</button>
-        <button type="button" class="btn ghost small" id="btn-tidslinje-artister">Tidslinje</button>
+        <button type="button" class="btn primary small" id="btn-tidslinje-artister">Tidslinje</button>
+        <a class="btn ghost small push-right" id="btn-foreslaa" href="student.html">Foreslå en artist</a>
       </div>
       <div class="filter-bar">
         <input type="search" id="sp-search" placeholder="Søk etter navn..." />
@@ -168,7 +170,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.45"></script>
-  <script type="module" src="js/landing.js?v=3.45"></script>
+  <script src="js/load-guard.js?v=3.46"></script>
+  <script type="module" src="js/landing.js?v=3.46"></script>
 </body>
 </html>
