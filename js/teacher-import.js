@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.38";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.39";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -13,16 +13,16 @@ import {
   addTech,
   saveDocsBulk,
   updateArtistFields,
-  saveVarmekart,
+  mergeVarmekartRows,
   addPodcast,
   updatePodcast,
   updateConfig,
-} from "./store.js?v=3.38";
-import { escapeHtml } from "./ui.js?v=3.38";
-import { $ } from "./shared.js?v=3.38";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.38";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.38";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.38";
+} from "./store.js?v=3.39";
+import { escapeHtml } from "./ui.js?v=3.39";
+import { $ } from "./shared.js?v=3.39";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.39";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.39";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.39";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -394,8 +394,15 @@ async function importExtras({ pages, varmekart, podcasts, config }) {
     catch (e) { console.error("Side-import feilet:", e); failed.push("innholdssidene"); }
   }
 
+  // Varmekartet FLETTES rad for rad (mergeVarmekartRows): sjangre fila ikke
+  // nevner, beholder tallene sine. En delvis fil (f.eks. bare den nye sjangeren)
+  // er derfor trygg — den skrev tidligere over hele kartet og slettet resten.
   if (varmekart && varmekart.heat && typeof varmekart.heat === "object") {
-    try { await saveVarmekart(varmekart.heat); done.push(`varmekartet (${Object.keys(varmekart.heat).length} sjangre)`); }
+    try {
+      const { written, kept, skipped } = await mergeVarmekartRows(varmekart.heat);
+      done.push(`varmekartet (${written.length} sjanger-rad(er) oppdatert, ${kept.length} beholdt)`);
+      if (skipped.length) console.warn("Varmekart-import: hoppet over rader som ikke er lister:", skipped);
+    }
     catch (e) { console.error("Varmekart-import feilet:", e); failed.push("varmekartet"); }
   }
 

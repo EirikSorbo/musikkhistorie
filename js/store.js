@@ -35,12 +35,13 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.38";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.38";
-import { isMainGenre } from "./genealogy.js?v=3.38";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.38";
-import { normalizeConfig } from "./config-normalize.js?v=3.38";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.38";
+import { firebaseConfig } from "./firebase-config.js?v=3.39";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.39";
+import { isMainGenre } from "./genealogy.js?v=3.39";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.39";
+import { normalizeConfig } from "./config-normalize.js?v=3.39";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.39";
+import { mergeHeatRows } from "./import-format.js?v=3.39";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -732,9 +733,27 @@ export async function deletePage(pageId) {
 // Lagrer HELE varmekartet (full overskriving, ikke merge): sjangernavn kan
 // inneholde tegn som er kronglete i felt-stier (f.eks. «Trance / DnB»), og
 // radene er små — å skrive hele dokumentet er enklest og trygt.
+//
+// KUN for kall som allerede sitter på hele kartet — i praksis celleredigeringen
+// (teacher.js → onHeatEdit), som sender dagens heat med én endret rad. Skal du
+// skrive et UTVALG rader (import, skript), bruk mergeVarmekartRows: rått over-
+// skrevet delkart sletter alle sjangrene som ikke er med i kallet.
 export async function saveVarmekart(heat) {
   return setDoc(doc(db, "content", "varmekart"),
     { heat, updatedAt: new Date().toISOString() });
+}
+
+// Skriver et UTVALG varmekart-rader uten å røre resten. Leser dagens dokument
+// først (ikke lokal state — importen skal være trygg også før første snapshot
+// har landet), fletter inn radene fra fila og skriver hele dokumentet tilbake.
+// Returnerer { written, kept, skipped } for kvitteringen til læreren.
+export async function mergeVarmekartRows(rows) {
+  const ref = doc(db, "content", "varmekart");
+  const snap = await getDoc(ref);
+  const current = (snap.exists() && snap.data().heat) || {};
+  const { heat, written, kept, skipped } = mergeHeatRows(current, rows);
+  await setDoc(ref, { heat, updatedAt: new Date().toISOString() });
+  return { written, kept, skipped };
 }
 
 // Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede

@@ -152,15 +152,19 @@ Du har to veier:
 
 **B) Importere en innholdspakke** (best for flere noder / mye tekst)
 
-Jeg kan skrive en JSON-fil du importerer på lærersiden (Data → Importer). Nøklene
-`genreDescriptions` og `edgeDescriptions` skriver **kun de dokumentene som ligger i
-fila** — trygt å sende en liten fil med bare det nye.
+Jeg kan skrive en JSON-fil du importerer på lærersiden (Data → Importer). Alle tre
+nøklene skriver **kun det som ligger i fila** og lar resten stå:
 
-> **FELLE — varmekart:** `varmekart.heat` skrives som ETT dokument. En importfil med
-> bare den nye sjangerens rad **sletter alle de andre radene**. Enten utelater du
-> `varmekart` fra fila (og klikker cellene inn i UI-et), eller så bygger du raden inn i
-> en **fersk** eksport som inneholder hele kartet. Gamle eksportfiler er utdaterte —
-> ta alltid en ny eksport samme dag.
+- `genreDescriptions` og `edgeDescriptions` — ett dokument per sjanger/kobling.
+- `varmekart.heat` — flettes rad for rad (`mergeVarmekartRows`, v3.39). En fil med
+  bare den nye sjangerens rad er trygg; sjangrene fila ikke nevner, beholder tallene.
+  Kvitteringen sier «N rad(er) oppdatert, M beholdt».
+
+Fram til v3.39 skrev varmekart-importen hele dokumentet rått over, så en delvis fil
+slettet alle de andre radene. Det er nå fikset i koden og låst med enhetstester
+(`mergeHeatRows` i `import-format.js`) — men merk at **en gammel full eksport
+fortsatt overskriver alt den inneholder**. Bruk en fersk eksport, eller en liten fil
+med bare det nye.
 
 ---
 
@@ -177,6 +181,9 @@ fila** — trygt å sende en liten fil med bare det nye.
 - **Rot-noder (`g: null`) trenger også beskrivelse** — Skrivebordet teller dem som hull.
 - **Ny node = flere hull, ikke færre.** Skrivebordets tall går opp med én
   sjangerbeskrivelse + én per ny kobling. Det er meningen.
+- **`saveVarmekart` skriver HELE kartet.** Den er kun for celleredigeringen, som
+  sitter på hele heat-objektet fra før. Skal kode/skript skrive et utvalg rader,
+  skal det gå gjennom `mergeVarmekartRows` — ellers er datatapet tilbake.
 
 ---
 

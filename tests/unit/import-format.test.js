@@ -1,6 +1,40 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { flattenGenreDescriptions, validateArtistsForImport } from "../../js/import-format.js?v=3.38";
+import { flattenGenreDescriptions, validateArtistsForImport, mergeHeatRows } from "../../js/import-format.js?v=3.39";
+
+// Varmekartet er ETT dokument. Importen skrev det tidligere rått over, så en
+// fil med bare den nye sjangerens rad slettet alle de andre. Disse testene
+// låser flette-oppførselen — det er hele vernet mot det datatapet.
+test("mergeHeatRows: rader fila ikke nevner, blir stående", () => {
+  const current = { Blues: [1, 2, 3], Jazz: [4, 5, 6], Punk: [0, 0, 0] };
+  const { heat, written, kept } = mergeHeatRows(current, { Punk: [3, 4, 5] });
+  assert.deepEqual(heat, { Blues: [1, 2, 3], Jazz: [4, 5, 6], Punk: [3, 4, 5] });
+  assert.deepEqual(written, ["Punk"]);
+  assert.deepEqual(kept.sort(), ["Blues", "Jazz"]);
+});
+
+test("mergeHeatRows: ny sjanger legges til uten å røre resten", () => {
+  const { heat } = mergeHeatRows({ Blues: [1] }, { Punk: [2] });
+  assert.deepEqual(heat, { Blues: [1], Punk: [2] });
+});
+
+test("mergeHeatRows: full eksport skriver alle radene (uendret oppførsel)", () => {
+  const { heat, written } = mergeHeatRows({ Blues: [1], Jazz: [2] }, { Blues: [9], Jazz: [8] });
+  assert.deepEqual(heat, { Blues: [9], Jazz: [8] });
+  assert.deepEqual(written.sort(), ["Blues", "Jazz"]);
+});
+
+test("mergeHeatRows: rader som ikke er lister forkastes, ikke lagres", () => {
+  const { heat, skipped } = mergeHeatRows({ Blues: [1] }, { Blues: "tull", Punk: [2] });
+  assert.deepEqual(heat, { Blues: [1], Punk: [2] }, "ugyldig rad skal ikke overskrive den gyldige");
+  assert.deepEqual(skipped, ["Blues"]);
+});
+
+test("mergeHeatRows: tomt/manglende kart sletter ingenting", () => {
+  assert.deepEqual(mergeHeatRows({ Blues: [1] }, {}).heat, { Blues: [1] });
+  assert.deepEqual(mergeHeatRows({ Blues: [1] }, null).heat, { Blues: [1] });
+  assert.deepEqual(mergeHeatRows(null, { Punk: [2] }).heat, { Punk: [2] });
+});
 
 test("nestet format (meta/main/sub) flates ut", () => {
   const nested = {

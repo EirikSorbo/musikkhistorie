@@ -4,6 +4,34 @@
 //  Skilt ut fra teacher-import.js så logikken kan enhetstestes i Node.
 // ============================================================================
 
+// ---------------------------------------------------------------------------
+//  VARMEKART — fletting av rader
+// ---------------------------------------------------------------------------
+//  Varmekartet er ETT Firestore-dokument (content/varmekart) med én rad per
+//  sjanger. Import skrev tidligere heat-objektet fra fila rått over dokumentet,
+//  så en fil med bare den nye sjangerens rad slettet alle de andre radene i
+//  samme slengen. Nå flettes radene: fila overstyrer sine egne sjangre, og alt
+//  den ikke nevner, blir stående. Samme prinsipp som sjanger- og koblings-
+//  beskrivelsene, der import bare rører dokumentene som faktisk ligger i fila.
+//
+//  Rader som ikke er lister forkastes (og rapporteres) — de ville skjult hele
+//  sjangerens tall bak en ugyldig verdi. Nivåene i seg selv normaliseres ikke
+//  her; visningen (vkRow i explore.js) godtar kun heltall 0–5 og viser resten
+//  som «ingen data».
+export function mergeHeatRows(current, incoming) {
+  const base = current && typeof current === "object" ? current : {};
+  const rows = incoming && typeof incoming === "object" ? incoming : {};
+  const heat = { ...base };
+  const written = [], skipped = [];
+  for (const [genre, row] of Object.entries(rows)) {
+    if (!Array.isArray(row)) { skipped.push(genre); continue; }
+    heat[genre] = row;
+    written.push(genre);
+  }
+  const kept = Object.keys(base).filter((g) => !written.includes(g));
+  return { heat, written, kept, skipped };
+}
+
 // Gjør sjangerbeskrivelser om til et flatt { navn: dokument }-oppslag uansett
 // kildeformat: nytt nestet { meta:{…}, main:{…}, sub:{…} }, eldre flatt
 // { navn: dokument }, eller legacy «subgenres». Nestet kjennes igjen på at ALLE
