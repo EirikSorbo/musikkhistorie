@@ -28,14 +28,14 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.33";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.33";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.33";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.33";
-import { initExplore } from "./explore.js?v=3.33";
+} from "./store.js?v=3.34";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.34";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.34";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.34";
+import { initExplore } from "./explore.js?v=3.34";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.33";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.33";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.34";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.34";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -51,11 +51,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.33";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.33";
-import { renderDesk } from "./teacher-desk.js?v=3.33";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.33";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.33";
+} from "./teacher-content.js?v=3.34";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.34";
+import { renderDesk } from "./teacher-desk.js?v=3.34";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.34";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.34";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.33";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.33";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.33";
-import { isVisible } from "./limits.js?v=3.33";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.33";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.33";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.33";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.33";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.33";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.33";
-import { renderSjangerhimmel } from "./constellation.js?v=3.33";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.34";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.34";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.34";
+import { isVisible, DECADES } from "./limits.js?v=3.34";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.34";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.34";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.34";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.34";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.34";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.34";
+import { renderSjangerhimmel } from "./constellation.js?v=3.34";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -487,7 +487,9 @@ function openDecadeList(mode) {
       techExtra.innerHTML = "";
     }
   }
-  const decades = (s.config?.decades || []).slice().sort((a, b) => a - b);
+  // Tiårene er en strukturakse (DECADES-konstanten), ikke config — config
+  // mistet decades-feltet i settings-slankingen (v3.20).
+  const decades = DECADES;
   const el = document.getElementById("dl-buttons");
   el.innerHTML = decades.map((d) => {
     const desc = s.decadeDescs[String(d)];
