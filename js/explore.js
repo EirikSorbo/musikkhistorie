@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.36";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.36";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.36";
-import { isVisible, DECADES } from "./limits.js?v=3.36";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.36";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.36";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.36";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.36";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.36";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.36";
-import { renderSjangerhimmel } from "./constellation.js?v=3.36";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.37";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.37";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.37";
+import { isVisible, DECADES } from "./limits.js?v=3.37";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.37";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.37";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.37";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.37";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.37";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.37";
+import { renderSjangerhimmel } from "./constellation.js?v=3.37";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -58,19 +58,6 @@ const MODAL_HTML = `
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="podkast-list" class="podkast-list"></div>
-  </div>
-</div>
-
-<!-- Tiår-liste -->
-<div class="modal-backdrop" id="modal-decade-list">
-  <div class="modal">
-    <div class="modal-head">
-      <h2>Kontekst</h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <div id="dl-tech-extra"></div>
-    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Velg et tiår for å lese mer.</p>
-    <div id="dl-buttons" class="explore-decade-grid"></div>
   </div>
 </div>
 
@@ -479,42 +466,12 @@ function openTechDetail(t) {
   modalOpen(modal);
 }
 
-// Student: tiårsvelgeren er en klikkbar tidslinje-stripe øverst i selve
-// tiårsvisningen (v3.35) — kortet åpner rett inn i et tiår, uten mellomliste.
-// Lærer beholder knappelista: der er tiårsvalget en inngang til redigering,
-// og muted-stylingen viser hvilke tiår som mangler tekst.
+// Tiårsvelgeren er en klikkbar tidslinje-stripe øverst i selve tiårsvisningen
+// (v3.35) — kortet åpner rett inn i et tiår, uten mellomliste. Lærersiden har
+// sin egen variant med samme stripe (teacher-content.js: openSingleDecadeModal).
 function openDecadeList(mode) {
   contextMode = mode;
-  if (!opts.onDecadeEdit) {
-    openDecadeView(currentDecade ?? DECADES[0]);
-    return;
-  }
-  const s = getState();
-  const modal = document.getElementById("modal-decade-list");
-  if (!modal) return;
-  modal.querySelector(".modal-head h2").textContent = mode === "society" ? "Samfunn" : "Teknologi";
-  const techExtra = document.getElementById("dl-tech-extra");
-  if (techExtra) {
-    if (mode === "tech") {
-      techExtra.innerHTML = `<button class="btn ghost" id="dl-btn-innovasjon" style="width:100%;margin-bottom:14px">Innovasjonskort</button>`;
-      techExtra.querySelector("#dl-btn-innovasjon").addEventListener("click", () => openTeknologi());
-    } else {
-      techExtra.innerHTML = "";
-    }
-  }
-  // Tiårene er en strukturakse (DECADES-konstanten), ikke config — config
-  // mistet decades-feltet i settings-slankingen (v3.20).
-  const decades = DECADES;
-  const el = document.getElementById("dl-buttons");
-  el.innerHTML = decades.map((d) => {
-    const desc = s.decadeDescs[String(d)];
-    const hasDesc = mode === "society" ? desc && desc.society : desc && desc.tech;
-    return `<button class="btn ghost decade-list-btn ${hasDesc ? "" : "muted"}" data-decade-view="${d}">${d}-tallet</button>`;
-  }).join("");
-  el.querySelectorAll("[data-decade-view]").forEach((btn) => {
-    btn.addEventListener("click", () => opts.onDecadeEdit(btn.dataset.decadeView, contextMode));
-  });
-  modalOpen(modal);
+  openDecadeView(currentDecade ?? DECADES[0]);
 }
 
 function openDecadeView(decadeId) {
@@ -535,17 +492,7 @@ function renderDecadeView(decadeId) {
 
   // Tidslinje-stripa: alle tiår som klikkbare punkter på én akse, aktivt
   // tiår uthevet. Re-render (ikke modalOpen) ved bytte — modalen står åpen.
-  const ribbon = document.getElementById("dv-ribbon");
-  if (ribbon) {
-    ribbon.innerHTML = `<div class="dr-track">` + DECADES.map((y) =>
-      `<button type="button" class="dr-node${y === d ? " active" : ""}" data-decade="${y}"` +
-      ` aria-label="${y}-tallet"${y === d ? ` aria-current="true"` : ""}>` +
-      `<span class="dr-dot"></span><span class="dr-year">${y}</span></button>`
-    ).join("") + `</div>`;
-    ribbon.querySelectorAll("[data-decade]").forEach((btn) => {
-      btn.addEventListener("click", () => renderDecadeView(btn.dataset.decade));
-    });
-  }
+  renderDecadeRibbon(document.getElementById("dv-ribbon"), d, renderDecadeView);
 
   // Teknologi har en ekstra inngang til alle innovasjonskortene (lå før i
   // tiårslista).
@@ -1420,7 +1367,7 @@ function injectModals() {
 }
 
 function wireModals() {
-  ["modal-teknologi", "modal-podkast", "modal-decade-list", "modal-decade-view",
+  ["modal-teknologi", "modal-podkast", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
    "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",

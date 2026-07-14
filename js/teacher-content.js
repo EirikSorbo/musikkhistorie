@@ -5,18 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.36";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.36";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.36";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.36";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.36";
-import { resolveDesc } from "./genre-descriptions.js?v=3.36";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn } from "./ui-helpers.js?v=3.36";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.37";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.37";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.37";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.37";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.37";
+import { resolveDesc } from "./genre-descriptions.js?v=3.37";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.37";
+import { DECADES } from "./limits.js?v=3.37";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.36";
-import { $ } from "./shared.js?v=3.36";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.36";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.37";
+import { $ } from "./shared.js?v=3.37";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.37";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -50,16 +51,53 @@ function renderDecadeSingleSections(decadeId, desc, isSociety) {
   if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
 }
 
+// Sist viste tiår — huskes innen økten, så Samfunn/Teknologi-kortene åpner
+// der læreren slapp (samme oppførsel som studentsiden).
+let lastDecade = null;
+
+export function openDecadeAdmin(mode) {
+  openSingleDecadeModal(lastDecade ?? DECADES[0], mode);
+}
+
 export function openSingleDecadeModal(decadeId, mode) {
   if (mode) teacherContextMode = mode;
-  const desc = state.decadeDescs[String(decadeId)] || {};
+  const d = Number(decadeId);
+  lastDecade = d;
+  const desc = state.decadeDescs[String(d)] || {};
   const modal = $("#modal-decade-single");
   const isSociety = teacherContextMode === "society";
-  $("#decade-single-title").textContent = `${decadeId}-tallet — ${isSociety ? "samfunn" : "teknologi"}`;
+  $("#decade-single-title").textContent = isSociety ? "Samfunn" : "Teknologi";
+  const heading = $("#ds-decade");
+  if (heading) heading.textContent = `${d}-tallet`;
+
+  // Samme tidslinje-stripe som studentvisningen. Bytte av tiår i redigerings-
+  // modus varsler først — ulagrede endringer forkastes ved re-render.
+  renderDecadeRibbon($("#ds-ribbon"), d, (y) => {
+    const editing = $("#ds-edit").style.display !== "none";
+    if (editing && !confirm("Bytte tiår? Endringer som ikke er lagret, går tapt.")) return;
+    openSingleDecadeModal(y, teacherContextMode);
+  });
+
+  // Sjekk + Rediger som ikonknapper (samme rad som alle andre kort). Sjekken
+  // gjelder hele tiåret (teacherChecks.decades), som på Skrivebordet.
+  const actions = $("#ds-actions");
+  if (actions) {
+    actions.innerHTML = teacherActionRow({
+      checked: (state.teacherChecks?.decades || []).includes(String(d)),
+      edit: true, del: false,
+    });
+    wireTeacherRow(actions, {
+      onCheck: (on) => setContentCheck("decades", String(d), on),
+      onEdit: () => {
+        $("#ds-view").style.display = "none";
+        $("#ds-edit").style.display = "";
+      },
+    });
+  }
 
   $("#ds-society-section").style.display = isSociety ? "" : "none";
   $("#ds-tech-section").style.display = isSociety ? "none" : "";
-  renderDecadeSingleSections(decadeId, desc, isSociety);
+  renderDecadeSingleSections(d, desc, isSociety);
 
   $("#ds-society").value = desc.society || "";
   $("#ds-tech").value = desc.tech || "";
@@ -186,10 +224,8 @@ export function setupSubgenreSingleSave() {
 }
 
 export function setupDecadeSingleSave() {
-  $("#ds-to-edit").addEventListener("click", () => {
-    $("#ds-view").style.display = "none";
-    $("#ds-edit").style.display = "";
-  });
+  // Rediger-knappen bor i #ds-actions-raden og kobles per åpning
+  // (openSingleDecadeModal) — ingen statisk knapp lenger.
   const addKilderBtn = $("#ds-add-kilder");
   if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ds-kilder-rows"), "", "", "ds"));
 
@@ -267,8 +303,8 @@ function renderTechAdmin() {
       <div class="card-foot teacher-card-actions" style="margin-top:auto;padding-top:8px">
         ${checkBtnHtml((state.teacherChecks?.tech || []).includes(t.id), "tech-check-btn")}
         <div class="spacer"></div>
-        <button class="btn ghost small tech-edit-btn">Rediger</button>
-        <button class="btn ghost small tech-del-btn" style="color:var(--danger)">Slett</button>
+        <button class="icon-btn tech-edit-btn" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>
+        <button class="icon-btn danger tech-del-btn" title="Slett" aria-label="Slett">${ICONS.trash}</button>
       </div>
     </article>`;
   }).join("");

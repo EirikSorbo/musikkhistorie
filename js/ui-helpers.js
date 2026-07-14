@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.36";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.36";
-import { GENDERS } from "./limits.js?v=3.36";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.37";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.37";
+import { GENDERS } from "./limits.js?v=3.37";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -51,34 +51,51 @@ export function wireLinks(el, lc) {
 
 export const kilderHtml = (kilder) => buildKilderList(kilder, "Kilder");
 
-// Delt «Sjekket»-knapp — ÉN kilde til etikett/klasser, så de fire sjekk-flatene
-// (artistdetalj, sjanger-popup, innovasjonskort, koblingskort) og teacherActionRow
-// aldri driver fra hverandre. checkBtnHtml lager markupen; setCheckBtn/
+// Delte lærer-ikoner — ÉN kilde (artistkortene i ui.js importerer også disse),
+// så alle redigerbare kort får identiske sjekk/rediger/slett-knapper.
+const ico = (d, stroke = "currentColor") => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+export const ICONS = {
+  check: ico("M20 6L9 17l-5-5"),
+  edit: ico("M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7") + ico("M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5"),
+  ban: ico("M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"),
+  trash: ico("M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"),
+  restore: ico("M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8") + ico("M21 3v5h-5"),
+  approve: ico("M22 11.08V12a10 10 0 11-5.93-9.14") + ico("M22 4L12 14.01l-3-3"),
+  reject: ico("M18 6L6 18M6 6l12 12"),
+};
+
+// Delt «Sjekket»-knapp — ÉN kilde til markup/klasser, så alle sjekk-flatene
+// (artistdetalj, sjanger-popup, innovasjonskort, koblingskort, tiår) og
+// teacherActionRow aldri driver fra hverandre. Ikon-knapp som på artistkortene:
+// grønn «active»-tilstand = sjekket. checkBtnHtml lager markupen; setCheckBtn/
 // toggleCheckBtn oppdaterer en eksisterende knapp optimistisk (modalene re-
 // rendres ikke av snapshotet). `extra` er ekstra klasser (f.eks. «tcr-check»).
+const CHECK_TITLE = (checked) => checked ? "Fjern avhuking" : "Merk som sjekket";
 export function checkBtnHtml(checked, extra = "") {
-  const cls = ("btn ghost small " + extra).trim();
-  return `<button type="button" class="${cls}${checked ? " accent" : ""}">${checked ? "✓ Sjekket" : "Sjekk"}</button>`;
+  const cls = ("icon-btn " + extra).trim() + (checked ? " active" : "");
+  return `<button type="button" class="${cls}" title="${CHECK_TITLE(checked)}" aria-label="${CHECK_TITLE(checked)}">${ICONS.check}</button>`;
 }
 export function setCheckBtn(btn, checked, extra = "") {
-  btn.className = ("btn ghost small " + extra).trim() + (checked ? " accent" : "");
-  btn.textContent = checked ? "✓ Sjekket" : "Sjekk";
+  btn.className = ("icon-btn " + extra).trim() + (checked ? " active" : "");
+  btn.title = CHECK_TITLE(checked);
+  btn.setAttribute("aria-label", CHECK_TITLE(checked));
+  btn.innerHTML = ICONS.check;
 }
 export function toggleCheckBtn(btn, extra = "") {
-  const now = !btn.classList.contains("accent");
+  const now = !btn.classList.contains("active");
   setCheckBtn(btn, now, extra);
   return now;
 }
 
 // Delt lærer-knapperad for detaljvisninger (sjanger, historie, røtter,
-// innovasjonskort osv.): Sjekk helt til venstre, Rediger + Slett til høyre —
-// samme mønster som artistkortene. Vises kun når lærer-callbacks finnes, så
-// studentvisningen aldri får knappene. Slett tas kun med for hele enheter
-// (innovasjonskort) — sjanger/historie/side har ingen enhet å slette.
+// innovasjonskort, tiår osv.): Sjekk helt til venstre, Rediger + Slett til
+// høyre — samme ikonknapper som artistkortene. Vises kun når lærer-callbacks
+// finnes, så studentvisningen aldri får knappene. Slett tas kun med for hele
+// enheter (innovasjonskort) — sjanger/historie/side har ingen enhet å slette.
 export function teacherActionRow({ checked = false, edit = true, del = false } = {}) {
   const right = [
-    edit ? `<button type="button" class="btn ghost small tcr-edit">Rediger</button>` : "",
-    del ? `<button type="button" class="btn ghost small tcr-del">Slett</button>` : "",
+    edit ? `<button type="button" class="icon-btn tcr-edit" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>` : "",
+    del ? `<button type="button" class="icon-btn danger tcr-del" title="Slett" aria-label="Slett">${ICONS.trash}</button>` : "",
   ].filter(Boolean).join("");
   return `<div class="teacher-card-actions">
     ${checkBtnHtml(checked, "tcr-check")}
@@ -129,7 +146,7 @@ export function podcastEpisodeHtml(ep, { withDelete = false } = {}) {
       ${desc}
       ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
       ${withDelete ? `<div class="podkast-actions">
-        <button class="btn ghost small btn-danger-text" data-pod-delete="${escapeHtml(ep.id)}">Slett</button>
+        <button class="icon-btn danger" data-pod-delete="${escapeHtml(ep.id)}" title="Slett" aria-label="Slett">${ICONS.trash}</button>
       </div>` : ""}
     </article>`;
 }

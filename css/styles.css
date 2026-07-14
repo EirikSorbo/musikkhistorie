@@ -641,10 +641,9 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .teacher-actions { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 10px; }
 .ta-left, .ta-center, .ta-right { display: flex; gap: 6px; align-items: center; }
 
-/* Delt lærer-knapperad i detaljvisninger: Sjekk til venstre, Rediger/Slett til høyre. */
+/* Delt lærer-knapperad i detaljvisninger: Sjekk til venstre, Rediger/Slett
+   til høyre — ikonknapper (.icon-btn), samme som artistkortene. */
 .teacher-card-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-.teacher-card-actions .tcr-del { color: var(--danger); }
-.teacher-card-actions .tcr-del:hover { border-color: var(--danger); background: #fff5f5; }
 
 /* Koblingskort i Oversikt: navn + tagger over en teacher-card-actions-fot.
    Foten deler klasse (og dermed utseende) med artist-/innovasjonskortene. */
@@ -1168,16 +1167,9 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .dash-title { font-weight: 600; font-size: 0.95rem; color: var(--text); }
 .dash-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
 
-.explore-decade-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.decade-list-btn { min-width: 100px; justify-content: center; }
-
 /* Tiårsvelger: klikkbar tidslinje-stripe øverst i Samfunn/Teknologi-
-   visningen (student). Linja tegnes som ::before fra første til siste
-   punktsenter (én kolonnehalvdel inn fra hver side). */
+   visningen (student og lærer). Linja tegnes som ::before fra første til
+   siste punktsenter (én kolonnehalvdel inn fra hver side). */
 .decade-ribbon { margin: 6px 0 2px; }
 .dr-track {
   position: relative;
@@ -1344,9 +1336,6 @@ body.is-teacher #gate { display: none; }
   .dash-icon { width: 18px; height: 18px; }
   .dash-title { font-size: 0.88rem; }
   .dash-desc { font-size: 0.73rem; }
-
-  /* Tiår-grid på mobil */
-  .decade-list-btn { min-width: 80px; }
 
   /* Resultat-liste: kortere min-width på navn */
   .result-name { min-width: 110px; }

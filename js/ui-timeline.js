@@ -5,8 +5,24 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.36";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.36";
+import { escapeHtml } from "./util.js?v=3.37";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.37";
+import { DECADES } from "./limits.js?v=3.37";
+
+// Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
+// (explore.js) og lærerens tiårsmodal (teacher-content.js), så de to flatene
+// aldri driver fra hverandre. onSelect får tiåret som tall.
+export function renderDecadeRibbon(el, active, onSelect) {
+  if (!el) return;
+  el.innerHTML = `<div class="dr-track">` + DECADES.map((y) =>
+    `<button type="button" class="dr-node${y === active ? " active" : ""}" data-decade="${y}"` +
+    ` aria-label="${y}-tallet"${y === active ? ` aria-current="true"` : ""}>` +
+    `<span class="dr-dot"></span><span class="dr-year">${y}</span></button>`
+  ).join("") + `</div>`;
+  el.querySelectorAll("[data-decade]").forEach((btn) => {
+    btn.addEventListener("click", () => onSelect(Number(btn.dataset.decade)));
+  });
+}
 
 function shortDesc(text) {
   const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();

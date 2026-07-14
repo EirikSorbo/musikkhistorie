@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=3.36";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.36";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.36";
+import { isVisible, filterArtists } from "./limits.js?v=3.37";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.37";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.37";
 import {
   escapeHtml,
   linkDesc,
@@ -31,18 +31,19 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=3.36";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.36";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.36";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.36";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.36";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.36";
+  ICONS,
+} from "./ui-helpers.js?v=3.37";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.37";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.37";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.37";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.37";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.37";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders };
 export { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage };
-export { buildTimeline, buildTechTimeline, renderDecadeSections };
+export { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon };
 export { renderDashboard, contentGaps };
 export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
 
@@ -293,14 +294,11 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
       : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">Svært relevant</button>`;
   }
 
-  const ico = (d, stroke = "currentColor") => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
-  const ICO_CHECK = ico("M20 6L9 17l-5-5");
-  const ICO_EDIT = ico("M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7") + ico("M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5");
-  const ICO_BAN = ico("M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636");
-  const ICO_TRASH = ico("M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2");
-  const ICO_RESTORE = ico("M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8") + ico("M21 3v5h-5");
-  const ICO_APPROVE = ico("M22 11.08V12a10 10 0 11-5.93-9.14") + ico("M22 4L12 14.01l-3-3");
-  const ICO_REJECT = ico("M18 6L6 18M6 6l12 12");
+  // Delte ikoner fra ui-helpers (samme sett som teacherActionRow/checkBtnHtml,
+  // så alle kort-typer viser identiske knapper). Prioritetsikonene er egne:
+  // de gjenbruker PRIO_ICONS-pathene, men i knappestørrelse (16px).
+  const ICO_CHECK = ICONS.check, ICO_EDIT = ICONS.edit, ICO_BAN = ICONS.ban,
+        ICO_TRASH = ICONS.trash, ICO_APPROVE = ICONS.approve, ICO_REJECT = ICONS.reject;
   const ICO_STAR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
   const ICO_ALERT = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
   const ICO_THUMB = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`;

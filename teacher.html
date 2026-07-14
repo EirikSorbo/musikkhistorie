@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.36" />
+  <link rel="stylesheet" href="css/styles.css?v=3.37" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -334,6 +334,9 @@
         <h2 id="decade-single-title"></h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
+      <!-- Tiårsvelger: samme tidslinje-stripe som studentvisningen -->
+      <div class="decade-ribbon" id="ds-ribbon"></div>
+      <h3 class="dv-decade" id="ds-decade"></h3>
       <!-- Visnings-modus -->
       <div id="ds-view">
         <div class="info-section" id="ds-society-section">
@@ -349,9 +352,7 @@
           <button class="btn ghost small" id="ds-tech-more-btn" style="display:none">Les mer</button>
         </div>
         <div id="ds-kilder-view"></div>
-        <div class="modal-foot-right">
-          <button type="button" id="ds-to-edit" class="btn ghost small">Rediger</button>
-        </div>
+        <div id="ds-actions"></div>
       </div>
       <!-- Redigerings-modus -->
       <div id="ds-edit" style="display:none">
@@ -532,8 +533,8 @@
       </div>
       <div id="detail-body"></div>
       <div style="margin-top:12px;display:flex;gap:8px">
-        <button class="btn ghost small" id="detail-check-btn">Sjekk</button>
-        <button class="btn ghost small" id="detail-edit-btn">Rediger</button>
+        <button class="icon-btn" id="detail-check-btn" title="Merk som sjekket" aria-label="Merk som sjekket"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button>
+        <button class="icon-btn" id="detail-edit-btn" title="Rediger" aria-label="Rediger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5"/></svg></button>
         <button class="btn ghost small" id="detail-tidslinje">Tidslinje</button>
       </div>
     </div>
@@ -567,7 +568,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.36"></script>
-  <script type="module" src="js/teacher.js?v=3.36"></script>
+  <script src="js/load-guard.js?v=3.37"></script>
+  <script type="module" src="js/teacher.js?v=3.37"></script>
 </body>
 </html>

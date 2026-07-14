@@ -28,16 +28,16 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.36";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.36";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.36";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.36";
-import { initExplore } from "./explore.js?v=3.36";
+} from "./store.js?v=3.37";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.37";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.37";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.37";
+import { initExplore } from "./explore.js?v=3.37";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.36";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.36";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.37";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.37";
 import {
-  openSingleDecadeModal,
+  openDecadeAdmin,
   openSingleSubgenreModal,
   setupDecadeSingleSave,
   setupSubgenreSingleSave,
@@ -51,11 +51,11 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.36";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.36";
-import { renderDesk } from "./teacher-desk.js?v=3.36";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.36";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.36";
+} from "./teacher-content.js?v=3.37";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.37";
+import { renderDesk } from "./teacher-desk.js?v=3.37";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.37";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.37";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -120,7 +120,6 @@ function startApp() {
     getState: () => state,
     onArtistClick: openDetail,
     onSlektstre: () => { window.location.href = "tre.html"; },
-    onDecadeEdit: (decadeId, mode) => openSingleDecadeModal(decadeId, mode),
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
     onStoryEdit: (genre) => openStoryEditor(genre),
     onPageEdit: (pageId) => openPageEditor(pageId),
@@ -144,8 +143,10 @@ function startApp() {
     },
   });
 
-  $("#btn-t-society").addEventListener("click", () => ctx.explore.openDecadeList("society"));
-  $("#btn-t-tech").addEventListener("click", () => ctx.explore.openDecadeList("tech"));
+  // Tiårskortene åpner lærerens tiårsmodal (samme tidslinje-stripe som
+  // studentsiden, pluss sjekk/rediger) — ikke explore-visningen.
+  $("#btn-t-society").addEventListener("click", () => openDecadeAdmin("society"));
+  $("#btn-t-tech").addEventListener("click", () => openDecadeAdmin("tech"));
   // Tidslinje-inngang fra artistlistas filterrad (samme delte modal som fra
   // Sjangre-modalen — én implementasjon i explore.js).
   const btnTid = document.getElementById("btn-tidslinje-artister");
