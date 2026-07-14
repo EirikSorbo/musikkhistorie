@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.42";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.42";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.42";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.42";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.43";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.43";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.43";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.43";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [

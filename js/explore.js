@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.42";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.42";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.42";
-import { isVisible, DECADES } from "./limits.js?v=3.42";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.42";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.42";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.42";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.42";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.42";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.42";
-import { renderSjangerhimmel } from "./constellation.js?v=3.42";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.43";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.43";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.43";
+import { isVisible, DECADES } from "./limits.js?v=3.43";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.43";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.43";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.43";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.43";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.43";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.43";
+import { renderSjangerhimmel } from "./constellation.js?v=3.43";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -317,8 +317,7 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div class="rotter-links">
-      <button class="btn ghost" id="rotter-tre">Se slektstreet</button>
-      <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen</button>
+      <button class="btn primary" id="rotter-tre">Se slektstreet</button>
     </div>
     <div id="rotter-body" class="story-body"></div>
   </div>
@@ -1389,14 +1388,13 @@ function wireModals() {
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
-  // Røtter-sidens navigasjonsknapper (statisk markup — innholdet bor i
-  // Firestore). Står over teksten, ikke under den.
+  // Røtter-sidens ene navigasjonsknapp (statisk markup — innholdet bor i
+  // Firestore). Står over teksten, ikke under den, og fyller bredden.
   const rotterTre = document.getElementById("rotter-tre");
   if (rotterTre) {
     if (opts.onSlektstre) rotterTre.addEventListener("click", () => opts.onSlektstre());
     else rotterTre.style.display = "none";
   }
-  document.getElementById("rotter-tidslinje")?.addEventListener("click", () => openTidslinje());
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {

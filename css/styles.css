@@ -591,10 +591,10 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .related-tag { font-size: 0.72rem; font-weight: 500; color: var(--muted-2); }
 
 /* Røtter før 1910 — forfattet fortelling (#9) */
-/* Navigasjonsknappene på Røtter-siden — står OVER teksten (.story-body), som
-   rendres fra Firestore-innholdet. */
-.rotter-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
-.rotter-links .btn { flex: 1; min-width: 160px; }
+/* Navigasjonsknappen på Røtter-siden — står OVER teksten (.story-body), som
+   rendres fra Firestore-innholdet, og fyller hele bredden (flex: 1). */
+.rotter-links { display: flex; gap: 10px; margin-bottom: 18px; }
+.rotter-links .btn { flex: 1; }
 
 /* Sjangerhistorier — seks fortellinger i Det store bildet + lærer-editor.
    Knappene ligger i et grid med like brede kolonner, så de seks til sammen
