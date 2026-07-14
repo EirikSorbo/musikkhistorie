@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb } from "../../js/util.js?v=3.43";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS } from "../../js/util.js?v=3.44";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -24,25 +24,26 @@ test("safeUrl slipper kun http/https gjennom", () => {
 });
 
 test("wikimediaThumb skriver om Wikimedia-originaler til thumbnail", () => {
-  // Original → thumbnail på oppgitt bredde (samme fil både i mappe og prefiks).
+  // Original → thumbnail. Bredden rundes OPP til nærmeste tillatte størrelse:
+  // Wikimedia svarer 400 på alt utenfor trappa (400 → 500).
   assert.equal(
     wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/0/06/Kool_Herc.jpg", 400),
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Kool_Herc.jpg/400px-Kool_Herc.jpg"
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Kool_Herc.jpg/500px-Kool_Herc.jpg"
   );
-  // Prosentkodede tegn i filnavnet bevares uendret i begge segmenter.
+  // Prosentkodede tegn i filnavnet bevares uendret i begge segmenter (800 → 960).
   assert.equal(
     wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/f/f5/Django_Reinhardt_%28Gottlieb_07301%29.jpg", 800),
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Django_Reinhardt_%28Gottlieb_07301%29.jpg/800px-Django_Reinhardt_%28Gottlieb_07301%29.jpg"
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Django_Reinhardt_%28Gottlieb_07301%29.jpg/960px-Django_Reinhardt_%28Gottlieb_07301%29.jpg"
   );
-  // SVG rasteriseres til PNG (…px-Fil.svg.png).
+  // SVG rasteriseres til PNG (…px-Fil.svg.png). 300 → 330.
   assert.equal(
     wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo.svg", 300),
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo.svg/300px-Logo.svg.png"
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo.svg/330px-Logo.svg.png"
   );
   // Andre prosjekter enn commons virker også.
   assert.equal(
     wikimediaThumb("https://upload.wikimedia.org/wikipedia/en/1/1a/Cover.jpg", 400),
-    "https://upload.wikimedia.org/wikipedia/en/thumb/1/1a/Cover.jpg/400px-Cover.jpg"
+    "https://upload.wikimedia.org/wikipedia/en/thumb/1/1a/Cover.jpg/500px-Cover.jpg"
   );
   // Null for alt som ikke er en omskrivbar Wikimedia-original.
   assert.equal(wikimediaThumb("https://example.com/photo.jpg", 400), null);       // annen vert
@@ -53,6 +54,21 @@ test("wikimediaThumb skriver om Wikimedia-originaler til thumbnail", () => {
   );
   assert.equal(wikimediaThumb("", 400), null);
   assert.equal(wikimediaThumb(null, 400), null);
+});
+
+// Wikimedia avviser alt utenfor trappa (400 «Use thumbnail sizes listed on
+// w.wiki/GHai»). Denne testen er hele vernet mot at en fremtidig kaller ber om
+// en «pen» bredde som 160 eller 480 og stille faller tilbake på originalen.
+test("wikimediaThumb runder bredden opp til en bredde Wikimedia godtar", () => {
+  const w = (width) => {
+    const url = wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/0/06/X.jpg", width);
+    return Number(url.match(/\/(\d+)px-/)[1]);
+  };
+  for (const allowed of WIKI_THUMB_WIDTHS) assert.equal(w(allowed), allowed, `${allowed} er lovlig og skal stå`);
+  assert.equal(w(160), 250, "himmelens 160 → 250");
+  assert.equal(w(480), 500, "artistkortenes 480 → 500");
+  assert.equal(w(1), 120);
+  assert.equal(w(5000), 1920, "over trappa: største tillatte, ikke en 400-URL");
 });
 
 test("throttle: kjører umiddelbart, slår sammen storm, kjører siste på slutten", (t) => {

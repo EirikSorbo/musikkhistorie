@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.43";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.43";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.43";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.43";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.44";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.44";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.44";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.44";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -292,6 +292,13 @@ export const MAIN_GENRE_INFO = Object.fromEntries(
 // tre-noder bruker. Utledet, ikke hardkodet — en ny node med ny familie flytter
 // automatisk fargen hvis den blir den vanligste. Brukt av sjangerhistorie-
 // knappene, så de snakker samme fargespråk som treet.
+//
+// Unntak: R&B ville fått rødt (rnb/soul/funk/neo-soul er rød familie) — samme
+// røde som Gospel, så to av de seks historie-knappene ble umulige å skille.
+// R&B tar derfor hip-hop-familiens rosa, som også finnes i slekta (hip-hop,
+// gangsta rap, trap).
+const META_FAM_OVERRIDE = { "R&B": "pink" };
+
 export const META_GENRE_COLOR = (() => {
   const tally = {};                              // meta → { fam: antall }
   for (const n of GENEALOGY) {
@@ -299,7 +306,7 @@ export const META_GENRE_COLOR = (() => {
     (tally[n.g] ||= {})[n.fam] = (tally[n.g][n.fam] || 0) + 1;
   }
   return Object.fromEntries(Object.entries(tally).map(([meta, fams]) => {
-    const fam = Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
+    const fam = META_FAM_OVERRIDE[meta] || Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
     return [meta, FAMILIES[fam]?.stroke || FAMILIES.gray.stroke];
   }));
 })();

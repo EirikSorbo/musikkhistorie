@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.43";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.43";
-import { GENDERS } from "./limits.js?v=3.43";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.44";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.44";
+import { GENDERS } from "./limits.js?v=3.44";
 
 export { escapeHtml, buildKilderList, safeUrl };
 

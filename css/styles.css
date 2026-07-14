@@ -607,7 +607,9 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   gap: 6px;
   margin-bottom: 14px;
 }
-.hist-chip {
+/* Selektorene tar med .btn: ellers vinner `.btn.ghost { background }` (to
+   klasser) over en ren .hist-chip-regel, og den lyse fargen slår aldri gjennom. */
+.hist-chip.btn {
   width: 100%;
   padding-left: 4px;
   padding-right: 4px;
@@ -616,10 +618,16 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--hist-color, var(--text));
+  /* Uvalgt: en lys tone av sjangerens egen farge, så alle seks er fargekodet
+     hele tiden — ikke bare den som er valgt. */
+  background: color-mix(in srgb, var(--hist-color, var(--line)) 14%, #fff);
   border-color: color-mix(in srgb, var(--hist-color, var(--line)) 45%, transparent);
 }
-.hist-chip:hover { border-color: var(--hist-color, var(--line)); }
-.hist-chip.active {
+.hist-chip.btn:hover {
+  background: color-mix(in srgb, var(--hist-color, var(--line)) 24%, #fff);
+  border-color: var(--hist-color, var(--line));
+}
+.hist-chip.btn.active {
   background: var(--hist-color, var(--accent));
   border-color: var(--hist-color, var(--accent));
   color: #fff;
@@ -1443,10 +1451,10 @@ body.is-teacher #gate { display: none; }
 
 .gx-node { cursor: pointer; }
 .gx-node rect { fill: transparent !important; stroke: transparent !important; pointer-events: all; }
-/* Sjangernavnene i treet: litt større enn nodeboksen tilsier, for lesbarhet.
+/* Sjangernavnene i treet: større enn nodeboksen tilsier, for lesbarhet.
    Boksen (NW/NH i genealogy.js) og avstanden mellom nodene er UENDRET — teksten
    er pointer-events:none og påvirker ikke treffområdet eller layouten. */
-.gx-node text { font-size: 15px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
+.gx-node text { font-size: 18px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
 .gx-dim { opacity: 0.16; }
 
 /* Touch: mini-kort øverst til venstre i kartet. Vises kun etter et trykk på en

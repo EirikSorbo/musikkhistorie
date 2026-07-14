@@ -32,6 +32,19 @@ export function safeUrl(url) {
 // Wikimedia-original (andre verter, og URL-er som alt peker på /thumb/), så
 // kalleren bruker URL-en uendret. Kalleren bør legge på en fallback til
 // originalen (data-full), siden Wikimedia kan avvise enkelte ferske bredder.
+// Wikimedia godtar ikke lenger vilkårlige thumbnail-bredder: alt utenfor en fast
+// trapp svarer «400 — Use thumbnail sizes listed on w.wiki/GHai». Verifisert mot
+// upload.wikimedia.org 2026-07-14; 480 og 160 (som appen ba om) er BEGGE avvist,
+// og hvert bilde falt derfor tilbake på fullstørrelse-originalen — akkurat det
+// minneproblemet thumbnailene skulle løse. Vi runder derfor ALLTID opp til
+// nærmeste tillatte bredde (opp, aldri ned, så bildet ikke blir uskarpt).
+export const WIKI_THUMB_WIDTHS = [120, 250, 330, 500, 960, 1280, 1920];
+
+function snapThumbWidth(width) {
+  const w = Math.round(Number(width) || 0);
+  return WIKI_THUMB_WIDTHS.find((allowed) => allowed >= w) ?? WIKI_THUMB_WIDTHS[WIKI_THUMB_WIDTHS.length - 1];
+}
+
 export function wikimediaThumb(url, width = 640) {
   // Original:  …/wikipedia/<prosjekt>/<a>/<ab>/<Fil>
   // Thumbnail: …/wikipedia/<prosjekt>/thumb/<a>/<ab>/<Fil>/<bredde>px-<Fil>
@@ -42,7 +55,7 @@ export function wikimediaThumb(url, width = 640) {
   const [, base, a, ab, file] = m;
   // SVG-thumbs rasteriseres til PNG (…px-Fil.svg.png).
   const thumbFile = /\.svg$/i.test(file) ? `${file}.png` : file;
-  return `${base}thumb/${a}/${ab}/${file}/${Math.round(width)}px-${thumbFile}`;
+  return `${base}thumb/${a}/${ab}/${file}/${snapThumbWidth(width)}px-${thumbFile}`;
 }
 
 // Utsetter kall til etter en pause i input (brukt på søkefelt, så ikke hele

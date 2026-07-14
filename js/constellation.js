@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.43";
-import { escapeHtml } from "./ui-helpers.js?v=3.43";
-import { safeUrl, wikimediaThumb } from "./util.js?v=3.43";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.44";
+import { escapeHtml } from "./ui-helpers.js?v=3.44";
+import { safeUrl, wikimediaThumb } from "./util.js?v=3.44";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -68,7 +68,14 @@ function artistThumb(artist, x, y) {
     preserveAspectRatio: "xMidYMid slice",            // fyll ruta, behold proporsjonene
     "clip-path": `url(#${clipId})`,
   });
-  img.setAttribute("href", wikimediaThumb(url, 160) || url);
+  const thumbUrl = wikimediaThumb(url, 160) || url;
+  img.setAttribute("href", thumbUrl);
+  // Samme fallback som <img>-veien har (se ui-helpers.js): svarer Wikimedia med
+  // en feil på thumbnailen, bytt til originalen ÉN gang. Uten dette ble et
+  // avvist thumbnail-svar stående som nettleserens «bilde mangler»-ikon.
+  if (thumbUrl !== url) {
+    img.addEventListener("error", () => img.setAttribute("href", url), { once: true });
+  }
   const frame = el("rect", {
     x: bx, y: by, width: THUMB, height: THUMB, rx: 8,
     fill: "none", stroke: "#fff", "stroke-width": 2,
