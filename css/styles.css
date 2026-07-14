@@ -591,16 +591,43 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .related-tag { font-size: 0.72rem; font-weight: 500; color: var(--muted-2); }
 
 /* Røtter før 1910 — forfattet fortelling (#9) */
-/* Navigasjonsfot på innholdssidene (Om historie, Røtter) — selve teksten
-   rendres som .story-body fra Firestore-innholdet. */
-.rotter-foot { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 14px; }
-.rotter-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+/* Navigasjonsknappene på Røtter-siden — står OVER teksten (.story-body), som
+   rendres fra Firestore-innholdet. */
+.rotter-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
 .rotter-links .btn { flex: 1; min-width: 160px; }
 
-/* Sjangerhistorier — seks fortellinger i Det store bildet + lærer-editor */
+/* Sjangerhistorier — seks fortellinger i Det store bildet + lærer-editor.
+   Knappene ligger i et grid med like brede kolonner, så de seks til sammen
+   dekker hele bredden av kortet, og bærer hovedsjangerens farge fra slektstreet
+   (--hist-color settes per knapp i explore.js). */
 .hist-intro { margin-bottom: 12px; font-size: 0.9rem; }
-.hist-chips { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-.hist-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.hist-chips {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.hist-chip {
+  width: 100%;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--hist-color, var(--text));
+  border-color: color-mix(in srgb, var(--hist-color, var(--line)) 45%, transparent);
+}
+.hist-chip:hover { border-color: var(--hist-color, var(--line)); }
+.hist-chip.active {
+  background: var(--hist-color, var(--accent));
+  border-color: var(--hist-color, var(--accent));
+  color: #fff;
+}
+/* Seks kolonner blir for trangt på telefon — to rader à tre. */
+@media (max-width: 640px) {
+  .hist-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .story-body h3 { margin: 18px 0 6px; font-size: 1.02rem; color: var(--text); }
 .story-body h3:first-child { margin-top: 0; }
 .story-body p { margin: 0 0 10px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
@@ -809,6 +836,24 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .modal-head h2 { margin: 0; font-size: 1.1rem; flex: 1; }
 /* «Finn artister» har mange hode-elementer — la dem bryte pent på smale skjermer. */
 #modal-artister .modal-head { flex-wrap: wrap; gap: 8px; }
+
+/* Lærerens Sjekk/Rediger-ikoner i selve modal-hodet (Om historie, Røtter,
+   Sjangerhistorier, Slik bruker du appen): midtstilt i rommet mellom tittelen
+   og ←/✕-knappene. Raden får all ledig plass (flex:1) og sentrerer innholdet
+   sitt — men da må tittelens egen `flex: 1` vike, ellers spiser h2 plassen og
+   ikonene presses inntil ←. Radens vanlige spacer (som skyver Rediger helt ut
+   til høyre i kort-foten) skrus av her; i hodet skal ikonene stå samlet.
+   For studenter er beholderen tom (ingen onCheck) — da gjelder ingenting av
+   dette, og hodet ser ut nøyaktig som før. */
+.modal-head .head-actions:not(:empty) {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-head:has(> .head-actions:not(:empty)) h2 { flex: 0 1 auto; }
+.modal-head .head-actions .teacher-card-actions { margin: 0; padding: 0; border: 0; gap: 8px; }
+.modal-head .head-actions .spacer { display: none; }
 .modal-head .modal-close,
 .modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
 .modal-head .modal-close { margin-right: 4px; }
@@ -1398,7 +1443,10 @@ body.is-teacher #gate { display: none; }
 
 .gx-node { cursor: pointer; }
 .gx-node rect { fill: transparent !important; stroke: transparent !important; pointer-events: all; }
-.gx-node text { font-size: 13px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
+/* Sjangernavnene i treet: litt større enn nodeboksen tilsier, for lesbarhet.
+   Boksen (NW/NH i genealogy.js) og avstanden mellom nodene er UENDRET — teksten
+   er pointer-events:none og påvirker ikke treffområdet eller layouten. */
+.gx-node text { font-size: 15px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
 .gx-dim { opacity: 0.16; }
 
 /* Touch: mini-kort øverst til venstre i kartet. Vises kun etter et trykk på en
@@ -1522,6 +1570,9 @@ body.is-teacher #gate { display: none; }
 #sh-svg .sh-artgroup.sh-locked .sh-artlbl { display: block; }
 #sh-svg .sh-artlbl.sh-show { display: block; font-weight: 700; stroke-width: 3.5px; }
 #sh-svg .sh-artdot { transition: r .08s; }
+/* Artistbildet ved hover (bygges i constellation.js). Skygge + peker-gjennom, så
+   ruta aldri stjeler hover fra prikken under og «blinker» av og på. */
+#sh-svg .sh-thumb { pointer-events: none; filter: drop-shadow(0 3px 8px rgba(16, 26, 19, 0.28)); }
 #sh-svg .sh-star .sh-halo { transition: fill-opacity .12s; }
 #sh-svg .sh-star.sh-hot .sh-starlbl { font-weight: 700; }
 #sh-svg .sh-star.sh-linked .sh-starlbl { font-weight: 700; }

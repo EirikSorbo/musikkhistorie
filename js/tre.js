@@ -1,11 +1,11 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.41";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.41";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.41";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.41";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.41";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.42";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.42";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.42";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.42";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.42";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.
@@ -130,6 +130,15 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") modalCloseTop();
+});
+
+// «← Tilbake» på selve siden (treet er en side, ikke en modal). Har man kommet
+// hit fra Det store bildet eller et artistkort, går history.back() dit. Åpnet
+// man tre.html direkte (ingen historikk å gå tilbake i), faller vi til
+// forsiden, så knappen aldri er en blindvei.
+document.getElementById("gx-back")?.addEventListener("click", () => {
+  if (window.history.length > 1) window.history.back();
+  else window.location.href = "index.html";
 });
 
 build();

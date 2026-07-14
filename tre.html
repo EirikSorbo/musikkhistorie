@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.41" />
+  <link rel="stylesheet" href="css/styles.css?v=3.42" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -36,9 +36,15 @@
     <div id="banner" class="banner"></div>
 
     <section class="panel gx-page">
-      <div class="gx-page-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <h2 style="margin:0">Slektstre</h2>
+      <!-- Slektstreet er en egen SIDE, ikke en modal — derfor har den ingen
+           ←/✕ i et modal-hode. Disse to knappene gjør samme jobb: Tilbake går
+           dit du kom fra (Det store bildet, artistkortet …), Lukk går til
+           forsiden. -->
+      <div class="gx-page-head" style="display:flex;align-items:center;gap:12px">
+        <h2 style="margin:0;flex:1">Slektstre</h2>
         <a class="btn ghost small" style="text-decoration:none" href="https://musicmap.info" target="_blank" rel="noopener">Åpne musicmap.info</a>
+        <button type="button" class="btn ghost small" id="gx-back" title="Tilbake" aria-label="Tilbake">← Tilbake</button>
+        <a class="btn ghost small" style="text-decoration:none" href="index.html" title="Lukk" aria-label="Lukk">✕ Lukk</a>
       </div>
       <div class="gx-legend" id="gx-legend"></div>
       <div class="gx-stage gx-stage-tall" id="gx-stage">
@@ -68,7 +74,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.41"></script>
-  <script type="module" src="js/tre.js?v=3.41"></script>
+  <script src="js/load-guard.js?v=3.42"></script>
+  <script type="module" src="js/tre.js?v=3.42"></script>
 </body>
 </html>

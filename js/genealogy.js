@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.41";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.41";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.41";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.41";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.42";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.42";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.42";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.42";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -287,6 +287,22 @@ export const MAIN_GENRE_INFO = Object.fromEntries(
     color: FAMILIES[n.fam]?.stroke || FAMILIES.gray.stroke,
   }])
 );
+
+// Farge per HOVEDSJANGER (metaGenre): familiefargen som flest av hovedsjangerens
+// tre-noder bruker. Utledet, ikke hardkodet — en ny node med ny familie flytter
+// automatisk fargen hvis den blir den vanligste. Brukt av sjangerhistorie-
+// knappene, så de snakker samme fargespråk som treet.
+export const META_GENRE_COLOR = (() => {
+  const tally = {};                              // meta → { fam: antall }
+  for (const n of GENEALOGY) {
+    if (!n.g) continue;
+    (tally[n.g] ||= {})[n.fam] = (tally[n.g][n.fam] || 0) + 1;
+  }
+  return Object.fromEntries(Object.entries(tally).map(([meta, fams]) => {
+    const fam = Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
+    return [meta, FAMILIES[fam]?.stroke || FAMILIES.gray.stroke];
+  }));
+})();
 
 function el(tag, attrs) {
   const e = document.createElementNS(SVGNS, tag);

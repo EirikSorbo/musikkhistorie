@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.41";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.41";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.41";
-import { isVisible, DECADES } from "./limits.js?v=3.41";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.41";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.41";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.41";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.41";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.41";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.41";
-import { renderSjangerhimmel } from "./constellation.js?v=3.41";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.42";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.42";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.42";
+import { isVisible, DECADES } from "./limits.js?v=3.42";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.42";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.42";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.42";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.42";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.42";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.42";
+import { renderSjangerhimmel } from "./constellation.js?v=3.42";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -287,9 +287,9 @@ ${TECH_DETAIL_MODAL_HTML}
   <div class="modal">
     <div class="modal-head">
       <h2>Slik bruker du appen</h2>
+      <div id="app-guide-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="app-guide-extra"></div>
     <div id="app-guide-body" class="story-body"></div>
   </div>
 </div>
@@ -302,17 +302,10 @@ ${TECH_DETAIL_MODAL_HTML}
   <div class="modal">
     <div class="modal-head">
       <h2>Om historie</h2>
+      <div id="omh-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="omh-extra"></div>
     <div id="om-historie-body" class="story-body"></div>
-    <div class="rotter-foot">
-      <p class="muted">Klar for selve historien? Start der alt begynner.</p>
-      <div class="rotter-links">
-        <button class="btn ghost" id="omh-rotter">Røtter før 1910</button>
-        <button class="btn ghost" id="omh-historier">Sjangerhistoriene</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -320,17 +313,14 @@ ${TECH_DETAIL_MODAL_HTML}
   <div class="modal">
     <div class="modal-head">
       <h2>Røtter før 1910</h2>
+      <div id="rotter-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="rotter-extra"></div>
-    <div id="rotter-body" class="story-body"></div>
-    <div class="rotter-foot">
-      <p class="muted">Røttene er selve premisset for de «lange linjene». Vil du se hvordan de vokser videre?</p>
-      <div class="rotter-links">
-        <button class="btn ghost" id="rotter-tre">Se slektstreet</button>
-        <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen</button>
-      </div>
+    <div class="rotter-links">
+      <button class="btn ghost" id="rotter-tre">Se slektstreet</button>
+      <button class="btn ghost" id="rotter-tidslinje">Åpne tidslinjen</button>
     </div>
+    <div id="rotter-body" class="story-body"></div>
   </div>
 </div>
 
@@ -341,11 +331,11 @@ ${TECH_DETAIL_MODAL_HTML}
   <div class="modal">
     <div class="modal-head">
       <h2>Sjangerhistorier</h2>
+      <div id="hist-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <p class="muted hist-intro">Seks fortellinger som til sammen dekker hele pensumet — trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
-    <div id="hist-extra"></div>
     <div id="hist-body" class="story-body"></div>
   </div>
 </div>
@@ -1082,7 +1072,7 @@ function renderKart() {
   const decEl = document.getElementById("kart-decades");
   decEl.innerHTML = [null, ...VK_DECADES].map((d) =>
     `<button type="button" class="btn ghost small kart-dec${d === kartDecade ? " active" : ""}" data-dec="${d ?? ""}"` +
-    `${d === kartDecade ? ' style="background:var(--accent,#1d4ed8);color:#fff"' : ""}>${d == null ? "Alle tiår" : d + "-t."}</button>`
+    `${d === kartDecade ? ' style="background:var(--accent,#1d4ed8);color:#fff"' : ""}>${d == null ? "Alle tiår" : d}</button>`
   ).join("");
   decEl.querySelectorAll(".kart-dec").forEach((b) => b.addEventListener("click", () => {
     kartDecade = b.dataset.dec === "" ? null : Number(b.dataset.dec);
@@ -1354,8 +1344,14 @@ function openHistorier(genre) {
   if (!modal) return;
   const chips = document.getElementById("hist-chips");
   if (!chips.dataset.filled) {
-    chips.innerHTML = STORY_ORDER.map((g) =>
-      `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("");
+    // Hver hovedsjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
+    // så knappene, treet, varmekartet og himmelen snakker samme fargespråk.
+    // --hist-color settes per knapp; CSS bruker den til kant, tekst og fyll når
+    // knappen er aktiv. Knappene ligger i et grid med like kolonner (se CSS).
+    chips.innerHTML = STORY_ORDER.map((g) => {
+      const color = META_GENRE_COLOR[g] || FAMILIES.gray.stroke;
+      return `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}" style="--hist-color:${color}">${escapeHtml(g)}</button>`;
+    }).join("");
     chips.querySelectorAll(".hist-chip").forEach((b) =>
       b.addEventListener("click", () => renderHistorie(b.dataset.story)));
     chips.dataset.filled = "1";
@@ -1393,9 +1389,8 @@ function wireModals() {
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
-  // Innholdssidenes navigasjonsføtter (statisk markup — innholdet bor i Firestore).
-  document.getElementById("omh-rotter")?.addEventListener("click", openRotter);
-  document.getElementById("omh-historier")?.addEventListener("click", () => openHistorier());
+  // Røtter-sidens navigasjonsknapper (statisk markup — innholdet bor i
+  // Firestore). Står over teksten, ikke under den.
   const rotterTre = document.getElementById("rotter-tre");
   if (rotterTre) {
     if (opts.onSlektstre) rotterTre.addEventListener("click", () => opts.onSlektstre());
