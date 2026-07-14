@@ -1598,6 +1598,35 @@ body.is-teacher #gate { display: none; }
 /* Artistbildet ved hover (bygges i constellation.js). Skygge + peker-gjennom, så
    ruta aldri stjeler hover fra prikken under og «blinker» av og på. */
 #sh-svg .sh-thumb { pointer-events: none; filter: drop-shadow(0 3px 8px rgba(16, 26, 19, 0.28)); }
+
+/* Hover-kortet på tidslinjens blokker: bilde + navn + aktiv-periode. Ligger i
+   <body> med fixed posisjon (settes i explore.js), så modalens scroll-boks ikke
+   klipper det. pointer-events:none — kortet skal aldri stjele hoveren fra
+   blokka under. Bildet beholder sitt eget format: ingen faste mål, bare et tak
+   på hver side, så liggende blir liggende og stående blir stående. */
+.tid-tip {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  width: max-content;
+  max-width: 200px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+}
+.tid-tip img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 168px;
+  max-height: 168px;
+  border-radius: 6px;
+  margin: 0 auto 7px;
+}
+.tid-tip-name { font-size: 0.84rem; font-weight: 600; color: var(--text); }
+.tid-tip-years { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
 #sh-svg .sh-star .sh-halo { transition: fill-opacity .12s; }
 #sh-svg .sh-star.sh-hot .sh-starlbl { font-weight: 700; }
 #sh-svg .sh-star.sh-linked .sh-starlbl { font-weight: 700; }

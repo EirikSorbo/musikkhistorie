@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.46";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.46";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.46";
-import { isVisible, DECADES } from "./limits.js?v=3.46";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.46";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.46";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.46";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.46";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.46";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.46";
-import { renderSjangerhimmel } from "./constellation.js?v=3.46";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.47";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.47";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.47";
+import { isVisible, DECADES } from "./limits.js?v=3.47";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow, imgTag, safeUrl } from "./ui-helpers.js?v=3.47";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.47";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.47";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.47";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.47";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.47";
+import { renderSjangerhimmel } from "./constellation.js?v=3.47";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -840,9 +840,53 @@ function openVkEdit(genre, idx) {
 //  scroller dit; { artistId } åpner artistens gruppe/seksjoner og uthever
 //  blokkene. Banepakkingen bor i timeline-lanes.js (enhetstestet).
 // ----------------------------------------------------------------------------
+// Hover-kortet på tidslinjens blokker: artistbildet (i sitt eget format — samme
+// som sjangerhimmelen), navnet og aktiv-perioden. Ett kort om gangen, festet til
+// <body> med position:fixed, så modalens scroll-boks ikke klipper det.
+let tidTip = null;
+
+function hideTidTip() {
+  tidTip?.remove();
+  tidTip = null;
+}
+
+function showTidTip(bar, artist) {
+  hideTidTip();
+  if (!artist) return;
+  const url = safeUrl(artist.imageUrl);
+  const tip = document.createElement("div");
+  tip.className = "tid-tip";
+  tip.innerHTML =
+    (url ? imgTag(url, artist.name || "", 250) : "") +
+    `<div class="tid-tip-name">${escapeHtml(artist.name || "")}</div>` +
+    `<div class="tid-tip-years">aktiv ${escapeHtml(bar.dataset.years || "")}</div>`;
+  document.body.appendChild(tip);
+
+  // Bildefeil: den globale fallbacken (ui-helpers) bytter først til originalen.
+  // Feiler DEN også — eller finnes ingen fallback å bytte til — fjerner vi bildet
+  // og lar kortet stå med navn og periode, i stedet for nettleserens
+  // «bilde mangler»-ikon.
+  const im = tip.querySelector("img");
+  im?.addEventListener("error", () => {
+    if (im.dataset.tipRetried || !im.dataset.full) im.remove();
+    else im.dataset.tipRetried = "1";
+  });
+
+  // Over blokka og sentrert på den; ned under hvis det ikke er plass over, og
+  // alltid innenfor vinduet i bredden.
+  const b = bar.getBoundingClientRect();
+  const t = tip.getBoundingClientRect();
+  const left = Math.max(8, Math.min(b.left + b.width / 2 - t.width / 2, window.innerWidth - t.width - 8));
+  const top = b.top - t.height - 8 < 8 ? b.bottom + 8 : b.top - t.height - 8;
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+  tidTip = tip;
+}
+
 function openTidslinje(focus = {}) {
   const modal = document.getElementById("modal-tidslinje");
   if (!modal) return;
+  hideTidTip();
   const body = document.getElementById("tid-body");
   const s = getState();
   const nowYear = new Date().getFullYear();
@@ -963,7 +1007,11 @@ function openTidslinje(focus = {}) {
           const openEnd = it.span.open;
           const multi = (sectionsPerArtist.get(it.id) || 1) > 1;
           const yearsTxt = `${it.span.start}${openEnd ? " → pågår / sluttår ikke satt" : "–" + it.span.end}`;
-          html += `<button type="button" class="tid-bar" data-artist-id="${escapeHtml(it.id)}" title="${escapeHtml(it.name)} · aktiv ${escapeHtml(yearsTxt)}" ` +
+          // aria-label i stedet for title: hover-kortet (bilde + navn + periode)
+          // tegnes selv, og nettleserens egen title-boble ville lagt seg oppå.
+          // Perioden bæres videre i data-years, så kortet slipper å regne den ut på nytt.
+          html += `<button type="button" class="tid-bar" data-artist-id="${escapeHtml(it.id)}"` +
+            ` data-years="${escapeHtml(yearsTxt)}" aria-label="${escapeHtml(it.name)} · aktiv ${escapeHtml(yearsTxt)}" ` +
             `style="position:absolute;top:${li * 25 + 1}px;left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;height:21px;` +
             `background:${rowColor}24;border:1px solid ${rowColor}66;${openEnd ? "border-right:none;border-radius:5px 0 0 5px;" : "border-radius:5px;"}` +
             `font-size:0.72rem;line-height:19px;padding:0 6px;color:var(--text);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">` +
@@ -1015,12 +1063,24 @@ function openTidslinje(focus = {}) {
   });
 
   // Klikk på blokk → artistkortet (samme inngang som resten av appen).
+  // Hold musen over en blokk → hover-kort med bilde, navn og aktiv-periode
+  // (samme idé som prikkene i sjangerhimmelen). Berøring hopper over det —
+  // der er klikket hele poenget.
   body.querySelectorAll(".tid-bar").forEach((bar) => {
     bar.addEventListener("click", () => {
+      hideTidTip();
       const a = s.artists.find((x) => x.id === bar.dataset.artistId);
       if (a && opts.onArtistClick) opts.onArtistClick(a);
     });
+    bar.addEventListener("pointerenter", (e) => {
+      if (e.pointerType === "touch") return;
+      showTidTip(bar, s.artists.find((x) => x.id === bar.dataset.artistId));
+    });
+    bar.addEventListener("pointerleave", hideTidTip);
   });
+  // Kortet er position:fixed (så det aldri klippes av modalens scroll-boks) —
+  // derfor må det bort når innholdet ruller under det.
+  modal.querySelector(".modal")?.addEventListener("scroll", hideTidTip);
 
   modalOpen(modal);
 
