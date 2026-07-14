@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.37" />
+  <link rel="stylesheet" href="css/styles.css?v=3.38" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -477,48 +477,58 @@
         <button class="btn ghost small tech-tab" data-tech-cat="Kringkasting og spredning">Kringkasting</button>
         <button class="btn ghost small tech-tab" data-tech-cat="Instrumenter og lydutstyr">Instrumenter</button>
       </div>
+      <div class="modal-foot-right" style="margin-bottom:12px">
+        <button type="button" id="tech-new-btn" class="btn ghost small">+ Ny innovasjon</button>
+      </div>
       <div id="tech-admin-list"></div>
-      <div style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h3 style="margin:0">Legg til / rediger</h3>
-          <button type="button" id="tech-new-btn" class="btn ghost small">+ Ny</button>
-        </div>
-        <div class="add-grid" style="grid-template-columns:1fr 1fr">
-          <label>Navn *
-            <input type="text" id="tech-name" required />
-          </label>
-          <label>Kategori
-            <select id="tech-category">
-              <option value="Opptak og avspilling">Opptak og avspilling</option>
-              <option value="Kringkasting og spredning">Kringkasting og spredning</option>
-              <option value="Instrumenter og lydutstyr">Instrumenter og lydutstyr</option>
-            </select>
-          </label>
-          <label>Oppfunnet (år)
-            <input type="number" id="tech-invented" placeholder="f.eks. 1948" />
-          </label>
-          <label>Tatt i bruk (år)
-            <input type="number" id="tech-adopted" placeholder="f.eks. 1950" />
-          </label>
-          <label>Periodevisning
-            <input type="text" id="tech-adopted-label" placeholder="f.eks. ca. 1950, sent 1960-tall" />
-          </label>
-          <label>Tiår (for filtrering)
-            <input type="text" id="tech-decade" placeholder="f.eks. 1950" />
-          </label>
-          <label class="full">Beskrivelse
-            <textarea id="tech-desc" rows="2"></textarea>
-          </label>
-          <label class="full">Bilde-URL
-            <input type="url" id="tech-image-url" placeholder="https://upload.wikimedia.org/…" />
-          </label>
-          <label class="full">Bildekreditering
-            <input type="text" id="tech-image-credit" placeholder="Fotograf / lisens" />
-          </label>
-          <div class="full add-actions">
-            <button type="button" id="tech-save" class="btn primary" data-edit-id="">Lagre</button>
-            <span id="tech-msg" class="form-msg ok"></span>
-          </div>
+    </div>
+  </div>
+
+  <!-- Innovasjonskort — skjema i egen popup. Åpnes fra «Rediger» i kortet
+       (tidslinjen/tiårsvisningen), fra rediger-knappen i lista over, og fra
+       «+ Ny innovasjon». Popupen legger seg oppå det du kom fra, så du slipper
+       å lete etter skjemaet nederst i en lang liste. -->
+  <div class="modal-backdrop" id="modal-tech-single">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 id="tech-single-title">Rediger innovasjon</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div class="add-grid" style="grid-template-columns:1fr 1fr">
+        <label>Navn *
+          <input type="text" id="tech-name" required />
+        </label>
+        <label>Kategori
+          <select id="tech-category">
+            <option value="Opptak og avspilling">Opptak og avspilling</option>
+            <option value="Kringkasting og spredning">Kringkasting og spredning</option>
+            <option value="Instrumenter og lydutstyr">Instrumenter og lydutstyr</option>
+          </select>
+        </label>
+        <label>Oppfunnet (år)
+          <input type="number" id="tech-invented" placeholder="f.eks. 1948" />
+        </label>
+        <label>Tatt i bruk (år)
+          <input type="number" id="tech-adopted" placeholder="f.eks. 1950" />
+        </label>
+        <label>Periodevisning
+          <input type="text" id="tech-adopted-label" placeholder="f.eks. ca. 1950, sent 1960-tall" />
+        </label>
+        <label>Tiår (for filtrering)
+          <input type="text" id="tech-decade" placeholder="f.eks. 1950" />
+        </label>
+        <label class="full">Beskrivelse
+          <textarea id="tech-desc" rows="4"></textarea>
+        </label>
+        <label class="full">Bilde-URL
+          <input type="url" id="tech-image-url" placeholder="https://upload.wikimedia.org/…" />
+        </label>
+        <label class="full">Bildekreditering
+          <input type="text" id="tech-image-credit" placeholder="Fotograf / lisens" />
+        </label>
+        <div class="full add-actions">
+          <button type="button" id="tech-save" class="btn primary" data-edit-id="">Lagre</button>
+          <span id="tech-msg" class="form-msg ok"></span>
         </div>
       </div>
     </div>
@@ -568,7 +578,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.37"></script>
-  <script type="module" src="js/teacher.js?v=3.37"></script>
+  <script src="js/load-guard.js?v=3.38"></script>
+  <script type="module" src="js/teacher.js?v=3.38"></script>
 </body>
 </html>

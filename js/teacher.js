@@ -28,14 +28,14 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.37";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.37";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.37";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.37";
-import { initExplore } from "./explore.js?v=3.37";
+} from "./store.js?v=3.38";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.38";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.38";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.38";
+import { initExplore } from "./explore.js?v=3.38";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.37";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.37";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.38";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.38";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -51,11 +51,12 @@ import {
   openPageEditor,
   setupStoryEditor,
   openTechEditor,
-} from "./teacher-content.js?v=3.37";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.37";
-import { renderDesk } from "./teacher-desk.js?v=3.37";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.37";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.37";
+  refreshTechAdmin,
+} from "./teacher-content.js?v=3.38";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.38";
+import { renderDesk } from "./teacher-desk.js?v=3.38";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.38";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.38";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -204,7 +205,15 @@ function startApp() {
     refreshDesk();
   });
   subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
-  subscribeTech((items) => { state.techItems = items; renderPendingEditsList(); refreshDesk(); });
+  // Åpne teknologi-visninger (admin-lista og innovasjonskortet) tegnes på nytt,
+  // så lagring i redigerings-popupen slår gjennom umiddelbart.
+  subscribeTech((items) => {
+    state.techItems = items;
+    renderPendingEditsList();
+    refreshTechAdmin();
+    ctx.explore?.refreshTechDetail?.();
+    refreshDesk();
+  });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; refreshDesk(); });
   subscribePendingEdits((edits) => { state.pendingEdits = edits; renderPendingEditsList(); refreshDesk(); });
 

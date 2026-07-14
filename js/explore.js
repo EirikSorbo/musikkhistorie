@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.37";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.37";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.37";
-import { isVisible, DECADES } from "./limits.js?v=3.37";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.37";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.37";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.37";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.37";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.37";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.37";
-import { renderSjangerhimmel } from "./constellation.js?v=3.37";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.38";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.38";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.38";
+import { isVisible, DECADES } from "./limits.js?v=3.38";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.38";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.38";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.38";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.38";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.38";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.38";
+import { renderSjangerhimmel } from "./constellation.js?v=3.38";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -431,8 +431,12 @@ function showArtistsForInstrument(instrument) {
   openArtistListModal(instrument, artistsByInstrument(getState().artists, instrument), opts.onArtistClick, "Ingen forslag med dette instrumentet ennå.");
 }
 
-function openTechDetail(t) {
+// Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
+// openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
+// redigerings-popupen ligger oppå det).
+function fillTechDetail(t) {
   const modal = document.getElementById("modal-tech-detail");
+  modal.dataset.techId = t.id;
   document.getElementById("td-title").textContent = t.name;
   const body = document.getElementById("td-body");
   renderTechDetail(body, t, buildLinkCtx());
@@ -446,7 +450,8 @@ function openTechDetail(t) {
     injectTeacherRow(extra, {
       category: "tech",
       id: t.id,
-      onEdit: opts.onTechEdit ? () => { modalClose(modal); opts.onTechEdit(t); } : null,
+      // Kortet blir stående åpent — skjemaet kommer som popup oppå det.
+      onEdit: opts.onTechEdit ? () => opts.onTechEdit(t) : null,
       onDelete: opts.onTechDelete ? () => { if (opts.onTechDelete(t.id)) modalClose(modal); } : null,
     });
   } else if (foot && btn && opts.onProposeEdit) {
@@ -463,7 +468,22 @@ function openTechDetail(t) {
   } else if (foot) {
     foot.style.display = "none";
   }
-  modalOpen(modal);
+}
+
+function openTechDetail(t) {
+  fillTechDetail(t);
+  modalOpen(document.getElementById("modal-tech-detail"));
+}
+
+// Kalles når teknologi-dataene endrer seg (lærer lagrer i redigerings-popupen).
+// Tegner det åpne kortet på nytt fra ferske data — uten modalOpen, som ville
+// hevet kortet OVER popupen. Er kortet slettet, lukkes det.
+function refreshTechDetail() {
+  const modal = document.getElementById("modal-tech-detail");
+  if (!modal || !modal.classList.contains("open")) return;
+  const t = (getState().techItems || []).find((x) => x.id === modal.dataset.techId);
+  if (t) fillTechDetail(t);
+  else modalClose(modal);
 }
 
 // Tiårsvelgeren er en klikkbar tidslinje-stripe øverst i selve tiårsvisningen
@@ -1497,6 +1517,7 @@ export function initExplore(options) {
     openPodkast,
     openTeknologi,
     openTechDetail,
+    refreshTechDetail,
     buildLinkCtx,
     showArtistsForSjanger,
     showPlaylistForMainGenre,

@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.37";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.37";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.37";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.37";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.37";
-import { resolveDesc } from "./genre-descriptions.js?v=3.37";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.37";
-import { DECADES } from "./limits.js?v=3.37";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.38";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.38";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.38";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.38";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.38";
+import { resolveDesc } from "./genre-descriptions.js?v=3.38";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.38";
+import { DECADES } from "./limits.js?v=3.38";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.37";
-import { $ } from "./shared.js?v=3.37";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.37";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.38";
+import { $ } from "./shared.js?v=3.38";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.38";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -270,12 +270,23 @@ export function openTechAdmin() {
   openAdminModal("modal-tech-admin");
 }
 
-// Åpne tech-admin med skjemaet forhåndsutfylt for ett kort — brukt av
-// «Rediger»-knappen i innovasjonskort-detaljen (explore.onTechEdit).
+// Ett innovasjonskort i egen popup — brukt av «Rediger» i kortdetaljen
+// (explore.onTechEdit), av rediger-knappen i admin-lista og av «+ Ny
+// innovasjon». Popupen legger seg OPPÅ det du kom fra (kortet eller lista), så
+// skjemaet aldri er noe man må rulle nedover i en lang liste for å finne.
+// t === null → tomt skjema (nytt kort).
 export function openTechEditor(t) {
-  openTechAdmin();
   fillTechForm(t);
-  document.getElementById("tech-name")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const title = document.getElementById("tech-single-title");
+  if (title) title.textContent = t ? `Rediger — ${t.name}` : "Ny innovasjon";
+  openAdminModal("modal-tech-single");
+}
+
+// Admin-lista tegnes på nytt når teknologi-snapshotet lander (lagt til /
+// oppdatert / slettet), men bare hvis den faktisk står åpen.
+export function refreshTechAdmin() {
+  const modal = document.getElementById("modal-tech-admin");
+  if (modal?.classList.contains("open")) renderTechAdmin();
 }
 
 let techAdminCat = "";
@@ -329,8 +340,7 @@ function renderTechAdmin() {
     btn.addEventListener("click", () => {
       const id = btn.closest("[data-tech-id]").dataset.techId;
       const t = state.techItems.find(x => x.id === id);
-      if (!t) return;
-      fillTechForm(t);
+      if (t) openTechEditor(t);
     });
   });
 }
@@ -363,7 +373,7 @@ export function setupTechAdmin() {
     });
   });
 
-  document.getElementById("tech-new-btn").addEventListener("click", () => fillTechForm(null));
+  document.getElementById("tech-new-btn").addEventListener("click", () => openTechEditor(null));
 
   document.getElementById("tech-save").addEventListener("click", async () => {
     const name = document.getElementById("tech-name").value.trim();
@@ -382,14 +392,14 @@ export function setupTechAdmin() {
     };
     const editId = document.getElementById("tech-save").dataset.editId;
     try {
-      if (editId) {
-        await updateTech(editId, data);
-        msg.textContent = "Oppdatert ✓"; msg.className = "form-msg ok";
-      } else {
-        await addTech(data);
-        msg.textContent = "Lagt til ✓"; msg.className = "form-msg ok";
-        fillTechForm(null);
-      }
+      if (editId) await updateTech(editId, data);
+      else await addTech(data);
+      msg.textContent = editId ? "Oppdatert ✓" : "Lagt til ✓";
+      msg.className = "form-msg ok";
+      // Popupen lukkes, og du er tilbake der du kom fra — kortet, lista eller
+      // tidslinjen. Begge stedene tegnes på nytt av teknologi-snapshotet
+      // (teacher.js → subscribeTech), så endringen synes med én gang.
+      setTimeout(() => closeAdminModal("modal-tech-single"), 800);
     } catch (err) {
       msg.textContent = "Feil: " + err.message; msg.className = "form-msg error";
     }
