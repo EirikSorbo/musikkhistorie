@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.44";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.44";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.44";
-import { isVisible, DECADES } from "./limits.js?v=3.44";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.44";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.44";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.44";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.44";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.44";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.44";
-import { renderSjangerhimmel } from "./constellation.js?v=3.44";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.45";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.45";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.45";
+import { isVisible, DECADES } from "./limits.js?v=3.45";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.45";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.45";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.45";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.45";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.45";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.45";
+import { renderSjangerhimmel } from "./constellation.js?v=3.45";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -137,7 +137,7 @@ const MODAL_HTML = `
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Hvor artistene virket. Større prikk = flere artister; stiplet ring = diffust område (f.eks. en delstat). Storbyområder er samlet (Brooklyn → New York). Velg et tiår for å se tyngdepunktet flytte seg — trykk på en prikk for artistene.</p>
-    <div id="kart-decades" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div class="decade-ribbon" id="kart-decades" style="margin-bottom:12px"></div>
     <div id="kart-svg"></div>
     <div id="kart-abroad" style="margin-top:14px"></div>
     <div id="kart-footer" style="margin-top:10px;font-size:0.78rem;color:var(--muted)"></div>
@@ -1067,16 +1067,13 @@ function renderKart() {
   const { onMap, abroad, unplaced } = aggregatePlaces(active, { decade: kartDecade });
   const DOT = "#1d4ed8";   // én kulør — størrelse bærer informasjonen
 
-  // Tiårsvelger (Alle + tiårene fra varmekartet, samme tidsrom)
-  const decEl = document.getElementById("kart-decades");
-  decEl.innerHTML = [null, ...VK_DECADES].map((d) =>
-    `<button type="button" class="btn ghost small kart-dec${d === kartDecade ? " active" : ""}" data-dec="${d ?? ""}"` +
-    `${d === kartDecade ? ' style="background:var(--accent,#1d4ed8);color:#fff"' : ""}>${d == null ? "Alle tiår" : d}</button>`
-  ).join("");
-  decEl.querySelectorAll(".kart-dec").forEach((b) => b.addEventListener("click", () => {
-    kartDecade = b.dataset.dec === "" ? null : Number(b.dataset.dec);
+  // Tiårsvelger: samme klikkbare tidslinje-stripe som Samfunn/Teknologi bruker
+  // (renderDecadeRibbon), pluss en «Alle»-prikk helt til venstre som slår av
+  // tiårsfilteret. kartDecade === null betyr alle tiår.
+  renderDecadeRibbon(document.getElementById("kart-decades"), kartDecade, (d) => {
+    kartDecade = d;
     renderKart();
-  }));
+  }, { all: true });
 
   // Kartet: landomriss + prikker. Radius ~ kvadratrot av antall (arealet
   // skalerer da med antallet); tekstetikett på de største.

@@ -5,22 +5,38 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.44";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.44";
-import { DECADES } from "./limits.js?v=3.44";
+import { escapeHtml } from "./util.js?v=3.45";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.45";
+import { DECADES } from "./limits.js?v=3.45";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
-// (explore.js) og lærerens tiårsmodal (teacher-content.js), så de to flatene
+// (explore.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
 // aldri driver fra hverandre. onSelect får tiåret som tall.
-export function renderDecadeRibbon(el, active, onSelect) {
+//
+// opts.all = true legger en egen prikk HELT TIL VENSTRE som betyr «vis alle
+// tiår» (kartet). Den har sin egen farge (.dr-all i CSS) og står utenfor selve
+// tidsaksen — streken starter først ved 1900. onSelect får da null.
+// Kolonnetallet og strekens startpunkt sendes til CSS som variabler, så det
+// samme sporet fungerer med og uten Alle-prikken.
+export function renderDecadeRibbon(el, active, onSelect, { all = false, allLabel = "Alle" } = {}) {
   if (!el) return;
-  el.innerHTML = `<div class="dr-track">` + DECADES.map((y) =>
-    `<button type="button" class="dr-node${y === active ? " active" : ""}" data-decade="${y}"` +
-    ` aria-label="${y}-tallet"${y === active ? ` aria-current="true"` : ""}>` +
-    `<span class="dr-dot"></span><span class="dr-year">${y}</span></button>`
-  ).join("") + `</div>`;
+  const cols = DECADES.length + (all ? 1 : 0);
+  const allNode = all
+    ? `<button type="button" class="dr-node dr-all${active == null ? " active" : ""}" data-decade=""` +
+      ` aria-label="Vis alle tiår"${active == null ? ` aria-current="true"` : ""}>` +
+      `<span class="dr-dot"></span><span class="dr-year">${escapeHtml(allLabel)}</span></button>`
+    : "";
+  el.innerHTML =
+    `<div class="dr-track" style="--dr-cols:${cols};--dr-line-start:${all ? 1 : 0}">` +
+    allNode +
+    DECADES.map((y) =>
+      `<button type="button" class="dr-node${y === active ? " active" : ""}" data-decade="${y}"` +
+      ` aria-label="${y}-tallet"${y === active ? ` aria-current="true"` : ""}>` +
+      `<span class="dr-dot"></span><span class="dr-year">${y}</span></button>`
+    ).join("") + `</div>`;
   el.querySelectorAll("[data-decade]").forEach((btn) => {
-    btn.addEventListener("click", () => onSelect(Number(btn.dataset.decade)));
+    btn.addEventListener("click", () =>
+      onSelect(btn.dataset.decade === "" ? null : Number(btn.dataset.decade)));
   });
 }
 
