@@ -7,12 +7,12 @@ import {
   subscribeConfig,
   addArtist,
   getClientId,
-} from "./store.js?v=3.35";
-import { GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.35";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=3.35";
-import { fillSelect } from "./ui.js?v=3.35";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.35";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.35";
+} from "./store.js?v=3.36";
+import { GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.36";
+import { GENEALOGY_META_GENRES } from "./genealogy.js?v=3.36";
+import { fillSelect } from "./ui.js?v=3.36";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.36";
+import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.36";
 
 const state = {
   artists: [],

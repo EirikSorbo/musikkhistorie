@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb } from "../../js/util.js?v=3.35";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb } from "../../js/util.js?v=3.36";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(

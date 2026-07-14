@@ -5,8 +5,8 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.35";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.35";
+import { escapeHtml } from "./util.js?v=3.36";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.36";
 
 function shortDesc(text) {
   const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
@@ -15,51 +15,88 @@ function shortDesc(text) {
   return first.slice(0, cut > 30 ? cut : 67) + "…";
 }
 
-function layoutTimeline(events) {
-  const stems = [24, 44, 64];
-  const result = [];
-  let lastAboveAt = -Infinity, lastBelowAt = -Infinity;
-  for (let i = 0; i < events.length; i++) {
-    const e = events[i];
-    const aboveGap = e.pct - lastAboveAt;
-    const belowGap = e.pct - lastBelowAt;
-    let dir, stem;
-    if (aboveGap >= 18 && belowGap >= 18) {
-      dir = "above"; stem = stems[0];
-    } else if (aboveGap >= belowGap) {
-      dir = "above";
-      stem = aboveGap < 10 ? stems[2] : aboveGap < 18 ? stems[1] : stems[0];
-    } else {
-      dir = "below";
-      stem = belowGap < 10 ? stems[2] : belowGap < 18 ? stems[1] : stems[0];
-    }
-    if (dir === "above") lastAboveAt = e.pct; else lastBelowAt = e.pct;
-    result.push({ ...e, dir, stem });
-  }
-  return result;
+// Etikettene er 130px brede (CSS .tl-prop .tl-label) — ca. 24 % av minste
+// sporbredde (560px). Grupper hvis intervaller overlapper horisontalt må
+// stables i høyden. Linjehøyden er et estimat uten DOM-måling: ~20 tegn per
+// linje ved 130px/0.75rem, bevisst i underkant så estimatet heller tar for
+// mye høyde enn for lite.
+const LABEL_W_PCT = 24;
+const CHARS_PER_LINE = 20;
+const LINE_H = 17;
+
+function estimateLabelHeight(entries) {
+  const lines = entries.reduce((n, e) => n + Math.max(1, Math.ceil(e.desc.length / CHARS_PER_LINE)), 0);
+  return LINE_H + 2 + lines * LINE_H;
+}
+
+// Kant-etiketter (tl-start/tl-end) venstre-/høyrestilles i CSS-en, så det
+// horisontale fotavtrykket deres strekker seg innover fra punktet — ikke
+// symmetrisk rundt det.
+function labelInterval(pct) {
+  if (pct <= 12) return [pct - 1, pct + LABEL_W_PCT - 1];
+  if (pct >= 88) return [pct - LABEL_W_PCT + 1, pct + 1];
+  return [pct - LABEL_W_PCT / 2, pct + LABEL_W_PCT / 2];
+}
+
+// Høydebevisst layout: hver gruppe legges på den siden (over/under) der den
+// får kortest stilk, og stilken må løfte etiketten klar av alle tidligere
+// etiketter på samme side som overlapper horisontalt. Da kan ingenting
+// kollidere, uansett hvor mange hendelser som deler årstall eller hvor mange
+// linjer tekstene brekker over.
+function layoutTimeline(groups) {
+  const placed = { above: [], below: [] };
+  return groups.map((g) => {
+    const [lo, hi] = labelInterval(g.pct);
+    const stemFor = (side) => {
+      let stem = 24;
+      for (const p of placed[side]) {
+        if (lo < p.hi && hi > p.lo) stem = Math.max(stem, p.stem + p.height + 8);
+      }
+      return stem;
+    };
+    const aStem = stemFor("above"), bStem = stemFor("below");
+    const dir = bStem < aStem ? "below" : "above";
+    const stem = Math.min(aStem, bStem);
+    placed[dir].push({ lo, hi, stem, height: g.height });
+    return { ...g, dir, stem };
+  });
 }
 
 function buildProportionalTimeline(items, startYear) {
   if (items.length < 2) return "";
-  const minY = Math.min(...items.map(e => e.year || startYear));
-  const maxY = Math.max(...items.map(e => e.year || startYear + 9));
+  // Hendelser med samme årstall samles til én gruppe — ett punkt, én stilk,
+  // navnene under hverandre — i stedet for flere etiketter på samme x.
+  const byLabel = new Map();
+  for (const e of items) {
+    if (!byLabel.has(e.label)) byLabel.set(e.label, { year: e.year, label: e.label, entries: [] });
+    byLabel.get(e.label).entries.push(e);
+  }
+  const groups = [...byLabel.values()];
+  const minY = Math.min(...groups.map(g => g.year || startYear));
+  const maxY = Math.max(...groups.map(g => g.year || startYear + 9));
   const span = Math.max(maxY - minY, 1);
   const pad = 4;
-  const mapped = items.map(e => ({
-    ...e,
-    pct: pad + ((e.year || startYear) - minY) / span * (100 - 2 * pad),
+  // Deler alle hendelsene årstall (én gruppe), sentreres punktet på aksen i
+  // stedet for å klistres til venstrekanten av en meningsløs spennvidde.
+  const mapped = groups.map(g => ({
+    ...g,
+    pct: groups.length === 1 ? 50 : pad + ((g.year || startYear) - minY) / span * (100 - 2 * pad),
+    height: estimateLabelHeight(g.entries),
   }));
   const laid = layoutTimeline(mapped);
-  const maxStem = Math.max(...laid.map(e => e.stem));
-  let html = `<div class="timeline tl-prop" style="--tl-max-stem:${maxStem}px"><div class="tl-track">`;
-  for (const ev of laid) {
-    const edge = ev.pct <= 12 ? " tl-start" : ev.pct >= 88 ? " tl-end" : "";
-    const posStyle = `left:${ev.pct.toFixed(1)}%;--stem:${ev.stem}px`;
-    const extra = ev.attrs ? ev.attrs.replace(/style="/, `style="${posStyle};`) : `style="${posStyle}"`;
-    html += `<div class="tl-item tl-${ev.dir}${edge}" ${extra}>` +
+  // Sporhøyden må dekke høyeste stilk + etikett på en side (10px luft mellom
+  // stilk og etikett, jf. CSS-ens bottom/top-calc).
+  const half = Math.max(...laid.map(g => g.stem + g.height + 10)) + 8;
+  let html = `<div class="timeline tl-prop" style="--tl-half:${half}px"><div class="tl-track">`;
+  for (const g of laid) {
+    const edge = g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
+    html += `<div class="tl-item tl-${g.dir}${edge}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
       `<div class="tl-dot"></div><div class="tl-stem"></div>` +
-      `<div class="tl-label"><span class="tl-year">${escapeHtml(ev.label)}</span>` +
-      `<span class="tl-desc">${escapeHtml(ev.desc)}</span></div></div>`;
+      `<div class="tl-label"><span class="tl-year">${escapeHtml(g.label)}</span>` +
+      g.entries.map((e) =>
+        `<span class="tl-desc"${e.techId ? ` data-tech-id="${escapeHtml(e.techId)}"` : ""}>${escapeHtml(e.desc)}</span>`
+      ).join("") +
+      `</div></div>`;
   }
   html += "</div></div>";
   return html;
@@ -129,7 +166,7 @@ export function buildTechTimeline(techItems, decadeId) {
     year: t.adoptedYear || null,
     label: t.adoptedYear ? String(t.adoptedYear) : `${d}+`,
     desc: t.name,
-    attrs: ` data-tech-id="${escapeHtml(t.id)}" style="cursor:pointer"`,
+    techId: t.id,
   }));
   return buildProportionalTimeline(items, startYear);
 }
