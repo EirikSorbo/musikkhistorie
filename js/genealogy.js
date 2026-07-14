@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.40";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.40";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.40";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.40";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.41";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.41";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.41";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.41";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -78,9 +78,9 @@ export const GENEALOGY = [
   // Tre sjangre som samler trådene i hver sin familie. Alle tre henter fra flere
   // hold på tvers av treet — det er hele poenget med dem: samtidsmusikken er der
   // grenene møtes igjen.
-  { id: "jazz2", l: "Jazz (2)", f: "Jazz nå (2010–)", fam: "purple", cx: 780, r: 12, p: ["nujazz"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
-  { id: "contcountry", l: "Contemporary country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
-  { id: "contgospel", l: "Contemporary gospel", f: "Contemporary gospel", fam: "red", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
+  { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 12, p: ["nujazz"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
+  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
+  { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "red", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
 ];
 
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).

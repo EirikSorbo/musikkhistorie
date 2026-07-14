@@ -5,9 +5,9 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.40";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.40";
-import { DECADES } from "./limits.js?v=3.40";
+import { escapeHtml } from "./util.js?v=3.41";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.41";
+import { DECADES } from "./limits.js?v=3.41";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore.js) og lærerens tiårsmodal (teacher-content.js), så de to flatene
