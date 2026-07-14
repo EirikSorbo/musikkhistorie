@@ -1473,7 +1473,11 @@ body.is-teacher #gate { display: none; }
 .gx-edge-hit { stroke: transparent; stroke-width: 16; fill: none; pointer-events: stroke; cursor: pointer; }
 
 .gx-node { cursor: pointer; }
-.gx-node rect { fill: transparent !important; stroke: transparent !important; pointer-events: all; }
+.gx-node rect { pointer-events: all; }
+/* Boksene er usynlige til vanlig — kun treffflate. Den hovrede noden
+   (gx-focus, satt i light()) beholder familiefyllet fra gx-f-*-reglene
+   under, så ankeret for fremhevingen alltid er tydelig. */
+.gx-node:not(.gx-focus) rect { fill: transparent !important; stroke: transparent !important; }
 /* Sjangernavnene i treet: større enn nodeboksen tilsier, for lesbarhet.
    Boksen (NW/NH i genealogy.js) og avstanden mellom nodene er UENDRET — teksten
    er pointer-events:none og påvirker ikke treffområdet eller layouten. */

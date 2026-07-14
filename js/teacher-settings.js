@@ -9,9 +9,9 @@
 //  eventuelle gamle grense-felter fra Firestore-dokumentet.
 // ============================================================================
 
-import { state, splitList, setupModals } from "./teacher-state.js?v=3.48";
-import { updateConfig } from "./store.js?v=3.48";
-import { CONFIGURED, $ } from "./shared.js?v=3.48";
+import { state, splitList, setupModals } from "./teacher-state.js?v=3.49";
+import { updateConfig } from "./store.js?v=3.49";
+import { CONFIGURED, $ } from "./shared.js?v=3.49";
 
 export function setupAdmin() {
   setupModals();

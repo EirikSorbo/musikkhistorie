@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.48";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.48";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.48";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.48";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.49";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.49";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.49";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.49";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -336,7 +336,6 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   GENEALOGY.forEach((n) => parentsOf(n).forEach((p) => { if (kids[p]) kids[p].push(n.id); }));
 
   const anc = (id, s = {}) => { parentsOf(map[id]).forEach((p) => { if (!s[p]) { s[p] = 1; anc(p, s); } }); return s; };
-  const desc = (id, s = {}) => { kids[id].forEach((c) => { if (!s[c]) { s[c] = 1; desc(c, s); } }); return s; };
 
   cam.innerHTML = "";
 
@@ -378,20 +377,37 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   GENEALOGY.forEach((n) => {
     const g = el("g", { class: "gx-node gx-f-" + n.fam });
     g.dataset.id = n.id;
-    g.appendChild(el("rect", { x: n.cx - NW / 2, y: n.y - NH / 2, width: NW, height: NH, rx: 8 }));
+    const rect = el("rect", { x: n.cx - NW / 2, y: n.y - NH / 2, width: NW, height: NH, rx: 8 });
+    g.appendChild(rect);
     const tx = el("text", { x: n.cx, y: n.y, "text-anchor": "middle", "dominant-baseline": "central" });
     tx.textContent = n.l;
     g.appendChild(tx); cam.appendChild(g); gnodes[n.id] = g;
+    // Noen etiketter er bredere enn NW («British invasion»); boksen utvides
+    // til teksten så fokus-fyllet ved hover dekker hele navnet. Måling krever
+    // synlig DOM — utenfor dokumentflyt blir bredden 0 og NW beholdes.
+    const w = (tx.getComputedTextLength ? tx.getComputedTextLength() : 0) + 18;
+    if (w > NW) { rect.setAttribute("x", n.cx - w / 2); rect.setAttribute("width", w); }
   });
 
-  // Utheving (vises ved hover)
+  // Utheving (vises ved hover): hele anelinjen bakover + kun direkte barn
+  // fremover. Full etterkommer-lukning lyste opp 60–90 % av kartet for de
+  // tidlige sjangrene (blues, gospel …) og mistet all effekt; historien
+  // videre nedover følges ledd for ledd, eller via popupens «Førte videre til».
   let moved = false;
   function light(id) {
-    const line = anc(id); line[id] = 1;
-    const dn = desc(id); for (const k in dn) line[k] = 1;
-    GENEALOGY.forEach((n) => gnodes[n.id].classList.toggle("gx-dim", !line[n.id]));
+    const ancSelf = anc(id); ancSelf[id] = 1;
+    const line = Object.assign({}, ancSelf);
+    kids[id].forEach((c) => { line[c] = 1; });
+    GENEALOGY.forEach((n) => {
+      gnodes[n.id].classList.toggle("gx-dim", !line[n.id]);
+      gnodes[n.id].classList.toggle("gx-focus", n.id === id);
+    });
     edges.forEach((e) => {
-      const on = line[e.dataset.p] && line[e.dataset.c];
+      // Kun streker som ligger på de opplyste banene: innad i anelinjen
+      // (koblingens barn er ane eller sjangeren selv) eller ut til et direkte
+      // barn. «Begge endepunkter lyser» holdt ikke — det tente snarveier
+      // utenom sjangeren (f.eks. blues→R&B ved hover på gospel).
+      const on = ancSelf[e.dataset.c] || e.dataset.p === id;
       e.classList.toggle("gx-hl", !!on);
       e.classList.toggle("gx-dim", !on);
       e.style.stroke = on ? (e.dataset.react ? "#d97706" : (FAM_STROKE[e.dataset.fam] || "")) : "";
@@ -400,7 +416,10 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   // Utheving av ÉN kobling (hover på trykkbane): de to endepunkt-nodene +
   // selve streken lyser, alt annet dimmes.
   function lightEdge(pid, cid) {
-    GENEALOGY.forEach((n) => gnodes[n.id].classList.toggle("gx-dim", n.id !== pid && n.id !== cid));
+    GENEALOGY.forEach((n) => {
+      gnodes[n.id].classList.toggle("gx-dim", n.id !== pid && n.id !== cid);
+      gnodes[n.id].classList.remove("gx-focus");
+    });
     edges.forEach((e) => {
       const on = e.dataset.p === pid && e.dataset.c === cid;
       e.classList.toggle("gx-hl", on);
@@ -409,7 +428,7 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
     });
   }
   function clearLight() {
-    GENEALOGY.forEach((n) => gnodes[n.id].classList.remove("gx-dim"));
+    GENEALOGY.forEach((n) => gnodes[n.id].classList.remove("gx-dim", "gx-focus"));
     edges.forEach((e) => { e.classList.remove("gx-hl", "gx-dim"); e.style.stroke = ""; });
   }
 
