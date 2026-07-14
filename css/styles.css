@@ -976,7 +976,13 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 }
 
 /* ----- Teknologi-kort ----- */
-.tech-category-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.tech-category-tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+/* «Foreslå ny» (student) / «Rediger kort» (lærer) i enden av kategoriraden.
+   nowrap: uten det brekker teksten til to linjer når raden er trang, og knappen
+   blir dobbelt så høy som fanene ved siden av. */
+.tech-tabs-extra { margin-left: auto; }
+.tech-tabs-extra:empty { display: none; }
+.tech-tabs-extra .btn { white-space: nowrap; }
 .tech-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
 .tag-tech-year { color: var(--accent); background: #eff6ff; border-color: #bfdbfe; font-weight: 600; }

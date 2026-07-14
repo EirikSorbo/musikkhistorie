@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.47";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.47";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.47";
-import { isVisible, DECADES } from "./limits.js?v=3.47";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow, imgTag, safeUrl } from "./ui-helpers.js?v=3.47";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.47";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.47";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.47";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.47";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.47";
-import { renderSjangerhimmel } from "./constellation.js?v=3.47";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.48";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.48";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.48";
+import { isVisible, DECADES } from "./limits.js?v=3.48";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow, imgTag, safeUrl } from "./ui-helpers.js?v=3.48";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.48";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.48";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.48";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.48";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.48";
+import { renderSjangerhimmel } from "./constellation.js?v=3.48";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -39,12 +39,14 @@ const MODAL_HTML = `
       <h2>Teknologiske innovasjoner</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="tek-admin-extra"></div>
+    <!-- Kategoriene i sin egen rekkefølge; «Foreslå ny» (student) / admin-
+         inngangen (lærer) ligger i SAMME rad, skjøvet helt til høyre. -->
     <div class="tech-category-tabs">
       <button class="btn ghost small tech-tab active" data-tech-cat="">Alle</button>
+      <button class="btn ghost small tech-tab" data-tech-cat="Instrumenter og lydutstyr">Instrumenter</button>
       <button class="btn ghost small tech-tab" data-tech-cat="Opptak og avspilling">Opptak</button>
       <button class="btn ghost small tech-tab" data-tech-cat="Kringkasting og spredning">Kringkasting</button>
-      <button class="btn ghost small tech-tab" data-tech-cat="Instrumenter og lydutstyr">Instrumenter</button>
+      <div id="tek-admin-extra" class="tech-tabs-extra"></div>
     </div>
     <div id="tech-list" class="tech-grid"></div>
   </div>
@@ -68,8 +70,9 @@ const MODAL_HTML = `
       <h2 id="dv-title"></h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div class="decade-ribbon" id="dv-ribbon"></div>
+    <!-- Inngangen til teknologikortene står ØVERST, over tidslinje-stripa. -->
     <div id="dv-extra"></div>
+    <div class="decade-ribbon" id="dv-ribbon"></div>
     <h3 class="dv-decade" id="dv-decade"></h3>
     <div class="info-section" id="dv-society-section">
       <h4 class="info-label">Samfunnsutvikling</h4>
@@ -510,7 +513,7 @@ function renderDecadeView(decadeId) {
     if (isSociety) {
       extra.innerHTML = "";
     } else {
-      extra.innerHTML = `<button class="btn ghost" id="dv-btn-innovasjon" style="width:100%;margin:10px 0 2px">Innovasjonskort</button>`;
+      extra.innerHTML = `<button class="btn ghost" id="dv-btn-innovasjon" style="width:100%;margin:0 0 12px">Vis teknologi-kort</button>`;
       extra.querySelector("#dv-btn-innovasjon").addEventListener("click", () => openTeknologi());
     }
   }
@@ -1500,15 +1503,16 @@ function wireModals() {
     sbModal.querySelector("#sb-guide").addEventListener("click", openAppGuide);
   }
 
+  // Ligger i kategorirad-en (se MODAL_HTML) — samme knappestørrelse som fanene.
   const tekExtra = document.getElementById("tek-admin-extra");
   if (opts.onTechAdmin && tekExtra) {
-    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-admin" style="width:100%;margin-bottom:14px">Teknologikort (admin)</button>`;
+    tekExtra.innerHTML = `<button class="btn ghost small" id="btn-tech-admin">Rediger kort</button>`;
     tekExtra.querySelector("#btn-tech-admin").addEventListener("click", () => {
       modalClose(document.getElementById("modal-teknologi"));
       opts.onTechAdmin();
     });
   } else if (opts.onProposeNewTech && tekExtra) {
-    tekExtra.innerHTML = `<button class="btn ghost" id="btn-tech-new" style="width:100%;margin-bottom:14px">Foreslå nytt innovasjonskort</button>`;
+    tekExtra.innerHTML = `<button class="btn ghost small" id="btn-tech-new">Foreslå ny</button>`;
     tekExtra.querySelector("#btn-tech-new").addEventListener("click", () => opts.onProposeNewTech());
   }
 
