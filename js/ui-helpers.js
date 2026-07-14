@@ -6,11 +6,36 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl } from "./util.js?v=3.30";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.30";
-import { GENDERS } from "./limits.js?v=3.30";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.31";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.31";
+import { GENDERS } from "./limits.js?v=3.31";
 
 export { escapeHtml, buildKilderList, safeUrl };
+
+// Bilde-fallback: når en skalert Wikimedia-thumbnail ikke lar seg hente
+// (Wikimedia avviser enkelte ferske bredder), bytt <img> tilbake til
+// original-URL-en i data-full. Én fangende lytter dekker alle bilder uansett
+// render-sted; img-error bobler ikke, så capture-fasen er nødvendig.
+// data-fellback sikrer nøyaktig ett bytte, så et brutt original aldri looper.
+if (typeof document !== "undefined") {
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (img?.tagName === "IMG" && img.dataset?.full && !img.dataset.fellback) {
+      img.dataset.fellback = "1";
+      img.src = img.dataset.full;
+    }
+  }, true);
+}
+
+// <img> som ber om en skalert Wikimedia-thumbnail når mulig, med data-full →
+// original som reserve (error-lytteren over bytter tilbake om Wikimedia ikke
+// leverer nettopp den bredden). Kutter dekodet bildeminne dramatisk på mobil.
+export function imgTag(url, alt, width) {
+  const thumb = wikimediaThumb(url, width);
+  const src = thumb || url;
+  const fallback = thumb ? ` data-full="${escapeHtml(url)}"` : "";
+  return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async"${fallback} />`;
+}
 
 export const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 
@@ -233,8 +258,9 @@ export function fmtCredit(raw) {
 export function artistImage(a, big = false) {
   const url = safeUrl(a.imageUrl);
   if (!url) return "";
+  // Detaljvisningen vises større enn kortene — be om en bredere thumbnail der.
   return `<figure class="artist-image ${big ? "big" : ""}">
-    <img src="${escapeHtml(url)}" alt="${escapeHtml(a.name)}" loading="lazy" />
+    ${imgTag(url, a.name, big ? 800 : 400)}
     ${fmtCredit(a.imageCredit)}
   </figure>`;
 }

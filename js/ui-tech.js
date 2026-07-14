@@ -4,14 +4,14 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl } from "./util.js?v=3.30";
-import { fmtCredit, linkDesc, wireLinks } from "./ui-helpers.js?v=3.30";
+import { escapeHtml, safeUrl } from "./util.js?v=3.31";
+import { fmtCredit, linkDesc, wireLinks, imgTag } from "./ui-helpers.js?v=3.31";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
   const url = safeUrl(t.imageUrl);
   if (!url) return "";
-  return `<figure class="artist-image"><img src="${escapeHtml(url)}" alt="${escapeHtml(t.name)}" loading="lazy" />${fmtCredit(t.imageCredit)}</figure>`;
+  return `<figure class="artist-image">${imgTag(url, t.name, 480)}${fmtCredit(t.imageCredit)}</figure>`;
 }
 
 export const TECH_CATEGORIES = [

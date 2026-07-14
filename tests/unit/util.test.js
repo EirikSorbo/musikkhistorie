@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle } from "../../js/util.js?v=3.30";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb } from "../../js/util.js?v=3.31";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -21,6 +21,38 @@ test("safeUrl slipper kun http/https gjennom", () => {
   assert.equal(safeUrl("  javascript:alert(1)"), "");
   assert.equal(safeUrl(""), "");
   assert.equal(safeUrl(null), "");
+});
+
+test("wikimediaThumb skriver om Wikimedia-originaler til thumbnail", () => {
+  // Original → thumbnail på oppgitt bredde (samme fil både i mappe og prefiks).
+  assert.equal(
+    wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/0/06/Kool_Herc.jpg", 400),
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Kool_Herc.jpg/400px-Kool_Herc.jpg"
+  );
+  // Prosentkodede tegn i filnavnet bevares uendret i begge segmenter.
+  assert.equal(
+    wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/f/f5/Django_Reinhardt_%28Gottlieb_07301%29.jpg", 800),
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Django_Reinhardt_%28Gottlieb_07301%29.jpg/800px-Django_Reinhardt_%28Gottlieb_07301%29.jpg"
+  );
+  // SVG rasteriseres til PNG (…px-Fil.svg.png).
+  assert.equal(
+    wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo.svg", 300),
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo.svg/300px-Logo.svg.png"
+  );
+  // Andre prosjekter enn commons virker også.
+  assert.equal(
+    wikimediaThumb("https://upload.wikimedia.org/wikipedia/en/1/1a/Cover.jpg", 400),
+    "https://upload.wikimedia.org/wikipedia/en/thumb/1/1a/Cover.jpg/400px-Cover.jpg"
+  );
+  // Null for alt som ikke er en omskrivbar Wikimedia-original.
+  assert.equal(wikimediaThumb("https://example.com/photo.jpg", 400), null);       // annen vert
+  assert.equal(wikimediaThumb("https://media.snl.no/media/1/x.jpg", 400), null);  // annen vert
+  assert.equal(                                                                    // alt en thumbnail
+    wikimediaThumb("https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/David.jpg/960px-David.jpg", 400),
+    null
+  );
+  assert.equal(wikimediaThumb("", 400), null);
+  assert.equal(wikimediaThumb(null, 400), null);
 });
 
 test("throttle: kjører umiddelbart, slår sammen storm, kjører siste på slutten", (t) => {

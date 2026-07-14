@@ -23,6 +23,28 @@ export function safeUrl(url) {
   return /^https?:\/\//i.test(u) ? u : "";
 }
 
+// Wikimedia Commons-bilder lenkes ofte til fulloppløste ORIGINALER — noen på
+// 10+ megapiksler (Django Reinhardt: 3584×3762 ≈ 13,5 MP). iOS Safari dekoder
+// hvert <img> til full bitmap i minnet (≈54 MB for det bildet), og noen få
+// slike sprenger fanens minnebudsjett — fanen drepes og lastes på nytt
+// gjentatte ganger («et problem oppstod gjentatte ganger»). Vi ber derfor om
+// en skalert thumbnail på oppgitt bredde. Gir null for alt som ikke er en
+// Wikimedia-original (andre verter, og URL-er som alt peker på /thumb/), så
+// kalleren bruker URL-en uendret. Kalleren bør legge på en fallback til
+// originalen (data-full), siden Wikimedia kan avvise enkelte ferske bredder.
+export function wikimediaThumb(url, width = 640) {
+  // Original:  …/wikipedia/<prosjekt>/<a>/<ab>/<Fil>
+  // Thumbnail: …/wikipedia/<prosjekt>/thumb/<a>/<ab>/<Fil>/<bredde>px-<Fil>
+  const m = String(url ?? "").match(
+    /^(https?:\/\/upload\.wikimedia\.org\/wikipedia\/[^/]+\/)([0-9a-f])\/([0-9a-f]{2})\/([^/?#]+)$/i
+  );
+  if (!m) return null;
+  const [, base, a, ab, file] = m;
+  // SVG-thumbs rasteriseres til PNG (…px-Fil.svg.png).
+  const thumbFile = /\.svg$/i.test(file) ? `${file}.png` : file;
+  return `${base}thumb/${a}/${ab}/${file}/${Math.round(width)}px-${thumbFile}`;
+}
+
 // Utsetter kall til etter en pause i input (brukt på søkefelt, så ikke hele
 // lista re-rendres for hvert tastetrykk).
 export function debounce(fn, ms = 200) {
