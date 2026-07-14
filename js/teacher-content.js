@@ -5,18 +5,18 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.29";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.29";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.29";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.29";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.29";
-import { resolveDesc } from "./genre-descriptions.js?v=3.29";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn } from "./ui-helpers.js?v=3.29";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.30";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.30";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.30";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.30";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, setupModal, modalOpen, techImage } from "./ui.js?v=3.30";
+import { resolveDesc } from "./genre-descriptions.js?v=3.30";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn } from "./ui-helpers.js?v=3.30";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.29";
-import { $ } from "./shared.js?v=3.29";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.29";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.30";
+import { $ } from "./shared.js?v=3.30";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.30";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -430,7 +430,7 @@ export function setupPodkastAdmin() {
 //  ifra om at tekst mangler. Forhåndsvisningen bruker samme renderStoryHtml
 //  som studentvisningen — det du ser er det studentene får.
 
-const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910" };
+const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910", appGuide: "Slik bruker du appen" };
 
 // { type: "story", id: <sjanger> } eller { type: "page", id: <sideId> }
 let editorTarget = null;
@@ -513,6 +513,7 @@ export function setupStoryEditor() {
     if (editorTarget.type === "story") ctx.explore.openHistorier(editorTarget.id);
     else if (editorTarget.id === "omHistorie") ctx.explore.openOmHistorie();
     else if (editorTarget.id === "rotter") ctx.explore.openRotter();
+    else if (editorTarget.id === "appGuide") ctx.explore.openAppGuide();
   };
 
   $("#se-save").addEventListener("click", async () => {

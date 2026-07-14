@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.29";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.29";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.29";
-import { isVisible } from "./limits.js?v=3.29";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.29";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.29";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.29";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.29";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.29";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.29";
-import { renderSjangerhimmel } from "./constellation.js?v=3.29";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.30";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.30";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.30";
+import { isVisible } from "./limits.js?v=3.30";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.30";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.30";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.30";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.30";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.30";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.30";
+import { renderSjangerhimmel } from "./constellation.js?v=3.30";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -288,35 +288,18 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
-<!-- Slik bruker du appen: en kort bruksveiledning for studentene. Dette er
-     app-dokumentasjon (om appen selv), ikke pensuminnhold — derfor hardkodet
-     her, ikke i content-samlingen. Åpnes som siste kort i «Det store bildet». -->
+<!-- Slik bruker du appen: en kort bruksveiledning for studentene. Teksten bor i
+     Firestore (content/appGuide, markdown-light) og redigeres via samme
+     Rediger-knapp som Om historie/Røtter — ingen hardkodet tekst i koden.
+     Åpnes som siste kort i «Det store bildet». -->
 <div class="modal-backdrop" id="modal-app-guide">
   <div class="modal">
     <div class="modal-head">
       <h2>Slik bruker du appen</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div class="story-body">
-      <p>Dette er ikke en vanlig lærebok, men et levende pensum du selv er med på å forme. Her er det viktigste for å få mest mulig ut av det.</p>
-
-      <h3>Utforsk fra forsiden</h3>
-      <p>Hvert kort på forsiden er sin egen inngang — <b>Artister</b>, <b>Sjangre</b>, <b>Teknologi</b>, <b>Samfunn</b> og <b>Podkast</b>. Begynn hvor du vil; alt henger sammen.</p>
-
-      <h3>Se det store bildet</h3>
-      <p>Bak «Det store bildet» ligger hele historien fremstilt på flere måter: tidslinje, slektstre, varmekart, kart og sjangerhimmel, i tillegg til sjangerhistoriene og røttene. Musikkhistorie har mange dimensjoner — tid, geografi, slektskap og innflytelse — og hver visning viser én av dem. Bytt mellom dem for å se det samme stoffet fra flere vinkler.</p>
-
-      <h3>Du former pensumet</h3>
-      <p>Savner du en artist, eller mener du noe bør endres? Foreslå det, og stem opp forslag du er enig i. Læreren vurderer alt som kommer inn — pensumet blir det dere gjør det til sammen.</p>
-
-      <h3>Prioriter det viktigste</h3>
-      <p>Stjerne-filtrene lar deg vise bare det viktigste når du repeterer, eller alt når du vil gå i dybden.</p>
-
-      <h3>Dagens artist</h3>
-      <p>Trenger du et sted å begynne, gir «Dagens artist» deg én ny hver gang — en enkel måte å bli kjent med bredden på.</p>
-
-      <p>Tanken bak: start med helheten, zoom inn på det som fanger deg, og kom tilbake så ofte du vil. Jo mer du utforsker og bidrar, jo mer får du ut av appen.</p>
-    </div>
+    <div id="app-guide-extra"></div>
+    <div id="app-guide-body" class="story-body"></div>
   </div>
 </div>
 
@@ -1256,10 +1239,14 @@ function openStoreBildet() {
   modalOpen(document.getElementById("modal-store-bildet"));
 }
 
-// Bruksveiledningen: hardkodet innhold i markupen (app-dokumentasjon, ikke
-// pensum), åpnes OPPÅ huben som de andre kortene — ← går tilbake dit.
+// Bruksveiledningen: teksten bor i Firestore (content/appGuide) og rendres ved
+// hver åpning — samme mønster som Om historie/Røtter, med Rediger-knapp for
+// lærer. Åpnes OPPÅ huben som de andre kortene, så ← går tilbake dit.
 function openAppGuide() {
-  modalOpen(document.getElementById("modal-app-guide"));
+  const modal = document.getElementById("modal-app-guide");
+  if (!modal) return;
+  renderPage("appGuide", "app-guide-body", "app-guide-extra");
+  modalOpen(modal);
 }
 
 // Innholdssidene «Om historie» (omHistorie) og «Røtter før 1910» (rotter):
@@ -1489,6 +1476,7 @@ function contentChanged() {
   const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
   if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
   if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");
+  if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
   if (isOpen("modal-varmekart")) renderVarmekartBody();
 }
 
@@ -1502,6 +1490,7 @@ export function initExplore(options) {
     openVarmekart,
     openTidslinje,
     openStoreBildet,
+    openAppGuide,
     openOmHistorie,
     openRotter,
     openHistorier,
