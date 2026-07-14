@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.39";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.39";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.39";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.39";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.40";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.40";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.40";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.40";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -73,6 +73,14 @@ export const GENEALOGY = [
   // --- Elektronisk videre ---
   { id: "elektronika", l: "Elektronika", f: "Elektronika", fam: "teal", cx: 1510, r: 11, p: ["techno", "house"], g: "Klubbmusikk", era: "1990–2000-tallet", t: ["Windowlicker – Aphex Twin (1999)", "Midnight in a Perfect World – DJ Shadow (1996)"] },
   { id: "edm", l: "EDM", f: "EDM", fam: "teal", cx: 1510, r: 12, p: ["elektronika"], g: "Klubbmusikk", era: "2010-tallet", t: ["Levels – Avicii (2011)", "Titanium – David Guetta ft. Sia (2011)"] },
+
+  // --- Samtid (2010-tallet) ---
+  // Tre sjangre som samler trådene i hver sin familie. Alle tre henter fra flere
+  // hold på tvers av treet — det er hele poenget med dem: samtidsmusikken er der
+  // grenene møtes igjen.
+  { id: "jazz2", l: "Jazz (2)", f: "Jazz nå (2010–)", fam: "purple", cx: 780, r: 12, p: ["nujazz"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
+  { id: "contcountry", l: "Contemporary country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
+  { id: "contgospel", l: "Contemporary gospel", f: "Contemporary gospel", fam: "red", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
 ];
 
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).

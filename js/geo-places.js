@@ -14,7 +14,7 @@
 //  Avhengighetsfri (kun limits.js for tiårsberegning) → enhetstestbar.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=3.39";
+import { decadesForRange } from "./limits.js?v=3.40";
 
 export const PLACES = {
   // --- New York-området ---
