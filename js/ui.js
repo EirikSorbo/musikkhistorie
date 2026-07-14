@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists } from "./limits.js?v=3.31";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.31";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.31";
+import { isVisible, filterArtists } from "./limits.js?v=3.33";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.33";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.33";
 import {
   escapeHtml,
   linkDesc,
@@ -31,12 +31,12 @@ import {
   factsLines,
   PRIO_ICONS,
   PRIO_LABELS,
-} from "./ui-helpers.js?v=3.31";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.31";
-import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.31";
-import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.31";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.31";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.31";
+} from "./ui-helpers.js?v=3.33";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.33";
+import { TECH_CATEGORIES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.33";
+import { buildTimeline, buildTechTimeline, renderDecadeSections } from "./ui-timeline.js?v=3.33";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.33";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.33";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -210,18 +210,56 @@ export function renderArtists(el, state) {
   }
 
   const linkCtx = state.linkCtx;
-  el.innerHTML = list
-    .map((a) => artistCard(a, { isTeacher, clientId, config, linkCtx }))
-    .join("");
-  wireLinks(el, linkCtx);
 
-  // Koble på knappehandlinger
-  el.querySelectorAll("[data-action]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const { action, id } = btn.dataset;
-      handlers[action]?.(id);
+  // Å bygge HELE lista på én gang sprengte iOS Safaris minne: 256 artister ble
+  // 10 000+ DOM-noder i en ~210 000 px høy modal med 256 bilder, og fanen
+  // kræsjet FØR modalen rakk å åpne (studenten kom ikke forbi dashbordet). Vi
+  // bygger derfor kortene stegvis — første pulje straks, resten når en sentinel
+  // nær bunnen scrolles inn i syne. Filtrering/sortering skjer før oppdelingen,
+  // så rekkefølgen er uendret.
+  el.innerHTML = "";
+  const BATCH = 30;
+  let rendered = 0;
+
+  const appendBatch = () => {
+    const slice = list.slice(rendered, rendered + BATCH);
+    rendered += slice.length;
+    // Bygg og koble puljen i et løst element, så bare de NYE kortene får
+    // lyttere (wireLinks/knappe-lyttere på hele el ville doblet dem).
+    const frag = document.createElement("div");
+    frag.innerHTML = slice.map((a) => artistCard(a, { isTeacher, clientId, config, linkCtx })).join("");
+    wireLinks(frag, linkCtx);
+    frag.querySelectorAll("[data-action]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const { action, id } = btn.dataset;
+        handlers[action]?.(id);
+      });
     });
-  });
+    while (frag.firstChild) el.appendChild(frag.firstChild);
+  };
+
+  appendBatch();
+
+  if (rendered < list.length) {
+    const sentinel = document.createElement("div");
+    sentinel.className = "list-sentinel";
+    sentinel.setAttribute("aria-hidden", "true");
+    el.appendChild(sentinel);
+    // Fangende scroll-lytter på document fanger scroll fra HVILKET som helst
+    // element (modalen her, eller sida i lærervisningen) uten at vi må vite
+    // hvilket. Vi laster neste pulje når sentinelen nærmer seg viewporten.
+    // isConnected-sjekken rydder lytteren når en ny render (el.innerHTML = "")
+    // har fjernet denne sentinelen — ellers ville en foreldet lytter fortsatt
+    // fyrt mot en detached sentinel.
+    const onScroll = () => {
+      if (!sentinel.isConnected) { document.removeEventListener("scroll", onScroll, true); return; }
+      if (sentinel.getBoundingClientRect().top > window.innerHeight + 800) return;
+      appendBatch();
+      if (rendered >= list.length) { document.removeEventListener("scroll", onScroll, true); sentinel.remove(); }
+      else el.appendChild(sentinel); // hold sentinelen sist
+    };
+    document.addEventListener("scroll", onScroll, true);
+  }
 }
 
 function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
