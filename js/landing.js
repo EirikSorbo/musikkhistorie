@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.57";
-import { DEFAULT_CONFIG, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.57";
-import { debounce, throttle } from "./util.js?v=3.57";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.57";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.57";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.57";
-import { initExplore } from "./explore.js?v=3.57";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.57";
+import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.58";
+import { DEFAULT_CONFIG, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.58";
+import { debounce, throttle } from "./util.js?v=3.58";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.58";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.58";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.58";
+import { initExplore } from "./explore.js?v=3.58";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.58";
 
 const state = {
   artists: [],
@@ -250,11 +250,20 @@ function renderDagensSection() {
     if (state.artistsLoaded) {
       section.style.display = "none";
       el.innerHTML = "";
+      delete el.dataset.dagensSig;
     }
     return;
   }
   section.style.display = "";
+  // Kortet bygges via innerHTML (bildet gjenskapes), og seksjonen tegnes på nytt
+  // for hvert snapshot under lasting (config/artister/tech) + ved hver stemme.
+  // Hopp over når verken artisten eller tech-lenkene ville endret seg — ellers
+  // blinker kortet 2–3 ganger ved sidelast. tech-lengden fanger «tech kom etter
+  // kortet», da linkene legges til (jf. subscribeTech under).
+  const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
+  if (el.dataset.dagensSig === sig) return;
   renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
+  el.dataset.dagensSig = sig;
 }
 
 // Modalen (åpnes fra «Finn artister»).
@@ -265,9 +274,15 @@ function renderDagensModal() {
   const artist = dagensArtist();
   if (!artist) {
     el.innerHTML = `<p class="muted empty">${state.artistsLoaded ? "Ingen artister ennå." : "Laster forslag …"}</p>`;
+    delete el.dataset.dagensSig;
     return;
   }
+  // Samme vakt som renderDagensSection: unngå å bygge kortet (og bildet) på nytt
+  // når verken artist eller tech-lenker har endret seg.
+  const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
+  if (el.dataset.dagensSig === sig) return;
   renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
+  el.dataset.dagensSig = sig;
 }
 
 function isDagensModalOpen() {

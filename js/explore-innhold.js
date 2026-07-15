@@ -6,13 +6,13 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=3.57";
-import { isVisible } from "./limits.js?v=3.57";
-import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.57";
-import { pageFor, renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.57";
-import { wireLinks } from "./ui-helpers.js?v=3.57";
-import { renderSjangerhimmel } from "./constellation.js?v=3.57";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=3.57";
+import { modalOpen, escapeHtml } from "./ui.js?v=3.58";
+import { isVisible } from "./limits.js?v=3.58";
+import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.58";
+import { pageFor, renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.58";
+import { wireLinks } from "./ui-helpers.js?v=3.58";
+import { renderSjangerhimmel } from "./constellation.js?v=3.58";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=3.58";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
