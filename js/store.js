@@ -35,13 +35,13 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.56";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.56";
-import { isMainGenre } from "./genealogy.js?v=3.56";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.56";
-import { normalizeConfig } from "./config-normalize.js?v=3.56";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.56";
-import { mergeHeatRows } from "./import-format.js?v=3.56";
+import { firebaseConfig } from "./firebase-config.js?v=3.57";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.57";
+import { isMainGenre } from "./genealogy.js?v=3.57";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.57";
+import { normalizeConfig } from "./config-normalize.js?v=3.57";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.57";
+import { mergeHeatRows } from "./import-format.js?v=3.57";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare) og importeres direkte der

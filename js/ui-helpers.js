@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.56";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.56";
-import { GENDERS } from "./limits.js?v=3.56";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.57";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.57";
+import { GENDERS } from "./limits.js?v=3.57";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -130,7 +130,7 @@ export function genreTags(a, { withInstrument = false, withSub = true, extraClas
   ].filter(Boolean).join("");
 }
 
-// Podkast-episodekort — delt av student-popupen (explore.js) og lærer-admin
+// Podkast-episodekort — delt av student-popupen (explore-tech.js) og lærer-admin
 // (teacher-content.js), så markupen ikke driver fra hverandre. withDelete
 // legger på slett-knappen (data-pod-delete); kalleren kobler lytteren.
 export function podcastEpisodeHtml(ep, { withDelete = false } = {}) {

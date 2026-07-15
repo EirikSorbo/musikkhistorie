@@ -5,12 +5,12 @@
 //  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.56";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.56";
-import { DECADES } from "./limits.js?v=3.56";
+import { escapeHtml } from "./util.js?v=3.57";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.57";
+import { DECADES } from "./limits.js?v=3.57";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
-// (explore.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
+// (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
 // aldri driver fra hverandre. onSelect får tiåret som tall.
 //
 // opts.all = true legger en egen prikk HELT TIL VENSTRE som betyr «vis alle
@@ -153,7 +153,7 @@ export function buildTimeline(text, decadeId) {
 }
 
 // Delt tiårs-render: samfunn/teknologi-tekst + tidslinjer + «les mer»-knapper.
-// Kalt fra forsidens tiårsvisning (explore) OG lærer-tiårsmodalen (også etter
+// Kalt fra forsidens tiårsvisning (explore-decade.js) OG lærer-tiårsmodalen (også etter
 // lagring), så de tre tidligere kopiene holdes ett sted. `refs` er DOM-elementer
 // (ulike ID-prefikser dv-/ds- per bruk); manglende refs hoppes over.
 export function renderDecadeSections(refs, desc, decadeId, techItems, { isSociety = true, onTechClick, onMore } = {}) {
