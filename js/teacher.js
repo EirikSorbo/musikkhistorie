@@ -17,7 +17,7 @@ import {
   subscribeTech,
   subscribeTeacherChecks,
   subscribePendingEdits,
-  saveVarmekart,
+  mergeVarmekartRows,
   deleteTech,
   onAuthChange,
   signInWithGoogle,
@@ -28,14 +28,14 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.49";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.49";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.49";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.49";
-import { initExplore } from "./explore.js?v=3.49";
+} from "./store.js?v=3.50";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.50";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.50";
+import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.50";
+import { initExplore } from "./explore.js?v=3.50";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.49";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.49";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.50";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.50";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -52,11 +52,11 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.49";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.49";
-import { renderDesk } from "./teacher-desk.js?v=3.49";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.49";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.49";
+} from "./teacher-content.js?v=3.50";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.50";
+import { renderDesk } from "./teacher-desk.js?v=3.50";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.50";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.50";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -124,12 +124,18 @@ function startApp() {
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
     onStoryEdit: (genre) => openStoryEditor(genre),
     onPageEdit: (pageId) => openPageEditor(pageId),
-    // Varmekart-redigering: celleklikk sender hele den nye raden hit; hele
-    // heat-kartet skrives (full overskriving — se saveVarmekart).
+    // Varmekart-redigering: celleklikk sender hele den nye raden hit. Vi FLETTER
+    // den ene raden inn i det som ligger i Firestore (mergeVarmekartRows leser
+    // fersk fra serveren først), så et klikk aldri kan slette de andre sjangrene
+    // — heller ikke før content-snapshotet har landet, eller fra to faner
+    // samtidig. Guarden hindrer dessuten redigering mot en tom/villedende
+    // celleverdi før innholdet er lastet.
     onHeatEdit: (genre, values) => {
-      const heat = { ...(state.content?.varmekart?.heat || {}) };
-      heat[genre] = values;
-      return saveVarmekart(heat);
+      if (!state.contentLoaded) {
+        alert("Varmekartet er ikke ferdig innlastet ennå. Vent et øyeblikk og prøv igjen.");
+        return Promise.resolve();
+      }
+      return mergeVarmekartRows({ [genre]: values });
     },
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,

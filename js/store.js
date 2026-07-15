@@ -35,13 +35,13 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.49";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.49";
-import { isMainGenre } from "./genealogy.js?v=3.49";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.49";
-import { normalizeConfig } from "./config-normalize.js?v=3.49";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.49";
-import { mergeHeatRows } from "./import-format.js?v=3.49";
+import { firebaseConfig } from "./firebase-config.js?v=3.50";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.50";
+import { isMainGenre } from "./genealogy.js?v=3.50";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.50";
+import { normalizeConfig } from "./config-normalize.js?v=3.50";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.50";
+import { mergeHeatRows } from "./import-format.js?v=3.50";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
@@ -204,7 +204,11 @@ function artistDocWithTimestamp(data) {
 }
 
 // Legg inn et nytt forslag. Normaliserer inn til ny modell før skriving.
+// Sikrer anonym innlogging FØRST: feilet oppstarts-innlogging (forbigående
+// nettfeil ved sidelast) fyrer aldri onAuthStateChanged på nytt, så uten dette
+// ville økta forbli uinnlogget og hver innsending avvist av reglene til reload.
 export async function addArtist(data) {
+  await ensureAuth().catch(() => {});
   return addDoc(artistsCol, artistDocWithTimestamp(data));
 }
 
@@ -626,7 +630,7 @@ export async function runContentKeyAlignment() {
   if (migSnap.exists() && migSnap.data()[CONTENT_KEY_ALIGN_FLAG]) return { skipped: true };
 
   // a) Varmekart-nøkler. Hele dokumentet skrives (samme policy som
-  //    saveVarmekart: full overskriving — feltstier er utrygge med «/» i navn).
+  //    mergeVarmekartRows: full skriv — feltstier er utrygge med «/» i navn).
   let heatRenamed = 0;
   const vkRef = doc(db, "content", "varmekart");
   const vkSnap = await getDoc(vkRef);
@@ -730,23 +734,13 @@ export async function deletePage(pageId) {
   return deleteDoc(doc(db, "content", pageId));
 }
 
-// Lagrer HELE varmekartet (full overskriving, ikke merge): sjangernavn kan
-// inneholde tegn som er kronglete i felt-stier (f.eks. «Trance / DnB»), og
-// radene er små — å skrive hele dokumentet er enklest og trygt.
-//
-// KUN for kall som allerede sitter på hele kartet — i praksis celleredigeringen
-// (teacher.js → onHeatEdit), som sender dagens heat med én endret rad. Skal du
-// skrive et UTVALG rader (import, skript), bruk mergeVarmekartRows: rått over-
-// skrevet delkart sletter alle sjangrene som ikke er med i kallet.
-export async function saveVarmekart(heat) {
-  return setDoc(doc(db, "content", "varmekart"),
-    { heat, updatedAt: new Date().toISOString() });
-}
-
 // Skriver et UTVALG varmekart-rader uten å røre resten. Leser dagens dokument
-// først (ikke lokal state — importen skal være trygg også før første snapshot
-// har landet), fletter inn radene fra fila og skriver hele dokumentet tilbake.
-// Returnerer { written, kept, skipped } for kvitteringen til læreren.
+// først (ikke lokal state — importen OG celleredigeringen skal være trygg også
+// før første snapshot har landet, og to faner skal ikke overskrive hverandre),
+// fletter inn radene fra kallet og skriver hele dokumentet tilbake (full skriv,
+// ikke felt-stier: sjangernavn kan inneholde «/» og andre tegn som er kronglete
+// i Firestore-feltstier). Eneste vei inn til content/varmekart fra både import
+// og celleklikk. Returnerer { written, kept, skipped } for kvitteringen.
 export async function mergeVarmekartRows(rows) {
   const ref = doc(db, "content", "varmekart");
   const snap = await getDoc(ref);
@@ -788,6 +782,7 @@ export function subscribePendingEdits(callback) {
 // `level` (meta/main/sub) brukes kun av entityType "subgenre", så godkjenning
 // vet hvilket nivåfelt i genreDescriptions teksten skal skrives til.
 export async function addPendingEdit({ entityType, entityId, entityName, proposedFields, proposedBy, level }) {
+  await ensureAuth().catch(() => {});   // se addArtist: selvheler feilet oppstarts-innlogging
   return addDoc(pendingEditsCol, {
     entityType,
     entityId,
@@ -869,6 +864,7 @@ function pendingEditTargetRef(entityType, entityId) {
 // `status: "pending"` og venter på lærergodkjenning. Eksisterende
 // tech-dokumenter uten status-felt regnes som aktive.
 export async function addTechProposal(data) {
+  await ensureAuth().catch(() => {});   // se addArtist: selvheler feilet oppstarts-innlogging
   return addDoc(techCol, {
     ...data,
     status: "pending",
