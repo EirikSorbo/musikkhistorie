@@ -4,7 +4,7 @@
 // edgeKey-formatet (Firestore-dokument-ID) er stabilt.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.54";
+import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.55";
 
 test("GENEALOGY_EDGES: alle koblinger peker på eksisterende noder", () => {
   const ids = new Set(GENEALOGY.map((n) => n.id));
