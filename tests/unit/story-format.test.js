@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "../../js/story-format.js?v=3.50";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "../../js/story-format.js?v=3.51";
 
 const artists = [
   { id: "a1", name: "Muddy Waters", status: "active" },
@@ -92,4 +92,16 @@ test("pageFor: samme regler for innholdssidene", () => {
 
 test("STORY_ORDER er de seks historiene i fast rekkefølge", () => {
   assert.deepEqual(STORY_ORDER, ["Blues", "Country", "Gospel", "Jazz", "R&B", "Klubbmusikk"]);
+});
+
+test("tekst rett etter et listepunkt (uten blank linje) beholder kildens rekkefølge", () => {
+  // Regresjon: para ble før flushet FØR den åpne lista, så avsnittet hoppet foran.
+  assert.equal(
+    renderStoryHtml("- punkt a\nfortsettelse\n\nNytt avsnitt"),
+    "<ul><li>punkt a</li></ul><p>fortsettelse</p><p>Nytt avsnitt</p>"
+  );
+  assert.equal(
+    renderStoryHtml("- a\ntekst\n- b"),
+    "<ul><li>a</li></ul><p>tekst</p><ul><li>b</li></ul>"
+  );
 });

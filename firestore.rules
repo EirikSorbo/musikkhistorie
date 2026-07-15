@@ -173,6 +173,14 @@ service cloud.firestore {
         request.resource.data.entityId.size() <= 200 &&
         request.resource.data.proposedFields is map &&
         request.resource.data.proposedFields.size() <= 30 &&
+        // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
+        // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
+        // dessuten kun main/sub; her tillates også meta som gyldig nivåverdi.
+        request.resource.data.get("level", "main") in ["meta", "main", "sub"] &&
+        // Grovt størrelsestak på det tyngste tekstfeltet i proposedFields, så en
+        // anonym bruker ikke kan fylle samlingen med ~1 MB-dokumenter (samme
+        // vern som artists/tech-create har). description er den store vektoren.
+        request.resource.data.proposedFields.get("description", "").size() <= 5000 &&
         request.resource.data.get("entityName", "").size() <= 200 &&
         request.resource.data.get("proposedBy", "").size() <= 100
       );

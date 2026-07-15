@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.50";
-import { escapeHtml } from "./ui-helpers.js?v=3.50";
-import { safeUrl, wikimediaThumb } from "./util.js?v=3.50";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, FAMILIES } from "./genealogy.js?v=3.51";
+import { escapeHtml } from "./ui-helpers.js?v=3.51";
+import { safeUrl, wikimediaThumb } from "./util.js?v=3.51";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -29,18 +29,6 @@ const VBW = 1660, VBH = 900;
 const ZOOM_MIN = 0.7, ZOOM_MAX = 7;
 
 const canonMain = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
-const canonMeta = new Map(GENEALOGY_META_GENRES.map((g) => [g.toLowerCase(), g]));
-// Familie per metaGenre (hyppigst blant metaens tre-sjangre) — for løse artister.
-const META_FAM = (() => {
-  const tally = new Map();
-  for (const info of Object.values(MAIN_GENRE_INFO)) {
-    if (!tally.has(info.meta)) tally.set(info.meta, {});
-    tally.get(info.meta)[info.fam] = (tally.get(info.meta)[info.fam] || 0) + 1;
-  }
-  const out = {};
-  for (const [meta, fams] of tally) out[meta] = Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
-  return out;
-})();
 
 const famColor = (fam) => FAMILIES[fam]?.stroke || FAMILIES.gray.stroke;
 const el = (tag, attrs = {}) => {

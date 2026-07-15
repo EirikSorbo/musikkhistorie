@@ -17,8 +17,8 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=3.50";
-import { escapeHtml } from "./ui-helpers.js?v=3.50";
+import { linkifyAll } from "./linkify.js?v=3.51";
+import { escapeHtml } from "./ui-helpers.js?v=3.51";
 
 // Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
 // én per hovedsjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
@@ -83,6 +83,10 @@ export function renderStoryHtml(text, lc = {}) {
       list.items.push(renderInline(ol[1], lc));
       continue;
     }
+    // Vanlig tekst etter et listepunkt (uten blank linje mellom) avslutter
+    // lista, så avsnittet havner ETTER den — ellers flushes para før den åpne
+    // lista og innholdet bytter rekkefølge mot kilden.
+    flushList();
     para.push(line);
   }
   flushPara();

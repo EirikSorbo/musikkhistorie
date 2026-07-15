@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl } from "./util.js?v=3.50";
-import { fmtCredit, linkDesc, wireLinks, imgTag } from "./ui-helpers.js?v=3.50";
+import { escapeHtml, safeUrl } from "./util.js?v=3.51";
+import { fmtCredit, linkDesc, wireLinks, imgTag } from "./ui-helpers.js?v=3.51";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -19,6 +19,16 @@ export const TECH_CATEGORIES = [
   "Kringkasting og spredning",
   "Instrumenter og lydutstyr",
 ];
+
+// Fane-visning (explore): kort etikett per kategori. AVLEDET fra
+// TECH_CATEGORIES, så en omdøping der forplanter seg hit automatisk (ingen
+// hardkodede kopier å glemme). Kategorier uten kort etikett viser full verdi.
+const TECH_SHORT = {
+  "Opptak og avspilling": "Opptak",
+  "Kringkasting og spredning": "Kringkasting",
+  "Instrumenter og lydutstyr": "Instrumenter",
+};
+export const TECH_CATEGORY_TABS = TECH_CATEGORIES.map((value) => ({ value, label: TECH_SHORT[value] || value }));
 
 export function renderTechList(el, items, activeCategory, lc) {
   const filtered = activeCategory ? items.filter(t => t.category === activeCategory) : items;

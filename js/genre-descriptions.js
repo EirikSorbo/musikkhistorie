@@ -13,9 +13,11 @@
 
 const LVL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
 
-// Tydelig melding når ingen beskrivelse er lagt inn på gjeldende nivå.
+// Tydelig melding når ingen beskrivelse er lagt inn på gjeldende nivå. Vises i
+// en .gx-missing-ramme som allerede markerer den visuelt (SVG-ikonkravet: ingen
+// emoji i teksten).
 export function missingDesc(level) {
-  return `⚠️ Ingen beskrivelse lagt inn ennå (${LVL[level] || level})`;
+  return `Ingen beskrivelse lagt inn ennå (${LVL[level] || level})`;
 }
 
 function fromOverride(o, level) {

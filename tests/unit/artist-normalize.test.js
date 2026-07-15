@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=3.50";
+import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=3.51";
 
 test("idempotent på allerede normalisert artist", () => {
   const a = {
@@ -77,4 +77,18 @@ test("manglende felter gir tomme arrays", () => {
   assert.deepEqual(n.keyWorks, []);
   assert.deepEqual(n.kilder, []);
   assert.deepEqual(n.musicExamples, []);
+});
+
+test("null/søppel-elementer i kilder/keyWorks/musicExamples krasjer ikke", () => {
+  // Ett ødelagt dokument (f.eks. håndredigert import med null i en array) skal
+  // ikke kaste — det ville stoppet HELE artistlista via subscribeArtists.
+  const n = normalizeArtist({
+    name: "X",
+    kilder: [null, { text: "ekte" }, 42],
+    keyWorks: [null, "Bare en streng", { title: "Verk" }],
+    musicExamples: [null, { url: "https://ok.no" }, 7],
+  });
+  assert.deepEqual(n.kilder, [{ text: "ekte", url: "" }]);
+  assert.deepEqual(n.keyWorks, [{ title: "Bare en streng" }, { title: "Verk" }]);
+  assert.deepEqual(n.musicExamples.map((m) => m.url), ["https://ok.no"]);
 });

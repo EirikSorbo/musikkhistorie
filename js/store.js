@@ -35,18 +35,17 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.50";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.50";
-import { isMainGenre } from "./genealogy.js?v=3.50";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.50";
-import { normalizeConfig } from "./config-normalize.js?v=3.50";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.50";
-import { mergeHeatRows } from "./import-format.js?v=3.50";
+import { firebaseConfig } from "./firebase-config.js?v=3.51";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.51";
+import { isMainGenre } from "./genealogy.js?v=3.51";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.51";
+import { normalizeConfig } from "./config-normalize.js?v=3.51";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.51";
+import { mergeHeatRows } from "./import-format.js?v=3.51";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
-// config-normalize.js (rene moduler, enhetstestbare); re-eksporteres her så
-// eksisterende importer fortsatt virker.
-export { normalizeArtist, buildArtistDoc, normalizeConfig };
+// config-normalize.js (rene moduler, enhetstestbare) og importeres direkte der
+// den trengs — store.js bruker dem internt (subscribeArtists/buildArtistDoc).
 
 const app = initializeApp(firebaseConfig);
 
@@ -97,12 +96,30 @@ const configRef = doc(db, "config", "settings");
 
 const AUTH_CONFIGURED = !String(firebaseConfig.apiKey).startsWith("DIN_");
 
+// Én delt «innlogging pågår»-promise: oppstartens onAuthStateChanged og
+// ensureAuth (fra voteUp/addArtist osv.) må ALDRI starte to parallelle
+// signInAnonymously. Uten dedupen kan et stemmeklikk i vinduet før første
+// innlogging er ferdig lage en NY anonym bruker → foreldreløs stemme-identitet
+// (uid-en stemmen skrives med ≠ den som persisteres), som gir «har stemt» som
+// aldri vises, umulig angre, og en reell dobbeltstemme. Nullstilles når kallet
+// er ferdig, så en senere utlogging kan logge inn på nytt.
+let signInInFlight = null;
+function signInAnonymouslyOnce() {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+  if (!signInInFlight) {
+    signInInFlight = signInAnonymously(auth)
+      .then((cred) => cred.user)
+      .finally(() => { signInInFlight = null; });
+  }
+  return signInInFlight;
+}
+
 // Hold nettleseren innlogget: logg inn anonymt ved oppstart og på nytt etter
 // utlogging (en lærer som logger ut, får ny anonym økt automatisk).
 if (AUTH_CONFIGURED) {
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      signInAnonymously(auth).catch((e) =>
+      signInAnonymouslyOnce().catch((e) =>
         console.warn("Anonym innlogging utilgjengelig (aktiver «Anonymous» i Firebase Console → Authentication → Sign-in method):", e.code)
       );
     }
@@ -113,8 +130,7 @@ if (AUTH_CONFIGURED) {
 // innlogging ikke er aktivert — kalleren håndterer fallback.
 async function ensureAuth() {
   if (auth.currentUser) return auth.currentUser;
-  const cred = await signInAnonymously(auth);
-  return cred.user;
+  return signInAnonymouslyOnce();
 }
 
 // Identiteten en stemme registreres med: uid når innlogget, ellers legacy-ID.
@@ -143,15 +159,23 @@ export function getClientId() {
 //  SANNTIDS-LYTTERE
 // ----------------------------------------------------------------------------
 
+// Delt feilhandler for sanntidslyttere: logg + varsle UI-et (banneret som
+// wireFirestoreErrorBanner viser). Brukt av ALLE subscribe-funksjoner, så en
+// avvist lesing (f.eks. stale publiserte regler på én samling) alltid gir
+// synlig feil, ikke bare en konsoll-linje.
+function onSubscribeError(what) {
+  return (err) => {
+    console.error(`Kunne ikke lese ${what} (sjekk Firestore-regler):`, err.code, err.message);
+    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
+  };
+}
+
 // Lytter på alle artister. Kaller callback hver gang noe endres.
 export function subscribeArtists(callback) {
   return onSnapshot(artistsCol, (snapshot) => {
     const artists = snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
     callback(artists);
-  }, (err) => {
-    console.error("Kunne ikke lese artister – sjekk Firestore-regler:", err.code, err.message);
-    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
-  });
+  }, onSubscribeError("artister"));
 }
 
 // Lytter på konfigurasjon. Bruker standardconfig til læreren lagrer egen.
@@ -296,7 +320,7 @@ export function subscribeDecades(callback) {
     const decades = {};
     snapshot.docs.forEach((d) => { decades[d.id] = { id: d.id, ...d.data() }; });
     callback(decades);
-  }, (err) => console.error("Kunne ikke lese tiårsbeskrivelser (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("tiårsbeskrivelser"));
 }
 
 export function subscribeGenreDescs(callback) {
@@ -304,7 +328,7 @@ export function subscribeGenreDescs(callback) {
     const m = {};
     snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
     callback(m);
-  }, (err) => console.error("Kunne ikke lese sjangerbeskrivelser (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("sjangerbeskrivelser"));
 }
 
 export function subscribeEdgeDescs(callback) {
@@ -312,7 +336,7 @@ export function subscribeEdgeDescs(callback) {
     const m = {};
     snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
     callback(m);
-  }, (err) => console.error("Kunne ikke lese koblingsbeskrivelser (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("koblingsbeskrivelser"));
 }
 
 // Lagrer beskrivelsen for én kobling (strek i treet). updatedAt som ISO-streng
@@ -328,7 +352,7 @@ export function subscribePodcasts(callback) {
     const pods = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     pods.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
     callback(pods);
-  }, (err) => console.error("Kunne ikke lese podkaster (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("podkaster"));
 }
 
 export async function addPodcast(data) {
@@ -349,7 +373,7 @@ export function subscribeTech(callback) {
     const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     items.sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
     callback(items);
-  }, (err) => console.error("Kunne ikke lese tech (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("tech"));
 }
 
 export async function addTech(data) {
@@ -388,50 +412,43 @@ export async function saveGenreDescLevel(genreId, level, data) {
   return setDoc(doc(db, "genreDescriptions", genreId), { [level]: data }, { merge: true });
 }
 
-// Engangs-opprydding (idempotent): hovedsjanger-beskrivelsene på meta-nivå er
-// pensjonert (v2.99) — de dekkes nå av sjangerhistoriene. Fjern det døde
-// `meta`-feltet fra genreDescriptions-dokumentene. RØRER KUN `meta`; `main`,
-// `sub`, `story` (og alt annet) står urørt — Blues/Jazz osv. er både meta OG
-// main. Dokumenter uten `meta` hoppes over, så den kan trygt kjøre ved hver
-// lærer-oppstart. Returnerer antall opprydda dokumenter.
-export async function purgeMetaGenreDescs() {
+// Engangs-opprydding (idempotent): fjerner to døde felt-generasjoner fra
+// genreDescriptions i ÉN lesning av samlingen (før: to separate getDocs av hele
+// samlingen ved hver lærer-oppstart — unødvendig dobbelt lese-/oppstartskost):
+//
+//  (1) `meta`-feltet: hovedsjanger-beskrivelsene på meta-nivå er pensjonert
+//      (v2.99), dekkes nå av sjangerhistoriene. RØRER KUN `meta`; `main`, `sub`,
+//      `story` står urørt — Blues/Jazz osv. er både meta OG main.
+//  (2) de FLATE `description`/`kilder`-feltene: appen leser KUN nivåfeltene
+//      (meta/main/sub) via resolveDesc. Fjernes KUN fra dokumenter som har et
+//      nivåfelt (main/sub), så ingen tekst går tapt — et umigrert flat-ONLY-
+//      dokument røres ikke (importen migrerer det til riktig nivå i stedet).
+//      Krøp tilbake da gamle backuper ble importert (v2.73), derfor lukker
+//      eksport/import nå også hullet.
+//
+// Idempotent: kan trygt kjøre ved hver lærer-oppstart. Ett dokument med begge
+// generasjonene ryddes i ÉN skriving. Returnerer { meta, flat }.
+export async function purgeDeadGenreDescFields() {
   const snapshot = await getDocs(genreDescsCol);
-  const withMeta = snapshot.docs.filter((d) => d.data().meta !== undefined);
-  if (!withMeta.length) return 0;
-  await Promise.all(withMeta.map((d) => updateDoc(d.ref, { meta: deleteField() })));
-  console.info(
-    `Fjernet dødt meta-felt fra ${withMeta.length} genreDescriptions-dokument(er):`,
-    withMeta.map((d) => d.id)
-  );
-  return withMeta.length;
-}
-
-// Engangs-opprydding (idempotent): de gamle FLATE `description`/`kilder`-feltene
-// er døde. Appen leser KUN nivåfeltene (meta/main/sub) via resolveDesc — aldri
-// de flate (se genre-descriptions.js). De ble liggende igjen fra den
-// opprinnelige flate datamodellen og dupliserer nivåteksten/-kildene (noen har
-// alt DIVERGERT, f.eks. Gospel/R&B). En tidligere cleanupFlatGenreDescs (v2.69)
-// gjorde det samme, men ble fjernet (v2.73) og feltene krøp tilbake da gamle
-// backuper ble importert — derfor lukker eksport/import nå også hullet. Fjern
-// de flate feltene KUN fra dokumenter som har et nivåfelt (main eller sub), så
-// ingen tekst går tapt: et evt. umigrert flat-ONLY-dokument røres ikke —
-// importen migrerer det til riktig nivå i stedet. Idempotent: kan trygt kjøre
-// ved hver lærer-oppstart. Returnerer antall opprydda dokumenter.
-export async function purgeFlatGenreDescs() {
-  const snapshot = await getDocs(genreDescsCol);
-  const stale = snapshot.docs.filter((d) => {
+  const ops = [];
+  let meta = 0, flat = 0;
+  for (const d of snapshot.docs) {
     const x = d.data();
+    const patch = {};
+    if (x.meta !== undefined) { patch.meta = deleteField(); meta++; }
     const hasLevel = x.main !== undefined || x.sub !== undefined;
-    const hasFlat = x.description !== undefined || x.kilder !== undefined;
-    return hasLevel && hasFlat;
-  });
-  if (!stale.length) return 0;
-  await Promise.all(stale.map((d) => updateDoc(d.ref, { description: deleteField(), kilder: deleteField() })));
-  console.info(
-    `Fjernet døde flate description/kilder-felt fra ${stale.length} genreDescriptions-dokument(er):`,
-    stale.map((d) => d.id)
-  );
-  return stale.length;
+    if (hasLevel && (x.description !== undefined || x.kilder !== undefined)) {
+      patch.description = deleteField();
+      patch.kilder = deleteField();
+      flat++;
+    }
+    if (Object.keys(patch).length) ops.push(updateDoc(d.ref, patch));
+  }
+  if (ops.length) {
+    await Promise.all(ops);
+    console.info(`genreDescriptions-opprydding: fjernet dødt meta-felt fra ${meta}, flate description/kilder fra ${flat} dokument(er).`);
+  }
+  return { meta, flat };
 }
 
 // ---------------------------------------------------------------------------
@@ -774,7 +791,7 @@ export function subscribePendingEdits(callback) {
     const edits = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     edits.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
     callback(edits);
-  }, (err) => console.error("Kunne ikke lese endringsforslag (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("endringsforslag"));
 }
 
 // Legg inn et endringsforslag. `proposedFields` skal kun inneholde feltene
@@ -796,8 +813,12 @@ export async function addPendingEdit({ entityType, entityId, entityName, propose
 
 // Nivået et sjangerbeskrivelse-forslag hører til. Eldre forslag mangler
 // level-feltet — da gjettes det ut fra om navnet er en tre-sjanger.
+// SIKKERHET: level kommer fra studentdokumentet (reglene håndhever ikke
+// verdien), så vi godtar KUN "main"/"sub". Alt annet (f.eks. "meta", som
+// purgeDeadGenreDescFields siden ville slettet, eller "story"/"updatedAt" som
+// lager søppelfelter) faller tilbake til den trygge isMainGenre-gjetningen.
 export function genreEditLevel(edit) {
-  if (edit.level) return edit.level;
+  if (edit.level === "main" || edit.level === "sub") return edit.level;
   return isMainGenre(edit.entityId) ? "main" : "sub";
 }
 
@@ -882,7 +903,7 @@ const teacherChecksRef = doc(db, "config", "teacherChecks");
 export function subscribeTeacherChecks(callback) {
   return onSnapshot(teacherChecksRef, (snap) => {
     callback(snap.exists() ? snap.data() : { genres: [], subgenres: [] });
-  }, (err) => console.error("Kunne ikke lese teacherChecks (sjekk Firestore-regler):", err.message));
+  }, onSubscribeError("teacherChecks"));
 }
 
 export async function setTeacherChecks(data) {

@@ -14,11 +14,11 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.50";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.50";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.50";
-import { DECADES } from "./limits.js?v=3.50";
-import { $ } from "./shared.js?v=3.50";
+} from "./store.js?v=3.51";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.51";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.51";
+import { DECADES } from "./limits.js?v=3.51";
+import { $ } from "./shared.js?v=3.51";
 
 export const state = {
   artists: [],
@@ -34,6 +34,10 @@ export const state = {
   // contentLoaded skiller «laster fortsatt» fra «mangler faktisk tekst».
   content: {},
   contentLoaded: false,
+  // artistsLoaded: har artist-snapshotet landet? Destruktive handlinger
+  // (Erstatt alle / Slett alt) må vente på dette — ellers bygges backupen fra
+  // en tom state mens slettingen går mot serveren.
+  artistsLoaded: false,
   podcasts: [],
   techItems: [],
   teacherChecks: { genres: [], subgenres: [] },

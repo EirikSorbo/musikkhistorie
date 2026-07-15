@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=3.50";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=3.50";
+import { safeUrl } from "./util.js?v=3.51";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=3.51";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen).
@@ -41,17 +41,22 @@ export function normalizeArtist(a) {
   } else if (!Array.isArray(out.keyWorks)) {
     out.keyWorks = [];
   }
-  out.keyWorks = out.keyWorks.map((w) => {
-    const { url, ...rest } = w;
-    const safe = safeUrl(url);
-    return safe ? { ...rest, url: safe } : rest;
-  });
+  out.keyWorks = out.keyWorks
+    .map((w) => (typeof w === "string" ? { title: w } : w))   // enkelt-streng (gammel form) → {title}
+    .filter((w) => w && typeof w === "object")                // dropp null/tall/annet søppel
+    .map((w) => {
+      const { url, ...rest } = w;
+      const safe = safeUrl(url);
+      return safe ? { ...rest, url: safe } : rest;
+    });
 
   // kilder: array av strenger → array av {text, url?}
   if (Array.isArray(out.kilder)) {
-    out.kilder = out.kilder.map((k) =>
-      typeof k === "string" ? { text: k } : { text: k.text || "", url: safeUrl(k.url) }
-    ).filter((k) => k.text);
+    out.kilder = out.kilder
+      .filter((k) => k != null && (typeof k === "string" || typeof k === "object"))
+      .map((k) =>
+        typeof k === "string" ? { text: k } : { text: k.text || "", url: safeUrl(k.url) }
+      ).filter((k) => k.text);
   } else {
     out.kilder = [];
   }
@@ -67,6 +72,7 @@ export function normalizeArtist(a) {
     }));
   }
   out.musicExamples = out.musicExamples
+    .filter((m) => m && typeof m === "object")   // dropp null/søppel før spredning
     .map((m) => ({ ...m, url: safeUrl(m.url) }))
     .filter((m) => m.url);
   delete out.links;

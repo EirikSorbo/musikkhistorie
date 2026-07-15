@@ -71,6 +71,15 @@ export function decadesForRange(startYear, endYear) {
 // siden student- og lærer-visningen har ulike regler der. Ren funksjon —
 // enhetstestbar, og holder filterlogikken ett sted (landing.js + ui.js delte den
 // før i to kopier som allerede hadde driftet fra hverandre).
+// Er noe innholdsfilter aktivt? (søk/sjanger/meta/instrument/tiår/undersjanger/
+// prioritet). Delt av landing (spotlight vs. kompakt liste) og ui.renderArtists
+// (sortert vs. tilfeldig rekkefølge), så de to flatene aldri driver fra
+// hverandre om hva «filtrert» betyr — landing utelot før prioritet og
+// undersjanger, som ga inkonsistent visning ved prioritet-bare-filter.
+export function hasActiveFilters(f = {}) {
+  return !!(f.search || f.mainGenre || f.metaGenre || f.instrument || f.decade || f.subgenre || f.priority);
+}
+
 export function filterArtists(list, filters = {}) {
   if (filters.mainGenre) {
     const sj = filters.mainGenre.toLowerCase();

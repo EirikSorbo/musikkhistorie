@@ -8,10 +8,10 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=3.50";
-import { diffFields, escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.50";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=3.50";
-import { GENDERS } from "./limits.js?v=3.50";
+import { addPendingEdit, addTechProposal } from "./store.js?v=3.51";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES } from "./ui.js?v=3.51";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=3.51";
+import { GENDERS } from "./limits.js?v=3.51";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -34,9 +34,8 @@ const FIELD_SPECS = {
     { key: "name", label: "Navn", type: "text" },
     { key: "category", label: "Kategori", type: "select", options: [
       { value: "", label: "Velg…" },
-      { value: "Opptak og avspilling", label: "Opptak og avspilling" },
-      { value: "Kringkasting og spredning", label: "Kringkasting og spredning" },
-      { value: "Instrumenter og lydutstyr", label: "Instrumenter og lydutstyr" },
+      // Kategoriene fra samme kilde som fanene/filtrene (ui-tech.TECH_CATEGORIES).
+      ...TECH_CATEGORIES.map((c) => ({ value: c, label: c })),
     ] },
     { key: "decade", label: "Tiår (f.eks. 1950)", type: "text" },
     { key: "adoptedYear", label: "Innført år", type: "number" },

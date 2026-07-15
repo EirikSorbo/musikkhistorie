@@ -1,11 +1,11 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.50";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.50";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.50";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.50";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.50";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.51";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.51";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.51";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.51";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.51";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.
@@ -142,7 +142,15 @@ document.getElementById("gx-back")?.addEventListener("click", () => {
 });
 
 build();
-window.addEventListener("resize", () => { if (api) api.fit(); });
+// Kun refit når stagens BREDDE faktisk endrer seg. På mobil fyrer resize også
+// når adressefeltet kollapser/ekspanderer (kun høyde) — da skal ikke brukerens
+// zoom/pan nullstilles. Bredde-endring (rotasjon, vindusstørrelse) refit-er.
+let lastStageW = document.getElementById("gx-stage")?.clientWidth || 0;
+window.addEventListener("resize", () => {
+  if (!api) return;
+  const w = document.getElementById("gx-stage")?.clientWidth || 0;
+  if (Math.abs(w - lastStageW) > 2) { lastStageW = w; api.fit(); }
+});
 
 if (CONFIGURED) {
   wireFirestoreErrorBanner();

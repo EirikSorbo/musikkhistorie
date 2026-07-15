@@ -1,14 +1,14 @@
-import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORIES, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.50";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.50";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.50";
-import { isVisible, DECADES } from "./limits.js?v=3.50";
-import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow, imgTag, safeUrl } from "./ui-helpers.js?v=3.50";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.50";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.50";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.50";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.50";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.50";
-import { renderSjangerhimmel } from "./constellation.js?v=3.50";
+import { escapeHtml, formatInfoText, renderDecadeSections, renderDecadeRibbon, renderTechList, renderTechDetail, TECH_CATEGORY_TABS, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, setupModal, initModalHeaders, buildKilderList, buildMainGenreList } from "./ui.js?v=3.51";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, isMainGenre, showSjangerInfo, MAIN_GENRE_INFO, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.51";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.51";
+import { isVisible, DECADES } from "./limits.js?v=3.51";
+import { podcastEpisodeHtml, wireLinks, teacherActionRow, wireTeacherRow, imgTag, safeUrl } from "./ui-helpers.js?v=3.51";
+import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "./story-format.js?v=3.51";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.51";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=3.51";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.51";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.51";
+import { renderSjangerhimmel } from "./constellation.js?v=3.51";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -16,7 +16,10 @@ import { renderSjangerhimmel } from "./constellation.js?v=3.50";
 // tiåret. Nivåene bor i Firestore (content/varmekart.heat, importert fra
 // innholds-JSON eller redigert via celleklikk som lærer) — sjangre uten data
 // vises som «ingen data».
-const VK_DECADES = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
+// Varmekart-kolonnene ER tiårsaksen (DECADES) — samme kilde, så en utvidelse
+// (2030-t) slår gjennom begge steder samtidig. Heat-radene er indeksbaserte og
+// vkRow padder korte rader, så en utvidelse er bakoverkompatibel.
+const VK_DECADES = DECADES;
 // Cellene fargelegges i hver sjangers familiefarge (fra slektstreet), mens
 // varmenivået (0–5) styrer lysheten: lyst = lite toneangivende, mørkt = mye.
 // Slik bærer ruten to akser samtidig — hvilken familie (kulør) og hvor sterk
@@ -43,9 +46,7 @@ const MODAL_HTML = `
          inngangen (lærer) ligger i SAMME rad, skjøvet helt til høyre. -->
     <div class="tech-category-tabs">
       <button class="btn ghost small tech-tab active" data-tech-cat="">Alle</button>
-      <button class="btn ghost small tech-tab" data-tech-cat="Instrumenter og lydutstyr">Instrumenter</button>
-      <button class="btn ghost small tech-tab" data-tech-cat="Opptak og avspilling">Opptak</button>
-      <button class="btn ghost small tech-tab" data-tech-cat="Kringkasting og spredning">Kringkasting</button>
+      ${TECH_CATEGORY_TABS.map((c) => `<button class="btn ghost small tech-tab" data-tech-cat="${escapeHtml(c.value)}">${escapeHtml(c.label)}</button>`).join("")}
       <div id="tek-admin-extra" class="tech-tabs-extra"></div>
     </div>
     <div id="tech-list" class="tech-grid"></div>
@@ -869,20 +870,28 @@ function showTidTip(bar, artist) {
   // Feiler DEN også — eller finnes ingen fallback å bytte til — fjerner vi bildet
   // og lar kortet stå med navn og periode, i stedet for nettleserens
   // «bilde mangler»-ikon.
+  // Over blokka og sentrert på den; ned under hvis det ikke er plass over, og
+  // alltid innenfor vinduet i bredden.
+  const place = () => {
+    const b = bar.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const left = Math.max(8, Math.min(b.left + b.width / 2 - t.width / 2, window.innerWidth - t.width - 8));
+    const top = b.top - t.height - 8 < 8 ? b.bottom + 8 : b.top - t.height - 8;
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+  };
+
   const im = tip.querySelector("img");
   im?.addEventListener("error", () => {
     if (im.dataset.tipRetried || !im.dataset.full) im.remove();
     else im.dataset.tipRetried = "1";
+    place();   // kortet krympet uten bilde — reposisjoner
   });
+  // Bildet er lazy: måles kortet før det lander, plasseres det på tekst-høyden
+  // og vokser etterpå NED over blokka. Reposisjoner når bildet er inne.
+  im?.addEventListener("load", place);
 
-  // Over blokka og sentrert på den; ned under hvis det ikke er plass over, og
-  // alltid innenfor vinduet i bredden.
-  const b = bar.getBoundingClientRect();
-  const t = tip.getBoundingClientRect();
-  const left = Math.max(8, Math.min(b.left + b.width / 2 - t.width / 2, window.innerWidth - t.width - 8));
-  const top = b.top - t.height - 8 < 8 ? b.bottom + 8 : b.top - t.height - 8;
-  tip.style.left = `${Math.round(left)}px`;
-  tip.style.top = `${Math.round(top)}px`;
+  place();
   tidTip = tip;
 }
 
@@ -1124,40 +1133,48 @@ function openKart() {
   }
 }
 
+// Full render: tegner det STATISKE landomrisset (~68 KB path-data) ÉN gang, med
+// et tomt prikk-lag under. Tiårsbytte kaller renderKartDots(), som kun oppdaterer
+// prikkene/chips/stripa — ikke re-parser hele omrisset (merkbart på svak mobil).
 function renderKart() {
+  let svg = `<div style="overflow-x:auto"><svg viewBox="0 0 ${MAP_VIEW.w} ${MAP_VIEW.h}" style="width:100%;min-width:560px;display:block" role="img" aria-label="Kart over Nord-Amerika med artistenes virkesteder">`;
+  svg += MAP_COUNTRIES.map((c) =>
+    `<path d="${c.d}" style="fill:var(--bg-soft,#eef1f4);stroke:var(--line-strong,#cbd5df);stroke-width:0.7" />`).join("");
+  svg += `<g id="kart-dots"></g></svg></div>`;
+  document.getElementById("kart-svg").innerHTML = svg;
+  renderKartDots();
+}
+
+function renderKartDots() {
   const s = getState();
   const active = s.artists.filter(isVisible);
   const { onMap, abroad, unplaced } = aggregatePlaces(active, { decade: kartDecade });
   const DOT = "#1d4ed8";   // én kulør — størrelse bærer informasjonen
 
-  // Tiårsvelger: samme klikkbare tidslinje-stripe som Samfunn/Teknologi bruker
-  // (renderDecadeRibbon), pluss en «Alle»-prikk helt til venstre som slår av
-  // tiårsfilteret. kartDecade === null betyr alle tiår.
+  // Tiårsvelger: samme klikkbare tidslinje-stripe som Samfunn/Teknologi bruker,
+  // pluss en «Alle»-prikk helt til venstre. kartDecade === null betyr alle tiår.
   renderDecadeRibbon(document.getElementById("kart-decades"), kartDecade, (d) => {
     kartDecade = d;
-    renderKart();
+    renderKartDots();
   }, { all: true });
 
-  // Kartet: landomriss + prikker. Radius ~ kvadratrot av antall (arealet
-  // skalerer da med antallet); tekstetikett på de største.
+  // Prikkene: radius ~ kvadratrot av antall (arealet skalerer med antallet);
+  // tekstetikett på de største. Skrives inn i det statiske omrissets prikk-lag.
   const r = (n) => Math.min(3 + 2.1 * Math.sqrt(n), 17);
-  let svg = `<div style="overflow-x:auto"><svg viewBox="0 0 ${MAP_VIEW.w} ${MAP_VIEW.h}" style="width:100%;min-width:560px;display:block" role="img" aria-label="Kart over Nord-Amerika med artistenes virkesteder">`;
-  svg += MAP_COUNTRIES.map((c) =>
-    `<path d="${c.d}" style="fill:var(--bg-soft,#eef1f4);stroke:var(--line-strong,#cbd5df);stroke-width:0.7" />`).join("");
   const placed = onMap.map((p, i) => ({ ...p, ...projectPoint(p.lat, p.lng), i }));
   // Store prikker tegnes først så små forblir klikkbare oppå.
   placed.sort((a, b) => b.count - a.count);
-  svg += placed.map((p) => {
+  let dots = placed.map((p) => {
     const style = p.region
       ? `fill:${DOT};fill-opacity:0.10;stroke:${DOT};stroke-width:1.2;stroke-dasharray:4 3`
       : `fill:${DOT};fill-opacity:0.68;stroke:#fff;stroke-width:1`;
     return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r(p.count).toFixed(1)}" data-place="${p.i}" style="${style};cursor:pointer"><title>${escapeHtml(`${p.label} · ${p.count} artist${p.count === 1 ? "" : "er"}`)}</title></circle>`;
   }).join("");
-  svg += placed.filter((p) => p.count >= 6).map((p) =>
+  dots += placed.filter((p) => p.count >= 6).map((p) =>
     `<text x="${(p.x + r(p.count) + 3).toFixed(1)}" y="${(p.y + 3.5).toFixed(1)}" style="font-size:13px;fill:var(--text,#1f2937);pointer-events:none">${escapeHtml(p.label)}</text>`).join("");
-  svg += `</svg></div>`;
-  document.getElementById("kart-svg").innerHTML = svg;
-  document.getElementById("kart-svg").querySelectorAll("[data-place]").forEach((el) => {
+  const dotsG = document.getElementById("kart-dots");
+  dotsG.innerHTML = dots;
+  dotsG.querySelectorAll("[data-place]").forEach((el) => {
     el.addEventListener("click", () => {
       const p = placed.find((x) => String(x.i) === el.dataset.place);
       if (p) openArtistListModal(p.label, p.artists, opts.onArtistClick, "Ingen artister her i valgt tiår.");
@@ -1447,6 +1464,15 @@ function wireModals() {
    "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+
+  // Tidslinjens hover-kort er position:fixed — fjern det når modalen lukkes på
+  // ANY måte (Escape/backdrop/«Lukk alle»), ellers kan det bli hengende svevende
+  // over dashbordet hvis pekeren sto i ro over en blokk ved lukking.
+  const tlModal = document.getElementById("modal-tidslinje");
+  if (tlModal && "MutationObserver" in window) {
+    new MutationObserver(() => { if (!tlModal.classList.contains("open")) hideTidTip(); })
+      .observe(tlModal, { attributes: true, attributeFilter: ["class"] });
+  }
 
   // Røtter-sidens ene navigasjonsknapp (statisk markup — innholdet bor i
   // Firestore). Står over teksten, ikke under den, og fyller bredden.

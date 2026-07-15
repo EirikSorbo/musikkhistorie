@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck } from "./teacher-state.js?v=3.50";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.50";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.50";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.50";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.50";
-import { resolveDesc } from "./genre-descriptions.js?v=3.50";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.50";
-import { DECADES } from "./limits.js?v=3.50";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.51";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.51";
+import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.51";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.51";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.51";
+import { resolveDesc } from "./genre-descriptions.js?v=3.51";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.51";
+import { DECADES } from "./limits.js?v=3.51";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.50";
-import { $ } from "./shared.js?v=3.50";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.50";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.51";
+import { $ } from "./shared.js?v=3.51";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.51";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -332,7 +332,7 @@ function renderTechAdmin() {
   el.querySelectorAll(".tech-del-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.closest("[data-tech-id]").dataset.techId;
-      if (confirm("Slette denne teknologien?")) await deleteTech(id);
+      if (confirm("Slette dette innovasjonskortet?")) await guardTeacherAction(deleteTech(id));
     });
   });
 
@@ -426,7 +426,7 @@ export function renderPodkastAdmin() {
   el.querySelectorAll("[data-pod-delete]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Slette denne episoden?")) return;
-      await deletePodcast(btn.dataset.podDelete);
+      await guardTeacherAction(deletePodcast(btn.dataset.podDelete));
     });
   });
 }
@@ -450,7 +450,9 @@ export function setupPodkastAdmin() {
         description: document.getElementById("pod-desc").value.trim(),
         duration: document.getElementById("pod-duration").value.trim(),
         audioUrl: audioUrl ? audioUrl.replace(/dl=0/, "dl=1").replace(/\?dl=1$/, "?raw=1") : "",
-        order: state.podcasts.length + 1,
+        // Maks eksisterende order + 1 (ikke lengde+1, som gjenbruker en verdi
+        // etter at en episode er slettet → to like order → ustabil sortering).
+        order: Math.max(0, ...state.podcasts.map((p) => p.order || 0)) + 1,
       });
       document.getElementById("pod-title").value = "";
       document.getElementById("pod-desc").value = "";

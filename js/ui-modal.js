@@ -43,7 +43,11 @@ export function modalOpen(el) {
     if (!dialog.hasAttribute("tabindex")) dialog.setAttribute("tabindex", "-1");
   }
   // Husk hvor fokus sto (per modal, så nøstede popuper går riktig tilbake).
-  el._restoreFocus = document.activeElement;
+  // KUN ved faktisk åpning: re-åpnes en allerede åpen modal (f.eks. klikk på en
+  // chip inne i detaljmodalen → openDetail på nytt), ville dette ellers pekt på
+  // et element inne i modalen som re-renderingen straks fjerner, og den
+  // opprinnelige utløseren utenfor mister fokusrestaureringen.
+  if (!el.classList.contains("open")) el._restoreFocus = document.activeElement;
   el.classList.add("open");
   (focusables(el)[0] || dialog)?.focus();
 }

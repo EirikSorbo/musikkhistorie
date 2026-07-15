@@ -22,20 +22,19 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-  purgeMetaGenreDescs,
-  purgeFlatGenreDescs,
+  purgeDeadGenreDescFields,
   runGenreDuplicateCleanup,
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.50";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.50";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.50";
-import { CONFIGURED, $, showSetupBanner } from "./shared.js?v=3.50";
-import { initExplore } from "./explore.js?v=3.50";
+} from "./store.js?v=3.51";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.51";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.51";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.51";
+import { initExplore } from "./explore.js?v=3.51";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.50";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.50";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.51";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.51";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -52,11 +51,11 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.50";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.50";
-import { renderDesk } from "./teacher-desk.js?v=3.50";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.50";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.50";
+} from "./teacher-content.js?v=3.51";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.51";
+import { renderDesk } from "./teacher-desk.js?v=3.51";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.51";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.51";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -186,6 +185,10 @@ function startApp() {
     return;
   }
 
+  // Vis banner hvis en sanntidslesing avvises (f.eks. stale publiserte regler) —
+  // lærersiden hadde #banner-elementet men koblet det aldri før.
+  wireFirestoreErrorBanner();
+
   subscribeConfig((config, meta) => {
     state.config = config;
     state.configIsFallback = !!meta?.fallback;
@@ -195,6 +198,7 @@ function startApp() {
   });
   subscribeArtists((artists) => {
     state.artists = artists;
+    state.artistsLoaded = true;
     refreshControls();
     renderAll();
     refreshDesk();
@@ -233,8 +237,7 @@ function startApp() {
   // isoleres og stopper ikke de neste. Se konsoll-loggen for hva hver gjorde.
   (async () => {
     const steps = [
-      ["Meta-opprydding", purgeMetaGenreDescs],
-      ["Flat-felt-opprydding", purgeFlatGenreDescs],
+      ["Genrebeskrivelse-opprydding", purgeDeadGenreDescFields],
       ["Sjangeropprydding", runGenreDuplicateCleanup],
       ["Node-label-justering", runGenreLabelAlignment],
       ["Trance-doc-id-migrering", runTranceDocIdMigration],

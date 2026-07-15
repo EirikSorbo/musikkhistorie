@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.50";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.50";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.50";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.50";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.51";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.51";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.51";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.51";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -19,13 +19,13 @@ export const GENEALOGY = [
   { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 580, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
   { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
   { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 2, p: ["worksongs"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
-  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "purple", cx: 700, r: 2, p: ["vestafrik"], g: "Jazz", era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
+  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "purple", cx: 700, r: 1, p: ["vestafrik"], g: "Jazz", era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
   { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["eurofolk"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
   { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 3, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
   { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
-  { id: "gospel", l: "Gospel", f: "Gospel", fam: "red", cx: 1070, r: 3, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
+  { id: "gospel", l: "Gospel", f: "Gospel", fam: "red", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
-  { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 5, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
+  { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 4, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
   { id: "honkytonk", l: "Honky tonk", f: "Honky tonk", fam: "amber", cx: 195, r: 5, p: ["country"], g: "Country", era: "1940-tallet", t: ["Lovesick Blues – Hank Williams (1949)", "Your Cheatin' Heart – Hank Williams (1953)"] },
   { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 700, r: 5, p: ["swing"], rx: ["swing"], g: "Jazz", era: "1945", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
   { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 1190, r: 5, p: ["blues", "gospel"], g: "R&B", era: "1940-tallet", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
@@ -40,14 +40,14 @@ export const GENEALOGY = [
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1320, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
   { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
   { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["jazz", "funk"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
-  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1250, r: 9, p: ["funk", "reggae"], g: "R&B", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
+  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1250, r: 8, p: ["funk", "reggae"], g: "R&B", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
   { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1380, r: 8, p: ["funk", "soul"], g: "Klubbmusikk", era: "1974", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
   { id: "house", l: "House", f: "House", fam: "teal", cx: 1510, r: 9, p: ["disco"], g: "Klubbmusikk", era: "1980", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles"] },
   { id: "techno", l: "Techno", f: "Techno", fam: "teal", cx: 1380, r: 9, p: ["house", "disco"], g: "Klubbmusikk", era: "1985", t: ["Strings of Life – Derrick May", "Big Fun – Inner City"] },
   { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["country", "folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
   { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
   { id: "trance", l: "Trance & DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1510, r: 10, p: ["techno", "house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
-  { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 11, p: ["fusion", "techno", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
+  { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 10, p: ["fusion", "techno", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
 
   // --- Folk (revival) ---
   { id: "folk", l: "Folk", f: "Folk (revival)", fam: "amber", cx: 70, r: 7, p: ["eurofolk"], g: "Country", era: "1950–60-tallet", t: ["This Land Is Your Land – Woody Guthrie (1944)", "Blowin' in the Wind – Bob Dylan (1963)"] },
@@ -386,7 +386,18 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
     // til teksten så fokus-fyllet ved hover dekker hele navnet. Måling krever
     // synlig DOM — utenfor dokumentflyt blir bredden 0 og NW beholdes.
     const w = (tx.getComputedTextLength ? tx.getComputedTextLength() : 0) + 18;
-    if (w > NW) { rect.setAttribute("x", n.cx - w / 2); rect.setAttribute("width", w); }
+    if (w > NW) {
+      // KLEM mot nærmeste nabo i samme rad: den usynlige trefflata skal aldri
+      // nå forbi midtpunktet mot naboen, ellers treffer klikk/hover ved kanten
+      // feil node (målt overlapp på britinv/modal og chicagoblues/bebop).
+      let nearestHalf = Infinity;
+      for (const m of GENEALOGY) {
+        if (m.r === n.r && m.id !== n.id) nearestHalf = Math.min(nearestHalf, Math.abs(m.cx - n.cx) / 2);
+      }
+      const half = Math.min(w / 2, Math.max(NW / 2, nearestHalf - 2));
+      rect.setAttribute("x", n.cx - half);
+      rect.setAttribute("width", half * 2);
+    }
   });
 
   // Utheving (vises ved hover): hele anelinjen bakover + kun direkte barn
@@ -548,19 +559,45 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
     zoom(ev.deltaY < 0 ? 1.12 : 0.9, ev.clientX - rect.left, ev.clientY - rect.top);
   }, { passive: false });
 
-  let drag = false, sx, sy;
+  // Peker-styrt pan + pinch-zoom. Ett Map fra pointerId → siste posisjon, så to
+  // fingre ALDRI deler ett (sx,sy)-par (som ga ville pan-hopp: finger nr. 2
+  // overskrev startpunktet og begge fingres move regnet dx/dy på kryss). Én
+  // peker = pan; to pekere = pinch-zoom om midtpunktet. Speiler constellation.js.
+  const pointers = new Map();
+  let pinchDist = 0;
   stage.addEventListener("pointerdown", (ev) => {
     lastPointerType = ev.pointerType || "mouse";
-    drag = true; moved = false; sx = ev.clientX; sy = ev.clientY;
-    stage.classList.add("gx-drag");
+    const first = pointers.size === 0;
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (first) { moved = false; stage.classList.add("gx-drag"); }
+    else pinchDist = 0;   // andre finger ned: nullstill pinch-referansen
   });
   stage.addEventListener("pointermove", (ev) => {
-    if (!drag) return;
-    const dx = ev.clientX - sx, dy = ev.clientY - sy;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-    tx += dx; ty += dy; sx = ev.clientX; sy = ev.clientY; apply();
+    if (!pointers.has(ev.pointerId)) return;
+    const prev = pointers.get(ev.pointerId);
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (pointers.size === 1) {
+      const dx = ev.clientX - prev.x, dy = ev.clientY - prev.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      tx += dx; ty += dy; apply();
+    } else if (pointers.size === 2) {
+      moved = true;
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(b.x - a.x, b.y - a.y);
+      if (pinchDist > 0) {
+        const rect = stage.getBoundingClientRect();
+        zoom(d / pinchDist, (a.x + b.x) / 2 - rect.left, (a.y + b.y) / 2 - rect.top);
+      }
+      pinchDist = d;
+    }
   });
-  window.addEventListener("pointerup", () => { drag = false; stage.classList.remove("gx-drag"); });
+  const endPtr = (ev) => {
+    pointers.delete(ev.pointerId);
+    pinchDist = 0;
+    if (!pointers.size) stage.classList.remove("gx-drag");
+  };
+  window.addEventListener("pointerup", endPtr);
+  stage.addEventListener("pointercancel", endPtr);
   stage.addEventListener("click", (ev) => {
     // Trykk på tomt kart (ikke node, ikke mini-kortet) nullstiller lys + valg.
     if (!ev.target.closest(".gx-node") && !ev.target.closest(".gx-card") && !moved) reset();

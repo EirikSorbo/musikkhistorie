@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.50";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.51";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,12 +17,13 @@ import {
   addPodcast,
   updatePodcast,
   updateConfig,
-} from "./store.js?v=3.50";
-import { escapeHtml } from "./ui.js?v=3.50";
-import { $ } from "./shared.js?v=3.50";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.50";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.50";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.50";
+  setTeacherChecks,
+} from "./store.js?v=3.51";
+import { escapeHtml } from "./ui.js?v=3.51";
+import { $ } from "./shared.js?v=3.51";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.51";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.51";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.51";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -47,6 +48,10 @@ export function setupDataButtons() {
   importInput.addEventListener("change", (e) => handleImportFile(e.target.files[0]));
 
   $("#btn-nuke").addEventListener("click", async () => {
+    if (!state.artistsLoaded) {
+      alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du sletter — ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
+      return;
+    }
     if (!confirm("Er du HELT sikker? Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.")) return;
     // Samme sikkerhetsnett som «Erstatt alle»: full backup lastes ned FØR
     // slettingen, og læreren må aktivt skrive SLETT for å bekrefte.
@@ -90,9 +95,11 @@ function hasDecadeContent(d) {
 
 // Bygger hele eksport-objektet fra gjeldende state. Delt av den manuelle
 // «Eksporter»-knappen og av auto-sikkerhetskopien før «Erstatt alle».
-// Tar med ALLE artister uansett status (også ventende forslag) og alle
-// eksportfelter (inkl. votedUpBy), så backupen er komplett og tapsfri —
-// deleteAllArtists sletter hele artistsamlingen, så alt her må bevares.
+// Tar med ALLE artister uansett status (også ventende forslag), alle
+// eksportfelter (inkl. votedUpBy) OG lærerens sjekk-fremdrift (teacherChecks),
+// så backupen bevarer alt pensuminnhold før deleteAllArtists. `pendingEdits`
+// (åpne studentforslag) tas bevisst IKKE med — de er flyktige og skal
+// behandles, ikke arkiveres. `formatVersion` merker filformatet.
 function buildExportData() {
   const artists = state.artists
     .map((a) => Object.fromEntries(EXPORT_FIELDS.map((f) => [f, a[f] ?? null])));
@@ -168,7 +175,12 @@ function buildExportData() {
     return rest;
   });
 
-  const out = { artists, decades, genreDescriptions, edgeDescriptions, tech, pages, podcasts, config: state.config || null };
+  const out = {
+    formatVersion: 1,
+    artists, decades, genreDescriptions, edgeDescriptions, tech, pages, podcasts,
+    config: state.config || null,
+    teacherChecks: state.teacherChecks || null,
+  };
   if (varmekart) out.varmekart = varmekart;
   return out;
 }
@@ -209,6 +221,25 @@ function formatImportErrors(errors) {
 
 // Innholdsdeler en importfil kan bære utover artistene.
 const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "subgenres", "tech", "pages", "varmekart", "podcasts", "config"];
+
+// Alle toppnøkler appen forstår. Ukjente nøkler (feilstavet, eller fra et nyere
+// format) ignoreres stille ved import — vi advarer i stedet, så delvise/skjeve
+// pakker oppdages.
+const KNOWN_IMPORT_KEYS = new Set(["formatVersion", "artists", "teacherChecks", ...CONTENT_KEYS]);
+
+// Sjangre (mainGenre) i importen som ikke finnes i slektstreet — samme
+// «single source of truth»-sjekk som redigeringsskjemaet. Advarsel, ikke feil.
+function collectUnknownGenres(artists) {
+  const bad = new Set();
+  for (const a of artists || []) {
+    const mg = Array.isArray(a.mainGenre) ? a.mainGenre : (a.mainGenre ? [a.mainGenre] : []);
+    for (const g of mg) {
+      const name = String(g || "").trim();
+      if (name && !isMainGenre(name)) bad.add(name);
+    }
+  }
+  return [...bad];
+}
 
 function importParts(data) {
   const parts = [];
@@ -253,6 +284,7 @@ async function handleImportFile(file) {
       varmekart: raw.varmekart || null,
       podcasts: raw.podcasts || [],
       config: raw.config || null,
+      teacherChecks: raw.teacherChecks || null,
     };
   } else {
     alert("Ugyldig format — filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
@@ -263,6 +295,15 @@ async function handleImportFile(file) {
   // feile på en skjev fil.
   const { ok, errors } = validateArtistsForImport(data.artists);
   if (!ok) { alert(formatImportErrors(errors)); return; }
+
+  // Ikke-blokkerende advarsler: ukjente toppnøkler (feilstavet/nyere format som
+  // ellers droppes stille) og sjangre som ikke finnes i slektstreet.
+  const warnings = [];
+  const unknownKeys = Array.isArray(raw) ? [] : Object.keys(raw).filter((k) => !KNOWN_IMPORT_KEYS.has(k));
+  if (unknownKeys.length) warnings.push(`Ukjente felter i fila (blir IKKE importert): ${unknownKeys.join(", ")}.`);
+  const unknownGenres = collectUnknownGenres(data.artists);
+  if (unknownGenres.length) warnings.push(`Sjangre som ikke finnes i slektstreet (vises ikke i tre-visningene): ${unknownGenres.slice(0, 15).join(", ")}${unknownGenres.length > 15 ? " …" : ""}.`);
+  if (warnings.length && !confirm(warnings.join("\n\n") + "\n\nSjekk for skrivefeil. Importere likevel?")) return;
 
   const parts = importParts(data);
   if (!parts.length) { alert("Fila inneholder ikke noe å importere."); return; }
@@ -382,7 +423,7 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
 // Innholdssider, varmekart, podkaster og config fra importfila. Podkaster
 // oppdateres på tittel-match (så en re-import ikke dupliserer episoder);
 // config skrives i sin helhet når fila har den.
-async function importExtras({ pages, varmekart, podcasts, config }) {
+async function importExtras({ pages, varmekart, podcasts, config, teacherChecks }) {
   const done = [];
   const failed = [];
 
@@ -428,6 +469,14 @@ async function importExtras({ pages, varmekart, podcasts, config }) {
     catch (e) { console.error("Config-import feilet:", e); failed.push("innstillingene"); }
   }
 
+  // Lærerens sjekk-fremdrift (merges inn). NB: tech-sjekker refererer doc-ID-er
+  // som ikke er stabile på tvers av prosjekter — trygt ved restore til SAMME
+  // prosjekt, kan peke feil ved import til et annet.
+  if (teacherChecks && typeof teacherChecks === "object") {
+    try { await setTeacherChecks(teacherChecks); done.push("sjekk-fremdrift"); }
+    catch (e) { console.error("teacherChecks-import feilet:", e); failed.push("sjekk-fremdriften"); }
+  }
+
   if (failed.length) {
     alert(`Kunne ikke importere ${failed.join(", ")}.\n\nSannsynlig årsak: Firestore-reglene er ikke publisert for 'content'-samlingen.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (done.length) {
@@ -470,6 +519,12 @@ async function importTechItems(techArray) {
 // ekstra sikkerhetsnett dersom skrivingen skulle feile midtveis.
 // Returnerer true hvis erstatningen ble gjennomført, false hvis avbrutt/feilet.
 async function handleReplace(data) {
+  // Vent på artist-snapshotet: uten det bygges backupen fra en tom state mens
+  // deleteAllArtists sletter det som faktisk ligger på serveren.
+  if (!state.artistsLoaded) {
+    alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du erstatter — ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
+    return false;
+  }
   const toAdd = data
     .filter((a) => a.name)
     .map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }));
@@ -481,6 +536,7 @@ async function handleReplace(data) {
   if (!confirm(
     `Dette sletter alle ${state.artists.length} eksisterende artister ` +
     `(inkludert stemmer og ventende forslag) og erstatter dem med ${toAdd.length} fra filen.\n\n` +
+    `Åpne endringsforslag på artister overlever ikke — de får nye ID-er.\n` +
     `En full sikkerhetskopi av dagens data lastes ned først.\n\nFortsette?`
   )) return false;
   // Last ned backupen og KREV at læreren bekrefter at fila faktisk kom før vi
@@ -511,9 +567,11 @@ async function handleMergeFile(data) {
 
   for (const imp of data) {
     if (!imp.name) continue;
+    // Match mot ALLE statuser, også «pending»: eksporten tar med ventende
+    // forslag, så en match kun mot active/removed ville lagt dem inn på nytt som
+    // duplikater ved re-import av egen backup.
     const existing = state.artists.find(
-      (a) => (a.status === "active" || a.status === "removed") &&
-              a.name.trim().toLowerCase() === imp.name.trim().toLowerCase()
+      (a) => a.name.trim().toLowerCase() === imp.name.trim().toLowerCase()
     );
     if (!existing) { mergeState.newArtists.push(imp); continue; }
 
@@ -573,14 +631,22 @@ function renderMergeConflict() {
       </div>`;
   }).join("");
 
-  $("#merge-next").textContent = index === queue.length - 1 ? "Fullfør" : "Neste";
+  // «Fullfør» når det ikke finnes flere KONFLIKT-rader etter denne (køen kan ha
+  // konfliktløse autofyll-rader til slutt som aldri vises — da ville en ren
+  // posisjonssjekk vist «Neste» på den faktisk siste konflikten).
+  const moreConflicts = queue.slice(index + 1).some((it) => it.conflicts.length > 0);
+  $("#merge-next").textContent = moreConflicts ? "Neste" : "Fullfør";
 }
 
 function fmtVal(v) {
   if (v === null || v === undefined) return "(tom)";
   if (Array.isArray(v)) {
     if (!v.length) return "(tom)";
-    return v.map((i) => (typeof i === "object" ? i.label || JSON.stringify(i) : i)).join(", ");
+    // Verk bruker `title`, kilder `text`, musikkeksempler `label` — vis riktig
+    // felt i stedet for rå JSON (samme feltprioritet som ui-edit.formatDiffValue).
+    return v.map((i) => (typeof i === "object" && i
+      ? (i.title || i.label || i.text || i.name || JSON.stringify(i))
+      : i)).join(", ");
   }
   return String(v);
 }
@@ -589,7 +655,12 @@ function collectCurrentChoices() {
   const item = mergeState.queue[mergeState.index];
   item.conflicts.forEach((c) => {
     const radio = document.querySelector(`input[name="cf-${c.field}"]:checked`);
-    item.resolved[c.field] = radio?.value === "imported" ? c.imported : c.existing;
+    // Skriv KUN feltet når importert verdi velges. «Behold» skal ikke skrive
+    // den eksisterende verdien tilbake (unødvendig Firestore-skriv + feilaktig
+    // «oppdatert»-telling). autoFill-felter ligger allerede i resolved og røres
+    // ikke her.
+    if (radio?.value === "imported") item.resolved[c.field] = c.imported;
+    else delete item.resolved[c.field];
   });
 }
 
@@ -610,7 +681,10 @@ async function bulkMerge(choice) {
   for (let i = mergeState.index; i < mergeState.queue.length; i++) {
     const item = mergeState.queue[i];
     item.conflicts.forEach((c) => {
-      item.resolved[c.field] = choice === "imported" ? c.imported : c.existing;
+      // Som collectCurrentChoices: «behold alt» skal ikke skrive eksisterende
+      // verdier tilbake — bare importerte valg skrives.
+      if (choice === "imported") item.resolved[c.field] = c.imported;
+      else delete item.resolved[c.field];
     });
   }
   await finishMerge();
