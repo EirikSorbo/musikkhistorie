@@ -5,17 +5,17 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=3.58";
-import { showSjangerInfo } from "./genealogy.js?v=3.58";
-import { MODAL_HTML } from "./explore-modals.js?v=3.58";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=3.58";
-import { openVarmekart } from "./explore-varmekart.js?v=3.58";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=3.58";
-import { openTechDetail, refreshTechDetail, openTeknologi, openPodkast, renderTeknologiList } from "./explore-tech.js?v=3.58";
-import { openDecadeList } from "./explore-decade.js?v=3.58";
-import { openKart } from "./explore-kart.js?v=3.58";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=3.58";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=3.58";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=3.59";
+import { showSjangerInfo } from "./genealogy.js?v=3.59";
+import { MODAL_HTML } from "./explore-modals.js?v=3.59";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=3.59";
+import { openVarmekart } from "./explore-varmekart.js?v=3.59";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=3.59";
+import { openTechDetail, refreshTechDetail, openTeknologi, openPodkast, renderTeknologiList } from "./explore-tech.js?v=3.59";
+import { openDecadeList } from "./explore-decade.js?v=3.59";
+import { openKart } from "./explore-kart.js?v=3.59";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=3.59";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=3.59";
 
 function injectModals() {
   const wrap = document.createElement("div");
