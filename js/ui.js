@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.52";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.52";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.52";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.53";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.53";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.53";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_ICONS,
   PRIO_LABELS,
   ICONS,
-} from "./ui-helpers.js?v=3.52";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.52";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.52";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.52";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.52";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.52";
+} from "./ui-helpers.js?v=3.53";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.53";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.53";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.53";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.53";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.53";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -230,6 +230,7 @@ export function renderArtists(el, state) {
     const frag = document.createElement("div");
     frag.innerHTML = slice.map((a) => artistCard(a, { isTeacher, clientId, config, linkCtx })).join("");
     wireLinks(frag, linkCtx);
+    wireRelated(frag, linkCtx);
     frag.querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const { action, id } = btn.dataset;
@@ -352,6 +353,7 @@ function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
       ${kilderHtml(a.kilder)}
+      ${relatedArtistsHtml(a, linkCtx)}
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
