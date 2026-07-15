@@ -16,7 +16,7 @@
 //
 //  Rader som ikke er lister forkastes (og rapporteres) — de ville skjult hele
 //  sjangerens tall bak en ugyldig verdi. Nivåene i seg selv normaliseres ikke
-//  her; visningen (vkRow i explore.js) godtar kun heltall 0–5 og viser resten
+//  her; visningen (vkRow i explore-varmekart.js) godtar kun heltall 0–5 og viser resten
 //  som «ingen data».
 export function mergeHeatRows(current, incoming) {
   const base = current && typeof current === "object" ? current : {};

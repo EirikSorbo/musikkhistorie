@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PLACES, parseGeography, aggregatePlaces, unknownPlaces } from "../../js/geo-places.js?v=3.55";
+import { PLACES, parseGeography, aggregatePlaces, unknownPlaces } from "../../js/geo-places.js?v=3.56";
 
 test("parseGeography: splitter på semikolon, trimmer og senker", () => {
   assert.deepEqual(parseGeography("New Orleans, Louisiana; Chicago, Illinois"),

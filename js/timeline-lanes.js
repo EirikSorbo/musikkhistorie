@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------
 //  Regner ut aktiv-perioder og pakker artister i færrest mulige horisontale
 //  baner per sjangerseksjon (grådig intervall-pakking). Avhengighetsfri og
-//  DOM-fri, så modulen kan enhetstestes i Node. Renderingen bor i explore.js.
+//  DOM-fri, så modulen kan enhetstestes i Node. Renderingen bor i explore-tidslinje.js.
 // ============================================================================
 
 // Aktiv-perioden til en artist:

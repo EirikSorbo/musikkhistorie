@@ -35,13 +35,13 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.55";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.55";
-import { isMainGenre } from "./genealogy.js?v=3.55";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.55";
-import { normalizeConfig } from "./config-normalize.js?v=3.55";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.55";
-import { mergeHeatRows } from "./import-format.js?v=3.55";
+import { firebaseConfig } from "./firebase-config.js?v=3.56";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.56";
+import { isMainGenre } from "./genealogy.js?v=3.56";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.56";
+import { normalizeConfig } from "./config-normalize.js?v=3.56";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.56";
+import { mergeHeatRows } from "./import-format.js?v=3.56";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js og
 // config-normalize.js (rene moduler, enhetstestbare) og importeres direkte der
@@ -620,7 +620,7 @@ export async function runTranceDocIdMigration() {
 //  innhold FØR sletting/flytting (gjenopprettbart fra konsollen).
 //   a) Varmekartet: radnøklene fulgte IKKE med da tre-labelene ble døpt om i
 //      v3.26/3.27 («Blues Rock»→«Blues rock», «Trance / DnB»→«Trance & DnB»).
-//      Oppslaget er case-sensitivt på label (vkRow i explore.js), så begge
+//      Oppslaget er case-sensitivt på label (vkRow i explore-varmekart.js), så begge
 //      sjangrene viste «ingen data» mens nivåene lå bak døde nøkler — og
 //      onHeatEdit sprer gamle nøkler videre ved hver lagring. Finnes den nye
 //      nøkkelen alt (læreren har redigert etter omdøpingen), vinner den, og

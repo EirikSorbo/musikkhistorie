@@ -27,14 +27,14 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.55";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.55";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.55";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.55";
-import { initExplore } from "./explore.js?v=3.55";
+} from "./store.js?v=3.56";
+import { DEFAULT_CONFIG } from "./limits.js?v=3.56";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.56";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.56";
+import { initExplore } from "./explore.js?v=3.56";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.55";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.55";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.56";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.56";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -51,11 +51,11 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.55";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.55";
-import { renderDesk } from "./teacher-desk.js?v=3.55";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.55";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.55";
+} from "./teacher-content.js?v=3.56";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.56";
+import { renderDesk } from "./teacher-desk.js?v=3.56";
+import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.56";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.56";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

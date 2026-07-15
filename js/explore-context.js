@@ -8,13 +8,13 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=3.55";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.55";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.55";
-import { openTechDetail } from "./explore-tech.js?v=3.55";
-import { renderPage } from "./explore-innhold.js?v=3.55";
-import { openTidslinje } from "./explore-tidslinje.js?v=3.55";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=3.55";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=3.56";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.56";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.56";
+import { openTechDetail } from "./explore-tech.js?v=3.56";
+import { renderPage } from "./explore-innhold.js?v=3.56";
+import { openTidslinje } from "./explore-tidslinje.js?v=3.56";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=3.56";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }

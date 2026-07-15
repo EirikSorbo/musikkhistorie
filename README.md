@@ -60,7 +60,9 @@ js/
   linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
   ui.js               Rendering + re-eksport-knutepunkt for ui-*-modulene
   ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff
-  explore.js          Utforsk-modalene (tiår, sjangre, varmekart, kart, podkast …)
+  explore.js          Utforsk — orkestrator (injiserer/wirer modalene, initExplore)
+  explore-*.js        Utforsk-featurene: context (delt kjerne + gjenbrukshjelpere),
+                      modals, varmekart, tidslinje, tech, decade, kart, sjanger, innhold
   proposals.js        Endringsforslag-editoren (student)
   landing.js / student.js / tre.js   Side-logikk
   teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler)
