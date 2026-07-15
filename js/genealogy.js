@@ -7,10 +7,10 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.51";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.51";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.51";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.51";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.52";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.52";
+import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.52";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.52";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -18,10 +18,10 @@ export const GENEALOGY = [
   { id: "vestafrik", l: "Vestafrikansk", f: "Vestafrikansk musikk", fam: "gray", cx: 700, r: 0, p: [], g: null, era: "Røtter", t: [] },
   { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 580, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
   { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
-  { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 2, p: ["worksongs"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
+  { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 1, yOffset: 0.5, p: ["worksongs"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
   { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "purple", cx: 700, r: 1, p: ["vestafrik"], g: "Jazz", era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
   { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["eurofolk"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
-  { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 3, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
+  { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
   { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
   { id: "gospel", l: "Gospel", f: "Gospel", fam: "red", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
@@ -34,7 +34,7 @@ export const GENEALOGY = [
   { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 700, r: 6, p: ["bebop"], rx: ["bebop"], g: "Jazz", era: "1949", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
   { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 825, r: 6, p: ["bebop"], rx: ["cool"], g: "Jazz", era: "1955", t: ["Moanin' – Art Blakey (1959)"] },
   { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 1190, r: 6, p: ["gospel", "rnb"], g: "R&B", era: "1959", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
-  { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 700, r: 7, p: ["bebop"], g: "Jazz", era: "1958", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
+  { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 700, r: 6, yOffset: 0.5, p: ["bebop"], g: "Jazz", era: "1958", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
   { id: "free", l: "Free jazz", f: "Free jazz", fam: "purple", cx: 825, r: 7, p: ["bebop"], rx: ["hardbop"], g: "Jazz", era: "1960", t: ["Free Jazz – Ornette Coleman (1961)"] },
   { id: "funk", l: "Funk", f: "Funk", fam: "red", cx: 1190, r: 7, p: ["soul"], g: "R&B", era: "1967", t: ["Papa's Got a Brand New Bag – James Brown", "Chameleon – Herbie Hancock (1973)"] },
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1320, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
@@ -55,7 +55,7 @@ export const GENEALOGY = [
   // --- Rock ---
   { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
   { id: "britinv", l: "British invasion", f: "Blues revival (British invasion)", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll"], g: "Blues", era: "1963–66", t: ["(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
-  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 8, p: ["britinv", "chicagoblues", "rock"], g: "Blues", era: "sent 1960-tall", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
+  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 7, yOffset: 0.5, p: ["britinv", "chicagoblues", "rock"], g: "Blues", era: "sent 1960-tall", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
 
   // --- Rock ---
   { id: "rock", l: "Rock", f: "Rock", fam: "rock", cx: 445, r: 7, p: ["rocknroll"], g: "Rock", era: "tidlig 1960-tall", t: ["My Generation – The Who (1965)", "Light My Fire – The Doors (1967)"] },
@@ -258,6 +258,7 @@ function showEdgeInfo(fromId, toId, opts = {}) {
 
 const W = 1660, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
 const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115, 12: 1210 };
+const ROW_GAP = 95;   // avstand mellom RY-radene; brukes til node-yOffset (brøkdel av en rad)
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t", 12: "2010-t" };
 // Sjangerfamilier: strekfarge + etikett til fargeforklaringen. Rekkefølgen her
 // styrer rekkefølgen i forklaringen. Familier som brukes i treet, men mangler
@@ -330,7 +331,11 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   const modal = root.querySelector("#modal-sjanger");
 
   const map = {}, kids = {};
-  GENEALOGY.forEach((n) => { n.y = RY[n.r]; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
+  // yOffset (brøkdel av en rad, valgfritt): lar en node ligge litt UNDER
+  // gridlinja i sitt eget tiårsbånd — brukt der en sjanger nedstammer fra en
+  // node i SAMME tiår (blues↔work songs, blues rock↔British invasion, modal↔cool),
+  // så «forelder over barn» bevares uten å bryte rad = tiår.
+  GENEALOGY.forEach((n) => { n.y = RY[n.r] + (n.yOffset || 0) * ROW_GAP; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
   // Alle foreldre = avstamning (p) + motreaksjon (rx)
   const parentsOf = (n) => { const a = n.p.slice(); n.rx.forEach((id) => { if (!a.includes(id)) a.push(id); }); return a; };
   GENEALOGY.forEach((n) => parentsOf(n).forEach((p) => { if (kids[p]) kids[p].push(n.id); }));

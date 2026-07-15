@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, FAMILIES } from "./genealogy.js?v=3.51";
-import { escapeHtml } from "./ui-helpers.js?v=3.51";
-import { safeUrl, wikimediaThumb } from "./util.js?v=3.51";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, FAMILIES } from "./genealogy.js?v=3.52";
+import { escapeHtml } from "./ui-helpers.js?v=3.52";
+import { safeUrl, wikimediaThumb } from "./util.js?v=3.52";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -109,7 +109,7 @@ function buildGraph(artists) {
   for (const n of GENEALOGY) {
     nodeById.set(n.id, {
       id: n.id, label: n.l, fam: n.fam, isGenre: !!n.g,
-      x: n.cx, y: ROW_Y(n.r), parents: n.p || [], reactions: n.rx || [],
+      x: n.cx, y: ROW_Y(n.r) + (n.yOffset || 0) * 64, parents: n.p || [], reactions: n.rx || [],
       artists: [],
     });
   }
