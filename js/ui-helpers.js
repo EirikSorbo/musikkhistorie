@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.59";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.59";
-import { GENDERS } from "./limits.js?v=3.59";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.60";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.60";
+import { GENDERS } from "./limits.js?v=3.60";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -102,6 +102,25 @@ export function teacherActionRow({ checked = false, edit = true, del = false } =
     <div class="spacer"></div>
     ${right}
   </div>`;
+}
+
+// Lærerens Rediger-ikon i sjanger-modalens hode (#sj-extra). Samme ikonknapp
+// som artistkortene bruker — sjanger-/undersjanger-popupen hadde før en
+// tekstknapp «Rediger» nederst i kroppen, som var den eneste flaten i appen
+// der redigering ikke så ut som redigering.
+//
+// Beholderen tømmes ALLTID først: #modal-sjanger gjenbrukes av sjanger-,
+// undersjanger- OG koblingsvisningen, så uten dette ville knappen fra forrige
+// popup blitt stående og redigert feil sjanger. Uten onEdit (student,
+// slektstresiden) blir hodet stående tomt.
+export function renderGenreEditBtn(root, onEdit) {
+  const extra = root.querySelector("#sj-extra");
+  if (!extra) return;
+  extra.innerHTML = onEdit
+    ? `<button type="button" class="icon-btn sj-edit-btn" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>`
+    : "";
+  const btn = extra.querySelector(".sj-edit-btn");
+  if (btn) btn.addEventListener("click", onEdit);
 }
 
 // Kobler radens tre knapper. Sjekk-knappen skifter utseende optimistisk (modalen

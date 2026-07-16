@@ -4,9 +4,9 @@
 //  Innovasjonskort (detalj + liste) og podkast-lista. Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=3.59";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.59";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=3.59";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=3.60";
+import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.60";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=3.60";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens

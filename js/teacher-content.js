@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.59";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.59";
-import { GENEALOGY, edgeKey } from "./genealogy.js?v=3.59";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.59";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.59";
-import { resolveDesc } from "./genre-descriptions.js?v=3.59";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.59";
-import { DECADES } from "./limits.js?v=3.59";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.60";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.60";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.60";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.60";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.60";
+import { resolveDesc } from "./genre-descriptions.js?v=3.60";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.60";
+import { DECADES } from "./limits.js?v=3.60";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.59";
-import { $ } from "./shared.js?v=3.59";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.59";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.60";
+import { $ } from "./shared.js?v=3.60";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.60";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -118,8 +118,17 @@ export function openSingleDecadeModal(decadeId, mode) {
   openAdminModal("modal-decade-single");
 }
 
+// Main-nivået går via genealogy.js sin resolveMainDesc — SAMME funksjon som
+// sjanger-popupen viser fra, så editoren aldri åpner tom over en tekst som
+// står i popupen. Sub-nivået er fri tekst uten tre-node: eksakt doc-ID.
+function resolveDescForEdit(genreId, level) {
+  return level === "main"
+    ? resolveMainDesc(state.genreDescs, genreId)
+    : resolveDesc(state.genreDescs, genreId, level);
+}
+
 export function openSingleSubgenreModal(subgenreId, level = "sub") {
-  const resolved = resolveDesc(state.genreDescs, subgenreId, level);
+  const resolved = resolveDescForEdit(subgenreId, level);
   $("#subgenre-single-title").textContent = `${subgenreId} (${LEVEL_LABEL[level] || level})`;
   $("#ss-desc").value = resolved.description || "";
   $("#ss-msg").textContent = "";

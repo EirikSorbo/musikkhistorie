@@ -11,11 +11,15 @@
 // ============================================================================
 
 // Sjanger-beskrivelse (åpnes fra slektstreet og sjanger-tags).
+// #sj-extra er lærerens Rediger-ikon (renderGenreEditBtn), samme hode-plassering
+// som Om historie/Røtter. Beholderen er tom for studenter og på slektstresiden,
+// og .head-actions-reglene er gated på :not(:empty) — da ser hodet ut som før.
 export const SJANGER_MODAL_HTML = `
 <div class="modal-backdrop" id="modal-sjanger">
   <div class="modal">
     <div class="modal-head">
       <h2 id="sj-title"></h2>
+      <div id="sj-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="sj-body"></div>

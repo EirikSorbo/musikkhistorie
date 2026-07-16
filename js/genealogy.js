@@ -7,10 +7,11 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.59";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.59";
-import { resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.59";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.59";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.60";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.60";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.60";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.60";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.60";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -127,6 +128,22 @@ export function findTreeGenreNode(name) {
   return GENEALOGY.find((n) => n.g && (n.l.toLowerCase() === s || n.f.toLowerCase() === s)) || null;
 }
 
+// Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
+// (showSjangerInfo under) og lærerens editor (teacher-content.js
+// openSingleSubgenreModal) — de MÅ lese samme dokument.
+//
+// Oppslaget prøver både nodens label (l) og fulle navn (f), fordi 18 av 48
+// noder har l≠f og eldre tekster kan ligge under fullnavnet. Skrivingen bruker
+// derimot ALLTID labelen — den er doc-ID-en i genreDescriptions. Leste de to
+// ulikt, ville editoren åpnet tom over en tekst som vises i popupen, og lagring
+// ville lagd et duplikat under labelen.
+export function resolveMainDesc(genreDescs, genreId) {
+  const n = GENEALOGY.find((x) => x.l === genreId || x.f === genreId);
+  return n
+    ? resolveDescAny(genreDescs, [n.l, n.f], "main")
+    : resolveDesc(genreDescs, genreId, "main");
+}
+
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, genreDescs, onShowArtists }
 export function showSjangerInfo(label, opts = {}) {
@@ -145,7 +162,8 @@ export function showSjangerInfo(label, opts = {}) {
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
   // Tre-noder er på «main»-nivå. Hent beskrivelse/kilder nivå-bevisst — kun
   // fra data (ingen fallback; mangler teksten, vises missingDesc under).
-  const resolved = resolveDescAny(genreDescs, [n.l, n.f], "main");
+  // Delt resolver med lærerens editor, så de aldri leser ulike dokumenter.
+  const resolved = resolveMainDesc(genreDescs, n.l);
   const descText = resolved.description;
   const kilderHtml = buildKilderList(resolved.kilder, "Kilder");
 
@@ -153,7 +171,6 @@ export function showSjangerInfo(label, opts = {}) {
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
     (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
     (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Tidslinje</button>` : "",
-    onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
@@ -174,8 +191,9 @@ export function showSjangerInfo(label, opts = {}) {
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
   const bt = mBody.querySelector(".gx-timeline-btn");
   if (bt) bt.addEventListener("click", () => onShowTimeline({ label: n.l }));
-  const be = mBody.querySelector(".gx-edit-btn");
-  if (be) be.addEventListener("click", () => onEdit(n.l, "main"));
+  // Rediger (lærer): n.l er doc-ID-en i genreDescriptions — samme ID som
+  // «Foreslå endring» under bruker, så begge veier treffer samme dokument.
+  renderGenreEditBtn(root, onEdit ? () => onEdit(n.l, "main") : null);
   // Foreslå endring (student). entityId = n.l — SAMME dokument-ID som lærer-
   // redigering bruker (tidligere n.f, som traff et annet dokument). Nivået
   // «main» følger med så godkjenning skriver til riktig nivåfelt.
@@ -247,10 +265,13 @@ function showEdgeInfo(fromId, toId, opts = {}) {
   const be2 = mBody.querySelector(".gx-edge-edit-btn");
   if (be2) be2.addEventListener("click", () => onEditEdge(fromId, toId));
 
-  // «Foreslå endring»-foten gjelder sjangerbeskrivelser — skjul den her, så
-  // den ikke blir stående igjen fra en tidligere sjanger-popup i samme modal.
+  // «Foreslå endring»-foten og Rediger-ikonet i hodet gjelder sjanger-
+  // beskrivelser — nullstill begge her, så de ikke blir stående igjen fra en
+  // tidligere sjanger-popup i samme modal og redigerer feil sjanger.
+  // (Koblingen har sin egen Rediger-knapp i kroppen, .gx-edge-edit-btn.)
   const foot = root.querySelector("#sj-foot");
   if (foot) foot.style.display = "none";
+  renderGenreEditBtn(root, null);
 
   modalOpen(modal);
   return true;

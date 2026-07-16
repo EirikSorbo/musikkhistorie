@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.59";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.59";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.59";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.60";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.60";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.60";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,13 @@ import {
   PRIO_ICONS,
   PRIO_LABELS,
   ICONS,
-} from "./ui-helpers.js?v=3.59";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.59";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.59";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.59";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.59";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.59";
+  renderGenreEditBtn,
+} from "./ui-helpers.js?v=3.60";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.60";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.60";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.60";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.60";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.60";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -405,7 +406,6 @@ function showGenreLevelInfo(label, level, opts = {}) {
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
     onShowPlaylist ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
-    onEdit ? `<button type="button" class="btn ghost small gx-edit-btn">Rediger</button>` : "",
   ].filter(Boolean).join(" ");
 
   // Peker navnet på en tre-sjanger? Tilby snarvei til sjanger-beskrivelsen.
@@ -431,8 +431,7 @@ function showGenreLevelInfo(label, level, opts = {}) {
   if (b) b.addEventListener("click", () => onShowArtists({ label }));
   const bp = mBody.querySelector(".gx-playlist-btn");
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label, fullName: label, node: { l: label } }));
-  const be = mBody.querySelector(".gx-edit-btn");
-  if (be) be.addEventListener("click", () => onEdit(label, level));
+  renderGenreEditBtn(root, onEdit ? () => onEdit(label, level) : null);
   modalOpen(modal);
   return true;
 }

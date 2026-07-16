@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.59";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.59";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.60";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.60";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
