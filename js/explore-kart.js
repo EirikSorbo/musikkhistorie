@@ -3,17 +3,17 @@
 // ----------------------------------------------------------------------------
 //  Flyttet ut av explore.js (v3.55, runde 2). kartDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, escapeHtml, openArtistListModal } from "./ui.js?v=3.60";
-import { isVisible } from "./limits.js?v=3.60";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.60";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.60";
-import { opts, getState } from "./explore-context.js?v=3.60";
+import { modalOpen, renderDecadeRibbon, escapeHtml, openArtistListModal } from "./ui.js?v=3.61";
+import { isVisible } from "./limits.js?v=3.61";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=3.61";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=3.61";
+import { opts, getState } from "./explore-context.js?v=3.61";
 
 // ----------------------------------------------------------------------------
 //  Kart: musikkens geografi. Nord-Amerika-utsnitt (Natural Earth-omriss i
 //  geo-map-data.js) med én prikk per sted (geo-places.js kobler geography-
 //  tekstene til koordinater). Tiårsfilter viser migrasjonen; steder utenfor
-//  utsnittet (Oslo, London …) vises som klikkbare chips under kartet, så de
+//  utsnittet (Oslo, London …) vises som klikkbare chips OVER kartet, så de
 //  ikke forsvinner stille. Klikk på prikk/chip → artistliste → artistkort.
 // ----------------------------------------------------------------------------
 let kartDecade = null;   // null = alle tiår
@@ -94,8 +94,8 @@ function renderKartDots() {
     });
   });
 
-  // Ærlig fotnote: artister uten plasserbart sted (klikkbar liste).
-  const footEl = document.getElementById("kart-footer");
+  // Ærlig regnskap over artister uten plasserbart sted (klikkbar liste).
+  const footEl = document.getElementById("kart-unplaced-row");
   const unplacedCount = unplaced.reduce((sum, u) => sum + u.count, 0);
   footEl.innerHTML = unplacedCount
     ? `<button type="button" class="btn ghost small" id="kart-unplaced">${unplacedCount} artist${unplacedCount === 1 ? "" : "er"} uten plasserbart sted</button>`

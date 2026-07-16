@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.60";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.60";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.61";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.61";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -118,9 +118,13 @@ export const MODAL_HTML = `
     </div>
     <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Hvor artistene virket. Større prikk = flere artister; stiplet ring = diffust område (f.eks. en delstat). Storbyområder er samlet (Brooklyn → New York). Velg et tiår for å se tyngdepunktet flytte seg — trykk på en prikk for artistene.</p>
     <div class="decade-ribbon" id="kart-decades" style="margin-bottom:12px"></div>
+    <!-- Utenfor-kartet-chips og «uten plasserbart sted» står OVER kartet: begge
+         er utfall av tiårsvalget, og under kartet havnet de under skjermkanten.
+         Tomme (ingen treff i valgt tiår) har de ingen høyde, og margin-bottom
+         kollapser mot naboene — da står stripa like tett på kartet som før. -->
+    <div id="kart-abroad" style="margin-bottom:10px"></div>
+    <div id="kart-unplaced-row" style="margin-bottom:12px;font-size:0.78rem;color:var(--muted)"></div>
     <div id="kart-svg"></div>
-    <div id="kart-abroad" style="margin-top:14px"></div>
-    <div id="kart-footer" style="margin-top:10px;font-size:0.78rem;color:var(--muted)"></div>
   </div>
 </div>
 
