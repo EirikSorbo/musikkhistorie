@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.64";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.64";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.64";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.65";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.65";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.65";
 import {
   escapeHtml,
   linkDesc,
@@ -20,7 +20,6 @@ import {
   buildKilderList,
   kilderHtml,
   genreTags,
-  yearLabel,
   musicExampleLabel,
   musicExamplesHtml,
   relatedArtistsHtml,
@@ -33,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.64";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.64";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.64";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.64";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.64";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.64";
+} from "./ui-helpers.js?v=3.65";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.65";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.65";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.65";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.65";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.65";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -509,12 +508,12 @@ export function openPlaylistModal(fullName, node, artists) {
   modalOpen(document.getElementById("modal-spilleliste"));
 }
 
-// Bygger HTML for spilleliste-popup: keyWorks/lenker fra artister, med sjanger-tag per rad.
+// Bygger HTML for spilleliste-popup: KUN lytteeksempler (musicExamples) — de
+// er kuratert lytting med lenke og sjangerknytning. Sentrale verk (keyWorks)
+// hører til artistkortet og tas bevisst IKKE med (brukervalg 2026-07-18:
+// spilleliste = ren lytteeksempel-liste).
 function buildPlaylistHtml(node, artists) {
-  const enc = encodeURIComponent;
   const sj = (node.l || "").toLowerCase();
-  const ytLink = (q, text) =>
-    `<a href="https://www.youtube.com/results?search_query=${enc(q)}" target="_blank" rel="noopener">${escapeHtml(text)}</a>`;
 
   const matchesSj = (a) => {
     if (a.metaGenre === node.l) return true;
@@ -524,9 +523,8 @@ function buildPlaylistHtml(node, artists) {
 
   // Per-eksempel sjangerknytning: et tagget eksempel vises KUN i sin egen
   // sjangers spilleliste (streng likhet — «Jazz»-noden betyr tidlig jazz, ikke
-  // paraplyen). Utagget faller tilbake til dagens oppførsel: alle artistens
-  // sjangre. Sjekker også keyWorks, så verk-tagging senere virker uten kodeendring.
-  const exOk = (x) => !x.genre || String(x.genre).toLowerCase() === sj;
+  // paraplyen). Utagget faller tilbake til alle artistens sjangre.
+  const exOk = (m) => !m.genre || String(m.genre).toLowerCase() === sj;
 
   const genreArtists = (artists || [])
     .filter((a) => isVisible(a) && matchesSj(a))
@@ -538,9 +536,9 @@ function buildPlaylistHtml(node, artists) {
     const nameLow = a.name.toLowerCase();
     const sjangerTag = genreTags(a, { withSub: false, extraClass: "tag-pl" });
     // Tagget rad viser eksempelets EGEN sjanger (én boble); utagget viser
-    // artistens sjangre som før.
-    const rowTag = (x) => x.genre
-      ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(x.genre)}">${escapeHtml(x.genre)}</button>`
+    // artistens sjangre.
+    const rowTag = (m) => m.genre
+      ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(m.genre)}">${escapeHtml(m.genre)}</button>`
       : sjangerTag;
     (a.musicExamples || []).forEach((m) => {
       if (!exOk(m)) return;
@@ -549,20 +547,6 @@ function buildPlaylistHtml(node, artists) {
       seen.add(key);
       const yInfo = musicExampleLabel(m);
       rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${rowTag(m)}</li>`);
-    });
-    (a.keyWorks || []).forEach((w) => {
-      const title = w.title || "";
-      if (!title) return;
-      if (!exOk(w)) return;
-      const key = `${nameLow}|${title.toLowerCase()}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      const yLabel = yearLabel(w);
-      const yr = yLabel ? ` <span class="muted">${escapeHtml(yLabel)}</span>` : "";
-      const link = w.url
-        ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>`
-        : ytLink(`${title} ${a.name}`, title);
-      rows.push(`<li class="pl-item">${link}${yr} <span class="muted">— ${escapeHtml(a.name)}</span> ${rowTag(w)}</li>`);
     });
     return rows;
   });
