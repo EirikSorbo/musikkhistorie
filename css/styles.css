@@ -324,7 +324,10 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-row.ov-zero .bar-fill { background: var(--warn); opacity: 0.45; }
 
 .ov-genre-cols { column-count: 3; column-gap: 28px; margin-top: 10px; }
-.ov-genre-cols .ov-row { break-inside: avoid; margin-bottom: 8px; }
+/* Bredere tallkolonne («31 (12)») enn standard 30px — søylen (1fr) blir
+   tilsvarende kortere, så alt står på én rad i stedet for å brytes. */
+.ov-genre-cols .ov-row { break-inside: avoid; margin-bottom: 8px; grid-template-columns: minmax(96px, auto) 1fr 54px; }
+.ov-genre-cols .ov-count { white-space: nowrap; }
 
 /* Chips (instrument, tomme greiner, tynne tiår, historier) */
 .ov-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
