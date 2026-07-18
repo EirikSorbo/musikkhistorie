@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.63";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.63";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.63";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.63";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.63";
-import { resolveDesc } from "./genre-descriptions.js?v=3.63";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.63";
-import { DECADES } from "./limits.js?v=3.63";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.64";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.64";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.64";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.64";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.64";
+import { resolveDesc } from "./genre-descriptions.js?v=3.64";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.64";
+import { DECADES } from "./limits.js?v=3.64";
 
 const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.63";
-import { $ } from "./shared.js?v=3.63";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.63";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.64";
+import { $ } from "./shared.js?v=3.64";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.64";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

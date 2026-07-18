@@ -8,7 +8,7 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.63";
+import { escapeHtml } from "./util.js?v=3.64";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
@@ -33,8 +33,21 @@ export const MUSIC_SPEC = {
     { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
     { key: "performanceYear", cls: "me-perf-year", type: "number", ph: "Framf.år", label: "Framføringsår", title: "Året for framføring/konsert (kun hvis annet enn utgivelsesår)" },
     { key: "note", cls: "me-note", type: "text", ph: "Hør etter … (valgfritt lytteanvisning)", label: "Hør etter", title: "Kort lytteanvisning: hva skal man legge merke til i akkurat denne innspillingen?" },
+    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til — styrer hvilken spilleliste det vises i. Viktig for artister med flere sjangre.", options: [] },
   ],
 };
+
+// MUSIC_SPEC med sjangervalgene fylt inn i genre-selecten. Holder row-editor
+// avhengighetsfri: kalleren sender inn gyldige tre-sjangre (typisk
+// GENEALOGY_MAIN_GENRES fra genealogy.js).
+export function musicSpecWithGenres(genres) {
+  return {
+    ...MUSIC_SPEC,
+    fields: MUSIC_SPEC.fields.map((f) =>
+      f.key === "genre" ? { ...f, options: [...(genres || [])] } : f
+    ),
+  };
+}
 
 export const SOURCE_SPEC = {
   rowClass: "source-row", removeClass: "remove-source", keepKey: "text",
@@ -47,6 +60,20 @@ export const SOURCE_SPEC = {
 
 function inputHtml(f, values) {
   const v = values[f.key] == null ? "" : values[f.key];
+  if (f.type === "select") {
+    // Eksisterende verdi som ikke står i options beholdes som eget valg,
+    // så en re-lagring aldri mister den stille.
+    const opts = Array.isArray(f.options) ? [...f.options] : [];
+    const vs = String(v);
+    if (vs && !opts.includes(vs)) opts.push(vs);
+    let html = `<select class="${f.cls}"`;
+    if (f.label) html += ` aria-label="${escapeHtml(f.label)}"`;
+    if (f.title) html += ` title="${escapeHtml(f.title)}"`;
+    html += `><option value="">${escapeHtml(f.ph || "")}</option>`;
+    html += opts.map((o) =>
+      `<option value="${escapeHtml(o)}"${o === vs ? " selected" : ""}>${escapeHtml(o)}</option>`).join("");
+    return html + "</select>";
+  }
   const type = f.type === "number" ? "number" : (f.type === "url" ? "url" : "text");
   let html = `<input type="${type}" class="${f.cls}" placeholder="${escapeHtml(f.ph || "")}" value="${escapeHtml(String(v))}"`;
   if (f.label) html += ` aria-label="${escapeHtml(f.label)}"`;

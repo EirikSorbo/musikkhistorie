@@ -3,8 +3,8 @@
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=3.63";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.63";
+import { contentGaps } from "../../js/ui-dashboard.js?v=3.64";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.64";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
@@ -67,12 +67,28 @@ test("contentGaps: koblingsbeskrivelse fjerner koblingen fra edgeDesc", () => {
   assert.ok(!withOne.edgeDesc.some((e) => e.from === "blues" && e.to === "jazz"));
 });
 
+test("contentGaps: lytteeksempler uten sjangerknytning teller kun flersjanger-artister", () => {
+  const artists = [
+    // Én sjanger → aldri i bøtta, selv uten genre-felt.
+    artist({ name: "EnSjanger", mainGenre: ["Blues"], musicExamples: [{ url: "https://x" }] }),
+    // Flersjanger uten genre på eksempelet → i bøtta.
+    artist({ name: "Utagget", mainGenre: ["Blues", "Soul"], musicExamples: [{ url: "https://x" }] }),
+    // Flersjanger med gyldig genre → ikke i bøtta.
+    artist({ name: "Tagget", mainGenre: ["Blues", "Soul"], musicExamples: [{ url: "https://x", genre: "Soul" }] }),
+    // Flersjanger med genre som ikke står i mainGenre → i bøtta (mismatch).
+    artist({ name: "Mismatch", mainGenre: ["Blues", "Soul"], musicExamples: [{ url: "https://x", genre: "Funk" }] }),
+  ];
+  const g = contentGaps({ artists, contentLoaded: true });
+  assert.deepEqual(g.noExGenre.map((a) => a.name).sort(), ["Mismatch", "Utagget"]);
+});
+
 test("contentGaps: total er summen av alle bøtter", () => {
   const g = contentGaps({
     artists: [artist({ name: "X", imageUrl: "" })],
     genreDescs: {}, content: {}, contentLoaded: true,
   });
   const sum = g.stories.length + g.pages.length + g.mainDesc.length + g.subDesc.length
-    + g.edgeDesc.length + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length;
+    + g.edgeDesc.length + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length
+    + g.noExGenre.length;
   assert.equal(g.total, sum);
 });

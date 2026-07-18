@@ -4,16 +4,21 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.63";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.63";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.63";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.63";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.63";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.63";
-import { GENDERS } from "./limits.js?v=3.63";
-import { debounce } from "./util.js?v=3.63";
-import { $ } from "./shared.js?v=3.63";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.63";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.64";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.64";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.64";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.64";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.64";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.64";
+import { GENDERS } from "./limits.js?v=3.64";
+import { debounce } from "./util.js?v=3.64";
+import { $ } from "./shared.js?v=3.64";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.64";
+
+// Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
+const MUSIC_SPEC_SJ = musicSpecWithGenres(
+  [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"))
+);
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -164,9 +169,9 @@ export function openEditModal(artistId) {
 
 // Rad-editorene bor nå i den delte row-editor.js (spec-drevet, med escaping).
 // Disse er tynne innpakninger mot rediger-modalens wrap-er.
-function buildEditMusicExampleRows(examples) { buildRows($("#ed-me-rows"), MUSIC_SPEC, examples); }
-function addEditMusicExampleRow(v) { addRow($("#ed-me-rows"), MUSIC_SPEC, v || {}); }
-function collectEditMusicExamples() { return collectRows($("#ed-me-rows"), MUSIC_SPEC); }
+function buildEditMusicExampleRows(examples) { buildRows($("#ed-me-rows"), MUSIC_SPEC_SJ, examples); }
+function addEditMusicExampleRow(v) { addRow($("#ed-me-rows"), MUSIC_SPEC_SJ, v || {}); }
+function collectEditMusicExamples() { return collectRows($("#ed-me-rows"), MUSIC_SPEC_SJ); }
 
 function buildEditSourceRows(kilder) { buildRows($("#ed-source-rows"), SOURCE_SPEC, kilder); }
 function addEditSourceRow(v) { addRow($("#ed-source-rows"), SOURCE_SPEC, v || {}); }

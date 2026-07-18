@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.63";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.63";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.63";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.64";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.64";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.64";
 import {
   escapeHtml,
   linkDesc,
@@ -33,12 +33,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.63";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.63";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.63";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.63";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.63";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.63";
+} from "./ui-helpers.js?v=3.64";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.64";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.64";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.64";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.64";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.64";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -522,6 +522,12 @@ function buildPlaylistHtml(node, artists) {
     return all.some((s) => String(s).toLowerCase() === sj);
   };
 
+  // Per-eksempel sjangerknytning: et tagget eksempel vises KUN i sin egen
+  // sjangers spilleliste (streng likhet — «Jazz»-noden betyr tidlig jazz, ikke
+  // paraplyen). Utagget faller tilbake til dagens oppførsel: alle artistens
+  // sjangre. Sjekker også keyWorks, så verk-tagging senere virker uten kodeendring.
+  const exOk = (x) => !x.genre || String(x.genre).toLowerCase() === sj;
+
   const genreArtists = (artists || [])
     .filter((a) => isVisible(a) && matchesSj(a))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
@@ -531,16 +537,23 @@ function buildPlaylistHtml(node, artists) {
     const rows = [];
     const nameLow = a.name.toLowerCase();
     const sjangerTag = genreTags(a, { withSub: false, extraClass: "tag-pl" });
+    // Tagget rad viser eksempelets EGEN sjanger (én boble); utagget viser
+    // artistens sjangre som før.
+    const rowTag = (x) => x.genre
+      ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(x.genre)}">${escapeHtml(x.genre)}</button>`
+      : sjangerTag;
     (a.musicExamples || []).forEach((m) => {
+      if (!exOk(m)) return;
       const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
       const yInfo = musicExampleLabel(m);
-      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
+      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${rowTag(m)}</li>`);
     });
     (a.keyWorks || []).forEach((w) => {
       const title = w.title || "";
       if (!title) return;
+      if (!exOk(w)) return;
       const key = `${nameLow}|${title.toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
@@ -549,7 +562,7 @@ function buildPlaylistHtml(node, artists) {
       const link = w.url
         ? `<a href="${escapeHtml(w.url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>`
         : ytLink(`${title} ${a.name}`, title);
-      rows.push(`<li class="pl-item">${link}${yr} <span class="muted">— ${escapeHtml(a.name)}</span> ${sjangerTag}</li>`);
+      rows.push(`<li class="pl-item">${link}${yr} <span class="muted">— ${escapeHtml(a.name)}</span> ${rowTag(w)}</li>`);
     });
     return rows;
   });

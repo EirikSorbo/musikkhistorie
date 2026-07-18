@@ -446,6 +446,7 @@ textarea { resize: vertical; }
 .me-row .me-year { flex: 0 0 90px; }
 .me-row .me-perf-year { flex: 0 0 110px; }
 .me-row .me-note { flex: 1 1 100%; }
+.me-row .me-genre { flex: 0 0 240px; }
 
 .add-actions, .admin-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 

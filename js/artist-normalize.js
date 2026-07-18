@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=3.63";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=3.63";
+import { safeUrl } from "./util.js?v=3.64";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=3.64";
 
 // Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
 // vises riktig uten å skrive om databasen).
@@ -73,7 +73,13 @@ export function normalizeArtist(a) {
   }
   out.musicExamples = out.musicExamples
     .filter((m) => m && typeof m === "object")   // dropp null/søppel før spredning
-    .map((m) => ({ ...m, url: safeUrl(m.url) }))
+    .map((m) => {
+      const o = { ...m, url: safeUrl(m.url) };
+      // genre (sjangerknytning for spillelister): kun ikke-tom streng beholdes.
+      if (typeof o.genre === "string" && o.genre.trim()) o.genre = o.genre.trim();
+      else delete o.genre;
+      return o;
+    })
     .filter((m) => m.url);
   delete out.links;
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=3.63";
+import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=3.64";
 
 test("idempotent på allerede normalisert artist", () => {
   const a = {
@@ -77,6 +77,21 @@ test("manglende felter gir tomme arrays", () => {
   assert.deepEqual(n.keyWorks, []);
   assert.deepEqual(n.kilder, []);
   assert.deepEqual(n.musicExamples, []);
+});
+
+test("musicExamples.genre: trimmes, ikke-streng/tom fjernes", () => {
+  const n = normalizeArtist({
+    musicExamples: [
+      { url: "https://a.no", genre: "  Cool jazz " },
+      { url: "https://b.no", genre: "" },
+      { url: "https://c.no", genre: 42 },
+      { url: "https://d.no" },
+    ],
+  });
+  assert.equal(n.musicExamples[0].genre, "Cool jazz");
+  assert.equal("genre" in n.musicExamples[1], false);
+  assert.equal("genre" in n.musicExamples[2], false);
+  assert.equal("genre" in n.musicExamples[3], false);
 });
 
 test("null/søppel-elementer i kilder/keyWorks/musicExamples krasjer ikke", () => {

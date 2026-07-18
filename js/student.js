@@ -6,12 +6,17 @@ import {
   subscribeArtists,
   subscribeConfig,
   addArtist,
-} from "./store.js?v=3.63";
-import { GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.63";
-import { GENEALOGY_META_GENRES } from "./genealogy.js?v=3.63";
-import { fillSelect } from "./ui.js?v=3.63";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.63";
-import { WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.63";
+} from "./store.js?v=3.64";
+import { GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.64";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.64";
+import { fillSelect } from "./ui.js?v=3.64";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.64";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.64";
+
+// Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
+const MUSIC_SPEC_SJ = musicSpecWithGenres(
+  [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"))
+);
 
 const state = {
   artists: [],
@@ -161,9 +166,9 @@ function findDuplicate(name) {
 
 // Rad-editorene (verk/musikkeksempler/kilder) bor nå i den delte row-editor.js
 // (spec-drevet, med escaping). Disse er tynne innpakninger mot skjemaets wrap-er.
-function addMusicExampleRow(v) { return addRow($("#me-rows"), MUSIC_SPEC, v || {}); }
-function resetMusicExampleRows() { buildRows($("#me-rows"), MUSIC_SPEC); }
-function collectMusicExamples() { return collectRows($("#me-rows"), MUSIC_SPEC); }
+function addMusicExampleRow(v) { return addRow($("#me-rows"), MUSIC_SPEC_SJ, v || {}); }
+function resetMusicExampleRows() { buildRows($("#me-rows"), MUSIC_SPEC_SJ); }
+function collectMusicExamples() { return collectRows($("#me-rows"), MUSIC_SPEC_SJ); }
 
 function addWorkRow(v) { return addRow($("#work-rows"), WORK_SPEC, v || {}); }
 function resetWorkRows() { buildRows($("#work-rows"), WORK_SPEC); }

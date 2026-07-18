@@ -17,11 +17,11 @@ import {
   activeArtists,
   decadesForRange,
   DECADES,
-} from "./limits.js?v=3.63";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.63";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.63";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.63";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.63";
+} from "./limits.js?v=3.64";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.64";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.64";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.64";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.64";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -83,9 +83,16 @@ export function contentGaps({ artists = [], genreDescs = {}, edgeDescs = {}, con
   const noDesc = active.filter((a) => !(a.description || "").trim()).sort(byName);
   const noMusic = active.filter((a) => !(a.musicExamples || []).length).sort(byName);
   const noSources = active.filter((a) => !(a.kilder || []).length).sort(byName);
+  // Flersjanger-artister med lytteeksempler uten (gyldig) sjangerknytning —
+  // uten den vises eksemplene i ALLE artistens sjanger-spillelister.
+  const noExGenre = active.filter((a) => {
+    const mg = a.mainGenre || [];
+    if (mg.length < 2) return false;
+    return (a.musicExamples || []).some((m) => !m.genre || !mg.includes(m.genre));
+  }).sort(byName);
   const total = stories.length + pages.length + mainDesc.length + subDesc.length + edgeDesc.length
-    + noImage.length + noDesc.length + noMusic.length + noSources.length;
-  return { stories, pages, mainDesc, subDesc, edgeDesc, noImage, noDesc, noMusic, noSources, total };
+    + noImage.length + noDesc.length + noMusic.length + noSources.length + noExGenre.length;
+  return { stories, pages, mainDesc, subDesc, edgeDesc, noImage, noDesc, noMusic, noSources, noExGenre, total };
 }
 
 export function renderDashboard(el, {
@@ -349,6 +356,7 @@ export function renderDashboard(el, {
       ${missItem("Artister uten beskrivelse", noDesc.length, artistRows(noDesc))}
       ${missItem("Artister uten bilde", noImage.length, artistRows(noImage))}
       ${missItem("Artister uten musikkeksempler", noMusic.length, artistRows(noMusic))}
+      ${missItem("Lytteeksempler uten sjangerknytning (flersjanger-artister)", gaps.noExGenre.length, artistRows(gaps.noExGenre))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
     </div>
   `;
