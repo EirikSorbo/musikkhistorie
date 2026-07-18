@@ -157,6 +157,10 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
 .btn.ghost:hover { color: var(--text); }
 .btn.small { padding: 6px 11px; font-size: 0.82rem; border-radius: 9px; }
+/* .compact: for knapperader med tre like brede knapper (f.eks. Undersjangere/
+   Tidslinje/Varmekart i sjanger-kortet) — mindre padding/tekst og min-width:0
+   så de tre får plass på smale skjermer (iPhone) uten at siste går ut. */
+.btn.compact { padding: 9px 8px; font-size: 0.86rem; min-width: 0; white-space: nowrap; }
 .btn.danger { color: var(--danger); border-color: #f3c9c9; }
 .btn.danger:hover { border-color: var(--danger); background: #fff5f5; }
 
@@ -1570,6 +1574,7 @@ body.is-teacher #gate { display: none; }
   .modal { padding: 16px 14px; }
   .btn { padding: 8px 13px; }
   .btn.small { padding: 5px 9px; font-size: 0.78rem; }
+  .btn.compact { padding: 8px 5px; font-size: 0.79rem; }
 }
 
 .artist-link, .tech-link, .genre-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
