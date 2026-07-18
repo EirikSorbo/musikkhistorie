@@ -10,20 +10,23 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-export const DEFAULT_CONFIG = {
-  instruments: [
-    "Vokal",
-    "Gitar",
-    "Piano/keyboards",
-    "Bass",
-    "Trommer/perkusjon",
-    "Saksofon",
-    "Trompet",
-    "Strykeinstrumenter",
-    "Elektronisk produksjon",
-    "Annet",
-  ],
-};
+// Instrument-vokabularet — fast liste i kode, som DECADES og sjangertreet
+// (v3.68: erstattet config-dokumentet i Firestore, det siste som lå der).
+// Endres her ved behov; artister med verdier utenfor lista flagges i
+// Oversikten og ved import, så lista og dataene ikke kan drive fra hverandre
+// slik config-tekstfeltet tillot (Saxofon/Saksofon, Tangenter/Piano...).
+export const INSTRUMENTS = [
+  "Vokal",
+  "Gitar",
+  "Tangenter",
+  "Bass",
+  "Trommer/perkusjon",
+  "Saksofon",
+  "Trompet",
+  "Strykeinstrumenter",
+  "Elektronisk produksjon",
+  "Annet",
+];
 
 // Tiårene appen dekker — strukturakse for histogram, filtre, tiårs-
 // beskrivelser og Skrivebordet. Utvides her når 2030-tallet melder seg.

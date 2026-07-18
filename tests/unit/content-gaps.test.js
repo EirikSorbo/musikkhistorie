@@ -3,12 +3,13 @@
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=3.67";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.67";
+import { contentGaps } from "../../js/ui-dashboard.js?v=3.68";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.68";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
-  imageUrl: "x", description: "d", musicExamples: [{}], kilder: [{}], ...o,
+  imageUrl: "x", description: "d", musicExamples: [{}], kilder: [{}],
+  instrument: "Vokal", ...o,
 });
 
 test("contentGaps: artist-mediahull telles per felt", () => {
@@ -82,6 +83,16 @@ test("contentGaps: lytteeksempler uten sjangerknytning teller kun flersjanger-ar
   assert.deepEqual(g.noExGenre.map((a) => a.name).sort(), ["Mismatch", "Utagget"]);
 });
 
+test("contentGaps: instrument utenfor vokabularet eller tomt flagges", () => {
+  const artists = [
+    artist({ name: "Gyldig" }),
+    artist({ name: "Tomt", instrument: "" }),
+    artist({ name: "Utenfor", instrument: "Saxofon" }),
+  ];
+  const g = contentGaps({ artists, contentLoaded: true });
+  assert.deepEqual(g.badInstrument.map((a) => a.name).sort(), ["Tomt", "Utenfor"]);
+});
+
 test("contentGaps: total er summen av alle bøtter", () => {
   const g = contentGaps({
     artists: [artist({ name: "X", imageUrl: "" })],
@@ -89,6 +100,6 @@ test("contentGaps: total er summen av alle bøtter", () => {
   });
   const sum = g.stories.length + g.pages.length + g.mainDesc.length + g.subDesc.length
     + g.edgeDesc.length + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length
-    + g.noExGenre.length;
+    + g.noExGenre.length + g.badInstrument.length;
   assert.equal(g.total, sum);
 });

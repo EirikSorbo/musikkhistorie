@@ -17,11 +17,12 @@ import {
   activeArtists,
   decadesForRange,
   DECADES,
-} from "./limits.js?v=3.67";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.67";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.67";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.67";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.67";
+  INSTRUMENTS,
+} from "./limits.js?v=3.68";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.68";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.68";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.68";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.68";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -95,14 +96,19 @@ export function contentGaps({ artists = [], genreDescs = {}, edgeDescs = {}, con
     if (mg.length < 2) return false;
     return (a.musicExamples || []).some((m) => !m.genre || !mg.includes(m.genre));
   }).sort(byName);
+  // Instrument utenfor vokabularet (INSTRUMENTS) eller tomt — verdier utenfor
+  // lista splitter filteret/statistikken (Saxofon vs Saksofon-fella).
+  const badInstrument = active
+    .filter((a) => !a.instrument || !INSTRUMENTS.includes(a.instrument))
+    .sort(byName);
   const total = stories.length + pages.length + mainDesc.length + subDesc.length + edgeDesc.length
-    + noImage.length + noDesc.length + noMusic.length + noSources.length + noExGenre.length;
-  return { stories, pages, mainDesc, subDesc, edgeDesc, noImage, noDesc, noMusic, noSources, noExGenre, total };
+    + noImage.length + noDesc.length + noMusic.length + noSources.length + noExGenre.length
+    + badInstrument.length;
+  return { stories, pages, mainDesc, subDesc, edgeDesc, noImage, noDesc, noMusic, noSources, noExGenre, badInstrument, total };
 }
 
 export function renderDashboard(el, {
   artists,
-  config,
   genreDescs = {},
   edgeDescs = {},
   teacherChecks = {},
@@ -151,11 +157,12 @@ export function renderDashboard(el, {
   const thinDecades = decades.filter((d) => (counts.perDecade[d] || 0) <= 1);
 
   // --- Instrument -------------------------------------------------------------
-  // Config-lista pluss eventuelle verdier i bruk som ikke står i config.
+  // Vokabularet (INSTRUMENTS) pluss eventuelle verdier i bruk utenfor lista —
+  // de siste er datafeil som ogsa flagges i «Innhold som mangler».
   const instruments = [
-    ...(config.instruments || []),
+    ...INSTRUMENTS,
     ...Object.keys(counts.perInstrument)
-      .filter((i) => i && i !== "undefined" && !(config.instruments || []).includes(i)),
+      .filter((i) => i && i !== "undefined" && !INSTRUMENTS.includes(i)),
   ];
 
   // --- Hull -------------------------------------------------------------------
@@ -363,6 +370,8 @@ export function renderDashboard(el, {
       ${missItem("Artister uten bilde", noImage.length, artistRows(noImage))}
       ${missItem("Artister uten musikkeksempler", noMusic.length, artistRows(noMusic))}
       ${missItem("Lytteeksempler uten sjangerknytning (flersjanger-artister)", gaps.noExGenre.length, artistRows(gaps.noExGenre))}
+      ${missItem("Artister uten gyldig instrument", gaps.badInstrument.length,
+        artistRows(gaps.badInstrument, (a) => a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
     </div>
   `;

@@ -4,14 +4,13 @@
 
 import {
   subscribeArtists,
-  subscribeConfig,
   addArtist,
-} from "./store.js?v=3.67";
-import { GENDERS, DEFAULT_CONFIG } from "./limits.js?v=3.67";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.67";
-import { fillSelect } from "./ui.js?v=3.67";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.67";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.67";
+} from "./store.js?v=3.68";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.68";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.68";
+import { fillSelect } from "./ui.js?v=3.68";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.68";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.68";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -20,7 +19,6 @@ const MUSIC_SPEC_SJ = musicSpecWithGenres(
 
 const state = {
   artists: [],
-  config: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -28,9 +26,8 @@ const state = {
 // ----------------------------------------------------------------------------
 
 function refreshControls() {
-  const { config } = state;
   fillSelect($("#in-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg hovedsjanger …" });
-  fillSelect($("#in-instrument"), config.instruments || [], { placeholder: "Velg instrument …" });
+  fillSelect($("#in-instrument"), INSTRUMENTS, { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }
 
@@ -194,17 +191,13 @@ function init() {
   resetSourceRows();
 
   if (!CONFIGURED) {
-    state.config = { ...DEFAULT_CONFIG };
     refreshControls();
     showSetupBanner("Du kan likevel se hvordan skjemaet ser ut.");
     return;
   }
 
   wireFirestoreErrorBanner();
-  subscribeConfig((config) => {
-    state.config = config;
-    refreshControls();
-  });
+  refreshControls();
   subscribeArtists((artists) => {
     state.artists = artists;
   });

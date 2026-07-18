@@ -14,18 +14,14 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.67";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.67";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.67";
-import { DECADES } from "./limits.js?v=3.67";
-import { $ } from "./shared.js?v=3.67";
+} from "./store.js?v=3.68";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.68";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.68";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=3.68";
+import { $ } from "./shared.js?v=3.68";
 
 export const state = {
   artists: [],
-  config: null,
-  // true når config-lesingen feilet og state.config bare er standardverdier —
-  // da må admin-lagring blokkeres, ellers overskrives lærerens ekte config.
-  configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
   // Koblingsbeskrivelser (strekene i slektstreet), doc-ID «fra__til».
@@ -135,7 +131,6 @@ export function renderList() {
 }
 
 export function renderAll() {
-  if (!state.config) return;
   // Ventende-filteret slås på fra Skrivebordet (som også slår det av igjen).
   // Når siste forslag er behandlet, slås det av automatisk — ellers ville
   // lista stått igjen tom uten noen synlig grunn.
@@ -146,7 +141,6 @@ export function renderAll() {
 }
 
 export function refreshControls() {
-  const { config } = state;
   fillSelect($("#f-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Alle sjangre" });
   fillSelect($("#f-genre"), GENEALOGY_META_GENRES, { placeholder: "Alle hovedsjangre" });
   fillSelect(
@@ -154,7 +148,7 @@ export function refreshControls() {
     DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Alle tiår" }
   );
-  fillSelect($("#f-instrument"), config.instruments || [], { placeholder: "Alle instrumenter" });
+  fillSelect($("#f-instrument"), INSTRUMENTS, { placeholder: "Alle instrumenter" });
   const allSubs = [...new Set(
     (state.artists || []).flatMap((a) => [...(a.mainGenre || []), ...(a.subGenre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));

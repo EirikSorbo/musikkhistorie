@@ -1,14 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEFAULT_CONFIG,
+  INSTRUMENTS,
   DECADES,
   isVisible,
   decadesForRange,
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=3.67";
+} from "../../js/limits.js?v=3.68";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);
@@ -47,9 +47,11 @@ test("genderDistribution: ukjente kategorier telles som ukjent", () => {
   assert.equal(d.total, 2);
 });
 
-test("config er slanket til instrument-vokabularet; tiårene bor i DECADES", () => {
-  assert.deepEqual(Object.keys(DEFAULT_CONFIG), ["instruments"]);
-  assert.ok(DEFAULT_CONFIG.instruments.includes("Gitar"));
+test("vokabularene bor i koden: INSTRUMENTS-konstanten og DECADES", () => {
+  assert.ok(INSTRUMENTS.includes("Gitar"));
+  assert.ok(INSTRUMENTS.includes("Tangenter"));
+  assert.ok(INSTRUMENTS.includes("Saksofon"));
+  assert.equal(new Set(INSTRUMENTS).size, INSTRUMENTS.length, "ingen duplikater");
   assert.equal(DECADES[0], 1900);
   assert.equal(DECADES[DECADES.length - 1], 2020);
 });

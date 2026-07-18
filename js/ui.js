@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.67";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.67";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.67";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.68";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.68";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.68";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.67";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.67";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.67";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.67";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.67";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.67";
+} from "./ui-helpers.js?v=3.68";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.68";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.68";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.68";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.68";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.68";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -69,7 +69,7 @@ export function buildMainGenreList(artists) {
 // ----------------------------------------------------------------------------
 
 // Kompakt klikkbar liste når filtre er aktive
-export function renderResultList(el, artists, config, onSelect) {
+export function renderResultList(el, artists, onSelect) {
   el.className = "result-list";
   if (!artists.length) {
     el.innerHTML = `<p class="muted empty">Ingen forslag matcher filteret.</p>`;
@@ -100,7 +100,7 @@ export function renderResultList(el, artists, config, onSelect) {
 }
 
 // Full innholdsvisning for detaljmodal (kun lesemodus)
-export function renderArtistDetail(el, artist, config, lc) {
+export function renderArtistDetail(el, artist, lc) {
   const a = artist;
   const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
@@ -127,18 +127,18 @@ export function renderArtistDetail(el, artist, config, lc) {
 }
 
 // Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
-export function renderSpotlightCards(el, artists, config, lc) {
+export function renderSpotlightCards(el, artists, lc) {
   el.className = "spotlight-grid";
   if (!artists.length) {
     el.innerHTML = `<p class="muted empty" style="grid-column:1/-1">Ingen forslag matcher filteret ennå.</p>`;
     return;
   }
-  el.innerHTML = artists.map((a) => spotlightCard(a, config, lc)).join("");
+  el.innerHTML = artists.map((a) => spotlightCard(a, lc)).join("");
   wireLinks(el, lc);
   wireRelated(el, lc);
 }
 
-function spotlightCard(a, config, lc) {
+function spotlightCard(a, lc) {
   const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
   const prio = a.priority || 0;
@@ -179,7 +179,7 @@ function sessionOrderKey(id) {
 }
 
 export function renderArtists(el, state) {
-  const { artists, filters, isTeacher, clientId, config, handlers } = state;
+  const { artists, filters, isTeacher, clientId, handlers } = state;
 
   let list = [...artists];
 
@@ -228,7 +228,7 @@ export function renderArtists(el, state) {
     // Bygg og koble puljen i et løst element, så bare de NYE kortene får
     // lyttere (wireLinks/knappe-lyttere på hele el ville doblet dem).
     const frag = document.createElement("div");
-    frag.innerHTML = slice.map((a) => artistCard(a, { isTeacher, clientId, config, linkCtx })).join("");
+    frag.innerHTML = slice.map((a) => artistCard(a, { isTeacher, clientId, linkCtx })).join("");
     wireLinks(frag, linkCtx);
     wireRelated(frag, linkCtx);
     frag.querySelectorAll("[data-action]").forEach((btn) => {
@@ -264,7 +264,7 @@ export function renderArtists(el, state) {
   }
 }
 
-function artistCard(a, { isTeacher, clientId, config, linkCtx }) {
+function artistCard(a, { isTeacher, clientId, linkCtx }) {
   const upvotes = (a.votedUpBy || []).length;
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
   const prio = a.priority || 0;

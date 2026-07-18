@@ -4,16 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.67";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.67";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.67";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.67";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.67";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.67";
-import { GENDERS } from "./limits.js?v=3.67";
-import { debounce } from "./util.js?v=3.67";
-import { $ } from "./shared.js?v=3.67";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.67";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.68";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.68";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.68";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.68";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.68";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.68";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.68";
+import { debounce } from "./util.js?v=3.68";
+import { $ } from "./shared.js?v=3.68";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.68";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -27,7 +27,7 @@ const MUSIC_SPEC_SJ = musicSpecWithGenres(
 export function openDetail(artist) {
   const modal = document.getElementById("modal-detail");
   document.getElementById("detail-name").textContent = artist.name;
-  renderArtistDetail(document.getElementById("detail-body"), artist, state.config, ctx.explore.buildLinkCtx());
+  renderArtistDetail(document.getElementById("detail-body"), artist, ctx.explore.buildLinkCtx());
   // «Vis i tidslinje» → fokus-API-et (samme som studentsiden); skjules for
   // artister uten startår (de har ingen blokk på tidslinjen).
   const tlBtn = document.getElementById("detail-tidslinje");
@@ -130,7 +130,6 @@ export function setupFilters() {
 export function openEditModal(artistId) {
   const a = state.artists.find((x) => x.id === artistId);
   if (!a) return;
-  const c = state.config;
 
   $("#ed-id").value = a.id;
   $("#ed-name").value = a.name || "";
@@ -151,7 +150,7 @@ export function openEditModal(artistId) {
   $("#ed-gender").value = a.gender || "";
   fillSelect($("#ed-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg sjanger …" });
   $("#ed-metaGenre").value = a.metaGenre || "";
-  fillSelect($("#ed-instrument"), c.instruments || [], { placeholder: "Ingen / ukjent" });
+  fillSelect($("#ed-instrument"), INSTRUMENTS, { placeholder: "Ingen / ukjent" });
   $("#ed-instrument").value = a.instrument || "";
 
   buildEditMusicExampleRows(a.musicExamples || []);

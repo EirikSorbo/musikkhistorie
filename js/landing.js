@@ -1,21 +1,17 @@
-import { subscribeArtists, subscribeConfig, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.67";
-import { DEFAULT_CONFIG, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.67";
-import { debounce, throttle } from "./util.js?v=3.67";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.67";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.67";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.67";
-import { initExplore } from "./explore.js?v=3.67";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.67";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.68";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.68";
+import { debounce, throttle } from "./util.js?v=3.68";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.68";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.68";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.68";
+import { initExplore } from "./explore.js?v=3.68";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.68";
 
 const state = {
   artists: [],
   // true etter første artist-snapshot — skiller «laster fortsatt» fra
   // «datasettet er faktisk tomt» (placeholder-opprydding i renderDagensSection).
   artistsLoaded: false,
-  config: null,
-  // true når config-lesingen feilet og state.config bare er standardverdier —
-  // da skal den ikke caches (ville overskrevet en tidligere ekte config).
-  configIsFallback: false,
   decadeDescs: {},
   genreDescs: {},
   // Innholdssidene (Om historie, Røtter) + varmekartet fra content-samlingen.
@@ -77,7 +73,7 @@ let explore = null;
 
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
-  renderArtistDetail($("#detail-body"), artist, state.config, explore.buildLinkCtx());
+  renderArtistDetail($("#detail-body"), artist, explore.buildLinkCtx());
   // «Vis i tidslinje» → fokus-API-et: åpner artistens gruppe/seksjoner og
   // uthever blokkene. Skjules for artister uten startår (de har ingen blokk).
   const tlBtn = document.getElementById("detail-tidslinje");
@@ -188,7 +184,7 @@ function applyIncomingFilter() {
 
 function applyPendingDeepLink() {
   if (!pendingDeepLink) return;
-  if (!state.config || !state.artists.length) return;
+  if (!state.artists.length) return;
   const { sj, g, inst, artistId } = pendingDeepLink;
   pendingDeepLink = null;
   if (sj) $("#sp-sjanger").value = sj;
@@ -238,7 +234,7 @@ function dagensArtist() {
 
 // Seksjonen under dashbordet — alltid synlig så snart det finnes artister.
 function renderDagensSection() {
-  if (!state.config) return;
+  if (!state.artists.length && !state.artistsLoaded) return;
   const section = document.getElementById("dagens-artist-section");
   const el = $("#dagens-artist");
   if (!section || !el) return;
@@ -262,13 +258,13 @@ function renderDagensSection() {
   // kortet», da linkene legges til (jf. subscribeTech under).
   const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
   if (el.dataset.dagensSig === sig) return;
-  renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
+  renderSpotlightCards(el, [artist], explore.buildLinkCtx());
   el.dataset.dagensSig = sig;
 }
 
 // Modalen (åpnes fra «Finn artister»).
 function renderDagensModal() {
-  if (!state.config) return;
+  if (!state.artists.length && !state.artistsLoaded) return;
   const el = $("#spotlight");
   if (!el) return;
   const artist = dagensArtist();
@@ -281,7 +277,7 @@ function renderDagensModal() {
   // når verken artist eller tech-lenker har endret seg.
   const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
   if (el.dataset.dagensSig === sig) return;
-  renderSpotlightCards(el, [artist], state.config, explore.buildLinkCtx());
+  renderSpotlightCards(el, [artist], explore.buildLinkCtx());
   el.dataset.dagensSig = sig;
 }
 
@@ -291,7 +287,7 @@ function isDagensModalOpen() {
 }
 
 function renderFilterResults() {
-  if (!state.config) return;
+  if (!state.artists.length && !state.artistsLoaded) return;
   const el = document.getElementById("filter-results");
   if (!el) return;
 
@@ -304,7 +300,7 @@ function renderFilterResults() {
   // innholdsfilteret — samme funksjon som «Alle forslag»-lista bruker.
   const pool = filterArtists(state.artists.filter(isVisible), state.filters);
 
-  renderResultList(el, pool, state.config, openDetail);
+  renderResultList(el, pool, openDetail);
 }
 
 // ----------------------------------------------------------------------------
@@ -312,7 +308,7 @@ function renderFilterResults() {
 // ----------------------------------------------------------------------------
 
 function renderList() {
-  if (!state.config) return;
+  if (!state.artists.length && !state.artistsLoaded) return;
   const el = $("#artist-list");
   if (!el) return;
   // Med aktive filtre vises KUN den kompakte resultatlista (#filter-results) —
@@ -350,10 +346,9 @@ function openArtistModal() {
 }
 
 function refreshFilterControls() {
-  const { config } = state;
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
   fillSelect($("#sp-genre"), GENEALOGY_META_GENRES.map(g => ({ value: g, label: g })), { placeholder: "Hovedsjanger" });
-  fillSelect($("#sp-instrument"), config.instruments || [], { placeholder: "Instrument" });
+  fillSelect($("#sp-instrument"), INSTRUMENTS, { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
     DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),
@@ -429,14 +424,13 @@ function shuffleDagens() {
 // migreringen) ignoreres og appen faller tilbake til ferske Firestore-data.
 const CACHE_SCHEMA  = "v3";
 const CACHE_ARTISTS = `pensum_cache_artists_${CACHE_SCHEMA}`;
-const CACHE_CONFIG  = `pensum_cache_config_${CACHE_SCHEMA}`;
 
 // Rydd bort caches fra eldre skjemaer (engangs).
 function purgeLegacyCache() {
   try {
     for (const k of Object.keys(localStorage)) {
       if ((k.startsWith("pensum_cache_artists") || k.startsWith("pensum_cache_config"))
-          && k !== CACHE_ARTISTS && k !== CACHE_CONFIG) {
+          && k !== CACHE_ARTISTS) {
         localStorage.removeItem(k);
       }
     }
@@ -446,10 +440,6 @@ function purgeLegacyCache() {
 function saveCache() {
   try {
     localStorage.setItem(CACHE_ARTISTS, JSON.stringify(state.artists));
-    // Fallback-config (lesefeil → standardverdier) caches ikke — den ville
-    // overskrevet en tidligere cachet EKTE config, og neste kalde last hadde
-    // vist standardoppsettet til Firestore svarte.
-    if (state.config && !state.configIsFallback) localStorage.setItem(CACHE_CONFIG, JSON.stringify(state.config));
   } catch { /* full storage */ }
 }
 
@@ -457,9 +447,7 @@ function loadCache() {
   purgeLegacyCache();
   try {
     const a = localStorage.getItem(CACHE_ARTISTS);
-    const c = localStorage.getItem(CACHE_CONFIG);
     if (a) state.artists = JSON.parse(a);
-    if (c) state.config = JSON.parse(c);
   } catch { /* corrupt cache */ }
 }
 
@@ -474,7 +462,6 @@ function init() {
   setupExplore();
 
   if (!CONFIGURED) {
-    state.config = { ...DEFAULT_CONFIG };
     refreshFilterControls();
     renderList();
     showSetupBanner();
@@ -482,7 +469,8 @@ function init() {
   }
 
   loadCache();
-  if (state.config && state.artists.length) {
+  refreshFilterControls();
+  if (state.artists.length) {
     refreshFilterControls();
     renderDagensSection();
     // #artist-list bygges når #modal-artister åpnes (openArtistModal), ikke her
@@ -510,18 +498,6 @@ function init() {
     }
   });
 
-  subscribeConfig((config, meta) => {
-    state.config = config;
-    state.configIsFallback = !!meta?.fallback;
-    refreshFilterControls();
-    // Dagens artist trenger config — på kald start (uten cache) kan artist-
-    // snapshotet ha kommet først og gitt opp; render på nytt nå.
-    renderDagensSection();
-    if (isDagensModalOpen()) renderDagensModal();
-    renderArtistViewsIfVisible();
-    applyPendingDeepLink();
-    saveCache();
-  });
   // Hver stemme fra hvem som helst i kullet fyrer dette snapshotet. Throttle
   // slår sammen en byge til jevnlige oppdateringer i stedet for én full
   // ombygging per stemme, og lista bygges bare når modalen faktisk er åpen.

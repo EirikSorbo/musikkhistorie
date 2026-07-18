@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.67";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.68";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -16,14 +16,14 @@ import {
   mergeVarmekartRows,
   addPodcast,
   updatePodcast,
-  updateConfig,
   setTeacherChecks,
-} from "./store.js?v=3.67";
-import { escapeHtml } from "./ui.js?v=3.67";
-import { $ } from "./shared.js?v=3.67";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.67";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.67";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.67";
+} from "./store.js?v=3.68";
+import { escapeHtml } from "./ui.js?v=3.68";
+import { $ } from "./shared.js?v=3.68";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.68";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.68";
+import { INSTRUMENTS } from "./limits.js?v=3.68";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.68";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -161,7 +161,8 @@ function buildExportData() {
 
   // Innholdssidene (Om historie, Røtter) og varmekartet — fra content-
   // samlingen, så backupen inneholder ALT pensuminnhold (koden har ingen
-  // fallback-tekster). Podkast-metadata og config/grensene tas også med.
+  // fallback-tekster). Podkast-metadata tas også med. (Config er borte, v3.68:
+  // instrument-vokabularet bor i koden — INSTRUMENTS i limits.js.)
   const pages = {};
   for (const [id, docData] of Object.entries(state.content || {})) {
     if (id !== "varmekart" && docData?.body) pages[id] = docData;
@@ -178,7 +179,6 @@ function buildExportData() {
   const out = {
     formatVersion: 1,
     artists, decades, genreDescriptions, edgeDescriptions, tech, pages, podcasts,
-    config: state.config || null,
     teacherChecks: state.teacherChecks || null,
   };
   if (varmekart) out.varmekart = varmekart;
@@ -241,6 +241,18 @@ function collectUnknownGenres(artists) {
   return [...bad];
 }
 
+// Instrument-verdier i importen utenfor INSTRUMENTS-vokabularet (limits.js) —
+// samme vakt som sjangrene, saa Saxofon/Saksofon-drift ikke kan gjenoppstaa
+// via en gammel backup. Advarsel, ikke feil.
+function collectUnknownInstruments(artists) {
+  const bad = new Set();
+  for (const a of artists || []) {
+    const name = String(a.instrument || "").trim();
+    if (name && !INSTRUMENTS.includes(name)) bad.add(name);
+  }
+  return [...bad];
+}
+
 function importParts(data) {
   const parts = [];
   const artistCount = (data.artists || []).filter(a => a.name).length;
@@ -256,7 +268,6 @@ function importParts(data) {
   if (pageCount) parts.push(`${pageCount} innholdsside(r)`);
   if (data.varmekart?.heat) parts.push(`varmekart (${Object.keys(data.varmekart.heat).length} sjangre)`);
   if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
-  if (data.config) parts.push("innstillinger/grenser");
   return parts;
 }
 
@@ -283,7 +294,6 @@ async function handleImportFile(file) {
       pages: raw.pages || {},
       varmekart: raw.varmekart || null,
       podcasts: raw.podcasts || [],
-      config: raw.config || null,
       teacherChecks: raw.teacherChecks || null,
     };
   } else {
@@ -303,6 +313,8 @@ async function handleImportFile(file) {
   if (unknownKeys.length) warnings.push(`Ukjente felter i fila (blir IKKE importert): ${unknownKeys.join(", ")}.`);
   const unknownGenres = collectUnknownGenres(data.artists);
   if (unknownGenres.length) warnings.push(`Sjangre som ikke finnes i slektstreet (vises ikke i tre-visningene): ${unknownGenres.slice(0, 15).join(", ")}${unknownGenres.length > 15 ? " …" : ""}.`);
+  const unknownInstruments = collectUnknownInstruments(data.artists);
+  if (unknownInstruments.length) warnings.push(`Instrumenter utenfor vokabularet (splitter filteret/statistikken): ${unknownInstruments.slice(0, 15).join(", ")}${unknownInstruments.length > 15 ? " …" : ""}.`);
   if (warnings.length && !confirm(warnings.join("\n\n") + "\n\nSjekk for skrivefeil. Importere likevel?")) return;
 
   const parts = importParts(data);
@@ -420,10 +432,10 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
   }
 }
 
-// Innholdssider, varmekart, podkaster og config fra importfila. Podkaster
+// Innholdssider, varmekart og podkaster fra importfila. Podkaster
 // oppdateres på tittel-match (så en re-import ikke dupliserer episoder);
-// config skrives i sin helhet når fila har den.
-async function importExtras({ pages, varmekart, podcasts, config, teacherChecks }) {
+// (Config i gamle backuper ignoreres — vokabularet bor i koden, v3.68.)
+async function importExtras({ pages, varmekart, podcasts, teacherChecks }) {
   const done = [];
   const failed = [];
 
@@ -462,11 +474,6 @@ async function importExtras({ pages, varmekart, podcasts, config, teacherChecks 
       }
       if (n) done.push(`${n} podkastepisode(r)`);
     } catch (e) { console.error("Podkast-import feilet:", e); failed.push("podkastene"); }
-  }
-
-  if (config && typeof config === "object") {
-    try { await updateConfig(config); done.push("innstillinger/grenser"); }
-    catch (e) { console.error("Config-import feilet:", e); failed.push("innstillingene"); }
   }
 
   // Lærerens sjekk-fremdrift (merges inn). NB: tech-sjekker refererer doc-ID-er

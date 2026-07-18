@@ -8,7 +8,6 @@
 
 import {
   subscribeArtists,
-  subscribeConfig,
   subscribeDecades,
   subscribeGenreDescs,
   subscribeEdgeDescs,
@@ -27,14 +26,13 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.67";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.67";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.67";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.67";
-import { initExplore } from "./explore.js?v=3.67";
+} from "./store.js?v=3.68";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.68";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.68";
+import { initExplore } from "./explore.js?v=3.68";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.67";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.67";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.68";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.68";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -51,11 +49,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.67";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.67";
-import { renderDesk } from "./teacher-desk.js?v=3.67";
-import { setupAdmin, fillAdminForm } from "./teacher-settings.js?v=3.67";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.67";
+} from "./teacher-content.js?v=3.68";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.68";
+import { renderDesk } from "./teacher-desk.js?v=3.68";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.68";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -106,7 +103,7 @@ function setupGate() {
 function startApp() {
   state.started = true;
   setupFilters();
-  setupAdmin();
+  setupModals();
   setupDataButtons();
   setupImportChoice();
   setupEditForm();
@@ -176,9 +173,7 @@ function startApp() {
   const refreshDesk = () => renderDesk($("#desk-body"));
 
   if (!CONFIGURED) {
-    state.config = { ...DEFAULT_CONFIG };
     refreshControls();
-    fillAdminForm();
     renderAll();
     refreshDesk();
     showSetupBanner();
@@ -189,13 +184,7 @@ function startApp() {
   // lærersiden hadde #banner-elementet men koblet det aldri før.
   wireFirestoreErrorBanner();
 
-  subscribeConfig((config, meta) => {
-    state.config = config;
-    state.configIsFallback = !!meta?.fallback;
-    refreshControls();
-    fillAdminForm();
-    renderAll();
-  });
+  refreshControls();
   subscribeArtists((artists) => {
     state.artists = artists;
     state.artistsLoaded = true;

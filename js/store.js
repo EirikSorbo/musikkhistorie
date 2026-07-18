@@ -35,17 +35,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.67";
-import { DEFAULT_CONFIG } from "./limits.js?v=3.67";
-import { isMainGenre } from "./genealogy.js?v=3.67";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.67";
-import { normalizeConfig } from "./config-normalize.js?v=3.67";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.67";
-import { mergeHeatRows } from "./import-format.js?v=3.67";
+import { firebaseConfig } from "./firebase-config.js?v=3.68";
+import { isMainGenre } from "./genealogy.js?v=3.68";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.68";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.68";
+import { mergeHeatRows } from "./import-format.js?v=3.68";
 
-// Normaliserings-/bygge-logikken bor i artist-normalize.js og
-// config-normalize.js (rene moduler, enhetstestbare) og importeres direkte der
-// den trengs — store.js bruker dem internt (subscribeArtists/buildArtistDoc).
+// Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
+// enhetstestbar) og importeres direkte der den trengs — store.js bruker den
+// internt (subscribeArtists/buildArtistDoc).
 
 const app = initializeApp(firebaseConfig);
 
@@ -82,7 +80,6 @@ const techCol = collection(db, "tech");
 const pendingEditsCol = collection(db, "pendingEdits");
 // Innholdssider (Om historie, Røtter) og varmekartet — se INNHOLD-seksjonen.
 const contentCol = collection(db, "content");
-const configRef = doc(db, "config", "settings");
 
 // ----------------------------------------------------------------------------
 //  STEMME-IDENTITET (anonym innlogging)
@@ -178,25 +175,10 @@ export function subscribeArtists(callback) {
   }, onSubscribeError("artister"));
 }
 
-// Lytter på konfigurasjon. Bruker standardconfig til læreren lagrer egen.
-// Callback får (config, meta): meta.fallback er true når lesingen FEILET og
-// configen bare er standardverdier — da må admin-lagring blokkeres, ellers
-// kan et påfølgende lagre overskrive lærerens ekte config med standard.
-// (At dokumentet ikke finnes ennå er derimot ikke en feil — da ER standard
-// den reelle configen.)
-export function subscribeConfig(callback) {
-  return onSnapshot(configRef, (snap) => {
-    if (!snap.exists()) {
-      callback({ ...DEFAULT_CONFIG }, { fallback: false });
-    } else {
-      callback({ ...DEFAULT_CONFIG, ...normalizeConfig(snap.data()) }, { fallback: false });
-    }
-  }, (err) => {
-    console.error("Kunne ikke lese konfig – sjekk Firestore-regler:", err.code, err.message);
-    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
-    callback({ ...DEFAULT_CONFIG }, { fallback: true, error: err });
-  });
-}
+// Konfig-abonnementet er fjernet (v3.68): instrument-vokabularet — det siste
+// som lå i config-dokumentet — er nå INSTRUMENTS-konstanten i limits.js,
+// samme mønster som DECADES og sjangertreet. config/settings-dokumentet i
+// Firestore leses ikke lenger og kan slettes manuelt.
 
 // ----------------------------------------------------------------------------
 //  LÆRER-INNLOGGING (Google / Firebase Auth)
@@ -767,11 +749,6 @@ export async function mergeVarmekartRows(rows) {
   return { written, kept, skipped };
 }
 
-// Lærer lagrer hele konfigurasjonen (full overskriving, så fjernede
-// per-tiår/per-sjanger-grenser ikke blir liggende igjen).
-export async function updateConfig(config) {
-  return setDoc(configRef, config);
-}
 
 // ----------------------------------------------------------------------------
 //  ENDRINGSFORSLAG (studentenes foreslåtte endringer på eksisterende kort)
