@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.65";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.65";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.65";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.66";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.66";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.66";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.65";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.65";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.65";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.65";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.65";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.65";
+} from "./ui-helpers.js?v=3.66";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.66";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.66";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.66";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.66";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.66";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -554,4 +554,10 @@ function buildPlaylistHtml(node, artists) {
   const total = items.length;
   if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>` };
   return { total, html: `<ul class="pl-list">${items.join("")}</ul>` };
+}
+
+// Antall lytteeksempler i en sjangers spilleliste — SAMME logikk som popupen
+// (matchesSj + exOk + dedup), så tallet i oversikten og lista aldri spriker.
+export function countPlaylistExamples(artists, label) {
+  return buildPlaylistHtml({ l: label }, artists).total;
 }

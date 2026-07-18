@@ -17,11 +17,11 @@ import {
   activeArtists,
   decadesForRange,
   DECADES,
-} from "./limits.js?v=3.65";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.65";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.65";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.65";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.65";
+} from "./limits.js?v=3.66";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.66";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.66";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.66";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.66";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -36,12 +36,17 @@ const byInfluenceThenName = (a, b) =>
   (a.influenceStart || 0) - (b.influenceStart || 0) || byName(a, b);
 
 // Kompakt fordelings-rad: navn + søyle + antall. Klikkbar via data-attributt.
-function distRow(label, count, max, attrs) {
+// exCount (valgfri): antall lytteeksempler i sjangerens spilleliste, vist i
+// parentes etter artisttallet — varselfarget når spillelista er tom.
+function distRow(label, count, max, attrs, exCount = null) {
   const zero = count === 0 ? " ov-zero" : "";
+  const ex = exCount == null
+    ? ""
+    : ` <span class="ov-count-ex${exCount === 0 ? " ov-ex-zero" : ""}">(${exCount})</span>`;
   return `<button type="button" class="ov-row${zero}" ${attrs}>
     <span class="ov-name">${escapeHtml(label)}</span>
     <span class="bar small"><span class="bar-fill" style="width:${count ? pct(count, max) : 100}%"></span></span>
-    <span class="ov-count">${count}</span>
+    <span class="ov-count">${count}${ex}</span>
   </button>`;
 }
 
@@ -106,6 +111,7 @@ export function renderDashboard(el, {
   contentLoaded = false,
   explore,
   countForGenre = () => 0,
+  exampleCountForGenre = null,
   onEditArtist,
   onEditDesc,
   onEditEdge,
@@ -128,7 +134,7 @@ export function renderDashboard(el, {
   // Tellingen (countForGenre) matcher artistlista bak sjanger-popupen, så
   // tallet her og lista der aldri spriker.
   const genreCounts = GENEALOGY_MAIN_GENRES
-    .map((l) => ({ l, n: countForGenre(l) }))
+    .map((l) => ({ l, n: countForGenre(l), e: exampleCountForGenre ? exampleCountForGenre(l) : null }))
     .sort((a, b) => b.n - a.n || byNo(a.l, b.l));
   const maxGenre = Math.max(1, ...genreCounts.map((g) => g.n));
   const covered = genreCounts.filter((g) => g.n > 0).length;
@@ -283,9 +289,9 @@ export function renderDashboard(el, {
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Sjangre i slektstreet (${genreCounts.length}) — sortert etter antall artistkort, klikk for beskrivelse og artister</div>
+      <div class="stat-label">Sjangre i slektstreet (${genreCounts.length}) — sortert etter antall artistkort${exampleCountForGenre ? ", tall i parentes = lytteeksempler i spillelista" : ""}, klikk for beskrivelse og artister</div>
       <div class="ov-genre-cols">${genreCounts.map((g) =>
-        distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`)).join("")}</div>
+        distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`, g.e)).join("")}</div>
     </div>
 
     <div class="ov-two">

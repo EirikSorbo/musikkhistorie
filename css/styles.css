@@ -318,6 +318,9 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-row:hover .ov-name { color: var(--accent-2); text-decoration: underline; }
 .ov-row .ov-count { text-align: right; color: var(--muted-2); font-variant-numeric: tabular-nums; }
 .ov-row.ov-zero .ov-name, .ov-row.ov-zero .ov-count { color: var(--warn); }
+/* Parentestall: lytteeksempler i sjangerens spilleliste; varsel når lista er tom. */
+.ov-count-ex { color: var(--muted); font-size: 0.85em; }
+.ov-count-ex.ov-ex-zero { color: var(--warn); }
 .ov-row.ov-zero .bar-fill { background: var(--warn); opacity: 0.45; }
 
 .ov-genre-cols { column-count: 3; column-gap: 28px; margin-top: 10px; }

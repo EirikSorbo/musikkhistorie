@@ -4,16 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.65";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.65";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal } from "./ui.js?v=3.65";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.65";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.65";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.65";
-import { GENDERS } from "./limits.js?v=3.65";
-import { debounce } from "./util.js?v=3.65";
-import { $ } from "./shared.js?v=3.65";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.65";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.66";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.66";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.66";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.66";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.66";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.66";
+import { GENDERS } from "./limits.js?v=3.66";
+import { debounce } from "./util.js?v=3.66";
+import { $ } from "./shared.js?v=3.66";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.66";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -76,6 +76,9 @@ export function openOversikt() {
     // Samme telling som artistlista bak sjanger-popupen (meta/main/sub-match),
     // så tallet i oversikten og lista brukeren klikker seg til stemmer overens.
     countForGenre: (label) => artistsInGenre(state.artists, label).length,
+    // Parentestallet i sjangerlista: lytteeksempler i sjangerens spilleliste
+    // (samme telling som spilleliste-popupen).
+    exampleCountForGenre: (label) => countPlaylistExamples(state.artists, label),
     onEditArtist: (id) => openEditModal(id),
     onEditDesc: (name, level) => openSingleSubgenreModal(name, level),
     onEditEdge: (fromId, toId) => openSingleEdgeModal(fromId, toId),
