@@ -5,17 +5,17 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=3.61";
-import { showSjangerInfo } from "./genealogy.js?v=3.61";
-import { MODAL_HTML } from "./explore-modals.js?v=3.61";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=3.61";
-import { openVarmekart } from "./explore-varmekart.js?v=3.61";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=3.61";
-import { openTechDetail, refreshTechDetail, openTeknologi, openPodkast, renderTeknologiList } from "./explore-tech.js?v=3.61";
-import { openDecadeList } from "./explore-decade.js?v=3.61";
-import { openKart } from "./explore-kart.js?v=3.61";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=3.61";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=3.61";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=3.62";
+import { showSjangerInfo } from "./genealogy.js?v=3.62";
+import { MODAL_HTML } from "./explore-modals.js?v=3.62";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=3.62";
+import { openVarmekart } from "./explore-varmekart.js?v=3.62";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=3.62";
+import { openTechDetail, refreshTechDetail, openTeknologi, openPodkast, renderTeknologiList } from "./explore-tech.js?v=3.62";
+import { openDecadeList } from "./explore-decade.js?v=3.62";
+import { openKart } from "./explore-kart.js?v=3.62";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=3.62";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=3.62";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -52,23 +52,20 @@ function wireModals() {
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {
-    // Sjangertreet er hovedinngangen — egen rad øverst, grønn og i full bredde.
-    // Under: Hovedsjangere → sjangerhistoriene (én fortelling per hovedsjanger)
-    // og Undersjangere → chip-lista i egen modal. Nederst de visuelle
-    // oversiktene. De fire nederste deler bredden likt (flex:1, to per rad).
+    // Øverste rad (grønn): Sjangertre + Hovedsjangere deler bredden likt — de to
+    // strukturelle inngangene til sjangersystemet. Nederste rad: Undersjangere
+    // → chip-lista, Tidslinje og Varmekart — de tre deler bredden likt.
     let btns = "";
-    if (opts.onSlektstre) {
-      btns += `<div style="display:flex;margin-bottom:10px">`;
-      btns += `<button class="btn primary" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
-      btns += `</div>`;
-    }
     btns += `<div style="display:flex;gap:10px;margin-bottom:10px">`;
-    btns += `<button class="btn ghost" id="btn-hovedsjangere" style="flex:1">Hovedsjangere</button>`;
-    btns += `<button class="btn ghost" id="btn-undersjangere" style="flex:1">Undersjangere</button>`;
+    if (opts.onSlektstre) {
+      btns += `<button class="btn primary" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
+    }
+    btns += `<button class="btn primary" id="btn-hovedsjangere" style="flex:1">Hovedsjangere</button>`;
     btns += `</div>`;
     btns += `<div style="display:flex;gap:10px;margin-bottom:14px">`;
-    btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Varmekart</button>`;
+    btns += `<button class="btn ghost" id="btn-undersjangere" style="flex:1">Undersjangere</button>`;
     btns += `<button class="btn ghost" id="btn-tidslinje" style="flex:1">Tidslinje</button>`;
+    btns += `<button class="btn ghost" id="btn-varmekart" style="flex:1">Varmekart</button>`;
     btns += `</div>`;
     slExtra.innerHTML = btns;
     slExtra.querySelector("#btn-hovedsjangere").addEventListener("click", () => openHistorier());
