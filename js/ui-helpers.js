@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.69";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.69";
-import { GENDERS } from "./limits.js?v=3.69";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.70";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.70";
+import { GENDERS } from "./limits.js?v=3.70";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -245,8 +245,7 @@ export function relatedArtistsHtml(a, lc, { limit = 5 } = {}) {
       <h4 class="related-head">Beslektede artister</h4>
       <div class="related-list">
         ${related.map((r) => {
-          const g = (Array.isArray(r.mainGenre) && r.mainGenre[0]) ? r.mainGenre[0] : (r.metaGenre || "");
-          return `<button type="button" class="related-chip" data-related-id="${escapeHtml(String(r.id))}">${escapeHtml(r.name)}${g ? `<span class="related-tag">${escapeHtml(g)}</span>` : ""}</button>`;
+          return `<button type="button" class="related-chip" data-related-id="${escapeHtml(String(r.id))}">${escapeHtml(r.name)}</button>`;
         }).join("")}
       </div>
     </div>`;

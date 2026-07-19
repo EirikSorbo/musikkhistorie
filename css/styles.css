@@ -599,7 +599,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   padding: 5px 11px; border-radius: 100px; cursor: pointer; transition: 0.12s;
 }
 .related-chip:hover { border-color: var(--accent); color: var(--accent-2); }
-.related-tag { font-size: 0.72rem; font-weight: 500; color: var(--muted-2); }
 
 /* Røtter før 1910 — forfattet fortelling (#9) */
 /* Navigasjonsknappen på Røtter-siden — står OVER teksten (.story-body), som
