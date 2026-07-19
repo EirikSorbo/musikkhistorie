@@ -14,11 +14,11 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.68";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.68";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.68";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=3.68";
-import { $ } from "./shared.js?v=3.68";
+} from "./store.js?v=3.69";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.69";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.69";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=3.69";
+import { $ } from "./shared.js?v=3.69";
 
 export const state = {
   artists: [],
@@ -73,6 +73,7 @@ export const handlers = {
     const a = state.artists.find(x => x.id === id);
     guardTeacherAction(updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) }));
   },
+  showTimeline: (id) => ctx.explore?.openTidslinje({ artistId: id }),
 };
 
 // Sett/fjern «sjekket» for et innholdselement. Artistkort bor på artist-
@@ -126,8 +127,29 @@ export function setupModals() {
 //  Kjerne-render
 // ----------------------------------------------------------------------------
 
+// Visningsmodus for lærerlista: artistkort (standard) eller kompakt navneliste
+// («Vis liste»). Klikk på en rad åpner detaljmodalen (ctx.openArtistDetail).
+let teacherView = "cards";
+
+export function toggleTeacherView() {
+  teacherView = teacherView === "list" ? "cards" : "list";
+  renderList();
+}
+
+function updateTeacherViewToggle() {
+  const btn = document.getElementById("t-view-toggle");
+  if (btn) btn.textContent = teacherView === "list" ? "Vis kort" : "Vis liste";
+}
+
 export function renderList() {
-  renderArtists($("#artist-list"), { ...state, handlers, linkCtx: ctx.explore ? ctx.explore.buildLinkCtx() : {} });
+  renderArtists($("#artist-list"), {
+    ...state,
+    handlers,
+    viewMode: teacherView,
+    onSelect: (a) => ctx.openArtistDetail?.(a),
+    linkCtx: ctx.explore ? ctx.explore.buildLinkCtx() : {},
+  });
+  updateTeacherViewToggle();
 }
 
 export function renderAll() {

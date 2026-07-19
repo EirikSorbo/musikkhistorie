@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.68" />
+  <link rel="stylesheet" href="css/styles.css?v=3.69" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -119,6 +119,9 @@
         <select id="sp-decade"></select>
         <select id="sp-genre"></select>
       </div>
+      <div class="view-toggle-row">
+        <button type="button" class="btn ghost small" id="sp-view-toggle" style="display:none">Vis liste</button>
+      </div>
       <div id="filter-results"></div>
       <div id="artist-list" class="artist-list"></div>
     </div>
@@ -145,7 +148,7 @@
       </div>
       <div id="detail-body"></div>
       <div class="modal-foot-right" id="detail-foot">
-        <button type="button" class="btn ghost small" id="detail-tidslinje">Tidslinje</button>
+        <button type="button" class="btn ghost small" id="detail-tidslinje">Vis i tidslinje</button>
         <button type="button" class="btn ghost small" id="detail-propose">Foreslå endring</button>
       </div>
     </div>
@@ -170,7 +173,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.68"></script>
-  <script type="module" src="js/landing.js?v=3.68"></script>
+  <script src="js/load-guard.js?v=3.69"></script>
+  <script type="module" src="js/landing.js?v=3.69"></script>
 </body>
 </html>

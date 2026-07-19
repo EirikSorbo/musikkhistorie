@@ -1093,6 +1093,11 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   gap: 10px;
   align-items: center;
 }
+.view-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 4px;
+}
 .filter-bar input,
 .filter-bar select { padding: 8px 11px; font-size: 0.88rem; }
 /* Student «Finn artister»: handlingsknappene på egen rad under tittelen,

@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.68";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.68";
-import { debounce, throttle } from "./util.js?v=3.68";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.68";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.68";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.68";
-import { initExplore } from "./explore.js?v=3.68";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.68";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.69";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.69";
+import { debounce, throttle } from "./util.js?v=3.69";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.69";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.69";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.69";
+import { initExplore } from "./explore.js?v=3.69";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.69";
 
 const state = {
   artists: [],
@@ -67,9 +67,14 @@ function guardedVote(id, fn) {
 const handlers = {
   voteUp: (id) => guardedVote(id, voteUp),
   undoVoteUp: (id) => guardedVote(id, undoVoteUp),
+  showTimeline: (id) => explore?.openTidslinje({ artistId: id }),
 };
 
 let explore = null;
+
+// Visningsmodus for filtertreff: artistkort (standard, kronologisk) eller
+// kompakt navneliste («Vis liste»). Nullstilles ikke — huskes til sidelast.
+let filterView = "cards";
 
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
@@ -78,7 +83,7 @@ function openDetail(artist) {
   // uthever blokkene. Skjules for artister uten startår (de har ingen blokk).
   const tlBtn = document.getElementById("detail-tidslinje");
   if (tlBtn) {
-    tlBtn.style.display = Number(artist.influenceStart) > 0 ? "" : "none";
+    tlBtn.style.display = "";
     tlBtn.onclick = () => explore.openTidslinje({ artistId: artist.id });
   }
   const btn = document.getElementById("detail-propose");
@@ -115,6 +120,17 @@ function setupProposeButtons() {
       if (!t) return;
       openProposalEditorGuarded({ entityType: "tech", entityId: t.id, entityName: t.name, currentValues: t });
     }
+  });
+
+  // «Vis i tidslinje» på dagens-artist-kortene (spotlight). De fulle
+  // artistkortene bruker data-action="showTimeline" via renderArtists' egen
+  // knappe-kobling; spotlight-kortene kobles her siden de ikke går den veien.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-timeline-id]");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    explore?.openTidslinje({ artistId: btn.dataset.timelineId });
   });
 }
 
@@ -291,7 +307,10 @@ function renderFilterResults() {
   const el = document.getElementById("filter-results");
   if (!el) return;
 
-  if (!hasFilters()) {
+  // Kompakt navneliste vises KUN når filter er aktivt OG bruker valgte «Vis
+  // liste». Ellers (ingen filter, eller kort-visning) er den tom — kortene
+  // under står da for visningen.
+  if (!hasFilters() || filterView !== "list") {
     el.innerHTML = "";
     return;
   }
@@ -311,13 +330,23 @@ function renderList() {
   if (!state.artists.length && !state.artistsLoaded) return;
   const el = $("#artist-list");
   if (!el) return;
-  // Med aktive filtre vises KUN den kompakte resultatlista (#filter-results) —
-  // de fulle artistkortene under skapte dobbel visning av samme treff.
-  if (hasFilters()) {
+  // Kortene skjules KUN når bruker har valgt kompakt liste (og filter er aktivt)
+  // — da står #filter-results for visningen. Ellers vises artistkortene, både
+  // uten filter og som standard MED filter (kronologisk sortert i renderArtists).
+  if (hasFilters() && filterView === "list") {
     el.innerHTML = "";
     return;
   }
   renderArtists(el, { ...state, handlers, linkCtx: explore.buildLinkCtx() });
+}
+
+// «Vis liste» / «Vis kort»-knappen: kun synlig når filter er aktivt.
+function updateViewToggle() {
+  const btn = document.getElementById("sp-view-toggle");
+  if (!btn) return;
+  if (!hasFilters()) { btn.style.display = "none"; return; }
+  btn.style.display = "";
+  btn.textContent = filterView === "list" ? "Vis kort" : "Vis liste";
 }
 
 // Forslag-lista og filterresultatene bor begge inne i #modal-artister. Å bygge
@@ -333,6 +362,7 @@ function isArtistModalOpen() {
 function renderArtistViews() {
   renderFilterResults();
   renderList();
+  updateViewToggle();
 }
 
 function renderArtistViewsIfVisible() {
@@ -368,8 +398,15 @@ function updatePrioButtons() {
 function setupFilters() {
   // Søket debounces så ikke hele lista re-rendres (inkl. linkifisering av
   // alle beskrivelser) for hvert eneste tastetrykk.
-  const rerender = () => { renderFilterResults(); renderList(); };
+  const rerender = () => renderArtistViews();
   const rerenderDebounced = debounce(rerender, 200);
+
+  // «Vis liste» / «Vis kort» bytter mellom kompakt navneliste og artistkort.
+  const viewBtn = document.getElementById("sp-view-toggle");
+  if (viewBtn) viewBtn.addEventListener("click", () => {
+    filterView = filterView === "list" ? "cards" : "list";
+    renderArtistViews();
+  });
   // Eksplisitt kobling element → filternøkkel: filterArtists leser mainGenre/
   // metaGenre, ikke element-id-ene (sjanger/genre) — å utlede nøkkelen fra
   // id-en gjorde at sjanger- og hovedsjangervalget aldri traff filteret.

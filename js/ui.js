@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.68";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.68";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.68";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.69";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.69";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.69";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.68";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.68";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.68";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.68";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.68";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.68";
+} from "./ui-helpers.js?v=3.69";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.69";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.69";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.69";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.69";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.69";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -165,6 +165,7 @@ function spotlightCard(a, lc) {
       ${relatedArtistsHtml(a, lc)}
       <footer class="card-foot">
         <div class="spacer"></div>
+        <button class="btn ghost small" data-timeline-id="${a.id}">Vis i tidslinje</button>
         <button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>
       </footer>
     </article>
@@ -179,7 +180,7 @@ function sessionOrderKey(id) {
 }
 
 export function renderArtists(el, state) {
-  const { artists, filters, isTeacher, clientId, handlers } = state;
+  const { artists, filters, isTeacher, clientId, handlers, viewMode, onSelect } = state;
 
   let list = [...artists];
 
@@ -206,9 +207,18 @@ export function renderArtists(el, state) {
   }
 
   if (list.length === 0) {
+    el.className = "artist-list";
     el.innerHTML = `<p class="muted empty">Ingen forslag matcher filteret ennå.</p>`;
     return;
   }
+
+  // Kompakt liste-visning (samme filtrerte/sorterte utvalg som kortene) — brukes
+  // når bruker slår på «Vis liste». onSelect åpner detaljmodalen for raden.
+  if (viewMode === "list") {
+    renderResultList(el, list, onSelect || (() => {}));
+    return;
+  }
+  el.className = "artist-list";
 
   const linkCtx = state.linkCtx;
 
@@ -359,6 +369,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
         <span class="vote-count muted" title="Positive stemmer">${upvotes} stemmer</span>
         <div class="spacer"></div>
+        <button class="btn ghost small" data-action="showTimeline" data-id="${a.id}">Vis i tidslinje</button>
         ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>` : ""}
         ${voteBtn}
       </footer>

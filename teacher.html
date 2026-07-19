@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.68" />
+  <link rel="stylesheet" href="css/styles.css?v=3.69" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -102,6 +102,7 @@
           <div class="filters">
             <div class="filter-row filter-row--controls">
               <input type="search" id="f-search" placeholder="Søk navn/sted …" />
+              <button type="button" id="t-view-toggle" class="btn ghost small">Vis liste</button>
               <button type="button" id="btn-tidslinje-artister" class="btn ghost small">Tidslinje</button>
               <label class="show-removed">
                 <input type="checkbox" id="f-hide-checked" /> Skjul sjekkede
@@ -534,7 +535,7 @@
       <div style="margin-top:12px;display:flex;gap:8px">
         <button class="icon-btn" id="detail-check-btn" title="Merk som sjekket" aria-label="Merk som sjekket"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button>
         <button class="icon-btn" id="detail-edit-btn" title="Rediger" aria-label="Rediger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5"/></svg></button>
-        <button class="btn ghost small" id="detail-tidslinje">Tidslinje</button>
+        <button class="btn ghost small" id="detail-tidslinje">Vis i tidslinje</button>
       </div>
     </div>
   </div>
@@ -567,7 +568,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.68"></script>
-  <script type="module" src="js/teacher.js?v=3.68"></script>
+  <script src="js/load-guard.js?v=3.69"></script>
+  <script type="module" src="js/teacher.js?v=3.69"></script>
 </body>
 </html>

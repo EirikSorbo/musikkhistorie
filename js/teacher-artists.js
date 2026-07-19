@@ -4,16 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.68";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.68";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.68";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.68";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.68";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.68";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.68";
-import { debounce } from "./util.js?v=3.68";
-import { $ } from "./shared.js?v=3.68";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.68";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.69";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.69";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.69";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.69";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.69";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.69";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.69";
+import { debounce } from "./util.js?v=3.69";
+import { $ } from "./shared.js?v=3.69";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.69";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -32,7 +32,7 @@ export function openDetail(artist) {
   // artister uten startår (de har ingen blokk på tidslinjen).
   const tlBtn = document.getElementById("detail-tidslinje");
   if (tlBtn) {
-    tlBtn.style.display = Number(artist.influenceStart) > 0 ? "" : "none";
+    tlBtn.style.display = "";
     tlBtn.onclick = () => ctx.explore.openTidslinje({ artistId: artist.id });
   }
   const editBtn = document.getElementById("detail-edit-btn");
@@ -121,6 +121,8 @@ export function setupFilters() {
   const hideChecked = $("#f-hide-checked");
   hideChecked.checked = state.filters.hideChecked;
   hideChecked.addEventListener("change", (e) => { state.filters.hideChecked = e.target.checked; renderList(); });
+  const viewToggle = $("#t-view-toggle");
+  if (viewToggle) viewToggle.addEventListener("click", toggleTeacherView);
 }
 
 // ----------------------------------------------------------------------------
@@ -245,3 +247,5 @@ export function setupEditForm() {
 
 // La handlers.edit (i teacher-state) nå rediger-modalen uten import-syklus.
 ctx.openEditModal = openEditModal;
+// La den kompakte listas rader (renderList → onSelect) åpne detaljmodalen.
+ctx.openArtistDetail = openDetail;
