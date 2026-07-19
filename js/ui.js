@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.70";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.70";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.70";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.71";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.71";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.71";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.70";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.70";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.70";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.70";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.70";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.70";
+} from "./ui-helpers.js?v=3.71";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.71";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.71";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.71";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.71";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.71";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -118,7 +118,7 @@ export function renderArtistDetail(el, artist, lc) {
     </div>
     ${a.description ? `<p class="desc">${linkDesc(a.description, lc)}</p>` : ""}
     ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-    ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
+    ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
     ${kilderHtml(a.kilder)}
     ${relatedHtml}
   `;
@@ -160,7 +160,7 @@ function spotlightCard(a, lc) {
       </header>
       ${a.description ? `<p class="desc">${linkDesc(a.description, lc)}</p>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-      ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
+      ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
       ${relatedArtistsHtml(a, lc)}
       <footer class="card-foot">
@@ -275,7 +275,6 @@ export function renderArtists(el, state) {
 }
 
 function artistCard(a, { isTeacher, clientId, linkCtx }) {
-  const upvotes = (a.votedUpBy || []).length;
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
   const prio = a.priority || 0;
   const removed = prio === -1;
@@ -297,12 +296,14 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
     ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
     : "";
 
-  // Studenthandlinger
+  // Studenthandlinger. «Merk ★» (samme stjerne som prioritet «Viktigst») i
+  // stedet for «Svært relevant» — small-knapp så den ligger på samme rad som
+  // «Vis i tidslinje» / «Foreslå endring».
   let voteBtn = "";
   if (!removed && !pending) {
     voteBtn = hasUpvoted
-      ? `<button class="btn ghost" data-action="undoVoteUp" data-id="${a.id}">Angre stemme</button>`
-      : `<button class="btn ghost accent" data-action="voteUp" data-id="${a.id}">Svært relevant</button>`;
+      ? `<button class="btn ghost small" data-action="undoVoteUp" data-id="${a.id}">Angre merking</button>`
+      : `<button class="btn ghost small accent" data-action="voteUp" data-id="${a.id}" title="Merk som svært relevant">Merk ${PRIO_ICONS[3]}</button>`;
   }
 
   // Delte ikoner fra ui-helpers (samme sett som teacherActionRow/checkBtnHtml,
@@ -361,13 +362,12 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
 
       ${a.description ? `<p class="desc">${linkDesc(a.description, linkCtx)}</p>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-      ${examplesHtml ? `<div class="links">${examplesHtml}</div>` : ""}
+      ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
       ${relatedArtistsHtml(a, linkCtx)}
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
-        <span class="vote-count muted" title="Positive stemmer">${upvotes} stemmer</span>
         <div class="spacer"></div>
         <button class="btn ghost small" data-action="showTimeline" data-id="${a.id}">Vis i tidslinje</button>
         ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>` : ""}

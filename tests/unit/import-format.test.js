@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { flattenGenreDescriptions, validateArtistsForImport, mergeHeatRows } from "../../js/import-format.js?v=3.70";
+import { flattenGenreDescriptions, validateArtistsForImport, mergeHeatRows } from "../../js/import-format.js?v=3.71";
 
 // Varmekartet er ETT dokument. Importen skrev det tidligere rått over, så en
 // fil med bare den nye sjangerens rad slettet alle de andre. Disse testene

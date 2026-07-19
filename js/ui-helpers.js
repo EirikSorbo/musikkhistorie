@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.70";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.70";
-import { GENDERS } from "./limits.js?v=3.70";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.71";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.71";
+import { GENDERS } from "./limits.js?v=3.71";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -185,21 +185,18 @@ export function musicExampleLabel(m) {
   return "";
 }
 
-// Delt musikkeksempel-lenkeliste (brukt av detalj-, spotlight- og artistkort).
-// Hvert eksempel pakkes i .me-item slik at en valgfri «Hør etter:»-anvisning
-// (m.note — kontekstualisert lytting) kan vises rett under lyttelenka. Uten
-// note ser lenka ut som før (pill i .links-raden).
+// Delt musikkeksempel-liste (brukt av detalj-, spotlight- og artistkort).
+// Samme inline-format som «Sentrale verk»: understreket lenke + årstall i
+// parentes utenfor lenka, komma-separert. Callerne setter «Lytteeksempler:»
+// i fet skrift foran (jf. keyWorksText / .works-avsnittet).
 export function musicExamplesHtml(a) {
-  return (a.musicExamples || [])
-    .filter((m) => safeUrl(m.url))
-    .map((m) => {
-      const link = `<a href="${escapeHtml(safeUrl(m.url))}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}${musicExampleLabel(m)}</a>`;
-      const cue = m.note
-        ? `<span class="listen-cue"><strong>Hør etter:</strong> ${escapeHtml(m.note)}</span>`
-        : "";
-      return `<span class="me-item">${link}${cue}</span>`;
-    })
-    .join("");
+  const items = (a.musicExamples || []).filter((m) => safeUrl(m.url));
+  if (!items.length) return "";
+  return items.map((m) => {
+    const label = escapeHtml(m.label || "Lytt");
+    const url = escapeHtml(safeUrl(m.url));
+    return `<a href="${url}" target="_blank" rel="noopener">${label}</a>${musicExampleLabel(m)}`;
+  }).join(", ");
 }
 
 // Beslektede artister — utledet naboliste for «oppdag ny musikk». Rangerer
