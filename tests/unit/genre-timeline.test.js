@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.75";
-import { GENEALOGY } from "../../js/genealogy.js?v=3.75";
-import { STORY_ORDER } from "../../js/story-format.js?v=3.75";
+import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.76";
+import { GENEALOGY } from "../../js/genealogy.js?v=3.76";
+import { STORY_ORDER } from "../../js/story-format.js?v=3.76";
 
 // Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.
@@ -73,5 +73,28 @@ test("familier uten rot får verken brudd eller forskjøvet akse", () => {
     const html = buildGenreTimeline(meta);
     assert.ok(!html.includes("tl-break"), `${meta} skal ikke ha brudd`);
     assert.ok(!html.includes("--tl-line-start"), `${meta} skal tegne heltrukken strek hele veien`);
+  }
+});
+
+const stemsOf = (html) =>
+  [...html.matchAll(/--stem:(\d+)px/g)].map((m) => +m[1]);
+
+test("stilkene veksler mellom to lengder i stedet for å eskalere", () => {
+  // Den frie stablingen vokste monotont — hver ny etikett måtte klarere alle de
+  // forrige — så i tette familier ble stilkene lengre og lengre utover i sporet.
+  for (const meta of STORY_ORDER) {
+    const stems = new Set(stemsOf(buildGenreTimeline(meta)));
+    assert.ok(stems.size <= 2, `${meta} skal ha høyst to stilklengder, fikk ${[...stems].join(", ")}`);
+  }
+  // Jazz er den tetteste familien (12 punkter) og den som eskalerte verst.
+  const jazz = stemsOf(buildGenreTimeline("Jazz"));
+  assert.ok(jazz.length >= 10, "Jazz skal ha mange punkter");
+  assert.equal(new Set(jazz).size, 2, "Jazz skal veksle mellom kort og lang");
+});
+
+test("etikettene kantstilles aldri — de er midtstilt over prikken overalt", () => {
+  for (const meta of STORY_ORDER) {
+    const html = buildGenreTimeline(meta);
+    assert.ok(!/tl-start|tl-end/.test(html), `${meta} skal ikke ha kantstilte etiketter`);
   }
 });

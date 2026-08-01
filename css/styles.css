@@ -945,9 +945,18 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* ----- Sjangertidslinje (over hver sjangerhistorie) -----
    Samme spor som innovasjonstidslinjen, men farget av familiefargen og med
    sjangernavnet som det bærende elementet. Genereres fra GENEALOGY. */
-.tl-genre { margin: 4px 0 18px; }
+/* Sidepolstringen gir de midtstilte ytterste etikettene plass utenfor sporet.
+   Uten den ville halve etiketten havnet utenfor scroll-kanten, siden punktene
+   selv står helt ytterst på aksen. */
+.tl-genre { margin: 4px 0 18px; padding: 0 62px; }
 .tl-genre .tl-desc { font-size: 0.82rem; font-weight: 600; opacity: 1; }
 .tl-genre .tl-year { font-weight: 500; font-size: 0.72rem; opacity: 0.75; }
+/* Sjangernavnet skal ligge NÆRMEST streken uansett hvilken side etiketten står
+   på. Over streken stables innholdet nedover mot den, og navnet ligger allerede
+   sist; under streken stables det bort fra den, så årstallet flyttes bakerst med
+   `order` — det beholder rekkefølgen på navnene når en gruppe har flere. */
+.tl-genre .tl-label { display: flex; flex-direction: column; }
+.tl-genre .tl-below .tl-label .tl-year { order: 1; margin-bottom: 0; margin-top: 3px; }
 .tl-prop.tl-genre .tl-desc[data-genre] { cursor: pointer; }
 .tl-prop.tl-genre .tl-desc[data-genre]:hover { color: var(--tl-color, var(--accent)); text-decoration: underline; }
 /* Rot-noder (Work songs, Spirituals, Euro-folk …) er opphavet, ikke sjangre man

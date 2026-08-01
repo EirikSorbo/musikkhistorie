@@ -7,10 +7,10 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.75";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.75";
-import { DECADES } from "./limits.js?v=3.75";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.75";
+import { escapeHtml } from "./util.js?v=3.76";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.76";
+import { DECADES } from "./limits.js?v=3.76";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.76";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -70,33 +70,58 @@ function estimateLabelHeight(entries, lineH = LINE_H) {
 
 // Kant-etiketter (tl-start/tl-end) venstre-/høyrestilles i CSS-en, så det
 // horisontale fotavtrykket deres strekker seg innover fra punktet — ikke
-// symmetrisk rundt det.
-function labelInterval(pct) {
-  if (pct <= 12) return [pct - 1, pct + LABEL_W_PCT - 1];
-  if (pct >= 88) return [pct - LABEL_W_PCT + 1, pct + 1];
+// symmetrisk rundt det. Er etikettene alltid midtstilte (sjangertidslinjen),
+// er fotavtrykket symmetrisk overalt, og kant-unntaket ville regnet feil.
+function labelInterval(pct, edgeAlign = true) {
+  if (edgeAlign && pct <= 12) return [pct - 1, pct + LABEL_W_PCT - 1];
+  if (edgeAlign && pct >= 88) return [pct - LABEL_W_PCT + 1, pct + 1];
   return [pct - LABEL_W_PCT / 2, pct + LABEL_W_PCT / 2];
 }
+
+const BASE_STEM = 24;
 
 // Høydebevisst layout: hver gruppe legges på den siden (over/under) der den
 // får kortest stilk, og stilken må løfte etiketten klar av alle tidligere
 // etiketter på samme side som overlapper horisontalt. Da kan ingenting
 // kollidere, uansett hvor mange hendelser som deler årstall eller hvor mange
 // linjer tekstene brekker over.
-function layoutTimeline(groups) {
+//
+// stemLevels > 0 slår på FASTE stilklengder i stedet. Den frie stablingen over
+// vokser monotont — hver ny etikett må klarere alle de forrige — så i en tett
+// familie som Jazz ble stilkene lengre og lengre utover i sporet. Med faste
+// nivåer prøves plassene i rekkefølgen kort-over, kort-under, lang-over,
+// lang-under, og en etikett som ikke overlapper noen i sin egen plass havner
+// på den korteste ledige. Da veksler stilkene i stedet for å eskalere, og
+// mønsteret nullstiller seg av seg selv når sporet åpner seg igjen.
+// Finnes det ingen ledig fast plass, faller vi tilbake på den frie stablingen,
+// så garantien om at ingenting kolliderer står uansett.
+function layoutTimeline(groups, { stemLevels = 0, edgeAlign = true } = {}) {
   const placed = { above: [], below: [] };
+  const step = Math.max(...groups.map((g) => g.height)) + 8;
   return groups.map((g) => {
-    const [lo, hi] = labelInterval(g.pct);
+    const [lo, hi] = labelInterval(g.pct, edgeAlign);
+    const overlaps = (p) => lo < p.hi && hi > p.lo;
+
+    for (let lvl = 0; lvl < stemLevels; lvl++) {
+      for (const side of ["above", "below"]) {
+        if (placed[side].some((p) => p.level === lvl && overlaps(p))) continue;
+        const stem = BASE_STEM + lvl * step;
+        placed[side].push({ lo, hi, stem, height: g.height, level: lvl });
+        return { ...g, dir: side, stem };
+      }
+    }
+
     const stemFor = (side) => {
-      let stem = 24;
+      let stem = BASE_STEM;
       for (const p of placed[side]) {
-        if (lo < p.hi && hi > p.lo) stem = Math.max(stem, p.stem + p.height + 8);
+        if (overlaps(p)) stem = Math.max(stem, p.stem + p.height + 8);
       }
       return stem;
     };
     const aStem = stemFor("above"), bStem = stemFor("below");
     const dir = bStem < aStem ? "below" : "above";
     const stem = Math.min(aStem, bStem);
-    placed[dir].push({ lo, hi, stem, height: g.height });
+    placed[dir].push({ lo, hi, stem, height: g.height, level: -1 });
     return { ...g, dir, stem };
   });
 }
@@ -119,9 +144,13 @@ function enforceMinGap(sorted, desiredGap, pad, limit) {
 // opts.color farger strek, prikker, stilker og årstall (CSS-variabelen
 // --tl-color, som faller tilbake på --accent når den ikke er satt — derfor er
 // tiårs- og teknologitidslinjene uendret grønne).
-// opts.minGapPct settes kun av sjangertidslinjen, så innovasjons- og
-// tiårstidslinjene beholder plasseringen de har i dag.
-function buildProportionalTimeline(items, startYear, { color = null, extraClass = "", minGapPct = 0, lineH = LINE_H } = {}) {
+// opts.minGapPct, opts.stemLevels og opts.edgeAlign settes kun av
+// sjangertidslinjen, så innovasjons- og tiårstidslinjene beholder plasseringen
+// og kant-justeringen de har i dag.
+function buildProportionalTimeline(items, startYear, {
+  color = null, extraClass = "", minGapPct = 0, lineH = LINE_H,
+  stemLevels = 0, edgeAlign = true,
+} = {}) {
   if (items.length < 2) return "";
   // Hendelser på samme punkt samles til én gruppe — ett punkt, én stilk, navnene
   // under hverandre — i stedet for flere etiketter oppå hverandre på samme x.
@@ -179,7 +208,7 @@ function buildProportionalTimeline(items, startYear, { color = null, extraClass 
   // første ekte sjangeren inn i bruddet.
   enforceMinGap(mapped.filter(g => !brutt || !g.entries.every(e => e.root)),
     minGapPct, AXIS_START, limit);
-  const laid = layoutTimeline(mapped);
+  const laid = layoutTimeline(mapped, { stemLevels, edgeAlign });
   // Sporhøyden må dekke høyeste stilk + etikett på en side (10px luft mellom
   // stilk og etikett, jf. CSS-ens bottom/top-calc).
   const half = Math.max(...laid.map(g => g.stem + g.height + 10)) + 8;
@@ -194,7 +223,7 @@ function buildProportionalTimeline(items, startYear, { color = null, extraClass 
     html += `<div class="tl-break" style="left:${rootEdge.toFixed(1)}%;width:${(firstAxis - rootEdge).toFixed(1)}%"></div>`;
   }
   for (const g of laid) {
-    const edge = g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
+    const edge = !edgeAlign ? "" : g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
     // Er HELE gruppen rot-noder, markeres selve prikken også (stiplet) — ikke
     // bare navnet. Blandede grupper beholder den vanlige prikken.
     const rootDot = g.entries.every((e) => e.root) ? " tl-item-root" : "";
@@ -365,5 +394,7 @@ export function buildGenreTimeline(metaGenre) {
     extraClass: "tl-genre",
     minGapPct: 6,
     lineH: 21,          // .tl-genre .tl-desc er 0.82rem/600 — se estimateLabelHeight
+    stemLevels: 2,      // kort/lang i stedet for stadig lengre stilker
+    edgeAlign: false,   // etikettene midtstilles også ytterst, ikke kantstilles
   });
 }
