@@ -143,8 +143,8 @@ service cloud.firestore {
       allow create: if isTeacher() || (
         request.auth != null &&
         request.resource.data.keys().hasOnly([
-          "name", "category", "decade", "adoptedYear", "adoptedLabel",
-          "description", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt"
+          "name", "category", "instrument", "decade", "adoptedYear", "adoptedLabel",
+          "description", "kilder", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt"
         ]) &&
         request.resource.data.status == "pending" &&
         request.resource.data.name is string &&
@@ -152,7 +152,10 @@ service cloud.firestore {
         request.resource.data.name.size() <= 120 &&
         request.resource.data.get("description", "").size() <= 5000 &&
         request.resource.data.get("imageUrl", "").size() <= 2000 &&
-        request.resource.data.get("proposedBy", "").size() <= 100
+        request.resource.data.get("proposedBy", "").size() <= 100 &&
+        // Kilder er en liste med korte strenger — hindrer at feltet brukes til
+        // å dytte inn vilkårlig store data via et «forslag».
+        request.resource.data.get("kilder", []).size() <= 20
       );
       allow update, delete: if isTeacher();
     }

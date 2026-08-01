@@ -10,23 +10,58 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-// Instrument-vokabularet — fast liste i kode, som DECADES og sjangertreet
-// (v3.68: erstattet config-dokumentet i Firestore, det siste som lå der).
-// Endres her ved behov; artister med verdier utenfor lista flagges i
-// Oversikten og ved import, så lista og dataene ikke kan drive fra hverandre
-// slik config-tekstfeltet tillot (Saxofon/Saksofon, Tangenter/Piano...).
-export const INSTRUMENTS = [
-  "Vokal",
-  "Gitar",
-  "Tangenter",
-  "Bass",
-  "Trommer/perkusjon",
-  "Saksofon",
-  "Trompet",
-  "Strykeinstrumenter",
-  "Elektronisk produksjon",
-  "Annet",
-];
+// ----------------------------------------------------------------------------
+//  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
+// ----------------------------------------------------------------------------
+//  Fast liste i kode, som DECADES og sjangertreet (v3.68: erstattet config-
+//  dokumentet i Firestore, det siste som lå der). Artister med verdier utenfor
+//  lista flagges i Oversikten og ved import, så lista og dataene ikke kan drive
+//  fra hverandre slik config-tekstfeltet tillot (Saxofon/Saksofon...).
+//
+//  v3.78 innførte GRUPPENIVÅET (samme form som metaGenre over mainGenre):
+//   - Artistkortet beholder det PRESISE instrumentet — «Trompet», «Klarinett».
+//   - Gruppen samler dem — Trompet, Saksofon og Klarinett er «Soloinstrument».
+//  Instrument-tidslinjene ligger på GRUPPEN; artistvisningen er uendret presis.
+//  Nøklene her er gruppenavnene, verdiene er det som kan stå på en artist.
+//  Grupper med bare seg selv (Vokal, Bass …) er helt vanlige — de har bare
+//  ingen underinndeling.
+export const INSTRUMENT_GROUPS = {
+  "Vokal": ["Vokal"],
+  "Gitar": ["Gitar", "Banjo"],
+  "Tangenter": ["Tangenter"],
+  "Bass": ["Bass"],
+  "Trommer": ["Trommer/perkusjon"],
+  "Soloinstrument": [
+    "Saksofon", "Trompet", "Strykeinstrumenter",
+    "Klarinett", "Trombone", "Munnspill", "Mandolin",
+  ],
+  "Elektronisk produksjon": ["Elektronisk produksjon"],
+  "Låtskriving": ["Låtskriving"],
+  // Ensembler, bandledere og produsenter uten ett bestemt instrument. Har
+  // bevisst INGEN nyvinnings-tidslinje — det finnes ikke instrumentnyvinninger
+  // for «et band».
+  "Annet": ["Annet"],
+};
+
+// Gruppene som får egen nyvinnings-tidslinje i Instrumenter-seksjonen.
+// «Annet» er utelatt (se over) — alt annet følger med automatisk når en ny
+// gruppe legges inn over.
+export const INSTRUMENT_TIMELINE_GROUPS =
+  Object.keys(INSTRUMENT_GROUPS).filter((g) => g !== "Annet");
+
+// Flat liste over lovlige artistverdier — utledet, så gruppene er ÉN kilde.
+// Brukt av forslagsskjema, lærerredigering, filtre og import-valideringen.
+export const INSTRUMENTS = Object.values(INSTRUMENT_GROUPS).flat();
+
+// Presist instrument → gruppe. Ukjente verdier gir null (og flagges allerede
+// som «utenfor vokabularet» i Oversikten).
+const INSTRUMENT_TO_GROUP = Object.fromEntries(
+  Object.entries(INSTRUMENT_GROUPS).flatMap(([group, list]) => list.map((i) => [i, group]))
+);
+
+export function instrumentGroup(instrument) {
+  return INSTRUMENT_TO_GROUP[instrument] || null;
+}
 
 // Tiårene appen dekker — strukturakse for histogram, filtre, tiårs-
 // beskrivelser og Skrivebordet. Utvides her når 2030-tallet melder seg.

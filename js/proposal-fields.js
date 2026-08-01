@@ -11,12 +11,12 @@
 //  Avhengighetsfri (kun artist-schema) → enhetstestbar i Node.
 // ============================================================================
 
-import { ARTIST_FIELDS } from "./artist-schema.js?v=3.77";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=3.78";
 
 export const PROPOSABLE_KEYS = {
   // «complex»-felter (verk/musikkeksempler/kilder) foreslås ikke via editoren.
   artist: ARTIST_FIELDS.filter((f) => f.type !== "complex").map((f) => f.key),
-  tech: ["name", "category", "decade", "adoptedYear", "adoptedLabel", "description", "imageUrl", "imageCredit"],
+  tech: ["name", "category", "instrument", "decade", "adoptedYear", "adoptedLabel", "description", "kilder", "imageUrl", "imageCredit"],
   subgenre: ["description"],
   "decade-society": ["society", "societyMore"],
   "decade-tech": ["tech", "techMore"],

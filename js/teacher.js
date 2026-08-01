@@ -26,13 +26,13 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.77";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.77";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.77";
-import { initExplore } from "./explore.js?v=3.77";
+} from "./store.js?v=3.78";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.78";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.78";
+import { initExplore } from "./explore.js?v=3.78";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.77";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.77";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.78";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.78";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -49,10 +49,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.77";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.77";
-import { renderDesk } from "./teacher-desk.js?v=3.77";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.77";
+} from "./teacher-content.js?v=3.78";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.78";
+import { renderDesk } from "./teacher-desk.js?v=3.78";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.78";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -159,6 +159,8 @@ function startApp() {
   if (btnStoreBildet) btnStoreBildet.addEventListener("click", ctx.explore.openStoreBildet);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
   $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);
+  const btnTInstr = document.getElementById("btn-t-instrumenter");
+  if (btnTInstr) btnTInstr.addEventListener("click", ctx.explore.openInstrumenter);
   setupPodkastAdmin();
   const btnArtister = document.getElementById("btn-t-artister");
   if (btnArtister) btnArtister.addEventListener("click", () => {

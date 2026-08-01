@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.77";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.77";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.78";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.78";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -26,6 +26,21 @@ export const MODAL_HTML = `
       <div id="tek-admin-extra" class="tech-tabs-extra"></div>
     </div>
     <div id="tech-list" class="tech-grid"></div>
+  </div>
+</div>
+
+<!-- Instrumenter: én nyvinnings-tidslinje per instrumentgruppe, bygget av
+     innovasjonskortene som har instrument satt (se explore-instrument.js).
+     Innholdet skrives av studentene via «Foreslå nytt kort» i hver seksjon.
+     NB: markupen her er én stor template-literal — ingen backticks i teksten. -->
+<div class="modal-backdrop" id="modal-instrumenter">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Instrumenter</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:6px;font-size:0.9rem">Sentrale nyvinninger for hvert instrument, tiår for tiår. Trykk på et navn for å åpne kortet. Savner du noe? Foreslå et nytt kort — læreren godkjenner det før det vises.</p>
+    <div id="instr-body"></div>
   </div>
 </div>
 

@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.77";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.77";
-import { debounce, throttle } from "./util.js?v=3.77";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.77";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.77";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.77";
-import { initExplore } from "./explore.js?v=3.77";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.77";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.78";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.78";
+import { debounce, throttle } from "./util.js?v=3.78";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.78";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.78";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.78";
+import { initExplore } from "./explore.js?v=3.78";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.78";
 
 const state = {
   artists: [],
@@ -140,7 +140,9 @@ function setupExplore() {
     onArtistClick: openDetail,
     onSlektstre: openSlektstre,
     onProposeEdit: (cfg) => openProposalEditorGuarded(cfg),
-    onProposeNewTech: () => openNewTechProposal(),
+    // preset settes av Instrumenter-seksjonen ({ instrument, category }), så
+    // skjemaet åpner riktig utfylt. Teknologiseksjonen sender ingenting.
+    onProposeNewTech: (preset) => openNewTechProposal(preset),
     hasPendingEdit,
   });
 
@@ -152,6 +154,8 @@ function setupExplore() {
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
   const btnPodkast = document.getElementById("btn-podkast");
   if (btnPodkast) btnPodkast.addEventListener("click", explore.openPodkast);
+  const btnInstrumenter = document.getElementById("btn-instrumenter");
+  if (btnInstrumenter) btnInstrumenter.addEventListener("click", explore.openInstrumenter);
   const btnStoreBildet = document.getElementById("btn-store-bildet");
   if (btnStoreBildet) btnStoreBildet.addEventListener("click", explore.openStoreBildet);
 

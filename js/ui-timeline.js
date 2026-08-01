@@ -7,10 +7,10 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.77";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.77";
-import { DECADES } from "./limits.js?v=3.77";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.77";
+import { escapeHtml } from "./util.js?v=3.78";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.78";
+import { DECADES } from "./limits.js?v=3.78";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.78";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -273,6 +273,38 @@ export function buildTechTimeline(techItems, decadeId) {
 }
 
 // ----------------------------------------------------------------------------
+//  INSTRUMENTTIDSLINJE — nyvinningene for én instrumentgruppe
+// ----------------------------------------------------------------------------
+//  Samme kort som teknologiseksjonen (samlingen `tech`), men gruppert på
+//  `instrument` i stedet for `decade`: ett kort = én stilk. Kortene skrives av
+//  studentene, så tidslinjen må bygges av dataene og ikke av noen liste i
+//  koden — en ny godkjent nyvinning skal dukke opp av seg selv.
+//
+//  Utformingen er den forfinede fra sjangertidslinjen (navnet nærmest streken,
+//  midtstilte etiketter, vekslende stilker), men UTEN farge — da faller den
+//  tilbake på --accent og er grønn som innovasjonstidslinjen den stammer fra.
+export function instrumentInnovations(techItems, group) {
+  return (techItems || [])
+    .filter((t) => t.instrument === group && (t.status || "active") === "active")
+    .sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
+}
+
+export function buildInstrumentTimeline(techItems, group) {
+  const items = instrumentInnovations(techItems, group);
+  if (items.length < 2) return "";
+  return buildProportionalTimeline(
+    items.map((t) => ({
+      year: t.adoptedYear || null,
+      label: t.adoptedLabel || (t.adoptedYear ? String(t.adoptedYear) : "—"),
+      desc: t.name,
+      techId: t.id,
+    })),
+    items[0].adoptedYear || 1900,
+    { extraClass: "tl-rich", minGapPct: 6, lineH: 21, stemLevels: 2, edgeAlign: false }
+  );
+}
+
+// ----------------------------------------------------------------------------
 //  SJANGERTIDSLINJE — sjangerfamilien over hver sjangerhistorie
 // ----------------------------------------------------------------------------
 //  Erstatter den håndskrevne «Sjangertre-løype»-linjen som lå øverst i hver
@@ -341,7 +373,7 @@ export function buildGenreTimeline(metaGenre) {
   const color = META_GENRE_COLOR[metaGenre] || FAMILIES.gray.stroke;
   return buildProportionalTimeline(items, items[0].year, {
     color,
-    extraClass: "tl-genre",
+    extraClass: "tl-rich tl-genre",   // tl-rich = den forfinede utformingen, delt med instrumenttidslinjen
     minGapPct: 6,
     lineH: 21,          // .tl-genre .tl-desc er 0.82rem/600 — se estimateLabelHeight
     stemLevels: 2,      // kort/lang i stedet for stadig lengre stilker

@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl } from "./util.js?v=3.77";
-import { fmtCredit, linkDesc, wireLinks, imgTag } from "./ui-helpers.js?v=3.77";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=3.78";
+import { fmtCredit, linkDesc, wireLinks, imgTag } from "./ui-helpers.js?v=3.78";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -39,6 +39,9 @@ export function renderTechList(el, items, activeCategory, lc) {
   el.innerHTML = filtered.map(t => {
     const img = techImage(t);
     const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
+    // Instrumentgruppen vises kun når kortet har en — da er det også et
+    // instrumentkort og ligger på tidslinjen i Instrumenter-seksjonen.
+    const instrTag = t.instrument ? `<span class="tag tag-tech-instr">${escapeHtml(t.instrument)}</span>` : "";
     const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
     const propBtn = lc?.isTeacher
       ? ""
@@ -60,6 +63,9 @@ export function renderTechDetail(el, t, lc) {
   const img = techImage(t);
   const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
   const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}</div>${t.description ? `<p>${linkDesc(t.description, lc)}</p>` : ""}`;
+  const instrTag = t.instrument ? `<span class="tag tag-tech-instr">${escapeHtml(t.instrument)}</span>` : "";
+  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}${instrTag}</div>`
+    + (t.description ? `<p>${linkDesc(t.description, lc)}</p>` : "")
+    + buildKilderList(t.kilder, "Kilder");
   wireLinks(el, lc);
 }
