@@ -7,11 +7,11 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.72";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.72";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.72";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.72";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.72";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.73";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.73";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.73";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.73";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.73";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -67,6 +67,16 @@ export const GENEALOGY = [
   // --- Fjelljazz (ECM) ---
   { id: "fjelljazz", l: "Fjelljazz", f: "Fjelljazz (ECM)", fam: "purple", cx: 950, r: 8, p: ["modal", "free"], g: "Jazz", era: "1970-tallet", t: ["Dansere – Jan Garbarek (1976)", "Witchi-Tai-To – Jan Garbarek (1974)"] },
 
+  // --- Country videre: tradisjonalistene ---
+  // Neotradisjonalismen er 1980-tallets svar på countrypolitan-popen: Outlaw-
+  // opprørets holdning møter honky tonk-instrumentene igjen. Ligger mellom
+  // Outlaw (1970-t) og Cont. country (1990-t–) og binder dem sammen.
+  // NB: KUN Outlaw som forelder. Honky tonk-arven og motreaksjonen mot Nashville
+  // arves gjennom Outlaw, som allerede har begge — tegnet vi dem på nytt her,
+  // ville strekene gått bak Nashville og Outlaw langs nøyaktig samme rute som
+  // de eksisterende, og sett ut som doble streker.
+  { id: "neotrad", l: "Neotrad. country", f: "Neotraditional country", fam: "amber", cx: 195, r: 9, p: ["outlaw"], g: "Country", era: "1980-tallet", t: ["Amarillo by Morning – George Strait (1983)", "Whoever's in New England – Reba McEntire (1986)"] },
+
   // --- Hip-hop videre ---
   { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1250, r: 10, p: ["hiphop"], g: "R&B", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },
   { id: "trap", l: "Trap", f: "Trap", fam: "pink", cx: 1250, r: 12, p: ["gangsta"], g: "R&B", era: "2000–2010-tallet", t: ["Sicko Mode – Travis Scott (2018)", "Mask Off – Future (2017)"] },
@@ -75,13 +85,17 @@ export const GENEALOGY = [
   { id: "elektronika", l: "Elektronika", f: "Elektronika", fam: "teal", cx: 1510, r: 11, p: ["techno", "house"], g: "Klubbmusikk", era: "1990–2000-tallet", t: ["Windowlicker – Aphex Twin (1999)", "Midnight in a Perfect World – DJ Shadow (1996)"] },
   { id: "edm", l: "EDM", f: "EDM", fam: "teal", cx: 1510, r: 12, p: ["elektronika"], g: "Klubbmusikk", era: "2010-tallet", t: ["Levels – Avicii (2011)", "Titanium – David Guetta ft. Sia (2011)"] },
 
-  // --- Samtid (2010-tallet) ---
-  // Tre sjangre som samler trådene i hver sin familie. Alle tre henter fra flere
-  // hold på tvers av treet — det er hele poenget med dem: samtidsmusikken er der
-  // grenene møtes igjen.
+  // --- Samtid ---
+  // Sjangre som samler trådene i hver sin familie. Alle henter fra flere hold på
+  // tvers av treet — det er hele poenget med dem: samtidsmusikken er der grenene
+  // møtes igjen. Cont. R&B og Cont. hip-hop ligger på 2000-t-raden fordi 1990-t
+  // allerede er full i den delen av kartet (Neo-soul, Gangsta rap); årstallet i
+  // `era` er fasiten for når de oppsto, ikke raden.
   { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 12, p: ["nujazz"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
-  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
+  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["neotrad", "americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
   { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "red", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
+  { id: "contrnb", l: "Cont. R&B", f: "Contemporary R&B", fam: "red", cx: 1160, r: 11, p: ["funk", "hiphop"], g: "R&B", era: "1990-tallet–i dag", t: ["Real Love – Mary J. Blige (1992)", "Crazy in Love – Beyoncé (2003)"] },
+  { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1350, r: 11, p: ["hiphop", "gangsta"], g: "R&B", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
 ];
 
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
