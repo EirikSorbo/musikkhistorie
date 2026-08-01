@@ -130,6 +130,59 @@ Så: åpne `tre.html` lokalt og sjekk **konsollen** (den er fasiten):
 
 Til slutt: commit + push (repoet er auto-push-autorisert; Pages deployer selv).
 
+### 4b. Mål kollisjonene — ikke stol på øyemål
+
+Et nedskalert skjermbilde skjuler akkurat det som gjør kartet rotete. Strekene er
+bezier-kurver som **forlater forelderen loddrett** og først bøyer av på halve veien
+(`M x1,y1 C x1,ym x2,ym x2,y2`), så en ny node kan lande midt oppå en strek som
+ikke har noe med den å gjøre. Kjør dette i konsollen på `tre.html`:
+
+```js
+(() => {
+  const NY = ['minNyeId'];                       // ← id-ene du nettopp la inn
+  const boxes = [...document.querySelectorAll('.gx-node')].map(n => {
+    const r = n.querySelector('rect');
+    return { id: n.dataset.id, x: +r.getAttribute('x'), y: +r.getAttribute('y'),
+             w: +r.getAttribute('width'), h: +r.getAttribute('height') };
+  });
+  const funn = [];
+  for (const p of document.querySelectorAll('path.gx-edge')) {
+    const { p: from, c: to } = p.dataset, L = p.getTotalLength();
+    for (const b of boxes) {
+      if (b.id === from || b.id === to) continue;
+      let minD = Infinity, inni = false;
+      for (let i = 0; i <= 200; i++) {
+        const pt = p.getPointAtLength(L * i / 200);
+        if (pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h) { inni = true; break; }
+        minD = Math.min(minD, Math.hypot(
+          Math.max(b.x - pt.x, 0, pt.x - (b.x + b.w)),
+          Math.max(b.y - pt.y, 0, pt.y - (b.y + b.h))));
+      }
+      if (inni) funn.push(`GJENNOM ${from}→${to} bak ${b.id}`);
+      else if (minD < 14) funn.push(`NÆR ${minD.toFixed(0)}px ${from}→${to} ved ${b.id}`);
+    }
+  }
+  return funn;
+})()
+```
+
+**Les resultatet riktig — dette er viktig:**
+
+- **Kjør skriptet FØR du legger inn noden også**, og sammenlign. Treet har rundt 20
+  «GJENNOM»-tilfeller fra før (`jazz→fusion` går bak fire noder) og grazes helt ned
+  i 2 px (`rnb→pop` ved `rocknroll`). Det er normalen her, ikke feil du har innført.
+- **«GJENNOM» er som regel greit.** Nodene har fyll og tegnes ETTER strekene, så en
+  strek bak en node ser ut som den går bak den. Det er «NÆR 2–3 px» som ser ut som
+  en renderingsfeil, fordi streken da løper synlig langs kanten.
+- **Node/node-overlapp er alltid feil.** Sjekk det separat ved å teste boksene mot
+  hverandre — det skal alltid gi tom liste.
+- Etiketter bredere enn `NW` (116 px) utvider boksen (`getComputedTextLength`), så
+  en lang `l` spiser plass du trodde du hadde. «British invasion» (16 tegn → 164 px)
+  er den bredeste som finnes; ligger du der, har du ikke mer å gå på.
+
+Finner du en ekte kollisjon, er **færre foreldre** ofte den beste fiksen — se fella
+om doble ruter i steg 6.
+
 ---
 
 ## 5. Innholdet — bor i Firestore, ikke i koden
@@ -179,6 +232,12 @@ med bare det nye.
 - **Undersjanger med samme navn som en sjanger skygger for den** i
   `genre-descriptions.js` (sub slår main ved likt navn). Ikke gjenbruk navn.
 - **Rot-noder (`g: null`) trenger også beskrivelse** — Skrivebordet teller dem som hull.
+- **Færre foreldre er ofte riktigere.** Er en forelder allerede forelder til en av
+  nodens andre foreldre, arves den — tegnes den på nytt, går den nye streken bak de
+  samme nodene langs nøyaktig samme rute som den gamle, og ser ut som en dobbel
+  strek. Konkret (v3.73): `Neotrad. country` fikk KUN `outlaw`, ikke `honkytonk` og
+  ikke `rx: nashville`, selv om begge er musikkfaglig sanne — Outlaw har begge fra
+  før. Musikkfaglig riktig ≠ verdt en egen strek.
 - **Ny node = flere hull, ikke færre.** Skrivebordets tall går opp med én
   sjangerbeskrivelse + én per ny kobling. Det er meningen.
 - **`saveVarmekart` skriver HELE kartet.** Den er kun for celleredigeringen, som
