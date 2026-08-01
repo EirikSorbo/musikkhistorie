@@ -7,10 +7,10 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.76";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.76";
-import { DECADES } from "./limits.js?v=3.76";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.76";
+import { escapeHtml } from "./util.js?v=3.77";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.77";
+import { DECADES } from "./limits.js?v=3.77";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.77";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -167,71 +167,32 @@ function buildProportionalTimeline(items, startYear, {
   const groups = [...byPos.values()];
   const pad = 4;
   const limit = 100 - pad;
-
-  // RØTTENE STÅR UTENFOR PROPORSJONEN. Work songs (1800-tallet) ligger et helt
-  // århundre foran Blues (ca. 1900), og på en ekte tidsakse spiste det avstanden
-  // over halve sporet mens alle de faktiske sjangrene ble klemt sammen til
-  // høyre. Røttene får derfor en fast plass ytterst til venstre, og den
-  // proporsjonale aksen begynner først ved den eldste ekte sjangeren. Bruddet
-  // markeres med en kort stiplet strek (se AXIS_START under og .tl-break i CSS),
-  // så det er tydelig at avstanden dit ikke er i skala.
-  const rootGroups = groups.filter(g => g.entries.every(e => e.root));
-  const axisGroups = groups.filter(g => !g.entries.every(e => e.root));
-  const brutt = rootGroups.length > 0 && axisGroups.length > 0;
-  const AXIS_START = brutt ? 17 : pad;
-
-  const yearsOf = (gs) => gs.map(g => g.year || startYear);
-  const minY = axisGroups.length ? Math.min(...yearsOf(axisGroups)) : Math.min(...yearsOf(groups));
-  const maxY = axisGroups.length
-    ? Math.max(...axisGroups.map(g => g.year || startYear + 9))
-    : Math.max(...groups.map(g => g.year || startYear + 9));
+  const minY = Math.min(...groups.map(g => g.year || startYear));
+  const maxY = Math.max(...groups.map(g => g.year || startYear + 9));
   const span = Math.max(maxY - minY, 1);
 
   // Deler alle hendelsene årstall (én gruppe), sentreres punktet på aksen i
   // stedet for å klistres til venstrekanten av en meningsløs spennvidde.
-  const posFor = (g) => {
-    if (groups.length === 1) return 50;
-    if (brutt && g.entries.every(e => e.root)) {
-      const i = rootGroups.indexOf(g);
-      return pad + i * 5;                       // flere røtter: tett rad ytterst
-    }
-    return AXIS_START + ((g.year || startYear) - minY) / span * (limit - AXIS_START);
-  };
   const mapped = groups.map(g => ({
     ...g,
-    pct: posFor(g),
+    pct: groups.length === 1 ? 50 : pad + ((g.year || startYear) - minY) / span * (limit - pad),
     height: estimateLabelHeight(g.entries, lineH),
   }));
   mapped.sort((a, b) => a.pct - b.pct);
-  // Minsteavstanden gjelder KUN den proporsjonale delen: røttene har allerede
-  // en fast plass, og skulle de vært med her, kunne bakover-passet dratt den
-  // første ekte sjangeren inn i bruddet.
-  enforceMinGap(mapped.filter(g => !brutt || !g.entries.every(e => e.root)),
-    minGapPct, AXIS_START, limit);
+  enforceMinGap(mapped, minGapPct, pad, limit);
   const laid = layoutTimeline(mapped, { stemLevels, edgeAlign });
   // Sporhøyden må dekke høyeste stilk + etikett på en side (10px luft mellom
   // stilk og etikett, jf. CSS-ens bottom/top-calc).
   const half = Math.max(...laid.map(g => g.stem + g.height + 10)) + 8;
-  // Ved brudd starter den heltrukne streken først ved aksen; strekningen fra
-  // roten og bort dit tegnes stiplet av .tl-break.
-  const firstAxis = brutt ? Math.min(...laid.filter(g => !g.entries.every(e => e.root)).map(g => g.pct)) : 0;
-  const rootEdge = brutt ? Math.max(...laid.filter(g => g.entries.every(e => e.root)).map(g => g.pct)) : 0;
-  const style = `--tl-half:${half}px` + (color ? `;--tl-color:${color}` : "") +
-    (brutt ? `;--tl-line-start:${firstAxis.toFixed(1)}%` : "");
+  const style = `--tl-half:${half}px` + (color ? `;--tl-color:${color}` : "");
   let html = `<div class="timeline tl-prop${extraClass ? " " + extraClass : ""}" style="${style}"><div class="tl-track">`;
-  if (brutt) {
-    html += `<div class="tl-break" style="left:${rootEdge.toFixed(1)}%;width:${(firstAxis - rootEdge).toFixed(1)}%"></div>`;
-  }
   for (const g of laid) {
     const edge = !edgeAlign ? "" : g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
-    // Er HELE gruppen rot-noder, markeres selve prikken også (stiplet) — ikke
-    // bare navnet. Blandede grupper beholder den vanlige prikken.
-    const rootDot = g.entries.every((e) => e.root) ? " tl-item-root" : "";
-    html += `<div class="tl-item tl-${g.dir}${edge}${rootDot}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
+    html += `<div class="tl-item tl-${g.dir}${edge}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
       `<div class="tl-dot"></div><div class="tl-stem"></div>` +
       `<div class="tl-label"><span class="tl-year">${escapeHtml(g.label)}</span>` +
       g.entries.map((e) =>
-        `<span class="tl-desc${e.root ? " tl-root" : ""}"` +
+        `<span class="tl-desc"` +
         (e.techId ? ` data-tech-id="${escapeHtml(e.techId)}"` : "") +
         (e.genre ? ` data-genre="${escapeHtml(e.genre)}"` : "") +
         `>${escapeHtml(e.desc)}</span>`
@@ -339,13 +300,13 @@ function nodeYear(n) {
 // høyere tall etter avstamnings-låsingen under.
 function nodeLabel(n) {
   const era = String(n.era || "").trim();
-  return era || (n.r === 0 ? "Røtter" : `${rowYear(n.r)}-t`);
+  return era || `${rowYear(n.r)}-t`;
 }
 
-// Sjangerfamilien til én metasjanger, i tidsrekkefølge — pluss rot-nodene den
-// vokste ut av (`g: null`, f.eks. Work songs → Blues). Rot-nodene tas med fordi
-// opphavet er halve poenget med løypen, men markeres eget (`root`) så det er
-// tydelig at de ikke er sjangre man kan tagge en artist med.
+// Sjangerfamilien til én metasjanger, i tidsrekkefølge. KUN ekte sjangre —
+// rot-nodene familien vokste ut av (`g: null`, f.eks. Work songs → Blues) er
+// bevisst utelatt (v3.77, brukervalg): de ga lite, og fordi de ligger et helt
+// århundre foran resten krevde de et eget aksebrudd som gjorde løypen rotete.
 //
 // AVSTAMNING LÅSER REKKEFØLGEN: `era` er fritekst, og upresise formuleringer kan
 // snu om på slektskapet — «sent 1960-tall» (Blues rock) leses som 1960 og havner
@@ -355,28 +316,17 @@ function nodeLabel(n) {
 export function genreFamilyNodes(metaGenre) {
   const family = GENEALOGY.filter((n) => n.g === metaGenre);
   if (!family.length) return [];
-  const inFamily = new Set(family.map((n) => n.id));
-  const roots = [];
-  const seen = new Set();
-  for (const n of family) {
-    for (const pid of n.p || []) {
-      if (inFamily.has(pid) || seen.has(pid)) continue;
-      const parent = GENEALOGY.find((x) => x.id === pid);
-      if (parent && !parent.g) { roots.push(parent); seen.add(pid); }
-    }
-  }
-  const all = [...roots.map((n) => ({ n, root: true })), ...family.map((n) => ({ n, root: false }))];
   // GENEALOGY er sortert slik at foreldre kommer før barn, så ett gjennomløp
   // holder for å propagere låsingen nedover kjeden.
-  const year = new Map(all.map(({ n }) => [n.id, nodeYear(n)]));
-  for (const { n } of all) {
+  const year = new Map(family.map((n) => [n.id, nodeYear(n)]));
+  for (const n of family) {
     const parents = (n.p || []).filter((pid) => year.has(pid));
     if (!parents.length) continue;
     const earliest = Math.max(...parents.map((pid) => year.get(pid))) + 1;
     if (year.get(n.id) < earliest) year.set(n.id, earliest);
   }
-  return all
-    .map((x) => ({ ...x, year: year.get(x.n.id), label: nodeLabel(x.n) }))
+  return family
+    .map((n) => ({ n, year: year.get(n.id), label: nodeLabel(n) }))
     .sort((a, b) => a.year - b.year);
 }
 
@@ -385,8 +335,8 @@ export function genreFamilyNodes(metaGenre) {
 export function buildGenreTimeline(metaGenre) {
   const nodes = genreFamilyNodes(metaGenre);
   if (nodes.length < 2) return "";
-  const items = nodes.map(({ n, root, year, label }) => ({
-    year, label, desc: n.l, genre: n.l, root,
+  const items = nodes.map(({ n, year, label }) => ({
+    year, label, desc: n.l, genre: n.l,
   }));
   const color = META_GENRE_COLOR[metaGenre] || FAMILIES.gray.stroke;
   return buildProportionalTimeline(items, items[0].year, {
