@@ -7,10 +7,10 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.74";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.74";
-import { DECADES } from "./limits.js?v=3.74";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.74";
+import { escapeHtml } from "./util.js?v=3.75";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.75";
+import { DECADES } from "./limits.js?v=3.75";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.75";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -136,25 +136,63 @@ function buildProportionalTimeline(items, startYear, { color = null, extraClass 
     byPos.get(key).entries.push(e);
   }
   const groups = [...byPos.values()];
-  const minY = Math.min(...groups.map(g => g.year || startYear));
-  const maxY = Math.max(...groups.map(g => g.year || startYear + 9));
-  const span = Math.max(maxY - minY, 1);
   const pad = 4;
+  const limit = 100 - pad;
+
+  // RØTTENE STÅR UTENFOR PROPORSJONEN. Work songs (1800-tallet) ligger et helt
+  // århundre foran Blues (ca. 1900), og på en ekte tidsakse spiste det avstanden
+  // over halve sporet mens alle de faktiske sjangrene ble klemt sammen til
+  // høyre. Røttene får derfor en fast plass ytterst til venstre, og den
+  // proporsjonale aksen begynner først ved den eldste ekte sjangeren. Bruddet
+  // markeres med en kort stiplet strek (se AXIS_START under og .tl-break i CSS),
+  // så det er tydelig at avstanden dit ikke er i skala.
+  const rootGroups = groups.filter(g => g.entries.every(e => e.root));
+  const axisGroups = groups.filter(g => !g.entries.every(e => e.root));
+  const brutt = rootGroups.length > 0 && axisGroups.length > 0;
+  const AXIS_START = brutt ? 17 : pad;
+
+  const yearsOf = (gs) => gs.map(g => g.year || startYear);
+  const minY = axisGroups.length ? Math.min(...yearsOf(axisGroups)) : Math.min(...yearsOf(groups));
+  const maxY = axisGroups.length
+    ? Math.max(...axisGroups.map(g => g.year || startYear + 9))
+    : Math.max(...groups.map(g => g.year || startYear + 9));
+  const span = Math.max(maxY - minY, 1);
+
   // Deler alle hendelsene årstall (én gruppe), sentreres punktet på aksen i
   // stedet for å klistres til venstrekanten av en meningsløs spennvidde.
+  const posFor = (g) => {
+    if (groups.length === 1) return 50;
+    if (brutt && g.entries.every(e => e.root)) {
+      const i = rootGroups.indexOf(g);
+      return pad + i * 5;                       // flere røtter: tett rad ytterst
+    }
+    return AXIS_START + ((g.year || startYear) - minY) / span * (limit - AXIS_START);
+  };
   const mapped = groups.map(g => ({
     ...g,
-    pct: groups.length === 1 ? 50 : pad + ((g.year || startYear) - minY) / span * (100 - 2 * pad),
+    pct: posFor(g),
     height: estimateLabelHeight(g.entries, lineH),
   }));
   mapped.sort((a, b) => a.pct - b.pct);
-  enforceMinGap(mapped, minGapPct, pad, 100 - pad);
+  // Minsteavstanden gjelder KUN den proporsjonale delen: røttene har allerede
+  // en fast plass, og skulle de vært med her, kunne bakover-passet dratt den
+  // første ekte sjangeren inn i bruddet.
+  enforceMinGap(mapped.filter(g => !brutt || !g.entries.every(e => e.root)),
+    minGapPct, AXIS_START, limit);
   const laid = layoutTimeline(mapped);
   // Sporhøyden må dekke høyeste stilk + etikett på en side (10px luft mellom
   // stilk og etikett, jf. CSS-ens bottom/top-calc).
   const half = Math.max(...laid.map(g => g.stem + g.height + 10)) + 8;
-  const style = `--tl-half:${half}px` + (color ? `;--tl-color:${color}` : "");
+  // Ved brudd starter den heltrukne streken først ved aksen; strekningen fra
+  // roten og bort dit tegnes stiplet av .tl-break.
+  const firstAxis = brutt ? Math.min(...laid.filter(g => !g.entries.every(e => e.root)).map(g => g.pct)) : 0;
+  const rootEdge = brutt ? Math.max(...laid.filter(g => g.entries.every(e => e.root)).map(g => g.pct)) : 0;
+  const style = `--tl-half:${half}px` + (color ? `;--tl-color:${color}` : "") +
+    (brutt ? `;--tl-line-start:${firstAxis.toFixed(1)}%` : "");
   let html = `<div class="timeline tl-prop${extraClass ? " " + extraClass : ""}" style="${style}"><div class="tl-track">`;
+  if (brutt) {
+    html += `<div class="tl-break" style="left:${rootEdge.toFixed(1)}%;width:${(firstAxis - rootEdge).toFixed(1)}%"></div>`;
+  }
   for (const g of laid) {
     const edge = g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
     // Er HELE gruppen rot-noder, markeres selve prikken også (stiplet) — ikke

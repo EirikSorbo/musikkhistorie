@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes } from "../../js/ui-timeline.js?v=3.74";
-import { GENEALOGY } from "../../js/genealogy.js?v=3.74";
-import { STORY_ORDER } from "../../js/story-format.js?v=3.74";
+import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.75";
+import { GENEALOGY } from "../../js/genealogy.js?v=3.75";
+import { STORY_ORDER } from "../../js/story-format.js?v=3.75";
 
 // Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.
@@ -47,4 +47,31 @@ test("de nye v3.73-nodene er med i løypene sine", () => {
   assert.ok(navn("Country").includes("Neotrad. country"));
   assert.ok(navn("R&B").includes("Cont. R&B"));
   assert.ok(navn("R&B").includes("Cont. hip-hop"));
+});
+
+test("rot-noden står utenfor proporsjonen, med et stiplet brudd inn til aksen", () => {
+  // Work songs (1800-tallet) ligger et århundre foran Blues (ca. 1900). Med
+  // roten på tidsaksen spiste den avstanden over halve sporet og klemte alle de
+  // faktiske sjangrene sammen til høyre.
+  const html = buildGenreTimeline("Blues");
+  const pos = [...html.matchAll(/class="tl-item[^"]*"[^>]*left:([\d.]+)%/g)].map((m) => +m[1]);
+  const rot = [...html.matchAll(/class="tl-item[^"]*tl-item-root"[^>]*left:([\d.]+)%/g)].map((m) => +m[1]);
+  assert.equal(rot.length, 1, "Blues har én rot-node");
+  assert.ok(rot[0] <= 5, "roten står helt til venstre, ikke på sitt egentlige årstall");
+  // Første ekte sjanger starter der aksen begynner — ikke langt ute til høyre.
+  const akse = pos.filter((p) => p > rot[0]).sort((a, b) => a - b);
+  assert.ok(akse[0] >= 12 && akse[0] <= 22, `aksen starter ved bruddet, fikk ${akse[0]}`);
+  // Bruddet tegnes som eget element mellom roten og aksen.
+  const brudd = html.match(/tl-break" style="left:([\d.]+)%;width:([\d.]+)%/);
+  assert.ok(brudd, "bruddet mangler");
+  assert.ok(Math.abs(+brudd[1] - rot[0]) < 1, "bruddet starter ved roten");
+  assert.ok(Math.abs(+brudd[1] + +brudd[2] - akse[0]) < 1, "bruddet slutter ved aksen");
+});
+
+test("familier uten rot får verken brudd eller forskjøvet akse", () => {
+  for (const meta of ["R&B", "Klubbmusikk"]) {
+    const html = buildGenreTimeline(meta);
+    assert.ok(!html.includes("tl-break"), `${meta} skal ikke ha brudd`);
+    assert.ok(!html.includes("--tl-line-start"), `${meta} skal tegne heltrukken strek hele veien`);
+  }
 });

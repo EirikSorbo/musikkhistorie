@@ -874,7 +874,10 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* --tl-color settes kun av sjangertidslinjen (familiefargen fra slektstreet).
    Uten den faller alt tilbake på --accent, så tiårs- og teknologitidslinjene
    er uendret grønne. */
-.tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: var(--tl-color, var(--accent)); border-radius: 2px; transform: translateY(-50%); }
+/* --tl-line-start settes kun når tidslinjen har et brudd (rot-noder utenfor
+   proporsjonen): da starter den heltrukne streken først ved den proporsjonale
+   aksen, og .tl-break tegner den stiplede strekningen fra roten og bort dit. */
+.tl-track::before { content: ""; position: absolute; left: var(--tl-line-start, 0); right: 0; top: 50%; height: 4px; background: var(--tl-color, var(--accent)); border-radius: 2px; transform: translateY(-50%); }
 .tl-item { position: relative; flex: 1 0 120px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
 .tl-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--tl-color, var(--accent)); background: var(--bg); flex-shrink: 0; z-index: 2; }
 .tl-label { position: absolute; width: 110px; text-align: center; }
@@ -951,6 +954,17 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    kan tagge en artist med — dempet tekst og stiplet prikk sier det uten ord. */
 .tl-genre .tl-desc.tl-root { font-weight: 500; font-style: italic; opacity: 0.7; }
 .tl-genre .tl-item-root .tl-dot { border-style: dashed; background: var(--bg); }
+/* Aksebruddet: roten står utenfor proporsjonen (Work songs er et århundre foran
+   Blues), og den stiplede strekningen sier at avstanden hit ikke er i skala. */
+.tl-prop .tl-break {
+  position: absolute;
+  top: 50%;
+  height: 0;
+  border-top: 4px dashed var(--tl-color, var(--accent));
+  opacity: 0.5;
+  transform: translateY(-50%);
+  z-index: 0;
+}
 
 /* ----- Endringsforslag-liste ----- */
 .pending-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
