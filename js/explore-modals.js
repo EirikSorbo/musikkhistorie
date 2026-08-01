@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.73";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.73";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.74";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.74";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -319,6 +319,10 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
     <p class="muted hist-intro">Seks fortellinger som til sammen dekker hele pensumet — trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
+    <!-- Sjangerfamilien som vannrett tidslinje, generert fra GENEALOGY
+         (buildGenreTimeline). Erstatter den håndskrevne «Sjangertre-løype»-
+         linjen som lå øverst i hver historietekst. -->
+    <div id="hist-tre"></div>
     <div id="hist-body" class="story-body"></div>
   </div>
 </div>

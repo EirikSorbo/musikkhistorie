@@ -6,13 +6,14 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=3.73";
-import { isVisible } from "./limits.js?v=3.73";
-import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.73";
-import { pageFor, renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.73";
-import { wireLinks } from "./ui-helpers.js?v=3.73";
-import { renderSjangerhimmel } from "./constellation.js?v=3.73";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=3.73";
+import { modalOpen, escapeHtml } from "./ui.js?v=3.74";
+import { isVisible } from "./limits.js?v=3.74";
+import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.74";
+import { pageFor, renderStoryHtml, storyFor, stripGenrePath, STORY_ORDER } from "./story-format.js?v=3.74";
+import { buildGenreTimeline } from "./ui-timeline.js?v=3.74";
+import { wireLinks } from "./ui-helpers.js?v=3.74";
+import { renderSjangerhimmel } from "./constellation.js?v=3.74";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=3.74";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -84,11 +85,21 @@ function renderHistorie(genre) {
   modal.querySelectorAll(".hist-chip").forEach((b) =>
     b.classList.toggle("active", b.dataset.story === genre));
 
+  // Sjangerfamilien som vannrett tidslinje, utledet av slektstreet. Tegnes
+  // uavhengig av om historieteksten finnes — treet er alltid der, så løypen
+  // vises også for en metasjanger som ennå mangler tekst.
+  const tre = document.getElementById("hist-tre");
+  if (tre) {
+    tre.innerHTML = buildGenreTimeline(genre);
+    tre.querySelectorAll(".tl-desc[data-genre]").forEach((el) =>
+      el.addEventListener("click", () => onMainGenreClick(el.dataset.genre)));
+  }
+
   const story = storyFor(genre, getState().genreDescs);
   const lc = buildLinkCtx();
   const body = document.getElementById("hist-body");
   body.innerHTML = story
-    ? renderStoryHtml(story.body, lc)
+    ? renderStoryHtml(stripGenrePath(story.body), lc)
     : `<p class="gx-missing">Historien om ${escapeHtml(genre)} er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen.</p>`;
   wireLinks(body, lc);
 

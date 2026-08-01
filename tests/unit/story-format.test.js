@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderStoryHtml, storyFor, pageFor, STORY_ORDER } from "../../js/story-format.js?v=3.73";
+import { renderStoryHtml, storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=3.74";
 
 const artists = [
   { id: "a1", name: "Muddy Waters", status: "active" },
@@ -104,4 +104,33 @@ test("tekst rett etter et listepunkt (uten blank linje) beholder kildens rekkef�
     renderStoryHtml("- a\ntekst\n- b"),
     "<ul><li>a</li></ul><p>tekst</p><ul><li>b</li></ul>"
   );
+});
+
+// --- stripGenrePath: den håndskrevne løype-linjen erstattes av den genererte
+//     sjangertidslinjen (buildGenreTimeline), og fjernes derfor ved rendring.
+test("stripGenrePath fjerner HELE løype-linjen, ikke bare fram til kolonet", () => {
+  // Regresjon: en lat kvantor stoppet på kolonet, så resten av løypen ble
+  // stående igjen som brødtekst øverst i historien.
+  const body = "*Sjangertre-løype: Work songs → Blues → Chicago blues*\n\n### Tittel\n\nTekst.";
+  const ut = stripGenrePath(body);
+  assert.ok(!ut.includes("Sjangertre"));
+  assert.ok(!ut.includes("Work songs"));
+  assert.equal(ut, "### Tittel\n\nTekst.");
+});
+
+test("stripGenrePath tåler variantene som finnes i innholdet", () => {
+  for (const linje of [
+    "*Sjangertre-løype: Spirituals → Gospel*",
+    "Sjangertre-loype: Reggae → Disco",          // uten kursiv, o for ø
+    "  *Sjangertre-løype : R&B → Soul*",         // innrykk og mellomrom før kolon
+  ]) {
+    assert.equal(stripGenrePath(linje + "\n\nBrødtekst."), "Brødtekst.", linje);
+  }
+});
+
+test("stripGenrePath rører ikke en historie uten løype-linje", () => {
+  const uten = "### Rett på sak\n\nTekst.";
+  assert.equal(stripGenrePath(uten), uten);
+  assert.equal(stripGenrePath(""), "");
+  assert.equal(stripGenrePath(undefined), undefined);
 });

@@ -1,13 +1,16 @@
 // ============================================================================
 //  UI — TIDSLINJER
 // ----------------------------------------------------------------------------
-//  Bygger proporsjonale tidslinjer for tiår (hendelser fra tekst) og teknologi.
-//  Intern layout-logikk holdes privat her. Re-eksporteres fra ui.js.
+//  Bygger proporsjonale tidslinjer for tiår (hendelser fra tekst), teknologi og
+//  sjangerfamilier. Intern layout-logikk holdes privat her. Re-eksporteres fra
+//  ui.js. Importerer GENEALOGY (treet er fasit for sjangertidslinjen) — trygt,
+//  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.73";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.73";
-import { DECADES } from "./limits.js?v=3.73";
+import { escapeHtml } from "./util.js?v=3.74";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.74";
+import { DECADES } from "./limits.js?v=3.74";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.74";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -56,9 +59,13 @@ const LABEL_W_PCT = 24;
 const CHARS_PER_LINE = 20;
 const LINE_H = 17;
 
-function estimateLabelHeight(entries) {
+// lineH må følge den FAKTISKE skriftstørrelsen på .tl-desc. Sjangertidslinjen
+// setter navnene større (0.82rem, halvfet) enn tiår-/teknologitidslinjene, og
+// med standardhøyden 17px undervurderte estimatet stabler på tre navn nok til
+// at etiketten kolliderte med naboen (Neo-soul/Gangsta rap/Cont. R&B mot Trap).
+function estimateLabelHeight(entries, lineH = LINE_H) {
   const lines = entries.reduce((n, e) => n + Math.max(1, Math.ceil(e.desc.length / CHARS_PER_LINE)), 0);
-  return LINE_H + 2 + lines * LINE_H;
+  return lineH + 2 + lines * lineH;
 }
 
 // Kant-etiketter (tl-start/tl-end) venstre-/høyrestilles i CSS-en, så det
@@ -94,16 +101,41 @@ function layoutTimeline(groups) {
   });
 }
 
-function buildProportionalTimeline(items, startYear) {
+// Punkter som ligger noen få år fra hverandre havner praktisk talt oppå
+// hverandre på aksen (British invasion 1963 / Blues rock 1964). Her dyttes de
+// fra hverandre til minst `gap` prosentpoeng: ett gjennomløp forover som skyver
+// høyre vei, så ett bakover fra høyre kant som fanger dem som ble skjøvet ut av
+// sporet. To gjennomløp konvergerer så lenge det er plass til alle, og `gap`
+// begrenses nettopp slik at det alltid er det.
+function enforceMinGap(sorted, desiredGap, pad, limit) {
+  const n = sorted.length;
+  if (n < 2 || !desiredGap) return;
+  const gap = Math.min(desiredGap, (limit - pad) / (n - 1));
+  for (let i = 1; i < n; i++) sorted[i].pct = Math.max(sorted[i].pct, sorted[i - 1].pct + gap);
+  sorted[n - 1].pct = Math.min(sorted[n - 1].pct, limit);
+  for (let i = n - 2; i >= 0; i--) sorted[i].pct = Math.min(sorted[i].pct, sorted[i + 1].pct - gap);
+}
+
+// opts.color farger strek, prikker, stilker og årstall (CSS-variabelen
+// --tl-color, som faller tilbake på --accent når den ikke er satt — derfor er
+// tiårs- og teknologitidslinjene uendret grønne).
+// opts.minGapPct settes kun av sjangertidslinjen, så innovasjons- og
+// tiårstidslinjene beholder plasseringen de har i dag.
+function buildProportionalTimeline(items, startYear, { color = null, extraClass = "", minGapPct = 0, lineH = LINE_H } = {}) {
   if (items.length < 2) return "";
-  // Hendelser med samme årstall samles til én gruppe — ett punkt, én stilk,
-  // navnene under hverandre — i stedet for flere etiketter på samme x.
-  const byLabel = new Map();
+  // Hendelser på samme punkt samles til én gruppe — ett punkt, én stilk, navnene
+  // under hverandre — i stedet for flere etiketter oppå hverandre på samme x.
+  // Grupperes på ÅRSTALL (posisjonen), ikke på etiketten: for tiår- og
+  // teknologitidslinjene er de to identiske, men sjangertidslinjen viser nodens
+  // `era` ordrett («sent 1960-tall»), og da må to noder på samme x havne i samme
+  // gruppe selv om teksten er ulik.
+  const byPos = new Map();
   for (const e of items) {
-    if (!byLabel.has(e.label)) byLabel.set(e.label, { year: e.year, label: e.label, entries: [] });
-    byLabel.get(e.label).entries.push(e);
+    const key = e.year == null ? "?" : e.year;
+    if (!byPos.has(key)) byPos.set(key, { year: e.year, label: e.label, entries: [] });
+    byPos.get(key).entries.push(e);
   }
-  const groups = [...byLabel.values()];
+  const groups = [...byPos.values()];
   const minY = Math.min(...groups.map(g => g.year || startYear));
   const maxY = Math.max(...groups.map(g => g.year || startYear + 9));
   const span = Math.max(maxY - minY, 1);
@@ -113,20 +145,29 @@ function buildProportionalTimeline(items, startYear) {
   const mapped = groups.map(g => ({
     ...g,
     pct: groups.length === 1 ? 50 : pad + ((g.year || startYear) - minY) / span * (100 - 2 * pad),
-    height: estimateLabelHeight(g.entries),
+    height: estimateLabelHeight(g.entries, lineH),
   }));
+  mapped.sort((a, b) => a.pct - b.pct);
+  enforceMinGap(mapped, minGapPct, pad, 100 - pad);
   const laid = layoutTimeline(mapped);
   // Sporhøyden må dekke høyeste stilk + etikett på en side (10px luft mellom
   // stilk og etikett, jf. CSS-ens bottom/top-calc).
   const half = Math.max(...laid.map(g => g.stem + g.height + 10)) + 8;
-  let html = `<div class="timeline tl-prop" style="--tl-half:${half}px"><div class="tl-track">`;
+  const style = `--tl-half:${half}px` + (color ? `;--tl-color:${color}` : "");
+  let html = `<div class="timeline tl-prop${extraClass ? " " + extraClass : ""}" style="${style}"><div class="tl-track">`;
   for (const g of laid) {
     const edge = g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
-    html += `<div class="tl-item tl-${g.dir}${edge}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
+    // Er HELE gruppen rot-noder, markeres selve prikken også (stiplet) — ikke
+    // bare navnet. Blandede grupper beholder den vanlige prikken.
+    const rootDot = g.entries.every((e) => e.root) ? " tl-item-root" : "";
+    html += `<div class="tl-item tl-${g.dir}${edge}${rootDot}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
       `<div class="tl-dot"></div><div class="tl-stem"></div>` +
       `<div class="tl-label"><span class="tl-year">${escapeHtml(g.label)}</span>` +
       g.entries.map((e) =>
-        `<span class="tl-desc"${e.techId ? ` data-tech-id="${escapeHtml(e.techId)}"` : ""}>${escapeHtml(e.desc)}</span>`
+        `<span class="tl-desc${e.root ? " tl-root" : ""}"` +
+        (e.techId ? ` data-tech-id="${escapeHtml(e.techId)}"` : "") +
+        (e.genre ? ` data-genre="${escapeHtml(e.genre)}"` : "") +
+        `>${escapeHtml(e.desc)}</span>`
       ).join("") +
       `</div></div>`;
   }
@@ -201,4 +242,90 @@ export function buildTechTimeline(techItems, decadeId) {
     techId: t.id,
   }));
   return buildProportionalTimeline(items, startYear);
+}
+
+// ----------------------------------------------------------------------------
+//  SJANGERTIDSLINJE — sjangerfamilien over hver sjangerhistorie
+// ----------------------------------------------------------------------------
+//  Erstatter den håndskrevne «Sjangertre-løype»-linjen som lå øverst i hver
+//  historie: den var manuelt vedlikeholdt og hadde drevet fra treet på fire av
+//  seks historier (Cont. jazz, Cont. gospel, Cont. country, Neotrad. country,
+//  Cont. R&B og Cont. hip-hop manglet). Her utledes den av GENEALOGY, så en ny
+//  node dukker opp i historien sin uten at noen må huske å oppdatere teksten.
+
+// rad → tiårets startår. Samme mapping som DEC i genealogy.js (r1 = 1900).
+const rowYear = (r) => 1890 + r * 10;
+
+// Årstallet en node plasseres på. `era` er den mest presise kilden (den er
+// forfattet per node: «1957», «ca. 1979», «midten av 1940-tallet»), men den er
+// fritekst — finnes det ikke et firesifret årstall der, faller vi tilbake på
+// radens tiår, som alltid er satt. Uten era-lesing ville rot-nodene kollidert
+// med sjangeren de føder (Work songs og Blues står begge på rad 1).
+function nodeYear(n) {
+  const m = String(n.era || "").match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
+  return m ? parseInt(m[1], 10) : rowYear(n.r);
+}
+
+// Etiketten over punktet er nodens `era` ORDRETT («1957», «sent 1960-tall»,
+// «midten av 1940-tallet»). Vi viser altså ikke det utleste årstallet: der era
+// er upresis, ville tallet både sett feil ut og kunne havnet til høyre for et
+// høyere tall etter avstamnings-låsingen under.
+function nodeLabel(n) {
+  const era = String(n.era || "").trim();
+  return era || (n.r === 0 ? "Røtter" : `${rowYear(n.r)}-t`);
+}
+
+// Sjangerfamilien til én metasjanger, i tidsrekkefølge — pluss rot-nodene den
+// vokste ut av (`g: null`, f.eks. Work songs → Blues). Rot-nodene tas med fordi
+// opphavet er halve poenget med løypen, men markeres eget (`root`) så det er
+// tydelig at de ikke er sjangre man kan tagge en artist med.
+//
+// AVSTAMNING LÅSER REKKEFØLGEN: `era` er fritekst, og upresise formuleringer kan
+// snu om på slektskapet — «sent 1960-tall» (Blues rock) leses som 1960 og havner
+// da FORAN forelderen British invasion («1963–66»). Derfor dyttes hver node til
+// minst ett år etter sin seneste forelder i familien. Da kan en strek i treet
+// aldri peke bakover på tidslinjen, uansett hvordan era er formulert.
+export function genreFamilyNodes(metaGenre) {
+  const family = GENEALOGY.filter((n) => n.g === metaGenre);
+  if (!family.length) return [];
+  const inFamily = new Set(family.map((n) => n.id));
+  const roots = [];
+  const seen = new Set();
+  for (const n of family) {
+    for (const pid of n.p || []) {
+      if (inFamily.has(pid) || seen.has(pid)) continue;
+      const parent = GENEALOGY.find((x) => x.id === pid);
+      if (parent && !parent.g) { roots.push(parent); seen.add(pid); }
+    }
+  }
+  const all = [...roots.map((n) => ({ n, root: true })), ...family.map((n) => ({ n, root: false }))];
+  // GENEALOGY er sortert slik at foreldre kommer før barn, så ett gjennomløp
+  // holder for å propagere låsingen nedover kjeden.
+  const year = new Map(all.map(({ n }) => [n.id, nodeYear(n)]));
+  for (const { n } of all) {
+    const parents = (n.p || []).filter((pid) => year.has(pid));
+    if (!parents.length) continue;
+    const earliest = Math.max(...parents.map((pid) => year.get(pid))) + 1;
+    if (year.get(n.id) < earliest) year.set(n.id, earliest);
+  }
+  return all
+    .map((x) => ({ ...x, year: year.get(x.n.id), label: nodeLabel(x.n) }))
+    .sort((a, b) => a.year - b.year);
+}
+
+// Bygger tidslinjen for én metasjanger. Farges av familiefargen fra treet, så
+// den snakker samme fargespråk som knappene, varmekartet og sjangerhimmelen.
+export function buildGenreTimeline(metaGenre) {
+  const nodes = genreFamilyNodes(metaGenre);
+  if (nodes.length < 2) return "";
+  const items = nodes.map(({ n, root, year, label }) => ({
+    year, label, desc: n.l, genre: n.l, root,
+  }));
+  const color = META_GENRE_COLOR[metaGenre] || FAMILIES.gray.stroke;
+  return buildProportionalTimeline(items, items[0].year, {
+    color,
+    extraClass: "tl-genre",
+    minGapPct: 6,
+    lineH: 21,          // .tl-genre .tl-desc er 0.82rem/600 — se estimateLabelHeight
+  });
 }

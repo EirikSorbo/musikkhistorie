@@ -17,8 +17,8 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=3.73";
-import { escapeHtml } from "./ui-helpers.js?v=3.73";
+import { linkifyAll } from "./linkify.js?v=3.74";
+import { escapeHtml } from "./ui-helpers.js?v=3.74";
 
 // Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
 // én per metasjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
@@ -100,6 +100,21 @@ export function renderStoryHtml(text, lc = {}) {
 export function storyFor(genre, genreDescs = {}) {
   const body = genreDescs?.[genre]?.story?.body;
   return typeof body === "string" && body.trim() ? { body } : null;
+}
+
+// Alle seks historiene åpner med en håndskrevet linje av formen
+//   *Sjangertre-løype: Work songs → Blues → Chicago blues → …*
+// Den er nå erstattet av den genererte sjangertidslinjen (buildGenreTimeline),
+// og fjernes her i stedet for i Firestore. Grunnen til at det gjøres i koden:
+// teksten ligger i innhold vi ikke skriver til, og en re-import av en eldre
+// backup ville ellers dratt linjen inn igjen. Tåler både «løype» og «loype»,
+// valgfri kursiv, og at linjen ikke står helt først.
+// `[^\n]*` MÅ være grådig: med lat kvantor stoppet den på kolonet og lot resten
+// av løypen stå igjen som brødtekst.
+const GENRE_PATH_LINE = /^[ \t]*\*?[ \t]*Sjangertre-l[øo]ype[ \t]*:[^\n]*\r?\n?/im;
+
+export function stripGenrePath(text) {
+  return typeof text === "string" ? text.replace(GENRE_PATH_LINE, "").replace(/^\s*\n/, "") : text;
 }
 
 // Samme oppslag for innholdssidene (content/<id>.body fra Firestore).
