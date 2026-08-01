@@ -1,17 +1,17 @@
 // ============================================================================
 //  SLEKTSTRE — «Carta» i musicmap-stil
 // ----------------------------------------------------------------------------
-//  2D-kart: tid løper nedover, supersjanger bortover. Dra for å panorere,
+//  2D-kart: tid løper nedover, metasjanger bortover. Dra for å panorere,
 //  scroll/knapper for å zoome, hover lyser opp påvirkningslinjene, klikk åpner
 //  panel med beskrivelse + spilleliste. Strukturen er fast og designet for
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.71";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.71";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.71";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.71";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.71";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.72";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.72";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.72";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.72";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.72";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -88,9 +88,9 @@ export const GENEALOGY = [
 export const GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
   .sort((a, b) => a.localeCompare(b, "no"));
 
-// Supersjangre (treets kolonner): én rad per hovedretning. Beholder rekkefølgen
+// Metasjangre (treets kolonner): én rad per hovedretning. Beholder rekkefølgen
 // fra GENEALOGY (≈ kronologisk). Brukes som rader i varmekartet — utvides
-// automatisk når nye supersjangre legges inn i treet.
+// automatisk når nye metasjangre legges inn i treet.
 export const GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
 
 // Alle koblinger (streker) i treet: avstamning/påvirkning (p) + motreaksjon
@@ -304,13 +304,13 @@ const FAM_STROKE = Object.fromEntries(Object.entries(FAMILIES).map(([k, v]) => [
 export { FAMILIES };
 export const MAIN_GENRE_INFO = Object.fromEntries(
   GENEALOGY.filter((n) => n.g).map((n) => [n.l, {
-    meta: n.g,                                  // metaGenre / supersjanger
+    meta: n.g,                                  // metaGenre (metasjanger)
     fam: n.fam,                                 // familienøkkel i treet
     color: FAMILIES[n.fam]?.stroke || FAMILIES.gray.stroke,
   }])
 );
 
-// Farge per HOVEDSJANGER (metaGenre): familiefargen som flest av hovedsjangerens
+// Farge per METASJANGER (metaGenre): familiefargen som flest av metasjangerens
 // tre-noder bruker. Utledet, ikke hardkodet — en ny node med ny familie flytter
 // automatisk fargen hvis den blir den vanligste. Brukt av sjangerhistorie-
 // knappene, så de snakker samme fargespråk som treet.

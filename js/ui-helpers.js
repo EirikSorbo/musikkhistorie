@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.71";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.71";
-import { GENDERS } from "./limits.js?v=3.71";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.72";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.72";
+import { GENDERS } from "./limits.js?v=3.72";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -200,9 +200,9 @@ export function musicExamplesHtml(a) {
 }
 
 // Beslektede artister — utledet naboliste for «oppdag ny musikk». Rangerer
-// andre synlige artister på musikalsk slektskap (delte under-/hovedsjangre,
+// andre synlige artister på musikalsk slektskap (delte sjangre/undersjangre,
 // samme metasjanger som lett bonus) med nærhet i tid som tiebreaker. Krever
-// minst én delt hoved- eller undersjanger, så lista aldri blir tilfeldig.
+// minst én delt sjanger eller undersjanger, så lista aldri blir tilfeldig.
 function relatedArtists(artist, all, { limit = 5 } = {}) {
   if (!artist || !Array.isArray(all)) return [];
   const sub = new Set(Array.isArray(artist.subGenre) ? artist.subGenre : []);

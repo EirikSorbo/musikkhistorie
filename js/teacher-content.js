@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.71";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.71";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.71";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.71";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.71";
-import { resolveDesc } from "./genre-descriptions.js?v=3.71";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.71";
-import { DECADES } from "./limits.js?v=3.71";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.72";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.72";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.72";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.72";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage } from "./ui.js?v=3.72";
+import { resolveDesc } from "./genre-descriptions.js?v=3.72";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.72";
+import { DECADES } from "./limits.js?v=3.72";
 
-const LEVEL_LABEL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.71";
-import { $ } from "./shared.js?v=3.71";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.71";
+const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.72";
+import { $ } from "./shared.js?v=3.72";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.72";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -481,7 +481,7 @@ export function setupPodkastAdmin() {
 //  live forhåndsvisning
 // ----------------------------------------------------------------------------
 //  Åpnes fra «Rediger»-knappene i historie-/sidemodalene (explore-innhold.js →
-//  onStoryEdit/onPageEdit). Historier lagres som story-felt på hovedsjangerens
+//  onStoryEdit/onPageEdit). Historier lagres som story-felt på metasjangerens
 //  genreDescriptions-dokument; sidene som content/<id>.body. Det finnes INGEN
 //  standardtekster i koden — «Slett teksten» gjør at visningen sier tydelig
 //  ifra om at tekst mangler. Forhåndsvisningen bruker samme renderStoryHtml

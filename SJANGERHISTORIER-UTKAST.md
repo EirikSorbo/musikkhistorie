@@ -5,7 +5,7 @@ Seks fortellinger som til sammen dekker hele MUR114-pensumet: blues, country, go
 **Konvensjoner:**
 - Kildene er MUR114-dokumentet (Musikkhistorie 2026) og Alt #07.json.
 - Alle artistnavn er skrevet nøyaktig slik de står i Alt #07.json, slik at `linkify.js` gjør dem klikkbare automatisk.
-- Hovedsjangrene fra sjangertreet (GENEALOGY) er brukt som mellomtitler og utgjør ryggraden i hver fortelling.
+- Sjangrene fra sjangertreet (GENEALOGY) er brukt som mellomtitler og utgjør ryggraden i hver fortelling (én fortelling per metasjanger).
 - Lengden varierer med stoffmengden: jazz er lengst, gospel kortest.
 
 ---

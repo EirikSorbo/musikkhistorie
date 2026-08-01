@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, FAMILIES } from "./genealogy.js?v=3.71";
-import { escapeHtml } from "./ui-helpers.js?v=3.71";
-import { safeUrl, wikimediaThumb } from "./util.js?v=3.71";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, FAMILIES } from "./genealogy.js?v=3.72";
+import { escapeHtml } from "./ui-helpers.js?v=3.72";
+import { safeUrl, wikimediaThumb } from "./util.js?v=3.72";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -479,7 +479,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     clearFocus();   // rydder evt. åpen stjerne (tråder, gråtone, zoom)
     focusPanel.hidden = false;
     const names = loose.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "no"));
-    focusPanel.innerHTML = `<strong>Uten tre-sjanger (${names.length})</strong> <span class="sh-fp-meta">kun hovedsjanger satt</span>` +
+    focusPanel.innerHTML = `<strong>Uten tre-sjanger (${names.length})</strong> <span class="sh-fp-meta">kun metasjanger satt</span>` +
       `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>` +
       `<div class="sh-loose-list">` + names.map((a, i) => `<button type="button" class="sh-linkbtn sh-loose-item" data-i="${i}">${escapeHtml(a.name || "(uten navn)")}</button>`).join("") + `</div>`;
     focusPanel.querySelector("#sh-fp-close").addEventListener("click", clearFocus);

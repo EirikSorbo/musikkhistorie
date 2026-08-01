@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.71";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.71";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.71";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.72";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.72";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.72";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.71";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.71";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.71";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.71";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.71";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.71";
+} from "./ui-helpers.js?v=3.72";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.72";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.72";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.72";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.72";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.72";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -400,8 +400,8 @@ export function fillSelect(select, values, { placeholder } = {}) {
 
 // Vis undersjanger-beskrivelse i #modal-sjanger (samme popup som sjanger).
 // Felles visning av sjangerbeskrivelse på ETT nivå i #modal-sjanger.
-// Brukes nå kun av showSubsjangerInfo (sub) — meta-nivået (hovedsjanger) har
-// ikke lenger egne beskrivelser; hovedsjangere peker til sjangerhistoriene.
+// Brukes nå kun av showSubsjangerInfo (sub) — meta-nivået (metasjanger) har
+// ikke lenger egne beskrivelser; metasjangere peker til sjangerhistoriene.
 // (showSjangerInfo i genealogy.js er egen fordi den også viser tre-relasjoner.)
 function showGenreLevelInfo(label, level, opts = {}) {
   const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
@@ -428,7 +428,7 @@ function showGenreLevelInfo(label, level, opts = {}) {
     : "";
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
-  mTitle.textContent = level === "meta" ? `${label} (hovedsjanger)` : label;
+  mTitle.textContent = level === "meta" ? `${label} (metasjanger)` : label;
   mBody.innerHTML = `
     ${seeGenreBtn}
     <p class="gx-desc">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc(level)}</span>`}</p>

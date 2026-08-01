@@ -18,11 +18,11 @@ import {
   decadesForRange,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=3.71";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.71";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.71";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.71";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.71";
+} from "./limits.js?v=3.72";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.72";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.72";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.72";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.72";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -145,7 +145,7 @@ export function renderDashboard(el, {
   const maxGenre = Math.max(1, ...genreCounts.map((g) => g.n));
   const covered = genreCounts.filter((g) => g.n > 0).length;
 
-  // --- Hovedsjangre (metaGenre-feltet: hver artist teller nøyaktig én gang) -
+  // --- Metasjangre (metaGenre-feltet: hver artist teller nøyaktig én gang) -
   const metaCounts = GENEALOGY_META_GENRES
     .map((g) => ({ g, n: counts.perMetaGenre[g] || 0 }))
     .sort((a, b) => b.n - a.n || byNo(a.g, b.g));
@@ -303,7 +303,7 @@ export function renderDashboard(el, {
 
     <div class="ov-two">
       <div class="stat-card ov-block" style="margin-top:0">
-        <div class="stat-label">Per hovedsjanger — klikk for artistliste</div>
+        <div class="stat-label">Per metasjanger — klikk for artistliste</div>
         <div class="ov-rows">${metaCounts.map((m) =>
           distRow(m.g, m.n, maxMeta, `data-ov-meta="${escapeHtml(m.g)}"`)).join("")}</div>
       </div>

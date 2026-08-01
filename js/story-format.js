@@ -17,11 +17,11 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=3.71";
-import { escapeHtml } from "./ui-helpers.js?v=3.71";
+import { linkifyAll } from "./linkify.js?v=3.72";
+import { escapeHtml } from "./ui-helpers.js?v=3.72";
 
 // Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
-// én per hovedsjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
+// én per metasjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
 // andre og har bevisst ingen egen historie.
 export const STORY_ORDER = ["Blues", "Country", "Gospel", "Jazz", "R&B", "Klubbmusikk"];
 

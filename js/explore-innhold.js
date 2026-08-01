@@ -6,13 +6,13 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=3.71";
-import { isVisible } from "./limits.js?v=3.71";
-import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.71";
-import { pageFor, renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.71";
-import { wireLinks } from "./ui-helpers.js?v=3.71";
-import { renderSjangerhimmel } from "./constellation.js?v=3.71";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=3.71";
+import { modalOpen, escapeHtml } from "./ui.js?v=3.72";
+import { isVisible } from "./limits.js?v=3.72";
+import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.72";
+import { pageFor, renderStoryHtml, storyFor, STORY_ORDER } from "./story-format.js?v=3.72";
+import { wireLinks } from "./ui-helpers.js?v=3.72";
+import { renderSjangerhimmel } from "./constellation.js?v=3.72";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=3.72";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -92,7 +92,7 @@ function renderHistorie(genre) {
     : `<p class="gx-missing">Historien om ${escapeHtml(genre)} er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen.</p>`;
   wireLinks(body, lc);
 
-  // Lærer: Sjekk (på hovedsjanger-nivå — historien ER hovedsjangerens innhold)
+  // Lærer: Sjekk (på metasjanger-nivå — historien ER metasjangerens innhold)
   // + Rediger, delt knapperad.
   injectTeacherRow(document.getElementById("hist-extra"), {
     category: "metaGenres",
@@ -109,7 +109,7 @@ export function openHistorier(genre) {
   if (!modal) return;
   const chips = document.getElementById("hist-chips");
   if (!chips.dataset.filled) {
-    // Hver hovedsjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
+    // Hver metasjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
     // så knappene, treet, varmekartet og himmelen snakker samme fargespråk.
     // --hist-color settes per knapp; CSS bruker den til kant, tekst og fyll når
     // knappen er aktiv. Knappene ligger i et grid med like kolonner (se CSS).

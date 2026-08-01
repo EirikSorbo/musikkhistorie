@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.71";
-import { isMainGenre } from "./genealogy.js?v=3.71";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.71";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.71";
-import { mergeHeatRows } from "./import-format.js?v=3.71";
+import { firebaseConfig } from "./firebase-config.js?v=3.72";
+import { isMainGenre } from "./genealogy.js?v=3.72";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.72";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.72";
+import { mergeHeatRows } from "./import-format.js?v=3.72";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -398,7 +398,7 @@ export async function saveGenreDescLevel(genreId, level, data) {
 // genreDescriptions i ÉN lesning av samlingen (før: to separate getDocs av hele
 // samlingen ved hver lærer-oppstart — unødvendig dobbelt lese-/oppstartskost):
 //
-//  (1) `meta`-feltet: hovedsjanger-beskrivelsene på meta-nivå er pensjonert
+//  (1) `meta`-feltet: metasjanger-beskrivelsene på meta-nivå er pensjonert
 //      (v2.99), dekkes nå av sjangerhistoriene. RØRER KUN `meta`; `main`, `sub`,
 //      `story` står urørt — Blues/Jazz osv. er både meta OG main.
 //  (2) de FLATE `description`/`kilder`-feltene: appen leser KUN nivåfeltene
@@ -686,7 +686,7 @@ export async function runContentKeyAlignment() {
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som
-// story-felt på hovedsjangerens genreDescriptions-dokument — samme
+// story-felt på metasjangerens genreDescriptions-dokument — samme
 // Firestore-regler og eksport/import som beskrivelsene, ingen egen samling.
 // updatedAt som ISO-streng (ikke serverTimestamp) så feltet overlever
 // JSON-eksport → import uten å endre type.

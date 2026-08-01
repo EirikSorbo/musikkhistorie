@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=3.71";
-import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=3.71";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=3.72";
+import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=3.72";
 
 const descs = {
   Blues: {
@@ -22,7 +22,7 @@ test("resolveDescAny prøver navnene i rekkefølge", () => {
 });
 
 test("missingDesc navngir nivået", () => {
-  assert.ok(missingDesc("meta").includes("hovedsjanger"));
+  assert.ok(missingDesc("meta").includes("metasjanger"));
   assert.ok(missingDesc("main").includes("sjanger"));
   assert.ok(missingDesc("sub").includes("undersjanger"));
 });

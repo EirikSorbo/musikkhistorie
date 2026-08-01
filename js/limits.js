@@ -2,7 +2,7 @@
 //  KONFIGURASJON, VOKABULAR OG TELLING
 // ----------------------------------------------------------------------------
 //  Config-en er slanket til det som faktisk er en lærer-innstilling
-//  (instrument-vokabularet). Hovedsjangre utledes alltid fra slektstreet
+//  (instrument-vokabularet). Metasjangre utledes alltid fra slektstreet
 //  (GENEALOGY_META_GENRES) og tiårene fra DECADES-konstanten — de er
 //  strukturakser i appen, ikke innstillinger. Grense-apparatet (maks totalt /
 //  per tiår / per sjanger / per instrument + checkWarnings) er fjernet (v3.20):

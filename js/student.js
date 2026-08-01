@@ -5,12 +5,12 @@
 import {
   subscribeArtists,
   addArtist,
-} from "./store.js?v=3.71";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.71";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.71";
-import { fillSelect } from "./ui.js?v=3.71";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.71";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.71";
+} from "./store.js?v=3.72";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.72";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.72";
+import { fillSelect } from "./ui.js?v=3.72";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.72";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.72";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -26,7 +26,7 @@ const state = {
 // ----------------------------------------------------------------------------
 
 function refreshControls() {
-  fillSelect($("#in-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg hovedsjanger …" });
+  fillSelect($("#in-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg metasjanger …" });
   fillSelect($("#in-instrument"), INSTRUMENTS, { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
 }

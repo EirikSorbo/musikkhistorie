@@ -11,7 +11,7 @@
 //  sjanger), sub (fri undersjanger).
 // ============================================================================
 
-const LVL = { meta: "hovedsjanger", main: "sjanger", sub: "undersjanger" };
+const LVL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 
 // Tydelig melding når ingen beskrivelse er lagt inn på gjeldende nivå. Vises i
 // en .gx-missing-ramme som allerede markerer den visuelt (SVG-ikonkravet: ingen

@@ -16,7 +16,7 @@ Gi meg **én blokk per sjanger** med dette — resten fyller jeg ut:
 ```
 Navn:        Punk                      # kort etikett = det artistene tagges med
 Fullt navn:  Punk rock                 # tittelen i node-panelet (kan være lik)
-Hovedsjanger: Rock                     # én av: Blues, Jazz, Country, Pop, Rock,
+Metasjanger: Rock                     # én av: Blues, Jazz, Country, Pop, Rock,
                                        #        Gospel, R&B, Klubbmusikk
                                        #        (nytt navn = ny kolonne i varmekartet)
 Oppsto:      1970-tallet               # tiåret = raden i treet
@@ -47,7 +47,7 @@ Ikke rør disse — de leser treet, og en ny node dukker opp av seg selv:
 | Sted | Hva som utledes |
 |---|---|
 | `GENEALOGY_MAIN_GENRES` | `l` blir en gyldig **mainGenre** (sjangerfilter, artist-tagging, validering ved import) |
-| `GENEALOGY_META_GENRES` | `g` blir en gyldig **metaGenre** (hovedsjanger; ny verdi = ny gruppe i varmekart/himmel) |
+| `GENEALOGY_META_GENRES` | `g` blir en gyldig **metaGenre** (metasjanger; ny verdi = ny gruppe i varmekart/himmel) |
 | `GENEALOGY_EDGES` | Én kobling per `p` og `rx` — brukes av trykkbanene i treet, lærer-oversikten og eksport |
 | `MAIN_GENRE_INFO` | Sjangerens metaGenre + familiefarge (varmekart, sjangerhimmel) |
 | Slektstreet (`tre.html`) | Node, streker, panel, «Vokste ut av»/«Førte videre til» |
@@ -174,7 +174,7 @@ med bare det nye.
   `genreDescriptions`-dokumenter og artistenes `mainGenre` foreldreløse samtidig.
   Rename = migrering, ikke en tekstendring. Bestem navnet før du pusher.
 - **`id` er koblingenes identitet.** Samme sak for `edgeDescriptions`.
-- **Nytt `g` = ny hovedsjanger** i hele appen (varmekart, sjangerhimmel, filtre,
+- **Nytt `g` = ny metasjanger** i hele appen (varmekart, sjangerhimmel, filtre,
   lærer-sjekklister). Bruk en eksisterende med mindre du faktisk mener å lage en ny.
 - **Undersjanger med samme navn som en sjanger skygger for den** i
   `genre-descriptions.js` (sub slår main ved likt navn). Ikke gjenbruk navn.

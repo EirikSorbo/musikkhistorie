@@ -14,7 +14,7 @@ Dette er ikke en vanlig lærebok, men et levende pensum du selv er med på å fo
 Hvert kort på forsiden er sin egen inngang: **Artister**, **Sjangre**, **Teknologi**, **Samfunn**, **Podkast** og **Det store bildet**. Du trenger ingen bestemt rekkefølge — begynn der noe fanger deg, for alt henger sammen.
 
 ### Finn og filtrer artister
-Under **Artister** kan du søke på navn og filtrere på **sjanger, hovedsjanger, tiår og instrument**. Kombiner filtrene for å snevre inn — for eksempel «gitarister på 1960-tallet». Trykk på en artist for å åpne kortet: bilde, leveår og virkested, sentrale verk, musikkeksempler du kan lytte til, og **beslektede artister** du kan hoppe videre til. Fra kortet tar knappen **«Tidslinje»** deg rett til artistens plass i tidslinjen, så du ser hvem andre som var aktive samtidig.
+Under **Artister** kan du søke på navn og filtrere på **sjanger, metasjanger, tiår og instrument**. Kombiner filtrene for å snevre inn — for eksempel «gitarister på 1960-tallet». Trykk på en artist for å åpne kortet: bilde, leveår og virkested, sentrale verk, musikkeksempler du kan lytte til, og **beslektede artister** du kan hoppe videre til. Fra kortet tar knappen **«Tidslinje»** deg rett til artistens plass i tidslinjen, så du ser hvem andre som var aktive samtidig.
 
 ### Se det store bildet
 Bak **Det store bildet** ligger hele historien fremstilt på flere måter. Musikkhistorie har mange dimensjoner — tid, geografi, slektskap og innflytelse — og hver visning viser én av dem. Bytt mellom dem for å se det samme stoffet fra nye vinkler:

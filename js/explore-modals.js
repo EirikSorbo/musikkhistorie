@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.71";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.71";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.72";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.72";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -84,14 +84,14 @@ export const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Varmekart: supersjanger × tiår -->
+<!-- Varmekart: metasjanger × tiår -->
 <div class="modal-backdrop" id="modal-varmekart">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Tyngdepunkt gjennom tiårene</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter hovedsjanger. Mørkere = mer toneangivende.</p>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter metasjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
   </div>
 </div>
@@ -148,7 +148,7 @@ export const MODAL_HTML = `
       <h2>Tidslinje — når var artistene aktive?</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode — gruppert etter hovedsjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode — gruppert etter metasjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
     <div id="tid-body"></div>
   </div>
 </div>
@@ -227,7 +227,7 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="dash-card" id="sb-historier">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span class="dash-title">Sjangerhistorier</span>
-        <span class="dash-desc">Fremstillingen av de seks hovedsjangrene</span>
+        <span class="dash-desc">Fremstillingen av de seks metasjangrene</span>
       </button>
       <button class="dash-card" id="sb-tidslinje">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>

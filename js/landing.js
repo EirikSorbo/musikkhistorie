@@ -1,11 +1,11 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.71";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.71";
-import { debounce, throttle } from "./util.js?v=3.71";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.71";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.71";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.71";
-import { initExplore } from "./explore.js?v=3.71";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.71";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=3.72";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.72";
+import { debounce, throttle } from "./util.js?v=3.72";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=3.72";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.72";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.72";
+import { initExplore } from "./explore.js?v=3.72";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=3.72";
 
 const state = {
   artists: [],
@@ -377,7 +377,7 @@ function openArtistModal() {
 
 function refreshFilterControls() {
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
-  fillSelect($("#sp-genre"), GENEALOGY_META_GENRES.map(g => ({ value: g, label: g })), { placeholder: "Hovedsjanger" });
+  fillSelect($("#sp-genre"), GENEALOGY_META_GENRES.map(g => ({ value: g, label: g })), { placeholder: "Metasjanger" });
   fillSelect($("#sp-instrument"), INSTRUMENTS, { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
@@ -409,7 +409,7 @@ function setupFilters() {
   });
   // Eksplisitt kobling element → filternøkkel: filterArtists leser mainGenre/
   // metaGenre, ikke element-id-ene (sjanger/genre) — å utlede nøkkelen fra
-  // id-en gjorde at sjanger- og hovedsjangervalget aldri traff filteret.
+  // id-en gjorde at sjanger- og metasjangervalget aldri traff filteret.
   const FILTER_KEYS = {
     "sp-search": "search",
     "sp-sjanger": "mainGenre",

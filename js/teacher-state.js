@@ -14,11 +14,11 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=3.71";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.71";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.71";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=3.71";
-import { $ } from "./shared.js?v=3.71";
+} from "./store.js?v=3.72";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=3.72";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=3.72";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=3.72";
+import { $ } from "./shared.js?v=3.72";
 
 export const state = {
   artists: [],
@@ -164,7 +164,7 @@ export function renderAll() {
 
 export function refreshControls() {
   fillSelect($("#f-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Alle sjangre" });
-  fillSelect($("#f-genre"), GENEALOGY_META_GENRES, { placeholder: "Alle hovedsjangre" });
+  fillSelect($("#f-genre"), GENEALOGY_META_GENRES, { placeholder: "Alle metasjangre" });
   fillSelect(
     $("#f-decade"),
     DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),

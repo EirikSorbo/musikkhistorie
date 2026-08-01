@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.71";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.72";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,13 +17,13 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=3.71";
-import { escapeHtml } from "./ui.js?v=3.71";
-import { $ } from "./shared.js?v=3.71";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.71";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.71";
-import { INSTRUMENTS } from "./limits.js?v=3.71";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.71";
+} from "./store.js?v=3.72";
+import { escapeHtml } from "./ui.js?v=3.72";
+import { $ } from "./shared.js?v=3.72";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.72";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.72";
+import { INSTRUMENTS } from "./limits.js?v=3.72";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.72";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -118,10 +118,10 @@ function buildExportData() {
   // Sjangerbeskrivelser eksporteres NESTET i tre bolker (meta → main → sub), så
   // fila blir oversiktlig i stedet for én lang flat liste. Bolken bestemmes av
   // sjangerens TYPE (samme inndeling som lærer-dashboardet):
-  //   hovedsjanger (treets metasjangre) → meta
+  //   metasjanger (treets metasjangre) → meta
   //   tre-sjanger  (isMainGenre)        → main
   //   ellers (fri undersjanger)         → sub
-  // Hovedsjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
+  // Metasjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
   // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
   // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.
   // story = sjangerhistorien (eneste kilde — ingen standardtekst i koden) —
@@ -382,14 +382,14 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
 
   const genreEntries = [];
   for (const [id, entry] of Object.entries(genreDescriptions || {})) {
-    // Meta-nivået (hovedsjanger-beskrivelse) er pensjonert (v2.99) — dropp det
+    // Meta-nivået (metasjanger-beskrivelse) er pensjonert (v2.99) — dropp det
     // fra gamle backuper, ellers gjenopplives det og purgeMetaGenreDescs måtte
     // slette det på nytt ved neste oppstart.
     let data = entry;
     if (data && data.meta) { const { meta, ...rest } = data; data = rest; }
     // Eldre flat form { description } leses ikke av appen (den leser kun
     // main/sub). Pakk den inn i riktig nivå før lagring. Meta-nivået er
-    // pensjonert, så en flat beskrivelse for en hovedsjanger legges på main.
+    // pensjonert, så en flat beskrivelse for en metasjanger legges på main.
     // `story` er et TOPP-nivå-felt og må løftes ut før innpakkingen — ellers
     // ville den blitt nestet inn i nivåfeltet og blitt usynlig for appen.
     let toSave = data;

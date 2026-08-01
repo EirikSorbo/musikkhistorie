@@ -5,10 +5,10 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.71";
-import { DECADES } from "./limits.js?v=3.71";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.71";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.71";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.72";
+import { DECADES } from "./limits.js?v=3.72";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.72";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.72";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -81,7 +81,7 @@ export function renderVarmekartBody() {
     if (orphan.length) console.warn(`Varmekart: ${orphan.length} rad(er) i content/varmekart matcher ingen tre-sjanger og vises aldri:`, orphan);
   }
 
-  // Grupper mainGenre etter metaGenre (supersjanger). Treet gir både
+  // Grupper mainGenre etter metaGenre (metasjanger). Treet gir både
   // grupperingen (MAIN_GENRE_INFO[sj].meta) og fargene (…​.color), så
   // varmekartet snakker samme visuelle språk som slektstreet.
   const groups = new Map();

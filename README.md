@@ -17,7 +17,7 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
     og **koblingsbeskrivelser** for hver strek i treet.
   - **Tidslinje**, **varmekart**, **geografisk kart** og **sjangerhimmel**
     (stjernekart), pluss tiårskontekst (samfunn + teknologi) og teknologikort.
-- **Finn artister**: søk og filtrer på sjanger, hovedsjanger, tiår og instrument;
+- **Finn artister**: søk og filtrer på sjanger, metasjanger, tiår og instrument;
   «dagens artist».
 - **Foreslå artist / innovasjon** (justering av pensumet) med navn, årstall,
   kjønn, sjanger, instrument, geografi, begrunnelse, verk, musikkeksempler,
@@ -144,7 +144,7 @@ nekter push hvis versjonene er i utakt.
 
 ## Vokabular og strukturakser
 
-- **Hovedsjangre** utledes fra slektstreet (`js/genealogy.js`).
+- **Metasjangre** utledes fra slektstreet (`js/genealogy.js`).
 - **Tiår** (1900–2020) er `DECADES`-konstanten i `js/limits.js`.
 - **Instrumenter** er den eneste redigerbare lista i innstillingene (styrer
   nedtrekksmenyene i forslagsskjema og filtre).
