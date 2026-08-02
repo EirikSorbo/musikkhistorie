@@ -7,11 +7,11 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.87";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.87";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.87";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.87";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.87";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.88";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.88";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.88";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.88";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.88";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -24,7 +24,7 @@ export const GENEALOGY = [
   { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["eurofolk"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
   { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
   { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
-  { id: "gospel", l: "Gospel", f: "Gospel", fam: "red", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
+  { id: "gospel", l: "Gospel", f: "Gospel", fam: "olive", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
   { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 4, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
   { id: "honkytonk", l: "Honky tonk", f: "Honky tonk", fam: "amber", cx: 195, r: 5, p: ["country"], g: "Country", era: "1940-tallet", t: ["Lovesick Blues – Hank Williams (1949)", "Your Cheatin' Heart – Hank Williams (1953)"] },
@@ -41,7 +41,7 @@ export const GENEALOGY = [
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1320, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
   { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
   { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["jazz", "funk"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
-  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1250, r: 8, p: ["funk", "reggae"], g: "R&B", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
+  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1250, r: 8, p: ["funk", "reggae"], g: "Hip-hop", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
   { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1380, r: 8, p: ["funk", "soul"], g: "Klubbmusikk", era: "1974", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
   { id: "house", l: "House", f: "House", fam: "teal", cx: 1510, r: 9, p: ["disco"], g: "Klubbmusikk", era: "1980", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles"] },
   { id: "techno", l: "Techno", f: "Techno", fam: "teal", cx: 1380, r: 9, p: ["house", "disco"], g: "Klubbmusikk", era: "1985", t: ["Strings of Life – Derrick May", "Big Fun – Inner City"] },
@@ -78,8 +78,8 @@ export const GENEALOGY = [
   { id: "neotrad", l: "Neotrad. country", f: "Neotraditional country", fam: "amber", cx: 195, r: 9, p: ["outlaw"], g: "Country", era: "1980-tallet", t: ["Amarillo by Morning – George Strait (1983)", "Whoever's in New England – Reba McEntire (1986)"] },
 
   // --- Hip-hop videre ---
-  { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1250, r: 10, p: ["hiphop"], g: "R&B", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },
-  { id: "trap", l: "Trap", f: "Trap", fam: "pink", cx: 1250, r: 12, p: ["gangsta"], g: "R&B", era: "2000–2010-tallet", t: ["Sicko Mode – Travis Scott (2018)", "Mask Off – Future (2017)"] },
+  { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1250, r: 10, p: ["hiphop"], g: "Hip-hop", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },
+  { id: "trap", l: "Trap", f: "Trap", fam: "pink", cx: 1250, r: 12, p: ["gangsta"], g: "Hip-hop", era: "2000–2010-tallet", t: ["Sicko Mode – Travis Scott (2018)", "Mask Off – Future (2017)"] },
 
   // --- Elektronisk videre ---
   { id: "elektronika", l: "Elektronika", f: "Elektronika", fam: "teal", cx: 1510, r: 11, p: ["techno", "house"], g: "Klubbmusikk", era: "1990–2000-tallet", t: ["Windowlicker – Aphex Twin (1999)", "Midnight in a Perfect World – DJ Shadow (1996)"] },
@@ -93,9 +93,9 @@ export const GENEALOGY = [
   // `era` er fasiten for når de oppsto, ikke raden.
   { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 12, p: ["nujazz"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
   { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["neotrad", "americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
-  { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "red", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
+  { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "olive", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
   { id: "contrnb", l: "Cont. R&B", f: "Contemporary R&B", fam: "red", cx: 1160, r: 11, p: ["funk", "hiphop"], g: "R&B", era: "1990-tallet–i dag", t: ["Real Love – Mary J. Blige (1992)", "Crazy in Love – Beyoncé (2003)"] },
-  { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1350, r: 11, p: ["hiphop", "gangsta"], g: "R&B", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
+  { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1350, r: 11, p: ["hiphop", "gangsta"], g: "Hip-hop", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
 ];
 
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
@@ -304,7 +304,14 @@ const FAMILIES = {
   pop:    { stroke: "#c026d3", label: "Pop" },
   amber:  { stroke: "#d97706", label: "Country" },
   purple: { stroke: "#7c3aed", label: "Jazz" },
-  red:    { stroke: "#dc2626", label: "Gospel / soul / funk" },
+  red:    { stroke: "#dc2626", label: "R&B / soul / funk" },
+  // Gospel ble skilt ut av den røde familien i v3.88 (R&B overtok rødt) og måtte
+  // UT av rød-rosa-aksen, ikke bare et hakk til side i den: rødt (R&B), rosa
+  // (hip-hop) og fuchsia (Pop) ligger allerede tett, og en burgunder mellom dem
+  // ble enten forvekslet med rosa eller så mørk at den leste som svart.
+  // Oliven er den eneste ledige kulørsonen i paletten — 90° fra Klubbmusikkens
+  // turkis og tydelig mattere enn reggae-grønnen den deler legend med.
+  olive:  { stroke: "#4d7c0f", label: "Gospel" },
   teal:   { stroke: "#0d9488", label: "Disco / electronica" },
   pink:   { stroke: "#db2777", label: "Hip-hop" },
   green:  { stroke: "#16a34a", label: "Reggae" },
@@ -329,21 +336,26 @@ export const MAIN_GENRE_INFO = Object.fromEntries(
 // automatisk fargen hvis den blir den vanligste. Brukt av sjangerhistorie-
 // knappene, så de snakker samme fargespråk som treet.
 //
-// Unntak: R&B ville fått rødt (rnb/soul/funk/neo-soul er rød familie) — samme
-// røde som Gospel, så to av de seks historie-knappene ble umulige å skille.
-// R&B tar derfor hip-hop-familiens rosa, som også finnes i slekta (hip-hop,
-// gangsta rap, trap).
-const META_FAM_OVERRIDE = { "R&B": "pink" };
-
+// Det finnes BEVISST ingen unntaksliste lenger (v3.88): hver metasjanger har nå
+// sin egen familie, så tellingen alene gir syv ulike farger. Tidligere måtte
+// R&B låne hip-hop-rosa fordi R&B og Gospel delte den røde familien; nå har
+// Gospel fått «wine» og hip-hop er egen metasjanger som beholder rosa.
+//
+// «gray» holdes utenfor tellingen: den er røttenes farge, ikke en identitet en
+// metasjanger kan arve. Uten den regelen ville Tin Pan Alley (gray) og Pop (pop)
+// stått 1–1 i Pop, og Pop fått røtter-gråen — samme grå som «Røtter» i
+// forklaringen. Skulle en metasjanger bestå av bare gray-noder, faller den
+// tilbake til gråen med vilje.
 export const META_GENRE_COLOR = (() => {
   const tally = {};                              // meta → { fam: antall }
   for (const n of GENEALOGY) {
-    if (!n.g) continue;
+    if (!n.g || n.fam === "gray") continue;
     (tally[n.g] ||= {})[n.fam] = (tally[n.g][n.fam] || 0) + 1;
   }
-  return Object.fromEntries(Object.entries(tally).map(([meta, fams]) => {
-    const fam = META_FAM_OVERRIDE[meta] || Object.entries(fams).sort((a, b) => b[1] - a[1])[0][0];
-    return [meta, FAMILIES[fam]?.stroke || FAMILIES.gray.stroke];
+  const metas = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
+  return Object.fromEntries(metas.map((meta) => {
+    const fams = Object.entries(tally[meta] || {}).sort((a, b) => b[1] - a[1]);
+    return [meta, FAMILIES[fams[0]?.[0]]?.stroke || FAMILIES.gray.stroke];
   }));
 })();
 

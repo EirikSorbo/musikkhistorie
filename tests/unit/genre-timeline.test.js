@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.87";
-import { GENEALOGY } from "../../js/genealogy.js?v=3.87";
-import { STORY_ORDER } from "../../js/story-format.js?v=3.87";
+import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.88";
+import { GENEALOGY } from "../../js/genealogy.js?v=3.88";
+import { STORY_ORDER } from "../../js/story-format.js?v=3.88";
 
 // Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.
@@ -50,7 +50,8 @@ test("de nye v3.73-nodene er med i løypene sine", () => {
   const navn = (meta) => genreFamilyNodes(meta).map((x) => x.n.l);
   assert.ok(navn("Country").includes("Neotrad. country"));
   assert.ok(navn("R&B").includes("Cont. R&B"));
-  assert.ok(navn("R&B").includes("Cont. hip-hop"));
+  // Cont. hip-hop lå i R&B til v3.88, da hip-hop ble egen metasjanger.
+  assert.ok(navn("Hip-hop").includes("Cont. hip-hop"));
 });
 
 test("aksen er ubrutt og bruker hele sporet", () => {

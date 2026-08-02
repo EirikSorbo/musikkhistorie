@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.87";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=3.87";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.87";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.87";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.87";
-import { resolveDesc } from "./genre-descriptions.js?v=3.87";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.87";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.87";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.88";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=3.88";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.88";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.88";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.88";
+import { resolveDesc } from "./genre-descriptions.js?v=3.88";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.88";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.88";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.87";
-import { $ } from "./shared.js?v=3.87";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.87";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.88";
+import { $ } from "./shared.js?v=3.88";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.88";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

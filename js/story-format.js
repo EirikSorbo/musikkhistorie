@@ -17,13 +17,18 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=3.87";
-import { escapeHtml } from "./ui-helpers.js?v=3.87";
+import { linkifyAll } from "./linkify.js?v=3.88";
+import { escapeHtml } from "./ui-helpers.js?v=3.88";
 
 // Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
 // én per metasjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
 // andre og har bevisst ingen egen historie.
-export const STORY_ORDER = ["Blues", "Country", "Gospel", "Jazz", "R&B", "Klubbmusikk"];
+//
+// Hip-hop står etter R&B fordi den ble skilt ut derfra (v3.88) og fortsatt
+// leses best i forlengelsen av soul og funk. Historien er ikke skrevet ennå —
+// knappen skal likevel stå: appen viser hull i innholdet i stedet for å skjule
+// dem, og lærer-oversikten teller den som en manglende historie.
+export const STORY_ORDER = ["Blues", "Country", "Gospel", "Jazz", "R&B", "Hip-hop", "Klubbmusikk"];
 
 // Inline-formatering: [lenke](url), **fet** og *kursiv*. Tokeniseres i ett
 // pass så en stjerne inni fet tekst ikke re-tolkes; hvert tekstsegment

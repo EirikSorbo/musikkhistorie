@@ -603,9 +603,11 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
    dekker hele bredden av kortet, og bærer metasjangerens farge fra slektstreet
    (--hist-color settes per knapp i explore.js). */
 .hist-intro { margin-bottom: 12px; font-size: 0.9rem; }
+/* Sju historier på fire kolonner (4 + 3). Seks kolonner klemte «Klubbmusikk»
+   til ellipse allerede før den sjuende kom til; fire gir god plass til alle. */
 .hist-chips {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   margin-bottom: 14px;
 }
@@ -634,7 +636,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   border-color: var(--hist-color, var(--accent));
   color: #fff;
 }
-/* Seks kolonner blir for trangt på telefon — to rader à tre. */
+/* Fire kolonner blir for trangt på telefon — tre rader à tre (siste alene). */
 @media (max-width: 640px) {
   .hist-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -1667,6 +1669,10 @@ body.is-teacher #gate { display: none; }
 .gx-f-amber rect  { fill: #fef3c7; stroke: #d97706; } .gx-f-amber text  { fill: #7c2d12; }
 .gx-f-purple rect { fill: #ede9fe; stroke: #7c3aed; } .gx-f-purple text { fill: #4c1d95; }
 .gx-f-red rect    { fill: #fee2e2; stroke: #dc2626; } .gx-f-red text    { fill: #7f1d1d; }
+/* olive = Gospel, skilt ut fra den røde familien i v3.88 da R&B overtok rødt.
+   Se FAMILIES i genealogy.js for hvorfor den havnet i grønnsonen og ikke i en
+   burgunder ved siden av rødt. */
+.gx-f-olive rect  { fill: #ecfccb; stroke: #4d7c0f; } .gx-f-olive text  { fill: #365314; }
 .gx-f-teal rect   { fill: #ccfbf1; stroke: #0d9488; } .gx-f-teal text   { fill: #134e4a; }
 .gx-f-pink rect   { fill: #fce7f3; stroke: #db2777; } .gx-f-pink text   { fill: #831843; }
 .gx-f-green rect  { fill: #dcfce7; stroke: #16a34a; } .gx-f-green text  { fill: #14532d; }

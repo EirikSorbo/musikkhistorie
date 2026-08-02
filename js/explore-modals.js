@@ -7,8 +7,12 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.87";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.87";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.88";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.88";
+// Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
+// Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
+// metasjangre — Pop og Rock har bevisst ingen egen fortelling.
+import { STORY_ORDER } from "./story-format.js?v=3.88";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -241,7 +245,7 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="dash-card" id="sb-historier">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span class="dash-title">Sjangerhistorier</span>
-        <span class="dash-desc">Fremstillingen av de seks metasjangrene</span>
+        <span class="dash-desc">Én fortelling per metasjanger</span>
       </button>
       <button class="dash-card" id="sb-tidslinje">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
@@ -321,7 +325,7 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
-<!-- Sjangerhistorier: seks forfattede fortellinger (én per metasjanger) som
+<!-- Sjangerhistorier: forfattede fortellinger (én per metasjanger) som
      til sammen dekker pensumet. Én modal med sjanger-chips øverst — samme
      leseflate uansett historie, og bytte skjer uten modal-stabling. -->
 <div class="modal-backdrop" id="modal-historier">
@@ -331,7 +335,7 @@ ${TECH_DETAIL_MODAL_HTML}
       <div id="hist-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted hist-intro">Seks fortellinger som til sammen dekker hele pensumet — trykk på navnene underveis for å åpne artistkortene.</p>
+    <p class="muted hist-intro">${STORY_ORDER.length} fortellinger som til sammen dekker hele pensumet — trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
     <!-- Sjangerfamilien som vannrett tidslinje, generert fra GENEALOGY
          (buildGenreTimeline). Erstatter den håndskrevne «Sjangertre-løype»-

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderStoryHtml, storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=3.87";
+import { renderStoryHtml, storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=3.88";
 
 const artists = [
   { id: "a1", name: "Muddy Waters", status: "active" },
@@ -90,8 +90,10 @@ test("pageFor: samme regler for innholdssidene", () => {
   assert.equal(pageFor("omHistorie", { omHistorie: { body: "Tekst." } }).body, "Tekst.");
 });
 
-test("STORY_ORDER er de seks historiene i fast rekkefølge", () => {
-  assert.deepEqual(STORY_ORDER, ["Blues", "Country", "Gospel", "Jazz", "R&B", "Klubbmusikk"]);
+test("STORY_ORDER er de sju historiene i fast rekkefølge", () => {
+  // Hip-hop kom til i v3.88 da den ble skilt ut som egen metasjanger fra R&B,
+  // og står rett etter R&B fordi den leses i forlengelsen av soul og funk.
+  assert.deepEqual(STORY_ORDER, ["Blues", "Country", "Gospel", "Jazz", "R&B", "Hip-hop", "Klubbmusikk"]);
 });
 
 test("tekst rett etter et listepunkt (uten blank linje) beholder kildens rekkefølge", () => {

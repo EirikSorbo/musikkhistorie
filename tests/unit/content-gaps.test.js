@@ -3,8 +3,8 @@
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=3.87";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.87";
+import { contentGaps } from "../../js/ui-dashboard.js?v=3.88";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.88";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
@@ -47,9 +47,10 @@ test("contentGaps: sider telles kun når innhold er lastet", () => {
 });
 
 test("contentGaps: sjangerhistorie regnes som skrevet når story.body finnes", () => {
-  assert.equal(contentGaps({ artists: [], genreDescs: {} }).stories.length, 6);
+  // Sju historier siden v3.88 (Hip-hop skilt ut fra R&B).
+  assert.equal(contentGaps({ artists: [], genreDescs: {} }).stories.length, 7);
   const one = contentGaps({ artists: [], genreDescs: { Blues: { story: { body: "s" } } } });
-  assert.equal(one.stories.length, 5);
+  assert.equal(one.stories.length, 6);
   assert.ok(!one.stories.includes("Blues"));
 });
 
