@@ -5,10 +5,10 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.89";
-import { DECADES } from "./limits.js?v=3.89";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.89";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.89";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.90";
+import { DECADES } from "./limits.js?v=3.90";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.90";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.90";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -90,8 +90,9 @@ export function renderVarmekartBody() {
     if (!groups.has(meta)) groups.set(meta, []);
     groups.get(meta).push(sj);
   }
-  // Metaorden følger treet (≈ kronologisk); evt. ukjente legges sist.
-  const metaOrder = [...GENEALOGY_META_GENRES, ...[...groups.keys()].filter((m) => !GENEALOGY_META_GENRES.includes(m))];
+  // Metaorden er den pedagogiske (META_GENRE_ORDER) — samme rekkefølge som
+  // artistenes tidslinje, så de to flatene leses likt; evt. ukjente legges sist.
+  const metaOrder = [...META_GENRE_ORDER, ...[...groups.keys()].filter((m) => !META_GENRE_ORDER.includes(m))];
   const usedFams = new Set();
 
   let groupIdx = 0;

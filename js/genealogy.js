@@ -7,11 +7,11 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.89";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.89";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.89";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.89";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.89";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.90";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.90";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.90";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.90";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.90";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -103,8 +103,10 @@ export const GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).ma
   .sort((a, b) => a.localeCompare(b, "no"));
 
 // Metasjangre (treets kolonner): én rad per hovedretning. Beholder rekkefølgen
-// fra GENEALOGY (≈ kronologisk). Brukes som rader i varmekartet — utvides
-// automatisk når nye metasjangre legges inn i treet.
+// fra GENEALOGY (≈ kronologisk) og utvides automatisk når nye metasjangre
+// legges inn i treet. Er VOKABULARET — hvilke metasjangre som finnes — og brukes
+// der rekkefølgen ikke betyr noe (nedtrekkslister, filtre, tellinger).
+// Visningsflatene sorterer etter META_GENRE_ORDER under.
 export const GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
 
 // Pedagogisk visningsrekkefølge for metasjangrene (brukervalg): den
@@ -112,7 +114,8 @@ export const GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).ma
 // Klubbmusikk → Gospel — og deretter Country → Pop → Rock. Treets egen
 // rekkefølge (GENEALOGY_META_GENRES ovenfor) er ≈ kronologisk og river disse
 // slektskapene fra hverandre; her står familiene som henger sammen ved siden
-// av hverandre. Brukes av artistenes tidslinje.
+// av hverandre. Brukes av artistenes tidslinje OG varmekartet — de to flatene
+// deler mønster og fargespråk, og må derfor lese likt ovenfra og ned.
 //
 // Listen er en RANGERING, ikke en fasit på hvilke metasjangre som finnes: den
 // sorterer det treet faktisk inneholder, og en ny metasjanger som ikke står her
