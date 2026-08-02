@@ -16,13 +16,13 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=3.84";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=3.84";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=3.84";
-import { pageFor, renderStoryHtml } from "./story-format.js?v=3.84";
-import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=3.84";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=3.84";
-import { openTechDetail } from "./explore-tech.js?v=3.84";
+import { modalOpen, escapeHtml } from "./ui.js?v=3.85";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=3.85";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=3.85";
+import { pageFor, renderStoryHtml } from "./story-format.js?v=3.85";
+import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=3.85";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=3.85";
+import { openTechDetail } from "./explore-tech.js?v=3.85";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -150,7 +150,7 @@ function renderGroup(group) {
     // Teksten peker på HVEM som skriver den, ikke bare at den mangler —
     // «podkast» er en lenke til podkastfanen, der gruppene ligger.
     sum.innerHTML = s.contentLoaded
-      ? `<p class="gx-missing">Teksten skrives av gruppen som lager ` +
+      ? `<p class="instr-sum-hint">Teksten skrives av gruppen som lager ` +
         `<button type="button" class="sh-linkbtn" id="instr-til-podkast">podkast</button>` +
         ` om instrumentets utvikling.</p>`
       : `<p class="gx-missing">Laster innhold …</p>`;
