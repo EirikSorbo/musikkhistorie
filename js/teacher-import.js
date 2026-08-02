@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.88";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=3.89";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,13 +17,13 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=3.88";
-import { escapeHtml } from "./ui.js?v=3.88";
-import { $ } from "./shared.js?v=3.88";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.88";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.88";
-import { INSTRUMENTS } from "./limits.js?v=3.88";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.88";
+} from "./store.js?v=3.89";
+import { escapeHtml } from "./ui.js?v=3.89";
+import { $ } from "./shared.js?v=3.89";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=3.89";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=3.89";
+import { INSTRUMENTS } from "./limits.js?v=3.89";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=3.89";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;

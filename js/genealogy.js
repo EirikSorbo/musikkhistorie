@@ -7,11 +7,11 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.88";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.88";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.88";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.88";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.88";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.89";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.89";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.89";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.89";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.89";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -106,6 +106,24 @@ export const GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).ma
 // fra GENEALOGY (≈ kronologisk). Brukes som rader i varmekartet — utvides
 // automatisk når nye metasjangre legges inn i treet.
 export const GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
+
+// Pedagogisk visningsrekkefølge for metasjangrene (brukervalg): den
+// afroamerikanske linja samlet først — Blues → Jazz → R&B → Hip-hop →
+// Klubbmusikk → Gospel — og deretter Country → Pop → Rock. Treets egen
+// rekkefølge (GENEALOGY_META_GENRES ovenfor) er ≈ kronologisk og river disse
+// slektskapene fra hverandre; her står familiene som henger sammen ved siden
+// av hverandre. Brukes av artistenes tidslinje.
+//
+// Listen er en RANGERING, ikke en fasit på hvilke metasjangre som finnes: den
+// sorterer det treet faktisk inneholder, og en ny metasjanger som ikke står her
+// havner sist i treets egen rekkefølge i stedet for å forsvinne.
+const META_ORDER_HINT = ["Blues", "Jazz", "R&B", "Hip-hop", "Klubbmusikk", "Gospel", "Country", "Pop", "Rock"];
+export const META_GENRE_ORDER = (() => {
+  const rank = new Map(META_ORDER_HINT.map((m, i) => [m, i]));
+  // Array.sort er stabil, så ukjente metasjangre beholder treets rekkefølge seg imellom.
+  return [...GENEALOGY_META_GENRES].sort(
+    (a, b) => (rank.get(a) ?? Infinity) - (rank.get(b) ?? Infinity));
+})();
 
 // Alle koblinger (streker) i treet: avstamning/påvirkning (p) + motreaksjon
 // (rx), i definisjonsrekkefølge. Delt av slektstreets trykkbaner, lærer-
