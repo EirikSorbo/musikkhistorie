@@ -26,13 +26,14 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.93";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.93";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.93";
-import { initExplore } from "./explore.js?v=3.93";
+  runOrphanDuplicatePurge,
+} from "./store.js?v=3.94";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.94";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.94";
+import { initExplore } from "./explore.js?v=3.94";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.93";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.93";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.94";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.94";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -49,10 +50,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.93";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.93";
-import { renderDesk } from "./teacher-desk.js?v=3.93";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.93";
+} from "./teacher-content.js?v=3.94";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.94";
+import { renderDesk } from "./teacher-desk.js?v=3.94";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.94";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -235,6 +236,7 @@ function startApp() {
       ["Node-label-justering", runGenreLabelAlignment],
       ["Trance-doc-id-migrering", runTranceDocIdMigration],
       ["Innholdsnøkkel-justering", runContentKeyAlignment],
+      ["Foreldreløs-opprydding", runOrphanDuplicatePurge],
     ];
     for (const [navn, fn] of steps) {
       try { await fn(); } catch (e) { console.warn(`${navn} feilet:`, e?.message || e); }

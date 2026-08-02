@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.93";
-import { isMainGenre } from "./genealogy.js?v=3.93";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.93";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.93";
-import { mergeHeatRows } from "./import-format.js?v=3.93";
+import { firebaseConfig } from "./firebase-config.js?v=3.94";
+import { isMainGenre } from "./genealogy.js?v=3.94";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.94";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.94";
+import { mergeHeatRows } from "./import-format.js?v=3.94";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -683,6 +683,94 @@ export async function runContentKeyAlignment() {
   await setDoc(migRef, { [CONTENT_KEY_ALIGN_FLAG]: new Date().toISOString() }, { merge: true });
   console.info(`Innholdsnøkkel-justering fullført: ${heatRenamed} varmekartrad(er) omdøpt, Outlaw country.main ${outlaw}, Rock ${rock}.`);
   return { heatRenamed, outlaw, rock };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v3.94): tre foreldreløse duplikater fra gamle navnebytter.
+//  Etterslep etter at tre-nodene fikk korte labeler («Contemporary country» →
+//  «Cont. country»): innholdet ble kopiert til det nye navnet, men de gamle
+//  dokumentene/radene ble aldri ryddet bort. «Jazz (2)» er dessuten et navn som
+//  aldri har eksistert i treet — en ren skrivefeil-tvilling av «Cont. jazz».
+//
+//  De er UNÅELIGE i appen: varmekartet slår opp på nodens label (heatRow), og
+//  beskrivelsene løses via resolveDescAny([l, f]) der label-dokumentet alltid
+//  vinner. De ligger altså bare og tærer på plassen — og verre: onHeatEdit
+//  skriver hele heat-objektet tilbake, så de døde radene spres videre ved hver
+//  lagring.
+//
+//  Verifisert mot live-data 2026-08-02 før migreringen ble skrevet: alle tre
+//  main-beskrivelsene er TEGN FOR TEGN identiske med sine kanoniske dokumenter.
+//  Migreringen sjekker det på nytt ved kjøring og lar dokumentet stå hvis
+//  teksten har rukket å divergere — da er det ikke lenger et duplikat, og
+//  sletting ville vært tap av innhold.
+//
+//  ÉN kjent forskjell: «Contemporary gospel» har i tillegg et sub-felt som
+//  «Cont. gospel» ikke har. Ingen artist er tagget med den undersjangeren, så
+//  teksten er uleselig i appen i dag. Den flyttes bevisst IKKE til
+//  «Cont. gospel»: et sub-felt der ville skygget for main-teksten på samme navn
+//  (den kjente shadowing-fella). Innholdet logges i sin helhet før sletting, så
+//  det kan gjenopprettes fra konsollen om det viser seg å være verdt å beholde.
+//
+//  edgeDescriptions nevner de fulle navnene i løpende tekst — det er korrekt
+//  prosa om sjangrene og røres ikke.
+// ---------------------------------------------------------------------------
+const ORPHAN_PURGE_FLAG = "orphanDuplicatePurge_2026_08";
+// [foreldreløst dokument/rad, det kanoniske navnet det er en tvilling av]
+const ORPHAN_DUPLICATES = [
+  ["Contemporary country", "Cont. country"],
+  ["Contemporary gospel", "Cont. gospel"],
+  ["Jazz (2)", "Cont. jazz"],
+];
+
+export async function runOrphanDuplicatePurge() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[ORPHAN_PURGE_FLAG]) return { skipped: true };
+
+  // a) genreDescriptions: slett dokumentet — men KUN når main-teksten fortsatt
+  //    er identisk med den kanoniske. Har den divergert, er det ikke et
+  //    duplikat lenger, og da beholdes dokumentet og avviket rapporteres.
+  const docsDeleted = [], docsKept = [];
+  for (const [orphan, canon] of ORPHAN_DUPLICATES) {
+    const oRef = doc(db, "genreDescriptions", orphan);
+    const oSnap = await getDoc(oRef);
+    if (!oSnap.exists()) continue;
+    const oData = oSnap.data();
+    const cSnap = await getDoc(doc(db, "genreDescriptions", canon));
+    const cText = cSnap.exists() ? cSnap.data()?.main?.description || "" : "";
+    const oText = oData?.main?.description || "";
+    if (oText && oText !== cText) {
+      docsKept.push(`${orphan} (main avviker fra «${canon}» — ikke lenger et duplikat)`);
+      console.warn(`Foreldreløs-opprydding — BEHOLDT «${orphan}»: main-teksten avviker fra «${canon}». Vurder manuelt.`, oData);
+      continue;
+    }
+    // Hele dokumentet logges før sletting (gjenopprettbart fra konsollen) —
+    // også evt. felt utover main, som sub-teksten på «Contemporary gospel».
+    console.info(`Foreldreløs-opprydding — sletter «${orphan}» (hele dokumentet logget for gjenoppretting):`, JSON.stringify(oData));
+    await deleteDoc(oRef);
+    docsDeleted.push(orphan);
+  }
+
+  // b) content/varmekart: fjern de døde radene. Hele dokumentet skrives (samme
+  //    policy som mergeVarmekartRows og nøkkel-justeringen over — feltstier er
+  //    utrygge med tegn som «(» og «/» i nøkkelnavn).
+  let heatRemoved = 0;
+  const vkRef = doc(db, "content", "varmekart");
+  const vkSnap = await getDoc(vkRef);
+  if (vkSnap.exists() && vkSnap.data().heat) {
+    const heat = { ...vkSnap.data().heat };
+    for (const [orphan] of ORPHAN_DUPLICATES) {
+      if (!(orphan in heat)) continue;
+      console.info(`Foreldreløs-opprydding — varmekartrad «${orphan}» (logget for gjenoppretting):`, JSON.stringify(heat[orphan]));
+      delete heat[orphan];
+      heatRemoved++;
+    }
+    if (heatRemoved) await setDoc(vkRef, { heat, updatedAt: new Date().toISOString() });
+  }
+
+  await setDoc(migRef, { [ORPHAN_PURGE_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Foreldreløs-opprydding fullført: ${docsDeleted.length} beskrivelsesdokument(er) slettet (${docsDeleted.join(", ") || "ingen"}), ${heatRemoved} varmekartrad(er) fjernet.${docsKept.length ? " BEHOLDT: " + docsKept.join("; ") : ""}`);
+  return { docsDeleted, docsKept, heatRemoved };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som
