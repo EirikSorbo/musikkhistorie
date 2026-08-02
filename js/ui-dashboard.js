@@ -15,14 +15,14 @@ import {
   computeCounts,
   genderDistribution,
   activeArtists,
-  decadesForRange,
+  decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=3.94";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.94";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.94";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.94";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.94";
+} from "./limits.js?v=3.95";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=3.95";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=3.95";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=3.95";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=3.95";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -401,7 +401,7 @@ export function renderDashboard(el, {
     if (dec) {
       const d = Number(dec.dataset.ovDecade);
       return onShowArtistList?.(`${d}-tallet`,
-        active.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(d)).sort(byInfluenceThenName));
+        active.filter((a) => decadesForArtist(a).includes(d)).sort(byInfluenceThenName));
     }
     const instr = hit("[data-ov-instr]");
     if (instr) {

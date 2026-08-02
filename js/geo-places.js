@@ -14,7 +14,7 @@
 //  Avhengighetsfri (kun limits.js for tiårsberegning) → enhetstestbar.
 // ============================================================================
 
-import { decadesForRange } from "./limits.js?v=3.94";
+import { decadesForArtist } from "./limits.js?v=3.95";
 
 export const PLACES = {
   // --- New York-området ---
@@ -191,7 +191,7 @@ export function parseGeography(str) {
 export function aggregatePlaces(artists, { decade = null } = {}) {
   const onMap = new Map(), abroad = new Map(), unplaced = new Map();
   for (const a of artists) {
-    if (decade != null && !decadesForRange(a.influenceStart, a.influenceEnd).includes(decade)) continue;
+    if (decade != null && !decadesForArtist(a).includes(decade)) continue;
     const keys = parseGeography(a.geography);
     if (!keys.length) {
       addTo(unplaced, "(ikke angitt)", { label: "(ikke angitt)" }, a);

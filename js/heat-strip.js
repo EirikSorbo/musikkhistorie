@@ -9,8 +9,8 @@
 //  stedet for å slås opp i MAIN_GENRE_INFO her.
 // ============================================================================
 
-import { DECADES } from "./limits.js?v=3.94";
-import { escapeHtml } from "./util.js?v=3.94";
+import { DECADES } from "./limits.js?v=3.95";
+import { escapeHtml } from "./util.js?v=3.95";
 
 export const HEAT_DECADES = DECADES;
 export const HEAT_SEG = 100 / DECADES.length;   // ett tiårs bredde i prosent

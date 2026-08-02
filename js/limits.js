@@ -10,6 +10,8 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
+import { resolveSpan } from "./timeline-lanes.js?v=3.95";
+
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
 // ----------------------------------------------------------------------------
@@ -135,7 +137,9 @@ export function activeArtists(artists) {
   return artists.filter(isVisible);
 }
 
-// Regner ut hvilke tiår en innflytelsesperiode spenner over
+// Regner ut hvilke tiår et ÅRSSPENN dekker. Ren primitiv: begge endene må være
+// avklart av kalleren. Bruk decadesForArtist under for artister — den vet hva
+// en manglende sluttdato betyr.
 export function decadesForRange(startYear, endYear) {
   if (!startYear) return [];
   const end = endYear || startYear;
@@ -144,6 +148,23 @@ export function decadesForRange(startYear, endYear) {
   const result = [];
   for (let d = first; d <= last; d += 10) result.push(d);
   return result;
+}
+
+// Tiårene EN ARTIST teller i. Tom influenceEnd betyr «pågår» — artisten regnes
+// da fra influenceStart og HELT FRAM TIL I DAG, ikke bare i startåret sitt
+// (v3.95). Før falt decadesForRange tilbake på `end = startYear`, så en artist
+// uten sluttår forsvant ut av alle senere tiår: Beyoncé (fra 1997) og Kendrick
+// Lamar (fra 2012) fantes ikke i 2020-tallsfiltrene, tellingene, kartet eller
+// dashbordet — nettopp de tiårene de definerer.
+//
+// Spennet kommer fra resolveSpan, SAMME kilde som artistenes tidslinje bruker.
+// Det er hele poenget med å gå via den: tidslinjen og tiårsfiltrene kan ikke
+// lenger svare ulikt på «når var denne artisten aktiv». Det gir også dødsåret
+// som tak på kjøpet — en avdød artist uten influenceEnd løper til dødsåret, ikke
+// til i dag. (Ingen i pensumet har den kombinasjonen nå, men regelen bør stå.)
+export function decadesForArtist(artist, nowYear = new Date().getFullYear()) {
+  const span = resolveSpan(artist, nowYear);
+  return span ? decadesForRange(span.start, span.end) : [];
 }
 
 // Delt innholdsfilter for artistlister (sjanger/meta/instrument/undersjanger/
@@ -176,7 +197,7 @@ export function filterArtists(list, filters = {}) {
   if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
   if (filters.decade) {
     const d = Number(filters.decade);
-    list = list.filter((a) => decadesForRange(a.influenceStart, a.influenceEnd).includes(d));
+    list = list.filter((a) => decadesForArtist(a).includes(d));
   }
   if (filters.search) {
     const q = filters.search.toLowerCase();
@@ -204,7 +225,7 @@ function countBy(list, key) {
 function countByDecade(list) {
   const map = {};
   for (const a of list) {
-    for (const d of decadesForRange(a.influenceStart, a.influenceEnd)) {
+    for (const d of decadesForArtist(a)) {
       map[d] = (map[d] || 0) + 1;
     }
   }

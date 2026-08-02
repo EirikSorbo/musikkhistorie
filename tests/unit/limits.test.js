@@ -5,10 +5,11 @@ import {
   DECADES,
   isVisible,
   decadesForRange,
+  decadesForArtist,
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=3.94";
+} from "../../js/limits.js?v=3.95";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);
@@ -23,6 +24,31 @@ test("decadesForRange spenner alle tiår", () => {
   assert.deepEqual(decadesForRange(1955), [1950]);
   assert.deepEqual(decadesForRange(null), []);
   assert.deepEqual(decadesForRange(1970, 1960), []); // slutt før start → tomt
+});
+
+test("decadesForArtist: tom influenceEnd løper til i dag", () => {
+  // Kjernen i v3.95: uten sluttår skal artisten telle i ALLE tiår fra start og
+  // fram til nå — ikke bare i startåret sitt, slik decadesForRange alene gjør.
+  assert.deepEqual(
+    decadesForArtist({ influenceStart: 1997 }, 2026),
+    [1990, 2000, 2010, 2020]);
+  assert.deepEqual(
+    decadesForArtist({ influenceStart: 2012 }, 2026),
+    [2010, 2020]);
+
+  // Satt sluttår avslutter som før.
+  assert.deepEqual(
+    decadesForArtist({ influenceStart: 1955, influenceEnd: 1972 }, 2026),
+    [1950, 1960, 1970]);
+
+  // Dødsåret er tak når influenceEnd mangler — en avdød artist «pågår» ikke.
+  assert.deepEqual(
+    decadesForArtist({ influenceStart: 1936, deathYear: 1938 }, 2026),
+    [1930]);
+
+  // Uten startår kan artisten ikke plasseres i det hele tatt.
+  assert.deepEqual(decadesForArtist({}, 2026), []);
+  assert.deepEqual(decadesForArtist({ influenceEnd: 1980 }, 2026), []);
 });
 
 test("computeCounts teller kun synlige", () => {
@@ -66,13 +92,31 @@ test("filterArtists: sjanger matcher case-insensitivt i main/sub/meta", () => {
 });
 
 test("filterArtists: prioritet, instrument, tiår og søk", () => {
+  // deathYear på Robert Johnson er ikke pynt: uten den ville han (start 1936,
+  // ingen influenceEnd) regnes som pågående helt fram til i dag etter v3.95, og
+  // tiårsfilteret under ville ikke lenger prøve det det skal prøve.
   const list = [
-    { name: "Robert Johnson", metaGenre: "Blues", instrument: "Gitar", priority: 3, mainGenre: [], subGenre: [], geography: "Mississippi", influenceStart: 1936 },
-    { name: "Bill Evans", metaGenre: "Jazz", instrument: "Piano", priority: 1, mainGenre: [], subGenre: [], geography: "New Jersey", influenceStart: 1958 },
+    { name: "Robert Johnson", metaGenre: "Blues", instrument: "Gitar", priority: 3, mainGenre: [], subGenre: [], geography: "Mississippi", influenceStart: 1936, deathYear: 1938 },
+    { name: "Bill Evans", metaGenre: "Jazz", instrument: "Piano", priority: 1, mainGenre: [], subGenre: [], geography: "New Jersey", influenceStart: 1958, influenceEnd: 1980 },
   ];
   assert.deepEqual(filterArtists(list, { priority: 3 }).map((a) => a.name), ["Robert Johnson"]);
   assert.deepEqual(filterArtists(list, { instrument: "Piano" }).map((a) => a.name), ["Bill Evans"]);
   assert.deepEqual(filterArtists(list, { decade: 1950 }).map((a) => a.name), ["Bill Evans"]);
   assert.deepEqual(filterArtists(list, { search: "mississippi" }).map((a) => a.name), ["Robert Johnson"]);
   assert.equal(filterArtists(list, {}).length, 2); // ingen filtre → alt
+});
+
+test("filterArtists: artist uten sluttår er med i alle tiår fram til nå", () => {
+  // Regresjonsvakt for v3.95. Før falt tiårsfilteret tilbake på startåret, så
+  // en pågående artist var USYNLIG i alle tiår etter debuten sin.
+  const list = [
+    { name: "Beyoncé", mainGenre: [], subGenre: [], influenceStart: 1997 },
+    { name: "Bessie Smith", mainGenre: [], subGenre: [], influenceStart: 1923, influenceEnd: 1933 },
+  ];
+  const nyeTiår = [1990, 2000, 2010, 2020];
+  for (const d of nyeTiår) {
+    assert.deepEqual(filterArtists(list, { decade: d }).map((a) => a.name), ["Beyoncé"], `tiår ${d}`);
+  }
+  assert.deepEqual(filterArtists(list, { decade: 1920 }).map((a) => a.name), ["Bessie Smith"]);
+  assert.deepEqual(filterArtists(list, { decade: 1960 }).map((a) => a.name), []);
 });
