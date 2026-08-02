@@ -8,10 +8,10 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=3.78";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES } from "./ui.js?v=3.78";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=3.78";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.78";
+import { addPendingEdit, addTechProposal } from "./store.js?v=3.79";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES } from "./ui.js?v=3.79";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=3.79";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.79";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -54,6 +54,9 @@ const FIELD_SPECS = {
   subgenre: [
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
   ],
+  instrument: [
+    { key: "body", label: "Sammendrag av instrumentets utvikling", type: "textarea", full: true },
+  ],
   "decade-society": [
     { key: "society", label: "Samfunnsutvikling", type: "textarea", full: true },
     { key: "societyMore", label: "Les mer (lengre tekst)", type: "textarea", full: true },
@@ -68,6 +71,7 @@ const TITLES = {
   artist: "Foreslå endring på artist",
   tech: "Foreslå endring på innovasjonskort",
   subgenre: "Foreslå endring på sjangerbeskrivelse",
+  instrument: "Foreslå endring på instrumentsammendrag",
   "decade-society": "Foreslå endring på samfunnsutvikling",
   "decade-tech": "Foreslå endring på teknologiutvikling",
   "new-tech": "Foreslå nytt innovasjonskort",

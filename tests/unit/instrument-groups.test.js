@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   INSTRUMENT_GROUPS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, instrumentGroup,
-} from "../../js/limits.js?v=3.78";
-import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=3.78";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=3.78";
+} from "../../js/limits.js?v=3.79";
+import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=3.79";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=3.79";
 
 // To nivåer, som metaGenre over mainGenre: artistkortet beholder det PRESISE
 // instrumentet, tidslinjene ligger på GRUPPEN.
@@ -77,4 +77,33 @@ test("instrument og kilder er foreslåbare felter", () => {
   // Uten disse ville et studentforslag blitt filtrert bort i approvePendingEdit.
   assert.ok(PROPOSABLE_KEYS.tech.includes("instrument"));
   assert.ok(PROPOSABLE_KEYS.tech.includes("kilder"));
+});
+
+// --- Sammendragssiden per instrumentgruppe -----------------------------------
+
+test("instrumentPageId gir lovlige, stabile Firestore-ID-er", async () => {
+  const { instrumentPageId } = await import("../../js/limits.js?v=3.79");
+  assert.equal(instrumentPageId("Gitar"), "instrument-gitar");
+  assert.equal(instrumentPageId("Låtskriving"), "instrument-latskriving");
+  assert.equal(instrumentPageId("Elektronisk produksjon"), "instrument-elektronisk-produksjon");
+  for (const g of INSTRUMENT_TIMELINE_GROUPS) {
+    const id = instrumentPageId(g);
+    // Firestore-ID-er tåler ikke skråstrek, og æøå gir vondt-å-feilsøke ID-er.
+    assert.ok(!id.includes("/"), `${g} → ${id} inneholder skråstrek`);
+    assert.match(id, /^instrument-[a-z0-9-]+$/, `${g} → ${id}`);
+  }
+  // Ingen to grupper kan dele side.
+  const ids = INSTRUMENT_TIMELINE_GROUPS.map(instrumentPageId);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("«instrument» er en komplett forslagstype", async () => {
+  // Alle fire stedene må kjenne typen, ellers blir forslaget avvist av reglene
+  // eller filtrert bort ved godkjenning.
+  const fs = await import("node:fs");
+  assert.deepEqual(PROPOSABLE_KEYS.instrument, ["body"]);
+  const rules = fs.readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8");
+  assert.match(rules, /entityType in \[[^\]]*"instrument"/, "firestore.rules mangler typen");
+  const store = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
+  assert.match(store, /case "instrument":\s*return doc\(db, "content"/, "pendingEditTargetRef mangler typen");
 });

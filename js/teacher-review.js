@@ -5,10 +5,10 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=3.78";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=3.78";
-import { resolveDesc } from "./genre-descriptions.js?v=3.78";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=3.78";
+import { state, guardTeacherAction } from "./teacher-state.js?v=3.79";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=3.79";
+import { resolveDesc } from "./genre-descriptions.js?v=3.79";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=3.79";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;
@@ -20,6 +20,11 @@ function getCurrentEntityValues(edit) {
       // eksisterende tekst (før: alltid main med sub som fallback).
       const d = resolveDesc(state.genreDescs, entityId, genreEditLevel(edit)).description;
       return { description: d || "" };
+    }
+    // Instrumentsammendraget er en innholdsside (content/instrument-<slug>).
+    case "instrument": {
+      const page = state.content?.[entityId] || {};
+      return { body: page.body || "" };
     }
     case "decade-society": {
       const d = state.decadeDescs[String(entityId)] || {};
@@ -36,6 +41,7 @@ function getCurrentEntityValues(edit) {
 function entityTypeLabel(t) {
   return ({
     artist: "Artist", tech: "Innovasjonskort", subgenre: "Sjanger",
+    instrument: "Instrumentsammendrag",
     "decade-society": "Samfunnstiår", "decade-tech": "Teknologitiår",
     "new-tech": "Nytt innovasjonskort",
   })[t] || t;

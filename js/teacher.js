@@ -26,13 +26,13 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.78";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.78";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.78";
-import { initExplore } from "./explore.js?v=3.78";
+} from "./store.js?v=3.79";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.79";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.79";
+import { initExplore } from "./explore.js?v=3.79";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.78";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.78";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.79";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.79";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -49,10 +49,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.78";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.78";
-import { renderDesk } from "./teacher-desk.js?v=3.78";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.78";
+} from "./teacher-content.js?v=3.79";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.79";
+import { renderDesk } from "./teacher-desk.js?v=3.79";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.79";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -138,7 +138,7 @@ function startApp() {
     onTechAdmin: () => openTechAdmin(),
     // Sjekk-knapp i detaljvisningene (sjanger, historie, røtter, innovasjonskort).
     onCheck: (category, id, on) => setContentCheck(category, id, on),
-    onTechEdit: (t) => openTechEditor(t),
+    onTechEdit: (t, preset) => openTechEditor(t, preset),
     onTechDelete: (id) => {
       if (!confirm("Slette dette innovasjonskortet?")) return false;
       guardTeacherAction(deleteTech(id));

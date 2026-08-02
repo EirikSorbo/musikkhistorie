@@ -964,16 +964,43 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .tl-prop.tl-rich .tl-desc[data-genre]:hover,
 .tl-prop.tl-rich .tl-desc[data-tech-id]:hover { color: var(--tl-color, var(--accent)); text-decoration: underline; }
 
-/* ----- Instrumenter: én nyvinnings-tidslinje per instrumentgruppe ----- */
-.instr-block { border-top: 1px solid var(--line, #e5e7eb); padding-top: 10px; margin-top: 14px; }
-.instr-block:first-child { border-top: 0; margin-top: 4px; }
-.instr-head { display: flex; align-items: center; gap: 10px; }
-.instr-head h3 { margin: 0; font-size: 1rem; }
-.instr-count { font-size: 0.78rem; color: var(--muted); }
+/* ----- Instrumenter: fane per gruppe, én tidslinje + sammendrag om gangen -----
+   Fanene har samme rolle som sjangerhistorienes chips: alle tidslinjene under
+   hverandre ble uoversiktlig. Åtte kolonner, samme rytme som .hist-chips. */
+/* To rader à fire, ikke én à åtte: «Elektronisk produksjon» blir avkortet til
+   «Elektronisk pro…» når åtte navn skal dele bredden. */
+.instr-chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 16px;
+}
+@media (min-width: 560px) { .instr-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* .btn tas med i selektoren: ellers vinner `.btn.ghost { background }` på to
+   klasser over en ren .instr-chip-regel, og aktiv-fargen slår aldri gjennom. */
+.instr-chip.btn {
+  width: 100%;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.instr-chip.btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 .instr-single { font-size: 0.88rem; margin: 10px 0 14px; }
-/* Tidslinjen har egen luft (.tl-rich), så blokka trenger ikke mer under. */
+/* Tidslinjen har egen luft (.tl-rich), så seksjonen trenger ikke mer under. */
 .instr-tl .timeline { margin-bottom: 4px; }
 .instr-tl .gx-missing { margin: 10px 0 14px; }
+/* Sammendraget under tidslinjen — skrives av studentene, som resten av innholdet. */
+.instr-sum { border-top: 1px solid var(--line, #e5e7eb); margin-top: 6px; padding-top: 12px; }
+.instr-sum-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.instr-sum-head h3 { margin: 0; font-size: 1rem; }
+.instr-foot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
 /* ----- Endringsforslag-liste ----- */
 .pending-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }

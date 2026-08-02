@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.78";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.78";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.78";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.78";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.78";
-import { resolveDesc } from "./genre-descriptions.js?v=3.78";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.78";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.78";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.79";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.79";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.79";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.79";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.79";
+import { resolveDesc } from "./genre-descriptions.js?v=3.79";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.79";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.79";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.78";
-import { $ } from "./shared.js?v=3.78";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.78";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.79";
+import { $ } from "./shared.js?v=3.79";
+import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.79";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -284,10 +284,19 @@ export function openTechAdmin() {
 // innovasjon». Popupen legger seg OPPÅ det du kom fra (kortet eller lista), så
 // skjemaet aldri er noe man må rulle nedover i en lang liste for å finne.
 // t === null → tomt skjema (nytt kort).
-export function openTechEditor(t) {
-  fillTechForm(t);
+// t = eksisterende kort, eller null for et nytt. `preset` forhåndsutfyller et
+// NYTT kort (Instrumenter-seksjonen sender { instrument, category }).
+// NB: preset må aldri sendes som `t` — fillTechForm ville da satt editId til
+// strengen "undefined" (t er sann, t.id finnes ikke), og lagringen hadde
+// skrevet til et dokument med den ID-en i stedet for å opprette et nytt.
+export function openTechEditor(t, preset = null) {
+  fillTechForm(t, preset);
   const title = document.getElementById("tech-single-title");
-  if (title) title.textContent = t ? `Rediger — ${t.name}` : "Ny innovasjon";
+  if (title) {
+    title.textContent = t ? `Rediger — ${t.name}`
+      : preset?.instrument ? `Nytt kort — ${preset.instrument}`
+      : "Ny innovasjon";
+  }
   openAdminModal("modal-tech-single");
 }
 
@@ -354,14 +363,14 @@ function renderTechAdmin() {
   });
 }
 
-function fillTechForm(t) {
+function fillTechForm(t, preset = null) {
   document.getElementById("tech-name").value = t ? t.name || "" : "";
-  document.getElementById("tech-category").value = t ? t.category || "" : "";
+  document.getElementById("tech-category").value = t ? t.category || "" : (preset?.category || "");
   // Instrumentgruppen avgjør hvilken tidslinje kortet havner på i Instrumenter-
   // seksjonen. Tomt = kortet vises kun under Teknologi.
   fillSelect(document.getElementById("tech-instrument"), INSTRUMENT_TIMELINE_GROUPS,
     { placeholder: "Ingen / gjelder ikke ett instrument" });
-  document.getElementById("tech-instrument").value = t ? t.instrument || "" : "";
+  document.getElementById("tech-instrument").value = t ? t.instrument || "" : (preset?.instrument || "");
   document.getElementById("tech-kilder").value =
     t && Array.isArray(t.kilder) ? t.kilder.join("\n") : "";
   document.getElementById("tech-invented").value = t ? t.inventedYear || "" : "";
@@ -372,7 +381,7 @@ function fillTechForm(t) {
   document.getElementById("tech-image-url").value = t ? t.imageUrl || "" : "";
   document.getElementById("tech-image-credit").value = t ? t.imageCredit || "" : "";
   document.getElementById("tech-msg").textContent = "";
-  document.getElementById("tech-save").dataset.editId = t ? t.id : "";
+  document.getElementById("tech-save").dataset.editId = t?.id || "";
 }
 
 export function setupTechAdmin() {

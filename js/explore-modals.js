@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.78";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.78";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.79";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.79";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -39,7 +39,7 @@ export const MODAL_HTML = `
       <h2>Instrumenter</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:6px;font-size:0.9rem">Sentrale nyvinninger for hvert instrument, tiår for tiår. Trykk på et navn for å åpne kortet. Savner du noe? Foreslå et nytt kort — læreren godkjenner det før det vises.</p>
+    <div class="instr-chips" id="instr-chips"></div>
     <div id="instr-body"></div>
   </div>
 </div>

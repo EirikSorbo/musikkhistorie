@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.78";
-import { isMainGenre } from "./genealogy.js?v=3.78";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.78";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.78";
-import { mergeHeatRows } from "./import-format.js?v=3.78";
+import { firebaseConfig } from "./firebase-config.js?v=3.79";
+import { isMainGenre } from "./genealogy.js?v=3.79";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.79";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.79";
+import { mergeHeatRows } from "./import-format.js?v=3.79";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -852,6 +852,9 @@ function pendingEditTargetRef(entityType, entityId) {
     // entityType beholdes som «subgenre» for bakoverkompat med eksisterende
     // pendingEdits-dokumenter; målet er nå genreDescriptions-samlingen.
     case "subgenre":       return doc(db, "genreDescriptions", entityId);
+    // Instrumentsammendraget er en innholdsside (content/instrument-<slug>) og
+    // kan opprettes ved første godkjente forslag — derfor ikke i mustExist.
+    case "instrument":     return doc(db, "content", entityId);
     case "decade-society": return doc(db, "decades", String(entityId));
     case "decade-tech":    return doc(db, "decades", String(entityId));
     default:               return null;

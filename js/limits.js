@@ -63,6 +63,20 @@ export function instrumentGroup(instrument) {
   return INSTRUMENT_TO_GROUP[instrument] || null;
 }
 
+// Dokument-ID for instrumentgruppens sammendrag i `content`-samlingen — samme
+// sted som Om historie og Røtter. Utledet, men rensket: Firestore-ID-er tåler
+// ikke skråstrek («Trommer/perkusjon» er en artistverdi, ikke et gruppenavn, så
+// gruppene er trygge i dag — men rensingen står her så en fremtidig gruppe med
+// skråstrek eller æøå ikke kan lage et ulovlig dokumentnavn i stillhet).
+export function instrumentPageId(group) {
+  const slug = String(group || "")
+    .toLowerCase()
+    .replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `instrument-${slug}`;
+}
+
 // Tiårene appen dekker — strukturakse for histogram, filtre, tiårs-
 // beskrivelser og Skrivebordet. Utvides her når 2030-tallet melder seg.
 export const DECADES = [

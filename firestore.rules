@@ -171,7 +171,7 @@ service cloud.firestore {
           "entityType", "entityId", "entityName", "proposedFields",
           "proposedBy", "level", "createdAt"
         ]) &&
-        request.resource.data.entityType in ["artist", "tech", "subgenre", "decade-society", "decade-tech"] &&
+        request.resource.data.entityType in ["artist", "tech", "subgenre", "instrument", "decade-society", "decade-tech"] &&
         request.resource.data.entityId is string &&
         request.resource.data.entityId.size() <= 200 &&
         request.resource.data.proposedFields is map &&
