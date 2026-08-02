@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.82";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.82";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.83";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.83";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -35,14 +35,14 @@ export const MODAL_HTML = `
      NB: markupen her er én stor template-literal — ingen backticks i teksten. -->
 <div class="modal-backdrop" id="modal-instrumenter">
   <div class="modal modal-wide">
-    <div class="modal-head">
-      <h2>Instrumenter</h2>
+    <!-- Hovedfanene ligger I hodet, på samme rad som ←/✕, i stedet for en
+         tittel: «Instrumenter» sa ikke annet enn det fanene allerede sier.
+         Tittelen beholdes for skjermlesere, som ellers mistet modalens navn. -->
+    <div class="modal-head modal-head-tabs">
+      <h2 class="sr-only">Instrumenter</h2>
+      <div class="instr-tabs" id="instr-tabs"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <!-- Hovedfaner: utvikling (standard) og podkaster. Podkastene lå tidligere
-         som eget dashbordkort; de hører sammen med instrumentene fordi
-         studentenes episoder handler om dem. -->
-    <div class="instr-tabs" id="instr-tabs"></div>
     <div id="instr-utvikling">
       <div class="instr-chips" id="instr-chips"></div>
       <div id="instr-body"></div>

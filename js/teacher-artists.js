@@ -4,16 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.82";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.82";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.82";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.82";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.82";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.82";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.82";
-import { debounce } from "./util.js?v=3.82";
-import { $ } from "./shared.js?v=3.82";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.82";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=3.83";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=3.83";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=3.83";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=3.83";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=3.83";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=3.83";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=3.83";
+import { debounce } from "./util.js?v=3.83";
+import { $ } from "./shared.js?v=3.83";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=3.83";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(

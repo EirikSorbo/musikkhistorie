@@ -967,11 +967,37 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* ----- Instrumenter: fane per gruppe, én tidslinje + sammendrag om gangen -----
    Fanene har samme rolle som sjangerhistorienes chips: alle tidslinjene under
    hverandre ble uoversiktlig. Åtte kolonner, samme rytme som .hist-chips. */
-/* Hovedfanene (utvikling / podkaster) — større og tydeligere enn
-   instrumentfanene under, så nivåforskjellen er synlig. */
-.instr-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.instr-tab.btn { font-size: 0.86rem; padding-left: 14px; padding-right: 14px; }
-.instr-tab.btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* Skjult for øyet, lest av skjermlesere. Brukt til modaltitler som er erstattet
+   av faner — uten den mister modalen sitt tilgjengelige navn. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Hovedfanene (utvikling / podkaster) ligger I modalhodet, på samme rad som
+   ←/✕. Ekte fane-preg: ingen ramme, understrek på den aktive, og en tynn linje
+   langs hele hodet som fanene «sitter på». */
+.modal-head-tabs { align-items: flex-end; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.modal-head-tabs .modal-close,
+.modal-head-tabs .modal-close-all { margin-bottom: 6px; }
+.instr-tabs { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+.instr-tab.btn {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 8px 10px;
+  margin-bottom: -1px;             /* legger understreken oppå hodets linje */
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.instr-tab.btn:hover { background: none; color: var(--text); }
+.instr-tab.btn.active {
+  background: none;
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
 
 /* To rader à fire, ikke én à åtte: «Elektronisk produksjon» blir avkortet til
    «Elektronisk pro…» når åtte navn skal dele bredden. */
@@ -982,6 +1008,9 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   margin-bottom: 16px;
 }
 @media (min-width: 560px) { .instr-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Skiller knappevalget fra innholdet under — samme tynne strek som over
+   tidslinjen, så de to seksjonsgrensene ser like ut. */
+.instr-chips { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 /* .btn tas med i selektoren: ellers vinner `.btn.ghost { background }` på to
    klasser over en ren .instr-chip-regel, og aktiv-fargen slår aldri gjennom. */
 .instr-chip.btn {
@@ -992,10 +1021,19 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Uvalgt: en lys tone av instrumentets egen farge, så alle åtte er fargekodet
+     hele tiden — ikke bare den som er valgt (som sjangerhistorienes chips). */
+  color: var(--instr-color, var(--text));
+  background: color-mix(in srgb, var(--instr-color, var(--line)) 14%, #fff);
+  border-color: color-mix(in srgb, var(--instr-color, var(--line)) 45%, transparent);
+}
+.instr-chip.btn:hover {
+  background: color-mix(in srgb, var(--instr-color, var(--line)) 24%, #fff);
+  border-color: var(--instr-color, var(--line));
 }
 .instr-chip.btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--instr-color, var(--accent));
+  border-color: var(--instr-color, var(--accent));
   color: #fff;
 }
 .instr-single { font-size: 0.88rem; margin: 10px 0 14px; }

@@ -43,6 +43,34 @@ export const INSTRUMENT_GROUPS = {
   "Annet": ["Annet"],
 };
 
+// Overskriften over hvert instrumentsammendrag. Skrives ut i sin helhet fordi
+// norsk genitiv ikke lar seg utlede mekanisk — «Tangentenes», «Trommenes» og
+// «Den elektroniske produksjonens» følger tre ulike mønstre.
+export const INSTRUMENT_TITLE = {
+  "Vokal": "Vokalens utvikling",
+  "Gitar": "Gitarens utvikling",
+  "Tangenter": "Tangentenes utvikling",
+  "Bass": "Bassens utvikling",
+  "Trommer": "Trommenes utvikling",
+  "Soloinstrument": "Soloinstrumentenes utvikling",
+  "Elektronisk produksjon": "Den elektroniske produksjonens utvikling",
+  "Låtskriving": "Låtskrivingens utvikling",
+};
+
+// Farge per instrumentgruppe, som metasjangrene har i sjangerhistoriene. Egen
+// palett — bevisst andre kulører enn slektstreets familiefarger, så et
+// instrument aldri kan forveksles med en sjangerfamilie.
+export const INSTRUMENT_COLOR = {
+  "Vokal": "#be123c",                    // rose
+  "Gitar": "#c2410c",                    // brent oransje
+  "Tangenter": "#4338ca",                // indigo
+  "Bass": "#0f766e",                     // mørk turkis
+  "Trommer": "#a16207",                  // okergul
+  "Soloinstrument": "#15803d",           // grønn
+  "Elektronisk produksjon": "#7e22ce",   // fiolett
+  "Låtskriving": "#0369a1",              // himmelblå
+};
+
 // Gruppene som får egen nyvinnings-tidslinje i Instrumenter-seksjonen.
 // «Annet» er utelatt (se over) — alt annet følger med automatisk når en ny
 // gruppe legges inn over.

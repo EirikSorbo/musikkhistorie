@@ -16,13 +16,13 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=3.82";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=3.82";
-import { INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=3.82";
-import { pageFor, renderStoryHtml } from "./story-format.js?v=3.82";
-import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=3.82";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=3.82";
-import { openTechDetail } from "./explore-tech.js?v=3.82";
+import { modalOpen, escapeHtml } from "./ui.js?v=3.83";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=3.83";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=3.83";
+import { pageFor, renderStoryHtml } from "./story-format.js?v=3.83";
+import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=3.83";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=3.83";
+import { openTechDetail } from "./explore-tech.js?v=3.83";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -85,8 +85,11 @@ function renderPodkast() {
 function renderChips() {
   const chips = document.getElementById("instr-chips");
   if (!chips || chips.dataset.filled) return;
+  // --instr-color per knapp; CSS bruker den til kant, tekst og fyll når knappen
+  // er aktiv — samme mønster som sjangerhistorienes chips.
   chips.innerHTML = INSTRUMENT_TIMELINE_GROUPS.map((g) =>
-    `<button type="button" class="btn ghost small instr-chip" data-instr="${escapeHtml(g)}">${escapeHtml(g)}</button>`
+    `<button type="button" class="btn ghost small instr-chip" data-instr="${escapeHtml(g)}"` +
+    ` style="--instr-color:${INSTRUMENT_COLOR[g] || "var(--accent)"}">${escapeHtml(g)}</button>`
   ).join("");
   chips.querySelectorAll(".instr-chip").forEach((b) =>
     b.addEventListener("click", () => renderGroup(b.dataset.instr)));
@@ -127,7 +130,7 @@ function renderGroup(group) {
   body.innerHTML = `
     <div class="instr-sum">
       <div class="instr-sum-head">
-        <h3>${escapeHtml(group)} — utvikling</h3>
+        <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `${group} — utvikling`)}</h3>
         <div class="spacer"></div>
         <div class="instr-sum-actions"></div>
       </div>
@@ -144,9 +147,14 @@ function renderGroup(group) {
     sum.innerHTML = renderStoryHtml(page.body, lc);
     wireLinks(sum, lc);
   } else {
-    sum.innerHTML = `<p class="gx-missing">${s.contentLoaded
-      ? `Sammendraget for ${escapeHtml(group)} er ikke skrevet ennå.`
-      : "Laster innhold …"}</p>`;
+    // Teksten peker på HVEM som skriver den, ikke bare at den mangler —
+    // «podkast» er en lenke til podkastfanen, der gruppene ligger.
+    sum.innerHTML = s.contentLoaded
+      ? `<p class="gx-missing">Teksten skrives av gruppen som lager ` +
+        `<button type="button" class="sh-linkbtn" id="instr-til-podkast">podkast</button>` +
+        ` om instrumentets utvikling.</p>`
+      : `<p class="gx-missing">Laster innhold …</p>`;
+    sum.querySelector("#instr-til-podkast")?.addEventListener("click", () => selectTab("podkast"));
   }
 
   // Rediger (lærer) eller Foreslå endring (student) på sammendraget.
@@ -159,7 +167,7 @@ function renderGroup(group) {
     sumActions.querySelector("button").addEventListener("click", () => opts.onProposeEdit({
       entityType: "instrument",
       entityId: pageId,
-      entityName: `${group} — utvikling`,
+      entityName: INSTRUMENT_TITLE[group] || `${group} — utvikling`,
       currentValues: { body: page?.body || "" },
     }));
   }
