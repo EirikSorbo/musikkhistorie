@@ -5,18 +5,18 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=3.86";
-import { showSjangerInfo } from "./genealogy.js?v=3.86";
-import { MODAL_HTML } from "./explore-modals.js?v=3.86";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=3.86";
-import { openVarmekart } from "./explore-varmekart.js?v=3.86";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=3.86";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=3.86";
-import { openDecadeList } from "./explore-decade.js?v=3.86";
-import { openKart } from "./explore-kart.js?v=3.86";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=3.86";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=3.86";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=3.86";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=3.87";
+import { showSjangerInfo } from "./genealogy.js?v=3.87";
+import { MODAL_HTML } from "./explore-modals.js?v=3.87";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=3.87";
+import { openVarmekart } from "./explore-varmekart.js?v=3.87";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=3.87";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=3.87";
+import { openDecadeList } from "./explore-decade.js?v=3.87";
+import { openKart } from "./explore-kart.js?v=3.87";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=3.87";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=3.87";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=3.87";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -33,6 +33,24 @@ function wireModals() {
    "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+
+  // Kategori- og instrumentlenkene på innovasjonskortene (techFactsLines).
+  // Delegert på document fordi kortene rendres tre steder — Teknologi-lista,
+  // detaljmodalen og lærerens admin-liste — og alle skal oppføre seg likt.
+  // stopPropagation: kortet selv åpner detaljvisningen ved klikk.
+  document.addEventListener("click", (e) => {
+    const kat = e.target.closest("[data-tech-cat]");
+    if (kat) {
+      e.preventDefault(); e.stopPropagation();
+      openTeknologi(kat.dataset.techCat);
+      return;
+    }
+    const instr = e.target.closest("[data-tech-instr]");
+    if (instr) {
+      e.preventDefault(); e.stopPropagation();
+      openInstrumenter("utvikling", instr.dataset.techInstr);
+    }
+  });
 
   // Tidslinjens hover-kort er position:fixed — fjern det når modalen lukkes på
   // ANY måte (Escape/backdrop/«Lukk alle»), ellers kan det bli hengende svevende

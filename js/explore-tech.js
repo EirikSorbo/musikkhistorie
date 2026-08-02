@@ -4,8 +4,8 @@
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=3.86";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=3.86";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=3.87";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=3.87";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
@@ -63,10 +63,13 @@ export function refreshTechDetail() {
 }
 
 
-export function openTeknologi() {
-  renderTeknologiList("");
+// `category` åpner seksjonen med den fanen alt valgt — brukt av kategori-lenka
+// på innovasjonskortene. Uten argument vises alle kortene, som før.
+export function openTeknologi(category = "") {
+  renderTeknologiList(category);
   const modal = document.getElementById("modal-teknologi");
-  modal.querySelectorAll(".tech-tab").forEach(b => b.classList.toggle("active", !b.dataset.techCat));
+  modal.querySelectorAll(".tech-tab").forEach(b =>
+    b.classList.toggle("active", (b.dataset.techCat || "") === category));
   modalOpen(modal);
 }
 

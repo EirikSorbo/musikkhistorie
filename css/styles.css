@@ -570,6 +570,15 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .facts { margin: 6px 0 10px; }
 .facts p { margin: 0 0 2px; font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
 .facts strong { color: var(--text); font-weight: 600; }
+/* Klikkbare faktaverdier (kategori/instrument på innovasjonskortene). Skal se
+   ut som resten av linja — kun understrek og pekefinger røper at den er en
+   lenke, så formateringen fra v3.81 beholdes. */
+.facts-link {
+  font: inherit; color: inherit; background: none; border: 0; padding: 0;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.facts-link:hover { color: var(--accent); text-decoration-color: currentColor; }
 
 /* Beslektede artister i detaljmodalen (#5) */
 .related { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }

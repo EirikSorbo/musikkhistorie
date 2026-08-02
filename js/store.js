@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.86";
-import { isMainGenre } from "./genealogy.js?v=3.86";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.86";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.86";
-import { mergeHeatRows } from "./import-format.js?v=3.86";
+import { firebaseConfig } from "./firebase-config.js?v=3.87";
+import { isMainGenre } from "./genealogy.js?v=3.87";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.87";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.87";
+import { mergeHeatRows } from "./import-format.js?v=3.87";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den

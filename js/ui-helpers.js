@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.86";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.86";
-import { GENDERS } from "./limits.js?v=3.86";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.87";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.87";
+import { GENDERS } from "./limits.js?v=3.87";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -346,8 +346,16 @@ export function factsLines(a, { showGender = false } = {}) {
 export function factsHtml(rows) {
   const fylte = rows.filter(([, v]) => v != null && String(v).trim() !== "");
   if (!fylte.length) return "";
-  return `<div class="facts">${fylte.map(([l, v]) =>
-    `<p><strong>${escapeHtml(l)}:</strong> ${escapeHtml(v)}</p>`).join("")}</div>`;
+  // Tredje element gjør verdien klikkbar: { attr } settes som data-attributt med
+  // verdien selv, og kalleren kobler lytteren (delegert i explore.js). Attributt-
+  // navnet kommer fra koden, aldri fra data.
+  return `<div class="facts">${fylte.map(([l, v, lenke]) => {
+    const tekst = escapeHtml(String(v));
+    const verdi = lenke
+      ? `<button type="button" class="facts-link" ${lenke.attr}="${tekst}">${tekst}</button>`
+      : tekst;
+    return `<p><strong>${escapeHtml(l)}:</strong> ${verdi}</p>`;
+  }).join("")}</div>`;
 }
 
 // Faktalinjer på innovasjonskortet. Erstattet fargede bobler (v3.81), så
@@ -358,8 +366,13 @@ export function techFactsLines(t) {
     // Typen vises kun på hendelseskort — innovasjon er normalen og trenger
     // ingen etikett. Hendelser har til gjengjeld ingen kategori.
     ["Type", t?.type === "hendelse" ? "Viktig hendelse" : ""],
-    ["Instrument", t.instrument],
-    ["Kategori", t.category],
+    // Kategori og instrument er klikkbare: de fører til henholdsvis
+    // Teknologi-seksjonen filtrert på kategorien, og Instrumenter-seksjonen
+    // på det instrumentet. (Boblene de erstattet var rene spans — dette er ny
+    // funksjonalitet, ikke gjenoppretting.)
+    ["Kategori", t.category, { attr: "data-tech-cat" }],
+    ["Instrument", t.instrument, { attr: "data-tech-instr" }],
+    ["Oppfunnet", t.inventedYear],
     ["Årstall", t.adoptedLabel],
   ]);
 }
