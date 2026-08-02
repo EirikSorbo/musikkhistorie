@@ -1774,6 +1774,26 @@ body.is-teacher #gate { display: none; }
    .vk-cell er de usynlige tiårsfeltene oppå: treffområder for hjelpetekst og
    lærerens klikk. De har ALDRI egen bakgrunn i hvile — får de det, er vi tilbake
    til firkantene. Hover/fokus er derfor et lyst slør, ikke en ramme. */
+/* Tiårsaksen over en varmestripe. Like kolonner og INGEN luft, så
+   etikettmidtene treffer segmentmidtene i stripa under på prosenten. Delt av
+   varmekartet og sjangerkortet, så de to aldri kan drive fra hverandre. */
+.hs-axis {
+  display: grid;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Varmelinja øverst på sjangerkortet: tyngdepunktet gjennom historien, over
+   selve teksten. Litt luft under, så den ikke klistrer seg til era-linja. */
+.gx-heat { margin: 0 0 14px; }
+.gx-heat .hs-axis { margin-bottom: 3px; }
+.gx-heat-missing {
+  margin: 5px 0 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
 /* Å knytte navnet til riktig stripe var vanskelig i en gruppe med mange rader
    (Jazz har 12). Derfor lyser HELE raden opp under pekeren — båndet går tvers
    over både etiketten og stripa, så øyet kobler dem uten å telle linjer.

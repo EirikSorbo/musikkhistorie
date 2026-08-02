@@ -7,11 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.92";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.92";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.92";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.92";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.92";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.93";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.93";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.93";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.93";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.93";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=3.93";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -179,6 +180,26 @@ export function resolveMainDesc(genreDescs, genreId) {
     : resolveDesc(genreDescs, genreId, "main");
 }
 
+// Varmelinja øverst på sjangerkortet: samme glidende stripe som i varmekartet,
+// med tiårene over — så man ser sjangerens tyngdepunkt gjennom historien før man
+// leser et eneste ord. Fargen er nodens egen familiefarge fra treet.
+//
+// Vises kun for ekte tre-sjangre (n.g) og kun når nivåene faktisk er lastet:
+// tre.html laster ikke innhold i det hele tatt, og da er en tom grå linje verre
+// enn ingen linje. Er nivåene lastet, men sjangeren mangler rad, står stripa
+// som «ingen data» med en forklarende linje under — samme sannhet som
+// varmekartet forteller.
+function heatStripBlock(n) {
+  const heat = getHeatData();
+  if (!n.g || !heat) return "";
+  const vals = heatRow(heat, n.l);
+  const color = FAMILIES[n.fam]?.stroke || FAMILIES.gray.stroke;
+  const tom = vals.every((v) => v == null);
+  return `<div class="gx-heat">${heatAxisHtml()}${heatStripHtml(color, vals)}` +
+    (tom ? `<p class="gx-heat-missing">Ingen varmekart-nivåer for denne sjangeren ennå.</p>` : "") +
+    `</div>`;
+}
+
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, genreDescs, onShowArtists }
 export function showSjangerInfo(label, opts = {}) {
@@ -211,6 +232,7 @@ export function showSjangerInfo(label, opts = {}) {
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
   mTitle.textContent = n.f;
   mBody.innerHTML = `
+    ${heatStripBlock(n)}
     <p class="gx-era">${escapeHtml(n.era)}</p>
     <p class="gx-desc">${descText ? linkifyAll(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</p>
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>

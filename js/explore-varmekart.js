@@ -5,10 +5,11 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.92";
-import { DECADES } from "./limits.js?v=3.92";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.92";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.92";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.93";
+import { DECADES } from "./limits.js?v=3.93";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.93";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.93";
+import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=3.93";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -20,75 +21,10 @@ import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from
 // (2030-t) slår gjennom begge steder samtidig. Heat-radene er indeksbaserte og
 // vkRow padder korte rader, så en utvidelse er bakoverkompatibel.
 const VK_DECADES = DECADES;
-// Cellene fargelegges i hver sjangers familiefarge (fra slektstreet), mens
-// varmenivået (0–5) styrer lysheten: lyst = lite toneangivende, mørkt = mye.
-// Slik bærer ruten to akser samtidig — hvilken familie (kulør) og hvor sterk
-// (valør). VK_INK er en nøytral grå brukt i nivå-forklaringen.
+// Selve stripa — fargeskala, gradient og rad-oppslag — bor i heat-strip.js,
+// delt med sjangerkortet. VK_INK er en nøytral grå brukt i nivå-forklaringen.
 const VK_INK = "#5b6b7a";
-const hexToRgb = (h) => { h = h.replace("#", ""); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
-const rgbToHex = (c) => "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
-const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
-function heatColor(famHex, level) {
-  const base = hexToRgb(famHex), white = [255, 255, 255], black = [0, 0, 0];
-  const t = level / 5;                              // 0 (lys) … 1 (mørk)
-  const tint = mix(white, base, 0.12 + 0.88 * t);  // hvitt → familiefarge
-  return rgbToHex(mix(tint, black, 0.12 * t));      // mørkne toppen litt for valør
-}
-
-// ---------------------------------------------------------------------------
-//  GLIDENDE STRIPE — én sammenhengende linje per sjanger
-// ---------------------------------------------------------------------------
-//  Raden var 13 avrundede bolker med luft mellom seg: hvert tiår sto som en
-//  egen firkant, og fargespranget mellom naboer ble en hard kant. Nå tegnes hele
-//  raden som ÉN CSS-gradient, der hvert tiår har en flat midtdel og myke
-//  overganger ut mot naboene.
-//
-//  Profilen per tiår (brukerens tredeling, men rampet i stedet for tre flate
-//  trinn — ellers hadde vi bare byttet 13 firkanter mot 39):
-//
-//      |‾‾‾‾‾‾‾|          midtre tredel = tiårets EGEN verdi, uendret,
-//     /         \         så nivået fortsatt kan leses av
-//    /           \        ytre tredeler = rampe mot nabogrensen
-//
-//  Grensefargen er MIDTPUNKTET mellom de to tiårene. Det er nøkkelen til at
-//  sømmen forsvinner helt: begge sider regner ut nøyaktig samme farge på samme
-//  x, så gradienten er kontinuerlig. Har naboen samme verdi, ER midtpunktet
-//  tiårets egen verdi, og grensen synes ikke i det hele tatt — akkurat kravet
-//  om at det bare skal skje «hvis og bare hvis» naboen er en annen temperatur.
-//  Størrelsen på nyansen følger da av seg selv hvor stort spranget er.
-//
-//  «Ingen data» blander seg bevisst IKKE inn i naboene: det segmentet får harde
-//  kanter, så et hull aldri kan se ut som en målt verdi.
-const VK_SEG = 100 / VK_DECADES.length;   // ett tiårs bredde i prosent
-const VK_NODATA = "#eef2f0";
-
-function heatGradient(famHex, vals) {
-  const col = (lvl) => heatColor(famHex, lvl);
-  const stops = [];
-  const push = (pos, c) => stops.push(`${c} ${pos.toFixed(3)}%`);
-  vals.forEach((v, i) => {
-    const x0 = i * VK_SEG, x1 = x0 + VK_SEG;
-    if (v == null) { push(x0, VK_NODATA); push(x1, VK_NODATA); return; }
-    const prev = vals[i - 1], next = vals[i + 1];
-    // Mangler naboen (kant eller hull), er «midtpunktet» vår egen verdi —
-    // stripa flater ut mot kanten i stedet for å tone mot ingenting.
-    push(x0, col(prev == null ? v : (prev + v) / 2));
-    push(x0 + VK_SEG / 3, col(v));
-    push(x1 - VK_SEG / 3, col(v));
-    push(x1, col(next == null ? v : (next + v) / 2));
-  });
-  return `linear-gradient(to right,${stops.join(",")})`;
-}
-
-// Rad-oppslag: alltid 13 celler (VK_DECADES), manglende/korte rader fylles
-// med null («ingen data») — så cellene alltid kan klikkes og redigeres.
-function vkRow(heat, sj) {
-  const raw = heat?.[sj];
-  return VK_DECADES.map((_, i) => {
-    const v = Array.isArray(raw) ? raw[i] : null;
-    return Number.isInteger(v) && v >= 0 && v <= 5 ? v : null;
-  });
-}
+const vkRow = heatRow;
 
 // Husker hvilken metagruppe som står åpen, så redigering (som re-rendrer
 // gjennom contentChanged) ikke klapper akkordeonen sammen igjen.
@@ -101,7 +37,6 @@ export function renderVarmekartBody() {
   const s = getState();
   const heat = s.content?.varmekart?.heat || null;
   const hasData = !!heat && Object.keys(heat).length > 0;
-  const cols = VK_DECADES.length;
   // Raden er nå to spor: etiketten og ÉN sammenhengende stripe. Tiårsoverskriftene
   // ligger i et eget 13-kolonners rutenett UTEN luft inni stripe-sporet, så
   // etikettmidtene treffer segmentmidtene på prosenten.
@@ -115,9 +50,8 @@ export function renderVarmekartBody() {
   }
   html += `<div style="overflow-x:auto"><div style="min-width:600px">`;
   html += `<div style="${gridStyle};align-items:end;margin-bottom:6px"><div></div>`;
-  html += `<div style="display:grid;grid-template-columns:repeat(${cols},1fr)">`;
-  html += VK_DECADES.map((d) => `<div style="text-align:center;font-size:0.72rem;color:var(--muted)">${d}</div>`).join("");
-  html += `</div></div>`;
+  html += heatAxisHtml();   // delt tiårsakse, samme som på sjangerkortet
+  html += `</div>`;
 
   const firstHot = (sj) => { const i = vkRow(heat, sj).findIndex((v) => v > 0); return i < 0 ? 99 : i; };
 
@@ -171,20 +105,16 @@ export function renderVarmekartBody() {
       // margin utenfor — margin ville falt utenfor båndet.
       html += `<div class="vk-row" style="${gridStyle};margin-bottom:2px;padding:2px 0">`;
       html += `<div class="vk-rowlabel" style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
-      // Selve stripa: gradienten bærer HELE raden. Oppå ligger 13 usynlige
-      // tiårsfelt — de er bare treffområder for hjelpetekst og (for læreren)
-      // klikk, og har ingen egen farge, så de kan ikke bryte opp linja igjen.
-      html += `<div class="vk-strip" style="background-image:${heatGradient(rowColor, vals)}">`;
-      html += vals.map((v, i) => {
+      // Stripa er den delte (heat-strip.js). Her byttes bare tiårsfeltene ut med
+      // varmekartets egne: full hjelpetekst, og for læreren klikkbare knapper.
+      html += heatStripHtml(rowColor, vals, (v, i, pos) => {
         const has = v != null;
         const title = `${sj} · ${meta} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}${opts.onHeatEdit ? " · klikk for å endre" : ""}`;
-        const pos = `left:${(i * VK_SEG).toFixed(3)}%;width:${VK_SEG.toFixed(3)}%`;
-        // Lærer: feltene er klikkbare (nivåvelger). Student: rene treffområder.
         return opts.onHeatEdit
           ? `<button type="button" class="vk-cell" data-vk-genre="${escapeHtml(sj)}" data-vk-idx="${i}" title="${escapeHtml(title)}" style="${pos}"></button>`
           : `<div class="vk-cell" title="${escapeHtml(title)}" style="${pos}"></div>`;
-      }).join("");
-      html += `</div></div>`;
+      });
+      html += `</div>`;
     }
     html += `</div>`;   // .vk-group-rows
     html += `</div>`;   // .vk-group
@@ -199,7 +129,7 @@ export function renderVarmekartBody() {
   const scale = [0, 1, 2, 3, 4, 5].map((v) => `${heatColor(VK_INK, v)} ${(v / 5 * 100).toFixed(0)}%`).join(",");
   html += `<span style="width:132px;height:10px;border-radius:5px;background:linear-gradient(to right,${scale})"></span>`;
   html += `<span>Mer</span>`;
-  html += `<span style="margin-left:14px;display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:10px;border-radius:5px;background:${VK_NODATA};border:1px dashed var(--line-strong)"></span>ingen data ennå</span>`;
+  html += `<span style="margin-left:14px;display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:10px;border-radius:5px;background:${HEAT_NODATA};border:1px dashed var(--line-strong)"></span>ingen data ennå</span>`;
   html += `</div>`;
 
   // Forklaring 2: fargene = slektstreets familier (kun de som faktisk vises).

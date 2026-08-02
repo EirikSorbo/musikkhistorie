@@ -8,13 +8,14 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=3.92";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.92";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.92";
-import { openTechDetail } from "./explore-tech.js?v=3.92";
-import { renderPage } from "./explore-innhold.js?v=3.92";
-import { openTidslinje } from "./explore-tidslinje.js?v=3.92";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=3.92";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=3.93";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.93";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.93";
+import { openTechDetail } from "./explore-tech.js?v=3.93";
+import { renderPage } from "./explore-innhold.js?v=3.93";
+import { openTidslinje } from "./explore-tidslinje.js?v=3.93";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=3.93";
+import { setHeatData } from "./heat-strip.js?v=3.93";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -97,6 +98,12 @@ export function showArtistsForInstrument(instrument) {
 // celleklikk): re-rendrer innholdsvisninger som står åpne, så endringen
 // slår gjennom uten å lukke/åpne modalen.
 export function contentChanged() {
+  // Varmenivåene legges igjen i heat-strip.js, der sjangerkortet (genealogy.js)
+  // henter dem. Kortet bygges et lag UNDER app-laget og kan ikke lese state
+  // herfra — explore-context importerer genealogy, så en import den andre veien
+  // ville lukket sirkelen. Dette er første og eneste snapshot-punktet, så linja
+  // på kortet er fersk fra første lasting og etter hver redigering.
+  setHeatData(getState().content?.varmekart?.heat || null);
   const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
   if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
   if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");
