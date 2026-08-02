@@ -1766,6 +1766,39 @@ body.is-teacher #gate { display: none; }
    ruta aldri stjeler hover fra prikken under og «blinker» av og på. */
 #sh-svg .sh-thumb { pointer-events: none; filter: drop-shadow(0 3px 8px rgba(16, 26, 19, 0.28)); }
 
+/* ----- Varmekart: én glidende stripe per sjanger -----
+   Raden var 13 avrundede bolker med luft imellom; nå er den ÉN stripe der
+   gradienten (bygd i explore-varmekart.js) bærer hele tidsforløpet. Høyden er
+   bevisst lav — stripa skal lese som en linje, ikke som en rad klosser — og
+   pille-radiusen gjør endene runde uten å dele opp innmaten.
+   .vk-cell er de usynlige tiårsfeltene oppå: treffområder for hjelpetekst og
+   lærerens klikk. De har ALDRI egen bakgrunn i hvile — får de det, er vi tilbake
+   til firkantene. Hover/fokus er derfor et lyst slør, ikke en ramme. */
+.vk-strip {
+  position: relative;
+  height: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.vk-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+button.vk-cell { cursor: pointer; }
+button.vk-cell:hover { background: rgba(255, 255, 255, 0.34); }
+button.vk-cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 3px;
+}
+
 /* Hover-kortet på tidslinjens blokker: bilde + navn + aktiv-periode. Ligger i
    <body> med fixed posisjon (settes i explore.js), så modalens scroll-boks ikke
    klipper det. pointer-events:none — kortet skal aldri stjele hoveren fra
