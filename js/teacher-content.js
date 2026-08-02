@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.80";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.80";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.80";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.80";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.80";
-import { resolveDesc } from "./genre-descriptions.js?v=3.80";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.80";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.80";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.81";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.81";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.81";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.81";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.81";
+import { resolveDesc } from "./genre-descriptions.js?v=3.81";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.81";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.81";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.80";
-import { $ } from "./shared.js?v=3.80";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.80";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.81";
+import { $ } from "./shared.js?v=3.81";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.81";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -320,13 +320,11 @@ function renderTechAdmin() {
   el.className = "tech-grid";
   el.innerHTML = filtered.map(t => {
     const img = techImage(t);
-    const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-    const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
     return `<article class="card" data-tech-id="${escapeHtml(t.id)}">
       <header class="card-head">
         ${img}
         <h3>${escapeHtml(t.name)}</h3>
-        <div class="meta">${yearTag}${catTag}</div>
+        ${techFactsLines(t)}
       </header>
       ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) })}</p>` : ""}
       <div class="card-foot teacher-card-actions" style="margin-top:auto;padding-top:8px">

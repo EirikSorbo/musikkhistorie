@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=3.80";
-import { fmtCredit, linkDesc, wireLinks, imgTag } from "./ui-helpers.js?v=3.80";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=3.81";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=3.81";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -38,11 +38,6 @@ export function renderTechList(el, items, activeCategory, lc) {
   }
   el.innerHTML = filtered.map(t => {
     const img = techImage(t);
-    const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-    // Instrumentgruppen vises kun når kortet har en — da er det også et
-    // instrumentkort og ligger på tidslinjen i Instrumenter-seksjonen.
-    const instrTag = t.instrument ? `<span class="tag tag-tech-instr">${escapeHtml(t.instrument)}</span>` : "";
-    const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
     const propBtn = lc?.isTeacher
       ? ""
       : `<footer class="card-foot"><div class="spacer"></div><button class="btn ghost small" data-propose-type="tech" data-propose-id="${escapeHtml(t.id)}">Foreslå endring</button></footer>`;
@@ -50,7 +45,7 @@ export function renderTechList(el, items, activeCategory, lc) {
       <header class="card-head">
         ${img}
         <h3>${escapeHtml(t.name)}</h3>
-        <div class="meta">${yearTag}${catTag}</div>
+        ${techFactsLines(t)}
       </header>
       ${t.description ? `<p class="desc">${linkDesc(t.description, lc)}</p>` : ""}
       ${propBtn}
@@ -61,10 +56,7 @@ export function renderTechList(el, items, activeCategory, lc) {
 
 export function renderTechDetail(el, t, lc) {
   const img = techImage(t);
-  const yearTag = t.adoptedLabel ? `<span class="tag tag-tech-year">${escapeHtml(t.adoptedLabel)}</span>` : "";
-  const catTag = `<span class="tag tag-tech-cat">${escapeHtml(t.category || "")}</span>`;
-  const instrTag = t.instrument ? `<span class="tag tag-tech-instr">${escapeHtml(t.instrument)}</span>` : "";
-  el.innerHTML = `${img}<div class="meta" style="margin:10px 0">${yearTag}${catTag}${instrTag}</div>`
+  el.innerHTML = `${img}${techFactsLines(t)}`
     + (t.description ? `<p>${linkDesc(t.description, lc)}</p>` : "")
     + buildKilderList(t.kilder, "Kilder");
   wireLinks(el, lc);

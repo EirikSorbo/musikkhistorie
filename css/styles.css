@@ -1050,10 +1050,6 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .tech-tabs-extra .btn { white-space: nowrap; }
 .tech-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
-.tag-tech-year { color: var(--accent); background: #eff6ff; border-color: #bfdbfe; font-weight: 600; }
-.tag-tech-cat { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
-/* Instrumentgruppe — vises kun på kort som også ligger på en instrumenttidslinje. */
-.tag-tech-instr { color: #0f766e; background: #f0fdfa; border-color: #99f6e4; font-weight: 600; }
 
 /* ----- Innstillinger-knapp i header (lærer) ----- */
 

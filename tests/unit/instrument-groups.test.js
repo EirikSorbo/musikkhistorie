@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   INSTRUMENT_GROUPS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, instrumentGroup,
-} from "../../js/limits.js?v=3.80";
-import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=3.80";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=3.80";
+} from "../../js/limits.js?v=3.81";
+import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=3.81";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=3.81";
 
 // To nivåer, som metaGenre over mainGenre: artistkortet beholder det PRESISE
 // instrumentet, tidslinjene ligger på GRUPPEN.
@@ -82,7 +82,7 @@ test("instrument og kilder er foreslåbare felter", () => {
 // --- Sammendragssiden per instrumentgruppe -----------------------------------
 
 test("instrumentPageId gir lovlige, stabile Firestore-ID-er", async () => {
-  const { instrumentPageId } = await import("../../js/limits.js?v=3.80");
+  const { instrumentPageId } = await import("../../js/limits.js?v=3.81");
   assert.equal(instrumentPageId("Gitar"), "instrument-gitar");
   assert.equal(instrumentPageId("Låtskriving"), "instrument-latskriving");
   assert.equal(instrumentPageId("Elektronisk produksjon"), "instrument-elektronisk-produksjon");

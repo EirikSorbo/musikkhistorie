@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.80";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.80";
-import { GENDERS } from "./limits.js?v=3.80";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.81";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.81";
+import { GENDERS } from "./limits.js?v=3.81";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -335,6 +335,25 @@ export function factsLines(a, { showGender = false } = {}) {
   if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel]);
   if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
   if (a.geography) rows.push(["Virkested", a.geography]);
-  if (!rows.length) return "";
-  return `<div class="facts">${rows.map(([l, v]) => `<p><strong>${l}:</strong> ${escapeHtml(v)}</p>`).join("")}</div>`;
+  return factsHtml(rows);
+}
+
+// Delt renderer for «etikett: verdi»-linjene. Fet etikett, vanlig verdi —
+// samme form på artistkort og innovasjonskort.
+export function factsHtml(rows) {
+  const fylte = rows.filter(([, v]) => v != null && String(v).trim() !== "");
+  if (!fylte.length) return "";
+  return `<div class="facts">${fylte.map(([l, v]) =>
+    `<p><strong>${escapeHtml(l)}:</strong> ${escapeHtml(v)}</p>`).join("")}</div>`;
+}
+
+// Faktalinjer på innovasjonskortet. Erstattet fargede bobler (v3.81), så
+// kortene leser likt som artistkortenes levetid/innflytelse. «Årstall» bærer
+// adoptedLabel, som ofte er en hel setning og aldri fikk plass i en boble.
+export function techFactsLines(t) {
+  return factsHtml([
+    ["Instrument", t.instrument],
+    ["Kategori", t.category],
+    ["Årstall", t.adoptedLabel],
+  ]);
 }
