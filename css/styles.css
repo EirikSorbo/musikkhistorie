@@ -1774,11 +1774,39 @@ body.is-teacher #gate { display: none; }
    .vk-cell er de usynlige tiårsfeltene oppå: treffområder for hjelpetekst og
    lærerens klikk. De har ALDRI egen bakgrunn i hvile — får de det, er vi tilbake
    til firkantene. Hover/fokus er derfor et lyst slør, ikke en ramme. */
+/* Å knytte navnet til riktig stripe var vanskelig i en gruppe med mange rader
+   (Jazz har 12). Derfor lyser HELE raden opp under pekeren — båndet går tvers
+   over både etiketten og stripa, så øyet kobler dem uten å telle linjer.
+   Bakgrunnen er det som bærer koblingen; halvfet etikett og en tynn ring rundt
+   stripa er bare forsterkning.
+   Bare hover-enheter får :hover — på berøring ville den hengt igjen etter et
+   trykk. Der settes .is-active fra JS i stedet (samme utseende), og
+   :focus-within tar tastaturet gjennom lærerens celleknapper. */
+.vk-row { border-radius: 8px; transition: background-color .12s; }
+@media (hover: hover) {
+  .vk-row:hover { background: var(--surface-2); }
+}
+.vk-row.is-active,
+.vk-row:focus-within { background: var(--surface-2); }
+
+.vk-rowlabel { transition: font-weight .12s; }
+.vk-row.is-active .vk-rowlabel,
+.vk-row:focus-within .vk-rowlabel { font-weight: 600; }
+@media (hover: hover) {
+  .vk-row:hover .vk-rowlabel { font-weight: 600; }
+}
+
 .vk-strip {
   position: relative;
   height: 15px;
   border-radius: 8px;
   overflow: hidden;
+  transition: box-shadow .12s;
+}
+.vk-row.is-active .vk-strip,
+.vk-row:focus-within .vk-strip { box-shadow: 0 0 0 1px var(--line-strong); }
+@media (hover: hover) {
+  .vk-row:hover .vk-strip { box-shadow: 0 0 0 1px var(--line-strong); }
 }
 .vk-cell {
   position: absolute;

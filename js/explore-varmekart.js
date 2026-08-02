@@ -5,10 +5,10 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.91";
-import { DECADES } from "./limits.js?v=3.91";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.91";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.91";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=3.92";
+import { DECADES } from "./limits.js?v=3.92";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.92";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=3.92";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -165,8 +165,12 @@ export function renderVarmekartBody() {
       const rowColor = MAIN_GENRE_INFO[sj]?.color || gColor;
       usedFams.add(MAIN_GENRE_INFO[sj]?.fam);
       const vals = vkRow(heat, sj);
-      html += `<div style="${gridStyle};margin-bottom:5px">`;
-      html += `<div style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
+      // Raden er ett fremhevings-mål (.vk-row): båndet under pekeren må dekke
+      // BÅDE etiketten og stripa, ellers hjelper det ikke å finne igjen linja.
+      // Den loddrette luften ligger derfor som padding inni raden, ikke som
+      // margin utenfor — margin ville falt utenfor båndet.
+      html += `<div class="vk-row" style="${gridStyle};margin-bottom:2px;padding:2px 0">`;
+      html += `<div class="vk-rowlabel" style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
       // Selve stripa: gradienten bærer HELE raden. Oppå ligger 13 usynlige
       // tiårsfelt — de er bare treffområder for hjelpetekst og (for læreren)
       // klikk, og har ingen egen farge, så de kan ikke bryte opp linja igjen.
@@ -214,6 +218,20 @@ export function renderVarmekartBody() {
   // selector-problemer med metanavn som «R&B».
   wireMetaAccordion(body, "vk", (wasOpen, group) => {
     vkOpenMeta = wasOpen ? "__ingen" : (group?.dataset.vkMeta || null);
+  });
+
+  // Fremheving av én rad. Hover-enheter får den fra CSS; berøring har ingen
+  // hover, så der låser et trykk raden i stedet (nytt trykk på samme rad slår
+  // den av, trykk på en annen flytter den). Klikk oppfører seg likt på
+  // pekerenheter — da kan man «feste» en rad mens man leser den.
+  // Lærerens celleklikk lever videre ved siden av: begge lytterne får hendelsen,
+  // så raden festes samtidig som nivåvelgeren åpnes.
+  body.querySelectorAll(".vk-row").forEach((row) => {
+    row.addEventListener("click", () => {
+      const wasActive = row.classList.contains("is-active");
+      body.querySelectorAll(".vk-row.is-active").forEach((r) => r.classList.remove("is-active"));
+      if (!wasActive) row.classList.add("is-active");
+    });
   });
 
   // Lærer: klikk på en celle åpner nivåvelgeren.
