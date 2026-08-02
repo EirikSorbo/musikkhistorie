@@ -16,13 +16,13 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=3.79";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=3.79";
-import { INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=3.79";
-import { pageFor, renderStoryHtml } from "./story-format.js?v=3.79";
-import { wireLinks } from "./ui-helpers.js?v=3.79";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=3.79";
-import { openTechDetail } from "./explore-tech.js?v=3.79";
+import { modalOpen, escapeHtml } from "./ui.js?v=3.80";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=3.80";
+import { INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=3.80";
+import { pageFor, renderStoryHtml } from "./story-format.js?v=3.80";
+import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=3.80";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=3.80";
+import { openTechDetail } from "./explore-tech.js?v=3.80";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -30,6 +30,57 @@ const INSTRUMENT_TECH_CATEGORY = "Instrumenter og lydutstyr";
 
 // Valgt fane huskes mellom åpninger, som sjangerhistoriene.
 let currentGroup = null;
+let currentTab = "utvikling";
+
+// Hovedfanene. Podkastene lå tidligere som eget dashbordkort — de hører hjemme
+// her fordi studentenes episoder handler om instrumentene.
+const TABS = [
+  { id: "utvikling", label: "Instrumentenes utvikling" },
+  { id: "podkast", label: "Podkaster" },
+];
+
+function renderTabs() {
+  const el = document.getElementById("instr-tabs");
+  if (!el) return;
+  if (!el.dataset.filled) {
+    el.innerHTML = TABS.map((t) =>
+      `<button type="button" class="btn ghost small instr-tab" data-tab="${t.id}">${escapeHtml(t.label)}</button>`
+    ).join("");
+    el.querySelectorAll(".instr-tab").forEach((b) =>
+      b.addEventListener("click", () => selectTab(b.dataset.tab)));
+    el.dataset.filled = "1";
+  }
+  el.querySelectorAll(".instr-tab").forEach((b) =>
+    b.classList.toggle("active", b.dataset.tab === currentTab));
+}
+
+function selectTab(tab) {
+  currentTab = TABS.some((t) => t.id === tab) ? tab : "utvikling";
+  renderTabs();
+  const utv = document.getElementById("instr-utvikling");
+  const pod = document.getElementById("instr-podkast");
+  if (utv) utv.hidden = currentTab !== "utvikling";
+  if (pod) pod.hidden = currentTab !== "podkast";
+  if (currentTab === "podkast") renderPodkast();
+  else renderUtvikling();
+}
+
+// Podkast-fanen: episodene lastes opp av lærer, så studentene ser bare lista.
+// Lærer får inngangen til opplastingsskjemaet her, siden dashbordkortet er borte.
+function renderPodkast() {
+  const el = document.getElementById("podkast-list");
+  const extra = document.getElementById("podkast-extra");
+  if (!el) return;
+  const s = getState();
+  el.innerHTML = s.podcasts.length
+    ? s.podcasts.map((ep) => podcastEpisodeHtml(ep)).join("")
+    : `<p class="muted empty" style="background:#fff">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`;
+  if (extra) {
+    extra.innerHTML = opts.onPodkastAdmin
+      ? `<button type="button" class="btn ghost small">Rediger episoder</button>` : "";
+    extra.querySelector("button")?.addEventListener("click", () => opts.onPodkastAdmin());
+  }
+}
 
 function renderChips() {
   const chips = document.getElementById("instr-chips");
@@ -99,10 +150,10 @@ function renderGroup(group) {
   // Rediger (lærer) eller Foreslå endring (student) på sammendraget.
   const sumActions = body.querySelector(".instr-sum-actions");
   if (opts.onPageEdit) {
-    sumActions.innerHTML = `<button type="button" class="btn ghost small">Rediger</button>`;
+    sumActions.innerHTML = `<button type="button" class="btn ghost small">Rediger sammendrag</button>`;
     sumActions.querySelector("button").addEventListener("click", () => opts.onPageEdit(pageId));
   } else if (opts.onProposeEdit) {
-    sumActions.innerHTML = `<button type="button" class="btn ghost small">Foreslå endring</button>`;
+    sumActions.innerHTML = `<button type="button" class="btn ghost small">Rediger sammendrag</button>`;
     sumActions.querySelector("button").addEventListener("click", () => opts.onProposeEdit({
       entityType: "instrument",
       entityId: pageId,
@@ -117,9 +168,9 @@ function renderGroup(group) {
   const foot = body.querySelector(".instr-foot");
   const knapper = [];
   if (opts.onTechEdit) {
-    knapper.push({ tekst: "Nytt kort", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
+    knapper.push({ tekst: "Legg til instrument-utvikling", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   } else if (opts.onProposeNewTech) {
-    knapper.push({ tekst: "Foreslå nytt kort", gjør: () => opts.onProposeNewTech({ instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
+    knapper.push({ tekst: "Legg til instrument-utvikling", gjør: () => opts.onProposeNewTech({ instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   }
   // Artistskjemaet åpnes UTEN forhåndsvalgt instrument (brukervalg): gruppenavnene
   // «Soloinstrument» og «Trommer» er ikke gyldige artistverdier — artisten skal
@@ -144,17 +195,23 @@ function renderGroup(group) {
   });
 }
 
-// Tegner på nytt uten å bytte fane — brukt når kort/innhold endres mens
-// seksjonen står åpen.
-export function renderInstrumenter() {
+function renderUtvikling() {
   renderChips();
   renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0]);
 }
 
-export function openInstrumenter(group) {
+// Tegner gjeldende fane på nytt — brukt når kort/episoder/innhold endres mens
+// seksjonen står åpen.
+export function renderInstrumenter() {
+  renderTabs();
+  selectTab(currentTab);
+}
+
+// `tab` kan være "podkast" for å åpne rett på podkastfanen.
+export function openInstrumenter(tab) {
   const modal = document.getElementById("modal-instrumenter");
   if (!modal) return;
-  renderChips();
-  renderGroup(typeof group === "string" ? group : (currentGroup || INSTRUMENT_TIMELINE_GROUPS[0]));
+  renderTabs();
+  selectTab(typeof tab === "string" ? tab : currentTab);
   modalOpen(modal);
 }

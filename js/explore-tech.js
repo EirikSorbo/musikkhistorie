@@ -1,12 +1,11 @@
 // ============================================================================
-//  TEKNOLOGI & PODKAST
+//  TEKNOLOGI
 // ----------------------------------------------------------------------------
-//  Innovasjonskort (detalj + liste) og podkast-lista. Flyttet ut av explore.js
+//  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=3.79";
-import { podcastEpisodeHtml } from "./ui-helpers.js?v=3.79";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=3.79";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=3.80";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=3.80";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
@@ -63,21 +62,6 @@ export function refreshTechDetail() {
   else modalClose(modal);
 }
 
-export function openPodkast() {
-  renderPodkastList();
-  modalOpen(document.getElementById("modal-podkast"));
-}
-
-function renderPodkastList() {
-  const el = document.getElementById("podkast-list");
-  if (!el) return;
-  const s = getState();
-  if (!s.podcasts.length) {
-    el.innerHTML = `<p class="muted empty" style="background:#fff">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`;
-    return;
-  }
-  el.innerHTML = s.podcasts.map((ep) => podcastEpisodeHtml(ep)).join("");
-}
 
 export function openTeknologi() {
   renderTeknologiList("");

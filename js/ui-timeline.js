@@ -7,10 +7,10 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.79";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.79";
-import { DECADES } from "./limits.js?v=3.79";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.79";
+import { escapeHtml } from "./util.js?v=3.80";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.80";
+import { DECADES } from "./limits.js?v=3.80";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.80";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -295,7 +295,10 @@ export function buildInstrumentTimeline(techItems, group) {
   return buildProportionalTimeline(
     items.map((t) => ({
       year: t.adoptedYear || null,
-      label: t.adoptedLabel || (t.adoptedYear ? String(t.adoptedYear) : "—"),
+      // KUN årstallet (brukervalg): adoptedLabel er fritekst som ofte er en hel
+      // setning («utviklet 1993, gjennombrudd sent på 1990-tallet»), og den
+      // sprengte den lille etiketten. Den lange formen står på selve kortet.
+      label: t.adoptedYear ? String(t.adoptedYear) : "",
       desc: t.name,
       techId: t.id,
     })),

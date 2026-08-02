@@ -26,13 +26,13 @@ import {
   runGenreLabelAlignment,
   runTranceDocIdMigration,
   runContentKeyAlignment,
-} from "./store.js?v=3.79";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.79";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.79";
-import { initExplore } from "./explore.js?v=3.79";
+} from "./store.js?v=3.80";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.80";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.80";
+import { initExplore } from "./explore.js?v=3.80";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.79";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.79";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.80";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.80";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -49,10 +49,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.79";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.79";
-import { renderDesk } from "./teacher-desk.js?v=3.79";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.79";
+} from "./teacher-content.js?v=3.80";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.80";
+import { renderDesk } from "./teacher-desk.js?v=3.80";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.80";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -139,6 +139,9 @@ function startApp() {
     // Sjekk-knapp i detaljvisningene (sjanger, historie, røtter, innovasjonskort).
     onCheck: (category, id, on) => setContentCheck(category, id, on),
     onTechEdit: (t, preset) => openTechEditor(t, preset),
+    // Podkast-administrasjonen nås nå fra Podkaster-fanen under Instrumenter
+    // (dashbordkortet er borte), så lærer fortsatt kan laste opp episoder.
+    onPodkastAdmin: () => openPodkastAdmin(),
     onTechDelete: (id) => {
       if (!confirm("Slette dette innovasjonskortet?")) return false;
       guardTeacherAction(deleteTech(id));
@@ -158,7 +161,6 @@ function startApp() {
   const btnStoreBildet = document.getElementById("btn-t-store-bildet");
   if (btnStoreBildet) btnStoreBildet.addEventListener("click", ctx.explore.openStoreBildet);
   $("#btn-t-oversikt").addEventListener("click", openOversikt);
-  $("#btn-t-podkast").addEventListener("click", openPodkastAdmin);
   const btnTInstr = document.getElementById("btn-t-instrumenter");
   if (btnTInstr) btnTInstr.addEventListener("click", ctx.explore.openInstrumenter);
   setupPodkastAdmin();

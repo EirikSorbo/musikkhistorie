@@ -8,10 +8,11 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=3.79";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES } from "./ui.js?v=3.79";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=3.79";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.79";
+import { addPendingEdit, addTechProposal } from "./store.js?v=3.80";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES } from "./ui.js?v=3.80";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=3.80";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.80";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.80";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -45,9 +46,9 @@ const FIELD_SPECS = {
     ] },
     { key: "decade", label: "Tiår (f.eks. 1950)", type: "text" },
     { key: "adoptedYear", label: "Innført år", type: "number" },
-    { key: "adoptedLabel", label: "Tidsangivelse", type: "text" },
+    { key: "adoptedLabel", label: "Årstall forklaring", type: "text" },
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
-    { key: "kilder", label: "Kilder (én per linje)", type: "lines", full: true },
+    { key: "kilder", label: "Kilder", type: "sources", full: true },
     { key: "imageUrl", label: "Bilde-URL", type: "text", full: true },
     { key: "imageCredit", label: "Bildekreditering", type: "text", full: true },
   ],
@@ -98,11 +99,13 @@ function inputForField(spec, value) {
     const display = Array.isArray(v) ? v.join(", ") : (v || "");
     return `${labelHtml}<input type="text" id="${id}" value="${escapeHtml(display)}" /></label>`;
   }
-  // «lines»: liste der hvert element er en hel linje (kilder). Komma duger ikke
-  // som skilletegn her — kildehenvisninger inneholder komma.
-  if (spec.type === "lines") {
-    const display = Array.isArray(v) ? v.join("\n") : (v || "");
-    return `${labelHtml}<textarea id="${id}" rows="3" placeholder="Én kilde per linje">${escapeHtml(display)}</textarea></label>`;
+  // «sources»: strukturerte kilder ({ text, url }) med samme rad-editor som
+  // artistskjemaet, så en kilde kan bære lenke. Radene bygges etter innsetting
+  // i DOM (fillSourceRows) — innerHTML her ville ikke fått med hendelsene.
+  if (spec.type === "sources") {
+    return `<div${fullClass}><span class="field-label">${escapeHtml(spec.label)}</span>` +
+      `<div id="${id}"></div>` +
+      `<button type="button" class="btn ghost small" data-add-src="${id}">+ Legg til kilde</button></div>`;
   }
   return `${labelHtml}<input type="text" id="${id}" value="${escapeHtml(v)}" /></label>`;
 }
@@ -117,10 +120,28 @@ function readField(spec) {
   if (spec.type === "csv") {
     return el.value.split(",").map((s) => s.trim()).filter(Boolean);
   }
-  if (spec.type === "lines") {
-    return el.value.split("\n").map((s) => s.trim()).filter(Boolean);
+  if (spec.type === "sources") {
+    return collectRows(el, SOURCE_SPEC).filter((k) => k.text);
   }
   return el.value.trim();
+}
+
+// Kilde-radene må bygges ETTER at skjemaet står i DOM — rowInnerHtml kobler
+// fjern-knappen per rad, og det overlever ikke en innerHTML-streng.
+function fillSourceRows(specs, values) {
+  for (const s of specs) {
+    if (s.type !== "sources") continue;
+    const wrap = document.getElementById(`prop-f-${s.key}`);
+    if (!wrap) continue;
+    const list = Array.isArray(values?.[s.key])
+      // Eldre kort kan ha kilder som rene strenger — vis dem som kildetekst.
+      ? values[s.key].map((k) => (typeof k === "string" ? { text: k } : k))
+      : [];
+    buildRows(wrap, SOURCE_SPEC, list);
+  }
+  document.querySelectorAll("#prop-form [data-add-src]").forEach((btn) => {
+    btn.onclick = () => addRow(document.getElementById(btn.dataset.addSrc), SOURCE_SPEC, {});
+  });
 }
 
 // Hoved-API: åpne redigereren for en eksisterende entitet.
@@ -141,6 +162,7 @@ export function openProposalEditor(config) {
 
   const form = document.getElementById("prop-form");
   form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
+  fillSourceRows(specs, config.currentValues || {});
 
   const submit = document.getElementById("prop-submit");
   submit.disabled = false;
@@ -215,6 +237,7 @@ export function openNewTechProposal(preset = null) {
       preset?.[s.key] ?? ""
     ))
     .join("");
+  fillSourceRows(specs, preset || {});
 
   const submit = document.getElementById("prop-submit");
   submit.disabled = false;
@@ -234,7 +257,7 @@ export function openNewTechProposal(preset = null) {
       return;
     }
     if (forInstrument && !(data.kilder || []).length) {
-      msg.textContent = "Kilder må fylles ut — én per linje.";
+      msg.textContent = "Minst én kilde må fylles ut.";
       msg.className = "form-msg error";
       return;
     }

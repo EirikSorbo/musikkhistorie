@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.79";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.79";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=3.80";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.80";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -39,19 +39,18 @@ export const MODAL_HTML = `
       <h2>Instrumenter</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div class="instr-chips" id="instr-chips"></div>
-    <div id="instr-body"></div>
-  </div>
-</div>
-
-<!-- Podkast -->
-<div class="modal-backdrop" id="modal-podkast">
-  <div class="modal modal-wide">
-    <div class="modal-head">
-      <h2>Podkast</h2>
-      <button class="modal-close btn ghost small">✕</button>
+    <!-- Hovedfaner: utvikling (standard) og podkaster. Podkastene lå tidligere
+         som eget dashbordkort; de hører sammen med instrumentene fordi
+         studentenes episoder handler om dem. -->
+    <div class="instr-tabs" id="instr-tabs"></div>
+    <div id="instr-utvikling">
+      <div class="instr-chips" id="instr-chips"></div>
+      <div id="instr-body"></div>
     </div>
-    <div id="podkast-list" class="podkast-list"></div>
+    <div id="instr-podkast" hidden>
+      <div id="podkast-extra" class="head-actions"></div>
+      <div id="podkast-list" class="podkast-list"></div>
+    </div>
   </div>
 </div>
 

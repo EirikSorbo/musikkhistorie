@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.79" />
+  <link rel="stylesheet" href="css/styles.css?v=3.80" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -80,11 +80,6 @@
             <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="17" r="3"/><path d="M10 17V5l10-2v12"/><circle cx="17" cy="15" r="3"/><path d="M10 9l10-2"/></svg>
             <span class="dash-title">Instrumenter</span>
             <span class="dash-desc">Instrumentenes utvikling</span>
-          </button>
-          <button class="dash-card" id="btn-t-podkast">
-            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
-            <span class="dash-title">Podkast</span>
-            <span class="dash-desc">Studentenes egne episoder</span>
           </button>
         </div>
       </section>
@@ -509,7 +504,7 @@
         <label>Tatt i bruk (år)
           <input type="number" id="tech-adopted" placeholder="f.eks. 1950" />
         </label>
-        <label>Periodevisning
+        <label>Årstall forklaring
           <input type="text" id="tech-adopted-label" placeholder="f.eks. ca. 1950, sent 1960-tall" />
         </label>
         <label>Tiår (for filtrering)
@@ -518,9 +513,11 @@
         <label class="full">Beskrivelse
           <textarea id="tech-desc" rows="4"></textarea>
         </label>
-        <label class="full">Kilder (én per linje)
-          <textarea id="tech-kilder" rows="3" placeholder="Én kilde per linje"></textarea>
-        </label>
+        <div class="full">
+          <span class="field-label">Kilder</span>
+          <div id="tech-source-rows"></div>
+          <button type="button" id="tech-add-source" class="btn ghost small">+ Legg til kilde</button>
+        </div>
         <label class="full">Bilde-URL
           <input type="url" id="tech-image-url" placeholder="https://upload.wikimedia.org/…" />
         </label>
@@ -579,7 +576,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.79"></script>
-  <script type="module" src="js/teacher.js?v=3.79"></script>
+  <script src="js/load-guard.js?v=3.80"></script>
+  <script type="module" src="js/teacher.js?v=3.80"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.79";
-import { GENEALOGY } from "../../js/genealogy.js?v=3.79";
-import { STORY_ORDER } from "../../js/story-format.js?v=3.79";
+import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.80";
+import { GENEALOGY } from "../../js/genealogy.js?v=3.80";
+import { STORY_ORDER } from "../../js/story-format.js?v=3.80";
 
 // Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.

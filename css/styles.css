@@ -967,6 +967,12 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* ----- Instrumenter: fane per gruppe, én tidslinje + sammendrag om gangen -----
    Fanene har samme rolle som sjangerhistorienes chips: alle tidslinjene under
    hverandre ble uoversiktlig. Åtte kolonner, samme rytme som .hist-chips. */
+/* Hovedfanene (utvikling / podkaster) — større og tydeligere enn
+   instrumentfanene under, så nivåforskjellen er synlig. */
+.instr-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.instr-tab.btn { font-size: 0.86rem; padding-left: 14px; padding-right: 14px; }
+.instr-tab.btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 /* To rader à fire, ikke én à åtte: «Elektronisk produksjon» blir avkortet til
    «Elektronisk pro…» når åtte navn skal dele bredden. */
 .instr-chips {

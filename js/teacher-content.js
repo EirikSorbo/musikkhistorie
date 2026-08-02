@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.79";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.79";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.79";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.79";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.79";
-import { resolveDesc } from "./genre-descriptions.js?v=3.79";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.79";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.79";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.80";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.80";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.80";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.80";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.80";
+import { resolveDesc } from "./genre-descriptions.js?v=3.80";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, ICONS } from "./ui-helpers.js?v=3.80";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.80";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.79";
-import { $ } from "./shared.js?v=3.79";
-import { SOURCE_SPEC, addRow, collectRows } from "./row-editor.js?v=3.79";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.80";
+import { $ } from "./shared.js?v=3.80";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.80";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -371,8 +371,10 @@ function fillTechForm(t, preset = null) {
   fillSelect(document.getElementById("tech-instrument"), INSTRUMENT_TIMELINE_GROUPS,
     { placeholder: "Ingen / gjelder ikke ett instrument" });
   document.getElementById("tech-instrument").value = t ? t.instrument || "" : (preset?.instrument || "");
-  document.getElementById("tech-kilder").value =
-    t && Array.isArray(t.kilder) ? t.kilder.join("\n") : "";
+  // Kilder som strukturerte rader (tekst + lenke), som i artistskjemaet. Eldre
+  // kort kan ha rene strenger — de vises som kildetekst uten lenke.
+  buildRows(document.getElementById("tech-source-rows"), SOURCE_SPEC,
+    (Array.isArray(t?.kilder) ? t.kilder : []).map((k) => (typeof k === "string" ? { text: k } : k)));
   document.getElementById("tech-invented").value = t ? t.inventedYear || "" : "";
   document.getElementById("tech-adopted").value = t ? t.adoptedYear || "" : "";
   document.getElementById("tech-adopted-label").value = t ? t.adoptedLabel || "" : "";
@@ -399,6 +401,8 @@ export function setupTechAdmin() {
   });
 
   document.getElementById("tech-new-btn").addEventListener("click", () => openTechEditor(null));
+  document.getElementById("tech-add-source").addEventListener("click", () =>
+    addRow(document.getElementById("tech-source-rows"), SOURCE_SPEC, {}));
 
   document.getElementById("tech-save").addEventListener("click", async () => {
     const name = document.getElementById("tech-name").value.trim();
@@ -408,8 +412,8 @@ export function setupTechAdmin() {
       name,
       category: document.getElementById("tech-category").value,
       instrument: document.getElementById("tech-instrument").value,
-      kilder: document.getElementById("tech-kilder").value
-        .split("\n").map((x) => x.trim()).filter(Boolean),
+      kilder: collectRows(document.getElementById("tech-source-rows"), SOURCE_SPEC)
+        .filter((k) => k.text),
       inventedYear: parseInt(document.getElementById("tech-invented").value) || null,
       adoptedYear: parseInt(document.getElementById("tech-adopted").value) || null,
       adoptedLabel: document.getElementById("tech-adopted-label").value.trim(),
