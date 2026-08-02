@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.85";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.85";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.85";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.85";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.85";
-import { resolveDesc } from "./genre-descriptions.js?v=3.85";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.85";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.85";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.86";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=3.86";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.86";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.86";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.86";
+import { resolveDesc } from "./genre-descriptions.js?v=3.86";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.86";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.86";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.85";
-import { $ } from "./shared.js?v=3.85";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.85";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.86";
+import { $ } from "./shared.js?v=3.86";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.86";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -461,14 +461,44 @@ export function openPodkastAdmin() {
   modalOpen(document.getElementById("modal-podkast-admin"));
 }
 
+// Episoden som redigeres nå, eller null for «legg til ny». Skjemaet er det
+// samme; bare knappetekst, overskrift og lagringskall skifter.
+let editingPodId = null;
+
+function fillPodForm(ep) {
+  editingPodId = ep ? ep.id : null;
+  document.getElementById("pod-title").value = ep?.title || "";
+  document.getElementById("pod-desc").value = ep?.description || "";
+  document.getElementById("pod-duration").value = ep?.duration || "";
+  document.getElementById("pod-url").value = ep?.audioUrl || "";
+  document.getElementById("pod-form-title").textContent = ep ? "Rediger episode" : "Legg til episode";
+  document.getElementById("pod-save").textContent = ep ? "Lagre endringer" : "Lagre episode";
+  document.getElementById("pod-cancel").hidden = !ep;
+  const msg = document.getElementById("pod-msg");
+  msg.textContent = "";
+  msg.className = "form-msg ok";
+}
+
 export function renderPodkastAdmin() {
   const el = document.getElementById("podkast-admin-list");
   if (!el) return;
+  // Episoden som redigeres kan ha blitt slettet i en annen fane — da må
+  // skjemaet tilbake til «legg til», ellers skriver Lagre til et borte dokument.
+  if (editingPodId && !state.podcasts.some((p) => p.id === editingPodId)) fillPodForm(null);
   if (!state.podcasts.length) {
     el.innerHTML = `<p class="muted empty">Ingen episoder ennå.</p>`;
     return;
   }
-  el.innerHTML = state.podcasts.map((ep) => podcastEpisodeHtml(ep, { withDelete: true })).join("");
+  el.innerHTML = state.podcasts.map((ep) => podcastEpisodeHtml(ep, { admin: true })).join("");
+  el.querySelectorAll("[data-pod-edit]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const ep = state.podcasts.find((p) => p.id === btn.dataset.podEdit);
+      if (!ep) return;
+      fillPodForm(ep);
+      document.getElementById("pod-title").focus();
+      document.querySelector(".podkast-add-form")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
   el.querySelectorAll("[data-pod-delete]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Slette denne episoden?")) return;
@@ -482,6 +512,8 @@ export function setupPodkastAdmin() {
   if (!modal) return;
   setupModal(modal);
 
+  document.getElementById("pod-cancel").addEventListener("click", () => fillPodForm(null));
+
   document.getElementById("pod-save").addEventListener("click", async () => {
     const title = document.getElementById("pod-title").value.trim();
     const audioUrl = document.getElementById("pod-url").value.trim();
@@ -490,21 +522,29 @@ export function setupPodkastAdmin() {
 
     msg.textContent = "Lagrer …";
     msg.className = "form-msg ok";
+    const felter = {
+      title,
+      description: document.getElementById("pod-desc").value.trim(),
+      duration: document.getElementById("pod-duration").value.trim(),
+      audioUrl: audioUrl ? audioUrl.replace(/dl=0/, "dl=1").replace(/\?dl=1$/, "?raw=1") : "",
+    };
     try {
-      await addPodcast({
-        title,
-        description: document.getElementById("pod-desc").value.trim(),
-        duration: document.getElementById("pod-duration").value.trim(),
-        audioUrl: audioUrl ? audioUrl.replace(/dl=0/, "dl=1").replace(/\?dl=1$/, "?raw=1") : "",
-        // Maks eksisterende order + 1 (ikke lengde+1, som gjenbruker en verdi
-        // etter at en episode er slettet → to like order → ustabil sortering).
-        order: Math.max(0, ...state.podcasts.map((p) => p.order || 0)) + 1,
-      });
-      document.getElementById("pod-title").value = "";
-      document.getElementById("pod-desc").value = "";
-      document.getElementById("pod-duration").value = "";
-      document.getElementById("pod-url").value = "";
-      msg.textContent = "Episode lagt til!";
+      if (editingPodId) {
+        // `order` røres IKKE ved redigering — rekkefølgen er lærerens, ikke en
+        // funksjon av når episoden sist ble endret.
+        await updatePodcast(editingPodId, felter);
+        fillPodForm(null);
+        msg.textContent = "Episode oppdatert!";
+      } else {
+        await addPodcast({
+          ...felter,
+          // Maks eksisterende order + 1 (ikke lengde+1, som gjenbruker en verdi
+          // etter at en episode er slettet → to like order → ustabil sortering).
+          order: Math.max(0, ...state.podcasts.map((p) => p.order || 0)) + 1,
+        });
+        fillPodForm(null);
+        msg.textContent = "Episode lagt til!";
+      }
     } catch (err) {
       console.error("Podkast-lagring feilet:", err);
       msg.textContent = "Feil: " + err.message;

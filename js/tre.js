@@ -1,11 +1,11 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.85";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.85";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.85";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.85";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.85";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.86";
+import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.86";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.86";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.86";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.86";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.

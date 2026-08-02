@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.85";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.85";
-import { GENDERS } from "./limits.js?v=3.85";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.86";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.86";
+import { GENDERS } from "./limits.js?v=3.86";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -149,24 +149,27 @@ export function genreTags(a, { withInstrument = false, withSub = true, extraClas
   ].filter(Boolean).join("");
 }
 
-// Podkast-episodekort — delt av student-popupen (explore-tech.js) og lærer-admin
-// (teacher-content.js), så markupen ikke driver fra hverandre. withDelete
-// legger på slett-knappen (data-pod-delete); kalleren kobler lytteren.
-export function podcastEpisodeHtml(ep, { withDelete = false } = {}) {
-  const duration = ep.duration ? `<span class="podkast-duration">${escapeHtml(ep.duration)}</span>` : "";
+// Podkast-episodekort — delt av podkastfanen (explore-instrument.js) og lærer-
+// admin (teacher-content.js), så markupen ikke driver fra hverandre. `admin`
+// legger rediger + slett HELT TIL HØYRE i tittelraden, over avspilleren;
+// kalleren kobler lytterne (data-pod-edit / data-pod-delete).
+export function podcastEpisodeHtml(ep, { admin = false } = {}) {
+  const duration = ep.duration ? `<span class="podkast-duration">(${escapeHtml(ep.duration)})</span>` : "";
   const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
   const audio = safeUrl(ep.audioUrl);
+  const id = escapeHtml(ep.id);
   return `
     <article class="podkast-episode">
       <div class="podkast-header">
         <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
         ${duration}
+        ${admin ? `<div class="podkast-actions">
+          <button class="icon-btn" data-pod-edit="${id}" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>
+          <button class="icon-btn danger" data-pod-delete="${id}" title="Slett" aria-label="Slett">${ICONS.trash}</button>
+        </div>` : ""}
       </div>
       ${desc}
       ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
-      ${withDelete ? `<div class="podkast-actions">
-        <button class="icon-btn danger" data-pod-delete="${escapeHtml(ep.id)}" title="Slett" aria-label="Slett">${ICONS.trash}</button>
-      </div>` : ""}
     </article>`;
 }
 

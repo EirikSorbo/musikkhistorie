@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.85" />
+  <link rel="stylesheet" href="css/styles.css?v=3.86" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -431,7 +431,7 @@
       </div>
       <div id="podkast-admin-list" class="podkast-list"></div>
       <div class="podkast-add-form" style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px">
-        <h3 style="margin:0 0 12px">Legg til episode</h3>
+        <h3 id="pod-form-title" style="margin:0 0 12px">Legg til episode</h3>
         <div class="add-grid" style="grid-template-columns:1fr 1fr">
           <label>Tittel *
             <input type="text" id="pod-title" required />
@@ -447,6 +447,7 @@
           </label>
           <div class="full add-actions">
             <button type="button" id="pod-save" class="btn primary">Lagre episode</button>
+            <button type="button" id="pod-cancel" class="btn ghost" hidden>Avbryt</button>
             <span id="pod-msg" class="form-msg ok"></span>
           </div>
         </div>
@@ -583,7 +584,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.85"></script>
-  <script type="module" src="js/teacher.js?v=3.85"></script>
+  <script src="js/load-guard.js?v=3.86"></script>
+  <script type="module" src="js/teacher.js?v=3.86"></script>
 </body>
 </html>
