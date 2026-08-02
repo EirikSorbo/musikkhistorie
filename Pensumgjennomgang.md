@@ -15,5 +15,5 @@ Logg over gjennomgangen av musikkhistorie-pensumet. Kort og konsist: hva, dato, 
 
 ## Gjenstår (ikke gjort ennå)
 - 9 artister uten instrument — fylles manuelt via Oversikten: Dr. Dre, Owen Bradley, Calvin Harris, The Meters, Kenny Clarke, 808 State, King Tubby, Thomas A. Dorsey, James Cleveland.
-- Innholdshull i sjangerspillelister: 5 tomme (British invasion, Cont. country, Cont. gospel, Cont. jazz, Rock'n'roll) og 6 tynne (Bluegrass, Folk, Ragtime, Techno, Trance & DnB, Trap).
+- Innholdshull i sjangerspillelister: 4 tomme (Cont. country, Cont. gospel, Cont. jazz, Rock'n'roll) og 6 tynne (Bluegrass, Folk, Ragtime, Techno, Trance & DnB, Trap).
 - NB (NWA): kildene spriker 1986/1987 på dannelsesår — valgt 1987, felt og tekst er nå samstemte.

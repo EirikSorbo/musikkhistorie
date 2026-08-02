@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.95";
-import { isMainGenre } from "./genealogy.js?v=3.95";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.95";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.95";
-import { mergeHeatRows } from "./import-format.js?v=3.95";
+import { firebaseConfig } from "./firebase-config.js?v=3.96";
+import { isMainGenre } from "./genealogy.js?v=3.96";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.96";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.96";
+import { mergeHeatRows } from "./import-format.js?v=3.96";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -771,6 +771,104 @@ export async function runOrphanDuplicatePurge() {
   await setDoc(migRef, { [ORPHAN_PURGE_FLAG]: new Date().toISOString() }, { merge: true });
   console.info(`Foreldreløs-opprydding fullført: ${docsDeleted.length} beskrivelsesdokument(er) slettet (${docsDeleted.join(", ") || "ingen"}), ${heatRemoved} varmekartrad(er) fjernet.${docsKept.length ? " BEHOLDT: " + docsKept.join("; ") : ""}`);
   return { docsDeleted, docsKept, heatRemoved };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v3.96): treet slanket etter pensumgjennomgangen.
+//   a) «British invasion» slått inn i «Blues rock». Noden var en HENDELSE mer
+//      enn en stilart, hadde bare to artister — John Mayall og Eric Clapton, som
+//      BEGGE allerede sto i Blues rock — og lå under Blues selv om fenomenet
+//      hører rocken til. Taggen fjernes derfor helt (ingen omdøping: den ville
+//      gitt duplikater), og Blues rock arver rock'n'roll som forelder.
+//   b) «Ragtime» er nå rot-node (g: null), ikke pensumsjanger. Den er ikke
+//      lenger et gyldig mainGenre, så taggen flyttes NED til subGenre — teksten
+//      «Ragtime» står fortsatt på Scott Joplin og Jelly Roll Morton, men som
+//      undersjanger. Joplin ville ellers stått helt uten tre-sjanger og falt ut
+//      i «Øvrige»-bøtta, så han får «Jazz» som mainGenre (Morton har den alt).
+//
+//  Begge sjangrene mister dermed sin plass i varmekartet, og radene deres blir
+//  foreldreløse — de fjernes her, ellers spres de videre ved hver onHeatEdit.
+//  «British invasion»-dokumentet og de tre koblingsbeskrivelsene som pekte på
+//  noden blir uleselige og slettes; ALT logges først. Blues rock-teksten fortalte
+//  allerede historien om den britiske bølgen, så beskrivelsen står seg.
+//  «Ragtime»-dokumentet BEHOLDES: rot-noder viser beskrivelsen sin som før.
+// ---------------------------------------------------------------------------
+const TREE_SLIM_FLAG = "treeSlim_2026_08";
+const TREE_SLIM_HEAT_ROWS = ["British invasion", "Ragtime"];
+const TREE_SLIM_GENRE_DOCS = ["British invasion"];
+const TREE_SLIM_EDGE_DOCS = ["chicagoblues__britinv", "rocknroll__britinv", "britinv__bluesrock"];
+
+export async function runTreeSlim() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[TREE_SLIM_FLAG]) return { skipped: true };
+
+  // a+b) Artist-taggene. Gjøres i ETT gjennomløp over artistene, så vi ikke
+  //      skriver de samme dokumentene to ganger.
+  const artistSnap = await getDocs(artistsCol);
+  let tagged = 0;
+  for (let i = 0; i < artistSnap.docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    let has = false;
+    for (const d of artistSnap.docs.slice(i, i + BATCH_LIMIT)) {
+      const a = d.data();
+      const main0 = Array.isArray(a.mainGenre) ? a.mainGenre : [];
+      const sub0 = Array.isArray(a.subGenre) ? a.subGenre : [];
+      let main = main0.filter((g) => g !== "British invasion");
+      let sub = sub0;
+      if (main.includes("Ragtime")) {
+        main = main.filter((g) => g !== "Ragtime");
+        if (!sub.includes("Ragtime")) sub = [...sub, "Ragtime"];
+        // Uten en gjenværende tre-sjanger faller artisten ut av tidslinjens og
+        // varmekartets sjangerseksjoner. Ragtime hører jazzen til.
+        if (!main.length) main = ["Jazz"];
+      }
+      const upd = {};
+      if (main.length !== main0.length || main.some((g, j) => g !== main0[j])) upd.mainGenre = main;
+      if (sub.length !== sub0.length) upd.subGenre = sub;
+      if (Object.keys(upd).length) {
+        console.info(`Tre-slanking — ${a.name}: mainGenre [${main0.join(", ")}] → [${main.join(", ")}]` +
+          (upd.subGenre ? `, subGenre [${sub0.join(", ")}] → [${sub.join(", ")}]` : ""));
+        batch.update(d.ref, upd);
+        has = true;
+        tagged++;
+      }
+    }
+    if (has) await batch.commit();
+  }
+
+  // Varmekart-radene. Hele dokumentet skrives (samme policy som de andre
+  // innholdsmigreringene — feltstier er utrygge med mellomrom i nøkkelnavn).
+  let heatRemoved = 0;
+  const vkRef = doc(db, "content", "varmekart");
+  const vkSnap = await getDoc(vkRef);
+  if (vkSnap.exists() && vkSnap.data().heat) {
+    const heat = { ...vkSnap.data().heat };
+    for (const key of TREE_SLIM_HEAT_ROWS) {
+      if (!(key in heat)) continue;
+      console.info(`Tre-slanking — varmekartrad «${key}» (logget for gjenoppretting):`, JSON.stringify(heat[key]));
+      delete heat[key];
+      heatRemoved++;
+    }
+    if (heatRemoved) await setDoc(vkRef, { heat, updatedAt: new Date().toISOString() });
+  }
+
+  // Beskrivelsene som ikke lenger kan nås fra noen flate.
+  let docsRemoved = 0;
+  for (const [col, ids] of [["genreDescriptions", TREE_SLIM_GENRE_DOCS], ["edgeDescriptions", TREE_SLIM_EDGE_DOCS]]) {
+    for (const id of ids) {
+      const ref = doc(db, col, id);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) continue;
+      console.info(`Tre-slanking — sletter ${col}/${id} (innhold logget for gjenoppretting):`, JSON.stringify(snap.data()));
+      await deleteDoc(ref);
+      docsRemoved++;
+    }
+  }
+
+  await setDoc(migRef, { [TREE_SLIM_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Tre-slanking fullført: ${tagged} artist(er) omtagget, ${heatRemoved} varmekartrad(er) fjernet, ${docsRemoved} beskrivelse(r) slettet.`);
+  return { tagged, heatRemoved, docsRemoved };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

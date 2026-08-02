@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.95";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.95";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.95";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.95";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.95";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=3.95";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.96";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.96";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.96";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.96";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.96";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=3.96";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -21,7 +21,12 @@ export const GENEALOGY = [
   { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 580, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
   { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 1, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
   { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 1, yOffset: 0.5, p: ["worksongs"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
-  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "purple", cx: 700, r: 1, p: ["vestafrik"], g: "Jazz", era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
+  // Ragtime er ROT, ikke pensumsjanger (v3.96, brukervalg): den er forløperen
+  // jazzen vokser ut av, på linje med Work songs og Spirituals — ikke en stil
+  // studentene skal tagge artister med. Derfor g: null (ute av mainGenre-
+  // vokabularet og varmekartet) og gray-familien, som de andre røttene.
+  // Noden, beskrivelsen og koblingene består; den er fortsatt jazzens inngang.
+  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "gray", cx: 700, r: 1, p: ["vestafrik"], g: null, era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
   { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["eurofolk"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
   { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
   { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
@@ -56,8 +61,14 @@ export const GENEALOGY = [
 
   // --- Rock ---
   { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
-  { id: "britinv", l: "British invasion", f: "Blues revival (British invasion)", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll"], g: "Blues", era: "1963–66", t: ["(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
-  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 7, yOffset: 0.5, p: ["britinv", "chicagoblues", "rock"], g: "Blues", era: "sent 1960-tall", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)"] },
+  // «British invasion» er slått inn i Blues rock (v3.96, brukervalg): den var en
+  // HENDELSE mer enn en stilart, hadde bare to artister — og begge sto allerede
+  // i Blues rock — og lå under Blues selv om fenomenet hører rocken til.
+  // Blues rock arver rock'n'roll som forelder, så linja rock'n'roll → britisk
+  // bølge → blues rock ikke brytes, bare kortes ned. Låteksemplene fra den
+  // britiske bølgen er beholdt her, og Blues rock-beskrivelsen fortalte allerede
+  // historien om bølgen. Epoken utvides bakover til 1963, som var britinv-ens.
+  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll", "rock"], g: "Blues", era: "1963–69", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)", "(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
 
   // --- Rock ---
   { id: "rock", l: "Rock", f: "Rock", fam: "rock", cx: 445, r: 7, p: ["rocknroll"], g: "Rock", era: "tidlig 1960-tall", t: ["My Generation – The Who (1965)", "Light My Fire – The Doors (1967)"] },

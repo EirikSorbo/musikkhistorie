@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.95";
-import { GENEALOGY } from "../../js/genealogy.js?v=3.95";
-import { STORY_ORDER } from "../../js/story-format.js?v=3.95";
+import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=3.96";
+import { GENEALOGY } from "../../js/genealogy.js?v=3.96";
+import { STORY_ORDER } from "../../js/story-format.js?v=3.96";
 
 // Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.
@@ -29,11 +29,21 @@ test("rot-noder holdes utenfor — kun ekte sjangre på løypen", () => {
 });
 
 test("avstamning låser rekkefølgen selv når era er upresis", () => {
-  // Blues rock har era «sent 1960-tall» (leses som 1960) og ville uten låsingen
-  // havnet FORAN forelderen British invasion («1963–66»).
+  // Chicago blues har era «midten av 1940-tallet» — ingen firesifret årstall, så
+  // den leses fra raden sin. Barnet Blues rock («1963–69») må uansett komme
+  // etter den.
+  //
+  // NB: sjekk ALLTID at noden finnes før du sammenligner indekser. Denne testen
+  // het før på «British invasion», og da den noden ble slått inn i Blues rock
+  // (v3.96), ga findIndex -1 — og «-1 < 2» besto stille mens testen ikke lenger
+  // prøvde noe som helst.
   const blues = genreFamilyNodes("Blues");
-  const i = (navn) => blues.findIndex((x) => x.n.l === navn);
-  assert.ok(i("British invasion") < i("Blues rock"));
+  const i = (navn) => {
+    const idx = blues.findIndex((x) => x.n.l === navn);
+    assert.ok(idx >= 0, `${navn} finnes ikke i Blues-familien — testen er utdatert`);
+    return idx;
+  };
+  assert.ok(i("Chicago blues") < i("Blues rock"));
   // Generelt: ingen node kan komme før en forelder i samme familie.
   for (const meta of STORY_ORDER) {
     const fam = genreFamilyNodes(meta);
