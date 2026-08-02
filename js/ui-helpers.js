@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.83";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.83";
-import { GENDERS } from "./limits.js?v=3.83";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=3.84";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.84";
+import { GENDERS } from "./limits.js?v=3.84";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -352,6 +352,9 @@ export function factsHtml(rows) {
 // adoptedLabel, som ofte er en hel setning og aldri fikk plass i en boble.
 export function techFactsLines(t) {
   return factsHtml([
+    // Typen vises kun på hendelseskort — innovasjon er normalen og trenger
+    // ingen etikett. Hendelser har til gjengjeld ingen kategori.
+    ["Type", t?.type === "hendelse" ? "Viktig hendelse" : ""],
     ["Instrument", t.instrument],
     ["Kategori", t.category],
     ["Årstall", t.adoptedLabel],

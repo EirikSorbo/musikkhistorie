@@ -8,11 +8,11 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=3.83";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES } from "./ui.js?v=3.83";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=3.83";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.83";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.83";
+import { addPendingEdit, addTechProposal } from "./store.js?v=3.84";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=3.84";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=3.84";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.84";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.84";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -32,6 +32,10 @@ const ARTIST_PROPOSAL_SPECS = ARTIST_FIELDS
 const FIELD_SPECS = {
   artist: ARTIST_PROPOSAL_SPECS,
   tech: [
+    // Typen står ØVERST fordi den styrer resten av skjemaet: velger man
+    // «Viktig hendelse», skjules kategori (som bare gjelder teknologi).
+    { key: "type", label: "Hva slags kort er dette?", type: "radio",
+      options: TECH_TYPES, full: true },
     { key: "name", label: "Navn", type: "text" },
     { key: "category", label: "Kategori", type: "select", options: [
       { value: "", label: "Velg…" },
@@ -102,6 +106,15 @@ function inputForField(spec, value) {
   // «sources»: strukturerte kilder ({ text, url }) med samme rad-editor som
   // artistskjemaet, så en kilde kan bære lenke. Radene bygges etter innsetting
   // i DOM (fillSourceRows) — innerHTML her ville ikke fått med hendelsene.
+  if (spec.type === "radio") {
+    // Standard er første valg — et kort uten `type` ER en innovasjon.
+    const valgt = spec.options.some((o) => o.value === v) ? v : spec.options[0].value;
+    return `<div${fullClass}><span class="field-label">${escapeHtml(spec.label)}</span>` +
+      `<div class="radio-row" id="${id}">` + spec.options.map((o) =>
+        `<label class="radio-opt"><input type="radio" name="${id}" value="${escapeHtml(o.value)}"` +
+        `${o.value === valgt ? " checked" : ""} /> ${escapeHtml(o.label)}</label>`
+      ).join("") + `</div></div>`;
+  }
   if (spec.type === "sources") {
     return `<div${fullClass}><span class="field-label">${escapeHtml(spec.label)}</span>` +
       `<div id="${id}"></div>` +
@@ -123,7 +136,26 @@ function readField(spec) {
   if (spec.type === "sources") {
     return collectRows(el, SOURCE_SPEC).filter((k) => k.text);
   }
+  if (spec.type === "radio") {
+    return el.querySelector("input:checked")?.value || spec.options[0].value;
+  }
   return el.value.trim();
+}
+
+// Kategori gjelder bare teknologi. Velger man «Viktig hendelse», skjules feltet
+// og verdien tømmes — ellers ville et kort som byttet type dratt med seg
+// «Opptak og avspilling» inn på en hendelse.
+function wireTypeToggle() {
+  const radios = document.querySelectorAll('#prop-f-type input[type="radio"]');
+  const katFelt = document.getElementById("prop-f-category")?.closest("label");
+  if (!radios.length || !katFelt) return;
+  const oppdater = () => {
+    const hendelse = document.querySelector('#prop-f-type input:checked')?.value === "hendelse";
+    katFelt.hidden = hendelse;
+    if (hendelse) document.getElementById("prop-f-category").value = "";
+  };
+  radios.forEach((r) => r.addEventListener("change", oppdater));
+  oppdater();
 }
 
 // Kilde-radene må bygges ETTER at skjemaet står i DOM — rowInnerHtml kobler
@@ -163,6 +195,7 @@ export function openProposalEditor(config) {
   const form = document.getElementById("prop-form");
   form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
   fillSourceRows(specs, config.currentValues || {});
+  wireTypeToggle();
 
   const submit = document.getElementById("prop-submit");
   submit.disabled = false;
@@ -238,6 +271,7 @@ export function openNewTechProposal(preset = null) {
     ))
     .join("");
   fillSourceRows(specs, preset || {});
+  wireTypeToggle();
 
   const submit = document.getElementById("prop-submit");
   submit.disabled = false;

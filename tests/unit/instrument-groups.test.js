@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   INSTRUMENT_GROUPS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, instrumentGroup,
-} from "../../js/limits.js?v=3.83";
-import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=3.83";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=3.83";
+} from "../../js/limits.js?v=3.84";
+import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=3.84";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=3.84";
 
 // To nivåer, som metaGenre over mainGenre: artistkortet beholder det PRESISE
 // instrumentet, tidslinjene ligger på GRUPPEN.
@@ -82,7 +82,7 @@ test("instrument og kilder er foreslåbare felter", () => {
 // --- Sammendragssiden per instrumentgruppe -----------------------------------
 
 test("instrumentPageId gir lovlige, stabile Firestore-ID-er", async () => {
-  const { instrumentPageId } = await import("../../js/limits.js?v=3.83");
+  const { instrumentPageId } = await import("../../js/limits.js?v=3.84");
   assert.equal(instrumentPageId("Gitar"), "instrument-gitar");
   assert.equal(instrumentPageId("Låtskriving"), "instrument-latskriving");
   assert.equal(instrumentPageId("Elektronisk produksjon"), "instrument-elektronisk-produksjon");
@@ -106,4 +106,58 @@ test("«instrument» er en komplett forslagstype", async () => {
   assert.match(rules, /entityType in \[[^\]]*"instrument"/, "firestore.rules mangler typen");
   const store = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
   assert.match(store, /case "instrument":\s*return doc\(db, "content"/, "pendingEditTargetRef mangler typen");
+});
+
+// --- Korttype: innovasjon vs. hendelse ---------------------------------------
+
+test("kort uten type ER en innovasjon — de 66 gamle trengte ingen migrering", async () => {
+  const { techType, isHendelse } = await import("../../js/ui-tech.js?v=3.84");
+  assert.equal(techType({ name: "Elektrisk gitar" }), "innovasjon");
+  assert.equal(techType({ type: "" }), "innovasjon");
+  assert.equal(techType({ type: "innovasjon" }), "innovasjon");
+  assert.equal(techType({ type: "hendelse" }), "hendelse");
+  // Ukjent verdi skal ikke kunne gjøre et kort til hendelse ved et uhell.
+  assert.equal(techType({ type: "tull" }), "innovasjon");
+  assert.equal(isHendelse({ type: "hendelse" }), true);
+  assert.equal(isHendelse({}), false);
+});
+
+test("begge typer havner på instrumenttidslinjen, kun hendelser merkes", async () => {
+  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js?v=3.84");
+  const kort = [
+    { id: "a", name: "Elektrisk gitar", adoptedYear: 1938, instrument: "Gitar", status: "active" },
+    { id: "b", name: "Charlie Christian som soloinstrument", adoptedYear: 1939, instrument: "Gitar", status: "active", type: "hendelse" },
+  ];
+  const html = buildInstrumentTimeline(kort, "Gitar");
+  assert.ok(html.includes("Elektrisk gitar") && html.includes("Charlie Christian"));
+  assert.equal((html.match(/tl-item-hendelse/g) || []).length, 1, "kun hendelsen merkes");
+  assert.ok(html.includes("tl-legend"), "tegnforklaring vises når begge typer finnes");
+});
+
+test("tegnforklaringen vises IKKE når bare én type finnes", async () => {
+  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js?v=3.84");
+  const bare = (type) => [1938, 1952].map((y, i) => ({
+    id: "x" + i, name: "Kort " + i, adoptedYear: y, instrument: "Gitar", status: "active", ...(type ? { type } : {}),
+  }));
+  assert.ok(!buildInstrumentTimeline(bare(null), "Gitar").includes("tl-legend"));
+  assert.ok(!buildInstrumentTimeline(bare("hendelse"), "Gitar").includes("tl-legend"));
+});
+
+test("hendelseskort vises ikke i Teknologi-seksjonen", async () => {
+  const { renderTechList } = await import("../../js/ui-tech.js?v=3.84");
+  const el = { innerHTML: "" };
+  const kort = [
+    { id: "a", name: "Vinylplata", category: "Opptak og avspilling" },
+    { id: "b", name: "Hendrix paa Monterey", category: "", type: "hendelse" },
+  ];
+  renderTechList(el, kort, "", null);
+  assert.ok(el.innerHTML.includes("Vinylplata"));
+  assert.ok(!el.innerHTML.includes("Hendrix"), "hendelsen hoerer hjemme paa instrumenttidslinjen");
+});
+
+test("type er foreslåbar og står i regel-hvitelista", async () => {
+  const fs = await import("node:fs");
+  assert.ok(PROPOSABLE_KEYS.tech.includes("type"));
+  const rules = fs.readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8");
+  assert.match(rules, /"name", "type", "category"/, "firestore.rules mangler type");
 });

@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=3.83" />
+  <link rel="stylesheet" href="css/styles.css?v=3.84" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -488,7 +488,14 @@
         <label>Navn *
           <input type="text" id="tech-name" required />
         </label>
-        <label>Kategori
+        <div class="full">
+          <span class="field-label">Hva slags kort er dette?</span>
+          <div class="radio-row" id="tech-type">
+            <label class="radio-opt"><input type="radio" name="tech-type" value="innovasjon" checked /> Teknologisk innovasjon</label>
+            <label class="radio-opt"><input type="radio" name="tech-type" value="hendelse" /> Viktig hendelse</label>
+          </div>
+        </div>
+        <label id="tech-category-felt">Kategori
           <select id="tech-category">
             <option value="Opptak og avspilling">Opptak og avspilling</option>
             <option value="Kringkasting og spredning">Kringkasting og spredning</option>
@@ -576,7 +583,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=3.83"></script>
-  <script type="module" src="js/teacher.js?v=3.83"></script>
+  <script src="js/load-guard.js?v=3.84"></script>
+  <script type="module" src="js/teacher.js?v=3.84"></script>
 </body>
 </html>

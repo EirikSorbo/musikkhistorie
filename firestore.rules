@@ -143,7 +143,7 @@ service cloud.firestore {
       allow create: if isTeacher() || (
         request.auth != null &&
         request.resource.data.keys().hasOnly([
-          "name", "category", "instrument", "decade", "adoptedYear", "adoptedLabel",
+          "name", "type", "category", "instrument", "decade", "adoptedYear", "adoptedLabel",
           "description", "kilder", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt"
         ]) &&
         request.resource.data.status == "pending" &&

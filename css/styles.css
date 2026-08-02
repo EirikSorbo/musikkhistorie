@@ -1036,6 +1036,22 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   border-color: var(--instr-color, var(--accent));
   color: #fff;
 }
+/* Radiovalg i skjemaene (korttype: innovasjon / hendelse) */
+.radio-row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 4px; }
+.radio-opt { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; cursor: pointer; }
+.radio-opt input { margin: 0; }
+
+/* Hendelseskort på tidslinjen: åpen prikk mot innovasjonens fylte, så artefakt
+   og skifte skilles uten farge (fargen er allerede instrumentets). */
+.tl-item-hendelse .tl-dot { background: var(--bg); border-style: double; border-width: 4px; }
+.tl-desc-hendelse { font-style: italic; }
+.tl-legend { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; font-size: 0.74rem; color: var(--muted); }
+.tl-legend-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
+  border: 2px solid var(--tl-color, var(--accent)); background: var(--tl-color, var(--accent));
+}
+.tl-legend-dot.tl-legend-hendelse { background: var(--bg); border-style: double; border-width: 3px; margin-left: 12px; }
+
 .instr-single { font-size: 0.88rem; margin: 10px 0 14px; }
 /* Tidslinjen har egen luft (.tl-rich), så seksjonen trenger ikke mer under. */
 .instr-tl .timeline { margin-bottom: 4px; }

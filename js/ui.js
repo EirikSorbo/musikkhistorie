@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.83";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.83";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.83";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=3.84";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=3.84";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=3.84";
 import {
   escapeHtml,
   linkDesc,
@@ -32,17 +32,17 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=3.83";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.83";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.83";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.83";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.83";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.83";
+} from "./ui-helpers.js?v=3.84";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=3.84";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=3.84";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=3.84";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=3.84";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=3.84";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders };
-export { TECH_CATEGORIES, TECH_CATEGORY_TABS, renderTechList, renderTechDetail, techImage };
+export { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage };
 export { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon };
 export { renderDashboard, contentGaps };
 export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };

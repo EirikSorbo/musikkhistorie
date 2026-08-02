@@ -7,10 +7,11 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=3.83";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.83";
-import { DECADES } from "./limits.js?v=3.83";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.83";
+import { escapeHtml } from "./util.js?v=3.84";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=3.84";
+import { DECADES } from "./limits.js?v=3.84";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=3.84";
+import { isHendelse } from "./ui-tech.js?v=3.84";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -188,11 +189,15 @@ function buildProportionalTimeline(items, startYear, {
   let html = `<div class="timeline tl-prop${extraClass ? " " + extraClass : ""}" style="${style}"><div class="tl-track">`;
   for (const g of laid) {
     const edge = !edgeAlign ? "" : g.pct <= 12 ? " tl-start" : g.pct >= 88 ? " tl-end" : "";
-    html += `<div class="tl-item tl-${g.dir}${edge}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
+    // Er HELE gruppen hendelser, markeres prikken som det. Blandede grupper
+    // (samme årstall, ulik type) beholder standardprikken — den ville ellers
+    // lyve om halvparten av innholdet.
+    const mark = g.entries.every((e) => e.hendelse) ? " tl-item-hendelse" : "";
+    html += `<div class="tl-item tl-${g.dir}${edge}${mark}" style="left:${g.pct.toFixed(1)}%;--stem:${g.stem}px">` +
       `<div class="tl-dot"></div><div class="tl-stem"></div>` +
       `<div class="tl-label"><span class="tl-year">${escapeHtml(g.label)}</span>` +
       g.entries.map((e) =>
-        `<span class="tl-desc"` +
+        `<span class="tl-desc${e.hendelse ? " tl-desc-hendelse" : ""}"` +
         (e.techId ? ` data-tech-id="${escapeHtml(e.techId)}"` : "") +
         (e.genre ? ` data-genre="${escapeHtml(e.genre)}"` : "") +
         `>${escapeHtml(e.desc)}</span>`
@@ -292,7 +297,7 @@ export function instrumentInnovations(techItems, group) {
 export function buildInstrumentTimeline(techItems, group) {
   const items = instrumentInnovations(techItems, group);
   if (items.length < 2) return "";
-  return buildProportionalTimeline(
+  const html = buildProportionalTimeline(
     items.map((t) => ({
       year: t.adoptedYear || null,
       // KUN årstallet (brukervalg): adoptedLabel er fritekst som ofte er en hel
@@ -301,10 +306,18 @@ export function buildInstrumentTimeline(techItems, group) {
       label: t.adoptedYear ? String(t.adoptedYear) : "",
       desc: t.name,
       techId: t.id,
+      hendelse: isHendelse(t),
     })),
     items[0].adoptedYear || 1900,
     { extraClass: "tl-rich", minGapPct: 6, lineH: 21, stemLevels: 2, edgeAlign: false }
   );
+  // Tegnforklaring kun når BEGGE typene er på tidslinjen — med bare én type
+  // forklarer den et skille som ikke finnes.
+  const harBegge = items.some(isHendelse) && items.some((t) => !isHendelse(t));
+  return html + (harBegge
+    ? `<p class="tl-legend"><span class="tl-legend-dot"></span>teknologisk innovasjon` +
+      `<span class="tl-legend-dot tl-legend-hendelse"></span>viktig hendelse</p>`
+    : "");
 }
 
 // ----------------------------------------------------------------------------

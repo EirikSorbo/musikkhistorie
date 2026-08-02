@@ -5,19 +5,19 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.83";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.83";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.83";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.83";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.83";
-import { resolveDesc } from "./genre-descriptions.js?v=3.83";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.83";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.83";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=3.84";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, deletePodcast } from "./store.js?v=3.84";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=3.84";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=3.84";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=3.84";
+import { resolveDesc } from "./genre-descriptions.js?v=3.84";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=3.84";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=3.84";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.83";
-import { $ } from "./shared.js?v=3.83";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.83";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.84";
+import { $ } from "./shared.js?v=3.84";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=3.84";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -361,9 +361,22 @@ function renderTechAdmin() {
   });
 }
 
+// Kategori gjelder bare teknologi. På en hendelse skjules feltet og tømmes, så
+// et kort som byttes til hendelse ikke drar med seg «Opptak og avspilling».
+function techTypeToggle() {
+  const hendelse = document.querySelector("#tech-type input:checked")?.value === "hendelse";
+  const felt = document.getElementById("tech-category-felt");
+  if (felt) felt.hidden = hendelse;
+  if (hendelse) document.getElementById("tech-category").value = "";
+}
+
 function fillTechForm(t, preset = null) {
   document.getElementById("tech-name").value = t ? t.name || "" : "";
+  // Typen styrer om kategori-feltet vises — se wireTechTypeToggle.
+  const type = t?.type === "hendelse" ? "hendelse" : "innovasjon";
+  document.querySelector(`#tech-type input[value="${type}"]`).checked = true;
   document.getElementById("tech-category").value = t ? t.category || "" : (preset?.category || "");
+  techTypeToggle();
   // Instrumentgruppen avgjør hvilken tidslinje kortet havner på i Instrumenter-
   // seksjonen. Tomt = kortet vises kun under Teknologi.
   fillSelect(document.getElementById("tech-instrument"), INSTRUMENT_TIMELINE_GROUPS,
@@ -401,6 +414,8 @@ export function setupTechAdmin() {
   document.getElementById("tech-new-btn").addEventListener("click", () => openTechEditor(null));
   document.getElementById("tech-add-source").addEventListener("click", () =>
     addRow(document.getElementById("tech-source-rows"), SOURCE_SPEC, {}));
+  document.querySelectorAll('#tech-type input[type="radio"]')
+    .forEach((r) => r.addEventListener("change", techTypeToggle));
 
   document.getElementById("tech-save").addEventListener("click", async () => {
     const name = document.getElementById("tech-name").value.trim();
@@ -408,6 +423,7 @@ export function setupTechAdmin() {
     if (!name) { msg.textContent = "Navn er påkrevd."; msg.className = "form-msg error"; return; }
     const data = {
       name,
+      type: document.querySelector("#tech-type input:checked")?.value || "innovasjon",
       category: document.getElementById("tech-category").value,
       instrument: document.getElementById("tech-instrument").value,
       kilder: collectRows(document.getElementById("tech-source-rows"), SOURCE_SPEC)
