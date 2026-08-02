@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderStoryHtml, storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=3.81";
+import { renderStoryHtml, storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=3.82";
 
 const artists = [
   { id: "a1", name: "Muddy Waters", status: "active" },

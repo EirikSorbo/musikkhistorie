@@ -1002,11 +1002,13 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 /* Tidslinjen har egen luft (.tl-rich), så seksjonen trenger ikke mer under. */
 .instr-tl .timeline { margin-bottom: 4px; }
 .instr-tl .gx-missing { margin: 10px 0 14px; }
-/* Sammendraget under tidslinjen — skrives av studentene, som resten av innholdet. */
-.instr-sum { border-top: 1px solid var(--line, #e5e7eb); margin-top: 6px; padding-top: 12px; }
+/* Sammendraget står ØVERST — teksten er inngangen til instrumentet. Skrives av
+   studentene, som resten av innholdet. */
 .instr-sum-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .instr-sum-head h3 { margin: 0; font-size: 1rem; }
 .instr-foot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+/* Skillelinjen følger tidslinjen, som nå ligger nederst. */
+.instr-tl { border-top: 1px solid var(--line, #e5e7eb); margin-top: 18px; padding-top: 6px; }
 
 /* ----- Endringsforslag-liste ----- */
 .pending-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
