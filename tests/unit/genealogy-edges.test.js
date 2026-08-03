@@ -4,7 +4,7 @@
 // edgeKey-formatet (Firestore-dokument-ID) er stabilt.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=3.99";
+import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=4.00";
 
 test("GENEALOGY_EDGES: alle koblinger peker på eksisterende noder", () => {
   const ids = new Set(GENEALOGY.map((n) => n.id));
@@ -25,9 +25,25 @@ test("GENEALOGY_EDGES: dekker p + rx uten duplikater", () => {
 
 test("GENEALOGY_EDGES: motreaksjoner flagges med react", () => {
   const reacts = GENEALOGY_EDGES.filter((e) => e.react);
-  assert.ok(reacts.length >= 6, `ventet minst 6 motreaksjoner, fikk ${reacts.length}`);
-  assert.ok(reacts.some((e) => e.from === "swing" && e.to === "bebop"));
+  assert.ok(reacts.length >= 1, "treet skal ha motreaksjoner");
   assert.ok(GENEALOGY_EDGES.some((e) => e.from === "blues" && e.to === "jazz" && !e.react));
+});
+
+test("en motreaksjon peker ALDRI på nodens egen forelder", () => {
+  // Regelen fra pensumgjennomgangen (v4.00, brukervalg). Står samme node i både
+  // p og rx, slår de sammen til ÉN strek — og den blir stiplet. Da forsvinner
+  // avstamningen visuelt: Bebop ← Swing og Cool jazz ← Bebop viste bare
+  // motreaksjon, ikke at de faktisk vokste ut av forelderen sin.
+  // Motreaksjonen skal peke på et SØSKEN og tilføre noe streken ikke alt sier.
+  for (const n of GENEALOGY) {
+    for (const r of n.rx || []) {
+      assert.ok(!(n.p || []).includes(r),
+        `${n.l}: «${r}» står som både forelder og motreaksjon — skriv motreaksjonen i teksten i stedet`);
+    }
+  }
+  // Swing → Bebop er nettopp tilfellet som ble ryddet: nå heltrukken avstamning.
+  const sb = GENEALOGY_EDGES.find((e) => e.from === "swing" && e.to === "bebop");
+  assert.ok(sb && !sb.react, "Swing → Bebop skal være heltrukken avstamning");
 });
 
 test("edgeKey: stabilt dokument-ID-format", () => {

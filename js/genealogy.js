@@ -7,47 +7,54 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.99";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.99";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.99";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.99";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.99";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=3.99";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.00";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.00";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.00";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.00";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.00";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.00";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
   { id: "eurofolk", l: "Europeisk", f: "Europeisk folkemusikk", fam: "gray", cx: 400, r: 0, p: [], g: null, era: "Røtter", t: [] },
   { id: "vestafrik", l: "Vestafrikansk", f: "Vestafrikansk musikk", fam: "gray", cx: 700, r: 0, p: [], g: null, era: "Røtter", t: [] },
+  // Hymner og Vaudeville er de to europeiske kanalene inn i amerikansk
+  // populærmusikk: den ene sakral, den andre kommersiell. Uten dem sto
+  // «Europeisk» som en udifferensiert sekk, og linjene videre til Spirituals,
+  // Country og Tin Pan Alley måtte tegnes fra den sekken i stedet for fra det
+  // som faktisk påvirket dem.
+  { id: "hymner", l: "Hymner", f: "Salmer og vekkelsessang", fam: "gray", cx: 330, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1700–1800-tallet", t: ["Amazing Grace (1779)", "Wondrous Love – Sacred Harp-tradisjonen"] },
+  { id: "vaudeville", l: "Vaudeville", f: "Vaudeville og varieté", fam: "gray", cx: 190, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1880–1930", t: ["Some of These Days – Sophie Tucker (1911)", "Alexander's Ragtime Band – Irving Berlin (1911)"] },
   { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 580, r: 0, yOffset: 0.5, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
-  { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 0, yOffset: 0.5, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
-  { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 1, yOffset: 0.5, p: ["worksongs"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
+  { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 0, yOffset: 0.5, p: ["vestafrik", "hymner"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
+  { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 1, yOffset: 0.5, p: ["worksongs", "vaudeville"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
   // Ragtime er ROT, ikke pensumsjanger (v3.96, brukervalg): den er forløperen
   // jazzen vokser ut av, på linje med Work songs og Spirituals — ikke en stil
   // studentene skal tagge artister med. Derfor g: null (ute av mainGenre-
   // vokabularet og varmekartet) og gray-familien, som de andre røttene.
   // Noden, beskrivelsen og koblingene består; den er fortsatt jazzens inngang.
   { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "gray", cx: 700, r: 1, p: ["vestafrik", "eurofolk"], g: null, era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
-  { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["eurofolk"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
+  { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["vaudeville"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
   { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
-  { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
+  { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "hymner", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
   { id: "gospel", l: "Gospel", f: "Gospel", fam: "olive", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
   { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 4, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
   { id: "honkytonk", l: "Honky tonk", f: "Honky tonk", fam: "amber", cx: 195, r: 5, p: ["country"], g: "Country", era: "1940-tallet", t: ["Lovesick Blues – Hank Williams (1949)", "Your Cheatin' Heart – Hank Williams (1953)"] },
-  { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 700, r: 5, p: ["swing"], rx: ["swing"], g: "Jazz", era: "1945", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
+  { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 700, r: 5, p: ["swing"], g: "Jazz", era: "1945", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
   { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 1190, r: 5, p: ["blues", "gospel"], g: "R&B", era: "1940-tallet", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
   { id: "nashville", l: "Nashville", f: "Nashville-sound", fam: "amber", cx: 195, r: 6, p: ["honkytonk"], g: "Country", era: "1957", t: ["Crazy – Patsy Cline (1961)", "Four Walls – Jim Reeves (1957)"] },
   { id: "chicagoblues", l: "Electric blues", f: "Electric blues", fam: "blue", cx: 580, r: 5, p: ["blues"], g: "Blues", era: "midten av 1940-tallet", t: ["Got My Mojo Workin' – Muddy Waters (1956)", "Call It Stormy Monday – T-Bone Walker (1948)"] },
-  { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 700, r: 6, p: ["bebop"], rx: ["bebop"], g: "Jazz", era: "1949", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
+  { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 700, r: 6, p: ["bebop"], g: "Jazz", era: "1949", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
   { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 825, r: 6, p: ["bebop"], rx: ["cool"], g: "Jazz", era: "1955", t: ["Moanin' – Art Blakey (1959)"] },
   { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 1190, r: 6, p: ["gospel", "rnb"], g: "R&B", era: "1959", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
-  { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 700, r: 6, yOffset: 0.5, p: ["bebop"], g: "Jazz", era: "1958", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
+  { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 700, r: 6, yOffset: 0.5, p: ["bebop", "cool"], g: "Jazz", era: "1958", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
   { id: "free", l: "Free jazz", f: "Free jazz", fam: "purple", cx: 825, r: 7, p: ["bebop"], rx: ["hardbop"], g: "Jazz", era: "1960", t: ["Free Jazz – Ornette Coleman (1961)"] },
   { id: "funk", l: "Funk", f: "Funk", fam: "red", cx: 1190, r: 7, p: ["soul"], g: "R&B", era: "1967", t: ["Papa's Got a Brand New Bag – James Brown", "Chameleon – Herbie Hancock (1973)"] },
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1590, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
   { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
-  { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["jazz", "funk"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
-  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1340, r: 8, p: ["funk", "reggae"], g: "Hip-hop", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
+  { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["modal", "funk", "rock"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
+  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1340, r: 8, p: ["funk", "reggae", "disco"], g: "Hip-hop", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
   { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1650, r: 8, p: ["funk", "soul"], g: "Klubbmusikk", era: "1974", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
   // House og techno er slått sammen (v3.97, brukervalg): to scener — Chicago og
   // Detroit — som deler puls, maskinpark og publikum, og som i pensumet uansett
@@ -55,7 +62,7 @@ export const GENEALOGY = [
   // ER doc-ID-en i genreDescriptions, og Firestore forbyr «/» i doc-ID-er
   // (samme grunn som «Trance & DnB»).
   { id: "house", l: "House & techno", f: "House & techno", fam: "teal", cx: 1780, r: 9, p: ["disco"], g: "Klubbmusikk", era: "1980–85", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles", "Strings of Life – Derrick May", "Big Fun – Inner City"] },
-  { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["country", "folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
+  { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
   { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
   { id: "trance", l: "Trance & DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1780, r: 10, p: ["house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
   { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 10, p: ["fusion", "house", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
@@ -64,7 +71,7 @@ export const GENEALOGY = [
   { id: "folk", l: "Folk", f: "Folk (revival)", fam: "amber", cx: 70, r: 7, p: ["eurofolk"], g: "Country", era: "1950–60-tallet", t: ["This Land Is Your Land – Woody Guthrie (1944)", "Blowin' in the Wind – Bob Dylan (1963)"] },
 
   // --- Rock ---
-  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "country", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
+  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
   // «British invasion» er slått inn i Blues rock (v3.96, brukervalg): den var en
   // HENDELSE mer enn en stilart, hadde bare to artister — og begge sto allerede
   // i Blues rock — og lå under Blues selv om fenomenet hører rocken til.
@@ -72,7 +79,7 @@ export const GENEALOGY = [
   // bølge → blues rock ikke brytes, bare kortes ned. Låteksemplene fra den
   // britiske bølgen er beholdt her, og Blues rock-beskrivelsen fortalte allerede
   // historien om bølgen. Epoken utvides bakover til 1963, som var britinv-ens.
-  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rocknroll", "rock"], g: "Blues", era: "1963–69", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)", "(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
+  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rock"], g: "Blues", era: "1963–69", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)", "(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
 
   // --- Rock ---
   { id: "rock", l: "Rock", f: "Rock", fam: "rock", cx: 445, r: 7, p: ["rocknroll"], g: "Rock", era: "tidlig 1960-tall", t: ["My Generation – The Who (1965)", "Light My Fire – The Doors (1967)"] },
@@ -106,7 +113,7 @@ export const GENEALOGY = [
 
   // --- Elektronisk videre ---
   { id: "elektronika", l: "Elektronika", f: "Elektronika", fam: "teal", cx: 1780, r: 11, p: ["house"], g: "Klubbmusikk", era: "1990–2000-tallet", t: ["Windowlicker – Aphex Twin (1999)", "Midnight in a Perfect World – DJ Shadow (1996)"] },
-  { id: "edm", l: "EDM", f: "EDM", fam: "teal", cx: 1780, r: 12, p: ["elektronika"], g: "Klubbmusikk", era: "2010-tallet", t: ["Levels – Avicii (2011)", "Titanium – David Guetta ft. Sia (2011)"] },
+  { id: "edm", l: "EDM", f: "EDM", fam: "teal", cx: 1780, r: 12, p: ["elektronika", "house"], g: "Klubbmusikk", era: "2010-tallet", t: ["Levels – Avicii (2011)", "Titanium – David Guetta ft. Sia (2011)"] },
 
   // --- Samtid ---
   // Sjangre som samler trådene i hver sin familie. Alle henter fra flere hold på
@@ -114,11 +121,11 @@ export const GENEALOGY = [
   // møtes igjen. Cont. R&B og Cont. hip-hop ligger på 2000-t-raden fordi 1990-t
   // allerede er full i den delen av kartet (Neo-soul, Gangsta rap); årstallet i
   // `era` er fasiten for når de oppsto, ikke raden.
-  { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 12, p: ["nujazz"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
-  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["neotrad", "americana", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
+  { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 12, p: ["nujazz", "hiphop"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
+  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["neotrad", "nashville", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
   { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "olive", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
   { id: "contrnb", l: "Cont. R&B", f: "Contemporary R&B", fam: "red", cx: 1160, r: 11, p: ["funk", "hiphop"], g: "R&B", era: "1990-tallet–i dag", t: ["Real Love – Mary J. Blige (1992)", "Crazy in Love – Beyoncé (2003)"] },
-  { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1440, r: 11, p: ["hiphop", "gullalder", "gangsta"], g: "Hip-hop", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
+  { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1440, r: 11, p: ["gullalder", "gangsta"], g: "Hip-hop", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
 ];
 
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
