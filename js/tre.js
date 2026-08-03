@@ -1,11 +1,12 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech } from "./store.js?v=3.98";
-import { renderGenealogy, showSjangerInfo } from "./genealogy.js?v=3.98";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.98";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.98";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.98";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech, subscribeContent } from "./store.js?v=3.99";
+import { setHeatData } from "./heat-strip.js?v=3.99";
+import { renderGenealogy, showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=3.99";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=3.99";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=3.99";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=3.99";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.
@@ -165,4 +166,13 @@ if (CONFIGURED) {
   subscribeArtists((a) => { artists = a; });
   // Skjul ikke-godkjente (pending) innovasjonskort for studenter, som på forsiden.
   subscribeTech((t) => { techItems = t.filter((x) => x.status !== "pending"); });
+  // Varmenivåene til stripa øverst på sjangerkortet. Denne siden lastet ikke
+  // innhold i det hele tatt før (v3.98), så kortet droppet stripa her mens den
+  // vistes overalt ellers — samme kort, to ulike svar avhengig av inngang.
+  // Kommer snapshotet etter at et kort er åpnet, tegnes kortet på nytt, slik at
+  // stripa dukker opp av seg selv i stedet for å mangle til neste klikk.
+  subscribeContent((c) => {
+    setHeatData(c?.varmekart?.heat || null);
+    refreshSjangerInfo();
+  });
 }

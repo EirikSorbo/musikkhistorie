@@ -8,14 +8,14 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=3.98";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.98";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.98";
-import { openTechDetail } from "./explore-tech.js?v=3.98";
-import { renderPage } from "./explore-innhold.js?v=3.98";
-import { openTidslinje } from "./explore-tidslinje.js?v=3.98";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=3.98";
-import { setHeatData } from "./heat-strip.js?v=3.98";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=3.99";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo, refreshSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=3.99";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=3.99";
+import { openTechDetail } from "./explore-tech.js?v=3.99";
+import { renderPage } from "./explore-innhold.js?v=3.99";
+import { openTidslinje } from "./explore-tidslinje.js?v=3.99";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=3.99";
+import { setHeatData } from "./heat-strip.js?v=3.99";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -104,6 +104,9 @@ export function contentChanged() {
   // ville lukket sirkelen. Dette er første og eneste snapshot-punktet, så linja
   // på kortet er fersk fra første lasting og etter hver redigering.
   setHeatData(getState().content?.varmekart?.heat || null);
+  // Står et sjangerkort åpent, tegnes det på nytt — da følger varmelinja med når
+  // læreren endrer nivåer, i stedet for å vise gamle tall til kortet lukkes.
+  refreshSjangerInfo();
   const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
   if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
   if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");

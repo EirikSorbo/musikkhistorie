@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.98";
-import { escapeHtml, buildKilderList } from "./util.js?v=3.98";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.98";
-import { modalOpen, modalClose } from "./ui-modal.js?v=3.98";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=3.98";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=3.98";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=3.99";
+import { escapeHtml, buildKilderList } from "./util.js?v=3.99";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=3.99";
+import { modalOpen, modalClose } from "./ui-modal.js?v=3.99";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=3.99";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=3.99";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -224,6 +224,21 @@ function heatStripBlock(n) {
 
 // Vis sjanger-beskrivelse i #modal-sjanger uten å laste hele kartet.
 // opts: { root, genreDescs, onShowArtists }
+// Kortet som står åpent nå (label + opts), så det kan tegnes på nytt når data
+// lander etter at det ble åpnet. Sporet HER, ikke i sidene, fordi kortet åpnes
+// fra flere innganger: sjanger-bobler, tre-noder og lærerens oversikt. Sporing i
+// én av dem ville bare dekket den ene.
+let openSjanger = null;
+
+// Tegn det åpne sjangerkortet på nytt. Gjør ingenting hvis ingen står åpent, så
+// den er trygg å kalle fra et hvilket som helst snapshot.
+export function refreshSjangerInfo() {
+  if (!openSjanger) return false;
+  const modal = (openSjanger.opts.root || document).querySelector("#modal-sjanger");
+  if (!modal?.classList.contains("open")) return false;
+  return showSjangerInfo(openSjanger.label, openSjanger.opts);
+}
+
 export function showSjangerInfo(label, opts = {}) {
   const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onEdit, onPropose, hasPendingEdit } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
@@ -252,6 +267,7 @@ export function showSjangerInfo(label, opts = {}) {
   ].filter(Boolean).join(" ");
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  openSjanger = { label, opts };
   mTitle.textContent = n.f;
   mBody.innerHTML = `
     ${heatStripBlock(n)}
