@@ -28,13 +28,14 @@ import {
   runContentKeyAlignment,
   runOrphanDuplicatePurge,
   runTreeSlim,
-} from "./store.js?v=3.96";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=3.96";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.96";
-import { initExplore } from "./explore.js?v=3.96";
+  runTreeSlim2,
+} from "./store.js?v=3.97";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=3.97";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=3.97";
+import { initExplore } from "./explore.js?v=3.97";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.96";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.96";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=3.97";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=3.97";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -51,10 +52,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=3.96";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.96";
-import { renderDesk } from "./teacher-desk.js?v=3.96";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.96";
+} from "./teacher-content.js?v=3.97";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=3.97";
+import { renderDesk } from "./teacher-desk.js?v=3.97";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=3.97";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -239,6 +240,7 @@ function startApp() {
       ["Innholdsnøkkel-justering", runContentKeyAlignment],
       ["Foreldreløs-opprydding", runOrphanDuplicatePurge],
       ["Tre-slanking", runTreeSlim],
+      ["Tre-slanking runde 2", runTreeSlim2],
     ];
     for (const [navn, fn] of steps) {
       try { await fn(); } catch (e) { console.warn(`${navn} feilet:`, e?.message || e); }

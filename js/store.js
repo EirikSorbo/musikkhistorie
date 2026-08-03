@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=3.96";
-import { isMainGenre } from "./genealogy.js?v=3.96";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.96";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.96";
-import { mergeHeatRows } from "./import-format.js?v=3.96";
+import { firebaseConfig } from "./firebase-config.js?v=3.97";
+import { isMainGenre } from "./genealogy.js?v=3.97";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=3.97";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=3.97";
+import { mergeHeatRows } from "./import-format.js?v=3.97";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -869,6 +869,139 @@ export async function runTreeSlim() {
   await setDoc(migRef, { [TREE_SLIM_FLAG]: new Date().toISOString() }, { merge: true });
   console.info(`Tre-slanking fullført: ${tagged} artist(er) omtagget, ${heatRemoved} varmekartrad(er) fjernet, ${docsRemoved} beskrivelse(r) slettet.`);
   return { tagged, heatRemoved, docsRemoved };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v3.97): pensumgjennomgangen, runde 2.
+//   a) «Chicago blues» → «Electric blues». Det gamle navnet var direkte FEIL for
+//      halve noden: B.B. King (Memphis), T-Bone Walker og Albert Collins (Texas)
+//      og Christone Ingram (Mississippi) er ikke Chicago-artister. 12 artister
+//      hadde dessuten alt «Electric blues» som UNDERsjanger — den taggen fjernes
+//      nå der den er blitt en dublett av hovedsjangeren.
+//      Node-ID-en forblir «chicagoblues»: koblingsnøklene er ID-baserte, og en
+//      ID-endring ville foreldreløst edgeDescriptions uten å gi noe tilbake.
+//   b) «House» + «Techno» → «House & techno». «/» er FORBUDT i Firestore-doc-
+//      ID-er, og labelen ER doc-ID-en — derfor «&», som i «Trance & DnB».
+//      Varmekartradene slås sammen med MAKS per tiår: begge scenene var
+//      toneangivende, og et snitt ville gjort familien kunstig kjøligere.
+//   c) Ny node «Gullalder-hip-hop». Artistene som hører hjemme der flyttes UT av
+//      sekkenoden «Hip-hop» — det var hele poenget: den rommet 22 artister fra
+//      1973 til 2003. Pionerene (Kool Herc, Bambaataa, Grandmaster Flash,
+//      Sugarhill Gang) blir stående i «Hip-hop», som er grunnleggelsen.
+// ---------------------------------------------------------------------------
+const TREE_SLIM2_FLAG = "treeSlim2_2026_08";
+const EB_OLD = "Chicago blues", EB_NEW = "Electric blues";
+const HT_OLD = ["House", "Techno"], HT_NEW = "House & techno";
+const GOLDEN_AGE = "Gullalder-hip-hop";
+// Østkyst-kanonen 1986–94. Run-DMC er tatt med fordi gjennombruddet («Raising
+// Hell», 1986) ER startskuddet; Fugees/Common/The Roots er bevisst utelatt —
+// de starter i 1994–95 og står allerede i Cont. hip-hop.
+const GOLDEN_AGE_ARTISTS = [
+  "Run DMC", "Beastie Boys", "Public Enemy", "Queen Latifah",
+  "De La Soul", "A Tribe Called Quest", "Wu-Tang Clan", "NAS",
+];
+
+export async function runTreeSlim2() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[TREE_SLIM2_FLAG]) return { skipped: true };
+
+  const uniq = (xs) => [...new Set(xs)];
+  const artistSnap = await getDocs(artistsCol);
+  let tagged = 0, movedToGolden = 0;
+  for (let i = 0; i < artistSnap.docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    let has = false;
+    for (const d of artistSnap.docs.slice(i, i + BATCH_LIMIT)) {
+      const a = d.data();
+      const main0 = Array.isArray(a.mainGenre) ? a.mainGenre : [];
+      const sub0 = Array.isArray(a.subGenre) ? a.subGenre : [];
+      let main = main0.map((g) => (g === EB_OLD ? EB_NEW : HT_OLD.includes(g) ? HT_NEW : g));
+      let sub = sub0.map((g) => (g === EB_OLD ? EB_NEW : HT_OLD.includes(g) ? HT_NEW : g));
+      // Gullalderen: ut av sekkenoden, inn i den nye.
+      if (GOLDEN_AGE_ARTISTS.includes(a.name) && main.includes("Hip-hop")) {
+        main = main.map((g) => (g === "Hip-hop" ? GOLDEN_AGE : g));
+        movedToGolden++;
+      }
+      main = uniq(main);
+      // En undersjanger som nå er identisk med en av artistens hovedsjangre er
+      // ren støy — den ville vist samme ord to ganger på kortet.
+      sub = uniq(sub).filter((g) => !main.includes(g));
+      const changed = main.join("\u0000") !== main0.join("\u0000") || sub.join("\u0000") !== sub0.join("\u0000");
+      if (changed) {
+        console.info(`Tre-runde-2 — ${a.name}: main [${main0.join(", ")}] → [${main.join(", ")}]` +
+          (sub.join() !== sub0.join() ? ` | sub [${sub0.join(", ")}] → [${sub.join(", ")}]` : ""));
+        batch.update(d.ref, { mainGenre: main, subGenre: sub });
+        has = true;
+        tagged++;
+      }
+    }
+    if (has) await batch.commit();
+  }
+
+  // Varmekartet: omdøping + sammenslåing (maks per tiår).
+  let heatNote = "uendret";
+  const vkRef = doc(db, "content", "varmekart");
+  const vkSnap = await getDoc(vkRef);
+  if (vkSnap.exists() && vkSnap.data().heat) {
+    const heat = { ...vkSnap.data().heat };
+    console.info("Tre-runde-2 — varmekartrader FØR (logget for gjenoppretting):",
+      JSON.stringify({ [EB_OLD]: heat[EB_OLD], House: heat.House, Techno: heat.Techno }));
+    if (heat[EB_OLD] && !heat[EB_NEW]) heat[EB_NEW] = heat[EB_OLD];
+    delete heat[EB_OLD];
+    const rows = HT_OLD.map((k) => heat[k]).filter(Array.isArray);
+    if (rows.length) {
+      heat[HT_NEW] = rows[0].map((_, i) =>
+        Math.max(...rows.map((r) => (Number.isInteger(r[i]) ? r[i] : 0))));
+    }
+    for (const k of HT_OLD) delete heat[k];
+    await setDoc(vkRef, { heat, updatedAt: new Date().toISOString() });
+    heatNote = `${EB_NEW} omdøpt, ${HT_NEW} slått sammen`;
+  }
+
+  // Beskrivelsene følger doc-ID = label. Flytt tekstene til de nye navnene.
+  // Ved kollisjon vinner den EKSISTERENDE main-teksten; en sub-tekst på samme
+  // navn droppes, ellers ville den skygget for main (den kjente fella).
+  const moveDesc = async (from, to) => {
+    const fromRef = doc(db, "genreDescriptions", from);
+    const fromSnap = await getDoc(fromRef);
+    if (!fromSnap.exists()) return;
+    const toRef = doc(db, "genreDescriptions", to);
+    const toSnap = await getDoc(toRef);
+    const cur = toSnap.exists() ? toSnap.data() : {};
+    console.info(`Tre-runde-2 — flytter genreDescriptions/${from} → ${to} (begge logget):`,
+      JSON.stringify({ from: fromSnap.data(), toFør: cur }));
+    const merged = { ...cur, ...fromSnap.data() };
+    delete merged.sub;   // navnet er nå en TRE-sjanger; sub ville skygget main
+    await setDoc(toRef, merged, { merge: false });
+    await deleteDoc(fromRef);
+  };
+  await moveDesc(EB_OLD, EB_NEW);
+  await moveDesc("House", HT_NEW);
+  // Techno-teksten er allerede dekket av den sammenslåtte noden; logg og slett.
+  for (const id of ["Techno"]) {
+    const ref = doc(db, "genreDescriptions", id);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) continue;
+    console.info(`Tre-runde-2 — sletter genreDescriptions/${id} (innhold logget):`, JSON.stringify(snap.data()));
+    await deleteDoc(ref);
+  }
+
+  // Koblinger som forsvant da techno ble borte, + rester fra tidligere runder.
+  let edgesRemoved = 0;
+  for (const id of ["house__techno", "disco__techno", "techno__trance", "techno__elektronika",
+                    "techno__nujazz", "nujazz__jazz2"]) {
+    const ref = doc(db, "edgeDescriptions", id);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) continue;
+    console.info(`Tre-runde-2 — sletter edgeDescriptions/${id} (innhold logget):`, JSON.stringify(snap.data()));
+    await deleteDoc(ref);
+    edgesRemoved++;
+  }
+
+  await setDoc(migRef, { [TREE_SLIM2_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Tre-runde-2 fullført: ${tagged} artist(er) omtagget (${movedToGolden} til gullalderen), varmekart: ${heatNote}, ${edgesRemoved} koblingsbeskrivelse(r) fjernet.`);
+  return { tagged, movedToGolden, heatNote, edgesRemoved };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som
