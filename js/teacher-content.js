@@ -5,20 +5,20 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.03";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.03";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.03";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.03";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.03";
-import { resolveDesc } from "./genre-descriptions.js?v=4.03";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.03";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.03";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.03";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.04";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.04";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.04";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.04";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.04";
+import { resolveDesc } from "./genre-descriptions.js?v=4.04";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.04";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.04";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.04";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.03";
-import { $ } from "./shared.js?v=4.03";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=4.03";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.04";
+import { $ } from "./shared.js?v=4.04";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=4.04";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -152,10 +152,41 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
       $("#ss-epoke-hint").textContent = epokeHint(subgenreId);
     }
   }
+  buildUsikreRows(Array.isArray(resolved.usikre) ? resolved.usikre : []);
   const modal = $("#modal-subgenre-single");
   modal.dataset.subgenre = subgenreId;
   modal.dataset.level = level;
   openAdminModal("modal-subgenre-single");
+}
+
+// Usikre påstander fra en kildegjennomgang: hva som mangler belegg, hvorfor det
+// likevel står i teksten, og hvor det kan avgjøres. Læreren kvitterer ut ett og
+// ett med «Avklart» — raden fjernes fra DOM, og lagring skriver det som er
+// igjen. Er lista tom, skjules hele blokken (ingen tom overskrift i skjemaet).
+function buildUsikreRows(usikre) {
+  const wrap = $("#ss-usikre-wrap");
+  const rows = $("#ss-usikre-rows");
+  if (!wrap || !rows) return;
+  rows.innerHTML = "";
+  wrap.hidden = usikre.length === 0;
+  usikre.forEach((u) => {
+    const rad = document.createElement("div");
+    rad.className = "ss-usikker";
+    rad.dataset.usikker = JSON.stringify(u);
+    rad.innerHTML =
+      `<div class="ss-usikker-tekst">${escapeHtml(u.tekst || "")}</div>` +
+      (u.hvorfor ? `<div class="hint">${escapeHtml(u.hvorfor)}</div>` : "") +
+      (u.hvorSjekke ? `<div class="hint"><strong>Sjekk mot:</strong> ${escapeHtml(u.hvorSjekke)}</div>` : "") +
+      `<button type="button" class="btn ghost small ss-usikker-ok">Avklart</button>`;
+    rows.appendChild(rad);
+  });
+}
+
+// Det som står igjen i DOM etter eventuelle «Avklart»-klikk.
+function collectUsikreRows() {
+  return [...document.querySelectorAll("#ss-usikre-rows .ss-usikker")]
+    .map((r) => { try { return JSON.parse(r.dataset.usikker); } catch { return null; } })
+    .filter(Boolean);
 }
 
 // Sammenligningsgrunnlaget under epoke-feltene: nodens era-streng fra treet
@@ -241,6 +272,15 @@ export function setupSubgenreSingleSave() {
   const addKilderBtn = $("#ss-add-kilder");
   if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ss-kilder-rows"), "", "", "ss"));
 
+  // «Avklart» fjerner bare raden fra DOM — den forsvinner først for godt når
+  // læreren faktisk lagrer, så et feilklikk kan angres ved å lukke uten å lagre.
+  const usikreRows = $("#ss-usikre-rows");
+  if (usikreRows) usikreRows.addEventListener("click", (e) => {
+    if (!e.target.closest(".ss-usikker-ok")) return;
+    e.target.closest(".ss-usikker").remove();
+    if (!usikreRows.children.length) $("#ss-usikre-wrap").hidden = true;
+  });
+
   $("#ss-save").addEventListener("click", async () => {
     const modal = $("#modal-subgenre-single");
     const subgenreId = modal.dataset.subgenre;
@@ -250,7 +290,7 @@ export function setupSubgenreSingleSave() {
     const msg = $("#ss-msg");
     // Epoken lagres KUN på main-nivå (tre-sjangre). Tomt felt = ingen verdi,
     // ikke 0 — null lar sjangerkortet falle tilbake på nodens era-streng.
-    const data = { description, kilder };
+    const data = { description, kilder, usikre: collectUsikreRows() };
     if (level === "main") {
       const num = (sel) => {
         const raw = $(sel).value.trim();

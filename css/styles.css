@@ -459,6 +459,14 @@ textarea { resize: vertical; }
 .ss-epoke-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .ss-epoke-felt { flex: 0 1 170px; }
 
+/* Påstander uten kildebelegg — arbeidsnotat i lærerens sjangereditor. Gul
+   venstrekant, samme signal som «trenger tilsyn» ellers i admin. */
+.ss-usikker { border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+  border-radius: 0 6px 6px 0; padding: 8px 10px; margin-bottom: 8px; }
+.ss-usikker-tekst { font-size: 0.9rem; }
+.ss-usikker .hint { margin: 4px 0 0; }
+.ss-usikker .ss-usikker-ok { margin-top: 6px; }
+
 .add-actions, .admin-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
 .hint { margin: 2px 0 10px; font-size: 0.78rem; color: var(--muted-2); }

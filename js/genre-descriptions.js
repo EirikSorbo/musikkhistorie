@@ -29,7 +29,7 @@ function yr(v) {
   return Number.isInteger(v) && v >= AAR_MIN && v <= AAR_MAKS ? v : null;
 }
 
-const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null };
+const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, usikre: [] };
 
 function fromOverride(o, level) {
   if (!o) return null;
@@ -47,6 +47,7 @@ function fromOverride(o, level) {
     kilder: lvl.kilder || [],
     activeFrom: yr(lvl.activeFrom),
     activeTo: yr(lvl.activeTo),
+    usikre: Array.isArray(lvl.usikre) ? lvl.usikre : [],
   };
 }
 

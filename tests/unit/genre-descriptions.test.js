@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.03";
-import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.03";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.04";
+import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.04";
 
 const descs = {
   Blues: {
@@ -99,10 +99,22 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: Firestore-årstall vinner, tomt sluttår blir «i dag», ellers node-fallback", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.03");
+  const { eraText } = await import("../../js/genealogy.js?v=4.04");
   const node = { era: "1930–45" };
   assert.equal(eraText(node, { activeFrom: 1935, activeTo: 1945 }), "1935–1945");
   assert.equal(eraText(node, { activeFrom: 1990, activeTo: null }), "1990–i dag");
   assert.equal(eraText(node, { activeFrom: null, activeTo: null }), "1930–45");
   assert.equal(eraText({ era: "" }, {}), "");
+});
+
+test("usikre påstander følger med, og er alltid en liste", () => {
+  const d = {
+    A: { main: { description: "t", usikre: [{ tekst: "x", hvorfor: "y", hvorSjekke: "z" }] } },
+    B: { main: { description: "t" } },
+    C: { main: { description: "t", usikre: "ikke en liste" } },
+  };
+  assert.equal(resolveDesc(d, "A", "main").usikre.length, 1);
+  assert.deepEqual(resolveDesc(d, "B", "main").usikre, []);
+  assert.deepEqual(resolveDesc(d, "C", "main").usikre, [], "ugyldig form skal bli tom liste, ikke krasje");
+  assert.deepEqual(resolveDesc(d, "Finnes ikke", "main").usikre, []);
 });

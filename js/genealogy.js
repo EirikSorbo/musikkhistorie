@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.03";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.03";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.03";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.03";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.03";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.03";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.04";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.04";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.04";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.04";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.04";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.04";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -45,7 +45,7 @@ export const GENEALOGY = [
   { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 700, r: 5, p: ["swing"], g: "Jazz", era: "1945", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
   { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 1190, r: 5, p: ["blues", "gospel"], g: "R&B", era: "1940-tallet", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
   { id: "nashville", l: "Nashville", f: "Nashville-sound", fam: "amber", cx: 195, r: 6, p: ["honkytonk"], g: "Country", era: "1957", t: ["Crazy – Patsy Cline (1961)", "Four Walls – Jim Reeves (1957)"] },
-  { id: "chicagoblues", l: "Electric blues", f: "Electric blues", fam: "blue", cx: 580, r: 5, p: ["blues"], g: "Blues", era: "midten av 1940-tallet", t: ["Got My Mojo Workin' – Muddy Waters (1956)", "Call It Stormy Monday – T-Bone Walker (1948)"] },
+  { id: "chicagoblues", l: "Electric blues", f: "Electric blues", fam: "blue", cx: 580, r: 5, p: ["blues"], g: "Blues", era: "midten av 1940-tallet", t: ["Got My Mojo Workin' – Muddy Waters (1956)", "Call It Stormy Monday – T-Bone Walker (1947)"] },
   { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 700, r: 6, p: ["bebop"], g: "Jazz", era: "1949", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
   { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 825, r: 6, p: ["bebop"], rx: ["cool"], g: "Jazz", era: "1955", t: ["Moanin' – Art Blakey (1959)"] },
   { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 1190, r: 6, p: ["gospel", "rnb"], g: "R&B", era: "1959", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
