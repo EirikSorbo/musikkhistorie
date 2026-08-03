@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.01";
-import { isMainGenre } from "./genealogy.js?v=4.01";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.01";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.01";
-import { mergeHeatRows } from "./import-format.js?v=4.01";
+import { firebaseConfig } from "./firebase-config.js?v=4.02";
+import { isMainGenre } from "./genealogy.js?v=4.02";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.02";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.02";
+import { mergeHeatRows } from "./import-format.js?v=4.02";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -1002,6 +1002,84 @@ export async function runTreeSlim2() {
   await setDoc(migRef, { [TREE_SLIM2_FLAG]: new Date().toISOString() }, { merge: true });
   console.info(`Tre-runde-2 fullført: ${tagged} artist(er) omtagget (${movedToGolden} til gullalderen), varmekart: ${heatNote}, ${edgesRemoved} koblingsbeskrivelse(r) fjernet.`);
   return { tagged, movedToGolden, heatNote, edgesRemoved };
+}
+
+// ---------------------------------------------------------------------------
+//  ENGANGS-MIGRERING (v4.02): omtagging etter tre-gjennomgangen — ni redaksjonelle
+//  vedtak fra gjennomgangswidgeten, godkjent av læreren enkeltvis.
+//
+//  Fellesnevneren for hip-hop-endringene: «Hip-hop» er etter v3.97 GRUNNLEGGELSES-
+//  noden (ca. 1979, Bronx). Artister som debuterte på 90- og 2000-tallet ble
+//  liggende der bare fordi sekkenoden var det eneste som fantes. De flyttes nå til
+//  noden som faktisk plasserer dem — eller mister den, hvis en mer presis node
+//  allerede står der.
+//
+//  En undersjanger som blir identisk med en av artistens hovedsjangre fjernes
+//  (samme regel som i v3.97): den ville vist samme ord to ganger på kortet.
+// ---------------------------------------------------------------------------
+const RETAG_FLAG = "genreRetag_2026_08";
+const RETAG = [
+  // Elektrisk blues, ikke bluesrock — begge har alt «Electric blues» som undersjanger.
+  { name: "Albert Collins", remove: ["Blues rock"], add: ["Electric blues"] },
+  { name: "Christone «Kingfish» Ingram", remove: ["Blues rock"], add: ["Electric blues"] },
+  // T.I. ga undersjangeren navnet med «Trap Muzik» (2003).
+  { name: "T.I.", remove: ["Hip-hop"], add: ["Trap"] },
+  { name: "Eminem", remove: ["Hip-hop"], add: ["Cont. hip-hop"] },
+  { name: "OutKast", remove: ["Hip-hop"], add: ["Cont. hip-hop"] },
+  { name: "Fugees", remove: ["Hip-hop"], add: ["Gullalder-hip-hop"] },
+  // Common spenner over begge: «Resurrection» (1994) er gullalder, karrieren samtid.
+  { name: "Common", remove: ["Hip-hop"], add: ["Gullalder-hip-hop"] },
+  // Disse fire er allerede plassert av «Cont. hip-hop»; grunnleggelsesnoden er støy.
+  { name: "Jay-Z", remove: ["Hip-hop"], add: [] },
+  { name: "Timbaland", remove: ["Hip-hop"], add: [] },
+  { name: "J Dilla", remove: ["Hip-hop"], add: [] },
+  { name: "Missy Elliott", remove: ["Hip-hop"], add: [] },
+  // Kraftwerk kom FØR house og techno og påvirket dem — å tagge dem med sjangeren
+  // de inspirerte er baklengs. «Elektronika» blir stående.
+  { name: "Kraftwerk", remove: ["House & techno"], add: [] },
+];
+
+export async function runGenreRetag() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[RETAG_FLAG]) return { skipped: true };
+
+  const artistSnap = await getDocs(artistsCol);
+  const byName = new Map(artistSnap.docs.map((d) => [String(d.data().name || "").trim().toLowerCase(), d]));
+  const done = [], missing = [], skipped = [];
+
+  for (let i = 0; i < RETAG.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    let has = false;
+    for (const spec of RETAG.slice(i, i + BATCH_LIMIT)) {
+      const d = byName.get(spec.name.trim().toLowerCase());
+      if (!d) { missing.push(spec.name); continue; }
+      const a = d.data();
+      const main0 = Array.isArray(a.mainGenre) ? a.mainGenre : [];
+      const sub0 = Array.isArray(a.subGenre) ? a.subGenre : [];
+      // Har taggen alt forsvunnet (manuell redigering i mellomtiden), rører vi ingenting.
+      if (spec.remove.length && !spec.remove.some((g) => main0.includes(g))) {
+        skipped.push(`${spec.name} (hadde ikke «${spec.remove.join(", ")}» lenger)`);
+        continue;
+      }
+      let main = main0.filter((g) => !spec.remove.includes(g));
+      for (const g of spec.add) if (!main.includes(g)) main.push(g);
+      if (!main.length) { skipped.push(`${spec.name} (ville stått uten sjanger)`); continue; }
+      const sub = sub0.filter((g) => !main.includes(g));
+      console.info(`Omtagging — ${a.name}: main [${main0.join(", ")}] → [${main.join(", ")}]` +
+        (sub.length !== sub0.length ? ` | sub [${sub0.join(", ")}] → [${sub.join(", ")}]` : ""));
+      batch.update(d.ref, { mainGenre: main, subGenre: sub });
+      has = true;
+      done.push(spec.name);
+    }
+    if (has) await batch.commit();
+  }
+
+  await setDoc(migRef, { [RETAG_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Omtagging fullført: ${done.length} artist(er) endret.` +
+    (missing.length ? ` IKKE FUNNET: ${missing.join(", ")}.` : "") +
+    (skipped.length ? ` HOPPET OVER: ${skipped.join("; ")}.` : ""));
+  return { done, missing, skipped };
 }
 
 // Sjangerhistoriene («Sjangerhistorier» i Det store bildet) lagres som

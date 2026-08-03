@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.01";
-import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.01";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.02";
+import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.02";
 
 const descs = {
   Blues: {
