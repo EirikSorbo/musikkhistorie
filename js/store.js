@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.04";
-import { isMainGenre } from "./genealogy.js?v=4.04";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.04";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.04";
-import { mergeHeatRows } from "./import-format.js?v=4.04";
+import { firebaseConfig } from "./firebase-config.js?v=4.05";
+import { isMainGenre } from "./genealogy.js?v=4.05";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.05";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.05";
+import { mergeHeatRows } from "./import-format.js?v=4.05";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -793,6 +793,66 @@ export async function runOrphanDuplicatePurge() {
 //  allerede historien om den britiske bølgen, så beskrivelsen står seg.
 //  «Ragtime»-dokumentet BEHOLDES: rot-noder viser beskrivelsen sin som før.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//  UNDERSJANGER-SLETTING (2026-08-03, brukervalg)
+// ---------------------------------------------------------------------------
+//  «Neotraditional country» var et sub-dokument som bar det FULLE navnet til
+//  tre-noden «Neotrad. country». De skygget for hverandre: en under-chip med
+//  fullnavnet slo opp sub-teksten i stedet for nodens main-tekst. Artistene som
+//  bar taggen er flyttet til mainGenre «Neotrad. country», så dokumentet står
+//  igjen uten en eneste referanse.
+//
+//  Sikring: sletter KUN når (a) dokumentet ikke har en main-tekst — da er det
+//  en tre-sjangerbeskrivelse og skal aldri røres her — og (b) ingen artist
+//  fortsatt viser til navnet i mainGenre eller subGenre. Blir taggen lagt inn
+//  igjen før migreringen rekker å kjøre, står dokumentet urørt og det logges.
+//  Hele dokumentet logges før sletting, så det kan gjenopprettes fra konsollen.
+// ---------------------------------------------------------------------------
+const SUBGENRE_DELETE_FLAG = "subgenreDocDelete_2026_08";
+const SUBGENRE_DOCS_TO_DELETE = ["Neotraditional country"];
+
+export async function runSubgenreDocDelete() {
+  const migRef = doc(db, "config", "migrations");
+  const migSnap = await getDoc(migRef);
+  if (migSnap.exists() && migSnap.data()[SUBGENRE_DELETE_FLAG]) return { skipped: true };
+
+  // Én lesning av artistene, delt av alle navnene i lista.
+  const artistSnap = await getDocs(artistsCol);
+  const refererer = (navn) => {
+    const n = String(navn).toLowerCase();
+    return artistSnap.docs.filter((d) => {
+      const a = d.data();
+      return [...(a.mainGenre || []), ...(a.subGenre || [])].some((g) => String(g).toLowerCase() === n);
+    }).map((d) => d.data().name);
+  };
+
+  const slettet = [], beholdt = [];
+  for (const navn of SUBGENRE_DOCS_TO_DELETE) {
+    const ref = doc(db, "genreDescriptions", navn);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) continue;
+    const data = snap.data();
+    if (data?.main?.description) {
+      beholdt.push(`${navn} (har main-tekst — er en tre-sjangerbeskrivelse)`);
+      console.warn(`Undersjanger-sletting — BEHOLDT «${navn}»: dokumentet har en main-tekst.`, data);
+      continue;
+    }
+    const brukt = refererer(navn);
+    if (brukt.length) {
+      beholdt.push(`${navn} (${brukt.length} artist(er) bruker den fortsatt)`);
+      console.warn(`Undersjanger-sletting — BEHOLDT «${navn}»: brukes av ${brukt.join(", ")}.`, data);
+      continue;
+    }
+    console.info(`Undersjanger-sletting — sletter «${navn}» (hele dokumentet logget for gjenoppretting):`, JSON.stringify(data));
+    await deleteDoc(ref);
+    slettet.push(navn);
+  }
+
+  await setDoc(migRef, { [SUBGENRE_DELETE_FLAG]: new Date().toISOString() }, { merge: true });
+  console.info(`Undersjanger-sletting fullført: ${slettet.length} slettet (${slettet.join(", ") || "ingen"}), ${beholdt.length} beholdt.`);
+  return { slettet, beholdt };
+}
+
 const TREE_SLIM_FLAG = "treeSlim_2026_08";
 const TREE_SLIM_HEAT_ROWS = ["British invasion", "Ragtime"];
 const TREE_SLIM_GENRE_DOCS = ["British invasion"];

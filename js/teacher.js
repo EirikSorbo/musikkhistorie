@@ -27,16 +27,17 @@ import {
   runTranceDocIdMigration,
   runContentKeyAlignment,
   runOrphanDuplicatePurge,
+  runSubgenreDocDelete,
   runTreeSlim,
   runTreeSlim2,
   runGenreRetag,
-} from "./store.js?v=4.04";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.04";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.04";
-import { initExplore } from "./explore.js?v=4.04";
+} from "./store.js?v=4.05";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.05";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.05";
+import { initExplore } from "./explore.js?v=4.05";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.04";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.04";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.05";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.05";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -53,10 +54,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.04";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.04";
-import { renderDesk } from "./teacher-desk.js?v=4.04";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.04";
+} from "./teacher-content.js?v=4.05";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.05";
+import { renderDesk } from "./teacher-desk.js?v=4.05";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.05";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -243,6 +244,7 @@ function startApp() {
       ["Tre-slanking", runTreeSlim],
       ["Tre-slanking runde 2", runTreeSlim2],
       ["Omtagging etter gjennomgang", runGenreRetag],
+      ["Undersjanger-sletting", runSubgenreDocDelete],
     ];
     for (const [navn, fn] of steps) {
       try { await fn(); } catch (e) { console.warn(`${navn} feilet:`, e?.message || e); }
