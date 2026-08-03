@@ -7,35 +7,36 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.00";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.00";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.00";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.00";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.00";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.00";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.01";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.01";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.01";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.01";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.01";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.01";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
-  { id: "eurofolk", l: "Europeisk", f: "Europeisk folkemusikk", fam: "gray", cx: 400, r: 0, p: [], g: null, era: "Røtter", t: [] },
-  { id: "vestafrik", l: "Vestafrikansk", f: "Vestafrikansk musikk", fam: "gray", cx: 700, r: 0, p: [], g: null, era: "Røtter", t: [] },
+  { id: "eurofolk", l: "Europeisk", f: "Europeisk folkemusikk", fam: "gray", cx: 600, r: 0, p: [], g: null, era: "Røtter", t: [] },
+  { id: "vestafrik", l: "Vestafrikansk", f: "Vestafrikansk musikk", fam: "gray", cx: 900, r: 0, p: [], g: null, era: "Røtter", t: [] },
   // Hymner og Vaudeville er de to europeiske kanalene inn i amerikansk
   // populærmusikk: den ene sakral, den andre kommersiell. Uten dem sto
   // «Europeisk» som en udifferensiert sekk, og linjene videre til Spirituals,
   // Country og Tin Pan Alley måtte tegnes fra den sekken i stedet for fra det
   // som faktisk påvirket dem.
-  { id: "hymner", l: "Hymner", f: "Salmer og vekkelsessang", fam: "gray", cx: 330, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1700–1800-tallet", t: ["Amazing Grace (1779)", "Wondrous Love – Sacred Harp-tradisjonen"] },
-  { id: "vaudeville", l: "Vaudeville", f: "Vaudeville og varieté", fam: "gray", cx: 190, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1880–1930", t: ["Some of These Days – Sophie Tucker (1911)", "Alexander's Ragtime Band – Irving Berlin (1911)"] },
-  { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 580, r: 0, yOffset: 0.5, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
-  { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1070, r: 0, yOffset: 0.5, p: ["vestafrik", "hymner"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
+  { id: "hymner", l: "Hymner", f: "Salmer og vekkelsessang", fam: "gray", cx: 530, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1700–1800-tallet", t: ["Amazing Grace (1779)", "Wondrous Love – Sacred Harp-tradisjonen"] },
+  { id: "vaudeville", l: "Vaudeville", f: "Vaudeville og varieté", fam: "gray", cx: 390, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1880–1930", t: ["Some of These Days – Sophie Tucker (1911)", "Alexander's Ragtime Band – Irving Berlin (1911)"] },
+  { id: "brassband", l: "Brassband", f: "Brass- og marsjtradisjon", fam: "gray", cx: 1030, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1800-tallet", t: ["The Stars and Stripes Forever – Sousa (1896)", "Just a Closer Walk with Thee – New Orleans-begravelsesmarsj"] },
+  { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 780, r: 0, yOffset: 0.5, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
+  { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1270, r: 0, yOffset: 0.5, p: ["vestafrik", "hymner"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
   { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 1, yOffset: 0.5, p: ["worksongs", "vaudeville"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
   // Ragtime er ROT, ikke pensumsjanger (v3.96, brukervalg): den er forløperen
   // jazzen vokser ut av, på linje med Work songs og Spirituals — ikke en stil
   // studentene skal tagge artister med. Derfor g: null (ute av mainGenre-
   // vokabularet og varmekartet) og gray-familien, som de andre røttene.
   // Noden, beskrivelsen og koblingene består; den er fortsatt jazzens inngang.
-  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "gray", cx: 700, r: 1, p: ["vestafrik", "eurofolk"], g: null, era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
+  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "gray", cx: 900, r: 1, p: ["vestafrik", "brassband"], g: null, era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
   { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["vaudeville"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
-  { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
+  { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "brassband", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
   { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "hymner", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
   { id: "gospel", l: "Gospel", f: "Gospel", fam: "olive", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
