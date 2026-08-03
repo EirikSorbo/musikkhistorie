@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.02";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.03";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -23,7 +23,12 @@ test("artist-hvitelisten inneholder de reelle innholdsfeltene", () => {
 
 test("tech/subgenre/decade-hvitelistene utelater status og andre systemfelter", () => {
   assert.equal(PROPOSABLE_KEYS.tech.includes("status"), false);
-  assert.deepEqual(PROPOSABLE_KEYS.subgenre, ["description"]);
+  // Sjangre: beskrivelse, epoke-årstallene og kilder er foreslåbare — men
+  // ingen systemfelter. Holdes i synk med FIELD_SPECS.subgenre i proposals.js.
+  assert.deepEqual(PROPOSABLE_KEYS.subgenre, ["description", "kilder", "activeFrom", "activeTo"]);
+  for (const key of FORBIDDEN) {
+    assert.equal(PROPOSABLE_KEYS.subgenre.includes(key), false, `subgenre skal ikke tillate ${key}`);
+  }
   assert.deepEqual(PROPOSABLE_KEYS["decade-society"], ["society", "societyMore"]);
   assert.deepEqual(PROPOSABLE_KEYS["decade-tech"], ["tech", "techMore"]);
 });

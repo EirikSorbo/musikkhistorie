@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.02";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.02";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.02";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.02";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.02";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.02";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.03";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.03";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.03";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.03";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.03";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.03";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -203,6 +203,18 @@ export function findTreeGenreNode(name) {
 // derimot ALLTID labelen — den er doc-ID-en i genreDescriptions. Leste de to
 // ulikt, ville editoren åpnet tom over en tekst som vises i popupen, og lagring
 // ville lagd et duplikat under labelen.
+// Epoke-linja øverst på sjangerkortet. Sannheten er de STRUKTURERTE årstallene
+// i Firestore (activeFrom/activeTo), som læreren kan rette og appen kan måle mot
+// varmekartet. Nodens era-streng i koden er bare fallback for sjangre som ennå
+// ikke er gjennomgått — den fases ut etter hvert som årstallene fylles inn.
+// Tomt sluttår betyr «fortsatt aktiv», ikke «ukjent»: en sjanger som lever i
+// dag skal lese «1990–i dag», ikke stå med en åpen strek.
+export function eraText(n, resolved) {
+  const from = resolved?.activeFrom, to = resolved?.activeTo;
+  if (Number.isInteger(from)) return `${from}–${Number.isInteger(to) ? to : "i dag"}`;
+  return n.era || "";
+}
+
 export function resolveMainDesc(genreDescs, genreId) {
   const n = GENEALOGY.find((x) => x.l === genreId || x.f === genreId);
   return n
@@ -279,7 +291,7 @@ export function showSjangerInfo(label, opts = {}) {
   mTitle.textContent = n.f;
   mBody.innerHTML = `
     ${heatStripBlock(n)}
-    <p class="gx-era">${escapeHtml(n.era)}</p>
+    <p class="gx-era">${escapeHtml(eraText(n, resolved))}</p>
     <p class="gx-desc">${descText ? linkifyAll(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</p>
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}

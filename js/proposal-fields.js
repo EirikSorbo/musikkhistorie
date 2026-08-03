@@ -11,13 +11,16 @@
 //  Avhengighetsfri (kun artist-schema) → enhetstestbar i Node.
 // ============================================================================
 
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.02";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.03";
 
 export const PROPOSABLE_KEYS = {
   // «complex»-felter (verk/musikkeksempler/kilder) foreslås ikke via editoren.
   artist: ARTIST_FIELDS.filter((f) => f.type !== "complex").map((f) => f.key),
   tech: ["name", "type", "category", "instrument", "decade", "adoptedYear", "adoptedLabel", "description", "kilder", "imageUrl", "imageCredit"],
-  subgenre: ["description"],
+  // Sjangre (main = tre-node, sub = fri undersjanger). «kilder» ble åpnet for
+  // forslag da sjangerkortene fikk kildelister på linje med artistkortene;
+  // activeFrom/activeTo er epoken, og gjelder i praksis bare main-nivået.
+  subgenre: ["description", "kilder", "activeFrom", "activeTo"],
   // Instrumentsammendraget bor i content-samlingen; body er hele teksten.
   instrument: ["body"],
   "decade-society": ["society", "societyMore"],

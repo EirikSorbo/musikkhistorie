@@ -5,19 +5,20 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.02";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.02";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.02";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.02";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.02";
-import { resolveDesc } from "./genre-descriptions.js?v=4.02";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.02";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.02";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.03";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.03";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.03";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.03";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.03";
+import { resolveDesc } from "./genre-descriptions.js?v=4.03";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.03";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.03";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.03";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.02";
-import { $ } from "./shared.js?v=4.02";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=4.02";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.03";
+import { $ } from "./shared.js?v=4.03";
+import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=4.03";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -138,10 +139,37 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
     const kilder = Array.isArray(resolved.kilder) ? resolved.kilder : [];
     (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || "", "ss"));
   }
+  // Epoke-feltene gjelder bare tre-sjangre. Hint-linja viser hvilke tiår
+  // varmekartet faktisk har tall for, så læreren ser epoken og pensumdekningen
+  // side om side når de spriker (de måler ulike ting — se Oppskrift-fila).
+  const epokeWrap = $("#ss-epoke-wrap");
+  if (epokeWrap) {
+    const isMain = level === "main";
+    epokeWrap.hidden = !isMain;
+    if (isMain) {
+      $("#ss-active-from").value = Number.isInteger(resolved.activeFrom) ? resolved.activeFrom : "";
+      $("#ss-active-to").value = Number.isInteger(resolved.activeTo) ? resolved.activeTo : "";
+      $("#ss-epoke-hint").textContent = epokeHint(subgenreId);
+    }
+  }
   const modal = $("#modal-subgenre-single");
   modal.dataset.subgenre = subgenreId;
   modal.dataset.level = level;
   openAdminModal("modal-subgenre-single");
+}
+
+// Sammenligningsgrunnlaget under epoke-feltene: nodens era-streng fra treet
+// (det epoken erstatter) og tiårsspennet varmekartet har verdier i.
+function epokeHint(genreId) {
+  const node = GENEALOGY.find((n) => n.l === genreId || n.f === genreId);
+  const deler = [];
+  if (node?.era) deler.push(`Treets era-tekst: «${node.era}»`);
+  const vals = heatRow(getHeatData(), node?.l || genreId);
+  const varme = vals.map((v, i) => (v > 0 ? DECADES[i] : null)).filter((d) => d !== null);
+  deler.push(varme.length
+    ? `Varmekartet har artister ${varme[0]}–${varme[varme.length - 1]}`
+    : "Varmekartet har ingen artister på denne sjangeren");
+  return deler.join(" · ");
 }
 
 // Rediger beskrivelsen for én kobling (strek i slektstreet). Doc-ID i
@@ -220,8 +248,27 @@ export function setupSubgenreSingleSave() {
     const description = $("#ss-desc").value.trim();
     const kilder = collectKilderRows($("#ss-kilder-rows"));
     const msg = $("#ss-msg");
+    // Epoken lagres KUN på main-nivå (tre-sjangre). Tomt felt = ingen verdi,
+    // ikke 0 — null lar sjangerkortet falle tilbake på nodens era-streng.
+    const data = { description, kilder };
+    if (level === "main") {
+      const num = (sel) => {
+        const raw = $(sel).value.trim();
+        if (!raw) return null;
+        const v = parseInt(raw, 10);
+        return Number.isInteger(v) && v >= 1600 && v <= 2100 ? v : null;
+      };
+      const from = num("#ss-active-from"), to = num("#ss-active-to");
+      if (from !== null && to !== null && to < from) {
+        msg.textContent = "«Til år» kan ikke være før «Fra år».";
+        msg.className = "form-msg error";
+        return;
+      }
+      data.activeFrom = from;
+      data.activeTo = to;
+    }
     try {
-      await saveGenreDescLevel(subgenreId, level, { description, kilder });
+      await saveGenreDescLevel(subgenreId, level, data);
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
       setTimeout(() => closeAdminModal("modal-subgenre-single"), 800);

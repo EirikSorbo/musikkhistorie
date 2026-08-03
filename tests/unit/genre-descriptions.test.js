@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.02";
-import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.02";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.03";
+import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.03";
 
 const descs = {
   Blues: {
@@ -58,4 +58,51 @@ test("resolveMainDesc treffer likt for label og fullt navn på alle tre-noder", 
     assert.equal(resolveMainDesc(d, n.l).description, `X ${n.f}`, `label-oppslag feilet for ${n.l}`);
     assert.equal(resolveMainDesc(d, n.f).description, `X ${n.f}`, `fullnavn-oppslag feilet for ${n.f}`);
   }
+});
+
+// --- Epoke (activeFrom/activeTo) --------------------------------------------
+// Årstallene er sannheten for sjangerens mest aktive periode; nodens era-streng
+// i koden er kun fallback til sjangeren er gjennomgått.
+
+const epoke = {
+  Swing: { main: { description: "swing-tekst", activeFrom: 1935, activeTo: 1945 } },
+  Pop: { main: { description: "pop-tekst", activeFrom: 1950 } },
+  Trap: { main: { activeFrom: 2010 } },           // årstall, men ingen tekst ennå
+  Nulltest: { main: { description: "t", activeFrom: 0, activeTo: "1980" } },
+};
+
+test("resolveDesc tar med epoke-årstallene", () => {
+  const r = resolveDesc(epoke, "Swing", "main");
+  assert.equal(r.activeFrom, 1935);
+  assert.equal(r.activeTo, 1945);
+});
+
+test("mangler epoke gir null, ikke undefined eller 0", () => {
+  const r = resolveDesc(epoke, "Pop", "main");
+  assert.equal(r.activeFrom, 1950);
+  assert.equal(r.activeTo, null);
+  const tom = resolveDesc(epoke, "Finnes ikke", "main");
+  assert.equal(tom.activeFrom, null);
+  assert.equal(tom.activeTo, null);
+});
+
+test("årstall uten beskrivelse gir fortsatt treff (epoken skal vises)", () => {
+  const r = resolveDesc(epoke, "Trap", "main");
+  assert.equal(r.activeFrom, 2010);
+  assert.equal(r.description, "");
+});
+
+test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
+  const r = resolveDesc(epoke, "Nulltest", "main");
+  assert.equal(r.activeFrom, null, "0 skal ikke bli år 0");
+  assert.equal(r.activeTo, null, "streng skal ikke godtas som årstall");
+});
+
+test("eraText: Firestore-årstall vinner, tomt sluttår blir «i dag», ellers node-fallback", async () => {
+  const { eraText } = await import("../../js/genealogy.js?v=4.03");
+  const node = { era: "1930–45" };
+  assert.equal(eraText(node, { activeFrom: 1935, activeTo: 1945 }), "1935–1945");
+  assert.equal(eraText(node, { activeFrom: 1990, activeTo: null }), "1990–i dag");
+  assert.equal(eraText(node, { activeFrom: null, activeTo: null }), "1930–45");
+  assert.equal(eraText({ era: "" }, {}), "");
 });

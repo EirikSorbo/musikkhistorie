@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.02" />
+  <link rel="stylesheet" href="css/styles.css?v=4.03" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -384,6 +384,20 @@
         <label>Beskrivelse
           <textarea id="ss-desc" rows="5" placeholder="Beskriv sjangeren …"></textarea>
         </label>
+        <!-- Epoke: kun for tre-sjangre (main-nivå). Frie undersjangre har ingen
+             node i treet og dermed ingen epoke å måle mot varmekartet. -->
+        <div id="ss-epoke-wrap" hidden>
+          <span class="field-label">Mest aktive periode</span>
+          <div class="ss-epoke-row">
+            <label class="ss-epoke-felt">Fra år
+              <input type="number" id="ss-active-from" min="1600" max="2100" step="1" placeholder="f.eks. 1935">
+            </label>
+            <label class="ss-epoke-felt">Til år
+              <input type="number" id="ss-active-to" min="1600" max="2100" step="1" placeholder="tom = fortsatt aktiv">
+            </label>
+          </div>
+          <p class="hint" id="ss-epoke-hint"></p>
+        </div>
         <div>
           <span class="field-label">Kilder for sjangeren</span>
           <div id="ss-kilder-rows"></div>
@@ -584,7 +598,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.02"></script>
-  <script type="module" src="js/teacher.js?v=4.02"></script>
+  <script src="js/load-guard.js?v=4.03"></script>
+  <script type="module" src="js/teacher.js?v=4.03"></script>
 </body>
 </html>

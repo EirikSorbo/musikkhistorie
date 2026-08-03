@@ -20,22 +20,44 @@ export function missingDesc(level) {
   return `Ingen beskrivelse lagt inn ennå (${LVL[level] || level})`;
 }
 
+// Årstallene er heltall i et plausibelt årsintervall, ellers null. Samme grense
+// som editoren validerer mot (1600–2100). Et tomt felt skal bety «ikke satt»,
+// og 0 er IKKE et årstall: uten denne grensen ville et streifende 0 fra en
+// import rendret «0–i dag» på sjangerkortet.
+const AAR_MIN = 1600, AAR_MAKS = 2100;
+function yr(v) {
+  return Number.isInteger(v) && v >= AAR_MIN && v <= AAR_MAKS ? v : null;
+}
+
+const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null };
+
 function fromOverride(o, level) {
   if (!o) return null;
+  const lvl = o[level];
+  if (!lvl) return null;
   // KUN nivå-spesifikk tekst. Ingen fallback til flat/annet nivå — mangler
   // beskrivelsen på DETTE nivået, skal kalleren vise missingDesc (bevisst valg).
-  if (o[level] && o[level].description) return { description: o[level].description, kilder: o[level].kilder || [] };
-  return null;
+  // Epoke-årstallene følger med uavhengig av teksten: en sjanger kan ha fått
+  // årstall satt før beskrivelsen er skrevet, og da skal kortet vise epoken
+  // selv om prosaen fortsatt mangler.
+  const har = !!lvl.description || yr(lvl.activeFrom) !== null;
+  if (!har) return null;
+  return {
+    description: lvl.description || "",
+    kilder: lvl.kilder || [],
+    activeFrom: yr(lvl.activeFrom),
+    activeTo: yr(lvl.activeTo),
+  };
 }
 
 // Beskrivelse for (navn, nivå) fra data. Tom { description: "" } hvis ingenting
 // finnes — kalleren viser da missingDesc.
 export function resolveDesc(overrides, name, level) {
-  return fromOverride(overrides && overrides[name], level) || { description: "", kilder: [] };
+  return fromOverride(overrides && overrides[name], level) || { ...TOM };
 }
 
 // Som resolveDesc, men over flere navn (f.eks. nodens label OG fulle navn).
 export function resolveDescAny(overrides, names, level) {
   for (const n of names) { const r = fromOverride(overrides && overrides[n], level); if (r) return r; }
-  return { description: "", kilder: [] };
+  return { ...TOM };
 }

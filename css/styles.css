@@ -454,6 +454,11 @@ textarea { resize: vertical; }
 .me-row .me-note { flex: 1 1 100%; }
 .me-row .me-genre { flex: 0 0 240px; }
 
+/* Epoke-feltene i sjangereditoren: to smale årstallfelt side om side, som
+   brekker under hverandre på smal skjerm. */
+.ss-epoke-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ss-epoke-felt { flex: 0 1 170px; }
+
 .add-actions, .admin-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
 .hint { margin: 2px 0 10px; font-size: 0.78rem; color: var(--muted-2); }
