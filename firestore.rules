@@ -164,6 +164,16 @@ service cloud.firestore {
     // Innloggede (anonymt holder) kan opprette forslag. Bare lærer kan
     // endre eller slette.
     match /pendingEdits/{doc} {
+      // proposedFields-hjelpere. capOk: feltet (streng ELLER liste — begge har
+      // size()) er innenfor taket; manglende felt gir "" → 0. En verdi av feil
+      // type (tall der en streng ventes) feiler size() → avvist (lukket feil).
+      function pf() {
+        return request.resource.data.proposedFields;
+      }
+      function capOk(key, max) {
+        return pf().get(key, "").size() <= max;
+      }
+
       allow read: if true;
       allow create: if (
         request.auth != null &&
@@ -176,14 +186,48 @@ service cloud.firestore {
         request.resource.data.entityId.size() <= 200 &&
         request.resource.data.proposedFields is map &&
         request.resource.data.proposedFields.size() <= 30 &&
+        // KUN kjente foreslåbare nøkler: unionen av PROPOSABLE_KEYS i
+        // js/proposal-fields.js — HOLD LISTENE I SYNK (nytt foreslåbart felt må
+        // inn her, ellers avvises studentforslaget). Uten hvitelisten kunne en
+        // vilkårlig nøkkel bære ~1 MB tekst forbi feltmaksene under.
+        pf().keys().hasOnly([
+          "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
+          "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
+          "geography", "description", "imageUrl", "imageCredit",
+          "type", "category", "decade", "adoptedYear", "adoptedLabel", "kilder",
+          "activeFrom", "activeTo", "body", "society", "societyMore", "tech", "techMore"
+        ]) &&
         // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
         // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
         // dessuten kun main/sub; her tillates også meta som gyldig nivåverdi.
         request.resource.data.get("level", "main") in ["meta", "main", "sub"] &&
-        // Grovt størrelsestak på det tyngste tekstfeltet i proposedFields, så en
-        // anonym bruker ikke kan fylle samlingen med ~1 MB-dokumenter (samme
-        // vern som artists/tech-create har). description er den store vektoren.
-        request.resource.data.proposedFields.get("description", "").size() <= 5000 &&
+        // Størrelsestak per felt (samme vern som artists/tech-create), så ingen
+        // kan fylle samlingen med ~1 MB-dokumenter: korte strenger med rause
+        // tak, URL som artist-create (2000), beskrivelse 5000, langtekstene
+        // (instrumentsammendrag/«les mer») 20 000. Lister begrenses i ANTALL —
+        // regler kan ikke validere hvert element, så innholdet i kilder-rader
+        // dekkes av moderasjonskøen (lærer ser og avviser).
+        capOk("name", 120) &&
+        capOk("gender", 40) &&
+        capOk("metaGenre", 100) &&
+        capOk("instrument", 100) &&
+        capOk("recordLabel", 200) &&
+        capOk("geography", 200) &&
+        capOk("type", 40) &&
+        capOk("category", 100) &&
+        capOk("decade", 20) &&
+        capOk("adoptedLabel", 300) &&
+        capOk("imageCredit", 300) &&
+        capOk("imageUrl", 2000) &&
+        capOk("description", 5000) &&
+        capOk("body", 20000) &&
+        capOk("society", 20000) &&
+        capOk("societyMore", 20000) &&
+        capOk("tech", 20000) &&
+        capOk("techMore", 20000) &&
+        capOk("mainGenre", 50) &&
+        capOk("subGenre", 50) &&
+        capOk("kilder", 50) &&
         request.resource.data.get("entityName", "").size() <= 200 &&
         request.resource.data.get("proposedBy", "").size() <= 100
       );

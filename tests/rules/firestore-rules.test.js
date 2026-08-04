@@ -157,3 +157,59 @@ test("pendingEdits: anonym kan opprette slik appen skriver det; uinnlogget avvis
     entityType: "artist", entityId: "a1", proposedFields: { description: "x" }, hacker: 1,
   }));
 });
+
+// Aksept-stier for ALLE entityTypene, med de faktiske skriveformene fra
+// proposals.js (readField: tekst → streng, tall → tall/null, kilder → liste av
+// { text, url }). Fanger at feltmaks-/hviteliste-stramming aldri avviser et
+// legitimt forslag.
+test("pendingEdits: alle entityTyper kan opprettes slik editoren skriver dem", async () => {
+  const db = anonDb();
+  await assertSucceeds(db.collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", entityName: "Robert Johnson",
+    proposedFields: { name: "Robert Johnson", birthYear: 1911, mainGenre: ["Blues"], geography: "Mississippi Delta", imageUrl: "https://ex.com/b.jpg" },
+    proposedBy: "Anonym",
+  }));
+  await assertSucceeds(db.collection("pendingEdits").add({
+    entityType: "subgenre", entityId: "Cont. hip-hop", entityName: "Contemporary hip-hop",
+    proposedFields: { description: "Ny tekst", kilder: [{ text: "SNL", url: "https://snl.no" }], activeFrom: 1994, activeTo: null },
+    proposedBy: "Anonym", level: "main",
+  }));
+  await assertSucceeds(db.collection("pendingEdits").add({
+    entityType: "tech", entityId: "t1", entityName: "Mikrofon",
+    proposedFields: { type: "hendelse", instrument: "Gitar", adoptedYear: 1931, adoptedLabel: "tidlig 1930-tall", kilder: [{ text: "SNL", url: "" }] },
+    proposedBy: "Anonym",
+  }));
+  await assertSucceeds(db.collection("pendingEdits").add({
+    entityType: "instrument", entityId: "instrument-gitar", entityName: "Gitarens utvikling",
+    proposedFields: { body: "x".repeat(19000) }, proposedBy: "Anonym",
+  }));
+  await assertSucceeds(db.collection("pendingEdits").add({
+    entityType: "decade-society", entityId: "1950", entityName: "1950-tallet — samfunn",
+    proposedFields: { society: "Ny tekst", societyMore: "x".repeat(19000) }, proposedBy: "Anonym",
+  }));
+  await assertSucceeds(db.collection("pendingEdits").add({
+    entityType: "decade-tech", entityId: "1950", entityName: "1950-tallet — teknologi",
+    proposedFields: { tech: "Ny tekst", techMore: "" }, proposedBy: "Anonym",
+  }));
+});
+
+test("pendingEdits: ukjent proposedFields-nøkkel og oppblåste felter avvises", async () => {
+  const db = anonDb();
+  const base = { entityType: "subgenre", entityId: "Blues", proposedBy: "Anonym", level: "main" };
+  // Nøkkel utenfor PROPOSABLE_KEYS-unionen — kunne ellers båret ~1 MB tekst.
+  await assertFails(db.collection("pendingEdits").add({ ...base, proposedFields: { smuglet: "x".repeat(100) } }));
+  await assertFails(db.collection("pendingEdits").add({ ...base, proposedFields: { description: "x".repeat(5001) } }));
+  await assertFails(db.collection("pendingEdits").add({ ...base, proposedFields: { kilder: Array.from({ length: 51 }, () => ({ text: "k" })) } }));
+  await assertFails(db.collection("pendingEdits").add({
+    entityType: "decade-society", entityId: "1950", proposedBy: "Anonym",
+    proposedFields: { societyMore: "x".repeat(20001) },
+  }));
+  await assertFails(db.collection("pendingEdits").add({
+    entityType: "instrument", entityId: "instrument-gitar", proposedBy: "Anonym",
+    proposedFields: { body: "x".repeat(20001) },
+  }));
+  await assertFails(db.collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", proposedBy: "Anonym",
+    proposedFields: { imageUrl: "https://ex.com/" + "x".repeat(2000) },
+  }));
+});

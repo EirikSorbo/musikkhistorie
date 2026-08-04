@@ -7,11 +7,13 @@
 //  ALDRI kunne skrives til et dokument via et godkjent endringsforslag.
 //  approvePendingEdit (store.js) filtrerer godkjente nøkler mot denne lista, så
 //  et ondsinnet pendingEdit ikke kan smugle privilegiefelter forbi læreren.
-//  Må holdes i synk med FIELD_SPECS i proposals.js (samme feltnøkler).
+//  Må holdes i synk med FIELD_SPECS i proposals.js (samme feltnøkler) OG med
+//  proposedFields-hvitelisten i firestore.rules (pendingEdits create): et nytt
+//  foreslåbart felt må inn begge steder, ellers avviser reglene forslaget.
 //  Avhengighetsfri (kun artist-schema) → enhetstestbar i Node.
 // ============================================================================
 
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.19";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.20";
 
 export const PROPOSABLE_KEYS = {
   // «complex»-felter (verk/musikkeksempler/kilder) foreslås ikke via editoren.
