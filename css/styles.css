@@ -354,7 +354,12 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-num:hover { color: var(--accent-2); }
 .ov-num.ov-ex-zero, .ov-row.ov-zero .ov-num { color: var(--warn); }
 
-.ov-genre-cols { column-count: 3; column-gap: 28px; margin-top: 10px; }
+/* Kolonnetallet styres av MINSTEBREDDE, ikke et fast antall: en rad trenger rundt
+   190 px (navn + søyle + tallkolonne), og med fast antall ble kolonnene på mobil
+   smalere enn det — da fløt navnet og tallet ut av kolonnen og la seg oppå naboen
+   («1 (1)Rock»). `columns: 200px 3` betyr: så mange kolonner det er plass til,
+   aldri smalere enn 200 px og aldri flere enn tre. */
+.ov-genre-cols { columns: 200px 3; column-gap: 28px; margin-top: 10px; }
 /* Bredere tallkolonne («31 (12)») enn standard 30px — søylen (1fr) blir
    tilsvarende kortere, så alt står på én rad i stedet for å brytes. */
 .ov-genre-cols .ov-row { break-inside: avoid; margin-bottom: 8px; grid-template-columns: minmax(96px, auto) 1fr 54px; }
@@ -439,7 +444,8 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 @media (max-width: 720px) {
   .ov-kpis { grid-template-columns: repeat(2, 1fr); }
   .ov-two { grid-template-columns: 1fr; }
-  .ov-genre-cols { column-count: 2; }
+  /* Ingen overstyring av .ov-genre-cols her: minstebredden over gjør jobben
+     selv, og et fast kolonnetall her ville lagt kollisjonen tilbake. */
   .ov-hist { height: 100px; gap: 4px; }
   .ov-hist-year { display: none; }
 }
