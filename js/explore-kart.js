@@ -3,11 +3,11 @@
 // ----------------------------------------------------------------------------
 //  Flyttet ut av explore.js (v3.55, runde 2). kartDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, escapeHtml, openArtistListModal } from "./ui.js?v=4.06";
-import { isVisible } from "./limits.js?v=4.06";
-import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=4.06";
-import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=4.06";
-import { opts, getState } from "./explore-context.js?v=4.06";
+import { modalOpen, renderDecadeRibbon, escapeHtml, openArtistListModal } from "./ui.js?v=4.07";
+import { isVisible } from "./limits.js?v=4.07";
+import { MAP_VIEW, MAP_COUNTRIES, projectPoint } from "./geo-map-data.js?v=4.07";
+import { aggregatePlaces, unknownPlaces } from "./geo-places.js?v=4.07";
+import { opts, getState } from "./explore-context.js?v=4.07";
 
 // ----------------------------------------------------------------------------
 //  Kart: musikkens geografi. Nord-Amerika-utsnitt (Natural Earth-omriss i
