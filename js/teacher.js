@@ -22,22 +22,13 @@ import {
   signInWithGoogle,
   signOutTeacher,
   purgeDeadGenreDescFields,
-  runGenreDuplicateCleanup,
-  runGenreLabelAlignment,
-  runTranceDocIdMigration,
-  runContentKeyAlignment,
-  runOrphanDuplicatePurge,
-  runSubgenreDocDelete,
-  runTreeSlim,
-  runTreeSlim2,
-  runGenreRetag,
-} from "./store.js?v=4.18";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.18";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.18";
-import { initExplore } from "./explore.js?v=4.18";
+} from "./store.js?v=4.19";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.19";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.19";
+import { initExplore } from "./explore.js?v=4.19";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.18";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.18";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.19";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.19";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -54,10 +45,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.18";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.18";
-import { renderDesk } from "./teacher-desk.js?v=4.18";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.18";
+} from "./teacher-content.js?v=4.19";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.19";
+import { renderDesk } from "./teacher-desk.js?v=4.19";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.19";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -229,27 +220,13 @@ function startApp() {
   // før første snapshot lander.
   refreshDesk();
 
-  // Engangs-vedlikehold ved lærer-oppstart. Kjøres SEKVENSIELT (ikke parallelt)
-  // så migreringer som rører de samme dokumentene (f.eks. flat-purge og Trance-
-  // doc-flyttingen) ikke kappes. Hver er flagg-guardet/idempotent; en feil
-  // isoleres og stopper ikke de neste. Se konsoll-loggen for hva hver gjorde.
-  (async () => {
-    const steps = [
-      ["Genrebeskrivelse-opprydding", purgeDeadGenreDescFields],
-      ["Sjangeropprydding", runGenreDuplicateCleanup],
-      ["Node-label-justering", runGenreLabelAlignment],
-      ["Trance-doc-id-migrering", runTranceDocIdMigration],
-      ["Innholdsnøkkel-justering", runContentKeyAlignment],
-      ["Foreldreløs-opprydding", runOrphanDuplicatePurge],
-      ["Tre-slanking", runTreeSlim],
-      ["Tre-slanking runde 2", runTreeSlim2],
-      ["Omtagging etter gjennomgang", runGenreRetag],
-      ["Undersjanger-sletting", runSubgenreDocDelete],
-    ];
-    for (const [navn, fn] of steps) {
-      try { await fn(); } catch (e) { console.warn(`${navn} feilet:`, e?.message || e); }
-    }
-  })();
+  // Vedlikehold ved lærer-oppstart: rydder døde felt-generasjoner i
+  // genreDescriptions (kan gjenoppstå via import av gamle backuper —
+  // idempotent, se purgeDeadGenreDescFields). De ni utførte engangs-
+  // migreringene som sto her er fjernet i v4.19; flaggene deres står igjen
+  // i config/migrations (se noten i store.js).
+  purgeDeadGenreDescFields().catch((e) =>
+    console.warn("Genrebeskrivelse-opprydding feilet:", e?.message || e));
 
   // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
   // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.
