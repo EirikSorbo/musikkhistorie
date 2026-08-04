@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.20";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.20";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.20";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.20";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.20";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.20";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.21";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.21";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.21";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.21";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.21";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.21";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -507,6 +507,41 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   const anc = (id, s = {}) => { parentsOf(map[id]).forEach((p) => { if (!s[p]) { s[p] = 1; anc(p, s); } }); return s; };
 
   cam.innerHTML = "";
+
+  // Familiebånd (v4.21): lys flate i familiefargen bak hver sjangerfamilie, så
+  // samhørigheten leses før en eneste strek — samme grep som musicmap.info sine
+  // «kontinenter». Flaten bygges av nodenes egne (polstrede) rektangler pluss
+  // brede bånd langs koblingene INNAD i familien, samlet i én <g> med opacity
+  // på GRUPPEN: da flater overlappende deler ut til én jevn tone i stedet for å
+  // mørkne. Kun kanter der BEGGE endene hører til familien tas med — en
+  // bounding-boks per familie ville annektert fremmede noder (Pop ligger midt i
+  // Country-kolonnene, Reggae vegg i vegg med Klubbmusikk). Forbindelsesbåndene
+  // tegnes som RETTE senter-til-senter-linjer, ikke kantenes bezier-buer:
+  // samme-rad-buene bøyer 46 px NED under nodene, og et bredt bånd langs dem
+  // ville sklidd inn i tiårsbåndet under (målt: Hymner→Spirituals over Blues).
+  // Tegnes FØRST, så rutenett, kanter og noder ligger over.
+  const FAMBG_PAD = 14, FAMBG_OPACITY = 0.09, FAMBG_STROKE = 74;
+  for (const fam of new Set(GENEALOGY.map((n) => n.fam))) {
+    const color = FAM_STROKE[fam] || FAMILIES.gray.stroke;
+    const g = el("g", { class: "gx-famband", opacity: FAMBG_OPACITY });
+    for (const n of GENEALOGY) {
+      if (n.fam !== fam) continue;
+      g.appendChild(el("rect", {
+        x: n.cx - NW / 2 - FAMBG_PAD, y: n.y - NH / 2 - FAMBG_PAD,
+        width: NW + 2 * FAMBG_PAD, height: NH + 2 * FAMBG_PAD,
+        rx: 26, fill: color,
+      }));
+      for (const pid of parentsOf(n)) {
+        const pa = map[pid];
+        if (!pa || pa.fam !== fam) continue;
+        g.appendChild(el("line", {
+          x1: pa.cx, y1: pa.y, x2: n.cx, y2: n.y,
+          stroke: color, "stroke-width": FAMBG_STROKE, "stroke-linecap": "round",
+        }));
+      }
+    }
+    cam.appendChild(g);
+  }
 
   // Tiår-rutenett (tids-aksen)
   for (let r = 0; r <= 12; r++) {

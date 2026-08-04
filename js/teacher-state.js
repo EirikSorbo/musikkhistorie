@@ -14,11 +14,11 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=4.20";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.20";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.20";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=4.20";
-import { $ } from "./shared.js?v=4.20";
+} from "./store.js?v=4.21";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.21";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.21";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=4.21";
+import { $ } from "./shared.js?v=4.21";
 
 export const state = {
   artists: [],
