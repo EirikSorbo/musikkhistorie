@@ -346,8 +346,21 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
    TALLENE som er lenkene — navnet er ren tekst her, i motsetning til
    sjangerlista der hele raden er én knapp. */
 /* Hver av de to kolonnene er søyle + tall: navn | søyle | antall | søyle | antall.
-   Søylene blir korte, men de skal bare rangere metasjangrene mot hverandre. */
-.ov-row-meta { grid-template-columns: minmax(66px, auto) 1fr 30px 1fr 34px; cursor: default; gap: 8px; }
+   Søylene blir korte, men de skal bare rangere metasjangrene mot hverandre.
+   ALLE radene deler ETT rutenett (radene er `display: contents`), ikke ett per
+   rad: med hver sin grid ble navnekolonnen så bred som radens eget navn, og
+   «Klubbmusikk» dyttet søylen og tallene sine til høyre for de andre radenes.
+   Nå setter det bredeste navnet kolonnebredden for hele tabellen. */
+.ov-rows-meta {
+  display: grid;
+  grid-template-columns: auto 1fr 30px 1fr 34px;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 8px;
+  margin-top: 10px;
+}
+.ov-rows-meta .ov-row-meta { display: contents; }
+.ov-row-meta { cursor: default; }
 .ov-row-meta:hover .ov-name { color: var(--muted); text-decoration: none; }
 /* Søyla for lytteeksempler har egen kulør (teal → cyan) så de to kolonnene ikke
    leses som én lang søyle med et tall midt inni. */
@@ -913,6 +926,10 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   animation: rise 0.2s ease both;
 }
 .modal.modal-wide { max-width: 860px; }
+/* For modaler med lite innhold (Innstillinger: to seksjoner à to små knapper).
+   320 px er målt: knapperadene står på én linje med god margin, og modalhodet
+   («Innstillinger» + ←/✕) holder seg på én rad. */
+.modal.modal-narrow { max-width: 320px; }
 .modal-head {
   display: flex;
   justify-content: space-between;

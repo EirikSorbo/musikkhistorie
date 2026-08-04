@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.13";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.13";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.13";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.13";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.13";
+} from "./limits.js?v=4.14";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.14";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.14";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.14";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.14";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -366,7 +366,7 @@ export function renderDashboard(el, {
     <div class="ov-two">
       <div class="stat-card ov-block" style="margin-top:0">
         <div class="stat-label">Per metasjanger. Klikk et tall for lista bak det.</div>
-        <div class="ov-rows">
+        <div class="ov-rows-meta">
           <div class="ov-row ov-row-meta ov-row-head">
             <span></span>
             <span class="ov-colh">Artister</span>

@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.13" />
+  <link rel="stylesheet" href="css/styles.css?v=4.14" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -147,7 +147,9 @@
 
   <!-- Innstillinger -->
   <div class="modal-backdrop" id="modal-settings">
-    <div class="modal modal-wide">
+    <!-- Smal modal: innholdet er fire små knapper i to seksjoner, og den brede
+         (860 px) ga bare luft rundt dem. -->
+    <div class="modal modal-narrow">
       <div class="modal-head">
         <h2>Innstillinger</h2>
         <button class="modal-close btn ghost small">✕</button>
@@ -605,7 +607,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.13"></script>
-  <script type="module" src="js/teacher.js?v=4.13"></script>
+  <script src="js/load-guard.js?v=4.14"></script>
+  <script type="module" src="js/teacher.js?v=4.14"></script>
 </body>
 </html>
