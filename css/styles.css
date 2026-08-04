@@ -259,7 +259,11 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-block { margin-top: 12px; }
 .ov-two {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  /* Metasjanger-kortet har to søylekolonner og trenger bredden; kjønnskortet er
+     én søyle med fire legender og tåler å gi fra seg litt. 1,25/0,75 er der
+     søylene blir brukbart lange uten at kjønnslegenden sprekker opp i fire
+     linjer (målt ved 1440 px: søyler 148 px, legenden på tre linjer). */
+  grid-template-columns: 1.25fr 0.75fr;
   gap: 12px;
   margin-top: 12px;
   align-items: start;
@@ -326,17 +330,23 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 /* Metasjanger-raden: to tallkolonner (artistkort + lytteeksempler), og det er
    TALLENE som er lenkene — navnet er ren tekst her, i motsetning til
    sjangerlista der hele raden er én knapp. */
-.ov-row-meta { grid-template-columns: minmax(76px, auto) 1fr 56px 68px; cursor: default; }
+/* Hver av de to kolonnene er søyle + tall: navn | søyle | antall | søyle | antall.
+   Søylene blir korte, men de skal bare rangere metasjangrene mot hverandre. */
+.ov-row-meta { grid-template-columns: minmax(66px, auto) 1fr 30px 1fr 34px; cursor: default; gap: 8px; }
 .ov-row-meta:hover .ov-name { color: var(--muted); text-decoration: none; }
-/* Kolonneoverskriftene: samme rutenett som radene, så etikettene står rett over
-   sine egne tall. Små nok til at «Eksempler» får plass i kolonnen sin. */
+/* Søyla for lytteeksempler har egen kulør (teal → cyan) så de to kolonnene ikke
+   leses som én lang søyle med et tall midt inni. */
+.ov-bar-ex .bar-fill { background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%); }
+.ov-row-meta .ov-bar-zero .bar-fill { background: var(--warn); opacity: 0.45; }
+/* Kolonneoverskriftene: hver etikett spenner over søyla OG tallet sitt, og står
+   høyrestilt rett over tallet. */
 .ov-row-head {
   font-size: 0.66rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--muted-2);
 }
-.ov-row-head span { text-align: right; }
+.ov-row-head .ov-colh { grid-column: span 2; text-align: right; }
 /* Tallene ER lenkene: understreket + aksentfarge, samme språk som de klikkbare
    navnene i listene under. */
 .ov-num {

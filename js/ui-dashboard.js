@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.10";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.10";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.10";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.10";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.10";
+} from "./limits.js?v=4.11";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.11";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.11";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.11";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.11";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -54,12 +54,21 @@ function distRow(label, count, max, attrs, exCount = null) {
 // Rad i metasjanger-kortet: navnet er ren tekst, og det er de to TALLENE som er
 // lenkene — artistkort til venstre, lytteeksempler til høyre. (Sjangerlista over
 // har fortsatt hele raden som én knapp; der er det bare én liste å åpne.)
-function metaRow(m, max) {
+//
+// Hver kolonne har sin EGEN søyle og sin egen skala (maxN / maxE): søylene
+// sammenlikner metasjangre innad i kolonnen, ikke artister mot eksempler — det
+// er to ulike måltall, og en delt skala ville bare gjort artistsøylene til
+// striper. Tom kolonne tegnes som full varselfarget søyle, samme grep som
+// resten av oversikten bruker for null.
+function metaRow(m, maxN, maxE) {
   const zero = m.n === 0 ? " ov-zero" : "";
+  const bar = (v, max, cls) => `<span class="bar small ${cls}${v ? "" : " ov-bar-zero"}">
+    <span class="bar-fill" style="width:${v ? pct(v, max) : 100}%"></span></span>`;
   return `<div class="ov-row ov-row-meta${zero}">
     <span class="ov-name">${escapeHtml(m.g)}</span>
-    <span class="bar small"><span class="bar-fill" style="width:${m.n ? pct(m.n, max) : 100}%"></span></span>
+    ${bar(m.n, maxN, "ov-bar-n")}
     <button type="button" class="ov-num" data-ov-meta="${escapeHtml(m.g)}" title="Vis artistene i ${escapeHtml(m.g)}">${m.n}</button>
+    ${bar(m.e, maxE, "ov-bar-ex")}
     <button type="button" class="ov-num${m.e === 0 ? " ov-ex-zero" : ""}" data-ov-meta-ex="${escapeHtml(m.g)}" title="Vis lytteeksemplene i ${escapeHtml(m.g)}">${m.e}</button>
   </div>`;
 }
@@ -183,6 +192,7 @@ export function renderDashboard(el, {
     })
     .sort((a, b) => b.n - a.n || byNo(a.g, b.g));
   const maxMeta = Math.max(1, ...metaCounts.map((m) => m.n));
+  const maxMetaEx = Math.max(1, ...metaCounts.map((m) => m.e));
   const metaByName = Object.fromEntries(metaCounts.map((m) => [m.g, m]));
 
   // --- Tiår ------------------------------------------------------------------
@@ -353,11 +363,11 @@ export function renderDashboard(el, {
         <div class="stat-label">Per metasjanger. Klikk et tall for lista bak det.</div>
         <div class="ov-rows">
           <div class="ov-row ov-row-meta ov-row-head">
-            <span></span><span></span>
-            <span>Artister</span>
-            <span>Eksempler</span>
+            <span></span>
+            <span class="ov-colh">Artister</span>
+            <span class="ov-colh">Lytteeksempler</span>
           </div>
-          ${metaCounts.map((m) => metaRow(m, maxMeta)).join("")}
+          ${metaCounts.map((m) => metaRow(m, maxMeta, maxMetaEx)).join("")}
         </div>
       </div>
       <div class="stat-card">
