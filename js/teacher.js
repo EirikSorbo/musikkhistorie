@@ -31,13 +31,13 @@ import {
   runTreeSlim,
   runTreeSlim2,
   runGenreRetag,
-} from "./store.js?v=4.08";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.08";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.08";
-import { initExplore } from "./explore.js?v=4.08";
+} from "./store.js?v=4.09";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.09";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.09";
+import { initExplore } from "./explore.js?v=4.09";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.08";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.08";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.09";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.09";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -54,10 +54,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.08";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.08";
-import { renderDesk } from "./teacher-desk.js?v=4.08";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.08";
+} from "./teacher-content.js?v=4.09";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.09";
+import { renderDesk } from "./teacher-desk.js?v=4.09";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.09";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

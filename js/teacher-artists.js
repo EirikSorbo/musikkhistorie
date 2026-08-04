@@ -4,16 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=4.08";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=4.08";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, countPlaylistExamples } from "./ui.js?v=4.08";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.08";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=4.08";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=4.08";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.08";
-import { debounce } from "./util.js?v=4.08";
-import { $ } from "./shared.js?v=4.08";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.08";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=4.09";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=4.09";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=4.09";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.09";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=4.09";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=4.09";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.09";
+import { debounce } from "./util.js?v=4.09";
+import { $ } from "./shared.js?v=4.09";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.09";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -84,6 +84,10 @@ export function openOversikt() {
     onEditEdge: (fromId, toId) => openSingleEdgeModal(fromId, toId),
     onEdgeCheck: (fromId, toId, on) => setContentCheck("edges", edgeKey(fromId, toId), on),
     onShowArtistList: (title, list) => openArtistListModal(title, list, openDetail, "Ingen artister her ennå."),
+    // Metasjangerens lytteeksempler: samme bygger som popupen, så tallet i
+    // kolonnen og antallet i lista alltid er det samme.
+    countExamplesFor: (list) => countArtistExamples(list),
+    onShowPlaylist: (title, list) => openArtistsPlaylistModal(title, list),
   });
   openAdminModal("modal-oversikt");
 }

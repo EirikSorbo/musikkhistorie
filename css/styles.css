@@ -323,6 +323,37 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-count-ex.ov-ex-zero { color: var(--warn); }
 .ov-row.ov-zero .bar-fill { background: var(--warn); opacity: 0.45; }
 
+/* Metasjanger-raden: to tallkolonner (artistkort + lytteeksempler), og det er
+   TALLENE som er lenkene — navnet er ren tekst her, i motsetning til
+   sjangerlista der hele raden er én knapp. */
+.ov-row-meta { grid-template-columns: minmax(76px, auto) 1fr 56px 68px; cursor: default; }
+.ov-row-meta:hover .ov-name { color: var(--muted); text-decoration: none; }
+/* Kolonneoverskriftene: samme rutenett som radene, så etikettene står rett over
+   sine egne tall. Små nok til at «Eksempler» får plass i kolonnen sin. */
+.ov-row-head {
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.ov-row-head span { text-align: right; }
+/* Tallene ER lenkene: understreket + aksentfarge, samme språk som de klikkbare
+   navnene i listene under. */
+.ov-num {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: right;
+  color: var(--accent);
+  text-decoration: underline;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.ov-num:hover { color: var(--accent-2); }
+.ov-num.ov-ex-zero, .ov-row.ov-zero .ov-num { color: var(--warn); }
+
 .ov-genre-cols { column-count: 3; column-gap: 28px; margin-top: 10px; }
 /* Bredere tallkolonne («31 (12)») enn standard 30px — søylen (1fr) blir
    tilsvarende kortere, så alt står på én rad i stedet for å brytes. */

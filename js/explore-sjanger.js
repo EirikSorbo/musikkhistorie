@@ -4,11 +4,11 @@
 //  Sjangre-/undersjangre-listene og sjanger-info-modalen (lærer-oversikten).
 //  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.08";
-import { isVisible } from "./limits.js?v=4.08";
-import { isMainGenre, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.08";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.08";
-import { opts, getState, canonMain, injectTeacherRow } from "./explore-context.js?v=4.08";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.09";
+import { isVisible } from "./limits.js?v=4.09";
+import { isMainGenre, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.09";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.09";
+import { opts, getState, canonMain, injectTeacherRow } from "./explore-context.js?v=4.09";
 
 export function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");

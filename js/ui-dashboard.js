@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.08";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.08";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.08";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.08";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.08";
+} from "./limits.js?v=4.09";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.09";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.09";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.09";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.09";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -49,6 +49,19 @@ function distRow(label, count, max, attrs, exCount = null) {
     <span class="bar small"><span class="bar-fill" style="width:${count ? pct(count, max) : 100}%"></span></span>
     <span class="ov-count">${count}${ex}</span>
   </button>`;
+}
+
+// Rad i metasjanger-kortet: navnet er ren tekst, og det er de to TALLENE som er
+// lenkene — artistkort til venstre, lytteeksempler til høyre. (Sjangerlista over
+// har fortsatt hele raden som én knapp; der er det bare én liste å åpne.)
+function metaRow(m, max) {
+  const zero = m.n === 0 ? " ov-zero" : "";
+  return `<div class="ov-row ov-row-meta${zero}">
+    <span class="ov-name">${escapeHtml(m.g)}</span>
+    <span class="bar small"><span class="bar-fill" style="width:${m.n ? pct(m.n, max) : 100}%"></span></span>
+    <button type="button" class="ov-num" data-ov-meta="${escapeHtml(m.g)}" title="Vis artistene i ${escapeHtml(m.g)}">${m.n}</button>
+    <button type="button" class="ov-num${m.e === 0 ? " ov-ex-zero" : ""}" data-ov-meta-ex="${escapeHtml(m.g)}" title="Vis lytteeksemplene i ${escapeHtml(m.g)}">${m.e}</button>
+  </div>`;
 }
 
 // Klikkbar navnerad i utvidbare lister (åpner redigering/info).
@@ -118,11 +131,16 @@ export function renderDashboard(el, {
   explore,
   countForGenre = () => 0,
   exampleCountForGenre = null,
+  // Teller lytteeksempler i et utvalg artister. Standarden er den enkle summen;
+  // lærersiden sender inn spilleliste-byggerens egen telling (med dedup), så
+  // tallet her og lista popupen viser er samme regnestykke.
+  countExamplesFor = (list) => list.reduce((n, a) => n + (a.musicExamples || []).length, 0),
   onEditArtist,
   onEditDesc,
   onEditEdge,
   onEdgeCheck,
   onShowArtistList,
+  onShowPlaylist,
 }) {
   const active = activeArtists(artists);
   const counts = computeCounts(artists);
@@ -138,7 +156,7 @@ export function renderDashboard(el, {
   // Lytteeksempler: alle kuraterte eksempler til sammen (ikke sentrale verk —
   // samme avgrensning som spillelistene). Parentestallet i sjangerlista under
   // teller de samme eksemplene, men fordelt per sjanger.
-  const exampleCount = active.reduce((n, a) => n + (a.musicExamples || []).length, 0);
+  const exampleCount = countExamplesFor(active);
   // Skjulte artistkort: aktive kort læreren har satt til prioritet -1. De er
   // usynlige for studentene og teller derfor ikke i noen annen statistikk her —
   // dette er eneste stedet de er synlige som tall.
@@ -156,10 +174,16 @@ export function renderDashboard(el, {
   const covered = genreCounts.filter((g) => g.n > 0).length;
 
   // --- Metasjangre (metaGenre-feltet: hver artist teller nøyaktig én gang) -
+  // Artistlista bygges her og brukes både til tallet, til eksempeltellingen og
+  // til lista bak klikket — de kan dermed ikke svare ulikt på «hvem er i R&B».
   const metaCounts = GENEALOGY_META_GENRES
-    .map((g) => ({ g, n: counts.perMetaGenre[g] || 0 }))
+    .map((g) => {
+      const list = active.filter((a) => a.metaGenre === g).sort(byInfluenceThenName);
+      return { g, list, n: list.length, e: countExamplesFor(list) };
+    })
     .sort((a, b) => b.n - a.n || byNo(a.g, b.g));
   const maxMeta = Math.max(1, ...metaCounts.map((m) => m.n));
+  const metaByName = Object.fromEntries(metaCounts.map((m) => [m.g, m]));
 
   // --- Tiår ------------------------------------------------------------------
   const decades = DECADES;
@@ -326,9 +350,15 @@ export function renderDashboard(el, {
 
     <div class="ov-two">
       <div class="stat-card ov-block" style="margin-top:0">
-        <div class="stat-label">Per metasjanger — klikk for artistliste</div>
-        <div class="ov-rows">${metaCounts.map((m) =>
-          distRow(m.g, m.n, maxMeta, `data-ov-meta="${escapeHtml(m.g)}"`)).join("")}</div>
+        <div class="stat-label">Per metasjanger. Klikk et tall for lista bak det.</div>
+        <div class="ov-rows">
+          <div class="ov-row ov-row-meta ov-row-head">
+            <span></span><span></span>
+            <span>Artister</span>
+            <span>Eksempler</span>
+          </div>
+          ${metaCounts.map((m) => metaRow(m, maxMeta)).join("")}
+        </div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Kjønnsfordeling</div>
@@ -415,10 +445,15 @@ export function renderDashboard(el, {
     const genre = hit("[data-ov-genre]");
     if (genre) return explore?.onMainGenreClick(genre.dataset.ovGenre);
 
+    const metaEx = hit("[data-ov-meta-ex]");
+    if (metaEx) {
+      const g = metaEx.dataset.ovMetaEx;
+      return onShowPlaylist?.(`Lytteeksempler i ${g}`, metaByName[g]?.list || []);
+    }
     const meta = hit("[data-ov-meta]");
     if (meta) {
       const g = meta.dataset.ovMeta;
-      return onShowArtistList?.(g, active.filter((a) => a.metaGenre === g).sort(byInfluenceThenName));
+      return onShowArtistList?.(g, metaByName[g]?.list || []);
     }
     const dec = hit("[data-ov-decade]");
     if (dec) {

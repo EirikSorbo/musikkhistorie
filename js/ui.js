@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.08";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.08";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.08";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.09";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.09";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.09";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.08";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.08";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.08";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.08";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.08";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.08";
+} from "./ui-helpers.js?v=4.09";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.09";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.09";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.09";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.09";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.09";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -532,17 +532,23 @@ function buildPlaylistHtml(node, artists) {
     return all.some((s) => String(s).toLowerCase() === sj);
   };
 
-  // Per-eksempel sjangerknytning: et tagget eksempel vises KUN i sin egen
-  // sjangers spilleliste (streng likhet — «Jazz»-noden betyr tidlig jazz, ikke
-  // paraplyen). Utagget faller tilbake til alle artistens sjangre.
-  const exOk = (m) => !m.genre || String(m.genre).toLowerCase() === sj;
-
   const genreArtists = (artists || [])
     .filter((a) => isVisible(a) && matchesSj(a))
-    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+    .sort(byInfluenceThenName);
+
+  return playlistRows(genreArtists, sj);
+}
+
+// Selve radbyggingen, delt av sjanger-spillelista over og metasjanger-lista
+// under. `sj` (små bokstaver) slår på per-eksempel sjangerknytning: et tagget
+// eksempel vises KUN i sin egen sjangers spilleliste (streng likhet — «Jazz»-
+// noden betyr tidlig jazz, ikke paraplyen), utagget faller tilbake til alle
+// artistens sjangre. Uten `sj` tas ALLE eksemplene til artistene med.
+function playlistRows(list, sj = null) {
+  const exOk = (m) => !sj || !m.genre || String(m.genre).toLowerCase() === sj;
 
   const seen = new Set();
-  const items = genreArtists.flatMap((a) => {
+  const items = list.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
     const sjangerTag = genreTags(a, { withSub: false, extraClass: "tag-pl" });
@@ -571,4 +577,22 @@ function buildPlaylistHtml(node, artists) {
 // (matchesSj + exOk + dedup), så tallet i oversikten og lista aldri spriker.
 export function countPlaylistExamples(artists, label) {
   return buildPlaylistHtml({ l: label }, artists).total;
+}
+
+// ----------------------------------------------------------------------------
+//  Spilleliste for et VILKÅRLIG utvalg artister (metasjanger-kolonnen i
+//  lærerens oversikt). Her er det ingen sjanger å måle eksemplene mot: et
+//  eksempel tagget «Soul» hører like fullt hjemme i R&B-familien, så ALLE
+//  artistenes eksempler er med. Tellingen går gjennom samme bygger som lista,
+//  så tallet i oversikten og popupen aldri kan sprike.
+// ----------------------------------------------------------------------------
+export function countArtistExamples(list) {
+  return playlistRows([...(list || [])].sort(byInfluenceThenName)).total;
+}
+
+export function openArtistsPlaylistModal(title, list) {
+  const { total, html } = playlistRows([...(list || [])].sort(byInfluenceThenName));
+  document.getElementById("pl-title").textContent = `${title} (${total})`;
+  document.getElementById("pl-body").innerHTML = html;
+  modalOpen(document.getElementById("modal-spilleliste"));
 }
