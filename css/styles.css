@@ -228,7 +228,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .ov-kick:first-child { margin-top: 0; }
 .ov-kick::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-/* Kompakte nøkkeltall — fire på én rad, «vanlig» tekststørrelse */
+/* Kompakte nøkkeltall — fire per rad, «vanlig» tekststørrelse */
 .ov-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

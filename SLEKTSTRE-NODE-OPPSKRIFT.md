@@ -85,6 +85,13 @@ Ikke rør disse — de leser treet, og en ny node dukker opp av seg selv:
   | tiår | Røtter | 1900 | 1910 | 1920 | 1930 | 1940 | 1950 | 1960 | 1970 | 1980 | 1990 | 2000 | 2010 |
 
   Foreldre bør ligge på **lavere** `r` (over) — ellers går strekene oppover og ser rare ut.
+  Noen noder står bevisst på tiåret sjangeren PREGET, ikke året den oppsto (R&B på
+  50-tallet, Soul på 60-tallet, brukervalg 2026-08-04) — `era` er fasiten for årstallet,
+  og sjangertidslinjen leser den, ikke raden. Ikke «rett» dem tilbake.
+- `yOffset` — valgfri brøkdel av en rad som flytter noden opp (negativ) eller ned
+  (positiv) INNENFOR tiårsbåndet sitt. Brukes når forelder og barn står i samme tiår
+  (Soul → Funk, Cool → Modal), så forelderen ligger synlig over barnet. Står de i samme
+  kolonne (`cx`), tegnes streken rett ned; ellers som en bue under begge.
 - `cx` — vannrett senter, 70–1510 (lerretet er 1660 bredt, noden 116 px).
   Hold **minst ~120 px** til andre noder på samme `r`. Sjangre i samme familie står
   i samme kolonneområde — det er dette som gjør kartet lesbart.

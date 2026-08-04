@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.07";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.07";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.07";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.07";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.07";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.07";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.08";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.08";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.08";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.08";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.08";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.08";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -43,15 +43,21 @@ export const GENEALOGY = [
   { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 4, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
   { id: "honkytonk", l: "Honky tonk", f: "Honky tonk", fam: "amber", cx: 195, r: 5, p: ["country"], g: "Country", era: "1940-tallet", t: ["Lovesick Blues – Hank Williams (1949)", "Your Cheatin' Heart – Hank Williams (1953)"] },
   { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 700, r: 5, p: ["swing"], g: "Jazz", era: "1945", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
-  { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 1190, r: 5, p: ["blues", "gospel"], g: "R&B", era: "1940-tallet", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
+  // R&B, Soul og Funk står på tiåret sjangeren PREGET, ikke året den ble navngitt
+  // (brukervalg 2026-08-04): R&B leses som 50-tallets sjanger, Soul som 60-tallets.
+  // `era` er fortsatt fasiten for oppstartsåret, og sjangertidslinjen leser den —
+  // ikke raden — så flyttingen endrer bare kartet.
+  { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 1190, r: 6, p: ["blues", "gospel"], g: "R&B", era: "1940-tallet", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
   { id: "nashville", l: "Nashville", f: "Nashville-sound", fam: "amber", cx: 195, r: 6, p: ["honkytonk"], g: "Country", era: "1957", t: ["Crazy – Patsy Cline (1961)", "Four Walls – Jim Reeves (1957)"] },
   { id: "chicagoblues", l: "Electric blues", f: "Electric blues", fam: "blue", cx: 580, r: 5, p: ["blues"], g: "Blues", era: "midten av 1940-tallet", t: ["Got My Mojo Workin' – Muddy Waters (1956)", "Call It Stormy Monday – T-Bone Walker (1947)"] },
   { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 700, r: 6, p: ["bebop"], g: "Jazz", era: "1949", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
   { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 825, r: 6, p: ["bebop"], rx: ["cool"], g: "Jazz", era: "1955", t: ["Moanin' – Art Blakey (1959)"] },
-  { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 1190, r: 6, p: ["gospel", "rnb"], g: "R&B", era: "1959", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
+  { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 1190, r: 7, yOffset: -0.2, p: ["gospel", "rnb"], g: "R&B", era: "1959", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
   { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 700, r: 6, yOffset: 0.5, p: ["bebop", "cool"], g: "Jazz", era: "1958", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
   { id: "free", l: "Free jazz", f: "Free jazz", fam: "purple", cx: 825, r: 7, p: ["bebop"], rx: ["hardbop"], g: "Jazz", era: "1960", t: ["Free Jazz – Ornette Coleman (1961)"] },
-  { id: "funk", l: "Funk", f: "Funk", fam: "red", cx: 1190, r: 7, p: ["soul"], g: "R&B", era: "1967", t: ["Papa's Got a Brand New Bag – James Brown", "Chameleon – Herbie Hancock (1973)"] },
+  // Funk ligger NEDERST i 60-tallsbåndet og krysser 1970-linja: den kom sent i
+  // tiåret, og skal leses som soulens fortsettelse på vei inn i 70-tallet.
+  { id: "funk", l: "Funk", f: "Funk", fam: "red", cx: 1190, r: 7, yOffset: 0.4, p: ["soul"], g: "R&B", era: "1967", t: ["Papa's Got a Brand New Bag – James Brown", "Chameleon – Herbie Hancock (1973)"] },
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1590, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
   { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
   { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["modal", "funk", "rock"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
@@ -479,10 +485,11 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   const modal = root.querySelector("#modal-sjanger");
 
   const map = {}, kids = {};
-  // yOffset (brøkdel av en rad, valgfritt): lar en node ligge litt UNDER
-  // gridlinja i sitt eget tiårsbånd — brukt der en sjanger nedstammer fra en
-  // node i SAMME tiår (blues↔work songs, blues rock↔British invasion, modal↔cool),
-  // så «forelder over barn» bevares uten å bryte rad = tiår.
+  // yOffset (brøkdel av en rad, valgfritt): flytter noden opp eller ned INNENFOR
+  // sitt eget tiårsbånd — brukt der en sjanger nedstammer fra en node i SAMME
+  // tiår (blues↔work songs, modal↔cool, soul↔funk), så «forelder over barn»
+  // bevares uten å bryte rad = tiår. Negativ verdi løfter noden mot toppen av
+  // båndet (Soul), positiv senker den mot neste tiårslinje (Funk).
   GENEALOGY.forEach((n) => { n.y = RY[n.r] + (n.yOffset || 0) * ROW_GAP; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
   // Alle foreldre = avstamning (p) + motreaksjon (rx)
   const parentsOf = (n) => { const a = n.p.slice(); n.rx.forEach((id) => { if (!a.includes(id)) a.push(id); }); return a; };
@@ -506,8 +513,12 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
     const pa = map[pid];
     const reaction = n.rx.includes(pid);
     let d;
-    if (pa.r === n.r) {
-      // Samme tiår: bue under begge nodene
+    // Samme tiår OG samme kolonne (Soul → Funk, Cool → Modal): noden ligger rett
+    // under forelderen, og en bue ville gått ned forbi barnet og kommet inn
+    // nedenfra — som en stump som stikker ut under boksen. Da tegnes streken rett
+    // ned, som mellom to tiår.
+    if (pa.r === n.r && Math.abs(pa.cx - n.cx) > 4) {
+      // Samme tiår, ulik kolonne: bue under begge nodene
       const y1 = pa.y + NH / 2, y2 = n.y + NH / 2, bow = 46;
       d = `M${pa.cx},${y1} C${pa.cx},${y1 + bow} ${n.cx},${y2 + bow} ${n.cx},${y2}`;
     } else {

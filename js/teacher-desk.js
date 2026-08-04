@@ -13,14 +13,14 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=4.07";
-import { modalOpen } from "./ui.js?v=4.07";
-import { renderPendingEditsList } from "./teacher-review.js?v=4.07";
-import { openDetail } from "./teacher-artists.js?v=4.07";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=4.07";
-import { GENEALOGY, GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre } from "./genealogy.js?v=4.07";
-import { DECADES } from "./limits.js?v=4.07";
-import { escapeHtml, pct } from "./ui-helpers.js?v=4.07";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=4.08";
+import { modalOpen } from "./ui.js?v=4.08";
+import { renderPendingEditsList } from "./teacher-review.js?v=4.08";
+import { openDetail } from "./teacher-artists.js?v=4.08";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=4.08";
+import { GENEALOGY, GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre } from "./genealogy.js?v=4.08";
+import { DECADES, isVisible } from "./limits.js?v=4.08";
+import { escapeHtml, pct } from "./ui-helpers.js?v=4.08";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -42,7 +42,11 @@ const openPanels = new Set();
 // artister). Sjekk-knappen i lista skriver dit; «åpne» går til kategoriens
 // naturlige visning (artistdetalj, sjanger-popup med Sjekk-knapp, osv.).
 function buildCategories() {
-  const active = state.artists.filter((a) => a.status === "active");
+  // Skjulte artistkort (prioritet -1) er tatt UT av universet (isVisible, samme
+  // predikat som Oversikten og studentvisningene): de vises ikke for noen, og
+  // skulle derfor verken telles som noe å sjekke eller ligge og lyse i
+  // «Usjekkede». Undersjanger-universet leses fra de samme kortene.
+  const active = state.artists.filter(isVisible);
   const checks = state.teacherChecks || {};
   const set = (field) => new Set(checks[field] || []);
 

@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.07";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.07";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.07";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.07";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.07";
+} from "./limits.js?v=4.08";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.08";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.08";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.08";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.08";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -135,6 +135,16 @@ export function renderDashboard(el, {
     ...(a.mainGenre || []).filter((x) => !isMainGenre(x)),
     ...(a.subGenre || []),
   ]))];
+  // Lytteeksempler: alle kuraterte eksempler til sammen (ikke sentrale verk —
+  // samme avgrensning som spillelistene). Parentestallet i sjangerlista under
+  // teller de samme eksemplene, men fordelt per sjanger.
+  const exampleCount = active.reduce((n, a) => n + (a.musicExamples || []).length, 0);
+  // Skjulte artistkort: aktive kort læreren har satt til prioritet -1. De er
+  // usynlige for studentene og teller derfor ikke i noen annen statistikk her —
+  // dette er eneste stedet de er synlige som tall.
+  const hidden = artists
+    .filter((a) => a.status === "active" && (a.priority || 0) === -1)
+    .sort(byName);
 
   // --- Sjangerliste (treets sjangre, sortert etter antall artistkort) -------
   // Tellingen (countForGenre) matcher artistlista bak sjanger-popupen, så
@@ -195,6 +205,7 @@ export function renderDashboard(el, {
   const expandList = (rowsHtml, count) => {
     const id = `ov-x-${uid++}`;
     return {
+      id,
       btn: `data-ov-toggle="${id}"`,
       panel: `<div id="${id}" class="ov-expand" style="display:none">${
         count ? `<div class="result-list">${rowsHtml}</div>` : `<p class="muted">Ingen.</p>`
@@ -287,6 +298,18 @@ export function renderDashboard(el, {
       <button type="button" class="ov-kpi ov-click" data-ov-open="subgenres">
         <span class="ov-kpi-n">${subTags.length}</span>
         <span class="ov-kpi-l">Undersjangre</span>
+      </button>
+      <div class="ov-kpi">
+        <span class="ov-kpi-n">${exampleCount}</span>
+        <span class="ov-kpi-l">Lytteeksempler</span>
+      </div>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="edges" title="Åpner lista over koblingene nederst">
+        <span class="ov-kpi-n">${GENEALOGY_EDGES.length}</span>
+        <span class="ov-kpi-l">Sjangerkoblinger</span>
+      </button>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="hidden" title="Aktive kort med prioritet «Skjult». De vises ikke for studentene.">
+        <span class="ov-kpi-n">${hidden.length}</span>
+        <span class="ov-kpi-l">Skjulte artistkort</span>
       </button>
     </div>
 
@@ -437,7 +460,22 @@ export function renderDashboard(el, {
     if (edge) return onEditEdge?.(edge.dataset.ovEdgeFrom, edge.dataset.ovEdgeTo);
 
     const open = hit("[data-ov-open]");
-    if (open) return open.dataset.ovOpen === "tech" ? explore?.openTeknologi() : explore?.openSubgenreList();
+    if (open) {
+      switch (open.dataset.ovOpen) {
+        case "tech": return explore?.openTeknologi();
+        case "subgenres": return explore?.openSubgenreList();
+        // Koblingene har ingen egen visning: nøkkeltallet folder ut lista som
+        // allerede står i «Innhold som mangler» og ruller ned til den.
+        case "edges": {
+          const panel = el.querySelector(`#${edgeX.id}`);
+          if (!panel) return;
+          panel.style.display = "block";
+          panel.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        case "hidden": return onShowArtistList?.("Skjulte artistkort", hidden);
+      }
+    }
   };
 }
 
