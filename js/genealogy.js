@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.21";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.21";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.21";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.21";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.21";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.21";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.22";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.22";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.22";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.22";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.22";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.22";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -520,7 +520,7 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   // samme-rad-buene bøyer 46 px NED under nodene, og et bredt bånd langs dem
   // ville sklidd inn i tiårsbåndet under (målt: Hymner→Spirituals over Blues).
   // Tegnes FØRST, så rutenett, kanter og noder ligger over.
-  const FAMBG_PAD = 14, FAMBG_OPACITY = 0.09, FAMBG_STROKE = 74;
+  const FAMBG_PAD = 14, FAMBG_OPACITY = 0.06, FAMBG_STROKE = 74;
   for (const fam of new Set(GENEALOGY.map((n) => n.fam))) {
     const color = FAM_STROKE[fam] || FAMILIES.gray.stroke;
     const g = el("g", { class: "gx-famband", opacity: FAMBG_OPACITY });
