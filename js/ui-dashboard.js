@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.16";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.16";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.16";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.16";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.16";
+} from "./limits.js?v=4.17";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.17";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.17";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.17";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.17";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -353,19 +353,19 @@ export function renderDashboard(el, {
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Antall artister per tiår.</div>
+      <div class="stat-label">Antall artister per tiår</div>
       <div class="ov-hist">${histCols}</div>
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Antall artister og (lytteeksempler) per sjanger.</div>
+      <div class="stat-label">Antall artister og (lytteeksempler) per sjanger</div>
       <div class="ov-genre-cols">${genreCounts.map((g) =>
         distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`, g.e)).join("")}</div>
     </div>
 
     <div class="ov-two">
       <div class="stat-card ov-block" style="margin-top:0">
-        <div class="stat-label">Antall artister og lytteeksempler per metasjanger.</div>
+        <div class="stat-label">Antall artister og lytteeksempler per metasjanger</div>
         <div class="ov-rows-meta">
           <div class="ov-row ov-row-meta ov-row-head">
             <span></span>
