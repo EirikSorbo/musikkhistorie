@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.14";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.14";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.14";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.14";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.14";
+} from "./limits.js?v=4.15";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.15";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.15";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.15";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.15";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -353,19 +353,19 @@ export function renderDashboard(el, {
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Artister per tiår — teller hele innflytelsesperioden, klikk en søyle for liste</div>
+      <div class="stat-label">Antall artister per tiår.</div>
       <div class="ov-hist">${histCols}</div>
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Sjangre i slektstreet (${genreCounts.length}) — sortert etter antall artistkort${exampleCountForGenre ? ", tall i parentes = lytteeksempler i spillelista" : ""}, klikk for beskrivelse og artister</div>
+      <div class="stat-label">Antall artister og (lytteeksempler) per hovedsjanger.</div>
       <div class="ov-genre-cols">${genreCounts.map((g) =>
         distRow(g.l, g.n, maxGenre, `data-ov-genre="${escapeHtml(g.l)}"`, g.e)).join("")}</div>
     </div>
 
     <div class="ov-two">
       <div class="stat-card ov-block" style="margin-top:0">
-        <div class="stat-label">Per metasjanger. Klikk et tall for lista bak det.</div>
+        <div class="stat-label">Antall artister og lytteeksempler per metasjanger.</div>
         <div class="ov-rows-meta">
           <div class="ov-row ov-row-meta ov-row-head">
             <span></span>
@@ -382,7 +382,7 @@ export function renderDashboard(el, {
     </div>
 
     <div class="stat-card ov-block">
-      <div class="stat-label">Instrument — klikk for artistliste</div>
+      <div class="stat-label">Instrumenter</div>
       <div class="ov-chips">${instruments.map((i) => {
         const n = counts.perInstrument[i] || 0;
         return `<button type="button" class="ov-chip${n ? "" : " ov-zero"}" data-ov-instr="${escapeHtml(i)}">${escapeHtml(i)} <strong>${n}</strong></button>`;
@@ -429,7 +429,7 @@ export function renderDashboard(el, {
         subMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="sub"`)).join(""))}
       <div class="ov-miss-item">
         <button type="button" class="ov-miss-head" ${edgeX.btn}>
-          <span>Sjangerkoblinger (strekene i slektstreet)</span>
+          <span>Sjangerkoblinger</span>
           <span class="ov-count ${gaps.edgeDesc.length ? "ov-warn" : "ov-ok"}">${edgesFilled}/${GENEALOGY_EDGES.length}</span>
         </button>
         ${edgeX.panel}
@@ -437,7 +437,7 @@ export function renderDashboard(el, {
       ${missItem("Artister uten beskrivelse", noDesc.length, artistRows(noDesc))}
       ${missItem("Artister uten bilde", noImage.length, artistRows(noImage))}
       ${missItem("Artister uten musikkeksempler", noMusic.length, artistRows(noMusic))}
-      ${missItem("Lytteeksempler uten sjangerknytning (flersjanger-artister)", gaps.noExGenre.length, artistRows(gaps.noExGenre))}
+      ${missItem("Lytteeksempler uten sjanger", gaps.noExGenre.length, artistRows(gaps.noExGenre))}
       ${missItem("Artister uten gyldig instrument", gaps.badInstrument.length,
         artistRows(gaps.badInstrument, (a) => a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
