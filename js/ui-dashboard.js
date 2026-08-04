@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.12";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.12";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.12";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.12";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.12";
+} from "./limits.js?v=4.13";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.13";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genealogy.js?v=4.13";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.13";
+import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.13";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -33,6 +33,11 @@ const GENDER_COLORS = {
 
 const byNo = (a, b) => a.localeCompare(b, "no");
 const byName = (a, b) => a.name.localeCompare(b.name, "no");
+// Kjønnsbøtta en artist havner i — MÅ være samme regel som genderDistribution
+// (limits.js): alt utenfor de fire verdiene, inkludert tomt felt, telles som
+// «ukjent». Ellers ville tallet i legenden og lista bak klikket sprike.
+const GENDER_KEYS = ["kvinne", "mann", "annet", "ukjent"];
+const genderBucket = (a) => (GENDER_KEYS.includes(a.gender) ? a.gender : "ukjent");
 const byInfluenceThenName = (a, b) =>
   (a.influenceStart || 0) - (b.influenceStart || 0) || byName(a, b);
 
@@ -476,6 +481,12 @@ export function renderDashboard(el, {
       const i = instr.dataset.ovInstr;
       return onShowArtistList?.(i, active.filter((a) => a.instrument === i).sort(byName));
     }
+    const gen = hit("[data-ov-gender]");
+    if (gen) {
+      const k = gen.dataset.ovGender;
+      return onShowArtistList?.(GENDER_LABEL[k],
+        active.filter((a) => genderBucket(a) === k).sort(byInfluenceThenName));
+    }
     const sub = hit("[data-ov-subinfo]");
     if (sub) return explore?.openSubgenreInfo(sub.dataset.ovSubinfo);
 
@@ -541,12 +552,14 @@ function renderGenderChart(dist) {
     )
     .join("");
 
+  // Tallet er lenka til artistlista, som i metasjanger-kortet — prosenten er
+  // ren tekst (den har ingen egen liste bak seg).
   const legend = ["kvinne", "mann", "annet", "ukjent"]
     .map(
       (k) => `
       <span class="legend-item">
         <span class="dot" style="background:${GENDER_COLORS[k]}"></span>
-        ${GENDER_LABEL[k]}: <strong>${dist[k]}</strong>
+        ${GENDER_LABEL[k]}: <button type="button" class="ov-num-inline" data-ov-gender="${k}" title="Vis artistene">${dist[k]}</button>
         (${pct(dist[k], dist.total)}%)
       </span>`
     )

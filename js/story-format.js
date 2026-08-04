@@ -17,8 +17,8 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=4.12";
-import { escapeHtml } from "./ui-helpers.js?v=4.12";
+import { linkifyAll } from "./linkify.js?v=4.13";
+import { escapeHtml } from "./ui-helpers.js?v=4.13";
 
 // Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
 // én per metasjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
