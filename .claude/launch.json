@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "pensum",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8731"],
-      "port": 8731
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "python3 -m http.server \"${PORT:-8731}\""],
+      "port": 8731,
+      "autoPort": true
     }
   ]
 }
