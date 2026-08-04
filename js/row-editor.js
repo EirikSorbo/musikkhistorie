@@ -8,7 +8,7 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.17";
+import { escapeHtml } from "./util.js?v=4.18";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
@@ -57,6 +57,21 @@ export const SOURCE_SPEC = {
     { key: "url",  cls: "source-url",  type: "url", ph: "https://… (valgfritt)", label: "Lenke (https)", always: true },
   ],
 };
+
+// Normaliserer en lagret kilde-liste til NØYAKTIG formen collectRows leverer
+// for SOURCE_SPEC: [{ text, url }] med begge feltene alltid til stede, tomme
+// rader filtrert bort. Kilder er historisk lagret både som rene strenger og
+// som objekter uten url-felt — uten denne ga en UENDRET kilde en falsk diff i
+// forslagseditoren ({ text } ≠ { text, url: "" }), og et sjangerkort uten
+// kilder ga en falsk «kilder: []»-endring i hvert eneste forslag.
+export function normalizeSources(v) {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((k) => (typeof k === "string"
+      ? { text: k, url: "" }
+      : { text: (k && k.text) || "", url: (k && k.url) || "" }))
+    .filter((k) => k.text);
+}
 
 function inputHtml(f, values) {
   const v = values[f.key] == null ? "" : values[f.key];

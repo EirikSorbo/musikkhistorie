@@ -5,10 +5,11 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.17";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=4.17";
-import { resolveDesc } from "./genre-descriptions.js?v=4.17";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=4.17";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.18";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=4.18";
+import { resolveDesc } from "./genre-descriptions.js?v=4.18";
+import { resolveMainDesc } from "./genealogy.js?v=4.18";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=4.18";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;
@@ -16,10 +17,21 @@ function getCurrentEntityValues(edit) {
     case "artist": return state.artists.find(a => a.id === entityId) || {};
     case "tech":   return state.techItems.find(t => t.id === entityId) || {};
     case "subgenre": {
-      // Les fra SAMME nivå som forslaget gjelder, så diffen viser riktig
-      // eksisterende tekst (før: alltid main med sub som fallback).
-      const d = resolveDesc(state.genreDescs, entityId, genreEditLevel(edit)).description;
-      return { description: d || "" };
+      // Les fra SAMME nivå som forslaget gjelder, og med SAMME oppslag som
+      // sjangerkortet (main går via resolveMainDesc, som også prøver nodens
+      // fulle navn). Alle foreslåbare felter må med — «Gjeldende»-kolonnen
+      // viste før «(tom)» for kilder selv når sjangeren hadde kilder, og
+      // godkjenning kunne dermed viske dem ut.
+      const level = genreEditLevel(edit);
+      const r = level === "main"
+        ? resolveMainDesc(state.genreDescs, entityId)
+        : resolveDesc(state.genreDescs, entityId, level);
+      return {
+        description: r.description || "",
+        kilder: r.kilder || [],
+        activeFrom: r.activeFrom ?? null,
+        activeTo: r.activeTo ?? null,
+      };
     }
     // Instrumentsammendraget er en innholdsside (content/instrument-<slug>).
     case "instrument": {

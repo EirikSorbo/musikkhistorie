@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.17";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.17";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.17";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.17";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.17";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.17";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.18";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.18";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.18";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.18";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.18";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.18";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -318,6 +318,10 @@ export function showSjangerInfo(label, opts = {}) {
   // Foreslå endring (student). entityId = n.l — SAMME dokument-ID som lærer-
   // redigering bruker (tidligere n.f, som traff et annet dokument). Nivået
   // «main» følger med så godkjenning skriver til riktig nivåfelt.
+  // currentValues må bære ALLE feltene forslagsskjemaet har (også kilder og
+  // epoke-årstallene) — bare description ga tomme kilderader over eksisterende
+  // kilder, en falsk «kilder: []»-diff i hvert forslag, og kildetap ved
+  // godkjenning.
   const foot = root.querySelector("#sj-foot");
   const propBtn = root.querySelector("#sj-propose");
   if (foot && propBtn) {
@@ -331,7 +335,12 @@ export function showSjangerInfo(label, opts = {}) {
         entityId: n.l,
         entityName: n.f,
         level: "main",
-        currentValues: { description: descText || "" },
+        currentValues: {
+          description: descText || "",
+          kilder: resolved.kilder || [],
+          activeFrom: resolved.activeFrom ?? null,
+          activeTo: resolved.activeTo ?? null,
+        },
       });
     } else {
       foot.style.display = "none";

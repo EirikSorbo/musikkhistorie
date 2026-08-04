@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rowInnerHtml, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.17";
+import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.18";
 
 test("rowInnerHtml escaper verdier (lukker XSS-fella)", () => {
   const html = rowInnerHtml(SOURCE_SPEC, { text: `"><img src=x onerror=alert(1)>`, url: "https://ex.com" });
@@ -45,4 +45,22 @@ test("tomme verdier gir tomme value-attributter", () => {
   const html = rowInnerHtml(SOURCE_SPEC, {});
   assert.match(html, /class="source-text"[^>]*value=""/);
   assert.match(html, /class="source-url"[^>]*value=""/);
+});
+
+// normalizeSources skal gi NØYAKTIG formen collectRows leverer for SOURCE_SPEC,
+// så en urørt kilde-liste aldri diffes som endret i forslagseditoren.
+test("normalizeSources: manglende liste og tomme rader blir tom liste", () => {
+  assert.deepEqual(normalizeSources(undefined), []);
+  assert.deepEqual(normalizeSources(null), []);
+  assert.deepEqual(normalizeSources("SNL"), []);
+  assert.deepEqual(normalizeSources([{ url: "https://ex.com" }, { text: "" }]), []);
+});
+
+test("normalizeSources: strenger og objekter uten url får url-felt", () => {
+  assert.deepEqual(normalizeSources(["SNL"]), [{ text: "SNL", url: "" }]);
+  assert.deepEqual(normalizeSources([{ text: "SNL" }]), [{ text: "SNL", url: "" }]);
+  assert.deepEqual(
+    normalizeSources([{ text: "SNL", url: "https://snl.no" }]),
+    [{ text: "SNL", url: "https://snl.no" }]
+  );
 });

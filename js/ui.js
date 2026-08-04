@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.17";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.17";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.17";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.18";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.18";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.18";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.17";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.17";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.17";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.17";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.17";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.17";
+} from "./ui-helpers.js?v=4.18";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.18";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.18";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.18";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.18";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.18";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -411,7 +411,14 @@ function showGenreLevelInfo(label, level, opts = {}) {
   if (!modal || !mTitle || !mBody) return false;
 
   const resolved = resolveDesc(genreDescs, label, level);
-  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, { description: resolved.description || "" }, level);
+  // Alle skjemafeltene med i currentValues (samme grunn som i showSjangerInfo):
+  // bare description ga falsk kilder-diff og kildetap ved godkjenning.
+  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", label, label, {
+    description: resolved.description || "",
+    kilder: resolved.kilder || [],
+    activeFrom: resolved.activeFrom ?? null,
+    activeTo: resolved.activeTo ?? null,
+  }, level);
 
   const btnArea = [
     onShowArtists ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",

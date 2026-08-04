@@ -8,11 +8,11 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.17";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.17";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.17";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.17";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=4.17";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.18";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.18";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.18";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.18";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.18";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -211,7 +211,16 @@ export function openProposalEditor(config) {
       const v = readField(s);
       if (v !== undefined) proposed[s.key] = v;
     }
-    const diff = diffFields(config.currentValues || {}, proposed);
+    // Kilder-felter: normaliser DAGENS verdi til samme form som collectRows
+    // leverer ({ text, url }, tomme rader borte) før diffen. Ellers ga en
+    // urørt kilde uten url-felt — eller et kort helt uten kilder (undefined
+    // mot []) — en falsk «endring» som lot tomme forslag slippe gjennom og
+    // kunne viske ut kilder ved godkjenning.
+    const current = { ...(config.currentValues || {}) };
+    for (const s of specs) {
+      if (s.type === "sources") current[s.key] = normalizeSources(current[s.key]);
+    }
+    const diff = diffFields(current, proposed);
     const msg = document.getElementById("prop-msg");
     if (!Object.keys(diff).length) {
       msg.textContent = "Du har ikke endret noe ennå.";
