@@ -6,9 +6,9 @@
 //  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.27";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.27";
-import { GENDERS } from "./limits.js?v=4.27";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.28";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.28";
+import { GENDERS } from "./limits.js?v=4.28";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -329,11 +329,14 @@ export function factsLines(a, { showGender = false } = {}) {
   if (a.birthYear && a.deathYear) rows.push(["Levetid", `${a.birthYear}–${a.deathYear}`]);
   else if (a.birthYear) rows.push(["Levetid", `${a.birthYear}–`]);
   else if (a.deathYear) rows.push(["Levetid", `?–${a.deathYear}`]);
+  // «ca.» gjelder HELE perioden, ikke bare enkeltåret: innflytelsesårene er
+  // skjønnsmessige anslag, ikke datofestede fakta, og et bart «1955–1970» leses
+  // som en presisjon feltet ikke har.
   if (a.influenceStart) {
     const p = (!a.influenceEnd || a.influenceEnd === a.influenceStart)
-      ? `ca. ${a.influenceStart}`
+      ? `${a.influenceStart}`
       : `${a.influenceStart}–${a.influenceEnd}`;
-    rows.push(["Innflytelse", p]);
+    rows.push(["Innflytelse", `ca. ${p}`]);
   }
   if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel]);
   if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);

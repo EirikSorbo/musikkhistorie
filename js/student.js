@@ -5,13 +5,13 @@
 import {
   fetchArtists,
   addArtist,
-} from "./store.js?v=4.27";
-import { loadArtists } from "./artist-cache.js?v=4.27";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.27";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.27";
-import { fillSelect } from "./ui.js?v=4.27";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.27";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.27";
+} from "./store.js?v=4.28";
+import { loadArtists } from "./artist-cache.js?v=4.28";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.28";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.28";
+import { fillSelect } from "./ui.js?v=4.28";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.28";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.28";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
