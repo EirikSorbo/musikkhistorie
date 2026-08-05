@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.23";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.23";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.23";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.25";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.25";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.25";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.23";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.23";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.23";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.23";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.23";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.23";
+} from "./ui-helpers.js?v=4.25";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.25";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.25";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.25";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.25";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.25";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -126,14 +126,31 @@ export function renderArtistDetail(el, artist, lc) {
   wireRelated(el, lc);
 }
 
+// Siste HTML som faktisk ble malt inn i et gitt element. WeakMap og ikke et
+// data-attributt: strengen er flere kB, og den har ingenting i DOM-en å gjøre.
+const spotlightPainted = new WeakMap();
+
 // Viser 2 tilfeldig valgte artistkort (kun lesemodus, ingen knapper)
 export function renderSpotlightCards(el, artists, lc) {
   el.className = "spotlight-grid";
   if (!artists.length) {
     el.innerHTML = `<p class="muted empty" style="grid-column:1/-1">Ingen forslag matcher filteret ennå.</p>`;
+    spotlightPainted.delete(el);
     return;
   }
-  el.innerHTML = artists.map((a) => spotlightCard(a, lc)).join("");
+  const html = artists.map((a) => spotlightCard(a, lc)).join("");
+  // Kortet bygges på nytt for hvert Firestore-snapshot (artister, tech, stemmer).
+  // Er HTML-en identisk, ville innerHTML-byttet tømt elementet og gjenskapt
+  // bildet for å tegne nøyaktig det samme — det er blinket man ser ved sidelast.
+  // Dagens artist-kortet traff dette hver gang: tech-lista kommer etter
+  // artistene, men bare 13 av 319 beskrivelser nevner et tech-kort, så for 96 %
+  // av artistene endret det andre bygget ingenting.
+  // firstElementChild-sjekken: andre kodeveier tømmer elementet direkte (bl.a.
+  // renderDagensSection når datasettet viser seg å være tomt). Uten den ville
+  // en identisk HTML etterpå blitt hoppet over, og kortet blitt stående tomt.
+  if (spotlightPainted.get(el) === html && el.firstElementChild) return;
+  el.innerHTML = html;
+  spotlightPainted.set(el, html);
   wireLinks(el, lc);
   wireRelated(el, lc);
 }
