@@ -397,11 +397,11 @@ Tech-data eksporteres/importeres sammen med resten av datasettet (under `tech`-n
 4. **Slå sammen**: artister matches på navn (case-insensitive). Tomme felter fylles automatisk fra importfilen. Konflikter løses interaktivt eller med *Behold alle*/*Importer alle*.
 5. **Tiår + sjangerbeskrivelser** importeres alltid (overskriver eksisterende verdier). **Tech** matches på navn (oppdater/legg til).
 
-### Bakoverkompatibilitet
-- **Feltnavnene `metaGenre`/`mainGenre`/`subGenre` er nå påkrevd.** Eldre filer med `genre`/`sjangre`/`undersjangre` eller kombinert `subgenres`-array importeres **ikke** lenger riktig — kompat-laget ble fjernet etter at dataene ble migrert (2026-06). Bruk en fersk eksport fra appen som backup.
-- Sjangerbeskrivelser: både nestet `genreDescriptions` (dagens format), flat `genreDescriptions` og legacy toppnøkkel `subgenres` leses ved import.
-- `keyWorks` som komma­separert streng konverteres fortsatt automatisk på lesetid.
-- Gammelt `links`-felt konverteres automatisk til `musicExamples` på lesetid (`normalizeArtist`).
+### Formatkrav (ingen bakoverkompatibilitet)
+Kompat-lagene for eldre filformater er fjernet (v4.23), etter at live-dataene ble verifisert rene. Importfiler må derfor følge formatet i dette dokumentet:
+- Feltnavnene `metaGenre`/`mainGenre`/`subGenre` er påkrevd. Eldre `genre`/`sjangre`/`undersjangre` og et kombinert `subgenres`-array leses **ikke**.
+- Sjangerbeskrivelser: kun nestet `genreDescriptions` med bolkene `meta`/`main`/`sub` (dagens eksportformat). Toppnøkkelen `subgenres` og flate `{ description }`-dokumenter leses **ikke** lenger — et dokument uten `main`, `sub` eller `story` hoppes over.
+- `keyWorks` og `musicExamples` må være lister av objekter; `keyWorks` som kommaseparert streng og det gamle `links`-feltet konverteres **ikke** lenger.
+- `kilder` kan skrives som objekter (`{ text, url }`) eller rene strenger — strenger tolkes som kildetekst uten lenke. Dette er den ENESTE gjenværende koersjonen, og finnes fordi importfiler skrives for hånd.
 - `recordingYear` i `keyWorks` er fjernet (v1.68). Eksisterende verdier ignoreres.
-- Når en lærer redigerer og lagrer, skrives det alltid i nytt format.
-- Etter en runde med redigering er all data konvertert.
+- Bruk alltid en fersk eksport fra appen som backup. Gamle backup-filer kan ikke lenger importeres riktig.

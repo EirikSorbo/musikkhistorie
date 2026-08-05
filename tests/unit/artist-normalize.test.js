@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeArtist, META_RENAME } from "../../js/artist-normalize.js?v=4.22";
+import { normalizeArtist } from "../../js/artist-normalize.js?v=4.23";
 
 test("idempotent på allerede normalisert artist", () => {
   const a = {
@@ -19,12 +19,6 @@ test("idempotent på allerede normalisert artist", () => {
   assert.deepEqual(twice, once);
 });
 
-test("metaGenre omdøpes via META_RENAME", () => {
-  for (const [old, ny] of Object.entries(META_RENAME)) {
-    assert.equal(normalizeArtist({ metaGenre: old }).metaGenre, ny);
-  }
-});
-
 test("søppel i mainGenre/subGenre filtreres bort (hindrer nedstrøms krasj)", () => {
   const n = normalizeArtist({
     mainGenre: ["Blues", null, "", "  ", 42, ["nested"], { x: 1 }],
@@ -34,12 +28,9 @@ test("søppel i mainGenre/subGenre filtreres bort (hindrer nedstrøms krasj)", (
   assert.deepEqual(n.subGenre, ["Delta blues"]);
 });
 
-test("keyWorks som streng splittes til objekter", () => {
-  const n = normalizeArtist({ keyWorks: "Cross Road Blues, Hellhound on My Trail" });
-  assert.deepEqual(n.keyWorks, [
-    { title: "Cross Road Blues" },
-    { title: "Hellhound on My Trail" },
-  ]);
+test("keyWorks som ikke er en liste gir tom liste", () => {
+  assert.deepEqual(normalizeArtist({ keyWorks: "Cross Road Blues" }).keyWorks, []);
+  assert.deepEqual(normalizeArtist({ keyWorks: 42 }).keyWorks, []);
 });
 
 test("kilder som strenger blir {text}", () => {
@@ -48,13 +39,6 @@ test("kilder som strenger blir {text}", () => {
     { text: "Ward 1998" },
     { text: "Bok", url: "https://x.no" },
   ]);
-});
-
-test("gamle links konverteres til musicExamples", () => {
-  const n = normalizeArtist({ links: [{ label: "Lytt", url: "https://y.tube" }] });
-  assert.equal(n.musicExamples.length, 1);
-  assert.equal(n.musicExamples[0].url, "https://y.tube");
-  assert.equal("links" in n, false);
 });
 
 test("javascript:-URLer vaskes bort overalt", () => {

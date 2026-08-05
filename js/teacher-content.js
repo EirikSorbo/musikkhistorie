@@ -5,20 +5,20 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.22";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.22";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.22";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.22";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.22";
-import { resolveDesc } from "./genre-descriptions.js?v=4.22";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.22";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.22";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.22";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.23";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.23";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.23";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.23";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.23";
+import { resolveDesc } from "./genre-descriptions.js?v=4.23";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.23";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.23";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.23";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.22";
-import { $ } from "./shared.js?v=4.22";
-import { SOURCE_SPEC, addRow, buildRows, collectRows } from "./row-editor.js?v=4.22";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.23";
+import { $ } from "./shared.js?v=4.23";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.23";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -469,10 +469,9 @@ function fillTechForm(t, preset = null) {
   fillSelect(document.getElementById("tech-instrument"), INSTRUMENT_TIMELINE_GROUPS,
     { placeholder: "Ingen / gjelder ikke ett instrument" });
   document.getElementById("tech-instrument").value = t ? t.instrument || "" : (preset?.instrument || "");
-  // Kilder som strukturerte rader (tekst + lenke), som i artistskjemaet. Eldre
-  // kort kan ha rene strenger — de vises som kildetekst uten lenke.
+  // Kilder som strukturerte rader (tekst + lenke), som i artistskjemaet.
   buildRows(document.getElementById("tech-source-rows"), SOURCE_SPEC,
-    (Array.isArray(t?.kilder) ? t.kilder : []).map((k) => (typeof k === "string" ? { text: k } : k)));
+    normalizeSources(t?.kilder));
   document.getElementById("tech-invented").value = t ? t.inventedYear || "" : "";
   document.getElementById("tech-adopted").value = t ? t.adoptedYear || "" : "";
   document.getElementById("tech-adopted-label").value = t ? t.adoptedLabel || "" : "";

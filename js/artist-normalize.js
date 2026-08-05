@@ -5,23 +5,20 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=4.22";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.22";
+import { safeUrl } from "./util.js?v=4.23";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.23";
 
-// Omdøpte metasjangre (lese-tids-migrering, så eksisterende artister/config
-// vises riktig uten å skrive om databasen).
-export const META_RENAME = {
-  "Afroamerikansk populærmusikk": "R&B",
-  "Elektronisk musikk": "Klubbmusikk",
-};
-
-// Normaliserer rå Firestore-data til intern ny modell.
-// Idempotent — kan kjøres på data som allerede er i ny form.
-// Vasker også alle URL-felter (kun http/https slipper gjennom).
+// Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
+// http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett
+// skjevt dokument ikke kan krasje hele artistlista. Idempotent.
+//
+// Migreringene fra eldre datamodeller (metaGenre-omdøping, `links` →
+// musicExamples, keyWorks som kommaseparert streng) er fjernet i v4.23 —
+// verifisert mot live-Firestore samme dag: 0 av 319 artister hadde noen av
+// formene. Elementnivå-koersjonene under BEHOLDES: de gjelder håndskrevne
+// importfiler, ikke gammel data (se JSON-OPPSKRIFT.md).
 export function normalizeArtist(a) {
   const out = { ...a };
-
-  if (META_RENAME[out.metaGenre]) out.metaGenre = META_RENAME[out.metaGenre];
 
   // Behold kun rene, ikke-tomme tekster i sjangerarrayene. null/tall/nestede
   // lister/objekter (f.eks. fra en håndredigert importfil) ville ellers bli
@@ -31,16 +28,7 @@ export function normalizeArtist(a) {
   out.mainGenre = cleanGenres(out.mainGenre);
   out.subGenre = cleanGenres(out.subGenre);
 
-  // keyWorks: streng → array av {title, year?, url?}
-  if (typeof out.keyWorks === "string") {
-    out.keyWorks = out.keyWorks
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((title) => ({ title }));
-  } else if (!Array.isArray(out.keyWorks)) {
-    out.keyWorks = [];
-  }
+  if (!Array.isArray(out.keyWorks)) out.keyWorks = [];
   out.keyWorks = out.keyWorks
     .map((w) => (typeof w === "string" ? { title: w } : w))   // enkelt-streng (gammel form) → {title}
     .filter((w) => w && typeof w === "object")                // dropp null/tall/annet søppel
@@ -61,16 +49,7 @@ export function normalizeArtist(a) {
     out.kilder = [];
   }
 
-  // musicExamples: bakoverkompatibilitet fra gamle «links»
-  if (!Array.isArray(out.musicExamples)) {
-    const old = Array.isArray(out.links) ? out.links : [];
-    out.musicExamples = old.map((l) => ({
-      label: l.label || "",
-      url: l.url || "",
-      year: l.year || null,
-      performanceYear: l.performanceYear || null,
-    }));
-  }
+  if (!Array.isArray(out.musicExamples)) out.musicExamples = [];
   out.musicExamples = out.musicExamples
     .filter((m) => m && typeof m === "object")   // dropp null/søppel før spredning
     .map((m) => {
@@ -81,7 +60,6 @@ export function normalizeArtist(a) {
       return o;
     })
     .filter((m) => m.url);
-  delete out.links;
 
   // Bilder
   out.imageUrl = safeUrl(out.imageUrl);

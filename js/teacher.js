@@ -21,14 +21,13 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-  purgeDeadGenreDescFields,
-} from "./store.js?v=4.22";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.22";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.22";
-import { initExplore } from "./explore.js?v=4.22";
+} from "./store.js?v=4.23";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.23";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.23";
+import { initExplore } from "./explore.js?v=4.23";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.22";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.22";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.23";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.23";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -45,10 +44,10 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.22";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.22";
-import { renderDesk } from "./teacher-desk.js?v=4.22";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.22";
+} from "./teacher-content.js?v=4.23";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.23";
+import { renderDesk } from "./teacher-desk.js?v=4.23";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.23";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -75,6 +74,12 @@ function setupGate() {
       signedInNotTeacher = false;
       msg.textContent = "";
       document.body.classList.add("is-teacher");
+      // Stemme-identiteten er uid-en (getClientId er null før innlogging har
+      // landet). Uten dette ville lærerens EGNE «Merk ★» stått som umerkede.
+      if (state.clientId !== user.uid) {
+        state.clientId = user.uid;
+        if (state.started) renderAll();
+      }
       if (!state.started) startApp();
     } else if (user && !user.isAnonymous) {
       signedInNotTeacher = true;
@@ -220,13 +225,8 @@ function startApp() {
   // før første snapshot lander.
   refreshDesk();
 
-  // Vedlikehold ved lærer-oppstart: rydder døde felt-generasjoner i
-  // genreDescriptions (kan gjenoppstå via import av gamle backuper —
-  // idempotent, se purgeDeadGenreDescFields). De ni utførte engangs-
-  // migreringene som sto her er fjernet i v4.19; flaggene deres står igjen
-  // i config/migrations (se noten i store.js).
-  purgeDeadGenreDescFields().catch((e) =>
-    console.warn("Genrebeskrivelse-opprydding feilet:", e?.message || e));
+  // (Oppstarts-vedlikeholdet er borte: de ni engangsmigreringene ble fjernet i
+  // v4.19, og felt-oppryddingen i genreDescriptions i v4.23 — se store.js.)
 
   // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
   // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.

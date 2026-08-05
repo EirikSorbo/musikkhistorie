@@ -3,14 +3,15 @@
 // ============================================================================
 
 import {
-  subscribeArtists,
+  fetchArtists,
   addArtist,
-} from "./store.js?v=4.22";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.22";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.22";
-import { fillSelect } from "./ui.js?v=4.22";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.22";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.22";
+} from "./store.js?v=4.23";
+import { loadArtists } from "./artist-cache.js?v=4.23";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.23";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genealogy.js?v=4.23";
+import { fillSelect } from "./ui.js?v=4.23";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.23";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.23";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 const MUSIC_SPEC_SJ = musicSpecWithGenres(
@@ -99,6 +100,7 @@ function setupForm() {
 
     // Myk duplikatsjekk — navnekollisjoner kan være legitime, så vi lar
     // studenten sende inn likevel etter en bekreftelse.
+    await ensureArtists();
     const dup = findDuplicate(candidate.name);
     if (dup && !confirm(`«${candidate.name}» ser ut til å finnes fra før${dup.status === "pending" ? " (venter på godkjenning)" : ""}. Sende inn likevel?`)) {
       return;
@@ -155,6 +157,23 @@ function validateSourceRows() {
   return null;
 }
 
+// Artistlista til duplikatsjekken. Hentes fra den delte localStorage-cachen
+// forsiden fyller (studenten kommer alltid hit via en lenke derfra), og kun
+// ved direkte-besøk med tom cache gjøres én engangs-henting. Siden abonnerte
+// før på HELE artistsamlingen i sanntid utelukkende for dette oppslaget.
+// Feiler hentingen, står lista tom: duplikatsjekken er en myk advarsel, og et
+// duplikat fanges uansett av læreren i godkjenningskøen.
+async function ensureArtists() {
+  if (state.artists.length) return;
+  state.artists = loadArtists();
+  if (state.artists.length) return;
+  try {
+    state.artists = await fetchArtists();
+  } catch (err) {
+    console.warn("Kunne ikke hente artistlista til duplikatsjekk:", err?.message || err);
+  }
+}
+
 // Case-insensitiv navnematch mot eksisterende (ikke-fjernede) forslag.
 function findDuplicate(name) {
   const n = (name || "").trim().toLowerCase();
@@ -198,9 +217,8 @@ function init() {
 
   wireFirestoreErrorBanner();
   refreshControls();
-  subscribeArtists((artists) => {
-    state.artists = artists;
-  });
+  // Artistlista hentes først ved innsending (ensureArtists) — siden viser
+  // ingen artister, så et sanntidsabonnement her var ren kostnad.
 }
 
 init();

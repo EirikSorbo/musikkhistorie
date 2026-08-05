@@ -8,11 +8,11 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.22";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.22";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.22";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.22";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.22";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.23";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.23";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.23";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.23";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.23";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -168,11 +168,9 @@ function fillSourceRows(specs, values) {
     if (s.type !== "sources") continue;
     const wrap = document.getElementById(`prop-f-${s.key}`);
     if (!wrap) continue;
-    const list = Array.isArray(values?.[s.key])
-      // Eldre kort kan ha kilder som rene strenger — vis dem som kildetekst.
-      ? values[s.key].map((k) => (typeof k === "string" ? { text: k } : k))
-      : [];
-    buildRows(wrap, SOURCE_SPEC, list);
+    // Samme normalisering som diffen bruker, så radene og sammenligningen
+    // alltid ser identiske verdier.
+    buildRows(wrap, SOURCE_SPEC, normalizeSources(values?.[s.key]));
   }
   document.querySelectorAll("#prop-form [data-add-src]").forEach((btn) => {
     btn.onclick = () => addRow(document.getElementById(btn.dataset.addSrc), SOURCE_SPEC, {});

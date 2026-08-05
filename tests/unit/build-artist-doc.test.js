@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildArtistDoc } from "../../js/artist-normalize.js?v=4.22";
-import { ARTIST_FIELDS } from "../../js/artist-schema.js?v=4.22";
+import { buildArtistDoc } from "../../js/artist-normalize.js?v=4.23";
+import { ARTIST_FIELDS } from "../../js/artist-schema.js?v=4.23";
 
 test("alle skjemafelter finnes i dokumentet, tomme felter får tom-verdi", () => {
   const doc = buildArtistDoc({ name: "X" });
@@ -53,12 +53,14 @@ test("createdAt settes IKKE her (legges på i store.js med serverTimestamp)", ()
   assert.equal("createdAt" in buildArtistDoc({ name: "A" }), false);
 });
 
-test("normalisering kjøres: metaGenre omdøpes og URL-er vaskes", () => {
+test("normalisering kjøres: URL-er vaskes og søppel filtreres", () => {
   const doc = buildArtistDoc({
     name: "A",
-    metaGenre: "Afroamerikansk populærmusikk",
+    metaGenre: "R&B",
     imageUrl: "javascript:alert(1)",
+    mainGenre: ["Soul", null, 42],
   });
   assert.equal(doc.metaGenre, "R&B");
   assert.equal(doc.imageUrl, "");
+  assert.deepEqual(doc.mainGenre, ["Soul"]);
 });

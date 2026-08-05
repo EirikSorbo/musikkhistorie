@@ -1,11 +1,12 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.22";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.22";
-import { debounce, throttle } from "./util.js?v=4.22";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.22";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.22";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.22";
-import { initExplore } from "./explore.js?v=4.22";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.22";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.23";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.23";
+import { debounce, throttle } from "./util.js?v=4.23";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.23";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.23";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.23";
+import { initExplore } from "./explore.js?v=4.23";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.23";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.23";
 
 const state = {
   artists: [],
@@ -457,37 +458,25 @@ function shuffleDagens() {
 // ----------------------------------------------------------------------------
 //  Cache
 // ----------------------------------------------------------------------------
-
-// Skjemaversjon i nøkkelen: bump ved feltnavn-endringer på artist/config, så
-// gamle caches (f.eks. fra før «genre»→«metaGenre»/«sjangre»→«mainGenre»-
-// migreringen) ignoreres og appen faller tilbake til ferske Firestore-data.
-const CACHE_SCHEMA  = "v3";
-const CACHE_ARTISTS = `pensum_cache_artists_${CACHE_SCHEMA}`;
-
-// Rydd bort caches fra eldre skjemaer (engangs).
-function purgeLegacyCache() {
-  try {
-    for (const k of Object.keys(localStorage)) {
-      if ((k.startsWith("pensum_cache_artists") || k.startsWith("pensum_cache_config"))
-          && k !== CACHE_ARTISTS) {
-        localStorage.removeItem(k);
-      }
-    }
-  } catch { /* ingen tilgang */ }
-}
-
-function saveCache() {
-  try {
-    localStorage.setItem(CACHE_ARTISTS, JSON.stringify(state.artists));
-  } catch { /* full storage */ }
-}
+//  Selve lagringen bor i artist-cache.js, delt med studentsiden (som leser
+//  cachen til duplikatsjekken i stedet for å abonnere på hele samlingen).
 
 function loadCache() {
-  purgeLegacyCache();
-  try {
-    const a = localStorage.getItem(CACHE_ARTISTS);
-    if (a) state.artists = JSON.parse(a);
-  } catch { /* corrupt cache */ }
+  const list = loadArtists();
+  if (list.length) state.artists = list;
+}
+
+// Cachen skrives når fanen FORLATES, ikke ved hvert snapshot: å stringify-e
+// hele artistlista (~1–2 MB) er den tyngste gjentatte jobben på siden, og under
+// en stemmestorm fyrte den hvert 400. ms på hver åpne fane. pagehide dekker
+// navigasjon/lukking, visibilitychange fanger mobil-bakgrunning (der pagehide
+// ikke er garantert). Begge skriver samme nøkkel, så dobbelt fyring er ufarlig.
+function setupCachePersist() {
+  const persist = () => { if (state.artistsLoaded) saveArtists(state.artists); };
+  window.addEventListener("pagehide", persist);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") persist();
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -508,9 +497,9 @@ function init() {
   }
 
   loadCache();
+  setupCachePersist();
   refreshFilterControls();
   if (state.artists.length) {
-    refreshFilterControls();
     renderDagensSection();
     // #artist-list bygges når #modal-artister åpnes (openArtistModal), ikke her
     // — den er skjult ved sidelast, så å bygge alle kortene nå er bortkastet.
@@ -544,7 +533,6 @@ function init() {
     renderArtistViewsIfVisible();
     renderDagensSection();
     if (isDagensModalOpen()) renderDagensModal();
-    saveCache();
   }, 400);
   subscribeArtists((artists) => {
     state.artists = artists;

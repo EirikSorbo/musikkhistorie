@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.22";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.23";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -17,13 +17,13 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.22";
-import { escapeHtml } from "./ui.js?v=4.22";
-import { $ } from "./shared.js?v=4.22";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=4.22";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.22";
-import { INSTRUMENTS } from "./limits.js?v=4.22";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.22";
+} from "./store.js?v=4.23";
+import { escapeHtml } from "./ui.js?v=4.23";
+import { $ } from "./shared.js?v=4.23";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=4.23";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.23";
+import { INSTRUMENTS } from "./limits.js?v=4.23";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.23";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -123,25 +123,12 @@ function buildExportData() {
   //   ellers (fri undersjanger)         → sub
   // Metasjangre som også er tre-noder (Blues, Jazz, Gospel …) havner under meta.
   // Hvert navn står ÉN gang (ett dokument); alle nivå-tekstene ligger i samme
-  // dokument. Import (flattenGenreDescriptions) leser både dette og flat format.
-  // story = sjangerhistorien (eneste kilde — ingen standardtekst i koden) —
-  // må med i backupen, ellers går tekstene tapt ved «Erstatt alle».
+  // dokument. story = sjangerhistorien (eneste kilde — ingen standardtekst i
+  // koden) — må med i backupen, ellers går tekstene tapt ved «Erstatt alle».
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
-    .map(([id, s]) => {
-      const { id: _omit, ...rest } = s;
-      // Dropp de DØDE flate `description`/`kilder`-feltene når et nivåfelt
-      // finnes: appen leser kun nivåene, og backupen skal ikke bære
-      // duplisert/stale tekst videre (import ville ellers re-lagret det). Et
-      // umigrert flat-ONLY-dokument beholder teksten, så importen kan pakke den
-      // inn i riktig nivå.
-      if ((rest.main || rest.sub) && (rest.description !== undefined || rest.kilder !== undefined)) {
-        const { description: _d, kilder: _k, ...r } = rest;
-        return [id, r];
-      }
-      return [id, rest];
-    })
-    .filter(([, rest]) => rest.description || rest.meta || rest.main || rest.sub || rest.story)
+    .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
+    .filter(([, rest]) => rest.main || rest.sub || rest.story)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
     .forEach(([id, rest]) => { genreDescriptions[genreSectionOf(id)][id] = rest; });
 
@@ -220,7 +207,7 @@ function formatImportErrors(errors) {
 }
 
 // Innholdsdeler en importfil kan bære utover artistene.
-const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "subgenres", "tech", "pages", "varmekart", "podcasts", "config"];
+const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts"];
 
 // Alle toppnøkler appen forstår. Ukjente nøkler (feilstavet, eller fra et nyere
 // format) ignoreres stille ved import — vi advarer i stedet, så delvise/skjeve
@@ -286,9 +273,9 @@ async function handleImportFile(file) {
     data = {
       artists: Array.isArray(raw.artists) ? raw.artists : [],
       decades: raw.decades || {},
-      // Nytt nøkkelnavn er «genreDescriptions»; eldre filer bruker «subgenres».
-      // Nytt format er nestet pr. nivå — flat ut til { navn: dokument }.
-      genreDescriptions: flattenGenreDescriptions(raw.genreDescriptions || raw.subgenres || {}),
+      // Formatet er nestet pr. nivå ({ meta, main, sub }) — flat ut til
+      // { navn: dokument } før skriving.
+      genreDescriptions: flattenGenreDescriptions(raw.genreDescriptions || {}),
       edgeDescriptions: raw.edgeDescriptions || {},
       tech: raw.tech || [],
       pages: raw.pages || {},
@@ -380,33 +367,11 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
     .filter(([, data]) => hasDecadeContent(data))
     .map(([id, data]) => ({ id, data }));
 
+  // Appen leser KUN nivåfeltene (main/sub) og story. Alt annet i et
+  // sjangerdokument ignoreres — og en fil uten dem har ingenting å skrive.
   const genreEntries = [];
-  for (const [id, entry] of Object.entries(genreDescriptions || {})) {
-    // Meta-nivået (metasjanger-beskrivelse) er pensjonert (v2.99) — dropp det
-    // fra gamle backuper, ellers gjenopplives det og purgeMetaGenreDescs måtte
-    // slette det på nytt ved neste oppstart.
-    let data = entry;
-    if (data && data.meta) { const { meta, ...rest } = data; data = rest; }
-    // Eldre flat form { description } leses ikke av appen (den leser kun
-    // main/sub). Pakk den inn i riktig nivå før lagring. Meta-nivået er
-    // pensjonert, så en flat beskrivelse for en metasjanger legges på main.
-    // `story` er et TOPP-nivå-felt og må løftes ut før innpakkingen — ellers
-    // ville den blitt nestet inn i nivåfeltet og blitt usynlig for appen.
-    let toSave = data;
-    if (data && data.description && !data.main && !data.sub) {
-      const { description, story, ...rest } = data;
-      const lvl = genreSectionOf(id);
-      toSave = { [lvl === "meta" ? "main" : lvl]: { description, ...rest }, ...(story ? { story } : {}) };
-    } else if (data && (data.main || data.sub) && (data.description !== undefined || data.kilder !== undefined)) {
-      // Har alt et nivåfelt: de flate `description`/`kilder`-feltene er døde og
-      // duplisert (kan være stale) — dropp dem så en gammel backup ikke
-      // re-lagrer dem.
-      const { description: _d, kilder: _k, ...rest } = data;
-      toSave = rest;
-    }
-    if (toSave.description || toSave.main || toSave.sub || toSave.story) {
-      genreEntries.push({ id, data: toSave });
-    }
+  for (const [id, data] of Object.entries(genreDescriptions || {})) {
+    if (data && (data.main || data.sub || data.story)) genreEntries.push({ id, data });
   }
 
   // Koblingsbeskrivelser: nøkkelen ER dokument-ID-en («fra__til»); kun

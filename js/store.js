@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.22";
-import { isMainGenre } from "./genealogy.js?v=4.22";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.22";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.22";
-import { mergeHeatRows } from "./import-format.js?v=4.22";
+import { firebaseConfig } from "./firebase-config.js?v=4.23";
+import { isMainGenre } from "./genealogy.js?v=4.23";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.23";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.23";
+import { mergeHeatRows } from "./import-format.js?v=4.23";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -124,32 +124,21 @@ if (AUTH_CONFIGURED) {
 }
 
 // Venter på en innlogget bruker (anonym eller Google). Kaster hvis anonym
-// innlogging ikke er aktivert — kalleren håndterer fallback.
+// innlogging ikke er aktivert — da feiler stemmingen synlig (voteFailed), i
+// stedet for å skrive en identitet reglene uansett avviser.
 async function ensureAuth() {
   if (auth.currentUser) return auth.currentUser;
   return signInAnonymouslyOnce();
 }
 
-// Identiteten en stemme registreres med: uid når innlogget, ellers legacy-ID.
-async function voteIdentity() {
-  try {
-    return (await ensureAuth()).uid;
-  } catch {
-    return getClientId();
-  }
-}
-
-// Klient-ID for rendering (hvilke kort har JEG stemt på): uid når innlogget.
-// Beholder localStorage-fallbacken for overgangsfasen og oppsettmodus.
+// Klient-ID for rendering (hvilke kort har JEG stemt på) = uid-en stemmene
+// faktisk registreres med. Null før anonym innlogging har landet; sidene
+// oppdaterer seg selv via onAuthChange. Den gamle localStorage-ID-en er fjernet
+// (v4.23): den stammet fra tiden før anonym auth, og etter at reglene begynte å
+// kreve egen uid var den ikke bare død — en stemme skrevet med den ble ALLTID
+// avvist. Verifisert mot live-Firestore: 0 av 319 artister har slike stemmer.
 export function getClientId() {
-  const uid = AUTH_CONFIGURED ? auth.currentUser?.uid : null;
-  if (uid) return uid;
-  let id = localStorage.getItem("pensum_client_id");
-  if (!id) {
-    id = "c_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem("pensum_client_id", id);
-  }
-  return id;
+  return (AUTH_CONFIGURED ? auth.currentUser?.uid : null) || null;
 }
 
 // ----------------------------------------------------------------------------
@@ -173,6 +162,15 @@ export function subscribeArtists(callback) {
     const artists = snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
     callback(artists);
   }, onSubscribeError("artister"));
+}
+
+// Engangs-henting av artistlista. Studentsiden bruker den KUN som reserve når
+// den lokale cachen er tom (direkte-besøk uten å ha vært innom forsiden) — den
+// trenger navnene til duplikatsjekken, ikke et sanntidsabonnement på hele
+// samlingen. Går mot den persistente cachen først, som alle andre lesinger.
+export async function fetchArtists() {
+  const snapshot = await getDocs(artistsCol);
+  return snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
 }
 
 // Konfig-abonnementet er fjernet (v3.68): instrument-vokabularet — det siste
@@ -240,14 +238,14 @@ export async function addArtistsBulk(list) {
 // samtidige stemmer, og et gjentatt klikk (uid allerede i lista) blir en
 // ekte no-op i stedet for en falsk feilmelding.
 export async function voteUp(artistId) {
-  const clientId = await voteIdentity();
-  return updateDoc(doc(db, "artists", artistId), { votedUpBy: arrayUnion(clientId) });
+  const { uid } = await ensureAuth();
+  return updateDoc(doc(db, "artists", artistId), { votedUpBy: arrayUnion(uid) });
 }
 
 // Angre positiv stemme (arrayRemove fjerner kun egen uid, atomisk).
 export async function undoVoteUp(artistId) {
-  const clientId = await voteIdentity();
-  return updateDoc(doc(db, "artists", artistId), { votedUpBy: arrayRemove(clientId) });
+  const { uid } = await ensureAuth();
+  return updateDoc(doc(db, "artists", artistId), { votedUpBy: arrayRemove(uid) });
 }
 
 // ----------------------------------------------------------------------------
@@ -394,44 +392,12 @@ export async function saveGenreDescLevel(genreId, level, data) {
   return setDoc(doc(db, "genreDescriptions", genreId), { [level]: data }, { merge: true });
 }
 
-// Engangs-opprydding (idempotent): fjerner to døde felt-generasjoner fra
-// genreDescriptions i ÉN lesning av samlingen (før: to separate getDocs av hele
-// samlingen ved hver lærer-oppstart — unødvendig dobbelt lese-/oppstartskost):
-//
-//  (1) `meta`-feltet: metasjanger-beskrivelsene på meta-nivå er pensjonert
-//      (v2.99), dekkes nå av sjangerhistoriene. RØRER KUN `meta`; `main`, `sub`,
-//      `story` står urørt — Blues/Jazz osv. er både meta OG main.
-//  (2) de FLATE `description`/`kilder`-feltene: appen leser KUN nivåfeltene
-//      (meta/main/sub) via resolveDesc. Fjernes KUN fra dokumenter som har et
-//      nivåfelt (main/sub), så ingen tekst går tapt — et umigrert flat-ONLY-
-//      dokument røres ikke (importen migrerer det til riktig nivå i stedet).
-//      Krøp tilbake da gamle backuper ble importert (v2.73), derfor lukker
-//      eksport/import nå også hullet.
-//
-// Idempotent: kan trygt kjøre ved hver lærer-oppstart. Ett dokument med begge
-// generasjonene ryddes i ÉN skriving. Returnerer { meta, flat }.
-export async function purgeDeadGenreDescFields() {
-  const snapshot = await getDocs(genreDescsCol);
-  const ops = [];
-  let meta = 0, flat = 0;
-  for (const d of snapshot.docs) {
-    const x = d.data();
-    const patch = {};
-    if (x.meta !== undefined) { patch.meta = deleteField(); meta++; }
-    const hasLevel = x.main !== undefined || x.sub !== undefined;
-    if (hasLevel && (x.description !== undefined || x.kilder !== undefined)) {
-      patch.description = deleteField();
-      patch.kilder = deleteField();
-      flat++;
-    }
-    if (Object.keys(patch).length) ops.push(updateDoc(d.ref, patch));
-  }
-  if (ops.length) {
-    await Promise.all(ops);
-    console.info(`genreDescriptions-opprydding: fjernet dødt meta-felt fra ${meta}, flate description/kilder fra ${flat} dokument(er).`);
-  }
-  return { meta, flat };
-}
+// purgeDeadGenreDescFields (rydding av døde `meta`- og flate `description`/
+// `kilder`-felter) er fjernet i v4.23: den leste hele genreDescriptions-
+// samlingen ved HVER lærer-oppstart for å rydde en tilstand som ikke lenger kan
+// oppstå — verifisert mot live-Firestore samme dag (0 av 150 dokumenter), og
+// eksport/import skriver nå utelukkende nivåfeltene. Koden ligger i
+// git-historikken (t.o.m. v4.22).
 
 // ---------------------------------------------------------------------------
 //  De ni engangsmigreringene fra sjanger-/tre-gjennomgangene 2026-07/08
