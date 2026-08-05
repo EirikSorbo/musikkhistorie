@@ -739,6 +739,10 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .story-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .story-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 #se-text { width: 100%; min-height: 420px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; line-height: 1.55; }
+/* Sjangerbeskrivelsen: main-nivåets tekster ligger rundt 2000 tegn, så feltet
+   settes i piksler i stedet for rader. rows="10" i teacher.html blir stående
+   som fallback hvis stilarket ikke lastes. */
+#ss-desc { min-height: 300px; }
 .story-preview { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-height: 480px; overflow-y: auto; background: #fff; }
 @media (max-width: 900px) { .story-edit-grid { grid-template-columns: 1fr; } }
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { diffFields } from "../../js/ui-edit.js?v=4.26";
+import { diffFields } from "../../js/ui-edit.js?v=4.27";
 
 test("diffFields: kun endrede felter tas med", () => {
   const current = { name: "X", birthYear: 1930, mainGenre: ["Blues"] };
