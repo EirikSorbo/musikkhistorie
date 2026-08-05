@@ -14,11 +14,11 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=4.28";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.28";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.28";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=4.28";
-import { $ } from "./shared.js?v=4.28";
+} from "./store.js?v=4.29";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.29";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.29";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=4.29";
+import { $ } from "./shared.js?v=4.29";
 
 export const state = {
   artists: [],
@@ -38,7 +38,11 @@ export const state = {
   techItems: [],
   teacherChecks: { genres: [], subgenres: [] },
   pendingEdits: [],
-  filters: { mainGenre: "", metaGenre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: true, showPending: false, hideChecked: false, priority: 0 },
+  // showRemoved starter AV (brukervalg): lærerlista skal åpne på pensumet slik
+  // det faktisk står, ikke med de skjulte blandet inn. «Vis skjulte» slår dem
+  // på igjen ved behov. Filteret bor bare i minnet, så det nullstilles ved
+  // hver sidelast.
+  filters: { mainGenre: "", metaGenre: "", decade: "", instrument: "", subgenre: "", search: "", showRemoved: false, showPending: false, hideChecked: false, priority: 0 },
   isTeacher: true,
   clientId: getClientId(),
   started: false,
