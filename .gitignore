@@ -2,7 +2,6 @@
 
 # Lokale JSON-backuper / arbeidsfiler (eksporter, ikke brukt av appen i drift)
 json files/
-data/
 
 # Pedagogiske arbeidsnotater (personlige, ikke del av appen)
 HOR-ETTER-PROMPT.md
