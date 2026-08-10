@@ -8,5 +8,10 @@ data/
 HOR-ETTER-PROMPT.md
 PEDAGOGISKE-POTENSIALER.md
 
+# Arbeidsmappe for kildemateriale og engangsskript (pensum-PDF, Grove-filer,
+# bildehenting, gjennomgangsskript). Ingenting her brukes av appen i drift, og
+# noe av det er opphavsrettslig materiale som ikke skal i et offentlig repo.
+git ignore/
+
 # Test-avhengigheter (regeltester)
 node_modules/
