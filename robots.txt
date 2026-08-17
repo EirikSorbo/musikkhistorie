@@ -1,0 +1,104 @@
+# historieappen.no — undervisningsapp for MUR114 (Populærmusikkhistorie).
+# Ikke ment for offentlig søk eller innhøsting; lenken deles med klassen.
+#
+# NB: Alle sidene er merket <meta name="robots" content="noindex">. For at en
+# søkemotor skal SE den merkingen, må den få lov til å hente siden — derfor
+# står det ikke «Disallow: /» for alle. Blokkerer man henting i stedet, kan
+# Google fortsatt vise selve adressen i resultatene uten å ha lest siden.
+
+User-agent: *
+Disallow:
+
+# ---------------------------------------------------------------------------
+#  AI-crawlere og innhøsting til modelltrening: full blokk.
+# ---------------------------------------------------------------------------
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Claude-SearchBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Perplexity-User
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: meta-externalfetcher
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: AI2Bot
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
