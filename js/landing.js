@@ -1,12 +1,12 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.36";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.36";
-import { debounce, throttle } from "./util.js?v=4.36";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.36";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.36";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.36";
-import { initExplore } from "./explore.js?v=4.36";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.36";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.36";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.37";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.37";
+import { debounce, throttle } from "./util.js?v=4.37";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.37";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.37";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.37";
+import { initExplore } from "./explore.js?v=4.37";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.37";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.37";
 
 const state = {
   artists: [],
@@ -570,7 +570,14 @@ function init() {
 // lastet, er __pensumGate undefined og Promise.resolve(undefined) går rett
 // videre: sperren feiler åpent framfor å låse ute klassen.
 Promise.resolve(window.__pensumGate?.klar).then(function roleGate() {
-  const role = localStorage.getItem("pensum-role");
+  // localStorage KAN kaste (blokkerte cookies/nettsteddata, styrte skole-
+  // profiler). Da skal siden oppføre seg som inkognito — spørre om rolle på
+  // nytt — aldri strande med døde knapper fordi et kast stoppet resten av
+  // funksjonen (init() og lytterne under ville ellers aldri blitt koblet).
+  const lesRole = () => { try { return localStorage.getItem("pensum-role"); } catch (e) { return null; } };
+  const lagreRole = (r) => { try { localStorage.setItem("pensum-role", r); } catch (e) {} };
+
+  const role = lesRole();
   const gate = document.getElementById("role-gate");
 
   function applyRole(r) {
@@ -587,12 +594,12 @@ Promise.resolve(window.__pensumGate?.klar).then(function roleGate() {
   if (!gate) { init(); return; }
 
   document.getElementById("role-student")?.addEventListener("click", () => {
-    localStorage.setItem("pensum-role", "student");
+    lagreRole("student");
     applyRole("student");
     init();
   });
   document.getElementById("role-teacher")?.addEventListener("click", () => {
-    localStorage.setItem("pensum-role", "teacher");
+    lagreRole("teacher");
     applyRole("teacher");
     window.location.href = "teacher.html";
   });

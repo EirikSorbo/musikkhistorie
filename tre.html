@@ -7,18 +7,21 @@
   <title>Slektstre – Populærmusikkhistorie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Fontene lastes ikke-blokkerende (media="print" til de er klare): en
+       brannmur som lar forespørselen HENGE ville ellers parkert parseren foran
+       gate.js og gitt hvit side til nettverkstimeout. Systemfont er fallback. -->
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
-    rel="stylesheet"
+    rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.36" />
-  <script src="js/gate.js?v=4.36"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.37" />
+  <script src="js/gate.js?v=4.37"></script>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
 </head>
 <body>
-  <script>if(localStorage.getItem("pensum-role")==="student")document.body.classList.add("role-student")</script>
+  <script>try{if(localStorage.getItem("pensum-role")==="student")document.body.classList.add("role-student")}catch(e){}</script>
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="index.html">
@@ -76,7 +79,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.36"></script>
-  <script type="module" src="js/tre.js?v=4.36"></script>
+  <script src="js/load-guard.js?v=4.37"></script>
+  <script type="module" src="js/tre.js?v=4.37"></script>
 </body>
 </html>

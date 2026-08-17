@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.36";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.36";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.36";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.37";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.37";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.37";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.36";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.36";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.36";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.36";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.36";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.36";
+} from "./ui-helpers.js?v=4.37";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.37";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.37";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.37";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.37";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.37";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -246,6 +246,14 @@ export function renderArtists(el, state) {
   // nær bunnen scrolles inn i syne. Filtrering/sortering skjer før oppdelingen,
   // så rekkefølgen er uendret.
   el.innerHTML = "";
+  // Forrige renders scroll-lytter fjernes MED EN GANG, ikke lat (ved neste
+  // scroll). Under en stemmestorm re-rendres lista hvert 400. ms, og en leser
+  // som står i ro scroller ikke — de foreldede lytterne (med hver sin kopi av
+  // artistlista i closuren) ville hopet seg opp til neste scroll-hendelse.
+  if (el._listOnScroll) {
+    document.removeEventListener("scroll", el._listOnScroll, true);
+    el._listOnScroll = null;
+  }
   const BATCH = 30;
   let rendered = 0;
 
@@ -281,12 +289,13 @@ export function renderArtists(el, state) {
     // har fjernet denne sentinelen — ellers ville en foreldet lytter fortsatt
     // fyrt mot en detached sentinel.
     const onScroll = () => {
-      if (!sentinel.isConnected) { document.removeEventListener("scroll", onScroll, true); return; }
+      if (!sentinel.isConnected) { document.removeEventListener("scroll", onScroll, true); if (el._listOnScroll === onScroll) el._listOnScroll = null; return; }
       if (sentinel.getBoundingClientRect().top > window.innerHeight + 800) return;
       appendBatch();
-      if (rendered >= list.length) { document.removeEventListener("scroll", onScroll, true); sentinel.remove(); }
+      if (rendered >= list.length) { document.removeEventListener("scroll", onScroll, true); if (el._listOnScroll === onScroll) el._listOnScroll = null; sentinel.remove(); }
       else el.appendChild(sentinel); // hold sentinelen sist
     };
+    el._listOnScroll = onScroll;
     document.addEventListener("scroll", onScroll, true);
   }
 }
