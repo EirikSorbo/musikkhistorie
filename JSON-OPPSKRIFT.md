@@ -274,6 +274,42 @@ Tech-data eksporteres/importeres sammen med resten av datasettet (under `tech`-n
 
 ---
 
+## Tekstformatering (gjelder ALLE beskrivelser)
+
+Alle tekstfelter i appen leses som **markdown-light** — artistbeskrivelser,
+sjanger- og koblingsbeskrivelser, innovasjonskort, podkastbeskrivelser,
+tiårstekstene og historiene/innholdssidene. Samme syntaks overalt, og samme
+knapper over hvert felt i editoren:
+
+```
+**fet**            *kursiv*            [lenketekst](https://…)
+### Mellomtittel
+- punkt            • punkt             – punkt
+1. nummerert punkt
+
+Blank linje = nytt avsnitt. Enkelt linjeskift = ny linje.
+```
+
+Detaljer verdt å kjenne:
+
+- **Tankestrek som kulepunkt** (`– `) teller som punktliste. Det er slik de 80
+  koblingsbeskrivelsene er skrevet, og de ble ekte lister uten at teksten ble rørt.
+- **Stjerne inni et ord** blir IKKE kursiv (`N*E*R*D` står som det står).
+  Kursivmarkørene må stå på ordgrense.
+- **Lenker** må være `http`/`https`; alt annet vises som ren tekst. Lenketeksten
+  blir aldri gjort om til artistlenke, så man slipper lenker inni lenker.
+- **Artist-, sjanger- og teknologinavn** blir fortsatt automatisk klikkbare, også
+  inni fet/kursiv tekst og inni listepunkter.
+- **HTML i teksten escapes.** Egne `<b>`-tagger o.l. vises som tekst, ikke markup.
+- **Tiårstekster skrevet med én linje per punkt, uten markering**, vises fortsatt
+  som punktliste (det gjelder teknologifeltene fra 1900 til 2000). Idet feltet får
+  et `- `, en blank linje eller en mellomtittel, gjelder vanlige regler.
+
+Formateringen skjer ved visning; det som lagres i Firestore og i denne fila er
+teksten slik den er skrevet.
+
+---
+
 ## Praktiske retningslinjer
 
 ### Bilder

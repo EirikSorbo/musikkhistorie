@@ -7,8 +7,9 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderStoryHtml, STORY_ORDER } from "../../js/story-format.js?v=4.31";
-import { GENEALOGY_MAIN_GENRES } from "../../js/genealogy.js?v=4.31";
+import { STORY_ORDER } from "../../js/story-format.js?v=4.32";
+import { renderRichText } from "../../js/rich-text.js?v=4.32";
+import { GENEALOGY_MAIN_GENRES } from "../../js/genealogy.js?v=4.32";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
 let pakke = null;
@@ -23,7 +24,7 @@ test("innholdspakke: sidene finnes og rendrer med mellomtitler og lenker", { ski
   for (const id of ["omHistorie", "rotter"]) {
     const body = pakke.pages?.[id]?.body;
     assert.ok(body && body.length > 1000, `${id} mangler/for kort`);
-    const html = renderStoryHtml(body);
+    const html = renderRichText(body);
     assert.ok(html.includes("<h3>"), `${id}: ingen mellomtitler`);
     assert.ok(html.includes('rel="noopener"'), `${id}: ingen lyttelenker`);
     assert.equal(html.includes("]("), false, `${id}: uparset lenkesyntaks`);
@@ -35,7 +36,7 @@ test("innholdspakke: historie for alle seks metasjangre", { skip }, () => {
   for (const g of STORY_ORDER) {
     const body = pakke.genreDescriptions?.meta?.[g]?.story?.body;
     assert.ok(body && body.length > 1000, `${g} mangler historie`);
-    assert.ok(renderStoryHtml(body).includes("<h3>"), `${g}: ingen mellomtitler`);
+    assert.ok(renderRichText(body).includes("<h3>"), `${g}: ingen mellomtitler`);
   }
 });
 

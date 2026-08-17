@@ -2,13 +2,15 @@
 //  UI — LAVNIVÅ-HJELPERE
 // ----------------------------------------------------------------------------
 //  Rene, gjenbrukbare byggeklosser for rendering (HTML-snutter, formattering).
-//  Avhenger kun av util + linkify + limits (GENDERS) — INGEN render-funksjoner,
-//  så modulen kan importeres fritt uten import-sykler. Re-eksporteres fra ui.js.
+//  Avhenger kun av util + linkify + rich-text + limits (GENDERS) — INGEN
+//  render-funksjoner, så modulen kan importeres fritt uten import-sykler.
+//  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.31";
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.31";
-import { GENDERS } from "./limits.js?v=4.31";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.32";
+import { wireAllLinks } from "./linkify.js?v=4.32";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.32";
+import { GENDERS } from "./limits.js?v=4.32";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -39,9 +41,15 @@ export function imgTag(url, alt, width) {
 
 export const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
 
+// Beskrivelser (artist, sjanger, kobling, innovasjon) rendres som markdown-
+// light gjennom den DELTE parseren, samme som historiene og innholdssidene.
+// Uten link-kontekst blir teksten fortsatt escapet — linkifyAll escaper alt
+// den slipper gjennom, også når den ikke finner noe å lenke.
+//
+// Utdata er blokk-html. Alle kallsteder MÅ legge den i en <div class="… rt">,
+// ikke i en <p> (se toppen av rich-text.js).
 export function linkDesc(text, lc) {
-  if (!lc) return escapeHtml(text);
-  return linkifyAll(text, lc);
+  return renderRichText(text, lc || {});
 }
 
 export function wireLinks(el, lc) {
@@ -155,7 +163,7 @@ export function genreTags(a, { withInstrument = false, withSub = true, extraClas
 // kalleren kobler lytterne (data-pod-edit / data-pod-delete).
 export function podcastEpisodeHtml(ep, { admin = false } = {}) {
   const duration = ep.duration ? `<span class="podkast-duration">(${escapeHtml(ep.duration)})</span>` : "";
-  const desc = ep.description ? `<p class="podkast-desc">${escapeHtml(ep.description)}</p>` : "";
+  const desc = ep.description ? `<div class="podkast-desc rt">${renderRichText(ep.description)}</div>` : "";
   const audio = safeUrl(ep.audioUrl);
   const id = escapeHtml(ep.id);
   return `
@@ -304,13 +312,27 @@ function splitLines(text) {
   return text.split("\n").map(l => l.replace(/^[•\-–]\s*/, "").trim()).filter(Boolean);
 }
 
-export function formatInfoText(text) {
+// Tiårstekstene ble skrevet FØR appen kunne formatere: ett punkt per linje,
+// uten noen markering, og formatInfoText gjorde hver linje til et kulepunkt.
+// Elleve slike felter ligger fortsatt i Firestore (alle «teknologi»-feltene fra
+// 1900 til 2000), og de skal fortsatt se ut som lister. Regelen er smal med
+// vilje: flere linjer, ingen blank linje mellom dem, og ingen blokkmarkering i
+// noen av dem. Setter læreren inn et «- », en tom linje eller en mellomtittel,
+// tar den vanlige parseren over. Returnerer linjene, eller null.
+function gammelLinjeliste(text) {
+  if (/\n\s*\n/.test(text)) return null;
+  const linjer = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (linjer.length < 2) return null;
+  if (linjer.some((l) => /^(#{1,6}|[-•–]|\d+[.)])\s/.test(l))) return null;
+  return linjer;
+}
+
+// Tiårenes samfunns- og teknologitekst (og «les mer»-modalen deres).
+export function formatInfoText(text, lc) {
   if (!text) return "";
-  const lines = splitLines(text);
-  if (lines.length > 1) {
-    return "<ul>" + lines.map(l => `<li>${escapeHtml(l)}</li>`).join("") + "</ul>";
-  }
-  return `<p>${escapeHtml(lines[0] || text.trim())}</p>`;
+  const gammel = gammelLinjeliste(String(text));
+  if (gammel) return `<ul>${gammel.map((l) => `<li>${renderInline(l, lc)}</li>`).join("")}</ul>`;
+  return renderRichText(text, lc);
 }
 
 export function extractBullets(text) {

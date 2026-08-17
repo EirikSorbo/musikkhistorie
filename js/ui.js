@@ -10,9 +10,9 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.31";
-import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.31";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.31";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.32";
+import { GENEALOGY_MAIN_GENRES, isMainGenre, findTreeGenreNode, showSjangerInfo } from "./genealogy.js?v=4.32";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.32";
 import {
   escapeHtml,
   linkDesc,
@@ -32,12 +32,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.31";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.31";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.31";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.31";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.31";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.31";
+} from "./ui-helpers.js?v=4.32";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.32";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.32";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.32";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.32";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.32";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -116,7 +116,7 @@ export function renderArtistDetail(el, artist, lc) {
       ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
       ${genreTags(a)}
     </div>
-    ${a.description ? `<p class="desc">${linkDesc(a.description, lc)}</p>` : ""}
+    ${a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : ""}
     ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
     ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
     ${kilderHtml(a.kilder)}
@@ -175,7 +175,7 @@ function spotlightCard(a, lc) {
           ${genreTags(a)}
         </div>
       </header>
-      ${a.description ? `<p class="desc">${linkDesc(a.description, lc)}</p>` : ""}
+      ${a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
@@ -377,7 +377,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
         </div>
       </header>
 
-      ${a.description ? `<p class="desc">${linkDesc(a.description, linkCtx)}</p>` : ""}
+      ${a.description ? `<div class="desc rt">${linkDesc(a.description, linkCtx)}</div>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
@@ -455,7 +455,7 @@ function showGenreLevelInfo(label, level, opts = {}) {
   mTitle.textContent = level === "meta" ? `${label} (metasjanger)` : label;
   mBody.innerHTML = `
     ${seeGenreBtn}
-    <p class="gx-desc">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc(level)}</span>`}</p>
+    <div class="gx-desc rt">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc(level)}</span>`}</div>
     ${buildKilderList(resolved.kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireLinks(mBody, lc);

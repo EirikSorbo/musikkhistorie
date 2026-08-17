@@ -1,24 +1,17 @@
 // ============================================================================
-//  SJANGERHISTORIER OG INNHOLDSSIDER — formatering og oppslag
+//  SJANGERHISTORIER OG INNHOLDSSIDER — oppslag
 // ----------------------------------------------------------------------------
-//  Historiene og innholdssidene (Om historie, Røtter) skrives i markdown-light
-//  — nøyaktig det utvalget lærer-editoren har knapper for, pluss lenker:
-//    ### Mellomtittel
-//    **fet**   *kursiv*   [lenketekst](https://…)
-//    - punktliste      1. nummerert liste
-//    (blank linje skiller avsnitt)
-//  All løpende tekst går gjennom linkifyAll, så artist-/teknologi-/sjanger-
-//  navn blir klikkbare på samme måte som i beskrivelsene ellers i appen.
-//  Escaping skjer INNE i linkifyAll — rå tekst må aldri rett inn i HTML her.
+//  Historiene og innholdssidene (Om historie, Røtter) skrives i samme
+//  markdown-light som resten av appens tekster. Selve formateringen bor i
+//  js/rich-text.js (renderRichText) — den er delt med beskrivelsene, så
+//  historier og beskrivelser aldri får hver sin syntaks. Denne modulen holder
+//  bare på STRUKTUREN: hvilke historier som finnes og hvor tekstene hentes fra.
 //
 //  Det finnes BEVISST ingen standardtekster i koden (brukervalg): innholdet
 //  bor i Firestore (importert fra innholds-JSON eller skrevet i editoren), og
 //  mangler det, skal appen vise en tydelig «mangler tekst»-melding — aldri en
 //  utdatert reservetekst.
 // ============================================================================
-
-import { linkifyAll } from "./linkify.js?v=4.31";
-import { escapeHtml } from "./ui-helpers.js?v=4.31";
 
 // Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
 // én per metasjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
@@ -29,75 +22,6 @@ import { escapeHtml } from "./ui-helpers.js?v=4.31";
 // knappen skal likevel stå: appen viser hull i innholdet i stedet for å skjule
 // dem, og lærer-oversikten teller den som en manglende historie.
 export const STORY_ORDER = ["Blues", "Country", "Gospel", "Jazz", "R&B", "Hip-hop", "Klubbmusikk"];
-
-// Inline-formatering: [lenke](url), **fet** og *kursiv*. Tokeniseres i ett
-// pass så en stjerne inni fet tekst ikke re-tolkes; hvert tekstsegment
-// linkifiseres (og dermed escapes) for seg. Lenketeksten escapes uten
-// linkifisering (en artist-lenke inni en URL-lenke ville gitt nøstede <a>),
-// og kun http(s)-URL-er slipper gjennom — alt annet rendres som ren tekst.
-function renderInline(text, lc) {
-  const out = [];
-  const re = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|\*([^*\n]+)\*/g;
-  let last = 0, m;
-  while ((m = re.exec(text))) {
-    if (m.index > last) out.push(linkifyAll(text.slice(last, m.index), lc));
-    if (m[1] !== undefined) out.push(`<a href="${escapeHtml(m[2])}" target="_blank" rel="noopener">${escapeHtml(m[1])}</a>`);
-    else if (m[3] !== undefined) out.push(`<strong>${linkifyAll(m[3], lc)}</strong>`);
-    else out.push(`<em>${linkifyAll(m[4], lc)}</em>`);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) out.push(linkifyAll(text.slice(last), lc));
-  return out.join("");
-}
-
-// Blokk-parser: linje for linje, med sammenhengende listepunkter samlet i én
-// <ul>/<ol> og løpende linjer samlet i avsnitt. Alle #-nivåer (##–####) blir
-// <h3> — modal-tittelen er h2, og dypere hierarki trengs ikke i en fortelling.
-export function renderStoryHtml(text, lc = {}) {
-  if (!text) return "";
-  const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
-  const html = [];
-  let list = null;
-  let para = [];
-  const flushList = () => {
-    if (!list) return;
-    html.push(`<${list.tag}>${list.items.map((i) => `<li>${i}</li>`).join("")}</${list.tag}>`);
-    list = null;
-  };
-  const flushPara = () => {
-    if (!para.length) return;
-    html.push(`<p>${renderInline(para.join(" "), lc)}</p>`);
-    para = [];
-  };
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) { flushPara(); flushList(); continue; }
-    const h = line.match(/^#{2,4}\s+(.*)$/);
-    if (h) { flushPara(); flushList(); html.push(`<h3>${renderInline(h[1], lc)}</h3>`); continue; }
-    const ul = line.match(/^[-•]\s+(.*)$/);
-    if (ul) {
-      flushPara();
-      if (!list || list.tag !== "ul") { flushList(); list = { tag: "ul", items: [] }; }
-      list.items.push(renderInline(ul[1], lc));
-      continue;
-    }
-    const ol = line.match(/^\d+[.)]\s+(.*)$/);
-    if (ol) {
-      flushPara();
-      if (!list || list.tag !== "ol") { flushList(); list = { tag: "ol", items: [] }; }
-      list.items.push(renderInline(ol[1], lc));
-      continue;
-    }
-    // Vanlig tekst etter et listepunkt (uten blank linje mellom) avslutter
-    // lista, så avsnittet havner ETTER den — ellers flushes para før den åpne
-    // lista og innholdet bytter rekkefølge mot kilden.
-    flushList();
-    para.push(line);
-  }
-  flushPara();
-  flushList();
-  return html.join("");
-}
 
 // Oppslaget: historien er den lærer-lagrede/importerte teksten på
 // genreDescriptions/<sjanger>.story.body — ingen fallback. Mangler den (eller

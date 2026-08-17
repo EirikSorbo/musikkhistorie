@@ -5,20 +5,22 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.31";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.31";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.31";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.31";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.31";
-import { resolveDesc } from "./genre-descriptions.js?v=4.31";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.31";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.31";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.31";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.32";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.32";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.32";
+import { storyFor, pageFor } from "./story-format.js?v=4.32";
+import { renderRichText } from "./rich-text.js?v=4.32";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.32";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.32";
+import { resolveDesc } from "./genre-descriptions.js?v=4.32";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.32";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.32";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.32";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.31";
-import { $ } from "./shared.js?v=4.31";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.31";
+import { wireAllLinks } from "./linkify.js?v=4.32";
+import { $ } from "./shared.js?v=4.32";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.32";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -413,7 +415,7 @@ function renderTechAdmin() {
         <h3>${escapeHtml(t.name)}</h3>
         ${techFactsLines(t)}
       </header>
-      ${t.description ? `<p class="desc">${linkifyAll(t.description, { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) })}</p>` : ""}
+      ${t.description ? `<div class="desc rt">${renderRichText(t.description, { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) })}</div>` : ""}
       <div class="card-foot teacher-card-actions" style="margin-top:auto;padding-top:8px">
         ${checkBtnHtml((state.teacherChecks?.tech || []).includes(t.id), "tech-check-btn")}
         <div class="spacer"></div>
@@ -647,7 +649,7 @@ export function setupPodkastAdmin() {
 //  onStoryEdit/onPageEdit). Historier lagres som story-felt på metasjangerens
 //  genreDescriptions-dokument; sidene som content/<id>.body. Det finnes INGEN
 //  standardtekster i koden — «Slett teksten» gjør at visningen sier tydelig
-//  ifra om at tekst mangler. Forhåndsvisningen bruker samme renderStoryHtml
+//  ifra om at tekst mangler. Forhåndsvisningen bruker samme renderRichText
 //  som studentvisningen — det du ser er det studentene får.
 
 const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910", appGuide: "Slik bruker du appen" };
@@ -661,7 +663,7 @@ function storyLinkCtx() {
 
 function renderStoryPreview() {
   const el = $("#se-preview");
-  if (el) el.innerHTML = renderStoryHtml($("#se-text").value, storyLinkCtx());
+  if (el) el.innerHTML = renderRichText($("#se-text").value, storyLinkCtx());
 }
 
 function openContentEditor(target, title, existing) {
@@ -687,32 +689,11 @@ export function openPageEditor(pageId) {
   openContentEditor({ type: "page", id: pageId }, PAGE_TITLES[pageId] || pageId, pageFor(pageId, state.content));
 }
 
-// Omslutt markeringen med et tegnpar (**fet** / *kursiv*).
-function seWrap(marker) {
-  const ta = $("#se-text");
-  const { selectionStart: s, selectionEnd: e, value: v } = ta;
-  const sel = v.slice(s, e) || "tekst";
-  ta.setRangeText(marker + sel + marker, s, e, "select");
-  ta.focus();
-  renderStoryPreview();
-}
-
-// Sett blokkprefiks (mellomtittel/liste) på hver markerte linje. Eksisterende
-// blokkprefiks byttes ut, så knappene ikke stabler `- ### - tekst`.
-function sePrefix(prefixFor) {
-  const ta = $("#se-text");
-  const { selectionStart: s, selectionEnd: e, value: v } = ta;
-  const start = v.lastIndexOf("\n", s - 1) + 1;
-  const endIdx = v.indexOf("\n", e);
-  const end = endIdx === -1 ? v.length : endIdx;
-  let n = 0;
-  const out = v.slice(start, end).split("\n")
-    .map((l) => l.trim() ? prefixFor(n++) + l.replace(/^\s*(#{2,4}|[-•]|\d+[.)])\s+/, "") : l)
-    .join("\n");
-  ta.setRangeText(out, start, end, "select");
-  ta.focus();
-  renderStoryPreview();
-}
+// Knappene i historie-editorens formatlinje (den ligger i teacher.html, med
+// egne id-er) deler funksjoner med formatlinja de andre tekstfeltene får satt
+// inn automatisk — se js/format-bar.js. ÉN implementasjon, samme syntaks.
+const seWrap = (marker) => wrapSelection($("#se-text"), marker, renderStoryPreview);
+const sePrefix = (prefixFor) => prefixLines($("#se-text"), prefixFor, renderStoryPreview);
 
 export function setupStoryEditor() {
   const ta = $("#se-text");

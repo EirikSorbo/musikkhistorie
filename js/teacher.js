@@ -21,13 +21,13 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.31";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.31";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.31";
-import { initExplore } from "./explore.js?v=4.31";
+} from "./store.js?v=4.32";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.32";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.32";
+import { initExplore } from "./explore.js?v=4.32";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.31";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.31";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.32";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.32";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -44,10 +44,11 @@ import {
   setupStoryEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.31";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.31";
-import { renderDesk } from "./teacher-desk.js?v=4.31";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.31";
+} from "./teacher-content.js?v=4.32";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.32";
+import { renderDesk } from "./teacher-desk.js?v=4.32";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.32";
+import { setupFormatBars } from "./format-bar.js?v=4.32";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -113,6 +114,9 @@ function startApp() {
   setupSubgenreSingleSave();
   setupEdgeSingleSave();
   setupStoryEditor();
+  // Formatlinja over alle tekstfelter merket med data-format (beskrivelser,
+  // tiårstekster, koblingstekster). Historie-editoren har sin egen i HTML-en.
+  setupFormatBars();
 
   ctx.explore = initExplore({
     getState: () => state,

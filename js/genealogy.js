@@ -7,12 +7,13 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.31";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.31";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.31";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.31";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.31";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.31";
+import { wireAllLinks } from "./linkify.js?v=4.32";
+import { renderRichText } from "./rich-text.js?v=4.32";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.32";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.32";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.32";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.32";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.32";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -319,7 +320,7 @@ export function showSjangerInfo(label, opts = {}) {
   mBody.innerHTML = `
     ${heatStripBlock(n)}
     <p class="gx-era">${escapeHtml(eraText(n, resolved))}</p>
-    <p class="gx-desc">${descText ? linkifyAll(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</p>
+    <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
@@ -405,7 +406,7 @@ function showEdgeInfo(fromId, toId, opts = {}) {
   mTitle.textContent = `${a.f} → ${b.f}`;
   mBody.innerHTML = `
     <p class="gx-era">${react ? "Motreaksjon" : "Avstamning / påvirkning"} · ${escapeHtml(a.era)} → ${escapeHtml(b.era)}</p>
-    <p class="gx-desc">${descText ? linkifyAll(descText, lc) : `<span class="gx-missing">${missingDesc("kobling")}</span>`}</p>
+    <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("kobling")}</span>`}</div>
     ${kilderHtml}
     ${genreBtns}`;
   wireAllLinks(mBody, lc);

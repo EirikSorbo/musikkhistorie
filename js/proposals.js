@@ -8,11 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.31";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.31";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.31";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.31";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.31";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.32";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.32";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.32";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.32";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.32";
+import { setupFormatBars } from "./format-bar.js?v=4.32";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -91,7 +92,10 @@ function inputForField(spec, value) {
   const fullClass = spec.full ? ' class="full"' : "";
   const labelHtml = `<label${fullClass}>${escapeHtml(spec.label)}`;
   if (spec.type === "textarea") {
-    return `${labelHtml}<textarea id="${id}" rows="4">${escapeHtml(v)}</textarea></label>`;
+    // data-format gir feltet formatlinja (fet/kursiv/lister) — se format-bar.js.
+    // De lange tekstene får også mellomtittel-knappen.
+    const langt = spec.key === "description" || spec.key === "body" || /More$/.test(spec.key);
+    return `${labelHtml}<textarea id="${id}" rows="4" data-format="${langt ? "full" : "kort"}">${escapeHtml(v)}</textarea></label>`;
   }
   if (spec.type === "select") {
     const opts = spec.options.map((o) =>
@@ -196,6 +200,7 @@ export function openProposalEditor(config) {
   const form = document.getElementById("prop-form");
   form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
   fillSourceRows(specs, config.currentValues || {});
+  setupFormatBars(form);
   wireTypeToggle();
 
   const submit = document.getElementById("prop-submit");
@@ -281,6 +286,7 @@ export function openNewTechProposal(preset = null) {
     ))
     .join("");
   fillSourceRows(specs, preset || {});
+  setupFormatBars(form);
   wireTypeToggle();
 
   const submit = document.getElementById("prop-submit");

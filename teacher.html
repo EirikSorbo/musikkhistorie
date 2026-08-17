@@ -10,7 +10,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.31" />
+  <link rel="stylesheet" href="css/styles.css?v=4.32" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -285,7 +285,7 @@
           <input type="text" id="ed-subGenre" placeholder="f.eks. Delta blues, Akustisk blues" />
         </label>
         <label class="full">Begrunnelse / hvorfor relevant
-          <textarea id="ed-desc" rows="7"></textarea>
+          <textarea id="ed-desc" rows="7" data-format></textarea>
         </label>
         <div class="full">
           <span class="field-label">Sentrale verk</span>
@@ -350,16 +350,16 @@
       <div id="ds-edit" style="display:none">
         <div class="add-grid" style="grid-template-columns:1fr">
           <label id="ds-edit-society">Samfunnsutvikling (kort)
-            <textarea id="ds-society" rows="3" placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
+            <textarea id="ds-society" rows="3" data-format placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
           </label>
           <label id="ds-edit-society-more">Samfunnsutvikling — utvidet («Les mer»)
-            <textarea id="ds-society-more" rows="6" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
+            <textarea id="ds-society-more" rows="6" data-format="full" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
           </label>
           <label id="ds-edit-tech">Teknologiutvikling (kort)
-            <textarea id="ds-tech" rows="3" placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
+            <textarea id="ds-tech" rows="3" data-format placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
           </label>
           <label id="ds-edit-tech-more">Teknologiutvikling — utvidet («Les mer»)
-            <textarea id="ds-tech-more" rows="6" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
+            <textarea id="ds-tech-more" rows="6" data-format="full" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
           </label>
           <div>
             <span class="field-label">Kilder for tiåret</span>
@@ -384,7 +384,7 @@
       </div>
       <div class="add-grid" style="grid-template-columns:1fr">
         <label>Beskrivelse
-          <textarea id="ss-desc" rows="10" placeholder="Beskriv sjangeren …"></textarea>
+          <textarea id="ss-desc" rows="10" data-format="full" placeholder="Beskriv sjangeren …"></textarea>
         </label>
         <!-- Epoke: kun for tre-sjangre (main-nivå). Frie undersjangre har ingen
              node i treet og dermed ingen epoke å måle mot varmekartet. -->
@@ -430,7 +430,7 @@
       <p class="muted" id="edge-single-type" style="margin:0 0 10px"></p>
       <div class="add-grid" style="grid-template-columns:1fr">
         <label>Beskrivelse av koblingen
-          <textarea id="es-desc" rows="5" placeholder="Hvordan påvirket den ene sjangeren den andre? Hva ble ført videre — og hva ble nytt?"></textarea>
+          <textarea id="es-desc" rows="5" data-format placeholder="Hvordan påvirket den ene sjangeren den andre? Hva ble ført videre — og hva ble nytt?"></textarea>
         </label>
         <div>
           <span class="field-label">Kilder for koblingen</span>
@@ -463,7 +463,7 @@
             <input type="text" id="pod-duration" placeholder="f.eks. 45 min" />
           </label>
           <label class="full">Beskrivelse
-            <textarea id="pod-desc" rows="2"></textarea>
+            <textarea id="pod-desc" rows="2" data-format></textarea>
           </label>
           <label class="full">Dropbox-lenke (del → kopier lenke)
             <input type="url" id="pod-url" placeholder="https://www.dropbox.com/…" />
@@ -542,7 +542,7 @@
           <input type="text" id="tech-decade" placeholder="f.eks. 1950" />
         </label>
         <label class="full">Beskrivelse
-          <textarea id="tech-desc" rows="4"></textarea>
+          <textarea id="tech-desc" rows="4" data-format></textarea>
         </label>
         <div class="full">
           <span class="field-label">Kilder</span>
@@ -607,7 +607,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.31"></script>
-  <script type="module" src="js/teacher.js?v=4.31"></script>
+  <script src="js/load-guard.js?v=4.32"></script>
+  <script type="module" src="js/teacher.js?v=4.32"></script>
 </body>
 </html>

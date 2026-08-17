@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=4.31";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=4.31";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=4.32";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=4.32";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -71,7 +71,7 @@ export function renderTechList(el, items, activeCategory, lc) {
         <h3>${escapeHtml(t.name)}</h3>
         ${techFactsLines(t)}
       </header>
-      ${t.description ? `<p class="desc">${linkDesc(t.description, lc)}</p>` : ""}
+      ${t.description ? `<div class="desc rt">${linkDesc(t.description, lc)}</div>` : ""}
       ${propBtn}
     </article>`;
   }).join("");
@@ -81,7 +81,7 @@ export function renderTechList(el, items, activeCategory, lc) {
 export function renderTechDetail(el, t, lc) {
   const img = techImage(t);
   el.innerHTML = `${img}${techFactsLines(t)}`
-    + (t.description ? `<p>${linkDesc(t.description, lc)}</p>` : "")
+    + (t.description ? `<div class="rt">${linkDesc(t.description, lc)}</div>` : "")
     + buildKilderList(t.kilder, "Kilder");
   wireLinks(el, lc);
 }

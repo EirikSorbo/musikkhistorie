@@ -6,14 +6,15 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.31";
-import { isVisible } from "./limits.js?v=4.31";
-import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=4.31";
-import { pageFor, renderStoryHtml, storyFor, stripGenrePath, STORY_ORDER } from "./story-format.js?v=4.31";
-import { buildGenreTimeline } from "./ui-timeline.js?v=4.31";
-import { wireLinks } from "./ui-helpers.js?v=4.31";
-import { renderSjangerhimmel } from "./constellation.js?v=4.31";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=4.31";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.32";
+import { isVisible } from "./limits.js?v=4.32";
+import { META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=4.32";
+import { pageFor, storyFor, stripGenrePath, STORY_ORDER } from "./story-format.js?v=4.32";
+import { renderRichText } from "./rich-text.js?v=4.32";
+import { buildGenreTimeline } from "./ui-timeline.js?v=4.32";
+import { wireLinks } from "./ui-helpers.js?v=4.32";
+import { renderSjangerhimmel } from "./constellation.js?v=4.32";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=4.32";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -43,7 +44,7 @@ export function renderPage(pageId, bodyElId, extraElId) {
   const page = pageFor(pageId, s.content);
   if (page) {
     const lc = buildLinkCtx();
-    body.innerHTML = renderStoryHtml(page.body, lc);
+    body.innerHTML = renderRichText(page.body, lc);
     wireLinks(body, lc);
   } else {
     body.innerHTML = `<p class="gx-missing">${s.contentLoaded
@@ -99,7 +100,7 @@ function renderHistorie(genre) {
   const lc = buildLinkCtx();
   const body = document.getElementById("hist-body");
   body.innerHTML = story
-    ? renderStoryHtml(stripGenrePath(story.body), lc)
+    ? renderRichText(stripGenrePath(story.body), lc)
     : `<p class="gx-missing">Historien om ${escapeHtml(genre)} er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen.</p>`;
   wireLinks(body, lc);
 
