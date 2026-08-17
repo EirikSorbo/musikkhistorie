@@ -9,8 +9,8 @@
 //  stedet for å slås opp i MAIN_GENRE_INFO her.
 // ============================================================================
 
-import { DECADES } from "./limits.js?v=4.32";
-import { escapeHtml } from "./util.js?v=4.32";
+import { DECADES } from "./limits.js?v=4.33";
+import { escapeHtml } from "./util.js?v=4.33";
 
 export const HEAT_DECADES = DECADES;
 export const HEAT_SEG = 100 / DECADES.length;   // ett tiårs bredde i prosent
@@ -97,8 +97,16 @@ export function heatStripHtml(color, vals, cell = null) {
 
 // Tiårsoverskriftene: eget rutenett med like kolonner og UTEN luft, så
 // etikettmidtene treffer segmentmidtene i stripa under på prosenten.
+//
+// `minmax(0,1fr)`, ikke `1fr`: et fr-spor har auto som minimum, så det kan ikke
+// bli smalere enn innholdet. På en 375 px-skjerm får sjangerkortets akse 327 px
+// (25 px per tiår) mens «1900» er 26 px bredt, og sporene vokste da til 343 px.
+// Aksen ble bredere enn stripa under, og etikettene gled ut av stilling med opp
+// mot 16 px mot høyre kant — akkurat det rutenettet skal hindre. Med 0 som
+// minimum holder sporene nøyaktig 1/13, og en for bred etikett flyter utenfor
+// sitt eget spor i stedet for å skyve på de andre.
 export function heatAxisHtml() {
-  return `<div class="hs-axis" style="grid-template-columns:repeat(${HEAT_DECADES.length},1fr)">` +
+  return `<div class="hs-axis" style="grid-template-columns:repeat(${HEAT_DECADES.length},minmax(0,1fr))">` +
     HEAT_DECADES.map((d) => `<div>${d}</div>`).join("") + `</div>`;
 }
 

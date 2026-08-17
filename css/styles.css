@@ -1894,6 +1894,22 @@ body.is-teacher #gate { display: none; }
    selve teksten. Litt luft under, så den ikke klistrer seg til era-linja. */
 .gx-heat { margin: 0 0 14px; }
 .gx-heat .hs-axis { margin-bottom: 3px; }
+/* Mobil: sjangerkortets akse får ~25 px per tiår på en 375 px-skjerm, mens
+   «1900» er 26 px bredt. Etikettene klistret seg sammen til «190019101920…».
+   Under 480 px vises derfor annethvert årstall (1900, 1920 … 2020), som gir
+   dem det dobbelte av plassen, og begge ender er fortsatt merket.
+   Grensen er MÅLT på tekstboksene (ikke på grid-cellene, som alltid fyller
+   kolonnen sin): med alle tretten synlige er avstanden mellom årstallene
+   -1,3 px ved 375 px skjerm, 1,6 px ved 431 px og 5,5 px ved 481 px. Det er
+   altså først rett over 480 px det er luft nok til å vise hele rekka.
+   visibility, IKKE display: kolonnene må stå igjen, ellers flytter de synlige
+   etikettene seg vekk fra segmentene i stripa under. Stripa selv beholder alle
+   tretten segmentene og hjelpeteksten på hvert av dem.
+   Gjelder kun sjangerkortet: varmekartets akse ligger i en vannrett scroller og
+   har 35 px per tiår, altså god plass. */
+@media (max-width: 480px) {
+  .gx-heat .hs-axis > :nth-child(even) { visibility: hidden; }
+}
 .gx-heat-missing {
   margin: 5px 0 0;
   font-size: 0.76rem;
