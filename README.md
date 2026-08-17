@@ -107,9 +107,9 @@ vises for studenter.
 8. Legg inn sikkerhetsreglene: **Firestore → Rules**, lim inn innholdet fra
    `firestore.rules`, og trykk **Publish**. VIKTIG: gjenta dette hver gang
    `firestore.rules` endres i repoet — fila og konsollen må være i synk.
-9. Når appen ligger på en nettadresse (f.eks. GitHub Pages), legg domenet til
-   under **Authentication → Settings → Authorized domains** (f.eks.
-   `ditt-brukernavn.github.io`). `localhost` er godkjent fra før.
+9. Når appen ligger på en nettadresse (f.eks. GitHub Pages eller et eget
+   domene), legg domenet til under **Authentication → Settings → Authorized
+   domains** (f.eks. `historieappen.no`). `localhost` er godkjent fra før.
 
 Appen er nå klar. Innhold legges inn i lærermodus eller importeres via en
 innholdspakke-JSON (Innstillinger → Importer).
@@ -122,8 +122,10 @@ Appen er ren HTML/JS uten byggesteg, så enhver statisk webhost funker.
 
 **GitHub Pages:** push mappa til et GitHub-repo, gå til **Settings → Pages**,
 velg `main`-branchen og rot-mappa. Du får en URL som
-`https://ditt-brukernavn.github.io/repo-navn/`. Husk å legge dette domenet til
-under Authentication → Authorized domains (se punkt 9 over).
+`https://ditt-brukernavn.github.io/repo-navn/`, eller et eget domene
+(f.eks. `historieappen.no`) satt opp under **Settings → Pages → Custom
+domain**. Husk å legge domenet til under Authentication → Authorized domains
+(se punkt 9 over).
 
 **Cache-busting:** ved hver endring, bump `VERSION` i `js/version.js` og kjør
 `./bump.sh` (oppdaterer alle `?v=`-referanser). En pre-push-hook
