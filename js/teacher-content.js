@@ -5,20 +5,20 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.29";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.29";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.29";
-import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.29";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.29";
-import { resolveDesc } from "./genre-descriptions.js?v=4.29";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.29";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.29";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.29";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.30";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.30";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.30";
+import { renderStoryHtml, storyFor, pageFor } from "./story-format.js?v=4.30";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.30";
+import { resolveDesc } from "./genre-descriptions.js?v=4.30";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.30";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.30";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.30";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.29";
-import { $ } from "./shared.js?v=4.29";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.29";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.30";
+import { $ } from "./shared.js?v=4.30";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.30";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

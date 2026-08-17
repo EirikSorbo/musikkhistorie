@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.29";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.29";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.29";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.29";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.29";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.29";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.30";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.30";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.30";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.30";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.30";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.30";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -107,6 +107,16 @@ export const GENEALOGY = [
   // de eksisterende, og sett ut som doble streker.
   { id: "neotrad", l: "Neotrad. country", f: "Neotraditional country", fam: "amber", cx: 195, r: 9, p: ["outlaw"], g: "Country", era: "1980-tallet", t: ["Amarillo by Morning – George Strait (1983)", "Whoever's in New England – Reba McEntire (1986)"] },
 
+  // --- R&B videre: new jack swing ---
+  // Broen mellom funken og 90-tallets R&B, og den som gjør spranget fra Funk
+  // (1967) til Cont. R&B leselig: Teddy Riley la sangtradisjonen oppå hip-hopens
+  // programmerte trommer, og det er nettopp den koblingen Cont. R&B-beskrivelsen
+  // åpner med («utgangspunktet er new jack swing»). Derfor er noden også Cont.
+  // R&B-ens ENESTE forelder: funken og hip-hopen arves gjennom den, og tegnet vi
+  // dem på nytt ville strekene gått langs samme rute forbi Neo-soul (jf.
+  // Neotrad. country og regelen om færre foreldre).
+  { id: "newjack", l: "New jack swing", f: "New jack swing", fam: "red", cx: 1130, r: 9, p: ["funk", "hiphop"], g: "R&B", era: "1987–93", t: ["My Prerogative – Bobby Brown (1988)", "Groove Me – Guy (1988)", "Poison – Bell Biv DeVoe (1990)", "Remember the Time – Michael Jackson (1992)"] },
+
   // --- Hip-hop videre ---
   { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1340, r: 10, p: ["hiphop"], g: "Hip-hop", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },
   // Gullalderen sto uten egen node: «Hip-hop» rommet 22 artister fra 1973 til
@@ -125,13 +135,19 @@ export const GENEALOGY = [
   // --- Samtid ---
   // Sjangre som samler trådene i hver sin familie. Alle henter fra flere hold på
   // tvers av treet — det er hele poenget med dem: samtidsmusikken er der grenene
-  // møtes igjen. Cont. R&B og Cont. hip-hop ligger på 2000-t-raden fordi 1990-t
-  // allerede er full i den delen av kartet (Neo-soul, Gangsta rap); årstallet i
-  // `era` er fasiten for når de oppsto, ikke raden.
-  { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 12, p: ["nujazz", "hiphop"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
-  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 12, p: ["neotrad", "nashville", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
-  { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "olive", cx: 1070, r: 12, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
-  { id: "contrnb", l: "Cont. R&B", f: "Contemporary R&B", fam: "red", cx: 1160, r: 11, p: ["funk", "hiphop"], g: "R&B", era: "1990-tallet–i dag", t: ["Real Love – Mary J. Blige (1992)", "Crazy in Love – Beyoncé (2003)"] },
+  // møtes igjen. Hele blokka står på 2000-t-raden (brukervalg 2026-08-17): det er
+  // tiåret de PREGET og er lest som samtidsmusikk i, og 1990-t er dessuten full
+  // i denne delen av kartet (Neo-soul, Gangsta rap). Årstallet i `era` — og de
+  // strukturerte årstallene i Firestore — er fasiten for når de oppsto, ikke raden.
+  { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 11, p: ["nujazz", "hiphop"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
+  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 11, p: ["neotrad", "nashville", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
+  // cx flyttet 1070 → 1020 da noden kom opp på 2000-t-raden: den måtte klare av
+  // Cont. R&B ved siden av seg, og på kjøpet kom Gospel-streken ned forbi
+  // Neo-soul-boksen med god margin (den lå 2 px fra kanten før).
+  { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "olive", cx: 1020, r: 11, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
+  // cx flyttet 1160 → 1240 da New jack swing kom inn over den: streken mellom dem
+  // måtte til høyre for Neo-soul-etiketten, ikke tvers gjennom den.
+  { id: "contrnb", l: "Cont. R&B", f: "Contemporary R&B", fam: "red", cx: 1240, r: 11, p: ["newjack"], g: "R&B", era: "1990-tallet–i dag", t: ["Real Love – Mary J. Blige (1992)", "Crazy in Love – Beyoncé (2003)"] },
   { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1440, r: 11, p: ["gullalder", "gangsta"], g: "Hip-hop", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
 ];
 
