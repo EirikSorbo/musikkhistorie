@@ -144,48 +144,70 @@ bezier-kurver som **forlater forelderen loddrett** og først bøyer av på halve
 (`M x1,y1 C x1,ym x2,ym x2,y2`), så en ny node kan lande midt oppå en strek som
 ikke har noe med den å gjøre. Kjør dette i konsollen på `tre.html`:
 
+Og mål mot **teksten**, ikke bare mot boksen: `.gx-node:not(.gx-focus) rect` har
+`fill: transparent`, så nodeboksen er bare treffflate. Det eneste som er synlig til
+vanlig, er etiketten. En strek «bak» en node løper altså rett gjennom navnet.
+
 ```js
 (() => {
-  const NY = ['minNyeId'];                       // ← id-ene du nettopp la inn
-  const boxes = [...document.querySelectorAll('.gx-node')].map(n => {
-    const r = n.querySelector('rect');
+  const nodes = [...document.querySelectorAll('.gx-node')];
+  const boxes = nodes.map(n => {
+    const r = n.querySelector('rect'), t = n.querySelector('text');
     return { id: n.dataset.id, x: +r.getAttribute('x'), y: +r.getAttribute('y'),
-             w: +r.getAttribute('width'), h: +r.getAttribute('height') };
+             w: +r.getAttribute('width'), h: +r.getAttribute('height'),
+             tx: +t.getAttribute('x') - t.getComputedTextLength() / 2,   // synlig tekst
+             tw: t.getComputedTextLength() };
   });
   const funn = [];
   for (const p of document.querySelectorAll('path.gx-edge')) {
     const { p: from, c: to } = p.dataset, L = p.getTotalLength();
     for (const b of boxes) {
       if (b.id === from || b.id === to) continue;
-      let minD = Infinity, inni = false;
-      for (let i = 0; i <= 200; i++) {
-        const pt = p.getPointAtLength(L * i / 200);
-        if (pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h) { inni = true; break; }
+      let minD = Infinity, minTekst = Infinity, inni = false;
+      for (let i = 0; i <= 300; i++) {
+        const pt = p.getPointAtLength(L * i / 300);
+        // glyfebåndet: teksten er ~18 px høy midt i den 40 px høye boksen
+        minTekst = Math.min(minTekst, Math.hypot(
+          Math.max(b.tx - pt.x, 0, pt.x - (b.tx + b.tw)),
+          Math.max(b.y + 11 - pt.y, 0, pt.y - (b.y + b.h - 11))));
+        if (pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h) { inni = true; continue; }
         minD = Math.min(minD, Math.hypot(
           Math.max(b.x - pt.x, 0, pt.x - (b.x + b.w)),
           Math.max(b.y - pt.y, 0, pt.y - (b.y + b.h))));
       }
-      if (inni) funn.push(`GJENNOM ${from}→${to} bak ${b.id}`);
-      else if (minD < 14) funn.push(`NÆR ${minD.toFixed(0)}px ${from}→${to} ved ${b.id}`);
+      if (inni || minD < 14)
+        funn.push(`${from}→${to} @ ${b.id} · boks ${inni ? 'GJENNOM' : minD.toFixed(0) + 'px'} · tekst ${minTekst.toFixed(0)}px`);
     }
   }
-  return funn;
+  // node/node: både boksene og etikettene skal klare hverandre
+  const ov = [];
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+    const a = boxes[i], b = boxes[j];
+    if (a.y < b.y + b.h && b.y < a.y + a.h) {
+      if (a.x < b.x + b.w && b.x < a.x + a.w) ov.push(`BOKS ${a.id} × ${b.id}`);
+      if (a.tx < b.tx + b.tw && b.tx < a.tx + a.tw) ov.push(`TEKST ${a.id} × ${b.id}`);
+    }
+  }
+  return { antall: funn.length, overlapp: ov, funn };
 })()
 ```
 
 **Les resultatet riktig — dette er viktig:**
 
-- **Kjør skriptet FØR du legger inn noden også**, og sammenlign. Treet har rundt 20
-  «GJENNOM»-tilfeller fra før (`jazz→fusion` går bak fire noder) og grazes helt ned
-  i 2 px (`rnb→pop` ved `rocknroll`). Det er normalen her, ikke feil du har innført.
-- **«GJENNOM» er som regel greit.** Nodene har fyll og tegnes ETTER strekene, så en
-  strek bak en node ser ut som den går bak den. Det er «NÆR 2–3 px» som ser ut som
-  en renderingsfeil, fordi streken da løper synlig langs kanten.
-- **Node/node-overlapp er alltid feil.** Sjekk det separat ved å teste boksene mot
-  hverandre — det skal alltid gi tom liste.
+- **Kjør skriptet FØR du legger inn noden også**, og sammenlign antallet. Treet lå på
+  55 funn før v4.30 og 54 etter. Mange av dem er gamle (`jazz→fusion` passerer fire
+  noder, `rnb→pop` grazer `rocknroll` på 2 px). Det er normalen her, ikke feil du har
+  innført. Et par nye funn er greit; en dobling er det ikke.
+- **`tekst`-tallet er det som teller, ikke `boks`.** Boksene er usynlige (kun
+  hover-fyllet vises), så «GJENNOM» betyr bare at streken passerer innenfor
+  trefflata. Er `tekst` over ~15 px, ser det ryddig ut. Er den 0–3 px, løper streken
+  synlig langs eller gjennom bokstavene, og DET er det som ser ut som en
+  renderingsfeil. Treet har slike fra før også, så mål mot utgangspunktet.
+- **Node/node-overlapp er alltid feil**, både `BOKS` og `TEKST`. Listen skal være tom.
 - Etiketter bredere enn `NW` (116 px) utvider boksen (`getComputedTextLength`), så
-  en lang `l` spiser plass du trodde du hadde. «British invasion» (16 tegn → 164 px)
-  er den bredeste som finnes; ligger du der, har du ikke mer å gå på.
+  en lang `l` spiser plass du trodde du hadde. Bredeste i dag: «Gullalder-hip-hop»
+  (152 px), «Neotrad. country» (146 px), «House & techno» (136 px). Ligger du der,
+  har du ikke mer å gå på. Rundt 9 px per tegn er et brukbart overslag før du måler.
 
 Finner du en ekte kollisjon, er **færre foreldre** ofte den beste fiksen — se fella
 om doble ruter i steg 6.

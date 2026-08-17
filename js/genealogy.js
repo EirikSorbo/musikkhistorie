@@ -7,12 +7,12 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.30";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.30";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.30";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.30";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.30";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.30";
+import { linkifyAll, wireAllLinks } from "./linkify.js?v=4.31";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.31";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.31";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.31";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.31";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.31";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -70,7 +70,12 @@ export const GENEALOGY = [
   // (samme grunn som «Trance & DnB»).
   { id: "house", l: "House & techno", f: "House & techno", fam: "teal", cx: 1780, r: 9, p: ["disco"], g: "Klubbmusikk", era: "1980–85", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles", "Strings of Life – Derrick May", "Big Fun – Inner City"] },
   { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
-  { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
+  // yOffset senker Neo-soul et kvart tiår ned i 90-tallsbåndet (v4.30). Sjangeren
+  // hører hjemme sent i tiåret uansett (D'Angelo 1995, Badu 1997), og lavere ned
+  // ligger den utenfor de tre strekene som passerte tett inntil etiketten:
+  // newjack→contrnb og hiphop→contgospel grazet den på 1 px, og hiphop→neosoul
+  // skar gjennom New jack swing-etiketten på veien ned hit.
+  { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, yOffset: 0.25, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
   { id: "trance", l: "Trance & DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1780, r: 10, p: ["house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
   { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 10, p: ["fusion", "house", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
 
@@ -115,7 +120,7 @@ export const GENEALOGY = [
   // R&B-ens ENESTE forelder: funken og hip-hopen arves gjennom den, og tegnet vi
   // dem på nytt ville strekene gått langs samme rute forbi Neo-soul (jf.
   // Neotrad. country og regelen om færre foreldre).
-  { id: "newjack", l: "New jack swing", f: "New jack swing", fam: "red", cx: 1130, r: 9, p: ["funk", "hiphop"], g: "R&B", era: "1987–93", t: ["My Prerogative – Bobby Brown (1988)", "Groove Me – Guy (1988)", "Poison – Bell Biv DeVoe (1990)", "Remember the Time – Michael Jackson (1992)"] },
+  { id: "newjack", l: "New jack swing", f: "New jack swing", fam: "red", cx: 1115, r: 9, p: ["funk", "hiphop"], g: "R&B", era: "1987–93", t: ["My Prerogative – Bobby Brown (1988)", "Groove Me – Guy (1988)", "Poison – Bell Biv DeVoe (1990)", "Remember the Time – Michael Jackson (1992)"] },
 
   // --- Hip-hop videre ---
   { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1340, r: 10, p: ["hiphop"], g: "Hip-hop", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },

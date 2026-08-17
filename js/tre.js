@@ -1,12 +1,12 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech, subscribeContent } from "./store.js?v=4.30";
-import { setHeatData } from "./heat-strip.js?v=4.30";
-import { renderGenealogy, showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.30";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=4.30";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.30";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.30";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech, subscribeContent } from "./store.js?v=4.31";
+import { setHeatData } from "./heat-strip.js?v=4.31";
+import { renderGenealogy, showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.31";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=4.31";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.31";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.31";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.
