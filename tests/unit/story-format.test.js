@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=4.33";
+import { storyFor, pageFor, stripGenrePath, STORY_ORDER } from "../../js/story-format.js?v=4.34";
 
 test("storyFor: null når ingen tekst er lagret (ingen fallback)", () => {
   assert.equal(storyFor("Blues", {}), null);

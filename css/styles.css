@@ -1457,6 +1457,42 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 }
 
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+
+/* Utforsk-griden med SEKS kort skal aldri ende med en ujevn siste rad. auto-fit
+   ovenfor fyller så mange den får plass til, og ga 5+1 rundt 900 px og 4+2 rundt
+   800 px. Her låses kolonnetallet til divisorene i 6 — 6, 3, 2 eller 1 — så
+   radene alltid blir like lange, og raden midtstilles når kortene ikke fyller
+   bredden.
+   Kortene får samtidig et tak på 240 px. Uten det ville tre kort på en 1000 px
+   skjerm blitt 294 px brede, altså nesten dobbelt så store som i dag; med taket
+   beholder de formen og luften havner utenfor raden i stedet for inni kortene.
+
+   Grensene er regnet ut fra minstebredden (150 px) og luften (10 px), mot
+   .wrap- og .panel-paddingen som gjelder på hvert nivå:
+     6 på rad: 6·150 + 5·10 = 950 px grid  → skjerm ≥ 1050 px
+     3 på rad: 3·150 + 2·10 = 470 px grid  → skjerm ≥ 530 px
+     2 på rad: 2·150 + 1·10 = 310 px grid  → skjerm ≥ 364 px
+   Grensene er lagt der kortene FAKTISK får plass, målt i nettleseren, så
+   ingen skjermbredde mister en kolonne den hadde med auto-fit.
+
+   :has() framfor en egen klasse: da treffer regelen nøyaktig de gridene som
+   FAKTISK har seks kort (student- og lærerdashbordet), og faller trygt tilbake
+   til auto-fit den dagen et sjuende kort kommer til. Hub-griden «Det store
+   bildet» har ni kort og er bevisst utenfor: like rader der ville tvunget den
+   ned i ett kort per rad på mobil. */
+.dash-grid:has(> :nth-child(6):last-child) {
+  grid-template-columns: repeat(6, minmax(150px, 240px));
+  justify-content: center;
+}
+@media (max-width: 1049px) {
+  .dash-grid:has(> :nth-child(6):last-child) { grid-template-columns: repeat(3, minmax(150px, 240px)); }
+}
+@media (max-width: 529px) {
+  .dash-grid:has(> :nth-child(6):last-child) { grid-template-columns: repeat(2, minmax(150px, 240px)); }
+}
+@media (max-width: 363px) {
+  .dash-grid:has(> :nth-child(6):last-child) { grid-template-columns: minmax(150px, 240px); }
+}
 .dash-card {
   background: #fff;
   border: 1px solid var(--line);
