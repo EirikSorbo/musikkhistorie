@@ -2064,3 +2064,25 @@ button.vk-cell:focus-visible {
 .sh-fp-meta { color: var(--muted); font-size: 0.8rem; }
 .sh-loose-list { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; max-height: 40vh; overflow-y: auto; margin-top: 4px; }
 .sh-loose-item { text-align: left; }
+
+/* ----- Klassepassord (js/gate.js) -----
+   Sperren LEGGER TIL .pensum-locked på <html>. Lastes ikke js/gate.js, skjer
+   ingenting og appen vises som før (bevisst: en lekkasje er bedre enn at
+   klassen står låst ute). Alt i <body> skjules bortsett fra selve sperren. */
+html.pensum-locked body > *:not(#pass-gate) { display: none !important; }
+html.pensum-locked, html.pensum-locked body { background: var(--bg); }
+
+.pass-gate {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); padding: 24px;
+}
+.pass-gate-card {
+  text-align: center; padding: 40px 32px; max-width: 340px; width: 100%;
+}
+.pass-gate-card h2 { margin: 0 0 4px; }
+.pass-gate-hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px; }
+.pass-gate-card form { display: flex; flex-direction: column; gap: 12px; }
+.pass-gate-card input { text-align: center; }
+.pass-gate-card .btn { width: 100%; padding: 12px; font-size: 1rem; }
+.pass-gate-msg { min-height: 1.2em; margin: 12px 0 0; font-size: 0.9rem; color: var(--muted); }

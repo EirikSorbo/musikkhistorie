@@ -134,6 +134,44 @@ nekter push hvis versjonene er i utakt.
 
 ---
 
+## Klassekode (js/gate.js)
+
+Alle fire sidene ligger bak en delt klassekode. Studenten skriver den inn én
+gang per nettleser, eller åpner en lenke med koden i:
+`https://historieappen.no/?kode=DEN-KODEN`. Koden fjernes fra adressefeltet
+etterpå. Er koden godtatt, lagres det i `localStorage` under `pensum-klasse`.
+
+**Hva dette er og ikke er.** Sperren holder nysgjerrige mennesker ute av
+grensesnittet. Den beskytter *ikke* dataene: innholdet ligger fortsatt åpent i
+Firestore (`allow read: if true`) for den som kjenner prosjekt-ID-en, og den
+kan omgås av alle som kan bruke utviklerverktøy. Ekte tilgangskontroll krever
+innlogging håndhevet i `firestore.rules`, eller App Check.
+
+Sperren **feiler åpent** med vilje: `js/gate.js` legger til klassen
+`pensum-locked`, og CSS skjuler innholdet av den. Lastes ikke fila, vises appen
+som før. En lekkasje er å foretrekke framfor at klassen står låst ute i en time.
+
+**Bytte kode** (generer nytt salt og hash, og øk `version` med 1 så alle må
+skrive inn på nytt):
+
+```bash
+python3 - <<'EOF'
+import hashlib, base64, secrets, unicodedata, re
+passord = "tre-urelaterte-ord"          # ← sett inn den nye koden
+norm = lambda s: re.sub(r"[^a-z0-9æøå]", "", unicodedata.normalize("NFC", s).lower())
+salt = secrets.token_bytes(16)
+print("salt:", base64.b64encode(salt).decode())
+print("hash:", hashlib.pbkdf2_hmac("sha256", norm(passord).encode(), salt, 150000, 32).hex())
+EOF
+```
+
+Lim `salt` og `hash` inn i `GATE`-objektet øverst i `js/gate.js`, øk
+`GATE.version`, bump `VERSION` + kjør `./bump.sh`, og push. Hashen er offentlig
+(repoet er offentlig), derfor 150 000 PBKDF2-iterasjoner — men frasen betyr
+mest: bruk tre urelaterte ord, aldri et passord du bruker andre steder.
+
+---
+
 ## Testing
 
 - **Enhetstester** (ingen avhengigheter): `npm test` — kjører `node --test`

@@ -1,12 +1,12 @@
 // ============================================================================
 //  SLEKTSTRE-SIDEN — egen fane med Carta-kartet
 // ============================================================================
-import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech, subscribeContent } from "./store.js?v=4.34";
-import { setHeatData } from "./heat-strip.js?v=4.34";
-import { renderGenealogy, showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.34";
-import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=4.34";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.34";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.34";
+import { subscribeArtists, subscribeGenreDescs, subscribeEdgeDescs, subscribeTech, subscribeContent } from "./store.js?v=4.35";
+import { setHeatData } from "./heat-strip.js?v=4.35";
+import { renderGenealogy, showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.35";
+import { renderArtistDetail, renderTechDetail, openArtistListModal, openPlaylistModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo, modalOpen, modalClose, modalCloseTop, setupModal, buildMainGenreList } from "./ui.js?v=4.35";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.35";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.35";
 
 // De delte modalene (samme fragmenter som forsiden får via explore.js)
 // injiseres FØR modal-oppsettet under, så markupen aldri driver fra forsiden.
@@ -153,7 +153,11 @@ window.addEventListener("resize", () => {
   if (Math.abs(w - lastStageW) > 2) { lastStageW = w; api.fit(); }
 });
 
-if (CONFIGURED) {
+// Vent på klassepassordet (js/gate.js) før noe hentes, så innholdet ikke
+// ligger lastet bak sperren. Er gate.js ikke lastet, er __pensumGate undefined
+// og Promise.resolve(undefined) går rett videre — sperren feiler åpent.
+Promise.resolve(window.__pensumGate?.klar).then(() => {
+  if (!CONFIGURED) return;
   wireFirestoreErrorBanner();
   subscribeGenreDescs((s) => {
     Object.keys(subDescs).forEach((k) => delete subDescs[k]);
@@ -175,4 +179,4 @@ if (CONFIGURED) {
     setHeatData(c?.varmekart?.heat || null);
     refreshSjangerInfo();
   });
-}
+});

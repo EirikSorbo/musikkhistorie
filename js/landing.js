@@ -1,12 +1,12 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.34";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.34";
-import { debounce, throttle } from "./util.js?v=4.34";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.34";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.34";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.34";
-import { initExplore } from "./explore.js?v=4.34";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.34";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.34";
+import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.35";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.35";
+import { debounce, throttle } from "./util.js?v=4.35";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.35";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.35";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.35";
+import { initExplore } from "./explore.js?v=4.35";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.35";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.35";
 
 const state = {
   artists: [],
@@ -565,8 +565,11 @@ function init() {
   applyIncomingFilter();
 }
 
-// Rollevelger
-(function roleGate() {
+// Rollevelger — kjører først når klassepassordet er godtatt (js/gate.js), så
+// verken rollevalget eller innholdet ligger bak sperren. Er gate.js ikke
+// lastet, er __pensumGate undefined og Promise.resolve(undefined) går rett
+// videre: sperren feiler åpent framfor å låse ute klassen.
+Promise.resolve(window.__pensumGate?.klar).then(function roleGate() {
   const role = localStorage.getItem("pensum-role");
   const gate = document.getElementById("role-gate");
 
@@ -593,4 +596,4 @@ function init() {
     applyRole("teacher");
     window.location.href = "teacher.html";
   });
-})();
+});
