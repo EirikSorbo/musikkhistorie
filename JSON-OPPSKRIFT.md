@@ -114,13 +114,19 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
 ### `kilder[]`
 
 ```json
-{ "text": "Wald, E. Escaping the Delta. 2004.", "url": "https://..." }
+{ "text": "Wald, E. Escaping the Delta. 2004.", "url": "https://...", "kategori": "Bøker" }
 ```
 
 | Felt | Påkrevd | Notater |
 |---|---|---|
 | `text` | ✓ | Hele kildereferansen, sluttet stil (Chicago/MLA). |
 | `url` | | Klikkbar lenke. Hvis satt: hele teksten blir lenke. |
+| `kategori` | | Styrer grupperingen i Referanser-kortet. Gyldige verdier står i `KILDE_KATEGORIER` (`js/kilder.js`): `Nettsteder`, `Bøker`, `Tidsskrifter`, `Forelesningsnotater`, `Videoer`, `Podkaster`. Mangler feltet, eller står det noe annet, havner kilden under «Ukategorisert» nederst i kortet — synlig, ikke skjult. |
+
+Referanser-kortet grupperer nettkilder på nettsted (`snl.no` → Store norske
+leksikon), og utleder artikkeltittelen fra URL-en, siden `text` som regel bare er
+navnet på oppslagsverket. Bøker, notater og annet uten lenke vises som én linje
+med hele referansen.
 
 ### `musicExamples[]`
 

@@ -7,32 +7,23 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.38";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.38";
-import { DECADES } from "./limits.js?v=4.38";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=4.38";
-import { isHendelse } from "./ui-tech.js?v=4.38";
+import { escapeHtml } from "./util.js?v=4.39";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.39";
+import { DECADES } from "./limits.js?v=4.39";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=4.39";
+import { isHendelse } from "./ui-tech.js?v=4.39";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
 // aldri driver fra hverandre. onSelect får tiåret som tall.
 //
-// opts.all = true legger en egen prikk HELT TIL VENSTRE som betyr «vis alle
-// tiår» (kartet). Den har sin egen farge (.dr-all i CSS) og står utenfor selve
-// tidsaksen — streken starter først ved 1900. onSelect får da null.
-// Kolonnetallet og strekens startpunkt sendes til CSS som variabler, så det
-// samme sporet fungerer med og uten Alle-prikken.
-export function renderDecadeRibbon(el, active, onSelect, { all = false, allLabel = "Alle" } = {}) {
+// Kolonnetallet sendes til CSS som variabel, så sporet følger DECADES den dagen
+// et nytt tiår melder seg. («Alle»-prikken forsvant med kartet i v4.39; se
+// KART-OPPSKRIFT.md hvis den skal tilbake.)
+export function renderDecadeRibbon(el, active, onSelect) {
   if (!el) return;
-  const cols = DECADES.length + (all ? 1 : 0);
-  const allNode = all
-    ? `<button type="button" class="dr-node dr-all${active == null ? " active" : ""}" data-decade=""` +
-      ` aria-label="Vis alle tiår"${active == null ? ` aria-current="true"` : ""}>` +
-      `<span class="dr-dot"></span><span class="dr-year">${escapeHtml(allLabel)}</span></button>`
-    : "";
   el.innerHTML =
-    `<div class="dr-track" style="--dr-cols:${cols};--dr-line-start:${all ? 1 : 0}">` +
-    allNode +
+    `<div class="dr-track" style="--dr-cols:${DECADES.length}">` +
     DECADES.map((y) =>
       `<button type="button" class="dr-node${y === active ? " active" : ""}" data-decade="${y}"` +
       ` aria-label="${y}-tallet"${y === active ? ` aria-current="true"` : ""}>` +

@@ -22,7 +22,7 @@ Bak **Det store bildet** ligger hele historien fremstilt på flere måter. Musik
 - **Tidslinjen** viser når hver artist var aktiv, gruppert etter sjanger. Hold pekeren over en blokk for bilde og periode.
 - **Slektstreet** viser hvordan sjangrene vokste fram, fra røttene til i dag. Strekene mellom dem er klikkbare — hver forteller *hvordan* én sjanger påvirket den neste. Zoom og dra for å utforske.
 - **Varmekartet** viser hvor toneangivende hver sjanger var, tiår for tiår. Mørkere felt betyr større betydning.
-- **Kartet** viser hvor artistene virket geografisk, og hvordan tyngdepunktet flyttet seg gjennom tiårene.
+- **Referanser** samler alle kildene appen bygger på, gruppert etter hovedkilde. Åpne en linje for å se hvilke artikler som er brukt.
 - **Sjangerhimmelen** stiller artistene opp som stjerner rundt sjangrene sine. Trykk på en sjanger for å se hvem som hører til, og let etter «broene» — artistene som knytter flere sjangre sammen.
 - **Sjangerhistoriene** er seks sammenhengende fortellinger som til sammen dekker hele pensumet — en god vei inn hvis du heller vil lese enn å klikke deg rundt.
 - **Om historie** og **Røtter før 1910** setter musikken inn i en større sammenheng.

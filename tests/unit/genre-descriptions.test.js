@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.38";
-import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.38";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.39";
+import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.39";
 
 const descs = {
   Blues: {
@@ -102,7 +102,7 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: Firestore-årstall vinner, tomt sluttår blir «i dag», ellers node-fallback", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.38");
+  const { eraText } = await import("../../js/genealogy.js?v=4.39");
   const node = { era: "1930–45" };
   assert.equal(eraText(node, { activeFrom: 1935, activeTo: 1945 }), "1935–1945");
   assert.equal(eraText(node, { activeFrom: 1990, activeTo: null }), "1990–i dag");

@@ -15,8 +15,10 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
     med klikkbare *koblinger* mellom dem (hvordan én sjanger påvirket den neste).
   - **Sjangerhistorier**, **sjangerbeskrivelser** i tre nivåer (meta/main/sub)
     og **koblingsbeskrivelser** for hver strek i treet.
-  - **Tidslinje**, **varmekart**, **geografisk kart** og **sjangerhimmel**
-    (stjernekart), pluss tiårskontekst (samfunn + teknologi) og teknologikort.
+  - **Tidslinje**, **varmekart** og **sjangerhimmel** (stjernekart), pluss
+    tiårskontekst (samfunn + teknologi) og teknologikort.
+  - **Referanser**: alle kildene appen bygger på, samlet og gruppert etter
+    hovedkilde (utledet av dataene, ikke vedlikeholdt for hånd).
 - **Finn artister**: søk og filtrer på sjanger, metasjanger, tiår og instrument;
   «dagens artist».
 - **Foreslå artist / innovasjon** (justering av pensumet) med navn, årstall,
@@ -56,13 +58,13 @@ js/
   genealogy.js        Slektstreet — sannhetskilde for sjangre + koblinger (edges)
   genre-descriptions.js  Nivådelte sjangerbeskrivelser (meta/main/sub)
   constellation.js    Sjangerhimmelen (stjernekart)
-  geo-places.js / geo-map-data.js   Geografisk kart
+  kilder.js           Kilde-vokabular + aggregering bak Referanser-kortet
   linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
   ui.js               Rendering + re-eksport-knutepunkt for ui-*-modulene
   ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff
   explore.js          Utforsk — orkestrator (injiserer/wirer modalene, initExplore)
   explore-*.js        Utforsk-featurene: context (delt kjerne + gjenbrukshjelpere),
-                      modals, varmekart, tidslinje, tech, decade, kart, sjanger, innhold
+                      modals, varmekart, tidslinje, tech, decade, referanser, sjanger, innhold
   proposals.js        Endringsforslag-editoren (student)
   landing.js / student.js / tre.js   Side-logikk
   teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler)

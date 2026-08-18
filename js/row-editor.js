@@ -8,7 +8,11 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.38";
+import { escapeHtml } from "./util.js?v=4.39";
+// Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
+// forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
+// hit uten at row-editor blir avhengig av app-tilstand.
+import { KILDE_KATEGORIER } from "./kilder.js?v=4.39";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
@@ -55,11 +59,14 @@ export const SOURCE_SPEC = {
   fields: [
     { key: "text", cls: "source-text", type: "text", ph: "F.eks. «Ward, Brian. Just My Soul Responding. 1998.»", label: "Kildetekst", always: true },
     { key: "url",  cls: "source-url",  type: "url", ph: "https://… (valgfritt)", label: "Lenke (https)", always: true },
+    // Kategorien styrer hvor kilden havner i Referanser-kortet. Lagret felt,
+    // ikke gjettet: uten valg havner kilden under «Ukategorisert» der.
+    { key: "kategori", cls: "source-kat", type: "select", ph: "Kategori …", label: "Kategori", title: "Hva slags kilde dette er. Styrer grupperingen i Referanser-kortet.", options: KILDE_KATEGORIER, always: true },
   ],
 };
 
 // Normaliserer en lagret kilde-liste til NØYAKTIG formen collectRows leverer
-// for SOURCE_SPEC: [{ text, url }] med begge feltene alltid til stede, tomme
+// for SOURCE_SPEC: [{ text, url, kategori }] med alle tre alltid til stede, tomme
 // rader filtrert bort. Kilder er historisk lagret både som rene strenger og
 // som objekter uten url-felt — uten denne ga en UENDRET kilde en falsk diff i
 // forslagseditoren ({ text } ≠ { text, url: "" }), og et sjangerkort uten
@@ -68,8 +75,8 @@ export function normalizeSources(v) {
   if (!Array.isArray(v)) return [];
   return v
     .map((k) => (typeof k === "string"
-      ? { text: k, url: "" }
-      : { text: (k && k.text) || "", url: (k && k.url) || "" }))
+      ? { text: k, url: "", kategori: "" }
+      : { text: (k && k.text) || "", url: (k && k.url) || "", kategori: (k && k.kategori) || "" }))
     .filter((k) => k.text);
 }
 

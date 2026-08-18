@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=4.38";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.38";
+import { safeUrl } from "./util.js?v=4.39";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.39";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett
@@ -38,13 +38,19 @@ export function normalizeArtist(a) {
       return safe ? { ...rest, url: safe } : rest;
     });
 
-  // kilder: array av strenger → array av {text, url?}
+  // kilder: array av strenger → array av {text, url?, kategori?}. Kategorien
+  // (se KILDE_KATEGORIER i kilder.js) må bæres videre — uten den ville
+  // normaliseringen stille tømt feltet Referanser-kortet grupperer på.
   if (Array.isArray(out.kilder)) {
     out.kilder = out.kilder
       .filter((k) => k != null && (typeof k === "string" || typeof k === "object"))
-      .map((k) =>
-        typeof k === "string" ? { text: k } : { text: k.text || "", url: safeUrl(k.url) }
-      ).filter((k) => k.text);
+      .map((k) => {
+        if (typeof k === "string") return { text: k };
+        const kat = typeof k.kategori === "string" ? k.kategori.trim() : "";
+        const rad = { text: k.text || "", url: safeUrl(k.url) };
+        if (kat) rad.kategori = kat;
+        return rad;
+      }).filter((k) => k.text);
   } else {
     out.kilder = [];
   }

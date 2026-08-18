@@ -5,18 +5,18 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.38";
-import { showSjangerInfo } from "./genealogy.js?v=4.38";
-import { MODAL_HTML } from "./explore-modals.js?v=4.38";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=4.38";
-import { openVarmekart } from "./explore-varmekart.js?v=4.38";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.38";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.38";
-import { openDecadeList } from "./explore-decade.js?v=4.38";
-import { openKart } from "./explore-kart.js?v=4.38";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.38";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.38";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.38";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.39";
+import { showSjangerInfo } from "./genealogy.js?v=4.39";
+import { MODAL_HTML } from "./explore-modals.js?v=4.39";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=4.39";
+import { openVarmekart } from "./explore-varmekart.js?v=4.39";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.39";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.39";
+import { openDecadeList } from "./explore-decade.js?v=4.39";
+import { openReferanser } from "./explore-referanser.js?v=4.39";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.39";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.39";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.39";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -30,7 +30,7 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-instrumenter", "modal-decade-view",
    "modal-decade-more", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
-   "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-kart", "modal-sjangerhimmel",
+   "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-referanser", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
 
@@ -108,8 +108,8 @@ function wireModals() {
     if (opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
     else sbTre.style.display = "none";
     sbModal.querySelector("#sb-varmekart").addEventListener("click", openVarmekart);
-    sbModal.querySelector("#sb-kart").addEventListener("click", openKart);
     sbModal.querySelector("#sb-himmel").addEventListener("click", openSjangerhimmel);
+    sbModal.querySelector("#sb-referanser").addEventListener("click", openReferanser);
     sbModal.querySelector("#sb-guide").addEventListener("click", openAppGuide);
   }
 

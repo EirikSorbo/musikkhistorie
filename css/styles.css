@@ -758,6 +758,20 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .kilder { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 .kilder ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 
+/* ----- Referanser: kildene appen bygger på, samlet (explore-referanser.js) ---
+   To nivåer akkordeon (kategori → hovedkilde) gjenbruker varmekartets
+   gruppehoder; her styles bare radene under dem. Lenkene kan bli lange, så
+   ordbryting er på: kortet skal aldri gi vannrett scroll på mobil. */
+.ref-rad, .ref-line {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  padding: 3px 0 3px 21px; font-size: 0.84rem; line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.ref-rad a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+.ref-rad a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.ref-line { color: var(--text); }
+.ref-merk { font-size: 0.72rem; color: var(--muted); }
+
 .source-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .source-row .source-text { flex: 1.4; }
 .source-row .source-url { flex: 1; }
@@ -1518,18 +1532,16 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .dr-track {
   position: relative;
   display: grid;
-  /* --dr-cols settes av renderDecadeRibbon: 13 tiår, 14 når kartets «Alle»-
-     prikk er med. */
+  /* --dr-cols settes av renderDecadeRibbon (ett spor per tiår i DECADES). */
   grid-template-columns: repeat(var(--dr-cols, 13), 1fr);
 }
 /* Selve tidsaksen. Den starter i midten av den FØRSTE tiårsprikken og slutter i
-   midten av den siste. --dr-line-start hopper over «Alle»-kolonnen når den er
-   der, så Alle-prikken står utenfor aksen — den er ikke et årstall. */
+   midten av den siste. */
 .dr-track::before {
   content: "";
   position: absolute;
   top: 10px;
-  left: calc(100% / var(--dr-cols, 13) * (var(--dr-line-start, 0) + 0.5));
+  left: calc(100% / var(--dr-cols, 13) * 0.5);
   right: calc(100% / var(--dr-cols, 13) * 0.5);
   height: 2px;
   background: var(--line-strong);
@@ -1569,11 +1581,6 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .dr-node.active .dr-year { color: var(--accent-2); font-weight: 700; }
 .dr-node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 
-/* «Alle»-prikken i kartets stripe: egen farge (lilla), så den leses som noe
-   annet enn et tiår — den slår av tiårsfilteret i stedet for å velge et år. */
-.dr-all .dr-dot { border-color: #7c3aed; }
-.dr-all.active .dr-dot { background: #7c3aed; box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.16); }
-.dr-all.active .dr-year { color: #6d28d9; }
 @media (max-width: 480px) {
   .dr-year { font-size: 0.56rem; letter-spacing: -0.03em; }
   .dr-dot { width: 10px; height: 10px; }

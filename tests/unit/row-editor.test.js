@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.38";
+import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.39";
+import { KILDE_KATEGORIER } from "../../js/kilder.js?v=4.39";
 
 test("rowInnerHtml escaper verdier (lukker XSS-fella)", () => {
   const html = rowInnerHtml(SOURCE_SPEC, { text: `"><img src=x onerror=alert(1)>`, url: "https://ex.com" });
@@ -47,6 +48,15 @@ test("tomme verdier gir tomme value-attributter", () => {
   assert.match(html, /class="source-url"[^>]*value=""/);
 });
 
+test("kilde-raden har kategori-nedtrekk med hele vokabularet", () => {
+  const html = rowInnerHtml(SOURCE_SPEC, { kategori: "Bøker" });
+  assert.match(html, /<select class="source-kat"/);
+  for (const kat of KILDE_KATEGORIER) {
+    assert.match(html, new RegExp(`<option value="${kat}"`));
+  }
+  assert.match(html, /<option value="Bøker" selected>/);
+});
+
 // normalizeSources skal gi NØYAKTIG formen collectRows leverer for SOURCE_SPEC,
 // så en urørt kilde-liste aldri diffes som endret i forslagseditoren.
 test("normalizeSources: manglende liste og tomme rader blir tom liste", () => {
@@ -56,11 +66,20 @@ test("normalizeSources: manglende liste og tomme rader blir tom liste", () => {
   assert.deepEqual(normalizeSources([{ url: "https://ex.com" }, { text: "" }]), []);
 });
 
-test("normalizeSources: strenger og objekter uten url får url-felt", () => {
-  assert.deepEqual(normalizeSources(["SNL"]), [{ text: "SNL", url: "" }]);
-  assert.deepEqual(normalizeSources([{ text: "SNL" }]), [{ text: "SNL", url: "" }]);
+test("normalizeSources: strenger og objekter uten url får url- og kategori-felt", () => {
+  assert.deepEqual(normalizeSources(["SNL"]), [{ text: "SNL", url: "", kategori: "" }]);
+  assert.deepEqual(normalizeSources([{ text: "SNL" }]), [{ text: "SNL", url: "", kategori: "" }]);
   assert.deepEqual(
     normalizeSources([{ text: "SNL", url: "https://snl.no" }]),
-    [{ text: "SNL", url: "https://snl.no" }]
+    [{ text: "SNL", url: "https://snl.no", kategori: "" }]
+  );
+});
+
+// Kategorien er det Referanser-kortet grupperer på: mister normalizeSources den,
+// diffes en urørt kilde som endret OG kilden faller ut av gruppa si.
+test("normalizeSources: lagret kategori bæres videre", () => {
+  assert.deepEqual(
+    normalizeSources([{ text: "SNL", url: "https://snl.no", kategori: "Nettsteder" }]),
+    [{ text: "SNL", url: "https://snl.no", kategori: "Nettsteder" }]
   );
 });

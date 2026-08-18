@@ -7,12 +7,12 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.38";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.38";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.39";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.39";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
-import { STORY_ORDER } from "./story-format.js?v=4.38";
+import { STORY_ORDER } from "./story-format.js?v=4.39";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -124,25 +124,6 @@ export const MODAL_HTML = `
     <p class="muted" style="margin-bottom:12px;font-size:0.86rem">Hvor toneangivende var sjangeren dette tiåret? 0 = ikke toneangivende, 5 = mest. «Ingen data» fjerner verdien.</p>
     <div id="vke-buttons" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     <div id="vke-msg" class="form-msg" style="margin-top:10px"></div>
-  </div>
-</div>
-
-<!-- Kart: musikkens geografi (Nord-Amerika + utenfor-kartet-chips) -->
-<div class="modal-backdrop" id="modal-kart">
-  <div class="modal modal-wide">
-    <div class="modal-head">
-      <h2>Musikkens geografi</h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <p class="muted" style="margin-bottom:12px;font-size:0.9rem">Hvor artistene virket. Større prikk = flere artister; stiplet ring = diffust område (f.eks. en delstat). Storbyområder er samlet (Brooklyn → New York). Velg et tiår for å se tyngdepunktet flytte seg — trykk på en prikk for artistene.</p>
-    <div class="decade-ribbon" id="kart-decades" style="margin-bottom:12px"></div>
-    <!-- Utenfor-kartet-chips og «uten plasserbart sted» står OVER kartet: begge
-         er utfall av tiårsvalget, og under kartet havnet de under skjermkanten.
-         Tomme (ingen treff i valgt tiår) har de ingen høyde, og margin-bottom
-         kollapser mot naboene — da står stripa like tett på kartet som før. -->
-    <div id="kart-abroad" style="margin-bottom:10px"></div>
-    <div id="kart-unplaced-row" style="margin-bottom:12px;font-size:0.78rem;color:var(--muted)"></div>
-    <div id="kart-svg"></div>
   </div>
 </div>
 
@@ -262,15 +243,15 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-title">Varmekart</span>
         <span class="dash-desc">Hvor toneangivende sjangrene var i ulike tiår</span>
       </button>
-      <button class="dash-card" id="sb-kart">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <span class="dash-title">Kart</span>
-        <span class="dash-desc">Musikkens geografi gjennom ulike tiår</span>
-      </button>
       <button class="dash-card" id="sb-himmel">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>
         <span class="dash-title">Sjangerhimmel</span>
         <span class="dash-desc">Artistene rundt sjangrene sine</span>
+      </button>
+      <button class="dash-card" id="sb-referanser">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/></svg>
+        <span class="dash-title">Referanser</span>
+        <span class="dash-desc">Kildene appen bygger på</span>
       </button>
       <button class="dash-card" id="sb-guide">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
@@ -278,6 +259,20 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-desc">Kort om funksjonene og tanken bak</span>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Referanser: alle kildene appen bygger på, samlet og gruppert etter kategori
+     og hovedkilde. Innholdet er en AVLEDNING av dataene og bygges på nytt ved
+     hver åpning (explore-referanser.js) — ingen tekst å redigere, og derfor
+     heller ingen Rediger-knapp. -->
+<div class="modal-backdrop" id="modal-referanser">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Referanser</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="ref-body"></div>
   </div>
 </div>
 

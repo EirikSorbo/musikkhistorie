@@ -3,8 +3,8 @@
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=4.38";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=4.38";
+import { contentGaps } from "../../js/ui-dashboard.js?v=4.39";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genealogy.js?v=4.39";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
