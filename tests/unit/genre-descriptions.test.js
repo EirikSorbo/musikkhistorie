@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.37";
-import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.37";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.38";
+import { GENEALOGY, resolveMainDesc } from "../../js/genealogy.js?v=4.38";
 
 const descs = {
   Blues: {
@@ -32,10 +32,13 @@ test("missingDesc navngir nivået", () => {
 // de to ulikt, åpner editoren tom over en tekst som vises i popupen, og lagring
 // lager et duplikat-dokument under labelen.
 test("resolveMainDesc finner tekst lagret under nodens FULLE navn", () => {
-  const d = { "Country (hillbilly)": { main: { description: "under fullnavn" } } };
+  // Testen sto på Country/«Country (hillbilly)» til v4.38, da noden ble døpt om
+  // til Hillbilly og fikk likt kort- og fullnavn. Den trenger et par der de to
+  // FAKTISK er ulike, ellers prøver den ingenting: Outlaw/«Outlaw country».
+  const d = { "Outlaw country": { main: { description: "under fullnavn" } } };
   // Eksakt oppslag på labelen ville vært tomt — det er nettopp fella:
-  assert.equal(resolveDesc(d, "Country", "main").description, "");
-  assert.equal(resolveMainDesc(d, "Country").description, "under fullnavn");
+  assert.equal(resolveDesc(d, "Outlaw", "main").description, "");
+  assert.equal(resolveMainDesc(d, "Outlaw").description, "under fullnavn");
 });
 
 test("resolveMainDesc lar labelen (doc-ID-en) vinne over fullnavnet", () => {
@@ -99,7 +102,7 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: Firestore-årstall vinner, tomt sluttår blir «i dag», ellers node-fallback", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.37");
+  const { eraText } = await import("../../js/genealogy.js?v=4.38");
   const node = { era: "1930–45" };
   assert.equal(eraText(node, { activeFrom: 1935, activeTo: 1945 }), "1935–1945");
   assert.equal(eraText(node, { activeFrom: 1990, activeTo: null }), "1990–i dag");

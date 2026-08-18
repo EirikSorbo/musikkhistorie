@@ -7,13 +7,13 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.37";
-import { renderRichText } from "./rich-text.js?v=4.37";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.37";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.37";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.37";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.37";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.37";
+import { wireAllLinks } from "./linkify.js?v=4.38";
+import { renderRichText } from "./rich-text.js?v=4.38";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.38";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.38";
+import { modalOpen, modalClose } from "./ui-modal.js?v=4.38";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.38";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.38";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -38,7 +38,11 @@ export const GENEALOGY = [
   { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "gray", cx: 900, r: 1, p: ["vestafrik", "brassband"], g: null, era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
   { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["vaudeville"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
   { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "brassband", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
-  { id: "country", l: "Country", f: "Country (hillbilly)", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "hymner", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
+  // id «country», etikett «Hillbilly»: 1920-tallets innspilte sjanger het
+  // hillbilly i samtiden, og navnet ble tatt i bruk i v4.38 (brukervalg).
+  // Metasjangeren heter fortsatt Country — den rommer alt fra Bluegrass til
+  // Cont. country, og skal ikke hete Hillbilly.
+  { id: "country", l: "Hillbilly", f: "Hillbilly", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "hymner", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
   { id: "gospel", l: "Gospel", f: "Gospel", fam: "olive", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
   { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
   { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 4, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
@@ -62,7 +66,9 @@ export const GENEALOGY = [
   { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1590, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
   { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
   { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["modal", "funk", "rock"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
-  { id: "hiphop", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1340, r: 8, p: ["funk", "reggae", "disco"], g: "Hip-hop", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
+  // id «hiphop», etikett «Early hip-hop» (v4.38): navnet «Hip-hop» flyttet ned
+  // til gullalder-noden, så denne står igjen som pionerårene i Bronx.
+  { id: "hiphop", l: "Early hip-hop", f: "Early hip-hop", fam: "pink", cx: 1340, r: 8, p: ["funk", "reggae", "disco"], g: "Hip-hop", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
   { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1650, r: 8, p: ["funk", "soul"], g: "Klubbmusikk", era: "1974", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
   // House og techno er slått sammen (v3.97, brukervalg): to scener — Chicago og
   // Detroit — som deler puls, maskinpark og publikum, og som i pensumet uansett
@@ -125,13 +131,16 @@ export const GENEALOGY = [
 
   // --- Hip-hop videre ---
   { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1340, r: 10, p: ["hiphop"], g: "Hip-hop", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },
-  // Gullalderen sto uten egen node: «Hip-hop» rommet 22 artister fra 1973 til
-  // 2003 — pionerene i Bronx, gullalderen OG midt-90-tallet i ett. Treet hoppet
-  // dermed fra Sugarhill Gang rett til Gangsta rap, og hele østkysttradisjonen
-  // manglet. Gangsta rap er bevisst IKKE forelder: den er samtidig med
-  // gullalderen (N.W.A 1988), ikke etterkommer — de er to greiner ut fra
-  // hip-hop, øst og vest.
-  { id: "gullalder", l: "Gullalder-hip-hop", f: "Hip-hopens gullalder (boom bap)", fam: "pink", cx: 1340, r: 9, p: ["hiphop"], g: "Hip-hop", era: "1986–94", t: ["Fight the Power – Public Enemy (1989)", "C.R.E.A.M. – Wu-Tang Clan (1993)", "N.Y. State of Mind – Nas (1994)"] },
+  // NB: id-en er «gullalder», etiketten er «Hip-hop». Noden ble skilt ut i v3.88
+  // som hip-hopens gullalder, og fikk hovednavnet i v4.38 (brukervalg): det er
+  // denne perioden studentene skal kjenne som hip-hop, mens pionerene i Bronx
+  // står som «Early hip-hop» over. ID-ene ble BEVISST ikke endret — de er
+  // identiteten til de 80 koblingsbeskrivelsene (edgeKey = «fra__til»), og et
+  // bytte der ville gjort dem foreldreløse.
+  // Gangsta rap er bevisst IKKE forelder: den er samtidig med denne noden
+  // (N.W.A 1988), ikke etterkommer — de er to greiner ut fra Early hip-hop,
+  // øst og vest.
+  { id: "gullalder", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1340, r: 9, p: ["hiphop"], g: "Hip-hop", era: "1986–94", t: ["Fight the Power – Public Enemy (1989)", "C.R.E.A.M. – Wu-Tang Clan (1993)", "N.Y. State of Mind – Nas (1994)"] },
   { id: "trap", l: "Trap", f: "Trap", fam: "pink", cx: 1340, r: 12, p: ["gangsta"], g: "Hip-hop", era: "2000–2010-tallet", t: ["Sicko Mode – Travis Scott (2018)", "Mask Off – Future (2017)"] },
 
   // --- Elektronisk videre ---
