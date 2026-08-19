@@ -7,7 +7,7 @@
 //  og under den de enkelte artiklene. Ren logikk uten DOM, så den kan
 //  enhetstestes; tegningen bor i explore-referanser.js.
 // ============================================================================
-import { safeUrl } from "./util.js?v=4.41";
+import { safeUrl } from "./util.js?v=4.42";
 
 // Fast vokabular i koden, ikke i config — samme valg som INSTRUMENTS (v3.68).
 // Navnene er OGSÅ seksjonsoverskriftene i Referanser-kortet, derav
@@ -150,6 +150,18 @@ function utenUtgiver(tittel, gruppe) {
 
 const paaNavn = (a, b) => a.tittel.localeCompare(b.tittel, "no");
 
+// Hvor kilden er brukt. Samme kort skal bare stå én gang per rad, selv om det
+// oppgir kilden på flere nivåer eller flere ganger.
+const opphavNokkel = (o) => `${o.type}:${o.id}:${o.niva || ""}`;
+function leggOpphav(rad, opphav) {
+  if (!opphav || !opphav.id) return;
+  const n = opphavNokkel(opphav);
+  if (!rad.opphav.some((o) => opphavNokkel(o) === n)) rad.opphav.push(opphav);
+}
+
+// «Arne Forsgren, 2021» — forfatter og år slik de vises etter tittelen.
+const detaljFor = (k) => [k.forfatter, k.year].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
+
 // Samler en flat liste kilder ({ text, url, kategori }) til seksjoner:
 //   { totalt, unike, seksjoner: [{ navn, farge, unike, bruk, grupper, rader }] }
 // «Nettsteder» er den eneste seksjonen som grupperes på utgiver: `grupper` er
@@ -186,7 +198,7 @@ export function samleKilder(liste) {
 
     const radNokkel = url || tekst.toLowerCase();
     const rad = g.rader.get(radNokkel);
-    if (rad) rad.bruk++;
+    if (rad) { rad.bruk++; if (!rad.detalj) rad.detalj = detaljFor(k); leggOpphav(rad, k.opphav); }
     else g.rader.set(radNokkel, {
       // Utenfor Nettsteder er kildeteksten HELE referansen (boktittel,
       // episodenavn), så URL-slug-en skal aldri overstyre den. Under Nettsteder
@@ -195,8 +207,10 @@ export function samleKilder(liste) {
       tittel: kategori === GRUPPERES ? utenUtgiver(radTittel(tekst, url), navn) : (tekst || radTittel(tekst, url)),
       url,
       spraak: url ? spraakFor(vertFor(url)) : "",
+      detalj: detaljFor(k),
       bruk: 1,
       sted: vert ? navn : (url ? vertFor(url) : ""),
+      opphav: k.opphav && k.opphav.id ? [k.opphav] : [],
     });
   }
 

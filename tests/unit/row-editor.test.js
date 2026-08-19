@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.41";
-import { KILDE_KATEGORIER } from "../../js/kilder.js?v=4.41";
+import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.42";
+import { KILDE_KATEGORIER } from "../../js/kilder.js?v=4.42";
 
 test("rowInnerHtml escaper verdier (lukker XSS-fella)", () => {
   const html = rowInnerHtml(SOURCE_SPEC, { text: `"><img src=x onerror=alert(1)>`, url: "https://ex.com" });
@@ -44,8 +44,9 @@ test("genre-select: options fylles, verdi utenfor lista beholdes, escaping holde
 
 test("tomme verdier gir tomme value-attributter", () => {
   const html = rowInnerHtml(SOURCE_SPEC, {});
-  assert.match(html, /class="source-text"[^>]*value=""/);
-  assert.match(html, /class="source-url"[^>]*value=""/);
+  for (const cls of ["source-text", "source-forfatter", "source-year", "source-url"]) {
+    assert.match(html, new RegExp(`class="${cls}"[^>]*value=""`));
+  }
 });
 
 test("kilde-raden har kategori-nedtrekk med hele vokabularet", () => {
@@ -66,20 +67,24 @@ test("normalizeSources: manglende liste og tomme rader blir tom liste", () => {
   assert.deepEqual(normalizeSources([{ url: "https://ex.com" }, { text: "" }]), []);
 });
 
-test("normalizeSources: strenger og objekter uten url får url- og kategori-felt", () => {
-  assert.deepEqual(normalizeSources(["SNL"]), [{ text: "SNL", url: "", kategori: "" }]);
-  assert.deepEqual(normalizeSources([{ text: "SNL" }]), [{ text: "SNL", url: "", kategori: "" }]);
+test("normalizeSources: strenger og objekter fylles ut med de faste feltene", () => {
+  const tom = { forfatter: "", url: "", kategori: "" };
+  assert.deepEqual(normalizeSources(["SNL"]), [{ text: "SNL", ...tom }]);
+  assert.deepEqual(normalizeSources([{ text: "SNL" }]), [{ text: "SNL", ...tom }]);
   assert.deepEqual(
     normalizeSources([{ text: "SNL", url: "https://snl.no" }]),
-    [{ text: "SNL", url: "https://snl.no", kategori: "" }]
+    [{ text: "SNL", ...tom, url: "https://snl.no" }]
   );
 });
 
-// Kategorien er det Referanser-kortet grupperer på: mister normalizeSources den,
-// diffes en urørt kilde som endret OG kilden faller ut av gruppa si.
-test("normalizeSources: lagret kategori bæres videre", () => {
+// Kategorien er det Referanser-kortet grupperer på, og forfatter/år vises etter
+// tittelen: mister normalizeSources dem, diffes en urørt kilde som endret.
+test("normalizeSources: kategori, forfatter og årstall bæres videre", () => {
   assert.deepEqual(
-    normalizeSources([{ text: "SNL", url: "https://snl.no", kategori: "Nettsteder" }]),
-    [{ text: "SNL", url: "https://snl.no", kategori: "Nettsteder" }]
+    normalizeSources([{ text: "SNL", url: "https://snl.no", kategori: "Nettsteder", forfatter: "Arne Forsgren", year: 2021 }]),
+    [{ text: "SNL", forfatter: "Arne Forsgren", year: 2021, url: "https://snl.no", kategori: "Nettsteder" }]
   );
+  // Årstall tas KUN med når det er et gyldig tall (som collectRows gjør).
+  assert.equal("year" in normalizeSources([{ text: "SNL", year: "" }])[0], false);
+  assert.equal(normalizeSources([{ text: "SNL", year: "1998" }])[0].year, 1998);
 });

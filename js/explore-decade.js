@@ -4,10 +4,10 @@
 //  Tiårsvisningen med klikkbar tidslinje-stripe. Flyttet ut av explore.js
 //  (v3.55, runde 2). contextMode/currentDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList, formatInfoText } from "./ui.js?v=4.41";
-import { DECADES } from "./limits.js?v=4.41";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=4.41";
-import { opts, getState } from "./explore-context.js?v=4.41";
+import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList, formatInfoText } from "./ui.js?v=4.42";
+import { DECADES } from "./limits.js?v=4.42";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=4.42";
+import { opts, getState } from "./explore-context.js?v=4.42";
 
 let contextMode = "society";
 // Sist viste tiår i Samfunn/Teknologi-visningen — huskes innen økten så
@@ -20,6 +20,13 @@ let currentDecade = null;
 export function openDecadeList(mode) {
   contextMode = mode;
   openDecadeView(currentDecade ?? DECADES[0]);
+}
+
+// Åpner ET bestemt tiår. Brukes av Referanser-kortet, som vet hvilket tiår en
+// kilde hører til, og skal føre læreren rett dit i stedet for til «forrige tiår».
+export function openDecade(decadeId, mode = "society") {
+  contextMode = mode;
+  openDecadeView(Number(decadeId));
 }
 
 function openDecadeView(decadeId) {

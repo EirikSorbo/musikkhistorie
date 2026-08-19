@@ -5,22 +5,22 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.41";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.41";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.41";
-import { storyFor, pageFor } from "./story-format.js?v=4.41";
-import { renderRichText } from "./rich-text.js?v=4.41";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.41";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.41";
-import { resolveDesc } from "./genre-descriptions.js?v=4.41";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.41";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.41";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.41";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.42";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.42";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.42";
+import { storyFor, pageFor } from "./story-format.js?v=4.42";
+import { renderRichText } from "./rich-text.js?v=4.42";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.42";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.42";
+import { resolveDesc } from "./genre-descriptions.js?v=4.42";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.42";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.42";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.42";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.41";
-import { $ } from "./shared.js?v=4.41";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.41";
+import { wireAllLinks } from "./linkify.js?v=4.42";
+import { $ } from "./shared.js?v=4.42";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.42";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -654,7 +654,9 @@ function referanseRader() {
   return normalizeSources(state.content?.referanser?.kilder);
 }
 
-export function openReferanseEditor() {
+// `fokus` = url-en (eller teksten) til raden som skal utheves — sendes fra
+// Rediger-knappen i Referanser-lista, så læreren slipper å lete i lista.
+export function openReferanseEditor(fokus) {
   const wrap = $("#ref-edit-rows");
   if (!wrap) return;
   buildRows(wrap, SOURCE_SPEC, referanseRader());
@@ -662,6 +664,17 @@ export function openReferanseEditor() {
   msg.textContent = "";
   msg.className = "form-msg ok";
   openAdminModal("modal-referanse-edit");
+
+  if (!fokus) return;
+  for (const rad of wrap.querySelectorAll(".source-row")) {
+    const url = rad.querySelector(".source-url")?.value.trim();
+    const tekst = rad.querySelector(".source-text")?.value.trim();
+    if (url !== fokus && tekst !== fokus) continue;
+    rad.classList.add("rad-uthevet");
+    rad.scrollIntoView({ block: "center" });
+    rad.querySelector(".source-text")?.focus();
+    break;
+  }
 }
 
 export function setupReferanseEditor() {

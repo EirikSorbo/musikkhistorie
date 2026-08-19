@@ -21,13 +21,13 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.41";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.41";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.41";
-import { initExplore } from "./explore.js?v=4.41";
+} from "./store.js?v=4.42";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.42";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.42";
+import { initExplore } from "./explore.js?v=4.42";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.41";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.41";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.42";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.42";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -46,11 +46,11 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.41";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.41";
-import { renderDesk } from "./teacher-desk.js?v=4.41";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.41";
-import { setupFormatBars } from "./format-bar.js?v=4.41";
+} from "./teacher-content.js?v=4.42";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.42";
+import { renderDesk } from "./teacher-desk.js?v=4.42";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.42";
+import { setupFormatBars } from "./format-bar.js?v=4.42";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -128,6 +128,9 @@ function startApp() {
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
     onStoryEdit: (genre) => openStoryEditor(genre),
     onPageEdit: (pageId) => openPageEditor(pageId),
+    // Frittstående referanser har ikke noe kort å åpne fra Referanser-lista;
+    // læreren får redigeringslista i stedet, med den valgte raden uthevet.
+    onReferanseEdit: (fokus) => openReferanseEditor(fokus),
     // Varmekart-redigering: celleklikk sender hele den nye raden hit. Vi FLETTER
     // den ene raden inn i det som ligger i Firestore (mergeVarmekartRows leser
     // fersk fra serveren først), så et klikk aldri kan slette de andre sjangrene

@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=4.41";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.41";
+import { safeUrl } from "./util.js?v=4.42";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.42";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett
@@ -47,7 +47,11 @@ export function normalizeArtist(a) {
       .map((k) => {
         if (typeof k === "string") return { text: k };
         const kat = typeof k.kategori === "string" ? k.kategori.trim() : "";
+        const forf = typeof k.forfatter === "string" ? k.forfatter.trim() : "";
+        const aar = parseInt(k.year, 10);
         const rad = { text: k.text || "", url: safeUrl(k.url) };
+        if (forf) rad.forfatter = forf;
+        if (Number.isFinite(aar)) rad.year = aar;
         if (kat) rad.kategori = kat;
         return rad;
       }).filter((k) => k.text);

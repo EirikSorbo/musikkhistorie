@@ -114,12 +114,14 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
 ### `kilder[]`
 
 ```json
-{ "text": "Wald, E. Escaping the Delta. 2004.", "url": "https://...", "kategori": "Bøker" }
+{ "text": "Store norske leksikon.", "forfatter": "Arne Forsgren", "year": 2021, "url": "https://snl.no/country", "kategori": "Nettsteder" }
 ```
 
 | Felt | Påkrevd | Notater |
 |---|---|---|
-| `text` | ✓ | Hele kildereferansen, sluttet stil (Chicago/MLA). |
+| `text` | ✓ | Navnet på kilden. For nettkilder: publikasjonen alene («Store norske leksikon.»), slik at lenken bærer artikkelen — samme form på artist-, sjanger- og tiårskort. |
+| `forfatter` | | Forfatter/artikkelforfatter. Vises i parentes etter tittelen, utenfor lenken. |
+| `year` | | Publiseringsår (tall). Vises sammen med forfatteren. |
 | `url` | | Klikkbar lenke. Hvis satt: hele teksten blir lenke. |
 | `kategori` | | Styrer hvilken seksjon kilden havner i i Referanser-kortet. Gyldige verdier står i `KILDE_KATEGORIER` (`js/kilder.js`): `Bøker`, `Podkaster`, `Videoer`, `Nettsteder`. Mangler feltet, eller står det noe annet, havner kilden under «Ukategorisert» nederst i kortet — synlig, ikke skjult. (`Tidsskrifter` fra v4.39 leses som `Nettsteder`.) |
 

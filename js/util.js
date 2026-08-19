@@ -100,9 +100,13 @@ export function buildKilderList(kilder, label = "Kilder") {
   const items = kilder.map((k) => {
     const text = escapeHtml(k.text || "");
     const url = safeUrl(k.url);
+    // Forfatter og år står utenfor lenken: teksten er navnet på publikasjonen,
+    // lenken peker på artikkelen, og opphavet henger etter i parentes.
+    const detaljer = [k.forfatter, k.year].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
+    const hale = detaljer ? ` <span class="kilde-detalj">(${escapeHtml(detaljer)})</span>` : "";
     return url
-      ? `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${text}</a></li>`
-      : `<li>${text}</li>`;
+      ? `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${text}</a>${hale}</li>`
+      : `<li>${text}${hale}</li>`;
   }).join("");
   return `<div class="kilder"><strong>${escapeHtml(label)}:</strong><ul>${items}</ul></div>`;
 }

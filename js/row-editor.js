@@ -8,11 +8,11 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.41";
+import { escapeHtml } from "./util.js?v=4.42";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=4.41";
+import { KILDE_KATEGORIER } from "./kilder.js?v=4.42";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
@@ -57,7 +57,12 @@ export const SOURCE_SPEC = {
   rowClass: "source-row", removeClass: "remove-source", keepKey: "text",
   removeLabel: "Fjern kilde",
   fields: [
-    { key: "text", cls: "source-text", type: "text", ph: "F.eks. «Ward, Brian. Just My Soul Responding. 1998.»", label: "Kildetekst", always: true },
+    { key: "text", cls: "source-text", type: "text", ph: "Kilde, f.eks. «Store norske leksikon.»", label: "Kildetekst", always: true },
+    // Forfatter og årstall står for seg, ikke inne i kildeteksten: da kan de
+    // vises likt overalt, og teksten kan holdes til navnet på publikasjonen
+    // (samme form som artistkortene bruker).
+    { key: "forfatter", cls: "source-forfatter", type: "text", ph: "Forfatter (valgfritt)", label: "Forfatter", always: true },
+    { key: "year", cls: "source-year", type: "number", ph: "År", label: "Årstall", title: "Publiseringsår for kilden" },
     { key: "url",  cls: "source-url",  type: "url", ph: "https://… (valgfritt)", label: "Lenke (https)", always: true },
     // Kategorien styrer hvor kilden havner i Referanser-kortet. Lagret felt,
     // ikke gjettet: uten valg havner kilden under «Ukategorisert» der.
@@ -66,18 +71,28 @@ export const SOURCE_SPEC = {
 };
 
 // Normaliserer en lagret kilde-liste til NØYAKTIG formen collectRows leverer
-// for SOURCE_SPEC: [{ text, url, kategori }] med alle tre alltid til stede, tomme
+// for SOURCE_SPEC: [{ text, forfatter, url, kategori }] alltid til stede (year kun
+// når det er et gyldig tall), tomme
 // rader filtrert bort. Kilder er historisk lagret både som rene strenger og
 // som objekter uten url-felt — uten denne ga en UENDRET kilde en falsk diff i
 // forslagseditoren ({ text } ≠ { text, url: "" }), og et sjangerkort uten
 // kilder ga en falsk «kilder: []»-endring i hvert eneste forslag.
 export function normalizeSources(v) {
   if (!Array.isArray(v)) return [];
-  return v
-    .map((k) => (typeof k === "string"
-      ? { text: k, url: "", kategori: "" }
-      : { text: (k && k.text) || "", url: (k && k.url) || "", kategori: (k && k.kategori) || "" }))
-    .filter((k) => k.text);
+  return v.map((k) => {
+    if (typeof k === "string") return { text: k, forfatter: "", url: "", kategori: "" };
+    const rad = {
+      text: (k && k.text) || "",
+      forfatter: (k && k.forfatter) || "",
+      url: (k && k.url) || "",
+      kategori: (k && k.kategori) || "",
+    };
+    // Årstall er tallfelt: collectRows tar det bare med når det er gyldig, og
+    // normaliseringen må gi NØYAKTIG samme form (ellers falsk diff).
+    const aar = parseInt(k && k.year, 10);
+    if (Number.isFinite(aar)) rad.year = aar;
+    return rad;
+  }).filter((k) => k.text);
 }
 
 function inputHtml(f, values) {
