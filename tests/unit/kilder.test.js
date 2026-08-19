@@ -4,7 +4,7 @@
 // kildeteksten er generisk, og at ingen kilde forsvinner stille.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/kilder.js?v=4.40";
+import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/kilder.js?v=4.41";
 
 const nett = (text, url) => ({ text, url, kategori: "Nettsteder" });
 
@@ -45,6 +45,17 @@ test("DOI-lenker grupperes på utgiveren i teksten, ikke på henviser-verten", (
   const nett = seksjoner.find((s) => s.navn === "Nettsteder");
   assert.deepEqual(nett.grupper.map((g) => g.navn), ["Grove Music Online"]);
   assert.equal(nett.grupper[0].antall, 3);
+});
+
+test("radene under en utgiver gjentar ikke utgivernavnet", () => {
+  const { seksjoner } = samleKilder([
+    { text: "Grove Music Online: «Jazz».", url: "https://doi.org/10.1093/gmo/A1", kategori: "Nettsteder" },
+    { text: "Grove Music Online: «Funk».", url: "https://doi.org/10.1093/gmo/A2", kategori: "Nettsteder" },
+    { text: "Grove Music Online: «Soul».", url: "https://doi.org/10.1093/gmo/A3", kategori: "Nettsteder" },
+  ]);
+  const grove = seksjoner.find((s) => s.navn === "Nettsteder").grupper[0];
+  assert.equal(grove.navn, "Grove Music Online");
+  assert.deepEqual(grove.rader.map((r) => r.tittel), ["Funk", "Jazz", "Soul"]);
 });
 
 test("familier samles under én hovedkilde", () => {

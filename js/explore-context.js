@@ -8,15 +8,15 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.40";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo, refreshSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=4.40";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.40";
-import { openTechDetail } from "./explore-tech.js?v=4.40";
-import { renderPage } from "./explore-innhold.js?v=4.40";
-import { openTidslinje } from "./explore-tidslinje.js?v=4.40";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=4.40";
-import { renderReferanser } from "./explore-referanser.js?v=4.40";
-import { setHeatData } from "./heat-strip.js?v=4.40";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.41";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo, refreshSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=4.41";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.41";
+import { openTechDetail } from "./explore-tech.js?v=4.41";
+import { renderPage } from "./explore-innhold.js?v=4.41";
+import { openTidslinje } from "./explore-tidslinje.js?v=4.41";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=4.41";
+import { renderReferanser } from "./explore-referanser.js?v=4.41";
+import { setHeatData } from "./heat-strip.js?v=4.41";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -139,11 +139,13 @@ export const groupColor = (labels) => {
 // `metaAttr` legger et evt. data-attributt på wrapperen (varmekartet bruker det
 // til å huske hvilken gruppe som står åpen). Åpner .${prefix}-group + knappen —
 // kalleren legger til .${prefix}-group-rows etterpå, som før.
-export function metaGroupHeadHtml({ prefix, meta, gColor, open, groupIdx, count, metaAttr = "" }) {
+// `dot: false` dropper den fargede prikken (Referanser-kortet: der bærer
+// seksjonsoverskriften fargen, og en prikk per linje ble bare støy).
+export function metaGroupHeadHtml({ prefix, meta, gColor, open, groupIdx, count, metaAttr = "", dot = true }) {
   let h = `<div class="${prefix}-group"${metaAttr}>`;
   h += `<button type="button" class="${prefix}-group-head" aria-expanded="${open}" style="width:100%;display:flex;align-items:center;gap:9px;margin:${groupIdx === 0 ? "6px" : "10px"} 0 6px;padding:4px 0 5px;border:0;border-bottom:2px solid ${gColor}40;background:none;cursor:pointer;text-align:left">`;
   h += `<span class="${prefix}-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>`;
-  h += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
+  if (dot) h += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
   h += `<span style="font-size:0.84rem;font-weight:700;color:var(--text)">${escapeHtml(meta)}</span>`;
   h += `<span style="font-size:0.72rem;color:var(--muted)">${count}</span>`;
   h += `</button>`;

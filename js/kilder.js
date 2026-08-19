@@ -7,7 +7,7 @@
 //  og under den de enkelte artiklene. Ren logikk uten DOM, så den kan
 //  enhetstestes; tegningen bor i explore-referanser.js.
 // ============================================================================
-import { safeUrl } from "./util.js?v=4.40";
+import { safeUrl } from "./util.js?v=4.41";
 
 // Fast vokabular i koden, ikke i config — samme valg som INSTRUMENTS (v3.68).
 // Navnene er OGSÅ seksjonsoverskriftene i Referanser-kortet, derav
@@ -138,6 +138,16 @@ export function radTittel(tekst, url) {
   return t || fraUrl || url;
 }
 
+// Rydder radtittelen under et gruppenavn: fjerner «Utgiver: » når gruppa
+// allerede heter det samme, og sitattegnene rundt det som blir igjen, så
+// radene under Grove leses likt som radene under Store norske leksikon.
+function utenUtgiver(tittel, gruppe) {
+  const prefiks = gruppe + ": ";
+  const rest = gruppe && tittel.startsWith(prefiks) ? tittel.slice(prefiks.length) : tittel;
+  const sitat = rest.match(/^«(.+)»\.?$/);
+  return sitat ? sitat[1] : rest;
+}
+
 const paaNavn = (a, b) => a.tittel.localeCompare(b.tittel, "no");
 
 // Samler en flat liste kilder ({ text, url, kategori }) til seksjoner:
@@ -179,8 +189,10 @@ export function samleKilder(liste) {
     if (rad) rad.bruk++;
     else g.rader.set(radNokkel, {
       // Utenfor Nettsteder er kildeteksten HELE referansen (boktittel,
-      // episodenavn), så URL-slug-en skal aldri overstyre den.
-      tittel: kategori === GRUPPERES ? radTittel(tekst, url) : (tekst || radTittel(tekst, url)),
+      // episodenavn), så URL-slug-en skal aldri overstyre den. Under Nettsteder
+      // står utgiveren allerede i gruppeoverskriften, så «Grove Music Online:
+      // «Jazz»» kortes til «Jazz» på selve raden.
+      tittel: kategori === GRUPPERES ? utenUtgiver(radTittel(tekst, url), navn) : (tekst || radTittel(tekst, url)),
       url,
       spraak: url ? spraakFor(vertFor(url)) : "",
       bruk: 1,

@@ -10,10 +10,10 @@
 //  80 ekstra dokumentlesninger per økt. De vises på hver kobling i treet.
 //  Grupperingen (kategori → hovedkilde → artikkel) kommer fra kilder.js.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.40";
-import { isVisible } from "./limits.js?v=4.40";
-import { samleKilder } from "./kilder.js?v=4.40";
-import { getState, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.40";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.41";
+import { isVisible } from "./limits.js?v=4.41";
+import { samleKilder } from "./kilder.js?v=4.41";
+import { getState, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.41";
 
 export function openReferanser() {
   const modal = document.getElementById("modal-referanser");
@@ -89,7 +89,7 @@ export function renderReferanser() {
 
     seksjon.grupper.forEach((g, gi) => {
       html += metaGroupHeadHtml({
-        prefix: "refp", meta: g.navn, gColor: seksjon.farge, open: false, groupIdx: gi,
+        prefix: "refp", meta: g.navn, gColor: seksjon.farge, open: false, groupIdx: gi, dot: false,
         count: antallOrd(g.antall, "artikkel", "artikler"),
       });
       html += `<div class="refp-group-rows" style="display:none">`;
