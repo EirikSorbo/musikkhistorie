@@ -21,13 +21,13 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.42";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.42";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.42";
-import { initExplore } from "./explore.js?v=4.42";
+} from "./store.js?v=4.43";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.43";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.43";
+import { initExplore } from "./explore.js?v=4.43";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.42";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.42";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.43";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.43";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -46,11 +46,11 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.42";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.42";
-import { renderDesk } from "./teacher-desk.js?v=4.42";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.42";
-import { setupFormatBars } from "./format-bar.js?v=4.42";
+} from "./teacher-content.js?v=4.43";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.43";
+import { renderDesk } from "./teacher-desk.js?v=4.43";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.43";
+import { setupFormatBars } from "./format-bar.js?v=4.43";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

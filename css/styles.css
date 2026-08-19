@@ -795,9 +795,23 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 /* Raden Referanser-lista sendte læreren til, uthevet til neste åpning. */
 .source-row.rad-uthevet { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
 
-.source-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.source-row .source-text { flex: 1.4; }
-.source-row .source-url { flex: 1; }
+/* Kilderaden har fem felter (tekst, forfatter, år, lenke, kategori) og
+   fjern-knappen. De får ikke plass på én linje i en modal, så raden BRYTER:
+   tekst + forfatter + år står øverst, lenke + kategori under. Uten wrap ble
+   feltene klemt sammen til ulesbare striper (v4.42-feilen). */
+.source-row {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start;
+  /* Rammen holder de to linjene sammen som ÉN kilde — uten den var det umulig
+     å se hvor en kilde sluttet og den neste begynte. */
+  margin-bottom: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px;
+}
+.source-row .source-text { flex: 4 1 220px; }
+.source-row .source-forfatter { flex: 2 1 150px; }
+.source-row .source-year { flex: 0 0 84px; }
+.source-row .source-url { flex: 4 1 220px; }
+.source-row .source-kat { flex: 0 1 150px; }
+/* Fjern-knappen skal ikke stå alene på en tredje linje. */
+.source-row .remove-source { flex: 0 0 auto; margin-left: auto; }
 .work-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .work-row .work-title { flex: 1.4; }
 .work-row .work-year { flex: 0 0 110px; }
@@ -1744,6 +1758,8 @@ body.is-teacher #gate { display: none; }
   /* Skjema: verk- og kilderader stables vertikalt */
   .me-row { flex-direction: column; }
   .source-row { flex-direction: column; }
+  .source-row > * { flex: 1 1 auto; }
+  .source-row .remove-source { margin-left: 0; align-self: flex-end; }
   .work-row { flex-direction: column; }
   .work-row .work-year { flex: 1; }
   .artist-image { float: none; max-width: 100%; margin: 0 0 12px; }
