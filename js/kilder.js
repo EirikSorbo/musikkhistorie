@@ -7,19 +7,23 @@
 //  og under den de enkelte artiklene. Ren logikk uten DOM, så den kan
 //  enhetstestes; tegningen bor i explore-referanser.js.
 // ============================================================================
-import { safeUrl } from "./util.js?v=4.39";
+import { safeUrl } from "./util.js?v=4.40";
 
 // Fast vokabular i koden, ikke i config — samme valg som INSTRUMENTS (v3.68).
-// Navnene er OGSÅ overskriftene i Referanser-kortet, derav flertallsform, og
-// rekkefølgen her er rekkefølgen kategoriene vises i.
+// Navnene er OGSÅ seksjonsoverskriftene i Referanser-kortet, derav
+// flertallsform, og rekkefølgen her er rekkefølgen seksjonene vises i.
 export const KILDE_KATEGORIER = [
-  "Nettsteder",
   "Bøker",
-  "Tidsskrifter",
-  "Forelesningsnotater",
-  "Videoer",
   "Podkaster",
+  "Videoer",
+  "Nettsteder",
 ];
+
+// Kategorier fra før v4.40 som er slått sammen med en annen (brukervalg).
+// «Forelesningsnotater» er BEVISST ikke med: de 62 MUR114-kildene bor på
+// slektstreets koblinger, som kortet uansett ikke viser. Dukker verdien opp,
+// havner den synlig under «Ukategorisert» i stedet for å bli gjettet feil.
+const KATEGORI_ALIAS = { Tidsskrifter: "Nettsteder" };
 
 // Kilder uten (gyldig) kategori forsvinner ikke stille: de samles her, nederst
 // i kortet, så det synes straks at noe må rettes.
@@ -27,12 +31,10 @@ export const UKATEGORISERT = "Ukategorisert";
 
 // Samme fargespråk som hub-ikonene, så kategoriene leses som en del av appen.
 export const KATEGORI_FARGE = {
-  Nettsteder: "#1d4ed8",
   Bøker: "#b45309",
-  Tidsskrifter: "#534AB7",
-  Forelesningsnotater: "#4d7c0f",
-  Videoer: "#dc2626",
   Podkaster: "#0891b2",
+  Videoer: "#dc2626",
+  Nettsteder: "#1d4ed8",
   [UKATEGORISERT]: "#64748b",
 };
 
@@ -72,10 +74,14 @@ const SPRAAK = {
 // en henviser. Der leses publikasjonen ut av kildeteksten i stedet.
 const HENVISERE = new Set(["doi.org", "dx.doi.org", "hdl.handle.net"]);
 
-// Et nettsted med bare ÉN artikkel fortjener ikke sin egen trekant. Er det
-// mange slike, samles de i én gruppe nederst i kategorien.
-const SAMLE_NAVN = "Enkeltstående nettsteder";
-const MIN_SAMLE = 5;
+// Et nettsted må ha minst tre artikler for å få sin egen linje med trekant
+// (brukervalg v4.40). Resten, og kilder uten lenke, samles nederst.
+const SAMLE_NAVN = "Andre nettsteder";
+const MIN_EGEN_GRUPPE = 3;
+
+// Bare nettkildene grupperes på utgiver: en bok, en podkast eller en video er
+// én referanse, ikke «tre artikler fra youtube.com».
+const GRUPPERES = "Nettsteder";
 
 export function vertFor(url) {
   try {
@@ -134,11 +140,13 @@ export function radTittel(tekst, url) {
 
 const paaNavn = (a, b) => a.tittel.localeCompare(b.tittel, "no");
 
-// Samler en flat liste kilder ({ text, url, kategori }) til:
-//   { totalt, unike, kategorier: [{ navn, farge, grupper, unike, bruk }] }
-// der hver gruppe er én hovedkilde: { navn, antall (unike artikler), bruk
-// (antall steder den er brukt), rader: [{ tittel, url, spraak, bruk, sted }] }.
-// Grupper uten rader (bøker, notater) tegnes som én linje uten trekant.
+// Samler en flat liste kilder ({ text, url, kategori }) til seksjoner:
+//   { totalt, unike, seksjoner: [{ navn, farge, unike, bruk, grupper, rader }] }
+// «Nettsteder» er den eneste seksjonen som grupperes på utgiver: `grupper` er
+// én linje per nettsted ({ navn, antall, bruk, rader }), der alt med færre enn
+// tre artikler — og alt uten lenke — havner i samlegruppa «Andre nettsteder».
+// De andre seksjonene er flate lister i `rader`: én bok, én podkast eller én
+// video ER referansen. Radene er { tittel, url, spraak, bruk, sted }.
 export function samleKilder(liste) {
   const katMap = new Map();
   let totalt = 0;
@@ -150,64 +158,85 @@ export function samleKilder(liste) {
     if (!tekst && !url) continue;
     totalt++;
 
-    const kategori = KILDE_KATEGORIER.includes(k.kategori) ? k.kategori : UKATEGORISERT;
+    const lagret = KATEGORI_ALIAS[k.kategori] || k.kategori;
+    const kategori = KILDE_KATEGORIER.includes(lagret) ? lagret : UKATEGORISERT;
     if (!katMap.has(kategori)) katMap.set(kategori, new Map());
     const grupper = katMap.get(kategori);
 
-    const vert = url ? vertFor(url) : "";
+    // Utenfor Nettsteder er hver referanse sin egen post — ingen utgiver-
+    // gruppering, ellers ville alle YouTube-videoene blitt «youtube.com».
+    const vert = url && kategori === GRUPPERES ? vertFor(url) : "";
     const navn = vert
       ? ((HENVISERE.has(vert) && publikasjonFraTekst(tekst)) || publikasjonFor(vert))
       : tekst;
-    const nokkel = vert ? "v:" + navn : "t:" + tekst.toLowerCase();
-    if (!grupper.has(nokkel)) grupper.set(nokkel, { navn, bruk: 0, rader: new Map() });
+    const nokkel = vert ? "v:" + navn : "t:" + (url || tekst.toLowerCase());
+    if (!grupper.has(nokkel)) grupper.set(nokkel, { navn, vert, bruk: 0, rader: new Map() });
     const g = grupper.get(nokkel);
     g.bruk++;
 
-    if (!url) continue;
-    const rad = g.rader.get(url);
+    const radNokkel = url || tekst.toLowerCase();
+    const rad = g.rader.get(radNokkel);
     if (rad) rad.bruk++;
-    else g.rader.set(url, { tittel: radTittel(tekst, url), url, spraak: spraakFor(vert), bruk: 1, sted: navn });
+    else g.rader.set(radNokkel, {
+      // Utenfor Nettsteder er kildeteksten HELE referansen (boktittel,
+      // episodenavn), så URL-slug-en skal aldri overstyre den.
+      tittel: kategori === GRUPPERES ? radTittel(tekst, url) : (tekst || radTittel(tekst, url)),
+      url,
+      spraak: url ? spraakFor(vertFor(url)) : "",
+      bruk: 1,
+      sted: vert ? navn : (url ? vertFor(url) : ""),
+    });
   }
 
-  const kategorier = [];
-  for (const navn of [...KILDE_KATEGORIER, UKATEGORISERT]) {
-    const rå = katMap.get(navn);
-    if (!rå || !rå.size) continue;
+  const seksjoner = [];
+  const navnene = [...KILDE_KATEGORIER, ...[...katMap.keys()].filter((n) => !KILDE_KATEGORIER.includes(n))];
+  for (const navn of navnene) {
+    const rå = katMap.get(navn) || new Map();
+    const farge = KATEGORI_FARGE[navn] || KATEGORI_FARGE[UKATEGORISERT];
+
+    // Flat seksjon: bøker, podkaster, videoer.
+    if (navn !== GRUPPERES) {
+      const rader = [...rå.values()].flatMap((g) => [...g.rader.values()]).sort(paaNavn);
+      seksjoner.push({
+        navn, farge, grupper: [],
+        rader,
+        unike: rader.length,
+        bruk: rader.reduce((n, r) => n + r.bruk, 0),
+      });
+      continue;
+    }
 
     let grupper = [...rå.values()].map((g) => ({
       navn: g.navn,
+      egen: !!g.vert && g.rader.size >= MIN_EGEN_GRUPPE,
       bruk: g.bruk,
       antall: g.rader.size,
       rader: [...g.rader.values()].sort(paaNavn),
     }));
 
-    // Nettsteder med én eneste artikkel samles nederst — men bare når de er
-    // mange nok til at egne trekanter ville blitt støy.
-    const enkle = grupper.filter((g) => g.antall === 1);
-    let samling = null;
-    if (enkle.length >= MIN_SAMLE) {
-      grupper = grupper.filter((g) => g.antall !== 1);
-      samling = {
+    // Alt for smått til en egen linje samles i «Andre nettsteder», sammen med
+    // kilder uten lenke (tidsskriftartikler og liknende enkeltreferanser).
+    const smaa = grupper.filter((g) => !g.egen);
+    grupper = grupper.filter((g) => g.egen);
+    if (smaa.length) {
+      grupper.sort((a, b) => b.antall - a.antall || a.navn.localeCompare(b.navn, "no"));
+      grupper.push({
         navn: SAMLE_NAVN,
         samling: true,
-        antall: enkle.length,
-        bruk: enkle.reduce((n, g) => n + g.bruk, 0),
-        rader: enkle.flatMap((g) => g.rader).sort(paaNavn),
-      };
+        antall: smaa.reduce((n, g) => n + g.antall, 0),
+        bruk: smaa.reduce((n, g) => n + g.bruk, 0),
+        rader: smaa.flatMap((g) => g.rader).sort(paaNavn),
+      });
+    } else {
+      grupper.sort((a, b) => b.antall - a.antall || a.navn.localeCompare(b.navn, "no"));
     }
 
-    grupper.sort((a, b) => b.antall - a.antall || b.bruk - a.bruk || a.navn.localeCompare(b.navn, "no"));
-    if (samling) grupper.push(samling);
-
-    kategorier.push({
-      navn,
-      farge: KATEGORI_FARGE[navn] || KATEGORI_FARGE[UKATEGORISERT],
-      grupper,
-      // En gruppe uten artikler (bok, notat) teller som én kilde.
-      unike: grupper.reduce((n, g) => n + (g.antall || 1), 0),
+    seksjoner.push({
+      navn, farge, grupper, rader: [],
+      unike: grupper.reduce((n, g) => n + g.antall, 0),
       bruk: grupper.reduce((n, g) => n + g.bruk, 0),
     });
   }
 
-  return { totalt, unike: kategorier.reduce((n, k) => n + k.unike, 0), kategorier };
+  return { totalt, unike: seksjoner.reduce((n, s) => n + s.unike, 0), seksjoner };
 }

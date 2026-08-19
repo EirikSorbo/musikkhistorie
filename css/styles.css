@@ -762,6 +762,17 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
    To nivåer akkordeon (kategori → hovedkilde) gjenbruker varmekartets
    gruppehoder; her styles bare radene under dem. Lenkene kan bli lange, så
    ordbryting er på: kortet skal aldri gi vannrett scroll på mobil. */
+/* Seksjonsoverskrift (Bøker/Podkaster/Videoer/Nettsteder): ikke klikkbar,
+   større enn radene og med luft over, så de fire delene leses som deler. */
+.ref-seksjon {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin: 26px 0 8px; padding-bottom: 6px;
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 1.08rem; font-weight: 700; color: var(--text);
+  border-bottom: 2px solid var(--ref-farge, var(--line-strong));
+}
+.ref-seksjon:first-of-type { margin-top: 14px; }
+.ref-antall { font-size: 0.76rem; font-weight: 500; color: var(--muted); }
 .ref-rad, .ref-line {
   display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   padding: 3px 0 3px 21px; font-size: 0.84rem; line-height: 1.35;

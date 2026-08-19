@@ -121,12 +121,23 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
 |---|---|---|
 | `text` | ✓ | Hele kildereferansen, sluttet stil (Chicago/MLA). |
 | `url` | | Klikkbar lenke. Hvis satt: hele teksten blir lenke. |
-| `kategori` | | Styrer grupperingen i Referanser-kortet. Gyldige verdier står i `KILDE_KATEGORIER` (`js/kilder.js`): `Nettsteder`, `Bøker`, `Tidsskrifter`, `Forelesningsnotater`, `Videoer`, `Podkaster`. Mangler feltet, eller står det noe annet, havner kilden under «Ukategorisert» nederst i kortet — synlig, ikke skjult. |
+| `kategori` | | Styrer hvilken seksjon kilden havner i i Referanser-kortet. Gyldige verdier står i `KILDE_KATEGORIER` (`js/kilder.js`): `Bøker`, `Podkaster`, `Videoer`, `Nettsteder`. Mangler feltet, eller står det noe annet, havner kilden under «Ukategorisert» nederst i kortet — synlig, ikke skjult. (`Tidsskrifter` fra v4.39 leses som `Nettsteder`.) |
 
-Referanser-kortet grupperer nettkilder på nettsted (`snl.no` → Store norske
-leksikon), og utleder artikkeltittelen fra URL-en, siden `text` som regel bare er
-navnet på oppslagsverket. Bøker, notater og annet uten lenke vises som én linje
-med hele referansen.
+Referanser-kortet har én seksjon per kategori. Kun `Nettsteder` grupperes på
+nettsted (`snl.no` → Store norske leksikon), og der utledes artikkeltittelen fra
+URL-en, siden `text` som regel bare er navnet på oppslagsverket. Nettsteder med
+færre enn tre artikler, og nettkilder uten lenke, samles under «Andre nettsteder».
+I de øvrige seksjonene er `text` hele referansen, og den overstyrer alltid URL-en.
+
+### `referanser` (toppnøkkel)
+
+```json
+"referanser": { "kilder": [{ "text": "Ted Gioia: The History of Jazz", "kategori": "Bøker" }], "updatedAt": "2026-08-19T…" }
+```
+
+Frittstående kilder som ikke hører til noe kort (lagt inn med «Ny referanse» på
+lærersiden, lagret i `content/referanser`). Samme feltene som `kilder[]`. Ved
+import ERSTATTES hele lista, siden den er ett dokument.
 
 ### `musicExamples[]`
 

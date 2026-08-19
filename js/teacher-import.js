@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.39";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.40";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -14,16 +14,17 @@ import {
   saveDocsBulk,
   updateArtistFields,
   mergeVarmekartRows,
+  saveReferanser,
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.39";
-import { escapeHtml } from "./ui.js?v=4.39";
-import { $ } from "./shared.js?v=4.39";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=4.39";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.39";
-import { INSTRUMENTS } from "./limits.js?v=4.39";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.39";
+} from "./store.js?v=4.40";
+import { escapeHtml } from "./ui.js?v=4.40";
+import { $ } from "./shared.js?v=4.40";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=4.40";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.40";
+import { INSTRUMENTS } from "./limits.js?v=4.40";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.40";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -158,6 +159,12 @@ function buildExportData() {
     ? { heat: state.content.varmekart.heat, updatedAt: state.content.varmekart.updatedAt || null }
     : null;
 
+  // Frittstående referanser (content/referanser): egen toppnøkkel, ikke en
+  // «side» — dokumentet har ingen body, og ville falt ut av pages-filteret.
+  const referanser = Array.isArray(state.content?.referanser?.kilder) && state.content.referanser.kilder.length
+    ? { kilder: state.content.referanser.kilder, updatedAt: state.content.referanser.updatedAt || null }
+    : null;
+
   const podcasts = state.podcasts.map((p) => {
     const { id, ...rest } = p;
     return rest;
@@ -169,6 +176,7 @@ function buildExportData() {
     teacherChecks: state.teacherChecks || null,
   };
   if (varmekart) out.varmekart = varmekart;
+  if (referanser) out.referanser = referanser;
   return out;
 }
 
@@ -207,7 +215,7 @@ function formatImportErrors(errors) {
 }
 
 // Innholdsdeler en importfil kan bære utover artistene.
-const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts"];
+const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts", "referanser"];
 
 // Alle toppnøkler appen forstår. Ukjente nøkler (feilstavet, eller fra et nyere
 // format) ignoreres stille ved import — vi advarer i stedet, så delvise/skjeve
@@ -254,6 +262,7 @@ function importParts(data) {
   const pageCount = Object.keys(data.pages || {}).length;
   if (pageCount) parts.push(`${pageCount} innholdsside(r)`);
   if (data.varmekart?.heat) parts.push(`varmekart (${Object.keys(data.varmekart.heat).length} sjangre)`);
+  if (Array.isArray(data.referanser?.kilder) && data.referanser.kilder.length) parts.push(`${data.referanser.kilder.length} frittstående referanser`);
   if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
   return parts;
 }
@@ -280,6 +289,7 @@ async function handleImportFile(file) {
       tech: raw.tech || [],
       pages: raw.pages || {},
       varmekart: raw.varmekart || null,
+      referanser: raw.referanser || null,
       podcasts: raw.podcasts || [],
       teacherChecks: raw.teacherChecks || null,
     };
@@ -400,7 +410,7 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
 // Innholdssider, varmekart og podkaster fra importfila. Podkaster
 // oppdateres på tittel-match (så en re-import ikke dupliserer episoder);
 // (Config i gamle backuper ignoreres — vokabularet bor i koden, v3.68.)
-async function importExtras({ pages, varmekart, podcasts, teacherChecks }) {
+async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks }) {
   const done = [];
   const failed = [];
 
@@ -422,6 +432,15 @@ async function importExtras({ pages, varmekart, podcasts, teacherChecks }) {
       if (skipped.length) console.warn("Varmekart-import: hoppet over rader som ikke er lister:", skipped);
     }
     catch (e) { console.error("Varmekart-import feilet:", e); failed.push("varmekartet"); }
+  }
+
+  // Frittstående referanser ERSTATTES i sin helhet: lista er ett dokument, og
+  // en delvis fil skal ikke etterlate en halv liste.
+  if (Array.isArray(referanser?.kilder)) {
+    try {
+      await saveReferanser(referanser.kilder);
+      done.push(`${referanser.kilder.length} frittstående referanse(r)`);
+    } catch (e) { console.error("Referanse-import feilet:", e); failed.push("de frittstående referansene"); }
   }
 
   if (Array.isArray(podcasts) && podcasts.length) {

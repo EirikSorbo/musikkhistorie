@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.39" />
-  <script src="js/gate.js?v=4.39"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.40" />
+  <script src="js/gate.js?v=4.40"></script>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -116,6 +116,7 @@
                 <input type="checkbox" id="f-show-removed" /> Vis skjulte
               </label>
               <div class="spacer"></div>
+              <button type="button" id="btn-ny-referanse" class="btn ghost small">Ny referanse</button>
               <a class="btn primary small" href="student.html">Ny artist</a>
             </div>
             <div class="filter-row filter-row--selects">
@@ -568,6 +569,24 @@
     </div>
   </div>
 
+  <!-- Frittstående referanser: kilder som ikke hører til et kort. Lagres som
+       én liste i content/referanser og blandes inn i Referanser-kortet. -->
+  <div class="modal-backdrop" id="modal-referanse-edit">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Frittstående referanser</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:12px;font-size:0.86rem">Kilder som ikke hører til et bestemt kort, men som pensumet bygger på. De vises i Referanser sammen med kildene fra kortene. Kategorien styrer hvilken seksjon de havner i.</p>
+      <div id="ref-edit-rows"></div>
+      <div class="add-actions">
+        <button type="button" id="ref-edit-add" class="btn ghost small">+ Legg til referanse</button>
+        <button type="button" id="ref-edit-save" class="btn primary">Lagre</button>
+        <span id="ref-edit-msg" class="form-msg ok"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- Artist-detalj -->
   <div class="modal-backdrop" id="modal-detail">
     <div class="modal">
@@ -612,7 +631,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.39"></script>
-  <script type="module" src="js/teacher.js?v=4.39"></script>
+  <script src="js/load-guard.js?v=4.40"></script>
+  <script type="module" src="js/teacher.js?v=4.40"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 // kildeteksten er generisk, og at ingen kilde forsvinner stille.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/kilder.js?v=4.39";
+import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/kilder.js?v=4.40";
 
 const nett = (text, url) => ({ text, url, kategori: "Nettsteder" });
 
@@ -37,12 +37,14 @@ test("radTittel: ekte referanse i teksten slår URL-slug-en", () => {
 });
 
 test("DOI-lenker grupperes på utgiveren i teksten, ikke på henviser-verten", () => {
-  const { kategorier } = samleKilder([
+  const { seksjoner } = samleKilder([
     { text: "Grove Music Online: «Jazz»", url: "https://doi.org/10.1093/gmo/A1", kategori: "Nettsteder" },
     { text: "Grove Music Online: «Blues»", url: "https://www.oxfordmusiconline.com/grovemusic/display/x", kategori: "Nettsteder" },
+    { text: "Grove Music Online: «Soul»", url: "https://doi.org/10.1093/gmo/A2", kategori: "Nettsteder" },
   ]);
-  assert.deepEqual(kategorier[0].grupper.map((g) => g.navn), ["Grove Music Online"]);
-  assert.equal(kategorier[0].grupper[0].antall, 2);
+  const nett = seksjoner.find((s) => s.navn === "Nettsteder");
+  assert.deepEqual(nett.grupper.map((g) => g.navn), ["Grove Music Online"]);
+  assert.equal(nett.grupper[0].antall, 3);
 });
 
 test("familier samles under én hovedkilde", () => {
@@ -53,75 +55,88 @@ test("familier samles under én hovedkilde", () => {
   assert.equal(publikasjonFor(vertFor("https://www.downbeat.com/x")), "downbeat.com");
 });
 
-test("samleKilder grupperer på hovedkilde og teller unike artikler", () => {
-  const { kategorier, totalt, unike } = samleKilder([
+test("Nettsteder grupperes på hovedkilde og teller unike artikler", () => {
+  const { seksjoner, totalt, unike } = samleKilder([
     nett("Store norske leksikon.", "https://snl.no/Louis_Armstrong"),
     nett("Store norske leksikon.", "https://snl.no/Bessie_Smith"),
     nett("Store norske leksikon.", "https://snl.no/Bessie_Smith"),   // samme artikkel to steder
+    nett("Store norske leksikon.", "https://snl.no/Duke_Ellington"),
     nett("Wikipedia (engelsk).", "https://en.wikipedia.org/wiki/Delta_blues"),
     nett("Wikipedia (norsk).", "https://no.wikipedia.org/wiki/Blues"),
   ]);
-  assert.equal(totalt, 5);
-  assert.equal(unike, 4);
+  assert.equal(totalt, 6);
+  assert.equal(unike, 5);
 
-  const nettsteder = kategorier.find((k) => k.navn === "Nettsteder");
-  assert.deepEqual(nettsteder.grupper.map((g) => g.navn), ["Store norske leksikon", "Wikipedia"]);
+  const nettsteder = seksjoner.find((s) => s.navn === "Nettsteder");
+  // Wikipedia har bare to artikler og faller ned i samlegruppa (grense: 3).
+  assert.deepEqual(nettsteder.grupper.map((g) => g.navn), ["Store norske leksikon", "Andre nettsteder"]);
 
   const snl = nettsteder.grupper[0];
-  assert.equal(snl.antall, 2, "to unike artikler");
-  assert.equal(snl.bruk, 3, "brukt tre steder");
-  assert.deepEqual(snl.rader.map((r) => r.tittel), ["Bessie Smith", "Louis Armstrong"]);
+  assert.equal(snl.antall, 3, "tre unike artikler");
+  assert.equal(snl.bruk, 4, "brukt fire steder");
+  assert.deepEqual(snl.rader.map((r) => r.tittel), ["Bessie Smith", "Duke Ellington", "Louis Armstrong"]);
   assert.equal(snl.rader[0].bruk, 2, "samme lenke to steder blir én rad med ×2");
 
-  // Radene står alfabetisk (Blues før Delta blues), og språkutgaven skal
-  // fortsatt kunne leses av på raden selv om utgavene deler hovedkilde.
-  const wiki = nettsteder.grupper[1];
-  assert.deepEqual(wiki.rader.map((r) => [r.tittel, r.spraak]), [["Blues", "norsk"], ["Delta blues", "engelsk"]]);
+  // Språkutgaven skal fortsatt kunne leses av på raden.
+  const andre = nettsteder.grupper[1];
+  assert.deepEqual(andre.rader.map((r) => [r.tittel, r.spraak]), [["Blues", "norsk"], ["Delta blues", "engelsk"]]);
 });
 
-test("kategoriene kommer i vokabularets rekkefølge, ukjent kategori havner sist", () => {
-  const { kategorier } = samleKilder([
+test("nettsteder med færre enn tre artikler samles i «Andre nettsteder»", () => {
+  const { seksjoner } = samleKilder([
+    nett("SNL", "https://snl.no/A"), nett("SNL", "https://snl.no/B"), nett("SNL", "https://snl.no/C"),
+    nett("Kilde", "https://a.no/en"), nett("Kilde", "https://a.no/to"),      // to artikler: for lite
+    nett("Kilde", "https://b.no/en"),                                        // én artikkel: for lite
+    { text: "«John Mayer: Blues Man.» Rolling Stone, 2007.", kategori: "Tidsskrifter" },  // gammel kategori
+  ]);
+  const nettsteder = seksjoner.find((s) => s.navn === "Nettsteder");
+  assert.deepEqual(nettsteder.grupper.map((g) => g.navn), ["Store norske leksikon", "Andre nettsteder"]);
+  const samling = nettsteder.grupper[1];
+  assert.equal(samling.antall, 4, "to fra a.no, én fra b.no, og tidsskriftartikkelen uten lenke");
+  assert.equal(samling.rader.find((r) => !r.url).tittel, "«John Mayer: Blues Man.» Rolling Stone, 2007.");
+  assert.equal(samling.rader.find((r) => r.url).sted, "a.no", "raden viser hvilket nettsted den kom fra");
+});
+
+test("seksjonene står i vokabularets rekkefølge, ukjent kategori havner sist", () => {
+  const { seksjoner } = samleKilder([
     { text: "Ted Gioia: The History of Jazz", kategori: "Bøker" },
     { text: "Uten kategori", url: "https://x.no/a" },
     { text: "Kilde", kategori: "Fantasikategori" },
     nett("SNL", "https://snl.no/A"),
   ]);
-  assert.deepEqual(kategorier.map((k) => k.navn), ["Nettsteder", "Bøker", UKATEGORISERT]);
-  assert.equal(kategorier[2].bruk, 2, "både ukjent og manglende kategori skal synes");
-  assert.ok(KILDE_KATEGORIER.includes("Bøker"));
+  assert.deepEqual(seksjoner.map((s) => s.navn), [...KILDE_KATEGORIER, UKATEGORISERT]);
+  assert.deepEqual(KILDE_KATEGORIER, ["Bøker", "Podkaster", "Videoer", "Nettsteder"]);
+  const ukat = seksjoner.find((s) => s.navn === UKATEGORISERT);
+  assert.equal(ukat.bruk, 2, "både ukjent og manglende kategori skal synes");
 });
 
-test("kilder uten lenke blir én linje uten artikler å åpne", () => {
-  const { kategorier } = samleKilder([
+test("bøker, videoer og podkaster er flate lister der teksten ER referansen", () => {
+  const { seksjoner } = samleKilder([
     { text: "Ted Gioia: The History of Jazz", kategori: "Bøker" },
     { text: "Ted Gioia: The History of Jazz", kategori: "Bøker" },
-    { text: "MUR114 (forelesningsnotater)", kategori: "Forelesningsnotater" },
+    { text: "Jazzeventyret (NRK)", url: "https://tv.nrk.no/serie/jazzeventyret", kategori: "Videoer" },
+    { text: "Song Exploder, episode 42", url: "https://songexploder.net/e42", kategori: "Podkaster" },
   ]);
-  const boker = kategorier.find((k) => k.navn === "Bøker");
-  assert.equal(boker.grupper.length, 1);
-  assert.equal(boker.grupper[0].rader.length, 0, "ingen artikkelrader");
-  assert.equal(boker.grupper[0].bruk, 2);
-  assert.equal(boker.unike, 1, "gruppa uten artikler teller som én kilde");
+  const boker = seksjoner.find((s) => s.navn === "Bøker");
+  assert.equal(boker.grupper.length, 0, "ingen utgiver-gruppering utenfor Nettsteder");
+  assert.deepEqual(boker.rader.map((r) => [r.tittel, r.bruk]), [["Ted Gioia: The History of Jazz", 2]]);
+
+  // Slug-en skal ALDRI overstyre en forfattet tittel her.
+  const video = seksjoner.find((s) => s.navn === "Videoer");
+  assert.deepEqual(video.rader.map((r) => r.tittel), ["Jazzeventyret (NRK)"]);
+  assert.equal(video.rader[0].url, "https://tv.nrk.no/serie/jazzeventyret");
+  assert.equal(seksjoner.find((s) => s.navn === "Podkaster").rader.length, 1);
 });
 
-test("mange nettsteder med kun én artikkel samles nederst", () => {
-  const enkelt = ["a", "b", "c", "d", "e"].map((d, i) => nett("Kilde", `https://${d}.no/artikkel-${i}`));
-  const { kategorier } = samleKilder([
-    ...enkelt,
-    nett("SNL", "https://snl.no/A"),
-    nett("SNL", "https://snl.no/B"),
-  ]);
-  const grupper = kategorier[0].grupper;
-  assert.deepEqual(grupper.map((g) => g.navn), ["Store norske leksikon", "Enkeltstående nettsteder"]);
-  const samling = grupper[1];
-  assert.equal(samling.antall, 5);
-  assert.equal(samling.rader.length, 5);
-  assert.equal(samling.rader[0].sted, "a.no", "raden viser hvilket nettsted den kom fra");
+test("tomme seksjoner finnes, men uten rader", () => {
+  const { seksjoner } = samleKilder([nett("SNL", "https://snl.no/A")]);
+  const tomme = seksjoner.filter((s) => !s.unike).map((s) => s.navn);
+  assert.deepEqual(tomme, ["Bøker", "Podkaster", "Videoer"]);
 });
 
 test("søppel og tomme kilder droppes uten å velte aggregeringen", () => {
-  const { totalt, kategorier } = samleKilder([null, undefined, "streng", {}, { text: "  " }, { url: "javascript:alert(1)" }]);
+  const { totalt, seksjoner } = samleKilder([null, undefined, "streng", {}, { text: "  " }, { url: "javascript:alert(1)" }]);
   assert.equal(totalt, 0);
-  assert.deepEqual(kategorier, []);
-  assert.deepEqual(samleKilder(undefined).kategorier, []);
+  assert.equal(seksjoner.every((s) => !s.unike), true);
+  assert.equal(samleKilder(undefined).totalt, 0);
 });

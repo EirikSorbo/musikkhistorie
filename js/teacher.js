@@ -21,13 +21,13 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.39";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.39";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.39";
-import { initExplore } from "./explore.js?v=4.39";
+} from "./store.js?v=4.40";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.40";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.40";
+import { initExplore } from "./explore.js?v=4.40";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.39";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.39";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.40";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.40";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -42,13 +42,15 @@ import {
   openStoryEditor,
   openPageEditor,
   setupStoryEditor,
+  openReferanseEditor,
+  setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.39";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.39";
-import { renderDesk } from "./teacher-desk.js?v=4.39";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.39";
-import { setupFormatBars } from "./format-bar.js?v=4.39";
+} from "./teacher-content.js?v=4.40";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.40";
+import { renderDesk } from "./teacher-desk.js?v=4.40";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.40";
+import { setupFormatBars } from "./format-bar.js?v=4.40";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -114,6 +116,7 @@ function startApp() {
   setupSubgenreSingleSave();
   setupEdgeSingleSave();
   setupStoryEditor();
+  setupReferanseEditor();
   // Formatlinja over alle tekstfelter merket med data-format (beskrivelser,
   // tiårstekster, koblingstekster). Historie-editoren har sin egen i HTML-en.
   setupFormatBars();
@@ -176,6 +179,11 @@ function startApp() {
     setTimeout(() => $("#f-search")?.focus(), 300);
   });
   setupTechAdmin();
+
+  // Frittstående referanser: står ved siden av «Ny artist», siden begge legger
+  // til noe som ikke finnes fra før.
+  const btnNyRef = document.getElementById("btn-ny-referanse");
+  if (btnNyRef) btnNyRef.addEventListener("click", openReferanseEditor);
 
   // Skrivebordet (arbeidsflyt-innboksen øverst) tegnes på nytt ved hvert
   // snapshot som påvirker tallene: forslag inn/ut, kort sjekket, innhold skrevet.

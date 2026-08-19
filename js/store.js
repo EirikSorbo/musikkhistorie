@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.39";
-import { isMainGenre } from "./genealogy.js?v=4.39";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.39";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.39";
-import { mergeHeatRows } from "./import-format.js?v=4.39";
+import { firebaseConfig } from "./firebase-config.js?v=4.40";
+import { isMainGenre } from "./genealogy.js?v=4.40";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.40";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.40";
+import { mergeHeatRows } from "./import-format.js?v=4.40";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -457,6 +457,16 @@ export async function savePage(pageId, data) {
 // Sletter en innholdsside — vises som manglende til ny tekst lagres/importeres.
 export async function deletePage(pageId) {
   return deleteDoc(doc(db, "content", pageId));
+}
+
+// Frittstående referanser: kilder som ikke hører til noe kort (en bok læreren
+// bygger pensumet på, en podkastserie, en dokumentar). Lagres som ÉN liste i
+// content-samlingen — den lastes allerede av alle sidene, så Referanser-kortet
+// får dem uten en eneste ekstra dokumentlesning, og reglene for content
+// gjelder som de er (ingen nye Firestore-regler å publisere).
+export async function saveReferanser(kilder) {
+  return setDoc(doc(db, "content", "referanser"),
+    { kilder, updatedAt: new Date().toISOString() });
 }
 
 // Skriver et UTVALG varmekart-rader uten å røre resten. Leser dagens dokument

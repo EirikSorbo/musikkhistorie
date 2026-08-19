@@ -8,14 +8,15 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.39";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo, refreshSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=4.39";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.39";
-import { openTechDetail } from "./explore-tech.js?v=4.39";
-import { renderPage } from "./explore-innhold.js?v=4.39";
-import { openTidslinje } from "./explore-tidslinje.js?v=4.39";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=4.39";
-import { setHeatData } from "./heat-strip.js?v=4.39";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.40";
+import { GENEALOGY_MAIN_GENRES, showSjangerInfo, refreshSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=4.40";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.40";
+import { openTechDetail } from "./explore-tech.js?v=4.40";
+import { renderPage } from "./explore-innhold.js?v=4.40";
+import { openTidslinje } from "./explore-tidslinje.js?v=4.40";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=4.40";
+import { renderReferanser } from "./explore-referanser.js?v=4.40";
+import { setHeatData } from "./heat-strip.js?v=4.40";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -112,6 +113,9 @@ export function contentChanged() {
   if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");
   if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
   if (isOpen("modal-varmekart")) renderVarmekartBody();
+  // Frittstående referanser bor i content: lagrer læreren en ny, skal kortet
+  // vise den med én gang, ikke ved neste åpning.
+  if (isOpen("modal-referanser")) renderReferanser();
 }
 
 // ----------------------------------------------------------------------------

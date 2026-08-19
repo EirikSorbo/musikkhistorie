@@ -5,22 +5,22 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.39";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.39";
-import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.39";
-import { storyFor, pageFor } from "./story-format.js?v=4.39";
-import { renderRichText } from "./rich-text.js?v=4.39";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.39";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.39";
-import { resolveDesc } from "./genre-descriptions.js?v=4.39";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.39";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.39";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.39";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.40";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.40";
+import { GENEALOGY, edgeKey, resolveMainDesc } from "./genealogy.js?v=4.40";
+import { storyFor, pageFor } from "./story-format.js?v=4.40";
+import { renderRichText } from "./rich-text.js?v=4.40";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.40";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.40";
+import { resolveDesc } from "./genre-descriptions.js?v=4.40";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.40";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.40";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.40";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.39";
-import { $ } from "./shared.js?v=4.39";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.39";
+import { wireAllLinks } from "./linkify.js?v=4.40";
+import { $ } from "./shared.js?v=4.40";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.40";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -635,6 +635,56 @@ export function setupPodkastAdmin() {
       }
     } catch (err) {
       console.error("Podkast-lagring feilet:", err);
+      msg.textContent = "Feil: " + err.message;
+      msg.className = "form-msg error";
+    }
+  });
+}
+
+// ----------------------------------------------------------------------------
+//  Frittstående referanser (content/referanser)
+// ----------------------------------------------------------------------------
+//  Kilder pensumet bygger på uten å høre til et bestemt kort: en bok, en
+//  podkastserie, en dokumentar. Én liste, samme rad-editor som kildene på
+//  kortene. Kategorien er PÅKREVD her — den bestemmer hvilken seksjon i
+//  Referanser-kortet referansen havner i, og uten den ville den havnet under
+//  «Ukategorisert» uten at læreren skjønte hvorfor.
+
+function referanseRader() {
+  return normalizeSources(state.content?.referanser?.kilder);
+}
+
+export function openReferanseEditor() {
+  const wrap = $("#ref-edit-rows");
+  if (!wrap) return;
+  buildRows(wrap, SOURCE_SPEC, referanseRader());
+  const msg = $("#ref-edit-msg");
+  msg.textContent = "";
+  msg.className = "form-msg ok";
+  openAdminModal("modal-referanse-edit");
+}
+
+export function setupReferanseEditor() {
+  const addBtn = $("#ref-edit-add");
+  if (!addBtn) return;
+  addBtn.addEventListener("click", () => addRow($("#ref-edit-rows"), SOURCE_SPEC, {}));
+
+  $("#ref-edit-save").addEventListener("click", async () => {
+    const msg = $("#ref-edit-msg");
+    const kilder = collectRows($("#ref-edit-rows"), SOURCE_SPEC);
+    const utenKategori = kilder.filter((k) => !k.kategori);
+    if (utenKategori.length) {
+      msg.textContent = `Velg kategori for ${utenKategori.length === 1 ? "referansen" : "alle referansene"} før du lagrer.`;
+      msg.className = "form-msg error";
+      return;
+    }
+    msg.textContent = "Lagrer …";
+    msg.className = "form-msg ok";
+    try {
+      await saveReferanser(kilder);
+      closeAdminModal("modal-referanse-edit");
+    } catch (err) {
+      console.error("Referanse-lagring feilet:", err);
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";
     }
