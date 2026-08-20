@@ -1,0 +1,2015 @@
+{
+  "nodes": [
+    {
+      "id": "eurofolk",
+      "l": "Europeisk",
+      "f": "Europeisk folkemusikk",
+      "fam": "gray",
+      "cx": 600,
+      "r": 0,
+      "p": [],
+      "g": null,
+      "era": "Røtter",
+      "t": []
+    },
+    {
+      "id": "vestafrik",
+      "l": "Vestafrikansk",
+      "f": "Vestafrikansk musikk",
+      "fam": "gray",
+      "cx": 900,
+      "r": 0,
+      "p": [],
+      "g": null,
+      "era": "Røtter",
+      "t": []
+    },
+    {
+      "id": "hymner",
+      "l": "Hymner",
+      "f": "Salmer og vekkelsessang",
+      "fam": "gray",
+      "cx": 530,
+      "r": 0,
+      "yOffset": 0.5,
+      "p": [
+        "eurofolk"
+      ],
+      "g": null,
+      "era": "1700–1800-tallet",
+      "t": [
+        "Amazing Grace (1779)",
+        "Wondrous Love – Sacred Harp-tradisjonen"
+      ]
+    },
+    {
+      "id": "vaudeville",
+      "l": "Vaudeville",
+      "f": "Vaudeville og varieté",
+      "fam": "gray",
+      "cx": 390,
+      "r": 0,
+      "yOffset": 0.5,
+      "p": [
+        "eurofolk"
+      ],
+      "g": null,
+      "era": "1880–1930",
+      "t": [
+        "Some of These Days – Sophie Tucker (1911)",
+        "Alexander's Ragtime Band – Irving Berlin (1911)"
+      ]
+    },
+    {
+      "id": "brassband",
+      "l": "Brassband",
+      "f": "Brass- og marsjtradisjon",
+      "fam": "gray",
+      "cx": 1030,
+      "r": 0,
+      "yOffset": 0.5,
+      "p": [
+        "eurofolk"
+      ],
+      "g": null,
+      "era": "1800-tallet",
+      "t": [
+        "The Stars and Stripes Forever – Sousa (1896)",
+        "Just a Closer Walk with Thee – New Orleans-begravelsesmarsj"
+      ]
+    },
+    {
+      "id": "worksongs",
+      "l": "Work songs",
+      "f": "Work songs / field hollers",
+      "fam": "gray",
+      "cx": 780,
+      "r": 0,
+      "yOffset": 0.5,
+      "p": [
+        "vestafrik"
+      ],
+      "g": null,
+      "era": "1800-tallet",
+      "t": [
+        "I'll Be So Glad When the Sun Goes Down (1959)"
+      ]
+    },
+    {
+      "id": "spirituals",
+      "l": "Spirituals",
+      "f": "Negro spirituals",
+      "fam": "gray",
+      "cx": 1270,
+      "r": 0,
+      "yOffset": 0.5,
+      "p": [
+        "vestafrik",
+        "hymner"
+      ],
+      "g": null,
+      "era": "1800-tallet",
+      "t": [
+        "Swing Low (1909)",
+        "Slave Songs of the United States (1867)"
+      ]
+    },
+    {
+      "id": "blues",
+      "l": "Blues",
+      "f": "Blues",
+      "fam": "blue",
+      "cx": 580,
+      "r": 1,
+      "yOffset": 0.5,
+      "p": [
+        "worksongs",
+        "vaudeville"
+      ],
+      "g": "Blues",
+      "era": "ca. 1900",
+      "t": [
+        "Cross Road Blues – Robert Johnson (1937)",
+        "St. Louis Blues – Bessie Smith (1925)"
+      ]
+    },
+    {
+      "id": "ragtime",
+      "l": "Ragtime",
+      "f": "Ragtime",
+      "fam": "gray",
+      "cx": 900,
+      "r": 1,
+      "p": [
+        "vestafrik",
+        "brassband"
+      ],
+      "g": null,
+      "era": "1897",
+      "t": [
+        "Maple Leaf Rag – Scott Joplin",
+        "The Entertainer – Scott Joplin"
+      ]
+    },
+    {
+      "id": "tinpan",
+      "l": "Tin Pan Alley",
+      "f": "Tin Pan Alley",
+      "fam": "gray",
+      "cx": 450,
+      "r": 2,
+      "p": [
+        "vaudeville"
+      ],
+      "g": "Pop",
+      "era": "1910–50",
+      "t": [
+        "White Christmas – Irving Berlin (1942)",
+        "Summertime – Gershwin (1935)"
+      ]
+    },
+    {
+      "id": "jazz",
+      "l": "Jazz",
+      "f": "Jazz",
+      "fam": "purple",
+      "cx": 700,
+      "r": 2,
+      "p": [
+        "ragtime",
+        "brassband",
+        "blues"
+      ],
+      "g": "Jazz",
+      "era": "ca. 1915",
+      "t": [
+        "Dipper Mouth Blues – King Oliver (1923)",
+        "West End Blues – Louis Armstrong (1928)"
+      ]
+    },
+    {
+      "id": "country",
+      "l": "Hillbilly",
+      "f": "Hillbilly",
+      "fam": "amber",
+      "cx": 330,
+      "r": 3,
+      "p": [
+        "eurofolk",
+        "hymner",
+        "blues"
+      ],
+      "g": "Country",
+      "era": "1920-tallet",
+      "t": [
+        "Wildwood Flower – Carter Family (1928)",
+        "Blue Yodel – Jimmie Rodgers (1929)"
+      ]
+    },
+    {
+      "id": "gospel",
+      "l": "Gospel",
+      "f": "Gospel",
+      "fam": "olive",
+      "cx": 1070,
+      "r": 4,
+      "p": [
+        "spirituals",
+        "blues"
+      ],
+      "g": "Gospel",
+      "era": "1930-tallet",
+      "t": [
+        "Precious Lord, Take My Hand – Dorsey (1932)",
+        "Lord Don't Move the Mountain – Mahalia Jackson"
+      ]
+    },
+    {
+      "id": "swing",
+      "l": "Swing",
+      "f": "Swing",
+      "fam": "purple",
+      "cx": 700,
+      "r": 4,
+      "p": [
+        "jazz"
+      ],
+      "g": "Jazz",
+      "era": "1930–45",
+      "t": [
+        "Sing, Sing, Sing – Benny Goodman (1937)",
+        "Take the A Train – Duke Ellington (1941)"
+      ]
+    },
+    {
+      "id": "bluegrass",
+      "l": "Bluegrass",
+      "f": "Bluegrass",
+      "fam": "amber",
+      "cx": 70,
+      "r": 4,
+      "p": [
+        "country"
+      ],
+      "g": "Country",
+      "era": "1939",
+      "t": [
+        "Uncle Pen – Bill Monroe (1965)"
+      ]
+    },
+    {
+      "id": "honkytonk",
+      "l": "Honky tonk",
+      "f": "Honky tonk",
+      "fam": "amber",
+      "cx": 195,
+      "r": 5,
+      "p": [
+        "country"
+      ],
+      "g": "Country",
+      "era": "1940-tallet",
+      "t": [
+        "Lovesick Blues – Hank Williams (1949)",
+        "Your Cheatin' Heart – Hank Williams (1953)"
+      ]
+    },
+    {
+      "id": "bebop",
+      "l": "Bebop",
+      "f": "Bebop",
+      "fam": "purple",
+      "cx": 700,
+      "r": 5,
+      "p": [
+        "swing"
+      ],
+      "g": "Jazz",
+      "era": "1945",
+      "t": [
+        "Koko – Charlie Parker",
+        "A Night in Tunisia – Dizzy Gillespie"
+      ]
+    },
+    {
+      "id": "rnb",
+      "l": "R&B",
+      "f": "Rhythm & blues",
+      "fam": "red",
+      "cx": 1190,
+      "r": 6,
+      "p": [
+        "blues",
+        "gospel"
+      ],
+      "g": "R&B",
+      "era": "1940-tallet",
+      "t": [
+        "Beans and Cornbread – Louis Jordan (1949)",
+        "Hallelujah I Love Her So – Ray Charles (1956)"
+      ]
+    },
+    {
+      "id": "nashville",
+      "l": "Nashville",
+      "f": "Nashville-sound",
+      "fam": "amber",
+      "cx": 195,
+      "r": 6,
+      "p": [
+        "honkytonk"
+      ],
+      "g": "Country",
+      "era": "1957",
+      "t": [
+        "Crazy – Patsy Cline (1961)",
+        "Four Walls – Jim Reeves (1957)"
+      ]
+    },
+    {
+      "id": "chicagoblues",
+      "l": "Electric blues",
+      "f": "Electric blues",
+      "fam": "blue",
+      "cx": 580,
+      "r": 5,
+      "p": [
+        "blues"
+      ],
+      "g": "Blues",
+      "era": "midten av 1940-tallet",
+      "t": [
+        "Got My Mojo Workin' – Muddy Waters (1956)",
+        "Call It Stormy Monday – T-Bone Walker (1947)"
+      ]
+    },
+    {
+      "id": "cool",
+      "l": "Cool jazz",
+      "f": "Cool jazz",
+      "fam": "purple",
+      "cx": 700,
+      "r": 6,
+      "p": [
+        "bebop"
+      ],
+      "g": "Jazz",
+      "era": "1949",
+      "t": [
+        "Take Five – Dave Brubeck (1959)",
+        "Birth of the Cool – Miles Davis"
+      ]
+    },
+    {
+      "id": "hardbop",
+      "l": "Hard bop",
+      "f": "Hard bop",
+      "fam": "purple",
+      "cx": 825,
+      "r": 6,
+      "p": [
+        "bebop"
+      ],
+      "rx": [
+        "cool"
+      ],
+      "g": "Jazz",
+      "era": "1955",
+      "t": [
+        "Moanin' – Art Blakey (1959)"
+      ]
+    },
+    {
+      "id": "soul",
+      "l": "Soul",
+      "f": "Soul",
+      "fam": "red",
+      "cx": 1190,
+      "r": 7,
+      "yOffset": -0.2,
+      "p": [
+        "gospel",
+        "rnb"
+      ],
+      "g": "R&B",
+      "era": "1959",
+      "t": [
+        "Respect – Aretha Franklin (1967)",
+        "A Change Is Gonna Come – Sam Cooke (1964)"
+      ]
+    },
+    {
+      "id": "modal",
+      "l": "Modal jazz",
+      "f": "Modal jazz",
+      "fam": "purple",
+      "cx": 700,
+      "r": 6,
+      "yOffset": 0.5,
+      "p": [
+        "bebop",
+        "cool"
+      ],
+      "g": "Jazz",
+      "era": "1958",
+      "t": [
+        "So What – Miles Davis (1959)",
+        "A Love Supreme – John Coltrane (1964)"
+      ]
+    },
+    {
+      "id": "free",
+      "l": "Free jazz",
+      "f": "Free jazz",
+      "fam": "purple",
+      "cx": 825,
+      "r": 7,
+      "p": [
+        "bebop"
+      ],
+      "rx": [
+        "hardbop"
+      ],
+      "g": "Jazz",
+      "era": "1960",
+      "t": [
+        "Free Jazz – Ornette Coleman (1961)"
+      ]
+    },
+    {
+      "id": "funk",
+      "l": "Funk",
+      "f": "Funk",
+      "fam": "red",
+      "cx": 1190,
+      "r": 7,
+      "yOffset": 0.4,
+      "p": [
+        "soul"
+      ],
+      "g": "R&B",
+      "era": "1967",
+      "t": [
+        "Papa's Got a Brand New Bag – James Brown",
+        "Chameleon – Herbie Hancock (1973)"
+      ]
+    },
+    {
+      "id": "reggae",
+      "l": "Reggae",
+      "f": "Reggae & dub",
+      "fam": "green",
+      "cx": 1590,
+      "r": 7,
+      "p": [
+        "rnb"
+      ],
+      "g": "Klubbmusikk",
+      "era": "1968",
+      "t": [
+        "Is This Love – Bob Marley",
+        "Do the Reggay – Toots & the Maytals (1968)"
+      ]
+    },
+    {
+      "id": "outlaw",
+      "l": "Outlaw",
+      "f": "Outlaw country",
+      "fam": "amber",
+      "cx": 195,
+      "r": 8,
+      "p": [
+        "honkytonk"
+      ],
+      "rx": [
+        "nashville"
+      ],
+      "g": "Country",
+      "era": "1970-tallet",
+      "t": [
+        "Red Headed Stranger – Willie Nelson (1975)"
+      ]
+    },
+    {
+      "id": "fusion",
+      "l": "Fusion",
+      "f": "Jazz-fusion",
+      "fam": "purple",
+      "cx": 760,
+      "r": 8,
+      "p": [
+        "modal",
+        "funk",
+        "rock"
+      ],
+      "g": "Jazz",
+      "era": "1970",
+      "t": [
+        "Bitches Brew – Miles Davis (1970)",
+        "Birdland – Weather Report (1977)"
+      ]
+    },
+    {
+      "id": "hiphop",
+      "l": "Early hip-hop",
+      "f": "Early hip-hop",
+      "fam": "pink",
+      "cx": 1340,
+      "r": 8,
+      "p": [
+        "funk",
+        "reggae",
+        "disco"
+      ],
+      "g": "Hip-hop",
+      "era": "ca. 1979",
+      "t": [
+        "Rapper's Delight – Sugarhill Gang (1979)",
+        "The Message – Grandmaster Flash (1982)"
+      ]
+    },
+    {
+      "id": "disco",
+      "l": "Disco",
+      "f": "Disco",
+      "fam": "teal",
+      "cx": 1650,
+      "r": 8,
+      "p": [
+        "funk",
+        "soul"
+      ],
+      "g": "Klubbmusikk",
+      "era": "1974",
+      "t": [
+        "Stayin' Alive – Bee Gees (1977)",
+        "Le Freak – Chic (1978)"
+      ]
+    },
+    {
+      "id": "house",
+      "l": "House & techno",
+      "f": "House & techno",
+      "fam": "teal",
+      "cx": 1780,
+      "r": 9,
+      "p": [
+        "disco"
+      ],
+      "g": "Klubbmusikk",
+      "era": "1980–85",
+      "t": [
+        "Move Your Body – Marshall Jefferson",
+        "Your Love – Frankie Knuckles",
+        "Strings of Life – Derrick May",
+        "Big Fun – Inner City"
+      ]
+    },
+    {
+      "id": "americana",
+      "l": "Americana",
+      "f": "Americana / alt-country",
+      "fam": "amber",
+      "cx": 70,
+      "r": 10,
+      "p": [
+        "folk"
+      ],
+      "rx": [
+        "nashville"
+      ],
+      "g": "Country",
+      "era": "1990-tallet",
+      "t": [
+        "Oh My Sweet Carolina – Ryan Adams (2001)"
+      ]
+    },
+    {
+      "id": "neosoul",
+      "l": "Neo-soul",
+      "f": "Neo-soul",
+      "fam": "red",
+      "cx": 1130,
+      "r": 10,
+      "yOffset": 0.25,
+      "p": [
+        "soul",
+        "hiphop"
+      ],
+      "g": "R&B",
+      "era": "1990-tallet",
+      "t": [
+        "On & On – Erykah Badu (1997)",
+        "Brown Sugar – D'Angelo (1995)"
+      ]
+    },
+    {
+      "id": "trance",
+      "l": "Trance & DnB",
+      "f": "Trance & drum'n'bass",
+      "fam": "teal",
+      "cx": 1780,
+      "r": 10,
+      "p": [
+        "house"
+      ],
+      "g": "Klubbmusikk",
+      "era": "1990-tallet",
+      "t": [
+        "For an Angel – Paul van Dyk (1994)",
+        "Timeless – Goldie (1995)"
+      ]
+    },
+    {
+      "id": "nujazz",
+      "l": "Nu-jazz",
+      "f": "Nu-jazz",
+      "fam": "purple",
+      "cx": 780,
+      "r": 10,
+      "p": [
+        "fusion",
+        "house",
+        "fjelljazz"
+      ],
+      "g": "Jazz",
+      "era": "1997",
+      "t": [
+        "Khmer – Nils Petter Molvær (1997)",
+        "Existence – Bugge Wesseltoft (1998)"
+      ]
+    },
+    {
+      "id": "folk",
+      "l": "Folk",
+      "f": "Folk (revival)",
+      "fam": "amber",
+      "cx": 70,
+      "r": 7,
+      "p": [
+        "eurofolk"
+      ],
+      "g": "Country",
+      "era": "1950–60-tallet",
+      "t": [
+        "This Land Is Your Land – Woody Guthrie (1944)",
+        "Blowin' in the Wind – Bob Dylan (1963)"
+      ]
+    },
+    {
+      "id": "rocknroll",
+      "l": "Rock'n'roll",
+      "f": "Rock'n'roll",
+      "fam": "rock",
+      "cx": 445,
+      "r": 6,
+      "p": [
+        "rnb",
+        "honkytonk"
+      ],
+      "g": "Rock",
+      "era": "1955",
+      "t": [
+        "Johnny B. Goode – Chuck Berry (1958)",
+        "Hound Dog – Elvis Presley (1956)"
+      ]
+    },
+    {
+      "id": "bluesrock",
+      "l": "Blues rock",
+      "f": "Blues rock",
+      "fam": "blue",
+      "cx": 580,
+      "r": 7,
+      "p": [
+        "chicagoblues",
+        "rock"
+      ],
+      "g": "Blues",
+      "era": "1963–69",
+      "t": [
+        "Crossroads – Cream (1968)",
+        "Whole Lotta Love – Led Zeppelin (1969)",
+        "(I Can't Get No) Satisfaction – The Rolling Stones (1965)",
+        "For Your Love – The Yardbirds (1965)"
+      ]
+    },
+    {
+      "id": "rock",
+      "l": "Rock",
+      "f": "Rock",
+      "fam": "rock",
+      "cx": 445,
+      "r": 7,
+      "p": [
+        "rocknroll"
+      ],
+      "g": "Rock",
+      "era": "tidlig 1960-tall",
+      "t": [
+        "My Generation – The Who (1965)",
+        "Light My Fire – The Doors (1967)"
+      ]
+    },
+    {
+      "id": "pop",
+      "l": "Pop",
+      "f": "Pop",
+      "fam": "pop",
+      "cx": 300,
+      "r": 7,
+      "p": [
+        "tinpan",
+        "rnb",
+        "rocknroll"
+      ],
+      "g": "Pop",
+      "era": "1960-tallet",
+      "t": [
+        "Be My Baby – The Ronettes (1963)",
+        "Walk On By – Dionne Warwick (1964)"
+      ]
+    },
+    {
+      "id": "fjelljazz",
+      "l": "Fjelljazz",
+      "f": "Fjelljazz (ECM)",
+      "fam": "purple",
+      "cx": 950,
+      "r": 8,
+      "p": [
+        "modal",
+        "free"
+      ],
+      "g": "Jazz",
+      "era": "1970-tallet",
+      "t": [
+        "Dansere – Jan Garbarek (1976)",
+        "Witchi-Tai-To – Jan Garbarek (1974)"
+      ]
+    },
+    {
+      "id": "neotrad",
+      "l": "Neotrad. country",
+      "f": "Neotraditional country",
+      "fam": "amber",
+      "cx": 195,
+      "r": 9,
+      "p": [
+        "outlaw"
+      ],
+      "g": "Country",
+      "era": "1980-tallet",
+      "t": [
+        "Amarillo by Morning – George Strait (1983)",
+        "Whoever's in New England – Reba McEntire (1986)"
+      ]
+    },
+    {
+      "id": "newjack",
+      "l": "New jack swing",
+      "f": "New jack swing",
+      "fam": "red",
+      "cx": 1115,
+      "r": 9,
+      "p": [
+        "funk",
+        "hiphop"
+      ],
+      "g": "R&B",
+      "era": "1987–93",
+      "t": [
+        "My Prerogative – Bobby Brown (1988)",
+        "Groove Me – Guy (1988)",
+        "Poison – Bell Biv DeVoe (1990)",
+        "Remember the Time – Michael Jackson (1992)"
+      ]
+    },
+    {
+      "id": "gangsta",
+      "l": "Gangsta rap",
+      "f": "Gangsta rap",
+      "fam": "pink",
+      "cx": 1340,
+      "r": 10,
+      "p": [
+        "hiphop"
+      ],
+      "g": "Hip-hop",
+      "era": "ca. 1990",
+      "t": [
+        "Straight Outta Compton – N.W.A (1988)",
+        "Nuthin' but a 'G' Thang – Dr. Dre (1992)"
+      ]
+    },
+    {
+      "id": "gullalder",
+      "l": "Hip-hop",
+      "f": "Hip-hop",
+      "fam": "pink",
+      "cx": 1340,
+      "r": 9,
+      "p": [
+        "hiphop"
+      ],
+      "g": "Hip-hop",
+      "era": "1986–94",
+      "t": [
+        "Fight the Power – Public Enemy (1989)",
+        "C.R.E.A.M. – Wu-Tang Clan (1993)",
+        "N.Y. State of Mind – Nas (1994)"
+      ]
+    },
+    {
+      "id": "trap",
+      "l": "Trap",
+      "f": "Trap",
+      "fam": "pink",
+      "cx": 1340,
+      "r": 12,
+      "p": [
+        "gangsta"
+      ],
+      "g": "Hip-hop",
+      "era": "2000–2010-tallet",
+      "t": [
+        "Sicko Mode – Travis Scott (2018)",
+        "Mask Off – Future (2017)"
+      ]
+    },
+    {
+      "id": "elektronika",
+      "l": "Elektronika",
+      "f": "Elektronika",
+      "fam": "teal",
+      "cx": 1780,
+      "r": 11,
+      "p": [
+        "house"
+      ],
+      "g": "Klubbmusikk",
+      "era": "1990–2000-tallet",
+      "t": [
+        "Windowlicker – Aphex Twin (1999)",
+        "Midnight in a Perfect World – DJ Shadow (1996)"
+      ]
+    },
+    {
+      "id": "edm",
+      "l": "EDM",
+      "f": "EDM",
+      "fam": "teal",
+      "cx": 1780,
+      "r": 12,
+      "p": [
+        "elektronika",
+        "house"
+      ],
+      "g": "Klubbmusikk",
+      "era": "2010-tallet",
+      "t": [
+        "Levels – Avicii (2011)",
+        "Titanium – David Guetta ft. Sia (2011)"
+      ]
+    },
+    {
+      "id": "contjazz",
+      "l": "Cont. jazz",
+      "f": "Contemporary jazz",
+      "fam": "purple",
+      "cx": 780,
+      "r": 11,
+      "p": [
+        "nujazz",
+        "hiphop"
+      ],
+      "g": "Jazz",
+      "era": "2010-tallet",
+      "t": [
+        "The Epic – Kamasi Washington (2015)",
+        "Black Radio – Robert Glasper Experiment (2012)"
+      ]
+    },
+    {
+      "id": "contcountry",
+      "l": "Cont. country",
+      "f": "Contemporary country",
+      "fam": "amber",
+      "cx": 195,
+      "r": 11,
+      "p": [
+        "neotrad",
+        "nashville",
+        "pop",
+        "rock"
+      ],
+      "g": "Country",
+      "era": "1990-tallet–i dag",
+      "t": [
+        "Need You Now – Lady Antebellum (2009)",
+        "Cruise – Florida Georgia Line (2012)"
+      ]
+    },
+    {
+      "id": "contgospel",
+      "l": "Cont. gospel",
+      "f": "Contemporary gospel",
+      "fam": "olive",
+      "cx": 1020,
+      "r": 11,
+      "p": [
+        "gospel",
+        "hiphop",
+        "neosoul"
+      ],
+      "g": "Gospel",
+      "era": "1990-tallet–i dag",
+      "t": [
+        "Stomp – Kirk Franklin & God's Property (1997)",
+        "Break Every Chain – Tasha Cobbs (2013)"
+      ]
+    },
+    {
+      "id": "contrnb",
+      "l": "Cont. R&B",
+      "f": "Contemporary R&B",
+      "fam": "red",
+      "cx": 1240,
+      "r": 11,
+      "p": [
+        "newjack"
+      ],
+      "g": "R&B",
+      "era": "1990-tallet–i dag",
+      "t": [
+        "Real Love – Mary J. Blige (1992)",
+        "Crazy in Love – Beyoncé (2003)"
+      ]
+    },
+    {
+      "id": "conthiphop",
+      "l": "Cont. hip-hop",
+      "f": "Contemporary hip-hop",
+      "fam": "pink",
+      "cx": 1440,
+      "r": 11,
+      "p": [
+        "gullalder",
+        "gangsta"
+      ],
+      "g": "Hip-hop",
+      "era": "1995–i dag",
+      "t": [
+        "Jesus Walks – Kanye West (2004)",
+        "Alright – Kendrick Lamar (2015)"
+      ]
+    }
+  ],
+  "families": {
+    "blue": {
+      "stroke": "#3b82f6",
+      "label": "Blues"
+    },
+    "rock": {
+      "stroke": "#334155",
+      "label": "Rock"
+    },
+    "pop": {
+      "stroke": "#c026d3",
+      "label": "Pop"
+    },
+    "amber": {
+      "stroke": "#d97706",
+      "label": "Country"
+    },
+    "purple": {
+      "stroke": "#7c3aed",
+      "label": "Jazz"
+    },
+    "red": {
+      "stroke": "#dc2626",
+      "label": "R&B / soul / funk"
+    },
+    "olive": {
+      "stroke": "#4d7c0f",
+      "label": "Gospel"
+    },
+    "teal": {
+      "stroke": "#0d9488",
+      "label": "Disco / electronica"
+    },
+    "pink": {
+      "stroke": "#db2777",
+      "label": "Hip-hop"
+    },
+    "green": {
+      "stroke": "#16a34a",
+      "label": "Reggae"
+    },
+    "gray": {
+      "stroke": "#9bada1",
+      "label": "Røtter"
+    }
+  },
+  "metaOrderHint": [
+    "Blues",
+    "Jazz",
+    "R&B",
+    "Hip-hop",
+    "Klubbmusikk",
+    "Gospel",
+    "Country",
+    "Pop",
+    "Rock"
+  ],
+  "mainGenres": [
+    "Americana",
+    "Bebop",
+    "Bluegrass",
+    "Blues",
+    "Blues rock",
+    "Cont. country",
+    "Cont. gospel",
+    "Cont. hip-hop",
+    "Cont. jazz",
+    "Cont. R&B",
+    "Cool jazz",
+    "Disco",
+    "Early hip-hop",
+    "EDM",
+    "Electric blues",
+    "Elektronika",
+    "Fjelljazz",
+    "Folk",
+    "Free jazz",
+    "Funk",
+    "Fusion",
+    "Gangsta rap",
+    "Gospel",
+    "Hard bop",
+    "Hillbilly",
+    "Hip-hop",
+    "Honky tonk",
+    "House & techno",
+    "Jazz",
+    "Modal jazz",
+    "Nashville",
+    "Neo-soul",
+    "Neotrad. country",
+    "New jack swing",
+    "Nu-jazz",
+    "Outlaw",
+    "Pop",
+    "R&B",
+    "Reggae",
+    "Rock",
+    "Rock'n'roll",
+    "Soul",
+    "Swing",
+    "Tin Pan Alley",
+    "Trance & DnB",
+    "Trap"
+  ],
+  "metaGenres": [
+    "Blues",
+    "Pop",
+    "Jazz",
+    "Country",
+    "Gospel",
+    "R&B",
+    "Klubbmusikk",
+    "Hip-hop",
+    "Rock"
+  ],
+  "metaGenreOrder": [
+    "Blues",
+    "Jazz",
+    "R&B",
+    "Hip-hop",
+    "Klubbmusikk",
+    "Gospel",
+    "Country",
+    "Pop",
+    "Rock"
+  ],
+  "edges": [
+    {
+      "from": "eurofolk",
+      "to": "hymner",
+      "react": false
+    },
+    {
+      "from": "eurofolk",
+      "to": "vaudeville",
+      "react": false
+    },
+    {
+      "from": "eurofolk",
+      "to": "brassband",
+      "react": false
+    },
+    {
+      "from": "vestafrik",
+      "to": "worksongs",
+      "react": false
+    },
+    {
+      "from": "vestafrik",
+      "to": "spirituals",
+      "react": false
+    },
+    {
+      "from": "hymner",
+      "to": "spirituals",
+      "react": false
+    },
+    {
+      "from": "worksongs",
+      "to": "blues",
+      "react": false
+    },
+    {
+      "from": "vaudeville",
+      "to": "blues",
+      "react": false
+    },
+    {
+      "from": "vestafrik",
+      "to": "ragtime",
+      "react": false
+    },
+    {
+      "from": "brassband",
+      "to": "ragtime",
+      "react": false
+    },
+    {
+      "from": "vaudeville",
+      "to": "tinpan",
+      "react": false
+    },
+    {
+      "from": "ragtime",
+      "to": "jazz",
+      "react": false
+    },
+    {
+      "from": "brassband",
+      "to": "jazz",
+      "react": false
+    },
+    {
+      "from": "blues",
+      "to": "jazz",
+      "react": false
+    },
+    {
+      "from": "eurofolk",
+      "to": "country",
+      "react": false
+    },
+    {
+      "from": "hymner",
+      "to": "country",
+      "react": false
+    },
+    {
+      "from": "blues",
+      "to": "country",
+      "react": false
+    },
+    {
+      "from": "spirituals",
+      "to": "gospel",
+      "react": false
+    },
+    {
+      "from": "blues",
+      "to": "gospel",
+      "react": false
+    },
+    {
+      "from": "jazz",
+      "to": "swing",
+      "react": false
+    },
+    {
+      "from": "country",
+      "to": "bluegrass",
+      "react": false
+    },
+    {
+      "from": "country",
+      "to": "honkytonk",
+      "react": false
+    },
+    {
+      "from": "swing",
+      "to": "bebop",
+      "react": false
+    },
+    {
+      "from": "blues",
+      "to": "rnb",
+      "react": false
+    },
+    {
+      "from": "gospel",
+      "to": "rnb",
+      "react": false
+    },
+    {
+      "from": "honkytonk",
+      "to": "nashville",
+      "react": false
+    },
+    {
+      "from": "blues",
+      "to": "chicagoblues",
+      "react": false
+    },
+    {
+      "from": "bebop",
+      "to": "cool",
+      "react": false
+    },
+    {
+      "from": "bebop",
+      "to": "hardbop",
+      "react": false
+    },
+    {
+      "from": "cool",
+      "to": "hardbop",
+      "react": true
+    },
+    {
+      "from": "gospel",
+      "to": "soul",
+      "react": false
+    },
+    {
+      "from": "rnb",
+      "to": "soul",
+      "react": false
+    },
+    {
+      "from": "bebop",
+      "to": "modal",
+      "react": false
+    },
+    {
+      "from": "cool",
+      "to": "modal",
+      "react": false
+    },
+    {
+      "from": "bebop",
+      "to": "free",
+      "react": false
+    },
+    {
+      "from": "hardbop",
+      "to": "free",
+      "react": true
+    },
+    {
+      "from": "soul",
+      "to": "funk",
+      "react": false
+    },
+    {
+      "from": "rnb",
+      "to": "reggae",
+      "react": false
+    },
+    {
+      "from": "honkytonk",
+      "to": "outlaw",
+      "react": false
+    },
+    {
+      "from": "nashville",
+      "to": "outlaw",
+      "react": true
+    },
+    {
+      "from": "modal",
+      "to": "fusion",
+      "react": false
+    },
+    {
+      "from": "funk",
+      "to": "fusion",
+      "react": false
+    },
+    {
+      "from": "rock",
+      "to": "fusion",
+      "react": false
+    },
+    {
+      "from": "funk",
+      "to": "hiphop",
+      "react": false
+    },
+    {
+      "from": "reggae",
+      "to": "hiphop",
+      "react": false
+    },
+    {
+      "from": "disco",
+      "to": "hiphop",
+      "react": false
+    },
+    {
+      "from": "funk",
+      "to": "disco",
+      "react": false
+    },
+    {
+      "from": "soul",
+      "to": "disco",
+      "react": false
+    },
+    {
+      "from": "disco",
+      "to": "house",
+      "react": false
+    },
+    {
+      "from": "folk",
+      "to": "americana",
+      "react": false
+    },
+    {
+      "from": "nashville",
+      "to": "americana",
+      "react": true
+    },
+    {
+      "from": "soul",
+      "to": "neosoul",
+      "react": false
+    },
+    {
+      "from": "hiphop",
+      "to": "neosoul",
+      "react": false
+    },
+    {
+      "from": "house",
+      "to": "trance",
+      "react": false
+    },
+    {
+      "from": "fusion",
+      "to": "nujazz",
+      "react": false
+    },
+    {
+      "from": "house",
+      "to": "nujazz",
+      "react": false
+    },
+    {
+      "from": "fjelljazz",
+      "to": "nujazz",
+      "react": false
+    },
+    {
+      "from": "eurofolk",
+      "to": "folk",
+      "react": false
+    },
+    {
+      "from": "rnb",
+      "to": "rocknroll",
+      "react": false
+    },
+    {
+      "from": "honkytonk",
+      "to": "rocknroll",
+      "react": false
+    },
+    {
+      "from": "chicagoblues",
+      "to": "bluesrock",
+      "react": false
+    },
+    {
+      "from": "rock",
+      "to": "bluesrock",
+      "react": false
+    },
+    {
+      "from": "rocknroll",
+      "to": "rock",
+      "react": false
+    },
+    {
+      "from": "tinpan",
+      "to": "pop",
+      "react": false
+    },
+    {
+      "from": "rnb",
+      "to": "pop",
+      "react": false
+    },
+    {
+      "from": "rocknroll",
+      "to": "pop",
+      "react": false
+    },
+    {
+      "from": "modal",
+      "to": "fjelljazz",
+      "react": false
+    },
+    {
+      "from": "free",
+      "to": "fjelljazz",
+      "react": false
+    },
+    {
+      "from": "outlaw",
+      "to": "neotrad",
+      "react": false
+    },
+    {
+      "from": "funk",
+      "to": "newjack",
+      "react": false
+    },
+    {
+      "from": "hiphop",
+      "to": "newjack",
+      "react": false
+    },
+    {
+      "from": "hiphop",
+      "to": "gangsta",
+      "react": false
+    },
+    {
+      "from": "hiphop",
+      "to": "gullalder",
+      "react": false
+    },
+    {
+      "from": "gangsta",
+      "to": "trap",
+      "react": false
+    },
+    {
+      "from": "house",
+      "to": "elektronika",
+      "react": false
+    },
+    {
+      "from": "elektronika",
+      "to": "edm",
+      "react": false
+    },
+    {
+      "from": "house",
+      "to": "edm",
+      "react": false
+    },
+    {
+      "from": "nujazz",
+      "to": "contjazz",
+      "react": false
+    },
+    {
+      "from": "hiphop",
+      "to": "contjazz",
+      "react": false
+    },
+    {
+      "from": "neotrad",
+      "to": "contcountry",
+      "react": false
+    },
+    {
+      "from": "nashville",
+      "to": "contcountry",
+      "react": false
+    },
+    {
+      "from": "pop",
+      "to": "contcountry",
+      "react": false
+    },
+    {
+      "from": "rock",
+      "to": "contcountry",
+      "react": false
+    },
+    {
+      "from": "gospel",
+      "to": "contgospel",
+      "react": false
+    },
+    {
+      "from": "hiphop",
+      "to": "contgospel",
+      "react": false
+    },
+    {
+      "from": "neosoul",
+      "to": "contgospel",
+      "react": false
+    },
+    {
+      "from": "newjack",
+      "to": "contrnb",
+      "react": false
+    },
+    {
+      "from": "gullalder",
+      "to": "conthiphop",
+      "react": false
+    },
+    {
+      "from": "gangsta",
+      "to": "conthiphop",
+      "react": false
+    }
+  ],
+  "mainGenreInfo": {
+    "Blues": {
+      "meta": "Blues",
+      "fam": "blue",
+      "color": "#3b82f6"
+    },
+    "Tin Pan Alley": {
+      "meta": "Pop",
+      "fam": "gray",
+      "color": "#9bada1"
+    },
+    "Jazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Hillbilly": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Gospel": {
+      "meta": "Gospel",
+      "fam": "olive",
+      "color": "#4d7c0f"
+    },
+    "Swing": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Bluegrass": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Honky tonk": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Bebop": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "R&B": {
+      "meta": "R&B",
+      "fam": "red",
+      "color": "#dc2626"
+    },
+    "Nashville": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Electric blues": {
+      "meta": "Blues",
+      "fam": "blue",
+      "color": "#3b82f6"
+    },
+    "Cool jazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Hard bop": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Soul": {
+      "meta": "R&B",
+      "fam": "red",
+      "color": "#dc2626"
+    },
+    "Modal jazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Free jazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Funk": {
+      "meta": "R&B",
+      "fam": "red",
+      "color": "#dc2626"
+    },
+    "Reggae": {
+      "meta": "Klubbmusikk",
+      "fam": "green",
+      "color": "#16a34a"
+    },
+    "Outlaw": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Fusion": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Early hip-hop": {
+      "meta": "Hip-hop",
+      "fam": "pink",
+      "color": "#db2777"
+    },
+    "Disco": {
+      "meta": "Klubbmusikk",
+      "fam": "teal",
+      "color": "#0d9488"
+    },
+    "House & techno": {
+      "meta": "Klubbmusikk",
+      "fam": "teal",
+      "color": "#0d9488"
+    },
+    "Americana": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Neo-soul": {
+      "meta": "R&B",
+      "fam": "red",
+      "color": "#dc2626"
+    },
+    "Trance & DnB": {
+      "meta": "Klubbmusikk",
+      "fam": "teal",
+      "color": "#0d9488"
+    },
+    "Nu-jazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Folk": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Rock'n'roll": {
+      "meta": "Rock",
+      "fam": "rock",
+      "color": "#334155"
+    },
+    "Blues rock": {
+      "meta": "Blues",
+      "fam": "blue",
+      "color": "#3b82f6"
+    },
+    "Rock": {
+      "meta": "Rock",
+      "fam": "rock",
+      "color": "#334155"
+    },
+    "Pop": {
+      "meta": "Pop",
+      "fam": "pop",
+      "color": "#c026d3"
+    },
+    "Fjelljazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Neotrad. country": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "New jack swing": {
+      "meta": "R&B",
+      "fam": "red",
+      "color": "#dc2626"
+    },
+    "Gangsta rap": {
+      "meta": "Hip-hop",
+      "fam": "pink",
+      "color": "#db2777"
+    },
+    "Hip-hop": {
+      "meta": "Hip-hop",
+      "fam": "pink",
+      "color": "#db2777"
+    },
+    "Trap": {
+      "meta": "Hip-hop",
+      "fam": "pink",
+      "color": "#db2777"
+    },
+    "Elektronika": {
+      "meta": "Klubbmusikk",
+      "fam": "teal",
+      "color": "#0d9488"
+    },
+    "EDM": {
+      "meta": "Klubbmusikk",
+      "fam": "teal",
+      "color": "#0d9488"
+    },
+    "Cont. jazz": {
+      "meta": "Jazz",
+      "fam": "purple",
+      "color": "#7c3aed"
+    },
+    "Cont. country": {
+      "meta": "Country",
+      "fam": "amber",
+      "color": "#d97706"
+    },
+    "Cont. gospel": {
+      "meta": "Gospel",
+      "fam": "olive",
+      "color": "#4d7c0f"
+    },
+    "Cont. R&B": {
+      "meta": "R&B",
+      "fam": "red",
+      "color": "#dc2626"
+    },
+    "Cont. hip-hop": {
+      "meta": "Hip-hop",
+      "fam": "pink",
+      "color": "#db2777"
+    }
+  },
+  "metaGenreColor": {
+    "Blues": "#3b82f6",
+    "Pop": "#c026d3",
+    "Jazz": "#7c3aed",
+    "Country": "#d97706",
+    "Gospel": "#4d7c0f",
+    "R&B": "#dc2626",
+    "Klubbmusikk": "#0d9488",
+    "Hip-hop": "#db2777",
+    "Rock": "#334155"
+  },
+  "isMainGenreTable": {
+    "Americana": true,
+    "AMERICANA": true,
+    "Americana / alt-country": false,
+    "AMERICANA / ALT-COUNTRY": false,
+    "Bebop": true,
+    "BEBOP": true,
+    "Bluegrass": true,
+    "BLUEGRASS": true,
+    "Blues": true,
+    "BLUES": true,
+    "Blues rock": true,
+    "BLUES ROCK": true,
+    "Brass- og marsjtradisjon": false,
+    "BRASS- OG MARSJTRADISJON": false,
+    "Brassband": false,
+    "BRASSBAND": false,
+    "Cont. R&B": true,
+    "CONT. R&B": true,
+    "Cont. country": true,
+    "CONT. COUNTRY": true,
+    "Cont. gospel": true,
+    "CONT. GOSPEL": true,
+    "Cont. hip-hop": true,
+    "CONT. HIP-HOP": true,
+    "Cont. jazz": true,
+    "CONT. JAZZ": true,
+    "Contemporary R&B": false,
+    "CONTEMPORARY R&B": false,
+    "Contemporary country": false,
+    "CONTEMPORARY COUNTRY": false,
+    "Contemporary gospel": false,
+    "CONTEMPORARY GOSPEL": false,
+    "Contemporary hip-hop": false,
+    "CONTEMPORARY HIP-HOP": false,
+    "Contemporary jazz": false,
+    "CONTEMPORARY JAZZ": false,
+    "Cool jazz": true,
+    "COOL JAZZ": true,
+    "Disco": true,
+    "DISCO": true,
+    "EDM": true,
+    "Early hip-hop": true,
+    "EARLY HIP-HOP": true,
+    "Electric blues": true,
+    "ELECTRIC BLUES": true,
+    "Elektronika": true,
+    "ELEKTRONIKA": true,
+    "Europeisk": false,
+    "EUROPEISK": false,
+    "Europeisk folkemusikk": false,
+    "EUROPEISK FOLKEMUSIKK": false,
+    "Fjelljazz": true,
+    "FJELLJAZZ": true,
+    "Fjelljazz (ECM)": false,
+    "FJELLJAZZ (ECM)": false,
+    "Folk": true,
+    "FOLK": true,
+    "Folk (revival)": false,
+    "FOLK (REVIVAL)": false,
+    "Free jazz": true,
+    "FREE JAZZ": true,
+    "Funk": true,
+    "FUNK": true,
+    "Fusion": true,
+    "FUSION": true,
+    "Gangsta rap": true,
+    "GANGSTA RAP": true,
+    "Gospel": true,
+    "GOSPEL": true,
+    "Hard bop": true,
+    "HARD BOP": true,
+    "Hillbilly": true,
+    "HILLBILLY": true,
+    "Hip-hop": true,
+    "HIP-HOP": true,
+    "Honky tonk": true,
+    "HONKY TONK": true,
+    "House & techno": true,
+    "HOUSE & TECHNO": true,
+    "Hymner": false,
+    "HYMNER": false,
+    "Jazz": true,
+    "JAZZ": true,
+    "Jazz-fusion": false,
+    "JAZZ-FUSION": false,
+    "Modal jazz": true,
+    "MODAL JAZZ": true,
+    "Nashville": true,
+    "NASHVILLE": true,
+    "Nashville-sound": false,
+    "NASHVILLE-SOUND": false,
+    "Negro spirituals": false,
+    "NEGRO SPIRITUALS": false,
+    "Neo-soul": true,
+    "NEO-SOUL": true,
+    "Neotrad. country": true,
+    "NEOTRAD. COUNTRY": true,
+    "Neotraditional country": false,
+    "NEOTRADITIONAL COUNTRY": false,
+    "New jack swing": true,
+    "NEW JACK SWING": true,
+    "Nu-jazz": true,
+    "NU-JAZZ": true,
+    "Outlaw": true,
+    "OUTLAW": true,
+    "Outlaw country": false,
+    "OUTLAW COUNTRY": false,
+    "Pop": true,
+    "POP": true,
+    "R&B": true,
+    "Ragtime": false,
+    "RAGTIME": false,
+    "Reggae": true,
+    "REGGAE": true,
+    "Reggae & dub": false,
+    "REGGAE & DUB": false,
+    "Rhythm & blues": false,
+    "RHYTHM & BLUES": false,
+    "Rock": true,
+    "ROCK": true,
+    "Rock'n'roll": true,
+    "ROCK'N'ROLL": true,
+    "Salmer og vekkelsessang": false,
+    "SALMER OG VEKKELSESSANG": false,
+    "Soul": true,
+    "SOUL": true,
+    "Spirituals": false,
+    "SPIRITUALS": false,
+    "Swing": true,
+    "SWING": true,
+    "Tin Pan Alley": true,
+    "TIN PAN ALLEY": true,
+    "Trance & DnB": true,
+    "TRANCE & DNB": true,
+    "Trance & drum'n'bass": false,
+    "TRANCE & DRUM'N'BASS": false,
+    "Trap": true,
+    "TRAP": true,
+    "Vaudeville": false,
+    "VAUDEVILLE": false,
+    "Vaudeville og varieté": false,
+    "VAUDEVILLE OG VARIETÉ": false,
+    "Vestafrikansk": false,
+    "VESTAFRIKANSK": false,
+    "Vestafrikansk musikk": false,
+    "VESTAFRIKANSK MUSIKK": false,
+    "Work songs": false,
+    "WORK SONGS": false,
+    "Work songs / field hollers": false,
+    "WORK SONGS / FIELD HOLLERS": false
+  },
+  "findTreeGenreNodeTable": {
+    "Americana": "americana",
+    "Americana / alt-country": "americana",
+    "Bebop": "bebop",
+    "Bluegrass": "bluegrass",
+    "Blues": "blues",
+    "Blues rock": "bluesrock",
+    "Brass- og marsjtradisjon": null,
+    "Brassband": null,
+    "Cont. R&B": "contrnb",
+    "Cont. country": "contcountry",
+    "Cont. gospel": "contgospel",
+    "Cont. hip-hop": "conthiphop",
+    "Cont. jazz": "contjazz",
+    "Contemporary R&B": "contrnb",
+    "Contemporary country": "contcountry",
+    "Contemporary gospel": "contgospel",
+    "Contemporary hip-hop": "conthiphop",
+    "Contemporary jazz": "contjazz",
+    "Cool jazz": "cool",
+    "Disco": "disco",
+    "EDM": "edm",
+    "Early hip-hop": "hiphop",
+    "Electric blues": "chicagoblues",
+    "Elektronika": "elektronika",
+    "Europeisk": null,
+    "Europeisk folkemusikk": null,
+    "Fjelljazz": "fjelljazz",
+    "Fjelljazz (ECM)": "fjelljazz",
+    "Folk": "folk",
+    "Folk (revival)": "folk",
+    "Free jazz": "free",
+    "Funk": "funk",
+    "Fusion": "fusion",
+    "Gangsta rap": "gangsta",
+    "Gospel": "gospel",
+    "Hard bop": "hardbop",
+    "Hillbilly": "country",
+    "Hip-hop": "gullalder",
+    "Honky tonk": "honkytonk",
+    "House & techno": "house",
+    "Hymner": null,
+    "Jazz": "jazz",
+    "Jazz-fusion": "fusion",
+    "Modal jazz": "modal",
+    "Nashville": "nashville",
+    "Nashville-sound": "nashville",
+    "Negro spirituals": null,
+    "Neo-soul": "neosoul",
+    "Neotrad. country": "neotrad",
+    "Neotraditional country": "neotrad",
+    "New jack swing": "newjack",
+    "Nu-jazz": "nujazz",
+    "Outlaw": "outlaw",
+    "Outlaw country": "outlaw",
+    "Pop": "pop",
+    "R&B": "rnb",
+    "Ragtime": null,
+    "Reggae": "reggae",
+    "Reggae & dub": "reggae",
+    "Rhythm & blues": "rnb",
+    "Rock": "rock",
+    "Rock'n'roll": "rocknroll",
+    "Salmer og vekkelsessang": null,
+    "Soul": "soul",
+    "Spirituals": null,
+    "Swing": "swing",
+    "Tin Pan Alley": "tinpan",
+    "Trance & DnB": "trance",
+    "Trance & drum'n'bass": "trance",
+    "Trap": "trap",
+    "Vaudeville": null,
+    "Vaudeville og varieté": null,
+    "Vestafrikansk": null,
+    "Vestafrikansk musikk": null,
+    "Work songs": null,
+    "Work songs / field hollers": null
+  }
+}

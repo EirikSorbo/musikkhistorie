@@ -8,15 +8,16 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.47";
-import { GENEALOGY_MAIN_GENRES, showSjangerInfo, refreshSjangerInfo, MAIN_GENRE_INFO, FAMILIES } from "./genealogy.js?v=4.47";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.47";
-import { openTechDetail } from "./explore-tech.js?v=4.47";
-import { renderPage } from "./explore-innhold.js?v=4.47";
-import { openTidslinje } from "./explore-tidslinje.js?v=4.47";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=4.47";
-import { renderReferanser } from "./explore-referanser.js?v=4.47";
-import { setHeatData } from "./heat-strip.js?v=4.47";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.48";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.48";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.48";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.48";
+import { openTechDetail } from "./explore-tech.js?v=4.48";
+import { renderPage } from "./explore-innhold.js?v=4.48";
+import { openTidslinje } from "./explore-tidslinje.js?v=4.48";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=4.48";
+import { renderReferanser } from "./explore-referanser.js?v=4.48";
+import { setHeatData } from "./heat-strip.js?v=4.48";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -126,10 +127,6 @@ export function contentChanged() {
 //  Delt av varmekart + tidslinje (før duplisert i begge). Én kilde, så meta-
 //  akkordeonen og fargevalgene aldri driver fra hverandre.
 // ----------------------------------------------------------------------------
-
-// Kanoniser artist-tagger til treets stavemåte (samme Map i tidslinjen og
-// sjangerlista). Bygget én gang fra treet — deterministisk.
-export const canonMain = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
 
 // Representativ familiefarge for en gruppe = den hyppigste i gruppa.
 export const groupColor = (labels) => {

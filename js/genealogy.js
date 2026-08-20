@@ -3,234 +3,22 @@
 // ----------------------------------------------------------------------------
 //  2D-kart: tid løper nedover, metasjanger bortover. Dra for å panorere,
 //  scroll/knapper for å zoome, hover lyser opp påvirkningslinjene, klikk åpner
-//  panel med beskrivelse + spilleliste. Strukturen er fast og designet for
-//  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
+//  panel med beskrivelse + spilleliste.
+//
+//  Fila eier VISNINGEN. Selve treet (hvilke sjangre som finnes, hvem som stammer
+//  fra hvem, familiefargene) kommer fra js/genre-model.js, som leser det fra
+//  Firestore — herfra og ut er strukturen data, ikke kode.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.47";
-import { renderRichText } from "./rich-text.js?v=4.47";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.47";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.47";
-import { modalOpen } from "./ui-modal.js?v=4.47";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.47";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.47";
-import { attachCamera } from "./gx-camera.js?v=4.47";
-
-// rad (r) → tiår; tid løper nedover.
-export const GENEALOGY = [
-  { id: "eurofolk", l: "Europeisk", f: "Europeisk folkemusikk", fam: "gray", cx: 600, r: 0, p: [], g: null, era: "Røtter", t: [] },
-  { id: "vestafrik", l: "Vestafrikansk", f: "Vestafrikansk musikk", fam: "gray", cx: 900, r: 0, p: [], g: null, era: "Røtter", t: [] },
-  // Hymner og Vaudeville er de to europeiske kanalene inn i amerikansk
-  // populærmusikk: den ene sakral, den andre kommersiell. Uten dem sto
-  // «Europeisk» som en udifferensiert sekk, og linjene videre til Spirituals,
-  // Country og Tin Pan Alley måtte tegnes fra den sekken i stedet for fra det
-  // som faktisk påvirket dem.
-  { id: "hymner", l: "Hymner", f: "Salmer og vekkelsessang", fam: "gray", cx: 530, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1700–1800-tallet", t: ["Amazing Grace (1779)", "Wondrous Love – Sacred Harp-tradisjonen"] },
-  { id: "vaudeville", l: "Vaudeville", f: "Vaudeville og varieté", fam: "gray", cx: 390, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1880–1930", t: ["Some of These Days – Sophie Tucker (1911)", "Alexander's Ragtime Band – Irving Berlin (1911)"] },
-  { id: "brassband", l: "Brassband", f: "Brass- og marsjtradisjon", fam: "gray", cx: 1030, r: 0, yOffset: 0.5, p: ["eurofolk"], g: null, era: "1800-tallet", t: ["The Stars and Stripes Forever – Sousa (1896)", "Just a Closer Walk with Thee – New Orleans-begravelsesmarsj"] },
-  { id: "worksongs", l: "Work songs", f: "Work songs / field hollers", fam: "gray", cx: 780, r: 0, yOffset: 0.5, p: ["vestafrik"], g: null, era: "1800-tallet", t: ["I'll Be So Glad When the Sun Goes Down (1959)"] },
-  { id: "spirituals", l: "Spirituals", f: "Negro spirituals", fam: "gray", cx: 1270, r: 0, yOffset: 0.5, p: ["vestafrik", "hymner"], g: null, era: "1800-tallet", t: ["Swing Low (1909)", "Slave Songs of the United States (1867)"] },
-  { id: "blues", l: "Blues", f: "Blues", fam: "blue", cx: 580, r: 1, yOffset: 0.5, p: ["worksongs", "vaudeville"], g: "Blues", era: "ca. 1900", t: ["Cross Road Blues – Robert Johnson (1937)", "St. Louis Blues – Bessie Smith (1925)"] },
-  // Ragtime er ROT, ikke pensumsjanger (v3.96, brukervalg): den er forløperen
-  // jazzen vokser ut av, på linje med Work songs og Spirituals — ikke en stil
-  // studentene skal tagge artister med. Derfor g: null (ute av mainGenre-
-  // vokabularet og varmekartet) og gray-familien, som de andre røttene.
-  // Noden, beskrivelsen og koblingene består; den er fortsatt jazzens inngang.
-  { id: "ragtime", l: "Ragtime", f: "Ragtime", fam: "gray", cx: 900, r: 1, p: ["vestafrik", "brassband"], g: null, era: "1897", t: ["Maple Leaf Rag – Scott Joplin", "The Entertainer – Scott Joplin"] },
-  { id: "tinpan", l: "Tin Pan Alley", f: "Tin Pan Alley", fam: "gray", cx: 450, r: 2, p: ["vaudeville"], g: "Pop", era: "1910–50", t: ["White Christmas – Irving Berlin (1942)", "Summertime – Gershwin (1935)"] },
-  { id: "jazz", l: "Jazz", f: "Jazz", fam: "purple", cx: 700, r: 2, p: ["ragtime", "brassband", "blues"], g: "Jazz", era: "ca. 1915", t: ["Dipper Mouth Blues – King Oliver (1923)", "West End Blues – Louis Armstrong (1928)"] },
-  // id «country», etikett «Hillbilly»: 1920-tallets innspilte sjanger het
-  // hillbilly i samtiden, og navnet ble tatt i bruk i v4.38 (brukervalg).
-  // Metasjangeren heter fortsatt Country — den rommer alt fra Bluegrass til
-  // Cont. country, og skal ikke hete Hillbilly.
-  { id: "country", l: "Hillbilly", f: "Hillbilly", fam: "amber", cx: 330, r: 3, p: ["eurofolk", "hymner", "blues"], g: "Country", era: "1920-tallet", t: ["Wildwood Flower – Carter Family (1928)", "Blue Yodel – Jimmie Rodgers (1929)"] },
-  { id: "gospel", l: "Gospel", f: "Gospel", fam: "olive", cx: 1070, r: 4, p: ["spirituals", "blues"], g: "Gospel", era: "1930-tallet", t: ["Precious Lord, Take My Hand – Dorsey (1932)", "Lord Don't Move the Mountain – Mahalia Jackson"] },
-  { id: "swing", l: "Swing", f: "Swing", fam: "purple", cx: 700, r: 4, p: ["jazz"], g: "Jazz", era: "1930–45", t: ["Sing, Sing, Sing – Benny Goodman (1937)", "Take the A Train – Duke Ellington (1941)"] },
-  { id: "bluegrass", l: "Bluegrass", f: "Bluegrass", fam: "amber", cx: 70, r: 4, p: ["country"], g: "Country", era: "1939", t: ["Uncle Pen – Bill Monroe (1965)"] },
-  { id: "honkytonk", l: "Honky tonk", f: "Honky tonk", fam: "amber", cx: 195, r: 5, p: ["country"], g: "Country", era: "1940-tallet", t: ["Lovesick Blues – Hank Williams (1949)", "Your Cheatin' Heart – Hank Williams (1953)"] },
-  { id: "bebop", l: "Bebop", f: "Bebop", fam: "purple", cx: 700, r: 5, p: ["swing"], g: "Jazz", era: "1945", t: ["Koko – Charlie Parker", "A Night in Tunisia – Dizzy Gillespie"] },
-  // R&B, Soul og Funk står på tiåret sjangeren PREGET, ikke året den ble navngitt
-  // (brukervalg 2026-08-04): R&B leses som 50-tallets sjanger, Soul som 60-tallets.
-  // `era` er fortsatt fasiten for oppstartsåret, og sjangertidslinjen leser den —
-  // ikke raden — så flyttingen endrer bare kartet.
-  { id: "rnb", l: "R&B", f: "Rhythm & blues", fam: "red", cx: 1190, r: 6, p: ["blues", "gospel"], g: "R&B", era: "1940-tallet", t: ["Beans and Cornbread – Louis Jordan (1949)", "Hallelujah I Love Her So – Ray Charles (1956)"] },
-  { id: "nashville", l: "Nashville", f: "Nashville-sound", fam: "amber", cx: 195, r: 6, p: ["honkytonk"], g: "Country", era: "1957", t: ["Crazy – Patsy Cline (1961)", "Four Walls – Jim Reeves (1957)"] },
-  { id: "chicagoblues", l: "Electric blues", f: "Electric blues", fam: "blue", cx: 580, r: 5, p: ["blues"], g: "Blues", era: "midten av 1940-tallet", t: ["Got My Mojo Workin' – Muddy Waters (1956)", "Call It Stormy Monday – T-Bone Walker (1947)"] },
-  { id: "cool", l: "Cool jazz", f: "Cool jazz", fam: "purple", cx: 700, r: 6, p: ["bebop"], g: "Jazz", era: "1949", t: ["Take Five – Dave Brubeck (1959)", "Birth of the Cool – Miles Davis"] },
-  { id: "hardbop", l: "Hard bop", f: "Hard bop", fam: "purple", cx: 825, r: 6, p: ["bebop"], rx: ["cool"], g: "Jazz", era: "1955", t: ["Moanin' – Art Blakey (1959)"] },
-  { id: "soul", l: "Soul", f: "Soul", fam: "red", cx: 1190, r: 7, yOffset: -0.2, p: ["gospel", "rnb"], g: "R&B", era: "1959", t: ["Respect – Aretha Franklin (1967)", "A Change Is Gonna Come – Sam Cooke (1964)"] },
-  { id: "modal", l: "Modal jazz", f: "Modal jazz", fam: "purple", cx: 700, r: 6, yOffset: 0.5, p: ["bebop", "cool"], g: "Jazz", era: "1958", t: ["So What – Miles Davis (1959)", "A Love Supreme – John Coltrane (1964)"] },
-  { id: "free", l: "Free jazz", f: "Free jazz", fam: "purple", cx: 825, r: 7, p: ["bebop"], rx: ["hardbop"], g: "Jazz", era: "1960", t: ["Free Jazz – Ornette Coleman (1961)"] },
-  // Funk ligger NEDERST i 60-tallsbåndet og krysser 1970-linja: den kom sent i
-  // tiåret, og skal leses som soulens fortsettelse på vei inn i 70-tallet.
-  { id: "funk", l: "Funk", f: "Funk", fam: "red", cx: 1190, r: 7, yOffset: 0.4, p: ["soul"], g: "R&B", era: "1967", t: ["Papa's Got a Brand New Bag – James Brown", "Chameleon – Herbie Hancock (1973)"] },
-  { id: "reggae", l: "Reggae", f: "Reggae & dub", fam: "green", cx: 1590, r: 7, p: ["rnb"], g: "Klubbmusikk", era: "1968", t: ["Is This Love – Bob Marley", "Do the Reggay – Toots & the Maytals (1968)"] },
-  { id: "outlaw", l: "Outlaw", f: "Outlaw country", fam: "amber", cx: 195, r: 8, p: ["honkytonk"], rx: ["nashville"], g: "Country", era: "1970-tallet", t: ["Red Headed Stranger – Willie Nelson (1975)"] },
-  { id: "fusion", l: "Fusion", f: "Jazz-fusion", fam: "purple", cx: 760, r: 8, p: ["modal", "funk", "rock"], g: "Jazz", era: "1970", t: ["Bitches Brew – Miles Davis (1970)", "Birdland – Weather Report (1977)"] },
-  // id «hiphop», etikett «Early hip-hop» (v4.38): navnet «Hip-hop» flyttet ned
-  // til gullalder-noden, så denne står igjen som pionerårene i Bronx.
-  { id: "hiphop", l: "Early hip-hop", f: "Early hip-hop", fam: "pink", cx: 1340, r: 8, p: ["funk", "reggae", "disco"], g: "Hip-hop", era: "ca. 1979", t: ["Rapper's Delight – Sugarhill Gang (1979)", "The Message – Grandmaster Flash (1982)"] },
-  { id: "disco", l: "Disco", f: "Disco", fam: "teal", cx: 1650, r: 8, p: ["funk", "soul"], g: "Klubbmusikk", era: "1974", t: ["Stayin' Alive – Bee Gees (1977)", "Le Freak – Chic (1978)"] },
-  // House og techno er slått sammen (v3.97, brukervalg): to scener — Chicago og
-  // Detroit — som deler puls, maskinpark og publikum, og som i pensumet uansett
-  // leses som én elektronisk grunnstamme. Labelen bruker «&», ikke «/»: labelen
-  // ER doc-ID-en i genreDescriptions, og Firestore forbyr «/» i doc-ID-er
-  // (samme grunn som «Trance & DnB»).
-  { id: "house", l: "House & techno", f: "House & techno", fam: "teal", cx: 1780, r: 9, p: ["disco"], g: "Klubbmusikk", era: "1980–85", t: ["Move Your Body – Marshall Jefferson", "Your Love – Frankie Knuckles", "Strings of Life – Derrick May", "Big Fun – Inner City"] },
-  { id: "americana", l: "Americana", f: "Americana / alt-country", fam: "amber", cx: 70, r: 10, p: ["folk"], rx: ["nashville"], g: "Country", era: "1990-tallet", t: ["Oh My Sweet Carolina – Ryan Adams (2001)"] },
-  // yOffset senker Neo-soul et kvart tiår ned i 90-tallsbåndet (v4.30). Sjangeren
-  // hører hjemme sent i tiåret uansett (D'Angelo 1995, Badu 1997), og lavere ned
-  // ligger den utenfor de tre strekene som passerte tett inntil etiketten:
-  // newjack→contrnb og hiphop→contgospel grazet den på 1 px, og hiphop→neosoul
-  // skar gjennom New jack swing-etiketten på veien ned hit.
-  { id: "neosoul", l: "Neo-soul", f: "Neo-soul", fam: "red", cx: 1130, r: 10, yOffset: 0.25, p: ["soul", "hiphop"], g: "R&B", era: "1990-tallet", t: ["On & On – Erykah Badu (1997)", "Brown Sugar – D'Angelo (1995)"] },
-  { id: "trance", l: "Trance & DnB", f: "Trance & drum'n'bass", fam: "teal", cx: 1780, r: 10, p: ["house"], g: "Klubbmusikk", era: "1990-tallet", t: ["For an Angel – Paul van Dyk (1994)", "Timeless – Goldie (1995)"] },
-  { id: "nujazz", l: "Nu-jazz", f: "Nu-jazz", fam: "purple", cx: 780, r: 10, p: ["fusion", "house", "fjelljazz"], g: "Jazz", era: "1997", t: ["Khmer – Nils Petter Molvær (1997)", "Existence – Bugge Wesseltoft (1998)"] },
-
-  // --- Folk (revival) ---
-  { id: "folk", l: "Folk", f: "Folk (revival)", fam: "amber", cx: 70, r: 7, p: ["eurofolk"], g: "Country", era: "1950–60-tallet", t: ["This Land Is Your Land – Woody Guthrie (1944)", "Blowin' in the Wind – Bob Dylan (1963)"] },
-
-  // --- Rock ---
-  { id: "rocknroll", l: "Rock'n'roll", f: "Rock'n'roll", fam: "rock", cx: 445, r: 6, p: ["rnb", "honkytonk"], g: "Rock", era: "1955", t: ["Johnny B. Goode – Chuck Berry (1958)", "Hound Dog – Elvis Presley (1956)"] },
-  // «British invasion» er slått inn i Blues rock (v3.96, brukervalg): den var en
-  // HENDELSE mer enn en stilart, hadde bare to artister — og begge sto allerede
-  // i Blues rock — og lå under Blues selv om fenomenet hører rocken til.
-  // Blues rock arver rock'n'roll som forelder, så linja rock'n'roll → britisk
-  // bølge → blues rock ikke brytes, bare kortes ned. Låteksemplene fra den
-  // britiske bølgen er beholdt her, og Blues rock-beskrivelsen fortalte allerede
-  // historien om bølgen. Epoken utvides bakover til 1963, som var britinv-ens.
-  { id: "bluesrock", l: "Blues rock", f: "Blues rock", fam: "blue", cx: 580, r: 7, p: ["chicagoblues", "rock"], g: "Blues", era: "1963–69", t: ["Crossroads – Cream (1968)", "Whole Lotta Love – Led Zeppelin (1969)", "(I Can't Get No) Satisfaction – The Rolling Stones (1965)", "For Your Love – The Yardbirds (1965)"] },
-
-  // --- Rock ---
-  { id: "rock", l: "Rock", f: "Rock", fam: "rock", cx: 445, r: 7, p: ["rocknroll"], g: "Rock", era: "tidlig 1960-tall", t: ["My Generation – The Who (1965)", "Light My Fire – The Doors (1967)"] },
-
-  // --- Pop ---
-  { id: "pop", l: "Pop", f: "Pop", fam: "pop", cx: 300, r: 7, p: ["tinpan", "rnb", "rocknroll"], g: "Pop", era: "1960-tallet", t: ["Be My Baby – The Ronettes (1963)", "Walk On By – Dionne Warwick (1964)"] },
-
-  // --- Fjelljazz (ECM) ---
-  { id: "fjelljazz", l: "Fjelljazz", f: "Fjelljazz (ECM)", fam: "purple", cx: 950, r: 8, p: ["modal", "free"], g: "Jazz", era: "1970-tallet", t: ["Dansere – Jan Garbarek (1976)", "Witchi-Tai-To – Jan Garbarek (1974)"] },
-
-  // --- Country videre: tradisjonalistene ---
-  // Neotradisjonalismen er 1980-tallets svar på countrypolitan-popen: Outlaw-
-  // opprørets holdning møter honky tonk-instrumentene igjen. Ligger mellom
-  // Outlaw (1970-t) og Cont. country (1990-t–) og binder dem sammen.
-  // NB: KUN Outlaw som forelder. Honky tonk-arven og motreaksjonen mot Nashville
-  // arves gjennom Outlaw, som allerede har begge — tegnet vi dem på nytt her,
-  // ville strekene gått bak Nashville og Outlaw langs nøyaktig samme rute som
-  // de eksisterende, og sett ut som doble streker.
-  { id: "neotrad", l: "Neotrad. country", f: "Neotraditional country", fam: "amber", cx: 195, r: 9, p: ["outlaw"], g: "Country", era: "1980-tallet", t: ["Amarillo by Morning – George Strait (1983)", "Whoever's in New England – Reba McEntire (1986)"] },
-
-  // --- R&B videre: new jack swing ---
-  // Broen mellom funken og 90-tallets R&B, og den som gjør spranget fra Funk
-  // (1967) til Cont. R&B leselig: Teddy Riley la sangtradisjonen oppå hip-hopens
-  // programmerte trommer, og det er nettopp den koblingen Cont. R&B-beskrivelsen
-  // åpner med («utgangspunktet er new jack swing»). Derfor er noden også Cont.
-  // R&B-ens ENESTE forelder: funken og hip-hopen arves gjennom den, og tegnet vi
-  // dem på nytt ville strekene gått langs samme rute forbi Neo-soul (jf.
-  // Neotrad. country og regelen om færre foreldre).
-  { id: "newjack", l: "New jack swing", f: "New jack swing", fam: "red", cx: 1115, r: 9, p: ["funk", "hiphop"], g: "R&B", era: "1987–93", t: ["My Prerogative – Bobby Brown (1988)", "Groove Me – Guy (1988)", "Poison – Bell Biv DeVoe (1990)", "Remember the Time – Michael Jackson (1992)"] },
-
-  // --- Hip-hop videre ---
-  { id: "gangsta", l: "Gangsta rap", f: "Gangsta rap", fam: "pink", cx: 1340, r: 10, p: ["hiphop"], g: "Hip-hop", era: "ca. 1990", t: ["Straight Outta Compton – N.W.A (1988)", "Nuthin' but a 'G' Thang – Dr. Dre (1992)"] },
-  // NB: id-en er «gullalder», etiketten er «Hip-hop». Noden ble skilt ut i v3.88
-  // som hip-hopens gullalder, og fikk hovednavnet i v4.38 (brukervalg): det er
-  // denne perioden studentene skal kjenne som hip-hop, mens pionerene i Bronx
-  // står som «Early hip-hop» over. ID-ene ble BEVISST ikke endret — de er
-  // identiteten til de 80 koblingsbeskrivelsene (edgeKey = «fra__til»), og et
-  // bytte der ville gjort dem foreldreløse.
-  // Gangsta rap er bevisst IKKE forelder: den er samtidig med denne noden
-  // (N.W.A 1988), ikke etterkommer — de er to greiner ut fra Early hip-hop,
-  // øst og vest.
-  { id: "gullalder", l: "Hip-hop", f: "Hip-hop", fam: "pink", cx: 1340, r: 9, p: ["hiphop"], g: "Hip-hop", era: "1986–94", t: ["Fight the Power – Public Enemy (1989)", "C.R.E.A.M. – Wu-Tang Clan (1993)", "N.Y. State of Mind – Nas (1994)"] },
-  { id: "trap", l: "Trap", f: "Trap", fam: "pink", cx: 1340, r: 12, p: ["gangsta"], g: "Hip-hop", era: "2000–2010-tallet", t: ["Sicko Mode – Travis Scott (2018)", "Mask Off – Future (2017)"] },
-
-  // --- Elektronisk videre ---
-  { id: "elektronika", l: "Elektronika", f: "Elektronika", fam: "teal", cx: 1780, r: 11, p: ["house"], g: "Klubbmusikk", era: "1990–2000-tallet", t: ["Windowlicker – Aphex Twin (1999)", "Midnight in a Perfect World – DJ Shadow (1996)"] },
-  { id: "edm", l: "EDM", f: "EDM", fam: "teal", cx: 1780, r: 12, p: ["elektronika", "house"], g: "Klubbmusikk", era: "2010-tallet", t: ["Levels – Avicii (2011)", "Titanium – David Guetta ft. Sia (2011)"] },
-
-  // --- Samtid ---
-  // Sjangre som samler trådene i hver sin familie. Alle henter fra flere hold på
-  // tvers av treet — det er hele poenget med dem: samtidsmusikken er der grenene
-  // møtes igjen. Hele blokka står på 2000-t-raden (brukervalg 2026-08-17): det er
-  // tiåret de PREGET og er lest som samtidsmusikk i, og 1990-t er dessuten full
-  // i denne delen av kartet (Neo-soul, Gangsta rap). Årstallet i `era` — og de
-  // strukturerte årstallene i Firestore — er fasiten for når de oppsto, ikke raden.
-  { id: "contjazz", l: "Cont. jazz", f: "Contemporary jazz", fam: "purple", cx: 780, r: 11, p: ["nujazz", "hiphop"], g: "Jazz", era: "2010-tallet", t: ["The Epic – Kamasi Washington (2015)", "Black Radio – Robert Glasper Experiment (2012)"] },
-  { id: "contcountry", l: "Cont. country", f: "Contemporary country", fam: "amber", cx: 195, r: 11, p: ["neotrad", "nashville", "pop", "rock"], g: "Country", era: "1990-tallet–i dag", t: ["Need You Now – Lady Antebellum (2009)", "Cruise – Florida Georgia Line (2012)"] },
-  // cx flyttet 1070 → 1020 da noden kom opp på 2000-t-raden: den måtte klare av
-  // Cont. R&B ved siden av seg, og på kjøpet kom Gospel-streken ned forbi
-  // Neo-soul-boksen med god margin (den lå 2 px fra kanten før).
-  { id: "contgospel", l: "Cont. gospel", f: "Contemporary gospel", fam: "olive", cx: 1020, r: 11, p: ["gospel", "hiphop", "neosoul"], g: "Gospel", era: "1990-tallet–i dag", t: ["Stomp – Kirk Franklin & God's Property (1997)", "Break Every Chain – Tasha Cobbs (2013)"] },
-  // cx flyttet 1160 → 1240 da New jack swing kom inn over den: streken mellom dem
-  // måtte til høyre for Neo-soul-etiketten, ikke tvers gjennom den.
-  { id: "contrnb", l: "Cont. R&B", f: "Contemporary R&B", fam: "red", cx: 1240, r: 11, p: ["newjack"], g: "R&B", era: "1990-tallet–i dag", t: ["Real Love – Mary J. Blige (1992)", "Crazy in Love – Beyoncé (2003)"] },
-  { id: "conthiphop", l: "Cont. hip-hop", f: "Contemporary hip-hop", fam: "pink", cx: 1440, r: 11, p: ["gullalder", "gangsta"], g: "Hip-hop", era: "1995–i dag", t: ["Jesus Walks – Kanye West (2004)", "Alright – Kendrick Lamar (2015)"] },
-];
-
-// Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
-export const GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
-  .sort((a, b) => a.localeCompare(b, "no"));
-
-// Metasjangre (treets kolonner): én rad per hovedretning. Beholder rekkefølgen
-// fra GENEALOGY (≈ kronologisk) og utvides automatisk når nye metasjangre
-// legges inn i treet. Er VOKABULARET — hvilke metasjangre som finnes — og brukes
-// der rekkefølgen ikke betyr noe (nedtrekkslister, filtre, tellinger).
-// Visningsflatene sorterer etter META_GENRE_ORDER under.
-export const GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
-
-// Pedagogisk visningsrekkefølge for metasjangrene (brukervalg): den
-// afroamerikanske linja samlet først — Blues → Jazz → R&B → Hip-hop →
-// Klubbmusikk → Gospel — og deretter Country → Pop → Rock. Treets egen
-// rekkefølge (GENEALOGY_META_GENRES ovenfor) er ≈ kronologisk og river disse
-// slektskapene fra hverandre; her står familiene som henger sammen ved siden
-// av hverandre. Brukes av artistenes tidslinje OG varmekartet — de to flatene
-// deler mønster og fargespråk, og må derfor lese likt ovenfra og ned.
-//
-// Listen er en RANGERING, ikke en fasit på hvilke metasjangre som finnes: den
-// sorterer det treet faktisk inneholder, og en ny metasjanger som ikke står her
-// havner sist i treets egen rekkefølge i stedet for å forsvinne.
-const META_ORDER_HINT = ["Blues", "Jazz", "R&B", "Hip-hop", "Klubbmusikk", "Gospel", "Country", "Pop", "Rock"];
-export const META_GENRE_ORDER = (() => {
-  const rank = new Map(META_ORDER_HINT.map((m, i) => [m, i]));
-  // Array.sort er stabil, så ukjente metasjangre beholder treets rekkefølge seg imellom.
-  return [...GENEALOGY_META_GENRES].sort(
-    (a, b) => (rank.get(a) ?? Infinity) - (rank.get(b) ?? Infinity));
-})();
-
-// Alle koblinger (streker) i treet: avstamning/påvirkning (p) + motreaksjon
-// (rx), i definisjonsrekkefølge. Delt av slektstreets trykkbaner, lærer-
-// oversikten (koblinger uten beskrivelse) og eksport/import.
-export const GENEALOGY_EDGES = (() => {
-  const edges = [];
-  GENEALOGY.forEach((n) => {
-    const ps = n.p.slice();
-    (n.rx || []).forEach((id) => { if (!ps.includes(id)) ps.push(id); });
-    ps.forEach((pid) => edges.push({ from: pid, to: n.id, react: (n.rx || []).includes(pid) }));
-  });
-  return edges;
-})();
-
-// Dokument-ID i Firestore-samlingen edgeDescriptions for koblingen fra → til.
-export function edgeKey(fromId, toId) {
-  return `${fromId}__${toId}`;
-}
-
-// Er navnet en ekte tre-sjanger (mainGenre)? Brukes til å skille mainGenre fra
-// frie undersjangre (subGenre). Delt av store, ui, explore og teacher.
-const MAIN_GENRE_SET = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
-export function isMainGenre(name) {
-  return MAIN_GENRE_SET.has(String(name).toLowerCase());
-}
-
-// Finn tre-noden (ekte sjanger, g≠null) et navn peker på — matcher både label
-// (l) og fullt navn (f), case-insensitivt. isMainGenre ser kun på labels og
-// er riktig for KLASSIFISERING (tagger skal være l); denne er for NAVIGASJON,
-// der også nodens fulle navn (f.eks. under-chippen «Outlaw country») skal
-// finne frem til sjangerbeskrivelsen.
-export function findTreeGenreNode(name) {
-  const s = String(name).toLowerCase();
-  return GENEALOGY.find((n) => n.g && (n.l.toLowerCase() === s || n.f.toLowerCase() === s)) || null;
-}
+import { wireAllLinks } from "./linkify.js?v=4.48";
+import { renderRichText } from "./rich-text.js?v=4.48";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.48";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.48";
+import { modalOpen } from "./ui-modal.js?v=4.48";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.48";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.48";
+import { attachCamera } from "./gx-camera.js?v=4.48";
+import { GENEALOGY, FAMILIES, DECADE_ROWS } from "./genre-model.js?v=4.48";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -445,73 +233,12 @@ export function showEdgeInfo(fromId, toId, opts = {}) {
 }
 
 const W = 1900, NW = 116, NH = 40, SVGNS = "http://www.w3.org/2000/svg";
-const RY = { 0: 70, 1: 165, 2: 260, 3: 355, 4: 450, 5: 545, 6: 640, 7: 735, 8: 830, 9: 925, 10: 1020, 11: 1115, 12: 1210 };
-const ROW_GAP = 95;   // avstand mellom RY-radene; brukes til node-yOffset (brøkdel av en rad)
+const ROW_GAP = 95;   // avstand mellom radene; brukes til node-yOffset (brøkdel av en rad)
+const ROW_TOP = 70;   // y for rad 0
+// y for en rad. Var en fast tabell med tolv oppslag til v4.48; nå en formel, så
+// en sjanger på en ny rad (2020-tallet) får en y i stedet for undefined.
+const rowY = (r) => ROW_TOP + r * ROW_GAP;
 const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t", 12: "2010-t" };
-// Sjangerfamilier: strekfarge + etikett til fargeforklaringen. Rekkefølgen her
-// styrer rekkefølgen i forklaringen. Familier som brukes i treet, men mangler
-// her, varsles i konsollen og tegnes uten farge (se renderGenealogy).
-const FAMILIES = {
-  blue:   { stroke: "#3b82f6", label: "Blues" },
-  rock:   { stroke: "#334155", label: "Rock" },
-  pop:    { stroke: "#c026d3", label: "Pop" },
-  amber:  { stroke: "#d97706", label: "Country" },
-  purple: { stroke: "#7c3aed", label: "Jazz" },
-  red:    { stroke: "#dc2626", label: "R&B / soul / funk" },
-  // Gospel ble skilt ut av den røde familien i v3.88 (R&B overtok rødt) og måtte
-  // UT av rød-rosa-aksen, ikke bare et hakk til side i den: rødt (R&B), rosa
-  // (hip-hop) og fuchsia (Pop) ligger allerede tett, og en burgunder mellom dem
-  // ble enten forvekslet med rosa eller så mørk at den leste som svart.
-  // Oliven er den eneste ledige kulørsonen i paletten — 90° fra Klubbmusikkens
-  // turkis og tydelig mattere enn reggae-grønnen den deler legend med.
-  olive:  { stroke: "#4d7c0f", label: "Gospel" },
-  teal:   { stroke: "#0d9488", label: "Disco / electronica" },
-  pink:   { stroke: "#db2777", label: "Hip-hop" },
-  green:  { stroke: "#16a34a", label: "Reggae" },
-  gray:   { stroke: "#9bada1", label: "Røtter" },
-};
-const FAM_STROKE = Object.fromEntries(Object.entries(FAMILIES).map(([k, v]) => [k, v.stroke]));
-
-// Fargepaletten + per-sjanger-oppslag eksponeres så andre visninger (f.eks.
-// varmekartet) kan gruppere mainGenre etter metaGenre og fargelegge dem med
-// nøyaktig de samme slektstre-familiefargene.
-export { FAMILIES };
-export const MAIN_GENRE_INFO = Object.fromEntries(
-  GENEALOGY.filter((n) => n.g).map((n) => [n.l, {
-    meta: n.g,                                  // metaGenre (metasjanger)
-    fam: n.fam,                                 // familienøkkel i treet
-    color: FAMILIES[n.fam]?.stroke || FAMILIES.gray.stroke,
-  }])
-);
-
-// Farge per METASJANGER (metaGenre): familiefargen som flest av metasjangerens
-// tre-noder bruker. Utledet, ikke hardkodet — en ny node med ny familie flytter
-// automatisk fargen hvis den blir den vanligste. Brukt av sjangerhistorie-
-// knappene, så de snakker samme fargespråk som treet.
-//
-// Det finnes BEVISST ingen unntaksliste lenger (v3.88): hver metasjanger har nå
-// sin egen familie, så tellingen alene gir syv ulike farger. Tidligere måtte
-// R&B låne hip-hop-rosa fordi R&B og Gospel delte den røde familien; nå har
-// Gospel fått «wine» og hip-hop er egen metasjanger som beholder rosa.
-//
-// «gray» holdes utenfor tellingen: den er røttenes farge, ikke en identitet en
-// metasjanger kan arve. Uten den regelen ville Tin Pan Alley (gray) og Pop (pop)
-// stått 1–1 i Pop, og Pop fått røtter-gråen — samme grå som «Røtter» i
-// forklaringen. Skulle en metasjanger bestå av bare gray-noder, faller den
-// tilbake til gråen med vilje.
-export const META_GENRE_COLOR = (() => {
-  const tally = {};                              // meta → { fam: antall }
-  for (const n of GENEALOGY) {
-    if (!n.g || n.fam === "gray") continue;
-    (tally[n.g] ||= {})[n.fam] = (tally[n.g][n.fam] || 0) + 1;
-  }
-  const metas = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
-  return Object.fromEntries(metas.map((meta) => {
-    const fams = Object.entries(tally[meta] || {}).sort((a, b) => b[1] - a[1]);
-    return [meta, FAMILIES[fams[0]?.[0]]?.stroke || FAMILIES.gray.stroke];
-  }));
-})();
-
 function el(tag, attrs) {
   const e = document.createElementNS(SVGNS, tag);
   for (const k in attrs) e.setAttribute(k, attrs[k]);
@@ -532,7 +259,7 @@ export function renderGenealogy({ root = document, getOpts }) {
   // tiår (blues↔work songs, modal↔cool, soul↔funk), så «forelder over barn»
   // bevares uten å bryte rad = tiår. Negativ verdi løfter noden mot toppen av
   // båndet (Soul), positiv senker den mot neste tiårslinje (Funk).
-  GENEALOGY.forEach((n) => { n.y = RY[n.r] + (n.yOffset || 0) * ROW_GAP; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
+  GENEALOGY.forEach((n) => { n.y = rowY(n.r) + (n.yOffset || 0) * ROW_GAP; n.rx = n.rx || []; map[n.id] = n; kids[n.id] = []; });
   // Alle foreldre = avstamning (p) + motreaksjon (rx)
   const parentsOf = (n) => { const a = n.p.slice(); n.rx.forEach((id) => { if (!a.includes(id)) a.push(id); }); return a; };
   GENEALOGY.forEach((n) => parentsOf(n).forEach((p) => { if (kids[p]) kids[p].push(n.id); }));
@@ -555,7 +282,7 @@ export function renderGenealogy({ root = document, getOpts }) {
   // Tegnes FØRST, så rutenett, kanter og noder ligger over.
   const FAMBG_PAD = 14, FAMBG_OPACITY = 0.06, FAMBG_STROKE = 74;
   for (const fam of new Set(GENEALOGY.map((n) => n.fam))) {
-    const color = FAM_STROKE[fam] || FAMILIES.gray.stroke;
+    const color = FAMILIES[fam]?.stroke || FAMILIES.gray?.stroke;
     const g = el("g", { class: "gx-famband", opacity: FAMBG_OPACITY });
     for (const n of GENEALOGY) {
       if (n.fam !== fam) continue;
@@ -576,13 +303,15 @@ export function renderGenealogy({ root = document, getOpts }) {
     cam.appendChild(g);
   }
 
-  // Tiår-rutenett (tids-aksen)
-  for (let r = 0; r <= 12; r++) {
-    cam.appendChild(el("line", { x1: 0, y1: RY[r] - 47, x2: W, y2: RY[r] - 47, class: "gx-grid" }));
-    const dl = el("text", { x: 14, y: RY[r] - 40, class: "gx-decade" });
-    dl.textContent = DEC[r];
+  // Tiår-rutenett (tids-aksen). Radene kommer fra modellen (DECADE_ROWS), som
+  // utleder dem av nodene — legger læreren inn en 2020-tallssjanger, vokser
+  // aksen av seg selv i stedet for å stoppe på et hardkodet 2010-t.
+  DECADE_ROWS.forEach((label, r) => {
+    cam.appendChild(el("line", { x1: 0, y1: rowY(r) - 47, x2: W, y2: rowY(r) - 47, class: "gx-grid" }));
+    const dl = el("text", { x: 14, y: rowY(r) - 40, class: "gx-decade" });
+    dl.textContent = label;
     cam.appendChild(dl);
-  }
+  });
 
   // Kanter — heltrukne = avstamning, stiplet = motreaksjon
   const edges = [], edgeHits = [];
@@ -661,7 +390,7 @@ export function renderGenealogy({ root = document, getOpts }) {
       const on = ancSelf[e.dataset.c] || e.dataset.p === id;
       e.classList.toggle("gx-hl", !!on);
       e.classList.toggle("gx-dim", !on);
-      e.style.stroke = on ? (e.dataset.react ? "#d97706" : (FAM_STROKE[e.dataset.fam] || "")) : "";
+      e.style.stroke = on ? (e.dataset.react ? "#d97706" : ((FAMILIES[e.dataset.fam]?.stroke || ""))) : "";
     });
   }
   // Utheving av ÉN kobling (hover på trykkbane): de to endepunkt-nodene +
@@ -675,7 +404,7 @@ export function renderGenealogy({ root = document, getOpts }) {
       const on = e.dataset.p === pid && e.dataset.c === cid;
       e.classList.toggle("gx-hl", on);
       e.classList.toggle("gx-dim", !on);
-      e.style.stroke = on ? (e.dataset.react ? "#d97706" : (FAM_STROKE[e.dataset.fam] || "")) : "";
+      e.style.stroke = on ? (e.dataset.react ? "#d97706" : ((FAMILIES[e.dataset.fam]?.stroke || ""))) : "";
     });
   }
   function clearLight() {
@@ -703,7 +432,7 @@ export function renderGenealogy({ root = document, getOpts }) {
   });
   function showCard(n) {
     cardName.textContent = n.l;
-    cardDot.style.background = FAM_STROKE[n.fam] || FAM_STROKE.gray;
+    cardDot.style.background = FAMILIES[n.fam]?.stroke || FAMILIES.gray?.stroke;
     card.classList.add("show");
   }
   function selectTouch(id) { selectedId = id; light(id); showCard(map[id]); }
@@ -716,7 +445,7 @@ export function renderGenealogy({ root = document, getOpts }) {
   // en dragning, `isTouch()` skiller to-trinns-trykk fra mus-hover.
   const camera = attachCamera({
     root, stage, cam, width: W,
-    height: RY[12] + NH,             // nederste tiårsrad + nodehøyde
+    height: rowY(Math.max(DECADE_ROWS.length - 1, 0)) + NH,   // nederste tiårsrad + nodehøyde
     onBackgroundClick: reset,
   });
 

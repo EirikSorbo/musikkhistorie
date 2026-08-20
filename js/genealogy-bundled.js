@@ -16,8 +16,9 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { GENEALOGY, FAMILIES, showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.47";
-import { attachCamera } from "./gx-camera.js?v=4.47";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.48";
+import { GENEALOGY, FAMILIES } from "./genre-model.js?v=4.48";
+import { attachCamera } from "./gx-camera.js?v=4.48";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = 2400;            // logisk kartbredde (kameraet skalerer til scenen)

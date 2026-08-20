@@ -36,7 +36,7 @@ import {
   subscribeContent,
   subscribeDecades,
   subscribePodcasts,
-} from "./store.js?v=4.47";
+} from "./store.js?v=4.48";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan

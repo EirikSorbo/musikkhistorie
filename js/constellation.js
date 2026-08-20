@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, FAMILIES } from "./genealogy.js?v=4.47";
-import { escapeHtml } from "./ui-helpers.js?v=4.47";
-import { safeUrl, wikimediaThumb } from "./util.js?v=4.47";
+import { GENEALOGY, FAMILIES, canonMainGenre } from "./genre-model.js?v=4.48";
+import { escapeHtml } from "./ui-helpers.js?v=4.48";
+import { safeUrl, wikimediaThumb } from "./util.js?v=4.48";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -28,7 +28,6 @@ const ROW_Y = (r) => 55 + r * 64;
 const VBW = 1660, VBH = 900;
 const ZOOM_MIN = 0.7, ZOOM_MAX = 7;
 
-const canonMain = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
 
 const famColor = (fam) => FAMILIES[fam]?.stroke || FAMILIES.gray.stroke;
 const el = (tag, attrs = {}) => {
@@ -120,7 +119,7 @@ function buildGraph(artists) {
   const loose = [];
   for (const a of artists) {
     const genreNodes = [...new Set((a.mainGenre || [])
-      .map((g) => canonMain.get(String(g).toLowerCase()))
+      .map((g) => canonMainGenre(g))
       .filter(Boolean)
       .map((lbl) => nodeByLabel.get(lbl.toLowerCase()))
       .filter(Boolean))];

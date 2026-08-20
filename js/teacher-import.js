@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.47";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.48";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -18,13 +18,13 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.47";
-import { escapeHtml } from "./ui.js?v=4.47";
-import { $ } from "./shared.js?v=4.47";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genealogy.js?v=4.47";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.47";
-import { INSTRUMENTS } from "./limits.js?v=4.47";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.47";
+} from "./store.js?v=4.48";
+import { escapeHtml } from "./ui.js?v=4.48";
+import { $ } from "./shared.js?v=4.48";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.48";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.48";
+import { INSTRUMENTS } from "./limits.js?v=4.48";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.48";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -82,9 +82,8 @@ export function setupDataButtons() {
 // Hvilket nivå (meta/main/sub) en sjanger hører til — samme inndeling som
 // lærer-dashboardet. Delt av eksport og import. Treet er eneste kilde til
 // metasjangre (config-lista er fjernet, v3.20).
-const META_SET = new Set(GENEALOGY_META_GENRES);
 function genreSectionOf(name) {
-  return META_SET.has(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
+  return GENEALOGY_META_GENRES.includes(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
 }
 
 // Har tiåret noe innhold verdt å eksportere/importere? (samfunn/teknologi,

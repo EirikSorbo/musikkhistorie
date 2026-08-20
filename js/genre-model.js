@@ -1,0 +1,219 @@
+// ============================================================================
+//  SJANGERMODELLEN — treets form, avledet ett sted
+// ----------------------------------------------------------------------------
+//  Alt appen vet om HVILKE sjangre som finnes, hvem som stammer fra hvem, hvilke
+//  metasjangre de hører til og hvilke farger de har, avledes her. Fram til v4.47
+//  bodde både rådataene og avledningene i js/genealogy.js, og «legg til en
+//  sjanger» var derfor en utviklerjobb. Nå er kilden ETT dokument i Firestore
+//  (se subscribeGenealogy i store.js), og denne modulen er den eneste som
+//  kjenner dokumentets form.
+//
+//  KONTRAKTEN mot resten av appen er uendret: samme symbolnavn, samme innhold,
+//  samme formler som før. De ~20 modulene som leser vokabularet trengte derfor
+//  bare å bytte importlinje.
+//
+//  ES-modulers LIVE BINDINGS bærer hele designet: eksportene er `let`, og
+//  rebuild() tilordner dem på nytt når et snapshot lander. En importør som
+//  leser `GENEALOGY_MAIN_GENRES` ved KALL-tid ser alltid ferskeste verdi.
+//  Fang derfor ALDRI en avledet verdi i en modulnivå-konstant (det var nettopp
+//  det canonMain i explore-context.js og constellation.js gjorde, og de måtte
+//  legges om) — les den inne i funksjonen som trenger den.
+//
+//  Modellen er TOM til første snapshot lander. Det er med vilje: det finnes
+//  ingen fallback-kopi av treet i koden, for da ville en tom database sett ut
+//  som et fungerende pensum. Sidene viser i stedet en tydelig melding
+//  (isGenreModelReady()).
+// ============================================================================
+
+// --- Modelltilstanden (byttes av rebuild) -----------------------------------
+
+// Alle noder i treet, i dokumentets rekkefølge. Røttene har g === null.
+export let GENEALOGY = [];
+
+// Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
+export let GENEALOGY_MAIN_GENRES = [];
+
+// Metasjangre (treets kolonner): én rad per hovedretning. Er VOKABULARET —
+// hvilke metasjangre som finnes — og brukes der rekkefølgen ikke betyr noe
+// (nedtrekkslister, filtre, tellinger). Visningsflatene sorterer etter
+// META_GENRE_ORDER under.
+export let GENEALOGY_META_GENRES = [];
+
+// Pedagogisk visningsrekkefølge for metasjangrene (brukervalg): den
+// afroamerikanske linja samlet først — Blues → Jazz → R&B → Hip-hop →
+// Klubbmusikk → Gospel — og deretter Country → Pop → Rock. Treets egen
+// rekkefølge er ≈ kronologisk og river disse slektskapene fra hverandre; her
+// står familiene som henger sammen ved siden av hverandre. Brukes av artistenes
+// tidslinje OG varmekartet — de to flatene deler mønster og fargespråk, og må
+// derfor lese likt ovenfra og ned.
+//
+// Rekkefølgen er en RANGERING, ikke en fasit på hvilke metasjangre som finnes:
+// den sorterer det treet faktisk inneholder, og en metasjanger som ikke er
+// rangert havner sist i treets egen rekkefølge i stedet for å forsvinne.
+export let META_GENRE_ORDER = [];
+
+// Alle koblinger (streker) i treet: avstamning/påvirkning (p) + motreaksjon
+// (rx), i definisjonsrekkefølge. Delt av slektstreets trykkbaner, lærer-
+// oversikten (koblinger uten beskrivelse) og eksport/import.
+export let GENEALOGY_EDGES = [];
+
+// Sjangerfamilier: strekfarge + etikett til fargeforklaringen. Rekkefølgen
+// styrer rekkefølgen i forklaringen.
+export let FAMILIES = {};
+
+// Per-sjanger-oppslag, så andre visninger (f.eks. varmekartet) kan gruppere
+// mainGenre etter metaGenre og fargelegge dem med nøyaktig de samme
+// slektstre-familiefargene.
+export let MAIN_GENRE_INFO = {};
+
+// Farge per METASJANGER: familiefargen som flest av metasjangerens tre-noder
+// bruker. Utledet, ikke hardkodet — en ny node med ny familie flytter
+// automatisk fargen hvis den blir den vanligste. Brukt av sjangerhistorie-
+// knappene, så de snakker samme fargespråk som treet.
+//
+// «gray» holdes utenfor tellingen: den er røttenes farge, ikke en identitet en
+// metasjanger kan arve. Uten den regelen ville Tin Pan Alley (gray) og Pop (pop)
+// stått 1–1 i Pop, og Pop fått røtter-gråen. Skulle en metasjanger bestå av
+// bare gray-noder, faller den tilbake til gråen med vilje.
+export let META_GENRE_COLOR = {};
+
+// Tiårsaksen treet tegnes på: rad → etikett. Utledes av nodene, så en sjanger
+// på en ny rad (2020-tallet) utvider aksen av seg selv i stedet for å havne
+// utenfor et hardkodet endepunkt.
+export let DECADE_ROWS = [];
+
+let mainGenreSet = new Set();
+let mainGenreCanon = new Map();
+let nodeIndex = new Map();
+let ready = false;
+
+// Varsles hver gang modellen bygges på nytt (nytt snapshot fra Firestore).
+const listeners = new Set();
+
+// Har modellen fått data? Sidene bruker denne til å skille «laster» fra
+// «treet mangler» — se banner-håndteringen i tre-page.js og landing.js.
+export function isGenreModelReady() { return ready; }
+
+// --- Avledningene ------------------------------------------------------------
+
+// Rad → tiårsetikett. Rad 0 er røttene (før innspillingenes tid), rad 1 er
+// 1900, og hver rad etter det er et tiår. Genereres så langt nodene rekker.
+function buildDecadeRows(nodes) {
+  const maxRow = nodes.reduce((m, n) => Math.max(m, Math.floor(n.r || 0)), 0);
+  const rows = ["Røtter"];
+  for (let r = 1; r <= Math.max(maxRow, 1); r++) {
+    rows.push(r === 1 ? "1900" : `${1900 + (r - 1) * 10}-t`);
+  }
+  return rows;
+}
+
+// Bygger hele modellen fra et treobjekt: { nodes, families, metaOrderHint }.
+// Kalles av snapshot-lytteren og av testene. Tåler delvis/tom input.
+export function rebuild(tree) {
+  const nodes = Array.isArray(tree?.nodes) ? tree.nodes : [];
+  const families = tree?.families && typeof tree.families === "object" ? tree.families : {};
+  const hint = Array.isArray(tree?.metaOrderHint) ? tree.metaOrderHint : [];
+
+  // Normaliser: rx er valgfri i dokumentet, men resten av appen forventer at
+  // den alltid finnes som array (renderGenealogy muterte den tidligere på plass).
+  GENEALOGY = nodes.map((n) => ({ ...n, p: Array.isArray(n.p) ? n.p : [], rx: Array.isArray(n.rx) ? n.rx : [] }));
+  FAMILIES = families;
+
+  GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
+    .sort((a, b) => a.localeCompare(b, "no"));
+  GENEALOGY_META_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.g))];
+
+  const rank = new Map(hint.map((m, i) => [m, i]));
+  // Array.sort er stabil, så urangerte metasjangre beholder treets rekkefølge seg imellom.
+  META_GENRE_ORDER = [...GENEALOGY_META_GENRES].sort(
+    (a, b) => (rank.get(a) ?? Infinity) - (rank.get(b) ?? Infinity));
+
+  const edges = [];
+  GENEALOGY.forEach((n) => {
+    const ps = n.p.slice();
+    n.rx.forEach((id) => { if (!ps.includes(id)) ps.push(id); });
+    ps.forEach((pid) => edges.push({ from: pid, to: n.id, react: n.rx.includes(pid) }));
+  });
+  GENEALOGY_EDGES = edges;
+
+  const grayFallback = () => FAMILIES.gray?.stroke || "#9bada1";
+  MAIN_GENRE_INFO = Object.fromEntries(
+    GENEALOGY.filter((n) => n.g).map((n) => [n.l, {
+      meta: n.g,                                  // metaGenre (metasjanger)
+      fam: n.fam,                                 // familienøkkel i treet
+      color: FAMILIES[n.fam]?.stroke || grayFallback(),
+    }]));
+
+  const tally = {};                              // meta → { fam: antall }
+  for (const n of GENEALOGY) {
+    if (!n.g || n.fam === "gray") continue;
+    (tally[n.g] ||= {})[n.fam] = (tally[n.g][n.fam] || 0) + 1;
+  }
+  META_GENRE_COLOR = Object.fromEntries(GENEALOGY_META_GENRES.map((meta) => {
+    const fams = Object.entries(tally[meta] || {}).sort((a, b) => b[1] - a[1]);
+    return [meta, FAMILIES[fams[0]?.[0]]?.stroke || grayFallback()];
+  }));
+
+  DECADE_ROWS = buildDecadeRows(GENEALOGY);
+  mainGenreSet = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
+  mainGenreCanon = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
+  nodeIndex = new Map(GENEALOGY.map((n) => [n.id, n]));
+  ready = GENEALOGY.length > 0;
+
+  listeners.forEach((fn) => { try { fn(); } catch (e) { console.error("genre-model-lytter feilet:", e); } });
+}
+
+// --- Oppslag ----------------------------------------------------------------
+
+// Dokument-ID i Firestore-samlingen edgeDescriptions for koblingen fra → til.
+export function edgeKey(fromId, toId) {
+  return `${fromId}__${toId}`;
+}
+
+// Er navnet en ekte tre-sjanger (mainGenre)? Brukes til å skille mainGenre fra
+// frie undersjangre (subGenre). Delt av store, ui, explore og teacher.
+export function isMainGenre(name) {
+  return mainGenreSet.has(String(name).toLowerCase());
+}
+
+// Kanoniser et sjangernavn til treets stavemåte («blues» → «Blues»). Artist-
+// tagger skrives av mennesker og varierer i case; visningsflatene må gruppere
+// dem likt. Returnerer undefined for navn som ikke er tre-sjangre.
+//
+// Var tidligere en modulnivå-Map (canonMain) i BÅDE explore-context.js og
+// constellation.js. Den låste vokabularet til import-tidspunktet og ville aldri
+// sett en sjanger læreren la til senere.
+export function canonMainGenre(name) {
+  return mainGenreCanon.get(String(name).toLowerCase());
+}
+
+// Node-oppslag på id. Bygges av rebuild, så kallere slipper å lage sin egen Map
+// på modulnivå (som ville frosset ved import-tid).
+export function genreNodeById(id) {
+  return nodeIndex.get(id) || null;
+}
+
+// Finn tre-noden (ekte sjanger, g≠null) et navn peker på — matcher både label
+// (l) og fullt navn (f), case-insensitivt. isMainGenre ser kun på labels og
+// er riktig for KLASSIFISERING (tagger skal være l); denne er for NAVIGASJON,
+// der også nodens fulle navn (f.eks. under-chippen «Outlaw country») skal
+// finne frem til sjangerbeskrivelsen.
+export function findTreeGenreNode(name) {
+  const s = String(name).toLowerCase();
+  return GENEALOGY.find((n) => n.g && (n.l.toLowerCase() === s || n.f.toLowerCase() === s)) || null;
+}
+
+
+// Meld deg på varsling om at modellen er bygget på nytt.
+// Returnerer en avmeldingsfunksjon.
+export function onGenreModelChanged(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+// --- MIDLERTIDIG FRØ (fase 0) -----------------------------------------------
+//  Bygger modellen synkront fra kodedataene, nøyaktig som før refaktoreringen,
+//  så fase 0 er beviselig atferdsidentisk. FJERNES i fase 1, når Firestore blir
+//  kilden — da skal ingen runtime-modul importere genealogy-data.js.
+import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "./genealogy-data.js?v=4.48";
+rebuild({ nodes: SEED_NODES, families: SEED_FAMILIES, metaOrderHint: META_ORDER_HINT });
