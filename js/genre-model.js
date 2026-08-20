@@ -211,9 +211,44 @@ export function onGenreModelChanged(fn) {
   return () => listeners.delete(fn);
 }
 
-// --- MIDLERTIDIG FRØ (fase 0) -----------------------------------------------
-//  Bygger modellen synkront fra kodedataene, nøyaktig som før refaktoreringen,
-//  så fase 0 er beviselig atferdsidentisk. FJERNES i fase 1, når Firestore blir
-//  kilden — da skal ingen runtime-modul importere genealogy-data.js.
-import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "./genealogy-data.js?v=4.48";
-rebuild({ nodes: SEED_NODES, families: SEED_FAMILIES, metaOrderHint: META_ORDER_HINT });
+// --- Kilde: Firestore, med localStorage-speil -------------------------------
+//  Treet bor i dokumentet content/genealogy og kommer inn via det EKSISTERENDE
+//  content-abonnementet (js/shared-data.js), så det koster ingen ekstra
+//  Firestore-lesinger.
+//
+//  Speilet er ikke en fallback-kopi av pensumet — det er sist mottatte data.
+//  Uten det ville en treg eller brutt forbindelse gitt et tomt kart ved kald
+//  start selv om eleven var her i går. Samme prinsipp som js/artist-cache.js.
+
+const SPEIL_NOKKEL = "pensum_cache_genealogy_v1";
+
+function lesSpeil() {
+  try {
+    const rå = localStorage.getItem(SPEIL_NOKKEL);
+    const t = rå ? JSON.parse(rå) : null;
+    return Array.isArray(t?.nodes) && t.nodes.length ? t : null;
+  } catch { return null; }
+}
+
+function skrivSpeil(tree) {
+  try { localStorage.setItem(SPEIL_NOKKEL, JSON.stringify(tree)); } catch { /* full storage */ }
+}
+
+// Tar imot dokumentet fra content-snapshotet. Kalles av subscribeSharedData.
+// Et TOMT/manglende dokument nullstiller IKKE en modell som allerede har data:
+// da ville et halvskrevet dokument midt i en lærerimport blanket kartet for
+// hele klassen. Mangler treet helt, forblir modellen tom og sidene sier fra.
+export function applyGenealogyDoc(doc) {
+  const gyldig = Array.isArray(doc?.nodes) && doc.nodes.length > 0;
+  if (!gyldig) {
+    if (!ready) rebuild(lesSpeil() || null);
+    return ready;
+  }
+  rebuild(doc);
+  skrivSpeil({ nodes: doc.nodes, families: doc.families, metaOrderHint: doc.metaOrderHint });
+  return true;
+}
+
+// Ved modul-lasting: bygg fra speilet med én gang, så kartet står der mens
+// snapshotet er underveis. Finnes ikke speilet, er modellen tom til data lander.
+rebuild(lesSpeil() || null);

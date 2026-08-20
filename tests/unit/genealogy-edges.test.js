@@ -2,9 +2,10 @@
 // koblingsliste og eksport/import av koblingsbeskrivelser. Testene låser at
 // alle koblinger peker på ekte noder, at motreaksjoner flagges, og at
 // edgeKey-formatet (Firestore-dokument-ID) er stabilt.
+import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=4.48";
+import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=4.51";
 
 test("GENEALOGY_EDGES: alle koblinger peker på eksisterende noder", () => {
   const ids = new Set(GENEALOGY.map((n) => n.id));

@@ -37,6 +37,9 @@ function utenKommentarer(src) {
 // ville nesten hver eneste import blitt meldt som ubrukt.
 function utenStrenger(src) {
   return src
+    // HTML-kommentarer inne i malene er tekst, ikke kode. Uten dette ble et
+    // symbolnavn nevnt i en <!-- forklaring --> lest som bruk.
+    .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/"(?:\\.|[^"\\])*"/g, ' "" ')
     .replace(/'(?:\\.|[^'\\])*'/g, " '' ");
 }
@@ -88,6 +91,37 @@ for (const f of filer) {
     }
   }
 }
+
+// «Brukt, men ikke importert»: et symbol som genre-model.js eksporterer, og som
+// en fil BRUKER uten å importere det, er en ReferenceError som først viser seg
+// når kodelinjen kjøres. Det skjedde da re-eksporten i genealogy.js ble fjernet:
+// edgeKey ble stående i bruk uten import, og hverken node --check eller
+// import-sjekken over fanget det (begge ser bare på importer).
+const modelExports = eksport["genre-model.js"] || new Set();
+const manglende = [];
+for (const f of filer) {
+  if (f === "genre-model.js") continue;
+  const s = utenKommentarer(kilde[f]);
+  const importert = new Set();
+  for (const m of s.matchAll(IMPORT_RE)) {
+    for (const del of m[1].split(",")) {
+      const t = del.trim(); if (!t) continue;
+      const [orig, alias] = t.split(/\s+as\s+/).map((x) => x.trim());
+      importert.add(alias || orig);
+    }
+  }
+  const kropp = utenStrenger(s.replace(IMPORT_RE, " ").replace(BARE_RE, " "));
+  // Lokale deklarasjoner skygger for modellens navn — de skal ikke meldes.
+  const lokale = new Set();
+  for (const m of kropp.matchAll(/(?:const|let|var|function|class)\s+([A-Za-z0-9_$]+)/g)) lokale.add(m[1]);
+  for (const navn of modelExports) {
+    if (importert.has(navn) || lokale.has(navn)) continue;
+    if (new RegExp(`(?<![A-Za-z0-9_$.])${navn}\\s*[(.[]`).test(kropp)) {
+      manglende.push(`${f}: bruker «${navn}» fra genre-model.js uten å importere det`);
+    }
+  }
+}
+brutt.push(...manglende);
 
 const skriv = (tittel, liste) => {
   if (!liste.length) return;

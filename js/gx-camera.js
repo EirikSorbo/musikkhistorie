@@ -65,6 +65,15 @@ export function attachCamera({
     apply();
   }
 
+  // Alt som kobles utenfor cam-elementet samles her, så kameraet kan ryddes opp
+  // når kartet tegnes på nytt (nytt sjangertre fra Firestore). Uten dette ville
+  // hver omtegning etterlatt et nytt sett pointerup-lyttere på window.
+  const opprydding = [];
+  const koble = (mål, type, fn, opts) => {
+    mål.addEventListener(type, fn, opts);
+    opprydding.push(() => mål.removeEventListener(type, fn, opts));
+  };
+
   root.querySelector("#gx-zin")?.addEventListener("click", () => zoom(1.25));
   root.querySelector("#gx-zout")?.addEventListener("click", () => zoom(0.8));
   root.querySelector("#gx-rst")?.addEventListener("click", () => {
@@ -118,7 +127,7 @@ export function attachCamera({
     pinchDist = 0;
     if (!pointers.size) stage.classList.remove("gx-drag");
   };
-  window.addEventListener("pointerup", endPtr);
+  koble(window, "pointerup", endPtr);
   stage.addEventListener("pointercancel", endPtr);
 
   stage.addEventListener("click", (ev) => {
@@ -130,6 +139,9 @@ export function attachCamera({
   return {
     fit,
     zoom,
+    // Kobler fra det som ligger utenfor kartet. Kall FØR en ny render på samme
+    // scene; elementene inne i #gx-cam forsvinner uansett når den tømmes.
+    destroy() { opprydding.forEach((av) => av()); opprydding.length = 0; },
     isMoved: () => moved,
     pointerType: () => lastPointerType,
     isTouch: () => lastPointerType === "touch" || lastPointerType === "pen",

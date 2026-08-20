@@ -14,11 +14,12 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=4.48";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=4.48";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.48";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=4.48";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.48";
+import { initExplore } from "./explore.js?v=4.51";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=4.51";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.51";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=4.51";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=4.51";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.51";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -63,18 +64,37 @@ export function initTrePage({ render }) {
   const stageEl = document.getElementById("gx-stage");
   let lastStageW = 0;
 
+  // Tegner kartet. Krever BÅDE at scenen har en bredde OG at sjangertreet har
+  // landet: fra v4.49 kommer treet fra Firestore, så modellen er tom de første
+  // øyeblikkene (med mindre localStorage-speilet har en kopi fra sist besøk).
+  // Tegnet vi før den var klar, ville vi malt et tomt kart som aldri fylte seg.
   function mount() {
-    if (api || !stageEl?.clientWidth) return false;
+    if (!stageEl?.clientWidth || !isGenreModelReady()) return false;
+    api?.destroy?.();                     // rydder kameraets window-lyttere
     api = render({ root: document, getOpts: sjangerOpts });
     api?.fit();
     lastStageW = stageEl.clientWidth;
+    visTreMangler(false);
     return true;
+  }
+
+  // Treet mangler i databasen: si det, i stedet for å la scenen stå tom. Appen
+  // har med vilje ingen kopi av pensumet i koden.
+  function visTreMangler(på) {
+    const el = document.getElementById("gx-tre-mangler");
+    if (el) el.style.display = på ? "" : "none";
+    if (stageEl) stageEl.style.display = på ? "none" : "";
   }
 
   if (!mount() && stageEl && "ResizeObserver" in window) {
     const ro = new ResizeObserver(() => { if (mount()) ro.disconnect(); });
     ro.observe(stageEl);
   }
+
+  // Nytt tre fra Firestore (første snapshot, eller lærerens import mens siden
+  // står åpen): tegn på nytt. Kameraet ryddes i mount(), så lytterne ikke hoper
+  // seg opp.
+  onGenreModelChanged(() => { mount(); });
 
   // «← Tilbake» på selve siden (treet er en side, ikke en modal). Har man kommet
   // hit fra Det store bildet eller et artistkort, går history.back() dit. Åpnet
@@ -107,7 +127,11 @@ export function initTrePage({ render }) {
       // contentChanged legger varmenivåene i heat-strip.js og tegner et åpent
       // sjangerkort på nytt, så varmestripa dukker opp av seg selv når
       // snapshotet lander etter at kortet ble åpnet.
-      onContent: () => explore.contentChanged(),
+      // Sjangertreet ligger i samme snapshot; er det ikke der, sier vi fra.
+      onContent: () => {
+        explore.contentChanged();
+        if (!isGenreModelReady()) visTreMangler(true);
+      },
     });
   });
 

@@ -36,7 +36,8 @@ import {
   subscribeContent,
   subscribeDecades,
   subscribePodcasts,
-} from "./store.js?v=4.48";
+} from "./store.js?v=4.51";
+import { applyGenealogyDoc } from "./genre-model.js?v=4.51";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan
@@ -96,6 +97,10 @@ export function subscribeSharedData(state, hooks = {}) {
   subscribeContent((c) => {
     state.content = c || {};
     state.contentLoaded = true;
+    // Sjangertreet bor i content/genealogy og kommer altså inn på DETTE
+    // snapshotet — ingen egen lytter, ingen ekstra lesinger. Modellen bygges
+    // FØR sidens hook kalles, så alt som tegnes i hooken ser ferskt vokabular.
+    applyGenealogyDoc(state.content.genealogy);
     onContent?.(state.content);
   });
 

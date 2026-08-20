@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.48";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.51";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -18,13 +18,14 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.48";
-import { escapeHtml } from "./ui.js?v=4.48";
-import { $ } from "./shared.js?v=4.48";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.48";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.48";
-import { INSTRUMENTS } from "./limits.js?v=4.48";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.48";
+} from "./store.js?v=4.51";
+import { escapeHtml } from "./ui.js?v=4.51";
+import { $ } from "./shared.js?v=4.51";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.51";
+import { validateTree } from "./genre-validate.js?v=4.51";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.51";
+import { INSTRUMENTS } from "./limits.js?v=4.51";
+import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.51";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -176,6 +177,10 @@ function buildExportData() {
   };
   if (varmekart) out.varmekart = varmekart;
   if (referanser) out.referanser = referanser;
+  // Sjangertreet (content/genealogy). Uten det er en backup ikke lenger
+  // komplett: fra v4.49 er treets STRUKTUR data, ikke kode, og en gjenoppretting
+  // uten det ville gitt en app helt uten sjangervokabular.
+  if (state.content?.genealogy?.nodes?.length) out.genealogy = state.content.genealogy;
   return out;
 }
 
@@ -409,7 +414,7 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
 // Innholdssider, varmekart og podkaster fra importfila. Podkaster
 // oppdateres på tittel-match (så en re-import ikke dupliserer episoder);
 // (Config i gamle backuper ignoreres — vokabularet bor i koden, v3.68.)
-async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks }) {
+async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks, genealogy }) {
   const done = [];
   const failed = [];
 
@@ -431,6 +436,29 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       if (skipped.length) console.warn("Varmekart-import: hoppet over rader som ikke er lister:", skipped);
     }
     catch (e) { console.error("Varmekart-import feilet:", e); failed.push("varmekartet"); }
+  }
+
+  // Sjangertreet ERSTATTES i sin helhet, men bare når det VALIDERER. En fil med
+  // en manglende forelder eller en sykel ville ellers blitt skrevet og tatt ned
+  // kartet for hele klassen — og treet er det ene dokumentet resten av
+  // vokabularet henger i.
+  if (genealogy && Array.isArray(genealogy.nodes)) {
+    const problemer = validateTree(genealogy);
+    const feil = problemer.filter((x) => x.nivå === "feil");
+    if (feil.length) {
+      console.error("Sjangertre-import avvist:", feil);
+      alert("Sjangertreet i fila ble AVVIST og er ikke importert:\n\n· "
+        + feil.slice(0, 8).map((f) => f.melding).join("\n· ")
+        + (feil.length > 8 ? `\n· … og ${feil.length - 8} til` : ""));
+      failed.push("sjangertreet");
+    } else {
+      try {
+        await saveDocsBulk("content", [{ id: "genealogy", data: { ...genealogy, updatedAt: new Date().toISOString() } }]);
+        done.push(`sjangertreet (${genealogy.nodes.length} noder)`);
+        problemer.filter((x) => x.nivå === "advarsel")
+          .forEach((a) => console.warn("Sjangertre-advarsel:", a.melding));
+      } catch (e) { console.error("Sjangertre-import feilet:", e); failed.push("sjangertreet"); }
+    }
   }
 
   // Frittstående referanser ERSTATTES i sin helhet: lista er ett dokument, og

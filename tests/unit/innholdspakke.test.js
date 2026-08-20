@@ -2,14 +2,15 @@
 // sidene og historiene skal rendre gjennom renderStoryHtml, og varmekart-
 // radene skal matche tre-sjangrene med gyldige nivåer. Fila er gitignored
 // (innhold, ikke kode) — finnes den ikke i utsjekket, hoppes testene over.
+import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { STORY_ORDER } from "../../js/story-format.js?v=4.48";
-import { renderRichText } from "../../js/rich-text.js?v=4.48";
-import { GENEALOGY_MAIN_GENRES } from "../../js/genre-model.js?v=4.48";
+import { STORY_ORDER } from "../../js/story-format.js?v=4.51";
+import { renderRichText } from "../../js/rich-text.js?v=4.51";
+import { GENEALOGY_MAIN_GENRES } from "../../js/genre-model.js?v=4.51";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
 let pakke = null;

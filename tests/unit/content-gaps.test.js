@@ -1,10 +1,11 @@
 // contentGaps er delt kilde for «Innhold som mangler» i Oversikt og tallet på
 // Skrivebordet. Testene låser tellereglene: hvilke felt/sider/historier som
 // regnes som hull, at bare synlige artister teller, og at total = sum av bøtter.
+import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=4.48";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=4.48";
+import { contentGaps } from "../../js/ui-dashboard.js?v=4.51";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=4.51";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],

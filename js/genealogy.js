@@ -10,15 +10,15 @@
 //  Firestore — herfra og ut er strukturen data, ikke kode.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.48";
-import { renderRichText } from "./rich-text.js?v=4.48";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.48";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.48";
-import { modalOpen } from "./ui-modal.js?v=4.48";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.48";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.48";
-import { attachCamera } from "./gx-camera.js?v=4.48";
-import { GENEALOGY, FAMILIES, DECADE_ROWS } from "./genre-model.js?v=4.48";
+import { wireAllLinks } from "./linkify.js?v=4.51";
+import { renderRichText } from "./rich-text.js?v=4.51";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.51";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.51";
+import { modalOpen } from "./ui-modal.js?v=4.51";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.51";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.51";
+import { attachCamera } from "./gx-camera.js?v=4.51";
+import { GENEALOGY, FAMILIES, DECADE_ROWS, edgeKey } from "./genre-model.js?v=4.51";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -513,5 +513,5 @@ export function renderGenealogy({ root = document, getOpts }) {
   }
 
   reset();
-  return { fit: camera.fit };
+  return { fit: camera.fit, destroy: camera.destroy };
 }

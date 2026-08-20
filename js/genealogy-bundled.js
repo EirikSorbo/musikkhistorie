@@ -16,9 +16,9 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.48";
-import { GENEALOGY, FAMILIES } from "./genre-model.js?v=4.48";
-import { attachCamera } from "./gx-camera.js?v=4.48";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.51";
+import { GENEALOGY, FAMILIES } from "./genre-model.js?v=4.51";
+import { attachCamera } from "./gx-camera.js?v=4.51";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = 2400;            // logisk kartbredde (kameraet skalerer til scenen)
@@ -418,5 +418,5 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   }
 
   reset();
-  return { fit: camera.fit };
+  return { fit: camera.fit, destroy: camera.destroy };
 }
