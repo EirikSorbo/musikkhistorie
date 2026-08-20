@@ -1899,6 +1899,42 @@ body.is-teacher #gate { display: none; }
 .gx-sw-line { width: 18px; height: 0; border-top: 2px dashed #e0a85a; display: inline-block; vertical-align: middle; }
 .gx-sw-line.gx-sw-solid { border-top: 2px solid #aebbb1; }
 
+/* --------------------------------------------------------------------------
+   Slektstre-prototype: bundlede bånd (tre-prototype.html, genealogy-bundled.js)
+   Motsatt vekting av det pakkede kartet: der er nodene usynlige til de får
+   fokus og strekene svake, her er PILLENE alltid synlige og båndene bærer
+   fargen. Strekfargen settes inline (familiefargen fra data), så reglene her
+   styrer kun tykkelse og gjennomsiktighet.
+   -------------------------------------------------------------------------- */
+.gxb-tag {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--line-strong); border-radius: 999px;
+  padding: 2px 8px; vertical-align: middle; margin-left: 6px;
+}
+.gxb-edge { fill: none; stroke-width: 2.6; opacity: 0.62; stroke-linecap: round; stroke-linejoin: round;
+  transition: opacity 0.15s, stroke-width 0.15s; }
+.gxb-edge.gxb-react { stroke-dasharray: 9 7; opacity: 0.5; }
+.gxb-edge.gx-hl { opacity: 1; stroke-width: 4; }
+.gxb-edge.gx-dim { opacity: 0.07; }
+/* Stubben og knutepunktet er den delte biten inn i pilla. De er ikke egne
+   koblinger, så de tar ikke klikk (hver forelder er klikkbar på sin egen
+   strekning fram til båndet), men de MÅ dimme og lyse sammen med kantene —
+   ellers blir de stående i full styrke over et dimmet kart. */
+.gxb-stub, .gxb-knot { pointer-events: none; transition: opacity 0.15s; }
+.gxb-stub { fill: none; opacity: 0.72; stroke-linecap: round; }
+.gxb-knot { opacity: 0.85; }
+.gxb-stub.gx-hl, .gxb-knot.gx-hl { opacity: 1; }
+.gxb-stub.gx-dim, .gxb-knot.gx-dim { opacity: 0.07; }
+.gxb-node { cursor: pointer; }
+.gxb-pill { fill: #fff; transition: filter 0.15s; }
+.gxb-label { font-size: 15px; font-weight: 500; fill: var(--text); pointer-events: none;
+  font-family: "Inter", sans-serif; }
+.gxb-label.gxb-merge { font-weight: 700; }
+.gxb-node.gxb-focus .gxb-pill { filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.22)); }
+.gxb-sw-band { width: 18px; height: 0; border-top: 3px solid #dc2626; display: inline-block; vertical-align: middle; }
+.gxb-sw-knot { width: 10px; height: 10px; border-radius: 50%; background: #dc2626; display: inline-block;
+  vertical-align: middle; }
+
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {
   .brand h1 { font-size: 0.95rem; }

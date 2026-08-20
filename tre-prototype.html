@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
-  <title>Foreslå artist – Pensumforslag</title>
+  <title>Slektstre (prototype) – Populærmusikkhistorie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Fontene lastes ikke-blokkerende (media="print" til de er klare): en
@@ -25,6 +25,7 @@
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="index.html">
+        <img src="img/header-icon.png" alt="" class="brand-icon" />
         <h1>Populærmusikkhistorie - Del 1</h1>
       </a>
       <nav class="nav"><span id="app-version" class="version-tag"></span>
@@ -39,91 +40,44 @@
   <main class="wrap">
     <div id="banner" class="banner"></div>
 
-    <a href="index.html" class="btn ghost small student-back">← Til startsiden</a>
-
-    <!-- Legg inn forslag -->
-    <section class="panel">
-      <h2>Foreslå en artist / musiker</h2>
-      <form id="add-form" class="add-grid">
-        <label>Navn *
-          <input type="text" id="in-name" required placeholder="f.eks. Robert Johnson" />
-        </label>
-        <label>Fødselsår
-          <input type="number" id="in-birthyear" min="1800" max="2025" placeholder="1911" />
-        </label>
-        <label>Dødsår
-          <input type="number" id="in-deathyear" min="1800" max="2030" placeholder="1938" />
-        </label>
-        <label>Kjønn *
-          <select id="in-gender" required></select>
-        </label>
-        <label>Metasjanger *
-          <select id="in-metaGenre" required></select>
-        </label>
-        <label>Instrument *
-          <select id="in-instrument" required></select>
-        </label>
-        <label>Geografisk tilhørighet
-          <input type="text" id="in-geo" placeholder="f.eks. Mississippi Delta" />
-        </label>
-        <label>Innflytelse fra (år) *
-          <input type="number" id="in-start" min="1800" max="2030" required placeholder="f.eks. 1955" />
-        </label>
-        <label>Innflytelse til (år)
-          <input type="number" id="in-end" min="1800" max="2030" placeholder="f.eks. 1972" />
-        </label>
-        <label class="full">Sjangre (fra slektstreet, kommaseparert)
-          <input type="text" id="in-mainGenre" placeholder="f.eks. Blues, Jazz" />
-        </label>
-        <label class="full">Undersjangre / tags (frie, kommaseparert)
-          <input type="text" id="in-subGenre" placeholder="f.eks. Delta blues, Akustisk blues" />
-        </label>
-        <label class="full">Begrunnelse / hvorfor relevant
-          <textarea id="in-desc" rows="7" data-format placeholder="Kort om musikkhistorisk betydning …"></textarea>
-        </label>
-        <div class="full">
-          <span class="field-label">Sentrale verk / album</span>
-          <div id="work-rows"></div>
-          <button type="button" id="add-work" class="btn ghost small">+ Legg til verk</button>
+    <section class="panel gx-page">
+      <!-- Prototypesiden: samme skjelett og samme id-er som tre.html, så begge
+           renderere finner scenen. «Vis dagens kart» bytter mellom de to. -->
+      <div class="gx-page-head" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 style="margin:0;flex:1">Slektstre <span class="gxb-tag">prototype</span></h2>
+        <a class="btn ghost small" style="text-decoration:none" href="tre.html">Vis dagens kart</a>
+        <button type="button" class="btn ghost small" id="gx-back" title="Tilbake" aria-label="Tilbake">← Tilbake</button>
+        <a class="btn ghost small" style="text-decoration:none" href="index.html" title="Lukk" aria-label="Lukk">✕ Lukk</a>
+      </div>
+      <div class="gx-legend" id="gx-legend"></div>
+      <div class="gx-stage gx-stage-tall gxb-stage" id="gx-stage">
+        <div class="gx-ctrl">
+          <button id="gx-zin" type="button" aria-label="Zoom inn">+</button>
+          <button id="gx-zout" type="button" aria-label="Zoom ut">−</button>
+          <button id="gx-rst" type="button" aria-label="Tilbakestill">⤺</button>
         </div>
-
-        <div class="full">
-          <span class="field-label">Musikkeksempler</span>
-          <div id="me-rows"></div>
-          <button type="button" id="add-me" class="btn ghost small">+ Legg til musikkeksempel</button>
-        </div>
-
-        <label class="full">Bilde-URL
-          <input type="url" id="in-image-url" placeholder="https://… (lenke til bilde av artisten, valgfritt)" />
-        </label>
-        <label class="full">Bildekreditering / kilde
-          <input type="text" id="in-image-credit" placeholder="f.eks. Wikipedia / CC BY-SA 4.0" />
-        </label>
-
-        <div class="full">
-          <span class="field-label">Kilder *</span>
-          <p class="hint">Bøker, artikler, nettsider eller andre referanser brukt om denne artisten.</p>
-          <div id="source-rows"></div>
-          <button type="button" id="add-source" class="btn ghost small">+ Legg til kilde</button>
-        </div>
-
-        <label class="full">Ditt navn (valgfritt)
-          <input type="text" id="in-by" placeholder="Anonym" />
-        </label>
-
-        <div class="full add-actions">
-          <button type="submit" class="btn primary">Legg til forslag</button>
-          <span id="form-msg" class="form-msg"></span>
-        </div>
-      </form>
+        <svg id="gx-svg" width="100%" height="100%" role="img" aria-label="Slektstre over sjangrene"><g id="gx-cam"></g></svg>
+      </div>
     </section>
   </main>
 
-  <footer class="sitefoot wrap">
+  <footer class="sitefoot wrap"></footer>
 
-  </footer>
+  <!-- Sjanger-, artistliste-, spilleliste- og teknologi-detalj-modalene deles
+       med forsiden og injiseres av initExplore (markup i js/explore-modals.js). -->
+
+  <!-- Artist-detalj-popup (åpnes fra artistlisten; kun denne siden) -->
+  <div class="modal-backdrop" id="modal-artist-detail">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="ad-title"></h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="ad-body"></div>
+    </div>
+  </div>
 
   <script src="js/load-guard.js?v=4.47"></script>
-  <script type="module" src="js/student.js?v=4.47"></script>
+  <script type="module" src="js/tre-prototype.js?v=4.47"></script>
 </body>
 </html>

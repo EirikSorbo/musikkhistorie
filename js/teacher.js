@@ -7,13 +7,6 @@
 // ============================================================================
 
 import {
-  subscribeArtists,
-  subscribeDecades,
-  subscribeGenreDescs,
-  subscribeEdgeDescs,
-  subscribeContent,
-  subscribePodcasts,
-  subscribeTech,
   subscribeTeacherChecks,
   subscribePendingEdits,
   mergeVarmekartRows,
@@ -21,13 +14,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.43";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.43";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.43";
-import { initExplore } from "./explore.js?v=4.43";
+} from "./store.js?v=4.47";
+import { subscribeSharedData } from "./shared-data.js?v=4.47";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.47";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.47";
+import { initExplore } from "./explore.js?v=4.47";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.43";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.43";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.47";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.47";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -46,11 +40,11 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.43";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.43";
-import { renderDesk } from "./teacher-desk.js?v=4.43";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.43";
-import { setupFormatBars } from "./format-bar.js?v=4.43";
+} from "./teacher-content.js?v=4.47";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.47";
+import { renderDesk } from "./teacher-desk.js?v=4.47";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.47";
+import { setupFormatBars } from "./format-bar.js?v=4.47";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -205,33 +199,33 @@ function startApp() {
   wireFirestoreErrorBanner();
 
   refreshControls();
-  subscribeArtists((artists) => {
-    state.artists = artists;
-    state.artistsLoaded = true;
-    refreshControls();
-    renderAll();
-    refreshDesk();
-  });
-  subscribeDecades((d) => { state.decadeDescs = d; });
-  subscribeGenreDescs((s) => { state.genreDescs = s; refreshDesk(); });
-  subscribeEdgeDescs((m) => { state.edgeDescs = m; });
-  subscribeContent((c) => {
-    state.content = c;
-    state.contentLoaded = true;
-    // Åpne innholdsvisninger (sider/varmekart) re-rendres så import/
-    // redigering slår gjennom umiddelbart.
-    ctx.explore?.contentChanged?.();
-    refreshDesk();
-  });
-  subscribePodcasts((pods) => { state.podcasts = pods; renderPodkastAdmin(); });
-  // Åpne teknologi-visninger (admin-lista og innovasjonskortet) tegnes på nytt,
-  // så lagring i redigerings-popupen slår gjennom umiddelbart.
-  subscribeTech((items) => {
-    state.techItems = items;
-    renderPendingEditsList();
-    refreshTechAdmin();
-    ctx.explore?.refreshTechDetail?.();
-    refreshDesk();
+  // Én rute inn for de syv delte samlingene (js/shared-data.js), samme som
+  // forsiden og slektstresidene. keepPendingTech: lærersiden er stedet
+  // innovasjonskort GODKJENNES, så den må se dem som venter — den eneste
+  // tillatte forskjellen mellom sidene.
+  subscribeSharedData(state, {
+    keepPendingTech: true,
+    onArtists: () => {
+      refreshControls();
+      renderAll();
+      refreshDesk();
+    },
+    onGenreDescs: () => refreshDesk(),
+    onContent: () => {
+      // Åpne innholdsvisninger (sider/varmekart) re-rendres så import/
+      // redigering slår gjennom umiddelbart.
+      ctx.explore?.contentChanged?.();
+      refreshDesk();
+    },
+    onPodcasts: () => renderPodkastAdmin(),
+    // Åpne teknologi-visninger (admin-lista og innovasjonskortet) tegnes på nytt,
+    // så lagring i redigerings-popupen slår gjennom umiddelbart.
+    onTech: () => {
+      renderPendingEditsList();
+      refreshTechAdmin();
+      ctx.explore?.refreshTechDetail?.();
+      refreshDesk();
+    },
   });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; refreshDesk(); });
   subscribePendingEdits((edits) => { state.pendingEdits = edits; renderPendingEditsList(); refreshDesk(); });

@@ -7,11 +7,11 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.43";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.43";
-import { DECADES } from "./limits.js?v=4.43";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=4.43";
-import { isHendelse } from "./ui-tech.js?v=4.43";
+import { escapeHtml } from "./util.js?v=4.47";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.47";
+import { DECADES } from "./limits.js?v=4.47";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genealogy.js?v=4.47";
+import { isHendelse } from "./ui-tech.js?v=4.47";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene

@@ -1,26 +1,19 @@
-import { subscribeArtists, subscribeDecades, subscribeGenreDescs, subscribeContent, subscribePodcasts, subscribeTech, fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.43";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.43";
-import { debounce, throttle } from "./util.js?v=4.43";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.43";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.43";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.43";
-import { initExplore } from "./explore.js?v=4.43";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.43";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.43";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.47";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.47";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.47";
+import { debounce, throttle } from "./util.js?v=4.47";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.47";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.47";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.47";
+import { initExplore } from "./explore.js?v=4.47";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.47";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.47";
 
 const state = {
-  artists: [],
-  // true etter første artist-snapshot — skiller «laster fortsatt» fra
-  // «datasettet er faktisk tomt» (placeholder-opprydding i renderDagensSection).
-  artistsLoaded: false,
-  decadeDescs: {},
-  genreDescs: {},
-  // Innholdssidene (Om historie, Røtter) + varmekartet fra content-samlingen.
-  // contentLoaded skiller «laster fortsatt» fra «mangler faktisk tekst».
-  content: {},
-  contentLoaded: false,
-  podcasts: [],
-  techItems: [],
+  // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
+  // decades, podcasts) kommer fra shared-data.js — samme form som lærersiden og
+  // slektstresidene, så en delt komponent aldri kan få ulikt innhold her.
+  ...sharedStateDefaults(),
   pendingEdits: [],
   filters: { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
   isTeacher: false,
@@ -534,32 +527,22 @@ function init() {
     renderDagensSection();
     if (isDagensModalOpen()) renderDagensModal();
   }, 400);
-  subscribeArtists((artists) => {
-    state.artists = artists;
-    state.artistsLoaded = true;
-    applyArtistSnapshot();
-    // Utenom throttlingen: deep-linken skal åpnes straks data finnes (no-op
-    // når det ikke venter noen).
-    applyPendingDeepLink();
-  });
-  // Tiårsbeskrivelsene brukes av Samfunn/Teknologi-modalene (explore-decade.js) —
-  // filterresultatene viser ikke lenger tiårsforklaring.
-  subscribeDecades((d) => { state.decadeDescs = d; });
-  // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
-  subscribeContent((c) => {
-    state.content = c;
-    state.contentLoaded = true;
-    explore?.contentChanged?.();
-  });
-  subscribeGenreDescs((s) => { state.genreDescs = s; if (isArtistModalOpen()) renderFilterResults(); });
-  subscribePodcasts((pods) => { state.podcasts = pods; });
-  // Merk: ikke noe pendingEdits-abonnement her — studentsiden trenger bare
-  // pending-status idet forslags-editoren åpnes (openProposalEditorGuarded).
-  // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
-  // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
-  subscribeTech((items) => {
-    state.techItems = items.filter((t) => t.status !== "pending");
-    applyArtistSnapshot();
+  // Én rute inn for alle de delte samlingene (js/shared-data.js). Merk: ikke noe
+  // pendingEdits-abonnement — studentsiden trenger bare pending-status idet
+  // forslags-editoren åpnes (openProposalEditorGuarded).
+  subscribeSharedData(state, {
+    onArtists: () => {
+      applyArtistSnapshot();
+      // Utenom throttlingen: deep-linken skal åpnes straks data finnes (no-op
+      // når det ikke venter noen).
+      applyPendingDeepLink();
+    },
+    onGenreDescs: () => { if (isArtistModalOpen()) renderFilterResults(); },
+    // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
+    // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
+    onTech: () => applyArtistSnapshot(),
+    // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
+    onContent: () => explore?.contentChanged?.(),
   });
 
   applyIncomingFilter();

@@ -14,28 +14,20 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=4.43";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.43";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.43";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=4.43";
-import { $ } from "./shared.js?v=4.43";
+} from "./store.js?v=4.47";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.47";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genealogy.js?v=4.47";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=4.47";
+import { sharedStateDefaults } from "./shared-data.js?v=4.47";
+import { $ } from "./shared.js?v=4.47";
 
 export const state = {
-  artists: [],
-  decadeDescs: {},
-  genreDescs: {},
-  // Koblingsbeskrivelser (strekene i slektstreet), doc-ID «fra__til».
-  edgeDescs: {},
-  // Innholdssidene (Om historie, Røtter) + varmekartet fra content-samlingen.
-  // contentLoaded skiller «laster fortsatt» fra «mangler faktisk tekst».
-  content: {},
-  contentLoaded: false,
-  // artistsLoaded: har artist-snapshotet landet? Destruktive handlinger
-  // (Erstatt alle / Slett alt) må vente på dette — ellers bygges backupen fra
-  // en tom state mens slettingen går mot serveren.
-  artistsLoaded: false,
-  podcasts: [],
-  techItems: [],
+  // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
+  // decades, podcasts) kommer fra shared-data.js — samme form som forsiden og
+  // slektstresidene. artistsLoaded er en del av den: destruktive handlinger
+  // (Erstatt alle / Slett alt) må vente på den, ellers bygges backupen fra en
+  // tom state mens slettingen går mot serveren.
+  ...sharedStateDefaults(),
   teacherChecks: { genres: [], subgenres: [] },
   pendingEdits: [],
   // showRemoved starter AV (brukervalg): lærerlista skal åpne på pensumet slik

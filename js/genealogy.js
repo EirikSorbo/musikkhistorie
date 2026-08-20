@@ -7,13 +7,14 @@
 //  lesbarhet; beskrivelser kan overstyres fra Firestore (genreDescriptions-samlingen).
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.43";
-import { renderRichText } from "./rich-text.js?v=4.43";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.43";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.43";
-import { modalOpen, modalClose } from "./ui-modal.js?v=4.43";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.43";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.43";
+import { wireAllLinks } from "./linkify.js?v=4.47";
+import { renderRichText } from "./rich-text.js?v=4.47";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.47";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.47";
+import { modalOpen } from "./ui-modal.js?v=4.47";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.47";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.47";
+import { attachCamera } from "./gx-camera.js?v=4.47";
 
 // rad (r) → tiår; tid løper nedover.
 export const GENEALOGY = [
@@ -386,7 +387,7 @@ export function showSjangerInfo(label, opts = {}) {
 // fallback i koden; mangler teksten, vises en tydelig mangler-melding (samme
 // prinsipp som sjangerbeskrivelsene). opts: { root, edgeDescs, artists,
 // techItems, genres, onArtistClick, onTechClick, onMainGenreClick, onEditEdge }
-function showEdgeInfo(fromId, toId, opts = {}) {
+export function showEdgeInfo(fromId, toId, opts = {}) {
   const { root = document, edgeDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onEditEdge } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const a = map[fromId], b = map[toId];
@@ -395,6 +396,11 @@ function showEdgeInfo(fromId, toId, opts = {}) {
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
   if (!modal || !mTitle || !mBody) return false;
+
+  // Koblings-popupen overtar SAMME modal som sjangerkortet. Uten dette ble
+  // `openSjanger` stående fra kortet som sto åpent før, og et content-snapshot
+  // (refreshSjangerInfo) tegnet da sjangerkortet oppå den åpne koblingen.
+  openSjanger = null;
 
   const react = (b.rx || []).includes(fromId);
   const doc = edgeDescs[edgeKey(fromId, toId)] || {};
@@ -516,13 +522,9 @@ function el(tag, attrs) {
 //  Bygger kartet i modal-rotelementet. Returnerer { fit } for å sentrere ved
 //  hver åpning. opts: { root, genreDescs, onShowArtists }
 // ----------------------------------------------------------------------------
-export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists: staticArtists, getArtists, getTechItems, getMainGenres, onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist }) {
-  const artists = getArtists ? { get current() { return getArtists(); } } : { current: staticArtists || [] };
-  const tech = getTechItems ? { get current() { return getTechItems(); } } : { current: [] };
-  const genreProxy = getMainGenres ? { get current() { return getMainGenres(); } } : { current: [] };
+export function renderGenealogy({ root = document, getOpts }) {
   const stage = root.querySelector("#gx-stage");
   const cam = root.querySelector("#gx-cam");
-  const modal = root.querySelector("#modal-sjanger");
 
   const map = {}, kids = {};
   // yOffset (brøkdel av en rad, valgfritt): flytter noden opp eller ned INNENFOR
@@ -643,7 +645,6 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   // fremover. Full etterkommer-lukning lyste opp 60–90 % av kartet for de
   // tidlige sjangrene (blues, gospel …) og mistet all effekt; historien
   // videre nedover følges ledd for ledd, eller via popupens «Førte videre til».
-  let moved = false;
   function light(id) {
     const ancSelf = anc(id); ancSelf[id] = 1;
     const line = Object.assign({}, ancSelf);
@@ -687,7 +688,6 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   //     kort nederst; andre trykk på samme node — eller «Detaljer»-knappen —
   //     åpner popupen. Kun på touch/pen; mus beholder hover + direkte klikk. ---
   let selectedId = null;
-  let lastPointerType = "mouse";
   const card = document.createElement("div");
   card.className = "gx-card";
   card.innerHTML =
@@ -708,29 +708,32 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   }
   function selectTouch(id) { selectedId = id; light(id); showCard(map[id]); }
   function clearTouchSel() { selectedId = null; card.classList.remove("show"); }
-  const isTouch = () => lastPointerType === "touch" || lastPointerType === "pen";
 
   function reset() { clearLight(); clearTouchSel(); }
 
-  // Klikk → popup med detaljer. Bruker den delte showSjangerInfo, så node-klikk
-  // og tag-klikk alltid viser nøyaktig samme popup (én kilde til sannhet).
+  // Panorering, zoom og pinch bor i det delte kameraet (gx-camera.js), som
+  // bundle-visningen bruker likt. `isMoved()` skiller et klikk fra slutten på
+  // en dragning, `isTouch()` skiller to-trinns-trykk fra mus-hover.
+  const camera = attachCamera({
+    root, stage, cam, width: W,
+    height: RY[12] + NH,             // nederste tiårsrad + nodehøyde
+    onBackgroundClick: reset,
+  });
+
+  // Klikk → popup med detaljer. Bruker den delte showSjangerInfo med sidens
+  // FELLES sjangerOpts (getOpts), så node-klikk, tag-klikk og forsidens
+  // sjangerbobler alltid viser nøyaktig samme kort — samme knapper, samme
+  // varmestripe. Kartet bygger ikke lenger sin egen opts: det var slik
+  // «Tidslinje»-knappen kunne finnes på forsidens kort og mangle i treets.
   function openModal(id) {
-    const n = map[id];
-    showSjangerInfo(n.l, {
-      root, genreDescs,
-      artists: artists.current, techItems: tech.current, genres: genreProxy.current,
-      onArtistClick, onTechClick, onMainGenreClick,
-      onShowArtists, onShowPlaylist,
-    });
+    showSjangerInfo(map[id].l, getOpts());
   }
 
   // Klikk på strek → koblings-popup (samme modal, delt showEdgeInfo).
+  // Samme opts-objekt: edgeDescs ligger i sjangerOpts, så kartet slipper å
+  // sette sammen sin egen kontekst.
   function openEdgeModal(pid, cid) {
-    showEdgeInfo(pid, cid, {
-      root, edgeDescs,
-      artists: artists.current, techItems: tech.current, genres: genreProxy.current,
-      onArtistClick, onTechClick, onMainGenreClick,
-    });
+    showEdgeInfo(pid, cid, getOpts());
   }
 
   GENEALOGY.forEach((n) => {
@@ -740,9 +743,9 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
     g.addEventListener("mouseenter", () => { if (!selectedId) light(n.id); });
     g.addEventListener("mouseleave", () => { if (!selectedId) clearLight(); });
     g.addEventListener("click", (ev) => {
-      if (moved) return;
+      if (camera.isMoved()) return;
       ev.stopPropagation();
-      if (!isTouch()) { openModal(n.id); return; }   // mus: som før
+      if (!camera.isTouch()) { openModal(n.id); return; }   // mus: som før
       if (selectedId === n.id) openModal(n.id);        // andre trykk → detaljer
       else selectTouch(n.id);                           // første trykk → lys opp
     });
@@ -756,91 +759,16 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
     h.addEventListener("mouseenter", () => { if (!selectedId) lightEdge(pid, cid); });
     h.addEventListener("mouseleave", () => { if (!selectedId) clearLight(); });
     h.addEventListener("click", (ev) => {
-      if (moved) return;
+      if (camera.isMoved()) return;
       ev.stopPropagation();               // ikke la stage-klikket nullstille lyset
       openEdgeModal(pid, cid);
     });
   });
 
-  // Lukking av popup (backdrop-klikk + ✕). Escape håndteres på sidenivå
-  // (tre.js sin modalCloseTop), så vi registrerer IKKE en egen Escape-lytter
-  // her — ellers ville Escape lukket både denne popupen og en stablet modal
-  // (f.eks. artistlista) samtidig.
-  if (modal) {
-    modal.addEventListener("click", (e) => { if (e.target === modal) modalClose(modal); });
-    const cl = modal.querySelector(".modal-close");
-    if (cl) cl.addEventListener("click", () => modalClose(modal));
-  }
-
-  // Pan / zoom
-  let sc = 0.56, tx = 20, ty = 10;
-  function apply() { cam.setAttribute("transform", `translate(${tx},${ty}) scale(${sc})`); }
-  function fit() {
-    const sw = stage.clientWidth || 760;
-    sc = sw / (W + 30);
-    tx = (sw - W * sc) / 2;
-    ty = 10;
-    apply();
-  }
-  function zoom(f, cx, cy) {
-    const sw = stage.clientWidth || 760, sh = stage.clientHeight || 440;
-    cx = cx == null ? sw / 2 : cx; cy = cy == null ? sh / 2 : cy;
-    const ns = Math.max(0.3, Math.min(1.8, sc * f));
-    tx = cx - (cx - tx) * (ns / sc); ty = cy - (cy - ty) * (ns / sc); sc = ns; apply();
-  }
-  root.querySelector("#gx-zin").addEventListener("click", () => zoom(1.25));
-  root.querySelector("#gx-zout").addEventListener("click", () => zoom(0.8));
-  root.querySelector("#gx-rst").addEventListener("click", () => { fit(); reset(); });
-
-  stage.addEventListener("wheel", (ev) => {
-    ev.preventDefault();
-    const rect = stage.getBoundingClientRect();
-    zoom(ev.deltaY < 0 ? 1.12 : 0.9, ev.clientX - rect.left, ev.clientY - rect.top);
-  }, { passive: false });
-
-  // Peker-styrt pan + pinch-zoom. Ett Map fra pointerId → siste posisjon, så to
-  // fingre ALDRI deler ett (sx,sy)-par (som ga ville pan-hopp: finger nr. 2
-  // overskrev startpunktet og begge fingres move regnet dx/dy på kryss). Én
-  // peker = pan; to pekere = pinch-zoom om midtpunktet. Speiler constellation.js.
-  const pointers = new Map();
-  let pinchDist = 0;
-  stage.addEventListener("pointerdown", (ev) => {
-    lastPointerType = ev.pointerType || "mouse";
-    const first = pointers.size === 0;
-    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    if (first) { moved = false; stage.classList.add("gx-drag"); }
-    else pinchDist = 0;   // andre finger ned: nullstill pinch-referansen
-  });
-  stage.addEventListener("pointermove", (ev) => {
-    if (!pointers.has(ev.pointerId)) return;
-    const prev = pointers.get(ev.pointerId);
-    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    if (pointers.size === 1) {
-      const dx = ev.clientX - prev.x, dy = ev.clientY - prev.y;
-      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-      tx += dx; ty += dy; apply();
-    } else if (pointers.size === 2) {
-      moved = true;
-      const [a, b] = [...pointers.values()];
-      const d = Math.hypot(b.x - a.x, b.y - a.y);
-      if (pinchDist > 0) {
-        const rect = stage.getBoundingClientRect();
-        zoom(d / pinchDist, (a.x + b.x) / 2 - rect.left, (a.y + b.y) / 2 - rect.top);
-      }
-      pinchDist = d;
-    }
-  });
-  const endPtr = (ev) => {
-    pointers.delete(ev.pointerId);
-    pinchDist = 0;
-    if (!pointers.size) stage.classList.remove("gx-drag");
-  };
-  window.addEventListener("pointerup", endPtr);
-  stage.addEventListener("pointercancel", endPtr);
-  stage.addEventListener("click", (ev) => {
-    // Trykk på tomt kart (ikke node, ikke mini-kortet) nullstiller lys + valg.
-    if (!ev.target.closest(".gx-node") && !ev.target.closest(".gx-card") && !moved) reset();
-  });
+  // Popupens lukking (backdrop + ✕) kobles av sidens setupModal("modal-sjanger"),
+  // ikke her. Escape håndteres på sidenivå (modalCloseTop), så vi registrerer
+  // ingen egen Escape-lytter — ellers ville Escape lukket både denne popupen og
+  // en stablet modal (f.eks. artistlista) samtidig.
 
   // Forklaring: kun strektypene (avstamning vs. motreaksjon). Fargene varsles
   // fortsatt i konsollen hvis en nodefamilie mangler strekfarge (brukt ved hover).
@@ -856,6 +784,5 @@ export function renderGenealogy({ root, genreDescs = {}, edgeDescs = {}, artists
   }
 
   reset();
-  apply();
-  return { fit };
+  return { fit: camera.fit };
 }
