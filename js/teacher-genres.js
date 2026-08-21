@@ -25,17 +25,17 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=4.62";
-import { escapeHtml } from "./util.js?v=4.62";
-import { modalOpen, modalClose } from "./ui.js?v=4.62";
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.62";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.62";
-import { validateTree } from "./genre-validate.js?v=4.62";
+import { $ } from "./shared.js?v=4.63";
+import { escapeHtml } from "./util.js?v=4.63";
+import { modalOpen, modalClose } from "./ui.js?v=4.63";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.63";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.63";
+import { validateTree } from "./genre-validate.js?v=4.63";
 import {
-  planGenreRename, planMetaRename, planGenreDelete,
-  findReferences, planPasserIBatch,
-} from "./genre-migrate.js?v=4.62";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.62";
+  planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
+  findReferences, planPasserIBatch, byggMetaTre,
+} from "./genre-migrate.js?v=4.63";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.63";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -85,6 +85,21 @@ export const GENRE_ADMIN_HTML = `
     <div class="modal-foot-right" style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn ghost small" id="gen-edit-slett">Slett</button>
       <button class="btn primary small" id="gen-edit-lagre">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-genre-meta">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="gen-meta-title">Metasjanger</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="gen-meta-body"></div>
+    <p id="gen-meta-msg" class="form-msg"></p>
+    <div class="modal-foot-right" style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn ghost small" id="gen-meta-slett">Slett</button>
+      <button class="btn primary small" id="gen-meta-lagre">Lagre</button>
     </div>
   </div>
 </div>
@@ -351,35 +366,118 @@ async function utforPlan() {
 // ----------------------------------------------------------------------------
 //  Metasjanger
 // ----------------------------------------------------------------------------
-function openMetaEditor(navn) {
-  const t = tre();
-  const m = (t.metaGenres || []).find((x) => x.name === navn);
-  if (!m) return;
-  const nytt = prompt(`Nytt navn på metasjangeren «${navn}»?\n\nAlle sjangrene i den, artistenes metaGenre-tagg, beskrivelsen og sjangerhistorien følger med.`, navn);
-  if (nytt == null || nytt.trim() === navn) return;
-  visPlan(`Endre metasjanger: «${navn}» → «${nytt.trim()}»`, planMetaRename(migrasjonsState(), navn, nytt.trim()));
+//  Samme skille som for nodene: farge og plassering er TRYGT og skrives rett,
+//  mens navnet og slettingen flytter identiteter og går gjennom en plan.
+let redigererMeta = null;     // metasjangerens navn, eller null for ny
+
+// Metasjangrene i kartets rekkefølge, venstre mot høyre.
+const metaerIKolonne = (t) =>
+  [...(t.metaGenres || [])].sort((a, b) => (a.column ?? 0) - (b.column ?? 0));
+
+// «Hvor skal den stå»-nedtrekk. Verdien er indeksen i lista UTEN den som
+// redigeres, så splice(plass, 0, …) alltid gir en rekkefølge uten hull eller
+// duplikater. Læreren slipper dermed å forholde seg til kolonnetall.
+function plasseringValg(andre, valgt) {
+  const opt = (v, tekst) => `<option value="${v}"${v === valgt ? " selected" : ""}>${tekst}</option>`;
+  return [opt(0, "Først")]
+    .concat(andre.map((navn, i) => opt(i + 1, `Etter «${escapeHtml(navn)}»`)))
+    .join("");
 }
 
-async function nyMeta() {
+function openMetaEditor(navn) {
   const t = tre();
-  const navn = prompt("Navn på den nye metasjangeren?");
-  if (!navn?.trim()) return;
-  const rent = navn.trim();
-  if ((t.metaGenres || []).some((m) => m.name.toLowerCase() === rent.toLowerCase())) {
-    alert("Den metasjangeren finnes allerede.");
+  if (!t) return;
+  const metaer = metaerIKolonne(t);
+  const m = navn ? metaer.find((x) => x.name === navn) : null;
+  if (navn && !m) return;
+  redigererMeta = m ? m.name : null;
+
+  $("#gen-meta-title").textContent = m ? m.name : "Ny metasjanger";
+  $("#gen-meta-msg").textContent = "";
+  $("#gen-meta-slett").style.display = m ? "" : "none";
+
+  const andreKart = metaer.filter((x) => x !== m).map((x) => x.name);
+  const kartPlass = m ? metaer.indexOf(m) : andreKart.length;
+
+  // Den pedagogiske rangeringen (metaOrderHint) er en EGEN akse: kartet har
+  // Country ytterst til venstre, mens den afroamerikanske linja står samlet
+  // først pedagogisk. Bare denne metasjangeren flyttes i lista — de andre
+  // beholder rekkefølgen seg imellom, så et lagre aldri stokker om på noe
+  // læreren ikke har rørt.
+  const hintNa = t.metaOrderHint || [];
+  const hint = hintNa.filter((h) => h !== m?.name);
+  const hintPlass = m && hintNa.includes(m.name) ? hintNa.indexOf(m.name) : hint.length;
+
+  const valgtFam = m?.fam || "gray";
+  const famValg = Object.entries(FAMILIES).map(([k, v]) =>
+    `<option value="${escapeHtml(k)}"${valgtFam === k ? " selected" : ""}>${escapeHtml(v.label || k)}</option>`).join("");
+
+  $("#gen-meta-body").innerHTML = `
+    <div class="form-grid">
+      <label>Navn
+        <input type="text" id="gen-meta-navn" value="${escapeHtml(m?.name || "")}" maxlength="60">
+      </label>
+      <label>Farge
+        <select id="gen-meta-fam">${famValg}</select>
+      </label>
+      <label>Plassering i kartet
+        <select id="gen-meta-kolonne">${plasseringValg(andreKart, kartPlass)}</select>
+      </label>
+      <label>Pedagogisk rekkefølge
+        <select id="gen-meta-hint">${plasseringValg(hint, hintPlass)}</select>
+      </label>
+    </div>
+    <p class="muted" style="margin:10px 0 0">
+      Sjangrene i metasjangeren arver fargen, med mindre de har fått sin egen.
+      Plasseringen i kartet og den pedagogiske rekkefølgen er to ulike akser:
+      varmekartet og tidslinjen leser den siste.
+    </p>`;
+  modalOpen($("#modal-genre-meta"));
+}
+
+async function lagreMeta() {
+  const t = tre();
+  const msg = $("#gen-meta-msg");
+  const navn = $("#gen-meta-navn").value.trim();
+  const fam = $("#gen-meta-fam").value;
+  const kartPlass = Number($("#gen-meta-kolonne").value);
+  const hintPlass = Number($("#gen-meta-hint").value);
+
+  if (!navn) { msg.textContent = "Navnet kan ikke være tomt."; return; }
+  // Navnet blir dokument-ID i genreDescriptions, og Firestore forbyr «/».
+  if (navn.includes("/")) { msg.textContent = "Navnet kan ikke inneholde «/». Bruk «&»."; return; }
+
+  const metaer = metaerIKolonne(t);
+  const gammel = redigererMeta ? metaer.find((x) => x.name === redigererMeta) : null;
+  if (metaer.some((x) => x !== gammel && x.name.toLowerCase() === navn.toLowerCase())) {
+    msg.textContent = `«${navn}» finnes allerede som metasjanger.`;
     return;
   }
-  const nyttTre = {
-    ...t,
-    metaGenres: [...(t.metaGenres || []), {
-      name: rent,
-      order: (t.metaGenres || []).length,
-      column: (t.metaGenres || []).length,
-      fam: "gray",
-    }],
-  };
+  const navnEndret = gammel && gammel.name !== navn;
+
+  const nyttTre = byggMetaTre(t, { gammel, navn, fam, kartPlass, hintPlass });
+
+  const problemer = validateTree(nyttTre).filter((p) => p.nivå === "feil");
+  if (problemer.length) { msg.textContent = problemer[0].melding; return; }
+
   await guardTeacherAction(saveGenealogyTree(nyttTre));
+
+  if (navnEndret) {
+    const s = migrasjonsState();
+    s.tree = nyttTre;
+    modalClose($("#modal-genre-meta"));
+    visPlan(`Endre metasjanger: «${gammel.name}» → «${navn}»`, planMetaRename(s, gammel.name, navn));
+    return;
+  }
+  modalClose($("#modal-genre-meta"));
   renderListe();
+}
+
+function slettMeta() {
+  if (!redigererMeta) return;
+  const navn = redigererMeta;
+  modalClose($("#modal-genre-meta"));
+  visPlan(`Slette metasjangeren «${navn}»`, planMetaDelete(migrasjonsState(), navn));
 }
 
 // ----------------------------------------------------------------------------
@@ -387,9 +485,11 @@ async function nyMeta() {
 // ----------------------------------------------------------------------------
 export function setupGenreAdmin() {
   $("#gen-ny-sjanger")?.addEventListener("click", () => openNodeEditor(null));
-  $("#gen-ny-meta")?.addEventListener("click", nyMeta);
+  $("#gen-ny-meta")?.addEventListener("click", () => openMetaEditor(null));
   $("#gen-edit-lagre")?.addEventListener("click", () => lagre());
   $("#gen-edit-slett")?.addEventListener("click", () => slett());
+  $("#gen-meta-lagre")?.addEventListener("click", () => lagreMeta());
+  $("#gen-meta-slett")?.addEventListener("click", () => slettMeta());
   $("#gen-plan-utfor")?.addEventListener("click", utforPlan);
   $("#gen-plan-avbryt")?.addEventListener("click", () => { ventendePlan = null; modalClose($("#modal-genre-plan")); });
 

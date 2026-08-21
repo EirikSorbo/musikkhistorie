@@ -110,7 +110,7 @@ export function planGenreRename(state, fra, til) {
 
   // 1) Treet
   const nyeNoder = noder.map((n) => (n.id === ref.node.id ? { ...n, l: nyttNavn } : n));
-  ops.push(op("doc.merge", "content", "genealogy", { ...tre, nodes: nyeNoder },
+  ops.push(op("doc.replace", "content", "genealogy", { ...tre, nodes: nyeNoder },
     `Treet: «${fra}» heter «${nyttNavn}»`));
 
   // 2) Beskrivelsen. Dokument-ID-en ER etiketten, så MAIN-nivået flyttes til et
@@ -303,7 +303,7 @@ export function planGenreDelete(state, label) {
   }
 
   // Fritt fram: slett noden og det som utelukkende hører til den.
-  ops.push(op("doc.merge", "content", "genealogy",
+  ops.push(op("doc.replace", "content", "genealogy",
     { ...tre, nodes: noder.filter((n) => n.id !== ref.node.id) },
     `Treet: «${label}» fjernes`));
 
@@ -342,13 +342,136 @@ export function planGenreDelete(state, label) {
 }
 
 // ----------------------------------------------------------------------------
-//  Trygge operasjoner — ren tilføyelse/endring uten identitetsflytting
+//  Sletting av en METASJANGER
 // ----------------------------------------------------------------------------
-// Alt som IKKE rører etiketten eller id-en kan skrives rett: nytt fullt navn,
-// ny epoke, nye foreldre, ny rad, ny metasjanger, fargeunntak, nye noder.
-export function planTreeUpdate(tree, hva = "Treet oppdatert") {
-  return { ops: [op("doc.replace", "content", "genealogy", tree, hva)], feil: [], advarsler: [], oppsummering: [] };
+//  Modellen utleder hvilke metasjangre som FINNES fra nodene (n.g), ikke fra
+//  metaGenres-lista. En metasjanger med sjangre i seg kan derfor ikke bare
+//  strykes fra lista: den ville fortsatt stått i kartet, nå uten farge og uten
+//  kolonne. Derfor blokkerer vi på nodene, ikke bare på artistene.
+//
+//  pendingEdits røres ikke. Metasjangere har ikke lenger egne beskrivelser i
+//  studentflyten (se showGenreLevelInfo i js/ui.js), så et åpent forslag på
+//  navnet tilhører en sjanger eller undersjanger som tilfeldigvis heter det
+//  samme — et annet vokabular, som skal overleve.
+export function planMetaDelete(state, navn) {
+  const feil = [], advarsler = [], ops = [];
+  const tre = state?.tree || {};
+  const noder = Array.isArray(tre.nodes) ? tre.nodes : [];
+  const metaer = Array.isArray(tre.metaGenres) ? tre.metaGenres : [];
+
+  const meta = metaer.find((m) => lik(m.name, navn));
+  if (!meta) {
+    return { ops: [], feil: [`Fant ingen metasjanger «${navn}».`], advarsler, oppsummering: [], blokkeringer: [] };
+  }
+
+  // HARDE blokkeringer, samme prinsipp som ved sletting av en sjanger: vi
+  // flytter aldri en artists tagg eller en sjangers tilhørighet på lærerens
+  // vegne. Det er pensumendringer, ikke opprydding.
+  const egne = noder.filter((n) => lik(n.g, meta.name));
+  const artister = (state?.artists || []).filter((a) => lik(a.metaGenre, meta.name));
+  const blokkeringer = [];
+  if (egne.length) {
+    blokkeringer.push({
+      hva: `${egne.length} sjanger(e) ligger i «${meta.name}»`,
+      losning: "Flytt dem til en annen metasjanger først, eller slett dem.",
+      detaljer: egne.slice(0, 12).map((n) => n.l),
+    });
+  }
+  if (artister.length) {
+    blokkeringer.push({
+      hva: `${artister.length} artist(er) er tagget med «${meta.name}»`,
+      losning: "Tagg dem om til en annen metasjanger først.",
+      detaljer: artister.slice(0, 12).map((a) => a.name),
+    });
+  }
+  if (blokkeringer.length) return { ops: [], feil, advarsler, blokkeringer, oppsummering: [] };
+
+  const hint = Array.isArray(tre.metaOrderHint) ? tre.metaOrderHint : [];
+  ops.push(op("doc.replace", "content", "genealogy", {
+    ...tre,
+    metaGenres: metaer.filter((m) => !lik(m.name, meta.name)),
+    metaOrderHint: hint.filter((h) => !lik(h, meta.name)),
+  }, `Treet: «${meta.name}» fjernes fra metasjangrene og fra den pedagogiske rekkefølgen`));
+
+  // Beskrivelsen OG sjangerhistorien bor begge på metasjangerens
+  // genreDescriptions-dokument. Et main- eller sub-nivå på samme navn er et
+  // ANNET vokabular (shadowing-fella) og skal bli liggende.
+  const desc = state?.genreDescs?.[meta.name];
+  const felter = ["meta", "story"].filter((f) => desc?.[f]);
+  if (felter.length) {
+    if (desc.main || desc.sub) {
+      for (const felt of felter) {
+        ops.push(op("field.delete", "genreDescriptions", meta.name, { felt },
+          felt === "story" ? "Sjangerhistorien slettes" : "Metasjanger-beskrivelsen slettes"));
+      }
+      advarsler.push(`«${meta.name}» finnes også som sjanger- eller undersjanger-tekst. Den blir liggende, og det er riktig: den hører til et annet vokabular.`);
+    } else {
+      ops.push(op("doc.delete", "genreDescriptions", meta.name, null,
+        `Dokumentet «${meta.name}» slettes`));
+    }
+    if (desc.story) advarsler.push("Sjangerhistorien i «Det store bildet» forsvinner med metasjangeren.");
+  }
+
+  const sjekket = state?.teacherChecks?.metaGenres || [];
+  if (sjekket.some((m) => lik(m, meta.name))) {
+    ops.push(op("doc.merge", "config", "teacherChecks",
+      { metaGenres: sjekket.filter((m) => !lik(m, meta.name)) }, "Avkryssingen fjernes"));
+  }
+
+  return {
+    ops, feil, advarsler, blokkeringer: [],
+    oppsummering: [
+      "ingen sjangre og ingen artister peker på den — derfor er sletting mulig",
+      desc?.meta ? "metasjanger-beskrivelsen slettes" : "ingen beskrivelse",
+      desc?.story ? "sjangerhistorien slettes" : "ingen sjangerhistorie",
+    ],
+  };
 }
+
+// ----------------------------------------------------------------------------
+//  Trygge endringer — treet slik det SKAL BLI
+// ----------------------------------------------------------------------------
+// Merk skillet mot resten av fila: identitetsendringer returnerer en PLAN som
+// utføres i én batch, mens de trygge returnerer et TRE som store.js skriver rett
+// med saveGenealogyTree. Logikken ligger her likevel, fordi den er ren og må
+// kunne testes — js/teacher-genres.js drar inn Firebase og kan ikke lastes i en
+// node-test.
+//
+// Bygger treet en lagring VILLE skrevet:
+// rekkefølgen er det eneste her som kan gå galt STILLE — en feil stokker om på
+// kartet eller den pedagogiske rangeringen uten at noe ser ødelagt ut.
+//
+// Navnet settes IKKE her ved redigering. Et navnebytte flytter en identitet og
+// går gjennom migreringsplanen, akkurat som for en node, så treet skrives med
+// det gamle navnet og planen bytter det etterpå.
+//
+// families leses fra treet, ikke fra modulens FAMILIES: da kan funksjonen
+// kalles uten at modellen er bygget, som i en test.
+export function byggMetaTre(t, { gammel, navn, fam, kartPlass, hintPlass }) {
+  const oppdatert = { ...(gammel || { name: navn }), fam };
+  const farge = t.families?.[fam]?.stroke;
+  if (farge) oppdatert.color = farge;
+
+  // Kolonnene nummereres 0..n-1 på nytt etter innsettingen, så de aldri kan få
+  // hull eller duplikater uansett hva de sto på før.
+  const andre = [...(t.metaGenres || [])]
+    .sort((a, b) => (a.column ?? 0) - (b.column ?? 0))
+    .filter((x) => x !== gammel);
+  andre.splice(kartPlass, 0, oppdatert);
+
+  // Bare DENNE metasjangeren flyttes i hintet. De andre beholder rekkefølgen
+  // seg imellom, så et lagre aldri rører noe læreren ikke har tatt i.
+  const hint = (t.metaOrderHint || []).filter((h) => h !== gammel?.name);
+  hint.splice(hintPlass, 0, oppdatert.name);
+
+  return { ...t, metaGenres: andre.map((x, i) => ({ ...x, column: i })), metaOrderHint: hint };
+}
+
+// De TRYGGE endringene (fullt navn, epoke, foreldre, rad, farge, ny node, ny
+// metasjanger) har ingen plan: ingen andre samlinger peker på dem, så editoren
+// skriver treet rett via store.js: saveGenealogyTree. En planlagt variant fantes
+// her en periode uten å bli tatt i bruk, og er fjernet — én skrivevei for de
+// trygge endringene er lettere å holde riktig enn to.
 
 function byggOppsummering(ref, { nyttNavn }) {
   const ut = [];

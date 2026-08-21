@@ -500,7 +500,20 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-.add-grid label {
+/* Skjemaet i sjangertre-editoren. Samme etikett-uttrykk som .add-grid, men TO
+   kolonner: det står i en smal modal, ikke utover siden. Klassen ble tatt i
+   bruk av editoren i v4.60 uten at den fantes i CSS-en i det hele tatt, så
+   feltene fløt på rad med etikettene inntil kontrollene. */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 560px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+.add-grid label,
+.form-grid label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -508,7 +521,8 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   font-weight: 500;
   color: var(--muted);
 }
-.add-grid .full { grid-column: 1 / -1; }
+.add-grid .full,
+.form-grid .full { grid-column: 1 / -1; }
 input, select, textarea {
   font: inherit;
   background: var(--surface);

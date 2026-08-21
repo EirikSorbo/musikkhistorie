@@ -18,9 +18,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  findReferences, planGenreRename, planMetaRename, planGenreDelete,
-  planPasserIBatch, BATCH_MAX,
-} from "../../js/genre-migrate.js?v=4.62";
+  findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
+  planPasserIBatch, BATCH_MAX, byggMetaTre,
+} from "../../js/genre-migrate.js?v=4.63";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -276,4 +276,149 @@ test("metasjanger-bytte oppdaterer metaOrderHint — ellers mistes den pedagogis
   assert.deepEqual(tre.metaOrderHint, ["Blues", "Soul og funk", "Rock"]);
   assert.equal(plan.ops.find((o) => o.id === "genealogy").type, "doc.replace",
     "treet må skrives helt, ellers kan ikke en fjernet metasjanger forsvinne fra listene");
+});
+
+// --- Treet skrives HELT ------------------------------------------------------
+// Merge dyp-fletter map-felter, og families ER en map. Arrays byttes riktignok
+// ut ved merge, så nodene forsvinner i dag uansett — men den dagen en familie
+// fjernes, ville den blitt liggende igjen usett. Alle tre planene skriver derfor
+// treet med replace, ikke bare metasjanger-byttet.
+test("navnebytte på en sjanger skriver treet med replace", () => {
+  const plan = planGenreRename(lagState(), "R&B", "Rhythm and blues");
+  assert.equal(plan.ops.find((o) => o.id === "genealogy").type, "doc.replace");
+});
+
+test("sletting av en sjanger skriver treet med replace", () => {
+  const s = lagState();
+  s.artists = [];                       // ellers blokkerer taggene
+  // Barn blokkerer sletting, og «barn» er både p og rx: Soul har R&B som
+  // forelder, og Rock har den som motreaksjon.
+  s.tree.nodes = s.tree.nodes
+    .filter((n) => n.id !== "soul")
+    .map((n) => ({ ...n, rx: [] }));
+  const plan = planGenreDelete(s, "R&B");
+  assert.equal(plan.ops.find((o) => o.id === "genealogy").type, "doc.replace");
+});
+
+// --- Sletting av metasjanger -------------------------------------------------
+// En metasjanger med sjangre i seg kan ikke bare strykes fra metaGenres-lista:
+// modellen utleder hvilke metasjangre som finnes fra NODENE (n.g), så kartet
+// ville fortsatt tegnet den, nå uten farge og kolonne.
+function medTomMeta() {
+  const s = lagState();
+  s.tree.metaGenres.push({ name: "Klubbmusikk", order: 3, column: 3, fam: "gray" });
+  s.tree.metaOrderHint.push("Klubbmusikk");
+  s.genreDescs.Klubbmusikk = { meta: { description: "om klubbmusikk" }, story: { body: "fortellingen" } };
+  s.teacherChecks.metaGenres.push("Klubbmusikk");
+  return s;
+}
+
+test("metasjanger med sjangre i seg blokkeres, med sjangrene listet", () => {
+  const plan = planMetaDelete(lagState(), "R&B");
+  assert.equal(plan.ops.length, 0, "ingenting skal skrives når noe blokkerer");
+  const b = plan.blokkeringer.find((x) => x.hva.includes("sjanger"));
+  assert.ok(b, plan.blokkeringer.map((x) => x.hva).join(" | "));
+  assert.deepEqual(b.detaljer.sort(), ["R&B", "Soul"]);
+});
+
+test("metasjanger med taggede artister blokkeres selv om den er tom for sjangre", () => {
+  const s = medTomMeta();
+  s.artists.push({ id: "a9", name: "Kraftwerk", mainGenre: [], metaGenre: "Klubbmusikk" });
+  const plan = planMetaDelete(s, "Klubbmusikk");
+  assert.equal(plan.ops.length, 0);
+  assert.ok(plan.blokkeringer.some((b) => b.detaljer.includes("Kraftwerk")));
+});
+
+test("tom metasjanger fjernes fra BÅDE metaGenres og metaOrderHint", () => {
+  const plan = planMetaDelete(medTomMeta(), "Klubbmusikk");
+  assert.deepEqual(plan.blokkeringer, []);
+  const t = treet(plan);
+  assert.deepEqual(t.metaGenres.map((m) => m.name), ["Blues", "R&B", "Rock"]);
+  assert.deepEqual(t.metaOrderHint, ["Blues", "R&B", "Rock"],
+    "glemmes hintet, blir navnet stående i den pedagogiske rangeringen");
+  assert.equal(plan.ops.find((o) => o.id === "genealogy").type, "doc.replace");
+});
+
+test("tom metasjanger tar med beskrivelsen og sjangerhistorien", () => {
+  const plan = planMetaDelete(medTomMeta(), "Klubbmusikk");
+  const d = ops(plan, "genreDescriptions");
+  assert.equal(d.length, 1);
+  assert.equal(d[0].type, "doc.delete");
+  assert.equal(d[0].id, "Klubbmusikk");
+  assert.ok(plan.advarsler.some((a) => a.includes("Sjangerhistorien")), plan.advarsler.join(" | "));
+});
+
+test("shadowing: main-teksten på samme navn overlever slettingen", () => {
+  const s = medTomMeta();
+  s.genreDescs.Klubbmusikk.main = { description: "en tre-sjanger som tilfeldigvis heter det samme" };
+  const plan = planMetaDelete(s, "Klubbmusikk");
+  const d = ops(plan, "genreDescriptions");
+  assert.ok(!d.some((o) => o.type === "doc.delete"), "dokumentet må bli liggende for main-teksten");
+  assert.deepEqual(d.map((o) => o.data.felt).sort(), ["meta", "story"]);
+});
+
+test("tom metasjanger fjerner avkryssingen sin", () => {
+  const plan = planMetaDelete(medTomMeta(), "Klubbmusikk");
+  const c = ops(plan, "config").find((o) => o.id === "teacherChecks");
+  assert.deepEqual(c.data.metaGenres, ["R&B"]);
+});
+
+test("ukjent metasjanger gir feil, ikke en tom plan", () => {
+  const plan = planMetaDelete(lagState(), "Finnes ikke");
+  assert.equal(plan.ops.length, 0);
+  assert.ok(plan.feil.length);
+});
+
+// --- byggMetaTre: de to rekkefølgene ----------------------------------------
+// Kartets kolonner og den pedagogiske rangeringen er ULIKE akser. Går én av dem
+// galt, stokker kartet eller varmekartet om seg selv uten at noe ser ødelagt ut,
+// og det er ikke synlig i noen feilmelding.
+const metaNavn = (t) => t.metaGenres.map((m) => m.name);
+const kolonner = (t) => t.metaGenres.map((m) => m.column);
+
+test("byggMetaTre: kolonnene nummereres 0..n-1 på nytt, uten hull", () => {
+  const t = lagState().tree;
+  t.metaGenres = [
+    { name: "Blues", column: 0, fam: "blue" },
+    { name: "R&B", column: 7, fam: "red" },      // hull med vilje
+    { name: "Rock", column: 9, fam: "rock" },
+  ];
+  const gammel = t.metaGenres[2];
+  const ut = byggMetaTre(t, { gammel, navn: "Rock", fam: "rock", kartPlass: 0, hintPlass: 2 });
+  assert.deepEqual(metaNavn(ut), ["Rock", "Blues", "R&B"]);
+  assert.deepEqual(kolonner(ut), [0, 1, 2]);
+});
+
+test("byggMetaTre: en ny metasjanger settes inn på valgt plass", () => {
+  const t = lagState().tree;
+  const ut = byggMetaTre(t, { gammel: null, navn: "Klubbmusikk", fam: "gray", kartPlass: 1, hintPlass: 3 });
+  assert.deepEqual(metaNavn(ut), ["Blues", "Klubbmusikk", "R&B", "Rock"]);
+  assert.deepEqual(ut.metaOrderHint, ["Blues", "R&B", "Rock", "Klubbmusikk"]);
+  assert.equal(ut.metaGenres[1].color, "#9", "fargen hentes fra treets families (gray), ikke fra modellen");
+});
+
+test("byggMetaTre: treet beholder det GAMLE navnet ved navnebytte", () => {
+  const t = lagState().tree;
+  const gammel = t.metaGenres.find((m) => m.name === "R&B");
+  const ut = byggMetaTre(t, { gammel, navn: "Soul og funk", fam: "red", kartPlass: 1, hintPlass: 1 });
+  assert.ok(metaNavn(ut).includes("R&B"),
+    "navnebyttet gjøres av planMetaRename etterpå — skriver treet det nye navnet her, bytter det to ganger");
+  assert.ok(!metaNavn(ut).includes("Soul og funk"));
+});
+
+test("byggMetaTre: de andre metasjangrene beholder rekkefølgen seg imellom", () => {
+  const t = lagState().tree;
+  t.metaOrderHint = ["Rock", "Blues", "R&B"];
+  const gammel = t.metaGenres.find((m) => m.name === "Blues");
+  const ut = byggMetaTre(t, { gammel, navn: "Blues", fam: "blue", kartPlass: 2, hintPlass: 2 });
+  assert.deepEqual(ut.metaOrderHint, ["Rock", "R&B", "Blues"],
+    "bare den redigerte flyttes — Rock skal fortsatt ligge foran R&B");
+});
+
+test("byggMetaTre: en metasjanger utenfor hintet legges inn der læreren velger", () => {
+  const t = lagState().tree;
+  t.metaOrderHint = ["Blues", "Rock"];              // R&B mangler
+  const gammel = t.metaGenres.find((m) => m.name === "R&B");
+  const ut = byggMetaTre(t, { gammel, navn: "R&B", fam: "red", kartPlass: 1, hintPlass: 1 });
+  assert.deepEqual(ut.metaOrderHint, ["Blues", "R&B", "Rock"]);
 });

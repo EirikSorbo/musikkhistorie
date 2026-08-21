@@ -1,14 +1,14 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.62";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.62";
-import { onGenreModelChanged } from "./genre-model.js?v=4.62";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.62";
-import { debounce, throttle } from "./util.js?v=4.62";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.62";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.62";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.62";
-import { initExplore } from "./explore.js?v=4.62";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.62";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.62";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.63";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.63";
+import { onGenreModelChanged } from "./genre-model.js?v=4.63";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.63";
+import { debounce, throttle } from "./util.js?v=4.63";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.63";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.63";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.63";
+import { initExplore } from "./explore.js?v=4.63";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.63";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.63";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

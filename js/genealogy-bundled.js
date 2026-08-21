@@ -16,10 +16,10 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.62";
-import { GENEALOGY, nodeColor, layoutX } from "./genre-model.js?v=4.62";
-import { attachCamera } from "./gx-camera.js?v=4.62";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.62";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.63";
+import { GENEALOGY, nodeColor, layoutX } from "./genre-model.js?v=4.63";
+import { attachCamera } from "./gx-camera.js?v=4.63";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.63";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = 2400;            // logisk kartbredde (kameraet skalerer til scenen)

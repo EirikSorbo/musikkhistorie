@@ -44,6 +44,39 @@ function utenStrenger(src) {
     .replace(/'(?:\\.|[^'\\])*'/g, " '' ");
 }
 
+// Plukker ut uttrykkene i ${…} og leverer dem som løs tekst.
+//
+// GRUNNEN: utenStrenger over blanker anførselstegn uten å vite om de står i en
+// vanlig streng eller inne i en MAL. Halve appen bygger HTML i maler, og der
+// står symbolene typisk i et attributt:
+//
+//     `<div title="${escapeHtml(t)}" style="width:${pct(a, b)}%">`
+//
+// De to anførselstegnene rundt uttrykket parer seg, og blankingen spiste hele
+// ${…}-et med symbolet i. Resultatet var at fem importer sto meldt som ubrukte
+// i v4.61 mens de var i høyst levende bruk — INSTRUMENT_COLOR, HEAT_NODATA,
+// escapeHtml, pct og PRIO_LABELS. Å «rydde» dem ville brutt fem filer.
+//
+// Uttrykkene legges derfor tilbake i kroppen etter blankingen. Funksjonen tar
+// også med ${…} som måtte stå i en vanlig streng; det er med vilje. Den feilen
+// gir «brukt» der svaret er usikkert, og det er den trygge veien for et verktøy
+// hvis svar avgjør om noe kan slettes.
+function malUttrykk(src) {
+  const ut = [];
+  for (let i = 0; i < src.length - 1; i++) {
+    if (src[i] !== "$" || src[i + 1] !== "{") continue;
+    let dybde = 1, j = i + 2;
+    while (j < src.length && dybde > 0) {
+      if (src[j] === "{") dybde++;
+      else if (src[j] === "}") dybde--;
+      j++;
+    }
+    ut.push(src.slice(i + 2, j - 1));
+    i = j - 1;
+  }
+  return ut.join(" ; ");
+}
+
 const IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g;
 const BARE_RE = /export\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g;
 
@@ -71,7 +104,9 @@ const brutt = [], ubrukt = [], ukjent = [];
 for (const f of filer) {
   const s = utenKommentarer(kilde[f]);
   // Kroppen: importlinjene og strengene ut, så «bruk» betyr faktisk bruk.
-  const kropp = utenStrenger(s.replace(IMPORT_RE, " ").replace(BARE_RE, " "));
+  // Mal-uttrykkene legges tilbake — se malUttrykk for hvorfor.
+  const utenImport = s.replace(IMPORT_RE, " ").replace(BARE_RE, " ");
+  const kropp = utenStrenger(utenImport) + " ; " + malUttrykk(utenImport);
   for (const m of s.matchAll(IMPORT_RE)) {
     const spec = m[2];
     if (!spec.startsWith("./") && !spec.startsWith("../")) continue;   // eksterne (Firebase) hoppes over
@@ -127,7 +162,12 @@ for (const f of filer) {
   for (const m of s.matchAll(/import\s+([A-Za-z0-9_$]+)\s*(?:,|from)/g)) importert.add(m[1]);
   for (const m of s.matchAll(/import\s*\*\s*as\s+([A-Za-z0-9_$]+)/g)) importert.add(m[1]);
 
-  const kropp = utenStrenger(s.replace(IMPORT_RE, " ").replace(BARE_RE, " "));
+  const utenImport2 = s.replace(IMPORT_RE, " ").replace(BARE_RE, " ");
+  const kropp = utenStrenger(utenImport2);
+  // Bruk måles mot kroppen MED mal-uttrykkene, men deklarasjonene under leses
+  // fra den rene kroppen: «${foo(x)}» ville ellers gjort foo til et lokalt navn
+  // og skjult et ekte funn.
+  const kroppMedMaler = kropp + " ; " + malUttrykk(utenImport2);
   // Alt filen selv deklarerer, inkludert parametre og destrukturering, skygger.
   const lokale = new Set();
   for (const re of [
@@ -149,7 +189,7 @@ for (const f of filer) {
     // «(?!{)» holder «${» i maler utenfor: der er $ interpolasjon, ikke
     // hjelperen $ fra shared.js.
     const gr = "(?![A-Za-z0-9_$" + "{])";      // «{» holder ${ i maler utenfor
-    if (new RegExp("(?<![A-Za-z0-9_$.])" + navn + gr).test(kropp)) {
+    if (new RegExp("(?<![A-Za-z0-9_$.])" + navn + gr).test(kroppMedMaler)) {
       manglende.push(`${f}: bruker «${navn}» (eksportert av ${hvor.join(", ")}) uten å importere det`);
     }
   }

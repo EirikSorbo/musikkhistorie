@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeArtist } from "../../js/artist-normalize.js?v=4.62";
+import { normalizeArtist } from "../../js/artist-normalize.js?v=4.63";
 
 test("idempotent på allerede normalisert artist", () => {
   const a = {
