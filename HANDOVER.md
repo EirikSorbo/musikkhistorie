@@ -106,16 +106,17 @@ slektskapet, med liste over hva som må ryddes først.
 1. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow read: if
    true`, så REST-skraping er mulig. Bør på plass før appen deles bredt med
    studentene.
-2. **Fase 4-migreringen er ikke kjørt mot live.** Koden er ferdig og pushet,
-   men selve flyttingen krever lærerinnlogging: Oversikt → Sjangertreet →
-   «Flytt epoke og lytteforslag til beskrivelsene (54)» → se planen → Utfør.
-   Ta fersk Innholdspakke-eksport først. Fram til den er kjørt viser
-   sjangerkortet og tidslinjen tom epoke, fordi koden leser fra
-   `genreDescriptions` og verdiene fortsatt står i treet.
+2. **`metaGenres[].order` skrives, men leses ingen steder** (se punkt 3 under —
+   dette er den eneste reelle resten).
 3. **`metaGenres[].order` skrives, men leses ingen steder.** Seed-generatoren
    setter den, og kommentaren der sier at varmekartet og tidslinjen leser den.
    Det gjør de ikke: de leser `metaOrderHint`. Feltet er altså dødt, men står
    igjen i data. Enten ta det i bruk eller fjern det.
+
+### Alle fire faser er nå i drift
+
+Sjangertreet er fullt datadrevet, `content/genealogy` er rent strukturelt, og
+læreren kan opprette, endre og slette sjangre og metasjangre uten utvikler.
 
 ### Lukket i v4.62, v4.63 og v4.64
 
@@ -127,10 +128,12 @@ slektskapet, med liste over hva som må ryddes først.
 - `planTreeUpdate` er fjernet — den var aldri tatt i bruk.
 - Importlista er ren. **Merk hvorfor det tok tid:** fem av de sju «ubrukte»
   importene var i høyst levende bruk. Se §6.
-- Fase 4 er ferdig i koden: `era` og `t` er ute av treet, og bor nå i
-  `genreDescriptions[etikett].main` som `era` og `lytt`. De rundt 100 kuraterte
-  lytteforslagene som ingenting leste, vises nå som «Hør etter» på
-  sjangerkortet.
+- Fase 4 er kjørt og verifisert mot live: `era` og `t` er ute av treet og bor
+  i `genreDescriptions[etikett].main` som `era` og `lytt`. 54 epoker og 105
+  lytteforslag flyttet. Ingenting tapt (43 activeFrom og 50 beskrivelser både
+  før og etter), og shadowing holdt: 15 dokumenter har både main og sub, og
+  sub-nivået er urørt i alle 15. De kuraterte lytteforslagene som ingenting
+  leste, vises nå som «Hør etter» på sjangerkortet.
 
 ## 5. Arbeidsrutiner du MÅ følge
 
@@ -221,10 +224,13 @@ skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
 ## 7. Neste steg, forslagsvis
 
-1. **Kjør fase 4-migreringen** (se §4 punkt 2). Det er den eneste handlingen som
-   står mellom koden og et rent strukturdokument.
-2. Avgjør hva `metaGenres[].order` skal være — i bruk eller borte.
-3. App Check før studentene får appen bredt.
+1. Avgjør hva `metaGenres[].order` skal være — i bruk eller borte.
+2. App Check før studentene får appen bredt. Dette er nå det største
+   gjenstående punktet.
+3. Fyll inn epoke og lytteforslag der de mangler: 11 sjangre har ennå ikke
+   `activeFrom` (de åtte rot-nodene pluss Urban music, Rock'n'roll og Rock), og
+   to sjangre har ingen lytteforslag. Begge redigeres nå samme sted som
+   beskrivelsen.
 
 ## 8. Minnefiler
 
