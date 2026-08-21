@@ -19,8 +19,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  planPasserIBatch, BATCH_MAX, byggMetaTre,
-} from "../../js/genre-migrate.js?v=4.63";
+  planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup,
+} from "../../js/genre-migrate.js?v=4.64";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -421,4 +421,74 @@ test("byggMetaTre: en metasjanger utenfor hintet legges inn der læreren velger"
   const gammel = t.metaGenres.find((m) => m.name === "R&B");
   const ut = byggMetaTre(t, { gammel, navn: "R&B", fam: "red", kartPlass: 1, hintPlass: 1 });
   assert.deepEqual(ut.metaOrderHint, ["Blues", "R&B", "Rock"]);
+});
+
+// --- Fase 4: epoke og lytteforslag ut av treet -------------------------------
+// Treet skal holde struktur. era var innhold (og en unøyaktig utgave av
+// activeFrom/activeTo, som allerede lå i genreDescriptions), og t var rundt 100
+// forfattede lytteforslag som ingenting i appen leste.
+function medEraOgT() {
+  const s = lagState();
+  s.tree.nodes = s.tree.nodes.map((n) => ({ ...n, era: `epoke-${n.id}`, t: [`spor-${n.id}`] }));
+  s.tree.nodes[0].t = [];                 // Blues: bare epoke
+  delete s.tree.nodes[1].era;             // R&B: bare lytteforslag
+  return s;
+}
+
+test("epoke og lytteforslag flyttes til beskrivelsens main-nivå", () => {
+  const plan = planTreeCleanup(medEraOgT());
+  const d = ops(plan, "genreDescriptions");
+  assert.equal(d.length, 4);
+  const blues = d.find((o) => o.id === "Blues");
+  assert.deepEqual(blues.data, { main: { era: "epoke-blues" } }, "tom lytteliste skal ikke skrives");
+  const rnb = d.find((o) => o.id === "R&B");
+  assert.deepEqual(rnb.data, { main: { lytt: ["spor-rnb"] } }, "manglende epoke skal ikke skrives");
+});
+
+test("beskrivelsene skrives med MERGE — description og kilder skal overleve", () => {
+  const plan = planTreeCleanup(medEraOgT());
+  for (const o of ops(plan, "genreDescriptions")) {
+    assert.equal(o.type, "doc.merge", `${o.id}: replace ville slettet beskrivelsen`);
+  }
+});
+
+test("treet skrives med replace, og era/t er borte fra HVER node", () => {
+  const plan = planTreeCleanup(medEraOgT());
+  const t = plan.ops.find((o) => o.id === "genealogy");
+  assert.equal(t.type, "doc.replace", "merge kan ikke fjerne et felt");
+  for (const n of t.data.nodes) {
+    assert.ok(!("era" in n), `${n.id} har fortsatt era`);
+    assert.ok(!("t" in n), `${n.id} har fortsatt t`);
+  }
+  // Strukturen skal være urørt.
+  assert.deepEqual(t.data.nodes.map((n) => n.id), ["blues", "rnb", "soul", "rock"]);
+  assert.deepEqual(t.data.nodes.find((n) => n.id === "soul").p, ["rnb"]);
+});
+
+test("skriving bruker ETIKETTEN som dokument-ID, aldri fullnavnet", () => {
+  const plan = planTreeCleanup(medEraOgT());
+  const ider = ops(plan, "genreDescriptions").map((o) => o.id);
+  assert.ok(ider.includes("R&B"), "etiketten");
+  assert.ok(!ider.includes("Rhythm & blues"), "fullnavnet er ikke dokument-ID");
+});
+
+test("en sjanger uten beskrivelse får dokument likevel, med varsel", () => {
+  const s = medEraOgT();
+  delete s.genreDescs["R&B"];
+  const plan = planTreeCleanup(s);
+  assert.ok(ops(plan, "genreDescriptions").some((o) => o.id === "R&B"));
+  assert.ok(plan.advarsler.some((a) => a.includes("ingen beskrivelse")), plan.advarsler.join(" | "));
+});
+
+test("å kjøre migreringen to ganger er ufarlig — andre gang er det ingenting å gjøre", () => {
+  const s = medEraOgT();
+  const t = planTreeCleanup(s).ops.find((o) => o.id === "genealogy").data;
+  s.tree = t;
+  const igjen = planTreeCleanup(s);
+  assert.equal(igjen.ops.length, 0);
+  assert.ok(igjen.feil[0].includes("allerede rent"), igjen.feil.join(" | "));
+});
+
+test("hele migreringen får plass i én atomisk batch", () => {
+  assert.ok(planPasserIBatch(planTreeCleanup(medEraOgT())));
 });

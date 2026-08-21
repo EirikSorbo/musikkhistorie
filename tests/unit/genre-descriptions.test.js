@@ -1,9 +1,9 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.63";
-import { resolveMainDesc } from "../../js/genealogy.js?v=4.63";
-import { GENEALOGY } from "../../js/genre-model.js?v=4.63";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.64";
+import { resolveMainDesc } from "../../js/genealogy.js?v=4.64";
+import { GENEALOGY } from "../../js/genre-model.js?v=4.64";
 
 const descs = {
   Blues: {
@@ -103,13 +103,33 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
   assert.equal(r.activeTo, null, "streng skal ikke godtas som årstall");
 });
 
-test("eraText: Firestore-årstall vinner, tomt sluttår blir «i dag», ellers node-fallback", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.63");
-  const node = { era: "1930–45" };
-  assert.equal(eraText(node, { activeFrom: 1935, activeTo: 1945 }), "1935–1945");
-  assert.equal(eraText(node, { activeFrom: 1990, activeTo: null }), "1990–i dag");
-  assert.equal(eraText(node, { activeFrom: null, activeTo: null }), "1930–45");
-  assert.equal(eraText({ era: "" }, {}), "");
+test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-epoken", async () => {
+  const { eraText } = await import("../../js/genealogy.js?v=4.64");
+  // Alt leses nå fra ÉN kilde (genreDescriptions). Fram til v4.64 kom friteksten
+  // fra treets node, og da kunne kortet og tidslinjen vise ulik epoke.
+  assert.equal(eraText({ activeFrom: 1935, activeTo: 1945, era: "1930–45" }), "1935–1945");
+  assert.equal(eraText({ activeFrom: 1990, activeTo: null, era: "1990-tallet" }), "1990–i dag");
+  assert.equal(eraText({ activeFrom: null, activeTo: null, era: "1930–45" }), "1930–45");
+  assert.equal(eraText({ era: "" }), "");
+  assert.equal(eraText(undefined), "");
+});
+
+test("resolveDesc tar med epoke-fritekst og lytteforslag", () => {
+  const d = { Blues: { main: { description: "x", era: "ca. 1900", lytt: ["Cross Road Blues", ""] } } };
+  const r = resolveDesc(d, "Blues", "main");
+  assert.equal(r.era, "ca. 1900");
+  assert.deepEqual(r.lytt, ["Cross Road Blues"], "tomme linjer lukes bort");
+});
+
+test("epoke eller lytteforslag ALENE gir treff — de fire rot-nodene har ikke prosa", () => {
+  // Europeisk, Vestafrikansk, Work songs og Spirituals hadde ingen beskrivelse
+  // da era/lytt ble flyttet inn. Uten dette ville nettopp de blitt usynlige.
+  const bare = { "Work songs": { main: { era: "1800-tallet" } } };
+  assert.equal(resolveDesc(bare, "Work songs", "main").era, "1800-tallet");
+  const bareLytt = { X: { main: { lytt: ["Noe"] } } };
+  assert.deepEqual(resolveDesc(bareLytt, "X", "main").lytt, ["Noe"]);
+  // Men et helt tomt nivå er fortsatt ingenting.
+  assert.equal(resolveDesc({ Y: { main: { era: "  ", lytt: [] } } }, "Y", "main").era, "");
 });
 
 test("usikre påstander følger med, og er alltid en liste", () => {

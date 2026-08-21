@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------
 //  Beskrivelser kommer KUN fra data (Firestore-«genreDescriptions» / import-JSON), per
 //  nivå: doc = sjangernavn, med valgfrie felt meta/main/sub = { description,
-//  kilder }. Det finnes INGEN fallback: hvert nivå leses kun fra sitt eget
+//  kilder, activeFrom, activeTo, usikre, era, lytt }. Det finnes INGEN fallback: hvert nivå leses kun fra sitt eget
 //  felt (meta/main/sub). Et eldre flatt { description } brukes IKKE.
 //  Det finnes BEVISST ingen seed/standardtekst — mangler en beskrivelse, skal
 //  det vises en tydelig feilmelding (missingDesc), ikke en fallback som skjuler
@@ -29,7 +29,7 @@ function yr(v) {
   return Number.isInteger(v) && v >= AAR_MIN && v <= AAR_MAKS ? v : null;
 }
 
-const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, usikre: [] };
+const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, usikre: [], era: "", lytt: [] };
 
 function fromOverride(o, level) {
   if (!o) return null;
@@ -40,7 +40,13 @@ function fromOverride(o, level) {
   // Epoke-årstallene følger med uavhengig av teksten: en sjanger kan ha fått
   // årstall satt før beskrivelsen er skrevet, og da skal kortet vise epoken
   // selv om prosaen fortsatt mangler.
-  const har = !!lvl.description || yr(lvl.activeFrom) !== null;
+  //
+  // era og lytt teller MED her (v4.64). De kom ut av sjangertreet, og de fire
+  // rot-nodene som ennå ikke har prosa (Europeisk, Vestafrikansk, Work songs,
+  // Spirituals) har bare dem. Uten dem i testen ville epoken og lytteforslagene
+  // for nettopp de nodene vært usynlige rett etter migreringen.
+  const har = !!lvl.description || yr(lvl.activeFrom) !== null
+    || !!String(lvl.era || "").trim() || (Array.isArray(lvl.lytt) && lvl.lytt.length > 0);
   if (!har) return null;
   return {
     description: lvl.description || "",
@@ -48,6 +54,13 @@ function fromOverride(o, level) {
     activeFrom: yr(lvl.activeFrom),
     activeTo: yr(lvl.activeTo),
     usikre: Array.isArray(lvl.usikre) ? lvl.usikre : [],
+    // Epoken som FRITEKST («midten av 1940-tallet», «ca. 1979»). Årstallene over
+    // er det presise; denne bærer nyansen, og tidslinjen viser den ordrett.
+    era: String(lvl.era || "").trim(),
+    // Kuraterte lytteforslag for sjangeren, som fri tekst per linje. Skilt fra
+    // artistenes musicExamples: DE er knyttet til et artistkort og driver
+    // spillelistene, disse hører til sjangeren som sådan.
+    lytt: Array.isArray(lvl.lytt) ? lvl.lytt.filter((x) => String(x || "").trim()) : [],
   };
 }
 

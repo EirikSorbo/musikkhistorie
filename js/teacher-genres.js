@@ -9,7 +9,7 @@
 //
 //  DET VIKTIGE SKILLET, og grunnen til at fila er bygget som den er:
 //
-//    TRYGGE endringer  — fullt navn, epoke, metasjanger, rad, foreldre, farge,
+//    TRYGGE endringer  — fullt navn, metasjanger, rad, foreldre, farge,
 //                        og det å legge til en helt ny sjanger. Ingen andre
 //                        peker på dem. De skrives rett.
 //
@@ -25,17 +25,17 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=4.63";
-import { escapeHtml } from "./util.js?v=4.63";
-import { modalOpen, modalClose } from "./ui.js?v=4.63";
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.63";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.63";
-import { validateTree } from "./genre-validate.js?v=4.63";
+import { $ } from "./shared.js?v=4.64";
+import { escapeHtml } from "./util.js?v=4.64";
+import { modalOpen, modalClose } from "./ui.js?v=4.64";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.64";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.64";
+import { validateTree } from "./genre-validate.js?v=4.64";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  findReferences, planPasserIBatch, byggMetaTre,
-} from "./genre-migrate.js?v=4.63";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.63";
+  findReferences, planPasserIBatch, byggMetaTre, planTreeCleanup,
+} from "./genre-migrate.js?v=4.64";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.64";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -69,6 +69,10 @@ export const GENRE_ADMIN_HTML = `
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       <button class="btn primary small" id="gen-ny-sjanger">Ny sjanger</button>
       <button class="btn ghost small" id="gen-ny-meta">Ny metasjanger</button>
+      <!-- Engangsflytting (fase 4). Knappen viser seg selv KUN så lenge det
+           finnes noder med epoke eller lytteforslag, og forsvinner når treet er
+           rent — da er den ferdig med jobben sin. -->
+      <button class="btn ghost small" id="gen-rydd" hidden>Flytt epoke og lytteforslag til beskrivelsene</button>
     </div>
     <div id="gen-liste"></div>
   </div>
@@ -136,6 +140,14 @@ function renderListe() {
   }
   const metaer = [...(t.metaGenres || [])].sort((a, b) => (a.column ?? 0) - (b.column ?? 0));
   const uten = t.nodes.filter((n) => !n.g);
+
+  // Fase 4: står det igjen innhold i strukturdokumentet?
+  const rydd = $("#gen-rydd");
+  if (rydd) {
+    const igjen = t.nodes.filter((n) => String(n.era || "").trim() || n.t?.length).length;
+    rydd.hidden = igjen === 0;
+    if (igjen) rydd.textContent = `Flytt epoke og lytteforslag til beskrivelsene (${igjen})`;
+  }
 
   let h = "";
   for (const m of metaer) {
@@ -211,14 +223,12 @@ function openNodeEditor(nodeId) {
       <label>Tiår
         <select id="gen-r">${radValg}</select>
       </label>
-      <label>Epoke (fritekst)
-        <input type="text" id="gen-era" value="${escapeHtml(n?.era || "")}" maxlength="60">
-      </label>
       <label>Egen farge (unntak)
         <select id="gen-fam"><option value="">(arv fra metasjangeren)</option>${famValg}</select>
       </label>
     </div>
     ${n ? `<p class="muted" style="margin:10px 0 4px">ID: <code>${escapeHtml(n.id)}</code> — kan ikke endres, koblingsbeskrivelsene henger i den.</p>` : ""}
+    <p class="muted" style="margin:4px 0">Epoke og lytteforslag redigeres sammen med beskrivelsen, ikke her: treet holder strukturen, beskrivelsen holder innholdet.</p>
     <details style="margin-top:10px"${n ? "" : " open"}>
       <summary>Vokste ut av (foreldre)</summary>
       <div class="gen-kryss-liste">${kryss("p", n?.p)}</div>
@@ -240,7 +250,6 @@ function lesSkjema() {
     f: $("#gen-f").value.trim() || l,
     g: $("#gen-g").value || null,
     r: Number($("#gen-r").value),
-    era: $("#gen-era").value.trim(),
     fam: $("#gen-fam").value || undefined,
     p: valgte("p"),
     rx: valgte("rx"),
@@ -271,7 +280,6 @@ async function lagre() {
     ? { ...gammel, ...felt, l: gammel.l }
     : { id: lagId(felt.l, new Set(t.nodes.map((n) => n.id))), ...felt };
   if (!nyNode.fam) delete nyNode.fam;
-  if (!nyNode.era) delete nyNode.era;
   if (!nyNode.rx?.length) delete nyNode.rx;
 
   const nyttTre = {
@@ -486,6 +494,8 @@ function slettMeta() {
 export function setupGenreAdmin() {
   $("#gen-ny-sjanger")?.addEventListener("click", () => openNodeEditor(null));
   $("#gen-ny-meta")?.addEventListener("click", () => openMetaEditor(null));
+  $("#gen-rydd")?.addEventListener("click", () =>
+    visPlan("Flytt epoke og lytteforslag ut av treet", planTreeCleanup(migrasjonsState())));
   $("#gen-edit-lagre")?.addEventListener("click", () => lagre());
   $("#gen-edit-slett")?.addEventListener("click", () => slett());
   $("#gen-meta-lagre")?.addEventListener("click", () => lagreMeta());

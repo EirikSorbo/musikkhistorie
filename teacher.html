@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.63" />
-  <script src="js/gate.js?v=4.63"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.64" />
+  <script src="js/gate.js?v=4.64"></script>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -411,7 +411,10 @@
           <textarea id="ss-desc" rows="10" data-format="full" placeholder="Beskriv sjangeren …"></textarea>
         </label>
         <!-- Epoke: kun for tre-sjangre (main-nivå). Frie undersjangre har ingen
-             node i treet og dermed ingen epoke å måle mot varmekartet. -->
+             node i treet og dermed ingen epoke å måle mot varmekartet.
+             Fritekst-epoken lå på treets node fram til v4.64. Den hører hjemme
+             her, sammen med årstallene den er unøyaktig utgave av — da ser
+             læreren begge samtidig, i stedet for i to ulike editorer. -->
         <div id="ss-epoke-wrap" hidden>
           <span class="field-label">Mest aktive periode</span>
           <div class="ss-epoke-row">
@@ -422,7 +425,20 @@
               <input type="number" id="ss-active-to" min="1600" max="2100" step="1" placeholder="tom = fortsatt aktiv">
             </label>
           </div>
+          <label>Epoke med ord
+            <input type="text" id="ss-era" maxlength="60" placeholder="f.eks. «midten av 1940-tallet»">
+          </label>
+          <p class="hint">Vises på sjangertidslinjen ORDRETT, og på sjangerkortet når årstallene over står tomme. Bruk den når et presist årstall ville sett feil ut.</p>
           <p class="hint" id="ss-epoke-hint"></p>
+        </div>
+        <!-- Lytteforslag for sjangeren som sådan. Skilt fra artistenes
+             lytteeksempler: DE henger på et artistkort og driver spillelistene.
+             Lå som «t» på treets noder til v4.64 uten at noe leste dem. -->
+        <div id="ss-lytt-wrap" hidden>
+          <label>Hør etter
+            <textarea id="ss-lytt" rows="4" placeholder="Ett forslag per linje, f.eks. Cross Road Blues – Robert Johnson (1937)"></textarea>
+          </label>
+          <p class="hint">Ett per linje. Vises på sjangerkortet under beskrivelsen.</p>
         </div>
         <!-- Påstander som ikke fikk kildebelegg i gjennomgangen. Vises KUN her,
              aldri for studentene: det er arbeidsnotater, ikke pensuminnhold.
@@ -649,7 +665,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.63"></script>
-  <script type="module" src="js/teacher.js?v=4.63"></script>
+  <script src="js/load-guard.js?v=4.64"></script>
+  <script type="module" src="js/teacher.js?v=4.64"></script>
 </body>
 </html>

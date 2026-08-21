@@ -429,6 +429,86 @@ export function planMetaDelete(state, navn) {
 }
 
 // ----------------------------------------------------------------------------
+//  FASE 4 — epoke og lytteforslag ut av treet
+// ----------------------------------------------------------------------------
+//  `content/genealogy` skal holde STRUKTUR: hvem noden er, hvor den hører til,
+//  hvem den vokste ut av. To felter hørte ikke hjemme der:
+//
+//    era  — epoken som fritekst («midten av 1940-tallet»). Den er innhold, og
+//           den er en unøyaktig utgave av activeFrom/activeTo, som allerede bor
+//           i genreDescriptions. At de lå to steder gjorde at sjangerkortet og
+//           sjangertidslinjen kunne vise ULIK epoke for samme sjanger, og at
+//           læreren måtte redigere dem i to forskjellige editorer.
+//    t    — kuraterte lytteforslag. Rundt 100 forfattede eksempler som ingenting
+//           i appen leste; de var usynlige for alle.
+//
+//  Begge flyttes til `genreDescriptions[etikett].main` som `era` og `lytt`.
+//  Skriving skjer med merge, som er RIKTIG her: main er en map, og description,
+//  kilder og årstallene skal bli stående urørt ved siden av.
+//
+//  Etiketten er dokument-ID-en, og skriving bruker ALLTID den (aldri fullnavnet)
+//  — samme regel som resten av appen.
+export function planTreeCleanup(state) {
+  const feil = [], advarsler = [], ops = [];
+  const tre = state?.tree || {};
+  const noder = Array.isArray(tre.nodes) ? tre.nodes : [];
+  if (!noder.length) {
+    return { ops: [], feil: ["Sjangertreet er ikke lastet inn."], advarsler, oppsummering: [], blokkeringer: [] };
+  }
+
+  const berorte = noder.filter((n) => String(n.era || "").trim() || (Array.isArray(n.t) && n.t.length));
+  if (!berorte.length) {
+    return {
+      ops: [], advarsler, blokkeringer: [], oppsummering: [],
+      feil: ["Treet er allerede rent: ingen noder har epoke eller lytteforslag igjen."],
+    };
+  }
+
+  for (const n of berorte) {
+    const data = {};
+    const era = String(n.era || "").trim();
+    const lytt = (Array.isArray(n.t) ? n.t : []).map((x) => String(x || "").trim()).filter(Boolean);
+    if (era) data.era = era;
+    if (lytt.length) data.lytt = lytt;
+
+    // Skriver vi over noe som allerede står der? Det skal ikke kunne skje
+    // (feltene er nye i genreDescriptions), men hvis migreringen kjøres to
+    // ganger med ulikt tre, vil vi vite om det framfor å overskrive stille.
+    const fins = state?.genreDescs?.[n.l]?.main;
+    if (fins?.era && fins.era !== era) {
+      advarsler.push(`«${n.l}» har allerede epoke-teksten «${fins.era}»; den erstattes av «${era}».`);
+    }
+
+    const hva = [era ? "epoke" : null, lytt.length ? `${lytt.length} lytteforslag` : null].filter(Boolean).join(" og ");
+    ops.push(op("doc.merge", "genreDescriptions", n.l, { main: data }, `${n.l}: ${hva}`));
+  }
+
+  // Treet skrives HELT, ikke merget: merge kan ikke fjerne et felt, og hele
+  // poenget her er at era og t skal bort.
+  ops.push(op("doc.replace", "content", "genealogy", {
+    ...tre,
+    nodes: noder.map((n) => {
+      const { era, t, ...rest } = n;    // eslint-disable-line no-unused-vars
+      return rest;
+    }),
+  }, "Treet: epoke og lytteforslag fjernes fra alle nodene"));
+
+  const utenBeskrivelse = berorte.filter((n) => !state?.genreDescs?.[n.l]?.main);
+  if (utenBeskrivelse.length) {
+    advarsler.push(`${utenBeskrivelse.length} sjanger(e) har ingen beskrivelse ennå (${utenBeskrivelse.map((n) => n.l).join(", ")}). De får et dokument med bare epoke og lytteforslag, og det er meningen.`);
+  }
+
+  return {
+    ops, feil, advarsler, blokkeringer: [],
+    oppsummering: [
+      `${berorte.length} sjanger(e) flyttes`,
+      `${berorte.filter((n) => String(n.era || "").trim()).length} med epoke`,
+      `${berorte.reduce((sum, n) => sum + (n.t?.length || 0), 0)} lytteforslag`,
+    ],
+  };
+}
+
+// ----------------------------------------------------------------------------
 //  Trygge endringer — treet slik det SKAL BLI
 // ----------------------------------------------------------------------------
 // Merk skillet mot resten av fila: identitetsendringer returnerer en PLAN som

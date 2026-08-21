@@ -12,14 +12,14 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.63";
-import { renderRichText } from "./rich-text.js?v=4.63";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.63";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.63";
-import { modalOpen } from "./ui-modal.js?v=4.63";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.63";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.63";
-import { GENEALOGY, FAMILIES, edgeKey } from "./genre-model.js?v=4.63";
+import { wireAllLinks } from "./linkify.js?v=4.64";
+import { renderRichText } from "./rich-text.js?v=4.64";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.64";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.64";
+import { modalOpen } from "./ui-modal.js?v=4.64";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.64";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.64";
+import { GENEALOGY, FAMILIES, edgeKey } from "./genre-model.js?v=4.64";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -31,15 +31,31 @@ import { GENEALOGY, FAMILIES, edgeKey } from "./genre-model.js?v=4.63";
 // ulikt, ville editoren åpnet tom over en tekst som vises i popupen, og lagring
 // ville lagd et duplikat under labelen.
 // Epoke-linja øverst på sjangerkortet. Sannheten er de STRUKTURERTE årstallene
-// i Firestore (activeFrom/activeTo), som læreren kan rette og appen kan måle mot
-// varmekartet. Nodens era-streng i koden er bare fallback for sjangre som ennå
-// ikke er gjennomgått — den fases ut etter hvert som årstallene fylles inn.
+// (activeFrom/activeTo), som læreren kan rette og appen kan måle mot varmekartet.
+// Fritekst-epoken er fallback for sjangre som ennå ikke har årstall.
+//
+// BEGGE kommer nå fra genreDescriptions (v4.64). Fram til da lå fritekst-epoken
+// på treets node, og det gjorde at kortet og tidslinjen kunne vise ULIK epoke
+// for samme sjanger: kortet leste årstallene, tidslinjen leste nodens era.
 // Tomt sluttår betyr «fortsatt aktiv», ikke «ukjent»: en sjanger som lever i
 // dag skal lese «1990–i dag», ikke stå med en åpen strek.
-export function eraText(n, resolved) {
+export function eraText(resolved) {
   const from = resolved?.activeFrom, to = resolved?.activeTo;
   if (Number.isInteger(from)) return `${from}–${Number.isInteger(to) ? to : "i dag"}`;
-  return n.era || "";
+  return resolved?.era || "";
+}
+
+// Kuraterte lytteforslag for sjangeren. Sto som `t` på treets noder fram til
+// v4.64 uten at noe leste dem — rundt 100 forfattede eksempler var usynlige.
+// De er FRI TEKST («Cross Road Blues – Robert Johnson (1937)»), ikke lenker til
+// artistkort: artistenes musicExamples er en annen ting, knyttet til kortet og
+// til spillelistene.
+function lyttHtml(lytt) {
+  if (!lytt?.length) return "";
+  return `<div class="gx-lytt">
+    <p class="gx-lytt-head">Hør etter</p>
+    <ul>${lytt.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+  </div>`;
 }
 
 export function resolveMainDesc(genreDescs, genreId) {
@@ -118,8 +134,9 @@ export function showSjangerInfo(label, opts = {}) {
   mTitle.textContent = n.f;
   mBody.innerHTML = `
     ${heatStripBlock(n)}
-    <p class="gx-era">${escapeHtml(eraText(n, resolved))}</p>
+    <p class="gx-era">${escapeHtml(eraText(resolved))}</p>
     <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>
+    ${lyttHtml(resolved.lytt)}
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
@@ -177,7 +194,7 @@ export function showSjangerInfo(label, opts = {}) {
 // prinsipp som sjangerbeskrivelsene). opts: { root, edgeDescs, artists,
 // techItems, genres, onArtistClick, onTechClick, onMainGenreClick, onEditEdge }
 export function showEdgeInfo(fromId, toId, opts = {}) {
-  const { root = document, edgeDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onEditEdge } = opts;
+  const { root = document, edgeDescs = {}, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onEditEdge } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const a = map[fromId], b = map[toId];
   if (!a || !b) return false;
@@ -209,7 +226,7 @@ export function showEdgeInfo(fromId, toId, opts = {}) {
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
   mTitle.textContent = `${a.f} → ${b.f}`;
   mBody.innerHTML = `
-    <p class="gx-era">${react ? "Motreaksjon" : "Avstamning / påvirkning"} · ${escapeHtml(a.era)} → ${escapeHtml(b.era)}</p>
+    <p class="gx-era">${react ? "Motreaksjon" : "Avstamning / påvirkning"} · ${escapeHtml(eraText(resolveMainDesc(genreDescs, a.l)))} → ${escapeHtml(eraText(resolveMainDesc(genreDescs, b.l)))}</p>
     <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("kobling")}</span>`}</div>
     ${kilderHtml}
     ${genreBtns}`;

@@ -5,23 +5,23 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.63";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.63";
-import { resolveMainDesc } from "./genealogy.js?v=4.63";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.63";
-import { storyFor, pageFor } from "./story-format.js?v=4.63";
-import { renderRichText } from "./rich-text.js?v=4.63";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.63";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.63";
-import { resolveDesc } from "./genre-descriptions.js?v=4.63";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.63";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.63";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.63";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.64";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.64";
+import { resolveMainDesc } from "./genealogy.js?v=4.64";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.64";
+import { storyFor, pageFor } from "./story-format.js?v=4.64";
+import { renderRichText } from "./rich-text.js?v=4.64";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.64";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.64";
+import { resolveDesc } from "./genre-descriptions.js?v=4.64";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.64";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.64";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.64";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.63";
-import { $ } from "./shared.js?v=4.63";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.63";
+import { wireAllLinks } from "./linkify.js?v=4.64";
+import { $ } from "./shared.js?v=4.64";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.64";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -152,8 +152,15 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
     if (isMain) {
       $("#ss-active-from").value = Number.isInteger(resolved.activeFrom) ? resolved.activeFrom : "";
       $("#ss-active-to").value = Number.isInteger(resolved.activeTo) ? resolved.activeTo : "";
+      $("#ss-era").value = resolved.era || "";
       $("#ss-epoke-hint").textContent = epokeHint(subgenreId);
     }
+  }
+  // Lytteforslagene er én per linje i tekstfeltet, en liste i data.
+  const lyttWrap = $("#ss-lytt-wrap");
+  if (lyttWrap) {
+    lyttWrap.hidden = level !== "main";
+    if (level === "main") $("#ss-lytt").value = (resolved.lytt || []).join("\n");
   }
   buildUsikreRows(Array.isArray(resolved.usikre) ? resolved.usikre : []);
   const modal = $("#modal-subgenre-single");
@@ -192,12 +199,13 @@ function collectUsikreRows() {
     .filter(Boolean);
 }
 
-// Sammenligningsgrunnlaget under epoke-feltene: nodens era-streng fra treet
-// (det epoken erstatter) og tiårsspennet varmekartet har verdier i.
+// Sammenligningsgrunnlaget under epoke-feltene: tiårsspennet varmekartet har
+// verdier i. Fram til v4.64 viste linja også «Treets era-tekst: …», fordi
+// friteksten lå på treets node og altså i en HELT annen editor. Nå står den i
+// skjemaet rett over, og krysshenvisningen er unødvendig.
 function epokeHint(genreId) {
   const node = GENEALOGY.find((n) => n.l === genreId || n.f === genreId);
   const deler = [];
-  if (node?.era) deler.push(`Treets era-tekst: «${node.era}»`);
   const vals = heatRow(getHeatData(), node?.l || genreId);
   const varme = vals.map((v, i) => (v > 0 ? DECADES[i] : null)).filter((d) => d !== null);
   deler.push(varme.length
@@ -292,7 +300,7 @@ export function setupSubgenreSingleSave() {
     const kilder = collectKilderRows($("#ss-kilder-rows"));
     const msg = $("#ss-msg");
     // Epoken lagres KUN på main-nivå (tre-sjangre). Tomt felt = ingen verdi,
-    // ikke 0 — null lar sjangerkortet falle tilbake på nodens era-streng.
+    // ikke 0 — null lar sjangerkortet falle tilbake på fritekst-epoken.
     const data = { description, kilder, usikre: collectUsikreRows() };
     if (level === "main") {
       const num = (sel) => {
@@ -309,6 +317,8 @@ export function setupSubgenreSingleSave() {
       }
       data.activeFrom = from;
       data.activeTo = to;
+      data.era = $("#ss-era").value.trim();
+      data.lytt = $("#ss-lytt").value.split("\n").map((x) => x.trim()).filter(Boolean);
     }
     try {
       await saveGenreDescLevel(subgenreId, level, data);

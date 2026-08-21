@@ -7,11 +7,14 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.63";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.63";
-import { DECADES } from "./limits.js?v=4.63";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.63";
-import { isHendelse } from "./ui-tech.js?v=4.63";
+import { escapeHtml } from "./util.js?v=4.64";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.64";
+import { DECADES } from "./limits.js?v=4.64";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.64";
+// Epoken bor i genreDescriptions fra v4.64. Vi går til den rene oppslags-
+// modulen, ikke til genealogy.js: den importerer denne veien rundt ellers.
+import { resolveDescAny } from "./genre-descriptions.js?v=4.64";
+import { isHendelse } from "./ui-tech.js?v=4.64";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -323,23 +326,35 @@ export function buildInstrumentTimeline(techItems, group) {
 // rad → tiårets startår. Samme mapping som DEC i genealogy.js (r1 = 1900).
 const rowYear = (r) => 1890 + r * 10;
 
-// Årstallet en node plasseres på. `era` er den mest presise kilden (den er
-// forfattet per node: «1957», «ca. 1979», «midten av 1940-tallet»), men den er
-// fritekst — finnes det ikke et firesifret årstall der, faller vi tilbake på
-// radens tiår, som alltid er satt. Uten era-lesing ville rot-nodene kollidert
-// med sjangeren de føder (Work songs og Blues står begge på rad 1).
-function nodeYear(n) {
-  const m = String(n.era || "").match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
+// Epoken for en node, fra genreDescriptions. Fram til v4.64 lå den som `era` på
+// treets node; da kunne sjangerkortet og denne tidslinjen vise ULIK epoke for
+// samme sjanger, fordi kortet leste årstallene og tidslinjen leste noden.
+function nodeEpoke(n, genreDescs) {
+  return resolveDescAny(genreDescs || {}, [n.l, n.f], "main");
+}
+
+// Årstallet en node plasseres på, i fallende presisjon:
+//   1. activeFrom — strukturert og validert, lærerens egen retting
+//   2. et firesifret årstall lest ut av fritekst-epoken («ca. 1979» → 1979)
+//   3. radens tiår, som alltid er satt
+// Uten steg 1 og 2 ville rot-nodene kollidert med sjangeren de føder (Work
+// songs og Blues står begge på rad 1).
+function nodeYear(n, e) {
+  if (Number.isInteger(e?.activeFrom)) return e.activeFrom;
+  const m = String(e?.era || "").match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
   return m ? parseInt(m[1], 10) : rowYear(n.r);
 }
 
-// Etiketten over punktet er nodens `era` ORDRETT («1957», «sent 1960-tall»,
-// «midten av 1940-tallet»). Vi viser altså ikke det utleste årstallet: der era
-// er upresis, ville tallet både sett feil ut og kunne havnet til høyre for et
-// høyere tall etter avstamnings-låsingen under.
-function nodeLabel(n) {
-  const era = String(n.era || "").trim();
-  return era || `${rowYear(n.r)}-t`;
+// Etiketten over punktet er fritekst-epoken ORDRETT («1957», «sent 1960-tall»,
+// «midten av 1940-tallet»). Vi viser altså ikke det utleste årstallet: der
+// epoken er upresis, ville tallet både sett feil ut og kunne havnet til høyre
+// for et høyere tall etter avstamnings-låsingen under. Mangler friteksten,
+// brukes årstallet, og ellers tiåret.
+function nodeLabel(n, e) {
+  const era = String(e?.era || "").trim();
+  if (era) return era;
+  if (Number.isInteger(e?.activeFrom)) return String(e.activeFrom);
+  return `${rowYear(n.r)}-t`;
 }
 
 // Sjangerfamilien til én metasjanger, i tidsrekkefølge. KUN ekte sjangre —
@@ -347,17 +362,18 @@ function nodeLabel(n) {
 // bevisst utelatt (v3.77, brukervalg): de ga lite, og fordi de ligger et helt
 // århundre foran resten krevde de et eget aksebrudd som gjorde løypen rotete.
 //
-// AVSTAMNING LÅSER REKKEFØLGEN: `era` er fritekst, og upresise formuleringer kan
+// AVSTAMNING LÅSER REKKEFØLGEN: fritekst-epoken er nettopp fritekst, og upresise formuleringer kan
 // snu om på slektskapet — «sent 1960-tall» (Blues rock) leses som 1960 og havner
 // da FORAN forelderen British invasion («1963–66»). Derfor dyttes hver node til
 // minst ett år etter sin seneste forelder i familien. Da kan en strek i treet
 // aldri peke bakover på tidslinjen, uansett hvordan era er formulert.
-export function genreFamilyNodes(metaGenre) {
+export function genreFamilyNodes(metaGenre, genreDescs = {}) {
   const family = GENEALOGY.filter((n) => n.g === metaGenre);
   if (!family.length) return [];
+  const epoke = new Map(family.map((n) => [n.id, nodeEpoke(n, genreDescs)]));
   // GENEALOGY er sortert slik at foreldre kommer før barn, så ett gjennomløp
   // holder for å propagere låsingen nedover kjeden.
-  const year = new Map(family.map((n) => [n.id, nodeYear(n)]));
+  const year = new Map(family.map((n) => [n.id, nodeYear(n, epoke.get(n.id))]));
   for (const n of family) {
     const parents = (n.p || []).filter((pid) => year.has(pid));
     if (!parents.length) continue;
@@ -365,14 +381,14 @@ export function genreFamilyNodes(metaGenre) {
     if (year.get(n.id) < earliest) year.set(n.id, earliest);
   }
   return family
-    .map((n) => ({ n, year: year.get(n.id), label: nodeLabel(n) }))
+    .map((n) => ({ n, year: year.get(n.id), label: nodeLabel(n, epoke.get(n.id)) }))
     .sort((a, b) => a.year - b.year);
 }
 
 // Bygger tidslinjen for én metasjanger. Farges av familiefargen fra treet, så
 // den snakker samme fargespråk som knappene, varmekartet og sjangerhimmelen.
-export function buildGenreTimeline(metaGenre) {
-  const nodes = genreFamilyNodes(metaGenre);
+export function buildGenreTimeline(metaGenre, genreDescs = {}) {
+  const nodes = genreFamilyNodes(metaGenre, genreDescs);
   if (nodes.length < 2) return "";
   const items = nodes.map(({ n, year, label }) => ({
     year, label, desc: n.l, genre: n.l,

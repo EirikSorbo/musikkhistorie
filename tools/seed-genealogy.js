@@ -83,8 +83,15 @@ function byggNode(n, metaGenres) {
   if (n.fam && n.fam !== arvet) ut.fam = n.fam;
   if (n.yOffset) ut.yOffset = n.yOffset;
   if (n.rx?.length) ut.rx = n.rx;
-  if (n.era) ut.era = n.era;
-  if (n.t?.length) ut.t = n.t;
+  // era og t er BORTE fra treet i v4.64 (fase 4). Epoken som fritekst og de
+  // kuraterte lytteforslagene er innhold, ikke struktur, og bor nå i
+  // genreDescriptions[etikett].main som `era` og `lytt`.
+  //
+  // Denne fila skriver derfor KUN strukturen. Innholdet reiser med
+  // Innholdspakka: eksporten tar med hele beskrivelsesdokumentet, og importen
+  // fletter (saveDocsBulk bruker merge), så era og lytt følger med av seg selv.
+  // Frøet i js/genealogy-data.js beholder era og t som historisk kilde og som
+  // fixture for testene (se tests/helpers/seed-model.js).
   return ut;
 }
 

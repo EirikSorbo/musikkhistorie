@@ -1900,6 +1900,28 @@ body.is-teacher #gate { display: none; }
 .gx-rel strong { color: var(--text); font-weight: 600; }
 .gx-react-rel strong { color: #b4690e; }
 
+/* «Hør etter» på sjangerkortet: kuraterte lytteforslag for sjangeren som sådan.
+   Rundt 100 forfattede eksempler lå usett som `t` på treets noder til v4.64.
+   Egen ramme, ikke bare en liste, så de ikke leses som en del av beskrivelsen
+   over — de er en oppfordring, ikke prosa. */
+.gx-lytt {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.gx-lytt-head {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.gx-lytt ul { margin: 0; padding-left: 16px; list-style: disc; }
+.gx-lytt li { font-size: 0.86rem; line-height: 1.6; color: var(--text); }
+
 /* Spilleliste-popup */
 .pl-list { margin: 0 0 4px; padding-left: 16px; list-style: disc; }
 .pl-item { font-size: 0.88rem; line-height: 2.4; }
