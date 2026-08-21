@@ -20,7 +20,7 @@ import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete,
   planPasserIBatch, BATCH_MAX,
-} from "../../js/genre-migrate.js?v=4.60";
+} from "../../js/genre-migrate.js?v=4.61";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {

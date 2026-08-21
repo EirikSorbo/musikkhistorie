@@ -92,15 +92,28 @@ for (const f of filer) {
   }
 }
 
-// «Brukt, men ikke importert»: et symbol som genre-model.js eksporterer, og som
-// en fil BRUKER uten å importere det, er en ReferenceError som først viser seg
-// når kodelinjen kjøres. Det skjedde da re-eksporten i genealogy.js ble fjernet:
-// edgeKey ble stående i bruk uten import, og hverken node --check eller
-// import-sjekken over fanget det (begge ser bare på importer).
-const modelExports = eksport["genre-model.js"] || new Set();
+// «Brukt, men ikke importert» — en ReferenceError som først viser seg når
+// kodelinjen KJØRER, og som verken node --check eller importsjekken over
+// fanger (begge ser bare på importer som finnes).
+//
+// Dette har slått til to ganger: edgeKey ble stående i genealogy.js etter at
+// en re-eksport forsvant, og GENRE_ADMIN_HTML ble brukt i teacher.js uten at
+// importen kom med — sistnevnte tok ned HELE lærersiden, fordi startApp kastet
+// på første linje og alt etter forble ukoblet.
+//
+// Vi ser på navn som en ANNEN modul i prosjektet eksporterer. Det gir få falske
+// positive (navnet finnes tross alt som eksport et sted) og fanger nettopp den
+// feilen: symbolet er hentet fra en modul, men importlinja mangler.
+const alleEksporter = new Map();          // navn → [filer som eksporterer det]
+for (const f of filer) {
+  for (const navn of eksport[f]) {
+    if (!alleEksporter.has(navn)) alleEksporter.set(navn, []);
+    alleEksporter.get(navn).push(f);
+  }
+}
+
 const manglende = [];
 for (const f of filer) {
-  if (f === "genre-model.js") continue;
   const s = utenKommentarer(kilde[f]);
   const importert = new Set();
   for (const m of s.matchAll(IMPORT_RE)) {
@@ -110,14 +123,34 @@ for (const f of filer) {
       importert.add(alias || orig);
     }
   }
+  // Standard-importer (import X from "...") og navnerom teller også.
+  for (const m of s.matchAll(/import\s+([A-Za-z0-9_$]+)\s*(?:,|from)/g)) importert.add(m[1]);
+  for (const m of s.matchAll(/import\s*\*\s*as\s+([A-Za-z0-9_$]+)/g)) importert.add(m[1]);
+
   const kropp = utenStrenger(s.replace(IMPORT_RE, " ").replace(BARE_RE, " "));
-  // Lokale deklarasjoner skygger for modellens navn — de skal ikke meldes.
+  // Alt filen selv deklarerer, inkludert parametre og destrukturering, skygger.
   const lokale = new Set();
-  for (const m of kropp.matchAll(/(?:const|let|var|function|class)\s+([A-Za-z0-9_$]+)/g)) lokale.add(m[1]);
-  for (const navn of modelExports) {
-    if (importert.has(navn) || lokale.has(navn)) continue;
-    if (new RegExp(`(?<![A-Za-z0-9_$.])${navn}\\s*[(.[]`).test(kropp)) {
-      manglende.push(`${f}: bruker «${navn}» fra genre-model.js uten å importere det`);
+  for (const re of [
+    /(?:const|let|var|function|class)\s+([A-Za-z0-9_$]+)/g,
+    /\b([A-Za-z0-9_$]+)\s*(?:=>|\()/g,
+    /\{([^{}]*)\}\s*=/g,
+  ]) {
+    for (const m of kropp.matchAll(re)) {
+      for (const bit of m[1].split(/[,:\s]+/)) if (bit) lokale.add(bit.trim());
+    }
+  }
+  for (const [navn, hvor] of alleEksporter) {
+    // Kun navn som begynner med STOR bokstav: konstanter og markup-symboler
+    // (GENRE_ADMIN_HTML, MODAL_HTML, GENEALOGY). De er nesten aldri lokale
+    // variabler, så treffene er ekte. Små forbokstaver ($ , state, opts, ctx,
+    // getState …) er ofte parametre eller lokale navn, og ga bare støy.
+    if (!/^[A-Z]/.test(navn)) continue;
+    if (hvor.includes(f) || importert.has(navn) || lokale.has(navn)) continue;
+    // «(?!{)» holder «${» i maler utenfor: der er $ interpolasjon, ikke
+    // hjelperen $ fra shared.js.
+    const gr = "(?![A-Za-z0-9_$" + "{])";      // «{» holder ${ i maler utenfor
+    if (new RegExp("(?<![A-Za-z0-9_$.])" + navn + gr).test(kropp)) {
+      manglende.push(`${f}: bruker «${navn}» (eksportert av ${hvor.join(", ")}) uten å importere det`);
     }
   }
 }
