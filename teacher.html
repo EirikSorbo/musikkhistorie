@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.59" />
-  <script src="js/gate.js?v=4.59"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.60" />
+  <script src="js/gate.js?v=4.60"></script>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png" />
@@ -85,6 +85,20 @@
             <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="17" r="3"/><path d="M10 17V5l10-2v12"/><circle cx="17" cy="15" r="3"/><path d="M10 9l10-2"/></svg>
             <span class="dash-title">Instrumenter</span>
             <span class="dash-desc">Instrumentenes utvikling</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Pensumets STRUKTUR. Bevisst UTENFOR «Utforsk»-griden: den speiles mot
+           forsiden (se tests/unit/dashboard-parity.test.js), og dette er et
+           lærerverktøy studentene ikke har. -->
+      <section class="panel">
+        <p class="section-label">Rediger pensumet</p>
+        <div class="dash-grid">
+          <button class="dash-card" id="btn-t-sjangertre">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6"/><path d="M6 21v-4a2 2 0 012-2h8a2 2 0 012 2v4"/><circle cx="12" cy="3" r="1.6"/><circle cx="6" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/></svg>
+            <span class="dash-title">Sjangertreet</span>
+            <span class="dash-sub">Legg inn, endre og fjern sjangre</span>
           </button>
         </div>
       </section>
@@ -631,7 +645,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.59"></script>
-  <script type="module" src="js/teacher.js?v=4.59"></script>
+  <script src="js/load-guard.js?v=4.60"></script>
+  <script type="module" src="js/teacher.js?v=4.60"></script>
 </body>
 </html>

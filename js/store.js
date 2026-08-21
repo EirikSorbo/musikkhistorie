@@ -35,11 +35,11 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.59";
-import { isMainGenre } from "./genre-model.js?v=4.59";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.59";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.59";
-import { mergeHeatRows } from "./import-format.js?v=4.59";
+import { firebaseConfig } from "./firebase-config.js?v=4.60";
+import { isMainGenre } from "./genre-model.js?v=4.60";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.60";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.60";
+import { mergeHeatRows } from "./import-format.js?v=4.60";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -375,6 +375,50 @@ export async function saveDecadeDesc(decadeId, data) {
 // Skriver mange dokumenter til én samling i batch (merge-set), i stedet for
 // én og én skriving — dramatisk raskere ved import. entries = [{ id, data }].
 // Returnerer antall skrevne dokumenter.
+// ----------------------------------------------------------------------------
+//  MIGRERING AV SJANGERTREET
+// ----------------------------------------------------------------------------
+//  Utfører en plan fra js/genre-migrate.js. Planen er allerede validert og vist
+//  for læreren; her skjer bare skrivingen.
+//
+//  ÉN batch, med vilje: et navnebytte berører seks samlinger, og skrives de hver
+//  for seg kan en feil midt i etterlate treet omdøpt mens artistene fortsatt
+//  peker på det gamle navnet. Firestore-batcher er atomiske OG kan spenne flere
+//  samlinger, så enten går alt gjennom eller ingenting.
+//
+//  Grensen er 500 operasjoner. En plan over det kan ikke gjøres atomisk, og da
+//  avviser vi heller enn å dele den opp — en halvveis migrering er verre enn en
+//  som ikke ble gjort. Planleggeren flagger det samme på forhånd
+//  (planPasserIBatch), så dette er siste skanse.
+export async function runMigrationPlan(ops) {
+  const liste = Array.isArray(ops) ? ops : [];
+  if (!liste.length) return 0;
+  if (liste.length > BATCH_LIMIT) {
+    throw new Error(`Migreringen krever ${liste.length} skrivinger, men Firestore tar maks ${BATCH_LIMIT} i én atomisk batch. Del endringen i mindre steg.`);
+  }
+  const batch = writeBatch(db);
+  for (const o of liste) {
+    const ref = doc(db, o.coll, String(o.id));
+    switch (o.type) {
+      case "doc.merge":   batch.set(ref, o.data, { merge: true }); break;
+      case "doc.replace": batch.set(ref, o.data); break;
+      case "doc.delete":  batch.delete(ref); break;
+      case "field.delete": batch.update(ref, { [o.data.felt]: deleteField() }); break;
+      default: throw new Error(`Ukjent migreringsoperasjon: ${o.type}`);
+    }
+  }
+  await batch.commit();
+  return liste.length;
+}
+
+// Lagrer hele sjangertreet (content/genealogy). Brukes av de TRYGGE
+// operasjonene i editoren — de som ikke flytter en identitet: ny sjanger, ny
+// forelder, ny rad, ny farge, endret fullt navn.
+export async function saveGenealogyTree(tree) {
+  return setDoc(doc(db, "content", "genealogy"),
+    { ...tree, updatedAt: new Date().toISOString() });
+}
+
 export async function saveDocsBulk(collectionName, entries) {
   for (let i = 0; i < entries.length; i += BATCH_LIMIT) {
     const batch = writeBatch(db);

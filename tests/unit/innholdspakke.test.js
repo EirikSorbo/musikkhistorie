@@ -8,9 +8,9 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { STORY_ORDER } from "../../js/story-format.js?v=4.59";
-import { renderRichText } from "../../js/rich-text.js?v=4.59";
-import { GENEALOGY_MAIN_GENRES } from "../../js/genre-model.js?v=4.59";
+import { STORY_ORDER } from "../../js/story-format.js?v=4.60";
+import { renderRichText } from "../../js/rich-text.js?v=4.60";
+import { GENEALOGY_MAIN_GENRES } from "../../js/genre-model.js?v=4.60";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
 let pakke = null;

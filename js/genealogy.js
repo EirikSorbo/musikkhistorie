@@ -12,14 +12,14 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.59";
-import { renderRichText } from "./rich-text.js?v=4.59";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.59";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.59";
-import { modalOpen } from "./ui-modal.js?v=4.59";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.59";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.59";
-import { GENEALOGY, FAMILIES, edgeKey } from "./genre-model.js?v=4.59";
+import { wireAllLinks } from "./linkify.js?v=4.60";
+import { renderRichText } from "./rich-text.js?v=4.60";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.60";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.60";
+import { modalOpen } from "./ui-modal.js?v=4.60";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.60";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.60";
+import { GENEALOGY, FAMILIES, edgeKey } from "./genre-model.js?v=4.60";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js

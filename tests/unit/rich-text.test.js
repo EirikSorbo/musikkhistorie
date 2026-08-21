@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderRichText } from "../../js/rich-text.js?v=4.59";
-import { formatInfoText } from "../../js/ui-helpers.js?v=4.59";
+import { renderRichText } from "../../js/rich-text.js?v=4.60";
+import { formatInfoText } from "../../js/ui-helpers.js?v=4.60";
 
 // renderRichText er DELT av historiene, innholdssidene og alle beskrivelsene
 // (artist, sjanger, kobling, innovasjon, tiår). Testene her låser syntaksen
