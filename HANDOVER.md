@@ -1,7 +1,7 @@
 # Handover — pensum-appen, status 21. august 2026
 
-Skrevet ved kontekstbytte. Alt her er verifisert mot koden og mot live samme dag.
-Appen er **v4.61**, utrullet på [historieappen.no](https://historieappen.no), 225 tester grønne.
+Skrevet ved kontekstbytte, oppdatert samme dag etter v4.62 og v4.63.
+Appen er **v4.63**, utrullet på [historieappen.no](https://historieappen.no), 239 tester grønne.
 
 ---
 
@@ -103,32 +103,41 @@ slektskapet, med liste over hva som må ryddes først.
 
 ## 4. Åpne punkter
 
-1. **Skrivestien i editoren er ALDRI kjørt mot Firestore.** Den krever
-   lærerinnlogging. Planlegging, validering, blokkering og UI er verifisert i
-   nettleseren med ekte tre og påfylt tilstand, uten skriving. **Første ekte
-   navnebytte bør gjøres på noe lite, med fersk Innholdspakke-eksport i bakhånd.**
-   (Eirik tok en eksport 21.08 etter at v4.61 var oppe.)
-2. **Metasjanger-editoren bruker `prompt()`** for navn. Fungerer, men er ikke husets
-   uttrykk. Bør bli et skjema som node-editoren.
-3. **Sletting av metasjanger er ikke implementert** — bare navnebytte og opprettelse.
-4. **`planTreeUpdate` i genre-migrate.js er ubrukt** (editoren skriver treet direkte
-   via `saveGenealogyTree`). Enten ta den i bruk eller fjern den.
-5. **Ti ubrukte importer** rapporteres av `check-imports.js`, de fleste
-   pre-eksisterende. Ufarlig, men kan ryddes.
-6. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow read: if
-   true`, så REST-skraping er mulig.
+1. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow read: if
+   true`, så REST-skraping er mulig. Bør på plass før appen deles bredt med
+   studentene.
+2. **Fase 4 fra den opprinnelige planen** er ikke gjort: flytt lytteeksempler og
+   epoke fra treet til `genreDescriptions`, så strukturdokumentet blir rent
+   strukturelt.
+3. **`metaGenres[].order` skrives, men leses ingen steder.** Seed-generatoren
+   setter den, og kommentaren der sier at varmekartet og tidslinjen leser den.
+   Det gjør de ikke: de leser `metaOrderHint`. Feltet er altså dødt, men står
+   igjen i data. Enten ta det i bruk eller fjern det.
 
----
+### Lukket i v4.62 og v4.63
+
+- Første ekte navnebytte er kjørt mot live Firestore av Eirik. Navnet byttet i
+  treet og artistenes sjangertilknytning fulgte med, slik planen sa.
+  Migreringsmaskineriet er dermed bekreftet i drift.
+- `prompt()` i metasjanger-editoren er erstattet med et skjema som node-editorens.
+- Sletting av metasjanger finnes nå (`planMetaDelete`), med blokkering.
+- `planTreeUpdate` er fjernet — den var aldri tatt i bruk.
+- Importlista er ren. **Merk hvorfor det tok tid:** fem av de sju «ubrukte»
+  importene var i høyst levende bruk. Se §6.
 
 ## 5. Arbeidsrutiner du MÅ følge
 
 **Versjonsbump ved hver endring:**
 ```bash
 cd "/Users/eiriks05/Documents/Eiriks Script/pensum"
-printf 'export const VERSION = "4.62";\n' > js/version.js && ./bump.sh
+printf 'export const VERSION = "4.64";\n' > js/version.js && ./bump.sh
 ```
 `bump.sh` setter `?v=` i alle `js/*.js`, `*.html` og `tests/*/*.js`. Uten dette får
-brukerne stale moduler. **Merk:** gjør aldri søk-og-erstatt mot et `?v=`-mønster før
+brukerne stale moduler. **Og under lokal verifisering rammer det deg selv:**
+redigerer du en fil uten å bumpe, serverer nettleseren fortsatt den forrige
+utgaven bak samme `?v=`. Det skjedde to ganger i v4.63-runden, én gang for en
+modul og én gang for stilarket, og så ut som om koden ikke virket. Bump, eller
+hent fila med en engangsparameter når du måler. **Merk:** gjør aldri søk-og-erstatt mot et `?v=`-mønster før
 du vet hvilken versjon fila faktisk står på — det var rotårsaken til at hele
 lærersiden døde i v4.60.
 
@@ -183,6 +192,18 @@ varmt speil.
 **Gå den EKTE veien.** Jeg verifiserte fase 1 ved å injisere treet i speilet, ikke
 gjennom importen. Importen var brutt, og det oppdaget brukeren, ikke jeg.
 
+**check-imports.js var blind for maler (rettet i v4.63).** Den blanket
+anførselstegn uten å skille vanlig streng fra MAL. I `title="${escapeHtml(t)}"`
+parer de to anførselstegnene seg rundt uttrykket, så symbolet forsvant før bruk
+ble målt. Fem av sju «ubrukte importer» var derfor i bruk — INSTRUMENT_COLOR,
+HEAT_NODATA, escapeHtml, pct, PRIO_LABELS. Hadde man ryddet etter lista, ville
+fem filer brutt. Verifiser alltid en «ubrukt»-melding manuelt før du sletter.
+
+**Klasser som ikke finnes i CSS-en feiler ikke.** `.form-grid` ble tatt i bruk av
+node-editoren i v4.60 uten å eksistere, og skjemaet fløt på rad i tre versjoner
+uten at noe så ødelagt ut. Det samme gjaldt `dash-sub`. Sjekk at klassen finnes
+når du skriver ny markup.
+
 **Merge kan ikke fjerne en nøkkel.** Firestore dyp-fletter map-felter. Varmekartet må
 skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
@@ -193,14 +214,11 @@ skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
 ## 7. Neste steg, forslagsvis
 
-1. Gjør det første ekte navnebyttet i editoren, på noe lite. Bekreft at planen stemmer
-   med det som faktisk skjer.
-2. Rydd punkt 2–5 i §4 (prompt→skjema, meta-sletting, ubrukt kode).
-3. Vurder fase 4 fra den opprinnelige planen: flytt lytteeksempler og epoke fra treet
-   til `genreDescriptions`, så strukturdokumentet blir rent strukturelt.
-4. App Check før studentene får appen bredt.
-
----
+1. Fase 4: flytt lytteeksempler og epoke ut av treet, inn i `genreDescriptions`,
+   så strukturdokumentet blir rent strukturelt. Migreringsmaskineriet er nå
+   bevist i drift, så dette hviler på fast grunn.
+2. Avgjør hva `metaGenres[].order` skal være — i bruk eller borte.
+3. App Check før studentene får appen bredt.
 
 ## 8. Minnefiler
 
