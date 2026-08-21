@@ -14,15 +14,15 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.58";
-import { subscribeSharedData } from "./shared-data.js?v=4.58";
-import { onGenreModelChanged } from "./genre-model.js?v=4.58";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.58";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.58";
-import { initExplore } from "./explore.js?v=4.58";
+} from "./store.js?v=4.59";
+import { subscribeSharedData } from "./shared-data.js?v=4.59";
+import { onGenreModelChanged } from "./genre-model.js?v=4.59";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.59";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.59";
+import { initExplore } from "./explore.js?v=4.59";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.58";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.58";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.59";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.59";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -41,11 +41,11 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.58";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.58";
-import { renderDesk } from "./teacher-desk.js?v=4.58";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.58";
-import { setupFormatBars } from "./format-bar.js?v=4.58";
+} from "./teacher-content.js?v=4.59";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.59";
+import { renderDesk } from "./teacher-desk.js?v=4.59";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.59";
+import { setupFormatBars } from "./format-bar.js?v=4.59";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

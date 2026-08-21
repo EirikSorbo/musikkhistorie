@@ -16,10 +16,10 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.58";
-import { GENEALOGY, nodeColor, layoutX } from "./genre-model.js?v=4.58";
-import { attachCamera } from "./gx-camera.js?v=4.58";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.58";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.59";
+import { GENEALOGY, nodeColor, layoutX } from "./genre-model.js?v=4.59";
+import { attachCamera } from "./gx-camera.js?v=4.59";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.59";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = 2400;            // logisk kartbredde (kameraet skalerer til scenen)
@@ -347,6 +347,10 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   // --- Touch: uten hover trykker man for å lyse opp. Første trykk på en pille
   //     dimmer alt utenom slekta, andre trykk (eller «Detaljer») åpner kortet.
   let selectedId = null;
+  // Kortet henger i SCENEN, ikke i #gx-cam, og overlever derfor en omtegning.
+  // Uten denne oppryddingen hopet det seg opp ett kort per snapshot, hvert med
+  // sin egen «Detaljer»-knapp som pekte på en gammel utgave av kartet.
+  stage.querySelectorAll(".gx-card").forEach((gammelt) => gammelt.remove());
   const card = document.createElement("div");
   card.className = "gx-card";
   card.innerHTML = `<span class="gx-card-dot"></span><span class="gx-card-name"></span>` +

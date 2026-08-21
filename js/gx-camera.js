@@ -65,23 +65,30 @@ export function attachCamera({
     apply();
   }
 
-  // Alt som kobles utenfor cam-elementet samles her, så kameraet kan ryddes opp
-  // når kartet tegnes på nytt (nytt sjangertre fra Firestore). Uten dette ville
-  // hver omtegning etterlatt et nytt sett pointerup-lyttere på window.
+  // ALLE lyttere samles her, så destroy() kan koble fra hver eneste én.
+  //
+  // Dette må være uttømmende. Scenen (#gx-stage) og zoom-knappene OVERLEVER en
+  // omtegning — bare innholdet i #gx-cam byttes — så en lytter som bindes rett
+  // på dem hoper seg opp for hvert nytt sjangertre-snapshot. Da fikk vi denne
+  // feilen: det gamle kameraet mistet pointerup (den var ryddet), men beholdt
+  // pointerdown og pointermove. Pekeren ble dermed liggende i dets `pointers`-
+  // kart for alltid, og kartet panorerte etter musa uten at noen knapp var nede,
+  // helt til pekeren forlot scenen. Zoom-knappene zoomet tilsvarende flere hakk
+  // per klikk.
   const opprydding = [];
   const koble = (mål, type, fn, opts) => {
     mål.addEventListener(type, fn, opts);
     opprydding.push(() => mål.removeEventListener(type, fn, opts));
   };
 
-  root.querySelector("#gx-zin")?.addEventListener("click", () => zoom(1.25));
-  root.querySelector("#gx-zout")?.addEventListener("click", () => zoom(0.8));
-  root.querySelector("#gx-rst")?.addEventListener("click", () => {
-    fit();
-    onBackgroundClick?.();
-  });
+  const zin = root.querySelector("#gx-zin");
+  const zout = root.querySelector("#gx-zout");
+  const zrst = root.querySelector("#gx-rst");
+  if (zin) koble(zin, "click", () => zoom(1.25));
+  if (zout) koble(zout, "click", () => zoom(0.8));
+  if (zrst) koble(zrst, "click", () => { fit(); onBackgroundClick?.(); });
 
-  stage.addEventListener("wheel", (ev) => {
+  koble(stage, "wheel", (ev) => {
     ev.preventDefault();
     const rect = stage.getBoundingClientRect();
     zoom(ev.deltaY < 0 ? 1.12 : 0.9, ev.clientX - rect.left, ev.clientY - rect.top);
@@ -94,7 +101,7 @@ export function attachCamera({
   const pointers = new Map();
   let pinchDist = 0;
 
-  stage.addEventListener("pointerdown", (ev) => {
+  koble(stage, "pointerdown", (ev) => {
     lastPointerType = ev.pointerType || "mouse";
     const first = pointers.size === 0;
     pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -102,7 +109,7 @@ export function attachCamera({
     else pinchDist = 0;   // andre finger ned: nullstill pinch-referansen
   });
 
-  stage.addEventListener("pointermove", (ev) => {
+  koble(stage, "pointermove", (ev) => {
     if (!pointers.has(ev.pointerId)) return;
     const prev = pointers.get(ev.pointerId);
     pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -128,9 +135,9 @@ export function attachCamera({
     if (!pointers.size) stage.classList.remove("gx-drag");
   };
   koble(window, "pointerup", endPtr);
-  stage.addEventListener("pointercancel", endPtr);
+  koble(stage, "pointercancel", endPtr);
 
-  stage.addEventListener("click", (ev) => {
+  koble(stage, "click", (ev) => {
     if (!ev.target.closest(ignoreSelector) && !moved) onBackgroundClick?.();
   });
 
@@ -139,9 +146,16 @@ export function attachCamera({
   return {
     fit,
     zoom,
-    // Kobler fra det som ligger utenfor kartet. Kall FØR en ny render på samme
-    // scene; elementene inne i #gx-cam forsvinner uansett når den tømmes.
-    destroy() { opprydding.forEach((av) => av()); opprydding.length = 0; },
+    // Kobler fra ALT kameraet har bundet. Kall FØR en ny render på samme scene.
+    // Rydder også pekertilstanden, så et halvferdig drag ikke overlever inn i
+    // det nye kameraet.
+    destroy() {
+      opprydding.forEach((av) => av());
+      opprydding.length = 0;
+      pointers.clear();
+      pinchDist = 0;
+      stage.classList.remove("gx-drag");
+    },
     isMoved: () => moved,
     pointerType: () => lastPointerType,
     isTouch: () => lastPointerType === "touch" || lastPointerType === "pen",
