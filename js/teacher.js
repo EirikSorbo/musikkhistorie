@@ -14,14 +14,14 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.51";
-import { subscribeSharedData } from "./shared-data.js?v=4.51";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.51";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.51";
-import { initExplore } from "./explore.js?v=4.51";
+} from "./store.js?v=4.52";
+import { subscribeSharedData } from "./shared-data.js?v=4.52";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.52";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.52";
+import { initExplore } from "./explore.js?v=4.52";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.51";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.51";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.52";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.52";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -40,11 +40,11 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.51";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.51";
-import { renderDesk } from "./teacher-desk.js?v=4.51";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.51";
-import { setupFormatBars } from "./format-bar.js?v=4.51";
+} from "./teacher-content.js?v=4.52";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.52";
+import { renderDesk } from "./teacher-desk.js?v=4.52";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.52";
+import { setupFormatBars } from "./format-bar.js?v=4.52";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

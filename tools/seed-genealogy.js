@@ -8,6 +8,10 @@
 //
 //  Kjør:  node tools/seed-genealogy.js
 //  Ut:    json files/genealogy-seed.json
+//
+//  Formen MÅ være { formatVersion, genealogy: {...} } med genealogy på
+//  TOPPNIVÅ — importøren leser toppnøkler (se CONTENT_KEYS i
+//  js/teacher-import.js), ikke en content-innpakning.
 // ============================================================================
 import fs from "node:fs";
 import path from "node:path";
@@ -72,7 +76,7 @@ if (feil.length) {
 
 const utfil = path.join(ROT, "json files", "genealogy-seed.json");
 fs.mkdirSync(path.dirname(utfil), { recursive: true });
-fs.writeFileSync(utfil, JSON.stringify({ content: { genealogy: tree } }, null, 2) + "\n");
+fs.writeFileSync(utfil, JSON.stringify({ formatVersion: 1, genealogy: tree }, null, 2) + "\n");
 
 console.log(`Skrevet: ${path.relative(ROT, utfil)}`);
 console.log(`  noder=${tree.nodes.length} metasjangre=${tree.metaGenres.length} familier=${Object.keys(tree.families).length}`);

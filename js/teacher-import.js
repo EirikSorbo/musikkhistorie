@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.51";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.52";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -18,14 +18,14 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.51";
-import { escapeHtml } from "./ui.js?v=4.51";
-import { $ } from "./shared.js?v=4.51";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.51";
-import { validateTree } from "./genre-validate.js?v=4.51";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.51";
-import { INSTRUMENTS } from "./limits.js?v=4.51";
-import { flattenGenreDescriptions, validateArtistsForImport } from "./import-format.js?v=4.51";
+} from "./store.js?v=4.52";
+import { escapeHtml } from "./ui.js?v=4.52";
+import { $ } from "./shared.js?v=4.52";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.52";
+import { validateTree } from "./genre-validate.js?v=4.52";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.52";
+import { INSTRUMENTS } from "./limits.js?v=4.52";
+import { flattenGenreDescriptions, validateArtistsForImport, normalizeImportFile, CONTENT_KEYS } from "./import-format.js?v=4.52";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -218,8 +218,6 @@ function formatImportErrors(errors) {
          `${shown.join("\n")}${more}\n\nRett opp filen og prøv igjen.`;
 }
 
-// Innholdsdeler en importfil kan bære utover artistene.
-const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts", "referanser"];
 
 // Alle toppnøkler appen forstår. Ukjente nøkler (feilstavet, eller fra et nyere
 // format) ignoreres stille ved import — vi advarer i stedet, så delvise/skjeve
@@ -268,6 +266,9 @@ function importParts(data) {
   if (data.varmekart?.heat) parts.push(`varmekart (${Object.keys(data.varmekart.heat).length} sjangre)`);
   if (Array.isArray(data.referanser?.kilder) && data.referanser.kilder.length) parts.push(`${data.referanser.kilder.length} frittstående referanser`);
   if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
+  if (Array.isArray(data.genealogy?.nodes) && data.genealogy.nodes.length) {
+    parts.push(`sjangertreet (${data.genealogy.nodes.length} sjangre)`);
+  }
   return parts;
 }
 
@@ -276,28 +277,8 @@ async function handleImportFile(file) {
   let raw;
   try { raw = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
 
-  let data;
-  if (Array.isArray(raw)) {
-    data = { artists: raw, decades: {}, genreDescriptions: {}, tech: [] };
-  } else if (raw && typeof raw === "object" &&
-             (Array.isArray(raw.artists) || CONTENT_KEYS.some((k) => raw[k]))) {
-    // Filer UTEN artister godtas også — rene innholdsfiler (sider, varmekart,
-    // historier/beskrivelser, podkaster, config).
-    data = {
-      artists: Array.isArray(raw.artists) ? raw.artists : [],
-      decades: raw.decades || {},
-      // Formatet er nestet pr. nivå ({ meta, main, sub }) — flat ut til
-      // { navn: dokument } før skriving.
-      genreDescriptions: flattenGenreDescriptions(raw.genreDescriptions || {}),
-      edgeDescriptions: raw.edgeDescriptions || {},
-      tech: raw.tech || [],
-      pages: raw.pages || {},
-      varmekart: raw.varmekart || null,
-      referanser: raw.referanser || null,
-      podcasts: raw.podcasts || [],
-      teacherChecks: raw.teacherChecks || null,
-    };
-  } else {
+  const data = normalizeImportFile(raw);
+  if (!data) {
     alert("Ugyldig format — filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
   }
 

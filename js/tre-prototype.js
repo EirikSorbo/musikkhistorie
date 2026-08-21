@@ -5,7 +5,7 @@
 //  annen. Siden er BEVISST ikke lenket fra menyen eller huben — den skal kunne
 //  prøves i undervisning ved siden av den som er i drift.
 // ============================================================================
-import { initTrePage } from "./tre-page.js?v=4.51";
-import { renderGenealogyBundled } from "./genealogy-bundled.js?v=4.51";
+import { initTrePage } from "./tre-page.js?v=4.52";
+import { renderGenealogyBundled } from "./genealogy-bundled.js?v=4.52";
 
 initTrePage({ render: renderGenealogyBundled });

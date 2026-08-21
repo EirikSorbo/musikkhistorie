@@ -118,3 +118,45 @@ export function validateArtistsForImport(list) {
   });
   return { ok: errors.length === 0, errors };
 }
+
+// ---------------------------------------------------------------------------
+//  IMPORTFILENS FORM
+// ---------------------------------------------------------------------------
+
+// Innholdsdeler en importfil kan bære utover artistene.
+export const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts", "referanser", "genealogy"];
+
+// Normaliserer en innlest importfil til appens interne form, eller returnerer
+// null når formatet ikke gjenkjennes. Skilt ut fra handleImportFile (v4.52) og
+// EKSPORTERT fordi den er ren og dermed testbar: objektet under er en
+// HVITELISTE, og en nøkkel som ikke nevnes her forsvinner stille på vei til
+// skrivingen. Det skjedde med sjangertreet — eksporten la det i fila og
+// importExtras leste det, men mellomleddet slapp det aldri gjennom.
+//
+// En bar array leses som en ren artistliste (det eldste formatet).
+export function normalizeImportFile(raw) {
+  if (Array.isArray(raw)) {
+    return { artists: raw, decades: {}, genreDescriptions: {}, tech: [] };
+  }
+  const harInnhold = raw && typeof raw === "object" &&
+    (Array.isArray(raw.artists) || CONTENT_KEYS.some((k) => raw[k]));
+  if (!harInnhold) return null;
+
+  // Filer UTEN artister godtas også — rene innholdsfiler (sider, varmekart,
+  // historier/beskrivelser, podkaster, sjangertreet).
+  return {
+    artists: Array.isArray(raw.artists) ? raw.artists : [],
+    decades: raw.decades || {},
+    // Formatet er nestet pr. nivå ({ meta, main, sub }) — flat ut til
+    // { navn: dokument } før skriving.
+    genreDescriptions: flattenGenreDescriptions(raw.genreDescriptions || {}),
+    edgeDescriptions: raw.edgeDescriptions || {},
+    tech: raw.tech || [],
+    pages: raw.pages || {},
+    varmekart: raw.varmekart || null,
+    referanser: raw.referanser || null,
+    podcasts: raw.podcasts || [],
+    teacherChecks: raw.teacherChecks || null,
+    genealogy: raw.genealogy || null,
+  };
+}
