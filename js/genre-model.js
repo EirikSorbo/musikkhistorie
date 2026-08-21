@@ -25,6 +25,8 @@
 //  (isGenreModelReady()).
 // ============================================================================
 
+import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.58";
+
 // --- Modelltilstanden (byttes av rebuild) -----------------------------------
 
 // Alle noder i treet, i dokumentets rekkefølge. Røttene har g === null.
@@ -77,6 +79,16 @@ export let MAIN_GENRE_INFO = {};
 // bare gray-noder, faller den tilbake til gråen med vilje.
 export let META_GENRE_COLOR = {};
 
+// Metasjangrene slik dokumentet beskriver dem: navn, pedagogisk rekkefølge
+// (order), visuell kolonne i treet (column) og farge. Fra v4.54 EIER
+// metasjangeren fargen; noder arver den, og bare unntakene bærer sin egen.
+export let META_GENRES = [];
+
+// Utregnet x-posisjon per node (js/genre-layout.js). Erstatter den håndsatte
+// cx-en. Delt av slektstreet og Sjangerhimmelen, så de to aldri kan komme i
+// utakt om hvor en sjanger hører hjemme vannrett.
+export let LAYOUT_X = new Map();
+
 // Tiårsaksen treet tegnes på: rad → etikett. Utledes av nodene, så en sjanger
 // på en ny rad (2020-tallet) utvider aksen av seg selv i stedet for å havne
 // utenfor et hardkodet endepunkt.
@@ -85,6 +97,7 @@ export let DECADE_ROWS = [];
 let mainGenreSet = new Set();
 let mainGenreCanon = new Map();
 let nodeIndex = new Map();
+let metaByName = new Map();
 let ready = false;
 
 // Varsles hver gang modellen bygges på nytt (nytt snapshot fra Firestore).
@@ -140,20 +153,31 @@ export function rebuild(tree) {
   MAIN_GENRE_INFO = Object.fromEntries(
     GENEALOGY.filter((n) => n.g).map((n) => [n.l, {
       meta: n.g,                                  // metaGenre (metasjanger)
-      fam: n.fam,                                 // familienøkkel i treet
-      color: FAMILIES[n.fam]?.stroke || grayFallback(),
+      fam: famOf(n),                              // familienøkkel (arvet eller egen)
+      color: nodeColor(n),
     }]));
 
-  const tally = {};                              // meta → { fam: antall }
-  for (const n of GENEALOGY) {
-    if (!n.g || n.fam === "gray") continue;
-    (tally[n.g] ||= {})[n.fam] = (tally[n.g][n.fam] || 0) + 1;
-  }
+  // Farge per metasjanger: leses av dokumentet når det sier noe, ellers
+  // utledes den av den vanligste familien blant metasjangerens noder (slik den
+  // ble utledet før metasjangrene eide fargen).
   META_GENRE_COLOR = Object.fromEntries(GENEALOGY_META_GENRES.map((meta) => {
-    const fams = Object.entries(tally[meta] || {}).sort((a, b) => b[1] - a[1]);
-    return [meta, FAMILIES[fams[0]?.[0]]?.stroke || grayFallback()];
+    const m = metaByName.get(meta);
+    if (m?.color) return [meta, m.color];
+    if (m?.fam && FAMILIES[m.fam]) return [meta, FAMILIES[m.fam].stroke];
+    const tally = {};
+    for (const n of GENEALOGY) {
+      if (n.g !== meta || !n.fam || n.fam === "gray") continue;
+      tally[n.fam] = (tally[n.fam] || 0) + 1;
+    }
+    const vanligst = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0];
+    return [meta, FAMILIES[vanligst]?.stroke || grayFallback()];
   }));
 
+  META_GENRES = Array.isArray(tree?.metaGenres)
+    ? tree.metaGenres.map((m) => (typeof m === "string" ? { name: m } : { ...m })).filter((m) => m.name)
+    : GENEALOGY_META_GENRES.map((name, i) => ({ name, order: i, column: i }));
+  metaByName = new Map(META_GENRES.map((m) => [m.name, m]));
+  LAYOUT_X = computeColumns(GENEALOGY, META_GENRES, { width: LAYOUT_WIDTH });
   DECADE_ROWS = buildDecadeRows(GENEALOGY);
   mainGenreSet = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
   mainGenreCanon = new Map(GENEALOGY_MAIN_GENRES.map((g) => [g.toLowerCase(), g]));
@@ -185,6 +209,33 @@ export function isMainGenre(name) {
 // sett en sjanger læreren la til senere.
 export function canonMainGenre(name) {
   return mainGenreCanon.get(String(name).toLowerCase());
+}
+
+// Familienøkkelen en node tegnes med. Noden kan bære sin egen `fam` som
+// UNNTAK (Reggae er grønn selv om metasjangeren Klubbmusikk er turkis, og
+// Tin Pan Alley er grå i Pop); ellers arves metasjangerens. Røtter har ingen
+// metasjanger og faller til grå.
+export function famOf(n) {
+  if (n?.fam) return n.fam;
+  const m = metaByName.get(n?.g);
+  return m?.fam || "gray";
+}
+
+// Fargen en node tegnes med, etter samme regel.
+export function nodeColor(n) {
+  const egen = n?.fam && FAMILIES[n.fam]?.stroke;
+  if (egen) return egen;
+  const m = metaByName.get(n?.g);
+  if (m?.color) return m.color;
+  if (m?.fam && FAMILIES[m.fam]) return FAMILIES[m.fam].stroke;
+  return FAMILIES.gray?.stroke || "#9bada1";
+}
+
+// Utregnet x for en node. Returnerer midten av kartet for ukjente noder, så en
+// renderer aldri får NaN.
+export function layoutX(id) {
+  const v = LAYOUT_X.get(id);
+  return Number.isFinite(v) ? v : LAYOUT_WIDTH / 2;
 }
 
 // Node-oppslag på id. Bygges av rebuild, så kallere slipper å lage sin egen Map
@@ -245,7 +296,17 @@ export function applyGenealogyDoc(doc) {
     return ready;
   }
   rebuild(doc);
-  skrivSpeil({ nodes: doc.nodes, families: doc.families, metaOrderHint: doc.metaOrderHint });
+  // Speilet må bære ALT rebuild leser. metaGenres manglet her først, og da falt
+  // kolonnerekkefølgen — og dermed hele kartets venstre-mot-høyre — tilbake til
+  // den pedagogiske ved kald start, altså en helt annen plassering enn den
+  // læreren har satt.
+  skrivSpeil({
+    nodes: doc.nodes,
+    families: doc.families,
+    metaOrderHint: doc.metaOrderHint,
+    metaGenres: doc.metaGenres,
+    version: doc.version,
+  });
   return true;
 }
 

@@ -16,9 +16,10 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.53";
-import { GENEALOGY, FAMILIES } from "./genre-model.js?v=4.53";
-import { attachCamera } from "./gx-camera.js?v=4.53";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.58";
+import { GENEALOGY, nodeColor, layoutX } from "./genre-model.js?v=4.58";
+import { attachCamera } from "./gx-camera.js?v=4.58";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.58";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = 2400;            // logisk kartbredde (kameraet skalerer til scenen)
@@ -37,8 +38,6 @@ const el = (tag, attrs) => {
   for (const k in attrs) e.setAttribute(k, attrs[k]);
   return e;
 };
-
-const famColor = (fam) => FAMILIES[fam]?.stroke || FAMILIES.gray.stroke;
 
 // ----------------------------------------------------------------------------
 //  Skyv noder i samme rad fra hverandre til ingen piller overlapper. Seeden er
@@ -126,13 +125,14 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
     gnodes[n.id] = { g, rect, text };
   });
 
-  const cxs = nodes.map((n) => n.cx);
-  const minCx = Math.min(...cxs), maxCx = Math.max(...cxs);
+  // x kommer fra den UTREGNEDE layouten (js/genre-layout.js), ikke fra en
+  // håndsatt koordinat. Kollisjonene under løses med MÅLTE etikettbredder, som
+  // layout-modulen ikke kan kjenne.
   nodes.forEach((n) => {
     const measured = gnodes[n.id].text.getComputedTextLength?.() || n.l.length * 8;
     n._w = measured + PILL_PAD * 2;
     n._row = n.r + (n.yOffset || 0);
-    n._x = 150 + ((n.cx - minCx) / (maxCx - minCx)) * (W - 300);
+    n._x = layoutX(n.id) * (W / LAYOUT_WIDTH);
     n._y = TOP + n._row * ROW_H;
   });
   spreadRows(nodes);
@@ -145,7 +145,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
     rect.setAttribute("x", n._x - n._w / 2);
     rect.setAttribute("y", n._y - NH / 2);
     rect.setAttribute("width", n._w);
-    rect.setAttribute("stroke", famColor(n.fam));
+    rect.setAttribute("stroke", nodeColor(n));
     rect.setAttribute("stroke-width", merge ? 3.4 : 1.8);
     text.setAttribute("x", n._x);
     text.setAttribute("y", n._y);
@@ -187,8 +187,8 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   // ellers blir 47 av 54 stubber stående i full styrke mens resten av kartet
   // dimmes, og uthevingen mister nettopp den effekten den finnes for.
   const stubs = [];
-  function addEdge(d, pid, cid, fam, react) {
-    const path = el("path", { d, class: "gxb-edge" + (react ? " gxb-react" : ""), stroke: famColor(fam) });
+  function addEdge(d, pid, cid, barn, react) {
+    const path = el("path", { d, class: "gxb-edge" + (react ? " gxb-react" : ""), stroke: nodeColor(barn) });
     path.dataset.p = pid; path.dataset.c = cid;
     gBands.appendChild(path);
     edges.push(path);
@@ -239,7 +239,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
       const d = Math.abs(p._x - n._x) < 4
         ? `M${p._x},${y1} L${n._x},${topY}`
         : `M${p._x},${y1} C${p._x},${Math.max(y1, y2) + 44} ${n._x},${Math.max(y1, y2) + 44} ${n._x},${y2}`;
-      addEdge(d, p.id, n.id, n.fam, n.rx.includes(p.id));
+      addEdge(d, p.id, n.id, n, n.rx.includes(p.id));
     });
 
     direct.forEach((p) => {
@@ -247,7 +247,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
       const d = Math.abs(p._x - n._x) < 4
         ? `M${p._x},${startY} L${n._x},${topY}`
         : `M${p._x},${startY} C${p._x},${(startY + topY) / 2} ${n._x},${(startY + topY) / 2} ${n._x},${topY}`;
-      addEdge(d, p.id, n.id, n.fam, n.rx.includes(p.id));
+      addEdge(d, p.id, n.id, n, n.rx.includes(p.id));
     });
 
     // Én fjern forelder: da er «båndet» bare denne ene koblingen, og hele veien
@@ -273,7 +273,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
         seg.push(`L${n._x},${bandY}`);
       }
       if (solo) seg.push(`L${n._x},${topY}`);
-      addEdge(seg.join(" "), p.id, n.id, n.fam, n.rx.includes(p.id));
+      addEdge(seg.join(" "), p.id, n.id, n, n.rx.includes(p.id));
     });
 
     if (far.length < 2) return;
@@ -283,9 +283,9 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
     // egen strekning fram til båndet.
     const stub = el("path", {
       d: `M${n._x},${bandY} L${n._x},${topY}`,
-      class: "gxb-stub", stroke: famColor(n.fam), "stroke-width": 5.5,
+      class: "gxb-stub", stroke: nodeColor(n), "stroke-width": 5.5,
     });
-    const knot = el("circle", { cx: n._x, cy: bandY, r: 4.5, fill: famColor(n.fam), class: "gxb-knot" });
+    const knot = el("circle", { cx: n._x, cy: bandY, r: 4.5, fill: nodeColor(n), class: "gxb-knot" });
     gBands.appendChild(stub);
     gBands.appendChild(knot);
     stubs.push({ cid: n.id, els: [stub, knot] });
@@ -387,7 +387,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
         selectedId = n.id;
         light(n.id);
         cardName.textContent = n.l;
-        cardDot.style.background = famColor(n.fam);
+        cardDot.style.background = nodeColor(n);
         card.classList.add("show");
       }
     });

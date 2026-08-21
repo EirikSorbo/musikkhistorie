@@ -8,16 +8,16 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.53";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.53";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.53";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.53";
-import { openTechDetail } from "./explore-tech.js?v=4.53";
-import { renderPage } from "./explore-innhold.js?v=4.53";
-import { openTidslinje } from "./explore-tidslinje.js?v=4.53";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=4.53";
-import { renderReferanser } from "./explore-referanser.js?v=4.53";
-import { setHeatData } from "./heat-strip.js?v=4.53";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.58";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.58";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.58";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.58";
+import { openTechDetail } from "./explore-tech.js?v=4.58";
+import { renderPage } from "./explore-innhold.js?v=4.58";
+import { openTidslinje } from "./explore-tidslinje.js?v=4.58";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=4.58";
+import { renderReferanser } from "./explore-referanser.js?v=4.58";
+import { setHeatData } from "./heat-strip.js?v=4.58";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }

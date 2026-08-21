@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, FAMILIES, canonMainGenre } from "./genre-model.js?v=4.53";
-import { escapeHtml } from "./ui-helpers.js?v=4.53";
-import { safeUrl, wikimediaThumb } from "./util.js?v=4.53";
+import { GENEALOGY, FAMILIES, canonMainGenre, famOf, nodeColor, layoutX } from "./genre-model.js?v=4.58";
+import { escapeHtml } from "./ui-helpers.js?v=4.58";
+import { safeUrl, wikimediaThumb } from "./util.js?v=4.58";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -26,6 +26,10 @@ const SVGNS = "http://www.w3.org/2000/svg";
 // uten scroll — fokus-zoom tar seg av lesbarheten i detalj.
 const ROW_Y = (r) => 55 + r * 64;
 const VBW = 1660, VBH = 900;
+// Vannrett luft i himmelens lerret. ASYMMETRISK med vilje: etiketten står til
+// HØYRE for stjernen, så den ytterste sjangeren trenger plass til navnet sitt
+// der. Treets utregnede layout skaleres inn mellom disse.
+const SKY_PAD_V = 60, SKY_PAD_H = 165;
 const ZOOM_MIN = 0.7, ZOOM_MAX = 7;
 
 
@@ -105,10 +109,21 @@ function artistThumb(artist, x, y) {
 // ----------------------------------------------------------------------------
 function buildGraph(artists) {
   const nodeById = new Map();
+  // Skaler treets utregnede x inn i himmelens lerret. Tidligere ble den
+  // håndsatte cx-en brukt rått, og siden den gikk til 1780 i et 1660 bredt
+  // viewBox, lå de høyre sjangrene (Reggae, Disco, EDM) delvis utenfor kanten.
+  const xs = GENEALOGY.map((n) => layoutX(n.id));
+  const minX = Math.min(...xs, 0), maxX = Math.max(...xs, 1);
+  const spenn = Math.max(1, maxX - minX);
+  const skaler = (x) => SKY_PAD_V + ((x - minX) / spenn) * (VBW - SKY_PAD_V - SKY_PAD_H);
   for (const n of GENEALOGY) {
     nodeById.set(n.id, {
-      id: n.id, label: n.l, fam: n.fam, isGenre: !!n.g,
-      x: n.cx, y: ROW_Y(n.r) + (n.yOffset || 0) * 64, parents: n.p || [], reactions: n.rx || [],
+      id: n.id, label: n.l, fam: famOf(n), color: nodeColor(n), isGenre: !!n.g,
+      // Samme UTREGNEDE x som slektstreet (js/genre-layout.js), skalert til
+      // himmelens bredde. Delte tidligere den håndsatte cx-en; nå kan de to
+      // flatene ikke komme i utakt om hvor en sjanger hører hjemme.
+      x: skaler(layoutX(n.id)),
+      y: ROW_Y(n.r) + (n.yOffset || 0) * 64, parents: n.p || [], reactions: n.rx || [],
       artists: [],
     });
   }
@@ -229,7 +244,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
       const x = n.x + dx, y = n.y + dy;
       const isBridge = m.others.length > 0;
       const baseR = isBridge ? 6.5 : 5;
-      const dot = el("circle", { cx: x, cy: y, r: baseR, fill: famColor(n.fam),
+      const dot = el("circle", { cx: x, cy: y, r: baseR, fill: (n.color || famColor(n.fam)),
         stroke: isBridge ? "var(--text,#101a13)" : "#fff", "stroke-width": isBridge ? 1.6 : 1,
         class: "sh-artdot", "data-name": m.artist.name || "" });
       dot.style.cursor = "pointer";
@@ -261,8 +276,8 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     // Selve stjernen.
     const sg = el("g", { class: "sh-star", "data-genre": n.id }); sg.style.cursor = "pointer";
     const halo = el("circle", { cx: n.x, cy: n.y, r: starR(n.artists.length) + 7, class: "sh-halo",
-      fill: famColor(n.fam), "fill-opacity": 0 });
-    const circle = el("circle", { cx: n.x, cy: n.y, r: starR(n.artists.length), fill: famColor(n.fam), "fill-opacity": 0.9 });
+      fill: (n.color || famColor(n.fam)), "fill-opacity": 0 });
+    const circle = el("circle", { cx: n.x, cy: n.y, r: starR(n.artists.length), fill: (n.color || famColor(n.fam)), "fill-opacity": 0.9 });
     const lbl = el("text", { class: "sh-starlbl", x: n.x, y: n.y + starR(n.artists.length) + 20, "text-anchor": "middle" });
     lbl.textContent = n.label;
     sg.append(halo, circle, lbl);
@@ -307,7 +322,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
         for (const o of m.others) {
           if (!activeFams.has(o.fam)) continue;
           threadG.appendChild(el("line", { x1: m.x, y1: m.y, x2: o.x, y2: o.y,
-            stroke: famColor(o.fam), "stroke-width": 1, "stroke-opacity": 0.16 }));
+            stroke: (o.color || famColor(o.fam)), "stroke-width": 1, "stroke-opacity": 0.16 }));
         }
       }
     }
@@ -341,14 +356,14 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     // på tvers). Alle kryssforbindelser finnes fortsatt via «Vis alle broer».
     for (const m of s.members) {
       threadG.appendChild(el("line", { x1: s.node.x, y1: s.node.y, x2: m.x, y2: m.y,
-        stroke: famColor(s.node.fam), "stroke-width": 1.1, "stroke-opacity": 0.45, class: "sh-thread" }));
+        stroke: (s.node.color || famColor(s.node.fam)), "stroke-width": 1.1, "stroke-opacity": 0.45, class: "sh-thread" }));
     }
 
     // Mini-panel: navn + antall + «les om sjangeren».
     const bridges = s.members.filter((m) => m.isBridge).length;
     focusPanel.hidden = false;
     focusPanel.innerHTML =
-      `<span class="sh-fp-dot" style="background:${famColor(s.node.fam)}"></span>` +
+      `<span class="sh-fp-dot" style="background:${(s.node.color || famColor(s.node.fam))}"></span>` +
       `<strong>${escapeHtml(s.node.label)}</strong> <span class="sh-fp-meta">${s.members.length} artist${s.members.length === 1 ? "" : "er"}${bridges ? ` · ${bridges} bro` : ""}${lastPointerType === "touch" ? "" : " · hold over en prikk for navn"}</span>` +
       `<button type="button" class="sh-linkbtn" id="sh-fp-open">les om sjangeren</button>` +
       `<button type="button" class="sh-linkbtn" id="sh-fp-close">lukk ✕</button>`;

@@ -30,6 +30,19 @@ function byggMetaGenres() {
   const rang = new Map(META_ORDER_HINT.map((m, i) => [m, i]));
   const sortert = [...brukte].sort((a, b) => (rang.get(a) ?? Infinity) - (rang.get(b) ?? Infinity));
 
+  // To ULIKE akser, begge lærerens å styre senere:
+  //  · order  — den pedagogiske rekkefølgen (varmekart og tidslinje leser den)
+  //  · column — venstre-mot-høyre i slektstreet
+  // De er bevisst forskjellige: pedagogisk står den afroamerikanske linja
+  // samlet først, mens kartet har Country ytterst til venstre. Kolonnene
+  // utledes her av medianen av de gamle håndsatte cx-ene, slik at det nye
+  // utregnede kartet arver den venstre-mot-høyre-plasseringen som allerede satt.
+  const medianCx = (navn) => {
+    const v = GENEALOGY.filter((n) => n.g === navn).map((n) => n.cx).sort((a, b) => a - b);
+    return v[Math.floor(v.length / 2)] ?? 0;
+  };
+  const kolonne = new Map([...brukte].sort((a, b) => medianCx(a) - medianCx(b)).map((m, i) => [m, i]));
+
   const tally = {};
   for (const n of GENEALOGY) {
     if (!n.g || n.fam === "gray") continue;
@@ -38,19 +51,36 @@ function byggMetaGenres() {
   return sortert.map((navn, i) => {
     const fams = Object.entries(tally[navn] || {}).sort((a, b) => b[1] - a[1]);
     const fam = fams[0]?.[0] || "gray";
-    return { name: navn, order: i, fam, color: FAMILIES[fam]?.stroke || FAMILIES.gray.stroke };
+    return {
+      name: navn, order: i, column: kolonne.get(navn) ?? i,
+      fam, color: FAMILIES[fam]?.stroke || FAMILIES.gray.stroke,
+    };
   });
+}
+
+// Familien metasjangeren gir sine noder — brukes til å avgjøre hvilke noder som
+// trenger sin EGEN fam som unntak.
+function metaFam(metaGenres, navn) {
+  return metaGenres.find((m) => m.name === navn)?.fam || null;
 }
 
 // Noden slik den lagres. Utelater felter som er tomme, så dokumentet er lesbart
 // og lite. rx og t tas bare med når de har innhold.
-function byggNode(n) {
+function byggNode(n, metaGenres) {
   const ut = {
-    id: n.id, l: n.l, f: n.f, fam: n.fam,
+    id: n.id, l: n.l, f: n.f,
     g: n.g ?? null,
-    r: n.r, cx: n.cx,
+    r: n.r,
     p: n.p || [],
   };
+  // fam lagres KUN som unntak. Noden arver ellers metasjangerens farge, og en
+  // lærer som bytter farge på metasjangeren skal se hele familien følge etter.
+  // I dagens pensum er unntakene to: Reggae (grønn i turkis Klubbmusikk) og
+  // Tin Pan Alley (grå i Pop). Røttene har ingen metasjanger og beholder grå.
+  //
+  // cx er BORTE: x regnes ut av js/genre-layout.js fra kolonne + slektskap.
+  const arvet = n.g ? metaFam(metaGenres, n.g) : null;
+  if (n.fam && n.fam !== arvet) ut.fam = n.fam;
   if (n.yOffset) ut.yOffset = n.yOffset;
   if (n.rx?.length) ut.rx = n.rx;
   if (n.era) ut.era = n.era;
@@ -58,12 +88,13 @@ function byggNode(n) {
   return ut;
 }
 
+const metaGenres = byggMetaGenres();
 const tree = {
-  version: 1,
-  nodes: GENEALOGY.map(byggNode),
+  version: 2,
+  nodes: GENEALOGY.map((n) => byggNode(n, metaGenres)),
   families: FAMILIES,
   metaOrderHint: META_ORDER_HINT,
-  metaGenres: byggMetaGenres(),
+  metaGenres,
 };
 
 const problemer = validateTree(tree);
@@ -80,4 +111,6 @@ fs.writeFileSync(utfil, JSON.stringify({ formatVersion: 1, genealogy: tree }, nu
 
 console.log(`Skrevet: ${path.relative(ROT, utfil)}`);
 console.log(`  noder=${tree.nodes.length} metasjangre=${tree.metaGenres.length} familier=${Object.keys(tree.families).length}`);
-console.log(`  metasjangre i rekkefølge: ${tree.metaGenres.map((m) => m.name).join(" · ")}`);
+console.log(`  pedagogisk rekkefølge: ${[...tree.metaGenres].sort((a, b) => a.order - b.order).map((m) => m.name).join(" · ")}`);
+console.log(`  kolonner (v→h):        ${[...tree.metaGenres].sort((a, b) => a.column - b.column).map((m) => m.name).join(" · ")}`);
+console.log(`  noder med egen farge:  ${tree.nodes.filter((n) => n.fam && n.g).map((n) => n.l).join(", ") || "ingen"}`);
