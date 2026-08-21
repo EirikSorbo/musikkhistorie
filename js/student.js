@@ -5,17 +5,21 @@
 import {
   fetchArtists,
   addArtist,
-} from "./store.js?v=4.52";
-import { loadArtists } from "./artist-cache.js?v=4.52";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.52";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=4.52";
-import { fillSelect } from "./ui.js?v=4.52";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.52";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.52";
-import { setupFormatBars } from "./format-bar.js?v=4.52";
+  subscribeContent,
+} from "./store.js?v=4.53";
+import { loadArtists } from "./artist-cache.js?v=4.53";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.53";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc, onGenreModelChanged } from "./genre-model.js?v=4.53";
+import { fillSelect } from "./ui.js?v=4.53";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.53";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.53";
+import { setupFormatBars } from "./format-bar.js?v=4.53";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
-const MUSIC_SPEC_SJ = musicSpecWithGenres(
+// Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
+// så vokabularet er tomt de første øyeblikkene. En modulnivå-konstant her ga
+// en tom sjangerliste i skjemaet for alltid.
+const musicSpecSj = () => musicSpecWithGenres(
   [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"))
 );
 
@@ -183,9 +187,9 @@ function findDuplicate(name) {
 
 // Rad-editorene (verk/musikkeksempler/kilder) bor nå i den delte row-editor.js
 // (spec-drevet, med escaping). Disse er tynne innpakninger mot skjemaets wrap-er.
-function addMusicExampleRow(v) { return addRow($("#me-rows"), MUSIC_SPEC_SJ, v || {}); }
-function resetMusicExampleRows() { buildRows($("#me-rows"), MUSIC_SPEC_SJ); }
-function collectMusicExamples() { return collectRows($("#me-rows"), MUSIC_SPEC_SJ); }
+function addMusicExampleRow(v) { return addRow($("#me-rows"), musicSpecSj(), v || {}); }
+function resetMusicExampleRows() { buildRows($("#me-rows"), musicSpecSj()); }
+function collectMusicExamples() { return collectRows($("#me-rows"), musicSpecSj()); }
 
 function addWorkRow(v) { return addRow($("#work-rows"), WORK_SPEC, v || {}); }
 function resetWorkRows() { buildRows($("#work-rows"), WORK_SPEC); }
@@ -221,6 +225,15 @@ function init() {
   refreshControls();
   // Artistlista hentes først ved innsending (ensureArtists) — siden viser
   // ingen artister, så et sanntidsabonnement her var ren kostnad.
+  //
+  // Sjangertreet MÅ derimot hentes: metasjanger-velgeren og sjangervalget i
+  // musikkeksemplene kommer fra det, og fra v4.51 bor det i Firestore. Uten
+  // dette sto skjemaet med tomme nedtrekk. content er ett lite dokumentsett.
+  subscribeContent((c) => {
+    applyGenealogyDoc(c?.genealogy);
+    refreshControls();
+    resetMusicExampleRows();
+  });
 }
 
 // Vent på klassepassordet (js/gate.js); uten gate.js er __pensumGate undefined

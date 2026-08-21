@@ -1,13 +1,14 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.52";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.52";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.52";
-import { debounce, throttle } from "./util.js?v=4.52";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.52";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.52";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.52";
-import { initExplore } from "./explore.js?v=4.52";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.52";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.52";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.53";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.53";
+import { onGenreModelChanged } from "./genre-model.js?v=4.53";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.53";
+import { debounce, throttle } from "./util.js?v=4.53";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.53";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.53";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.53";
+import { initExplore } from "./explore.js?v=4.53";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.53";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.53";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -544,6 +545,11 @@ function init() {
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     onContent: () => explore?.contentChanged?.(),
   });
+
+  // Sjangervokabularet kommer fra Firestore og lander ETTER at filtrene ble
+  // fylt første gang. Fyll dem på nytt når treet er der, ellers står
+  // Sjanger- og Metasjanger-nedtrekkene tomme.
+  onGenreModelChanged(() => refreshFilterControls());
 
   applyIncomingFilter();
 }

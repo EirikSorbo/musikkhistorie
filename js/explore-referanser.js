@@ -10,13 +10,13 @@
 //  80 ekstra dokumentlesninger per økt. De vises på hver kobling i treet.
 //  Grupperingen (kategori → hovedkilde → artikkel) kommer fra kilder.js.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.52";
-import { isVisible } from "./limits.js?v=4.52";
-import { samleKilder } from "./kilder.js?v=4.52";
-import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=4.52";
-import { openTechDetail } from "./explore-tech.js?v=4.52";
-import { openDecade } from "./explore-decade.js?v=4.52";
-import { openHistorier } from "./explore-innhold.js?v=4.52";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.53";
+import { isVisible } from "./limits.js?v=4.53";
+import { samleKilder } from "./kilder.js?v=4.53";
+import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=4.53";
+import { openTechDetail } from "./explore-tech.js?v=4.53";
+import { openDecade } from "./explore-decade.js?v=4.53";
+import { openHistorier } from "./explore-innhold.js?v=4.53";
 
 export function openReferanser() {
   const modal = document.getElementById("modal-referanser");
