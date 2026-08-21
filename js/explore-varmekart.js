@@ -5,11 +5,11 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.61";
-import { DECADES } from "./limits.js?v=4.61";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.61";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.61";
-import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=4.61";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.62";
+import { DECADES } from "./limits.js?v=4.62";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.62";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.62";
+import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=4.62";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.

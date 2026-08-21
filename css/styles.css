@@ -243,6 +243,12 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .ov-kick:first-child { margin-top: 0; }
 .ov-kick::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
+/* «Rediger pensumet» øverst i Oversikt-modalen. Blokka er et statisk søsken til
+   #oversikt-body, så .ov-kick:first-child der nuller topp-margen på «Pensumets
+   form». Luften mellom de to seksjonene må derfor legges her, i samme rytme som
+   .ov-kick ellers holder (26 px). */
+.ov-rediger { margin-bottom: 26px; }
+
 /* Kompakte nøkkeltall — fire per rad, «vanlig» tekststørrelse */
 .ov-kpis {
   display: grid;
@@ -1544,6 +1550,12 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 @media (max-width: 363px) {
   .dash-grid:has(> :nth-child(6):last-child) { grid-template-columns: minmax(150px, 240px); }
 }
+
+/* Ett kort alene («Rediger pensumet» i Oversikt-modalen) ville strukket seg over
+   hele modalbredden og lest som et banner. Samme tak (240 px) som seks-korts-
+   griden, venstrestilt under kickeren.
+   MÅ stå etter .dash-grid: lik spesifisitet, så kilderekkefølgen avgjør. */
+.dash-grid--enkelt { grid-template-columns: minmax(150px, 240px); justify-content: start; }
 .dash-card {
   background: #fff;
   border: 1px solid var(--line);
