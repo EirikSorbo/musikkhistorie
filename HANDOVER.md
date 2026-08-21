@@ -1,7 +1,7 @@
 # Handover — pensum-appen, status 21. august 2026
 
-Skrevet ved kontekstbytte, oppdatert samme dag etter v4.62 og v4.63.
-Appen er **v4.63**, utrullet på [historieappen.no](https://historieappen.no), 239 tester grønne.
+Skrevet ved kontekstbytte, oppdatert samme dag etter v4.62, v4.63 og v4.64.
+Appen er **v4.64**, utrullet på [historieappen.no](https://historieappen.no), 248 tester grønne.
 
 ---
 
@@ -106,15 +106,18 @@ slektskapet, med liste over hva som må ryddes først.
 1. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow read: if
    true`, så REST-skraping er mulig. Bør på plass før appen deles bredt med
    studentene.
-2. **Fase 4 fra den opprinnelige planen** er ikke gjort: flytt lytteeksempler og
-   epoke fra treet til `genreDescriptions`, så strukturdokumentet blir rent
-   strukturelt.
+2. **Fase 4-migreringen er ikke kjørt mot live.** Koden er ferdig og pushet,
+   men selve flyttingen krever lærerinnlogging: Oversikt → Sjangertreet →
+   «Flytt epoke og lytteforslag til beskrivelsene (54)» → se planen → Utfør.
+   Ta fersk Innholdspakke-eksport først. Fram til den er kjørt viser
+   sjangerkortet og tidslinjen tom epoke, fordi koden leser fra
+   `genreDescriptions` og verdiene fortsatt står i treet.
 3. **`metaGenres[].order` skrives, men leses ingen steder.** Seed-generatoren
    setter den, og kommentaren der sier at varmekartet og tidslinjen leser den.
    Det gjør de ikke: de leser `metaOrderHint`. Feltet er altså dødt, men står
    igjen i data. Enten ta det i bruk eller fjern det.
 
-### Lukket i v4.62 og v4.63
+### Lukket i v4.62, v4.63 og v4.64
 
 - Første ekte navnebytte er kjørt mot live Firestore av Eirik. Navnet byttet i
   treet og artistenes sjangertilknytning fulgte med, slik planen sa.
@@ -124,6 +127,10 @@ slektskapet, med liste over hva som må ryddes først.
 - `planTreeUpdate` er fjernet — den var aldri tatt i bruk.
 - Importlista er ren. **Merk hvorfor det tok tid:** fem av de sju «ubrukte»
   importene var i høyst levende bruk. Se §6.
+- Fase 4 er ferdig i koden: `era` og `t` er ute av treet, og bor nå i
+  `genreDescriptions[etikett].main` som `era` og `lytt`. De rundt 100 kuraterte
+  lytteforslagene som ingenting leste, vises nå som «Hør etter» på
+  sjangerkortet.
 
 ## 5. Arbeidsrutiner du MÅ følge
 
@@ -214,9 +221,8 @@ skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
 ## 7. Neste steg, forslagsvis
 
-1. Fase 4: flytt lytteeksempler og epoke ut av treet, inn i `genreDescriptions`,
-   så strukturdokumentet blir rent strukturelt. Migreringsmaskineriet er nå
-   bevist i drift, så dette hviler på fast grunn.
+1. **Kjør fase 4-migreringen** (se §4 punkt 2). Det er den eneste handlingen som
+   står mellom koden og et rent strukturdokument.
 2. Avgjør hva `metaGenres[].order` skal være — i bruk eller borte.
 3. App Check før studentene får appen bredt.
 
