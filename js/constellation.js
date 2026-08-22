@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, FAMILIES, canonMainGenre, famOf, nodeColor, layoutX } from "./genre-model.js?v=4.65";
-import { escapeHtml } from "./ui-helpers.js?v=4.65";
-import { safeUrl, wikimediaThumb } from "./util.js?v=4.65";
+import { GENEALOGY, FAMILIES, canonMainGenre, famOf, nodeColor, layoutX } from "./genre-model.js?v=4.66";
+import { escapeHtml } from "./ui-helpers.js?v=4.66";
+import { safeUrl, wikimediaThumb } from "./util.js?v=4.66";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er
@@ -151,11 +151,11 @@ const starR = (count) => 9 + Math.sqrt(count) * 2.3;
 
 // Phyllotaxis-utlegg: jevn «solsikke»-spredning av artistene rundt stjernen,
 // stabil (deterministisk) og kompakt uansett antall.
-function fanOffset(i, n) {
+function fanOffset(i) {
   const golden = 2.399963229728653;
   const rad = 30 + 18 * Math.sqrt(i);
   const a = i * golden;
-  return { dx: Math.cos(a) * rad, dy: Math.sin(a) * rad, a };
+  return { dx: Math.cos(a) * rad, dy: Math.sin(a) * rad };
 }
 
 // Ett rAF/håndtak-sett per container, så gjenåpning ikke lekker lyttere.
@@ -231,7 +231,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
   }
 
   // Sjangerstjerner + (skjulte) artist-stjernebilder.
-  const starEls = new Map();     // id → { circle, halo, group(artistG-child), members:[{dot,label,x,y,others}] }
+  const starEls = new Map();     // id → { node, sg, halo, ag, members:[{dot,label,x,y,others}] }
   for (const n of genres) {
     const members = n.artists
       .slice()
@@ -240,7 +240,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     // Skjult artist-gruppe for denne sjangeren.
     const ag = el("g", { class: "sh-artgroup", "data-genre": n.id }); ag.style.display = "none";
     const memberEls = members.map((m, i) => {
-      const { dx, dy } = fanOffset(i, members.length);
+      const { dx, dy } = fanOffset(i);
       const x = n.x + dx, y = n.y + dy;
       const isBridge = m.others.length > 0;
       const baseR = isBridge ? 6.5 : 5;
@@ -282,7 +282,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     lbl.textContent = n.label;
     sg.append(halo, circle, lbl);
     starG.appendChild(sg);
-    starEls.set(n.id, { node: n, sg, circle, halo, ag, members: memberEls });
+    starEls.set(n.id, { node: n, sg, halo, ag, members: memberEls });
   }
 
   // ---- Zoom-tilstand (delt av fokus-zoom og manuell pan/zoom nedenfor) ------
@@ -332,7 +332,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     if (focusedId && focusedId !== id) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
     focusedId = id;
     // Nullstill uthevede stjerner
-    for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
+    for (const s of starEls.values()) { s.sg.classList.remove("sh-hot"); s.halo.setAttribute("fill-opacity", 0); }
     clearThreads();
     drawAllBridges();
 
@@ -377,7 +377,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     if (focusedId) starEls.get(focusedId)?.ag && (starEls.get(focusedId).ag.style.display = "none");
     focusedId = null;
     svg.classList.remove("sh-focusmode");
-    for (const s of starEls.values()) { s.sg.classList.remove("sh-hot", "sh-linked"); s.halo.setAttribute("fill-opacity", 0); }
+    for (const s of starEls.values()) { s.sg.classList.remove("sh-hot"); s.halo.setAttribute("fill-opacity", 0); }
     focusPanel.hidden = true;
     drawAllBridges();
     if (didAutoZoom) { animateTo(1, 0, 0); didAutoZoom = false; }

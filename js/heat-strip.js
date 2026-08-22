@@ -9,11 +9,11 @@
 //  stedet for å slås opp i MAIN_GENRE_INFO her.
 // ============================================================================
 
-import { DECADES } from "./limits.js?v=4.65";
-import { escapeHtml } from "./util.js?v=4.65";
+import { DECADES } from "./limits.js?v=4.66";
+import { escapeHtml } from "./util.js?v=4.66";
 
-export const HEAT_DECADES = DECADES;
-export const HEAT_SEG = 100 / DECADES.length;   // ett tiårs bredde i prosent
+const HEAT_DECADES = DECADES;
+const HEAT_SEG = 100 / DECADES.length;   // ett tiårs bredde i prosent
 export const HEAT_NODATA = "#eef2f0";
 
 // Cellene fargelegges i sjangerens familiefarge (fra slektstreet), mens
@@ -62,7 +62,7 @@ export function heatRow(heat, sj) {
 //
 //  «Ingen data» blander seg bevisst IKKE inn i naboene: det segmentet får harde
 //  kanter, så et hull aldri kan se ut som en målt verdi.
-export function heatGradient(famHex, vals) {
+function heatGradient(famHex, vals) {
   const col = (lvl) => heatColor(famHex, lvl);
   const stops = [];
   const push = (pos, c) => stops.push(`${c} ${pos.toFixed(3)}%`);

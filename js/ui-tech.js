@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=4.65";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=4.65";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=4.66";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=4.66";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -37,8 +37,6 @@ export const TECH_TYPES = [
 
 export const techType = (t) => (t?.type === "hendelse" ? "hendelse" : "innovasjon");
 export const isHendelse = (t) => techType(t) === "hendelse";
-export const techTypeLabel = (t) =>
-  TECH_TYPES.find((x) => x.value === techType(t))?.label || "";
 
 // Fane-visning (explore): kort etikett per kategori. AVLEDET fra
 // TECH_CATEGORIES, så en omdøping der forplanter seg hit automatisk (ingen

@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=4.65";
+import { resolveSpan } from "./timeline-lanes.js?v=4.66";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -83,15 +83,9 @@ export const INSTRUMENT_TIMELINE_GROUPS =
 // Brukt av forslagsskjema, lærerredigering, filtre og import-valideringen.
 export const INSTRUMENTS = Object.values(INSTRUMENT_GROUPS).flat();
 
-// Presist instrument → gruppe. Ukjente verdier gir null (og flagges allerede
-// som «utenfor vokabularet» i Oversikten).
-const INSTRUMENT_TO_GROUP = Object.fromEntries(
-  Object.entries(INSTRUMENT_GROUPS).flatMap(([group, list]) => list.map((i) => [i, group]))
-);
-
-export function instrumentGroup(instrument) {
-  return INSTRUMENT_TO_GROUP[instrument] || null;
-}
+// (instrumentGroup/INSTRUMENT_TO_GROUP er fjernet: ingen runtime-kode mappet
+// noensinne et presist instrument til gruppe — tech-kortene lagrer GRUPPE-
+// navnet direkte, og artistkortet beholder det presise instrumentet.)
 
 // Dokument-ID for instrumentgruppens sammendrag i `content`-samlingen — samme
 // sted som Om historie og Røtter. Utledet, men rensket: Firestore-ID-er tåler

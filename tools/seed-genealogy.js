@@ -31,12 +31,15 @@ function byggMetaGenres() {
   const sortert = [...brukte].sort((a, b) => (rang.get(a) ?? Infinity) - (rang.get(b) ?? Infinity));
 
   // To ULIKE akser, begge lærerens å styre senere:
-  //  · order  — den pedagogiske rekkefølgen (varmekart og tidslinje leser den)
+  //  · metaOrderHint — den pedagogiske rekkefølgen (varmekart og tidslinje
+  //    leser den via META_GENRE_ORDER; skrives nederst i byggTree)
   //  · column — venstre-mot-høyre i slektstreet
   // De er bevisst forskjellige: pedagogisk står den afroamerikanske linja
   // samlet først, mens kartet har Country ytterst til venstre. Kolonnene
   // utledes her av medianen av de gamle håndsatte cx-ene, slik at det nye
   // utregnede kartet arver den venstre-mot-høyre-plasseringen som allerede satt.
+  // (Et `order`-felt per metasjanger ble skrevet her tidligere — ingenting
+  // leste det noensinne, og det skrives ikke lenger.)
   const medianCx = (navn) => {
     const v = GENEALOGY.filter((n) => n.g === navn).map((n) => n.cx).sort((a, b) => a - b);
     return v[Math.floor(v.length / 2)] ?? 0;
@@ -52,7 +55,7 @@ function byggMetaGenres() {
     const fams = Object.entries(tally[navn] || {}).sort((a, b) => b[1] - a[1]);
     const fam = fams[0]?.[0] || "gray";
     return {
-      name: navn, order: i, column: kolonne.get(navn) ?? i,
+      name: navn, column: kolonne.get(navn) ?? i,
       fam, color: FAMILIES[fam]?.stroke || FAMILIES.gray.stroke,
     };
   });
@@ -118,6 +121,6 @@ fs.writeFileSync(utfil, JSON.stringify({ formatVersion: 1, genealogy: tree }, nu
 
 console.log(`Skrevet: ${path.relative(ROT, utfil)}`);
 console.log(`  noder=${tree.nodes.length} metasjangre=${tree.metaGenres.length} familier=${Object.keys(tree.families).length}`);
-console.log(`  pedagogisk rekkefølge: ${[...tree.metaGenres].sort((a, b) => a.order - b.order).map((m) => m.name).join(" · ")}`);
+console.log(`  pedagogisk rekkefølge: ${tree.metaOrderHint.join(" · ")}`);
 console.log(`  kolonner (v→h):        ${[...tree.metaGenres].sort((a, b) => a.column - b.column).map((m) => m.name).join(" · ")}`);
 console.log(`  noder med egen farge:  ${tree.nodes.filter((n) => n.fam && n.g).map((n) => n.l).join(", ") || "ingen"}`);

@@ -51,7 +51,7 @@ const KNAPPER = [
 
 // Sett formatlinja over ett tekstfelt. Idempotent: kalles trygt på nytt når en
 // modal åpnes igjen (feltet merkes med data-fmt).
-export function attachFormatBar(ta, { full = false, onChange } = {}) {
+function attachFormatBar(ta, { full = false, onChange } = {}) {
   if (!ta || ta.dataset.fmt) return;
   ta.dataset.fmt = "1";
   const bar = document.createElement("div");

@@ -794,14 +794,13 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 }
 .ref-seksjon:first-of-type { margin-top: 14px; }
 .ref-antall { font-size: 0.76rem; font-weight: 500; color: var(--muted); }
-.ref-rad, .ref-line {
+.ref-rad {
   display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   padding: 3px 0 3px 21px; font-size: 0.84rem; line-height: 1.35;
   overflow-wrap: anywhere;
 }
 .ref-rad a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
 .ref-rad a:hover { color: var(--accent); border-bottom-color: var(--accent); }
-.ref-line { color: var(--text); }
 .ref-merk { font-size: 0.72rem; color: var(--muted); }
 /* Veien videre fra en referanse: kortet den er brukt på, eller Rediger for de
    frittstående. Liten og dempet, så den ikke konkurrerer med selve lenken. */
@@ -890,9 +889,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 }
 .badge.removed { background: #fee2e2; color: var(--danger); }
 .badge.pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-.badge.prio-3 { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
-.badge.prio-2 { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
-.badge.prio-1 { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
 .card.is-pending { border-left: 3px solid #f59e0b; opacity: 0.92; }
 .card.is-prio-3 { border-left: 3px solid #facc15; }
 .card.is-prio-2 { border-left: 3px solid #38bdf8; }
@@ -954,8 +950,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 }
 @media (max-width: 480px) {
   .add-grid { grid-template-columns: 1fr; }
-  .brand h1 { font-size: 1.25rem; }
-  .panel { padding: 20px; }
+  /* (.brand h1- og .panel-regler her var døde: 640px-blokka lenger ned i fila
+     vinner ved alle bredder ≤480 med samme spesifisitet.) */
 }
 
 /* ----- Rollevelger ----- */
@@ -1829,29 +1825,15 @@ body.is-teacher #gate { display: none; }
 .gx-grid { stroke: var(--line); stroke-width: 1; opacity: 0.6; }
 .gx-decade { font-size: 12px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
 
-.gx-edge { stroke: #c2cfc7; stroke-width: 1.4; opacity: 0.35; fill: none; transition: opacity 0.15s, stroke-width 0.15s; }
-.gx-edge.gx-hl { opacity: 1; stroke-width: 2.2; }
-.gx-edge.gx-react { stroke: #e0a85a; stroke-dasharray: 6 5; opacity: 0.5; }
-.gx-edge.gx-react.gx-hl { opacity: 1; stroke-width: 2.4; }
 /* Usynlig, bred trykkbane oppå hver strek — fanger klikk/hover for koblingen
-   (en 1,4 px linje er umulig å treffe med finger). pointer-events: stroke gjør
+   (en tynn linje er umulig å treffe med finger). pointer-events: stroke gjør
    den klikkbar selv om streken er gjennomsiktig. */
 .gx-edge-hit { stroke: transparent; stroke-width: 16; fill: none; pointer-events: stroke; cursor: pointer; }
 
-.gx-node { cursor: pointer; }
-.gx-node rect { pointer-events: all; }
-/* Boksene er usynlige til vanlig — kun treffflate. Den hovrede noden
-   (gx-focus, satt i light()) beholder familiefyllet fra gx-f-*-reglene
-   under, så ankeret for fremhevingen alltid er tydelig. */
-.gx-node:not(.gx-focus) rect { fill: transparent !important; stroke: transparent !important; }
-/* Sjangernavnene i treet: større enn nodeboksen tilsier, for lesbarhet.
-   Boksen (NW/NH i genealogy.js) og avstanden mellom nodene er UENDRET — teksten
-   er pointer-events:none og påvirker ikke treffområdet eller layouten. */
-.gx-node text { font-size: 18px; font-weight: 500; pointer-events: none; font-family: "Inter", sans-serif; }
 .gx-dim { opacity: 0.16; }
 
 /* Touch: mini-kort øverst til venstre i kartet. Vises kun etter et trykk på en
-   node på touch-enheter — se selectTouch() i genealogy.js. Første trykk lyser
+   node på touch-enheter — se selectTouch() i genealogy-bundled.js. Første trykk lyser
    opp slekta og viser dette; «Detaljer» (eller et nytt trykk på noden) åpner
    popupen. (Zoom-knappene ligger nederst til høyre, så ingen kollisjon.) */
 .gx-card {
@@ -1878,20 +1860,6 @@ body.is-teacher #gate { display: none; }
 }
 .gx-card-btn { flex: none; }
 
-.gx-f-gray rect   { fill: #e7ebe8; stroke: #9bada1; } .gx-f-gray text   { fill: #3a4a40; }
-.gx-f-blue rect   { fill: #dbeafe; stroke: #3b82f6; } .gx-f-blue text   { fill: #1e3a8a; }
-.gx-f-amber rect  { fill: #fef3c7; stroke: #d97706; } .gx-f-amber text  { fill: #7c2d12; }
-.gx-f-purple rect { fill: #ede9fe; stroke: #7c3aed; } .gx-f-purple text { fill: #4c1d95; }
-.gx-f-red rect    { fill: #fee2e2; stroke: #dc2626; } .gx-f-red text    { fill: #7f1d1d; }
-/* olive = Gospel, skilt ut fra den røde familien i v3.88 da R&B overtok rødt.
-   Se FAMILIES i genealogy.js for hvorfor den havnet i grønnsonen og ikke i en
-   burgunder ved siden av rødt. */
-.gx-f-olive rect  { fill: #ecfccb; stroke: #4d7c0f; } .gx-f-olive text  { fill: #365314; }
-.gx-f-teal rect   { fill: #ccfbf1; stroke: #0d9488; } .gx-f-teal text   { fill: #134e4a; }
-.gx-f-pink rect   { fill: #fce7f3; stroke: #db2777; } .gx-f-pink text   { fill: #831843; }
-.gx-f-green rect  { fill: #dcfce7; stroke: #16a34a; } .gx-f-green text  { fill: #14532d; }
-.gx-f-rock rect   { fill: #e2e8f0; stroke: #334155; } .gx-f-rock text   { fill: #1e293b; }
-.gx-f-pop rect    { fill: #fae8ff; stroke: #c026d3; } .gx-f-pop text    { fill: #701a75; }
 
 .gx-era { font-size: 0.8rem; color: var(--muted-2); margin: 0 0 8px; }
 /* pre-line: lange metasjanger-tekster bruker \n\n som avsnittsskille i data. */
@@ -1933,32 +1901,14 @@ body.is-teacher #gate { display: none; }
 .gx-missing { color: var(--danger, #dc2626); font-weight: 600; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
 .gx-leg-hint { font-style: italic; color: var(--muted-2); }
-.gx-sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid; }
-.gx-sw.gx-f-gray   { background: #e7ebe8; border-color: #9bada1; }
-.gx-sw.gx-f-blue   { background: #dbeafe; border-color: #3b82f6; }
-.gx-sw.gx-f-amber  { background: #fef3c7; border-color: #d97706; }
-.gx-sw.gx-f-purple { background: #ede9fe; border-color: #7c3aed; }
-.gx-sw.gx-f-red    { background: #fee2e2; border-color: #dc2626; }
-.gx-sw.gx-f-teal   { background: #ccfbf1; border-color: #0d9488; }
-.gx-sw.gx-f-pink   { background: #fce7f3; border-color: #db2777; }
-.gx-sw.gx-f-green  { background: #dcfce7; border-color: #16a34a; }
-.gx-sw.gx-f-rock   { background: #e2e8f0; border-color: #334155; }
-.gx-sw.gx-f-pop    { background: #fae8ff; border-color: #c026d3; }
 .gx-sw-line { width: 18px; height: 0; border-top: 2px dashed #e0a85a; display: inline-block; vertical-align: middle; }
-.gx-sw-line.gx-sw-solid { border-top: 2px solid #aebbb1; }
 
 /* --------------------------------------------------------------------------
-   Slektstre-prototype: bundlede bånd (tre-prototype.html, genealogy-bundled.js)
-   Motsatt vekting av det pakkede kartet: der er nodene usynlige til de får
-   fokus og strekene svake, her er PILLENE alltid synlige og båndene bærer
-   fargen. Strekfargen settes inline (familiefargen fra data), så reglene her
-   styrer kun tykkelse og gjennomsiktighet.
+   Slektstreet: bundlede bånd (tre.html, genealogy-bundled.js)
+   PILLENE er alltid synlige og båndene bærer fargen. Strekfargen settes
+   inline (familiefargen fra data), så reglene her styrer kun tykkelse og
+   gjennomsiktighet.
    -------------------------------------------------------------------------- */
-.gxb-tag {
-  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--muted); border: 1px solid var(--line-strong); border-radius: 999px;
-  padding: 2px 8px; vertical-align: middle; margin-left: 6px;
-}
 .gxb-edge { fill: none; stroke-width: 2.6; opacity: 0.62; stroke-linecap: round; stroke-linejoin: round;
   transition: opacity 0.15s, stroke-width 0.15s; }
 .gxb-edge.gxb-react { stroke-dasharray: 9 7; opacity: 0.5; }
@@ -2165,8 +2115,6 @@ button.vk-cell:focus-visible {
 .tid-tip-years { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
 #sh-svg .sh-star .sh-halo { transition: fill-opacity .12s; }
 #sh-svg .sh-star.sh-hot .sh-starlbl { font-weight: 700; }
-#sh-svg .sh-star.sh-linked .sh-starlbl { font-weight: 700; }
-#sh-svg .sh-star.sh-linked circle:not(.sh-halo) { stroke: var(--text); stroke-width: 2px; }
 /* Fokusmodus (én stjerne valgt): alle ANDRE stjerner + røtter + skjelett gråes
    ut, så sjangerens artist-prikker står tydelig frem. Den valgte stjernen
    (.sh-hot) beholder familiefargen som anker for stjernebildet.

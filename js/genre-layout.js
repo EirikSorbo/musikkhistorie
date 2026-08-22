@@ -25,12 +25,12 @@ const BAND_GAP = 40;      // luft mellom to metasjanger-soner
 const PASSES = 24;        // relaksasjonsrunder (konvergerer lenge før dette)
 
 // Rad (tiår) som brøktall, slik nodene bærer den.
-export const rowOf = (n) => (n.r || 0) + (n.yOffset || 0);
+const rowOf = (n) => (n.r || 0) + (n.yOffset || 0);
 
 // Metasjangrene i VISUELL rekkefølge, venstre mot høyre. `column` er feltet
-// læreren styrer; `order` (den pedagogiske rekkefølgen som varmekartet og
-// tidslinjen bruker) er bevisst en ANNEN akse og brukes ikke her.
-export function metaColumnOrder(metaGenres = []) {
+// læreren styrer. Den pedagogiske rekkefølgen (metaOrderHint → META_GENRE_ORDER,
+// som varmekartet og tidslinjen leser) er bevisst en ANNEN akse og brukes ikke her.
+function metaColumnOrder(metaGenres = []) {
   return [...metaGenres]
     .map((m, i) => ({ name: typeof m === "string" ? m : m.name, column: (typeof m === "object" && Number.isFinite(m.column)) ? m.column : i, i }))
     .filter((m) => m.name)

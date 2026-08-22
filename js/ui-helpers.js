@@ -7,10 +7,10 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.65";
-import { wireAllLinks } from "./linkify.js?v=4.65";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.65";
-import { GENDERS } from "./limits.js?v=4.65";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.66";
+import { wireAllLinks } from "./linkify.js?v=4.66";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.66";
+import { GENDERS } from "./limits.js?v=4.66";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -181,7 +181,7 @@ export function podcastEpisodeHtml(ep, { admin = false } = {}) {
     </article>`;
 }
 
-export function yearLabel(w) {
+function yearLabel(w) {
   const y = w.year || null;
   if (y) return `(${y})`;
   return "";
@@ -368,7 +368,7 @@ export function factsLines(a, { showGender = false } = {}) {
 
 // Delt renderer for «etikett: verdi»-linjene. Fet etikett, vanlig verdi —
 // samme form på artistkort og innovasjonskort.
-export function factsHtml(rows) {
+function factsHtml(rows) {
   const fylte = rows.filter(([, v]) => v != null && String(v).trim() !== "");
   if (!fylte.length) return "";
   // Tredje element gjør verdien klikkbar: { attr } settes som data-attributt med

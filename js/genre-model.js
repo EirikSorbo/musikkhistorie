@@ -25,7 +25,7 @@
 //  (isGenreModelReady()).
 // ============================================================================
 
-import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.65";
+import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.66";
 
 // --- Modelltilstanden (byttes av rebuild) -----------------------------------
 
@@ -82,12 +82,12 @@ export let META_GENRE_COLOR = {};
 // Metasjangrene slik dokumentet beskriver dem: navn, pedagogisk rekkefølge
 // (order), visuell kolonne i treet (column) og farge. Fra v4.54 EIER
 // metasjangeren fargen; noder arver den, og bare unntakene bærer sin egen.
-export let META_GENRES = [];
+let META_GENRES = [];
 
 // Utregnet x-posisjon per node (js/genre-layout.js). Erstatter den håndsatte
 // cx-en. Delt av slektstreet og Sjangerhimmelen, så de to aldri kan komme i
 // utakt om hvor en sjanger hører hjemme vannrett.
-export let LAYOUT_X = new Map();
+let LAYOUT_X = new Map();
 
 // Tiårsaksen treet tegnes på: rad → etikett. Utledes av nodene, så en sjanger
 // på en ny rad (2020-tallet) utvider aksen av seg selv i stedet for å havne

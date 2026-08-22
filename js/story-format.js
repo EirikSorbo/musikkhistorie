@@ -13,7 +13,7 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=4.65";
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=4.66";
 
 // Den KURATERTE historie-rekkefølgen (struktur, ikke innhold): én per
 // metasjanger som skal ha en forfattet fortelling. Pop og Rock dekkes gjennom

@@ -7,7 +7,7 @@
 //  og under den de enkelte artiklene. Ren logikk uten DOM, så den kan
 //  enhetstestes; tegningen bor i explore-referanser.js.
 // ============================================================================
-import { safeUrl } from "./util.js?v=4.65";
+import { safeUrl } from "./util.js?v=4.66";
 
 // Fast vokabular i koden, ikke i config — samme valg som INSTRUMENTS (v3.68).
 // Navnene er OGSÅ seksjonsoverskriftene i Referanser-kortet, derav
@@ -30,7 +30,7 @@ const KATEGORI_ALIAS = { Tidsskrifter: "Nettsteder" };
 export const UKATEGORISERT = "Ukategorisert";
 
 // Samme fargespråk som hub-ikonene, så kategoriene leses som en del av appen.
-export const KATEGORI_FARGE = {
+const KATEGORI_FARGE = {
   Bøker: "#b45309",
   Podkaster: "#0891b2",
   Videoer: "#dc2626",
@@ -95,7 +95,7 @@ export function publikasjonFor(vert) {
   return PUBLIKASJONER[vert] || vert;
 }
 
-export function spraakFor(vert) {
+function spraakFor(vert) {
   return SPRAAK[vert] || "";
 }
 
