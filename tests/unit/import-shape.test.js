@@ -16,9 +16,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeImportFile } from "../../js/import-format.js?v=4.66";
-import { validateTree } from "../../js/genre-validate.js?v=4.66";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.66";
+import { normalizeImportFile } from "../../js/import-format.js?v=4.67";
+import { validateTree } from "../../js/genre-validate.js?v=4.67";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.67";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const tre = () => ({ version: 1, nodes: GENEALOGY, families: FAMILIES, metaOrderHint: META_ORDER_HINT });
@@ -69,14 +69,14 @@ test("manglende deler blir tomme, ikke undefined", () => {
   assert.equal(d.varmekart, null);
 });
 
-test("seed-fila har den formen importen faktisk godtar", () => {
-  const sti = path.join(HER, "../../json files/genealogy-seed.json");
-  if (!fs.existsSync(sti)) {
-    // Fila er gitignored; regenereres med tools/seed-genealogy.js.
-    console.log("  (hopper over: json files/genealogy-seed.json finnes ikke lokalt)");
-    return;
-  }
-  const raw = JSON.parse(fs.readFileSync(sti, "utf8"));
+// { skip }-opsjonen, ikke en stille return: en return rapporteres som PASS
+// uten å ha prøvd noe, og synes ikke i skipped-telleren.
+const seedSti = path.join(HER, "../../json files/genealogy-seed.json");
+const seedSkip = fs.existsSync(seedSti)
+  ? false : "json files/genealogy-seed.json finnes ikke (gitignored; regenereres med tools/seed-genealogy.js)";
+
+test("seed-fila har den formen importen faktisk godtar", { skip: seedSkip }, () => {
+  const raw = JSON.parse(fs.readFileSync(seedSti, "utf8"));
   assert.ok(raw.genealogy, "genealogy må ligge på TOPPNIVÅ, ikke pakket i content");
   const d = normalizeImportFile(raw);
   assert.ok(d, "seed-fila må godtas av formsjekken");

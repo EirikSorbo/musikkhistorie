@@ -1,7 +1,9 @@
-# Handover — pensum-appen, status 21. august 2026
+# Handover — pensum-appen, status 22. august 2026
 
-Skrevet ved kontekstbytte, oppdatert samme dag etter v4.62, v4.63 og v4.64.
-Appen er **v4.64**, utrullet på [historieappen.no](https://historieappen.no), 248 tester grønne.
+Skrevet ved kontekstbytte 21.08; oppdatert 22.08 etter den store gjennomgangen
+(v4.65 bugfikser + v4.66 sletterunde + v4.67 tester/verktøy/dokumentasjon).
+Appen er **v4.67**, utrullet på [historieappen.no](https://historieappen.no),
+253 tester grønne (0 hoppet over).
 
 ---
 
@@ -101,22 +103,58 @@ slektskapet, med liste over hva som må ryddes først.
 
 ---
 
-## 4. Åpne punkter
+## 4. Åpne punkter (etter gjennomgangen 22.08)
 
-1. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow read: if
-   true`, så REST-skraping er mulig. Bør på plass før appen deles bredt med
-   studentene.
-2. **`metaGenres[].order` skrives, men leses ingen steder** (se punkt 3 under —
-   dette er den eneste reelle resten).
-3. **`metaGenres[].order` skrives, men leses ingen steder.** Seed-generatoren
-   setter den, og kommentaren der sier at varmekartet og tidslinjen leser den.
-   Det gjør de ikke: de leser `metaOrderHint`. Feltet er altså dødt, men står
-   igjen i data. Enten ta det i bruk eller fjern det.
+1. **Publiser firestore.rules.** v4.65 la størrelses-/antallstak på
+   artists-create (metaGenre/mainGenre/subGenre/geography/recordLabel m.fl.).
+   Fila i repoet er oppdatert; konsollen må ha samme innhold
+   (Firebase Console → Firestore → Rules → Publish).
+2. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow
+   read: if true`, så REST-skraping er mulig. Bør på plass før appen deles
+   bredt. (Regel-nivå kan heller ikke begrense ANTALL pending-dokumenter per
+   anonym uid — kjent begrensning, også et App Check-argument.)
+3. **To foreldreløse varmekart-rader i live-data:** «Gullalder-hip-hop» og
+   «Country» (rester etter navnebyttene i v4.38 — fikspakken fra juli som
+   aldri ble kjørt). Ufarlige (visningen ignorerer dem), flagges som
+   diagnostikk av innholdspakke-testen. Ryddes med en varmekart-import uten
+   radene, eller en liten fikspakke ved lærer-innlogging.
+4. **Pop- og Rock-historiene er skrevet, men var usynlige.** Databasen har
+   `story` på alle NI metasjangre, mens den kuraterte lista (STORY_ORDER)
+   bare viser sju. Fra v4.65 leser visningene `storyOrder()`, som OGSÅ tar
+   med metasjangre som har historie — så Pop og Rock vises nå (bakerst).
+   Er det uønsket: slett story-feltet på Pop/Rock, eller si fra så legges
+   en eksplisitt utelukkelse inn.
+5. **«Hør etter»-feltet på musikkeksempler redigeres, men vises aldri.**
+   Visningen ble fjernet i v3.71; redigeringsfeltet ble stående. Avgjør:
+   gjeninnfør visningen (liten jobb) eller fjern feltet fra editorene.
+   Se NB-en i HOR-ETTER-PROMPT.md. (Sjangernivåets «Hør etter» vises.)
+6. **Ta en fersk eksport.** Nyeste musikkhistorie-JSON er fra 18.08 — FØR
+   treet kom til Firestore og FØR navnebyttet som er kjørt live. Gamle
+   backuper er gift (import ruller tilbake); seed-generatoren advarer nå
+   om det samme.
+7. **metaGenres[].order er avviklet i koden** (ingenting leste det, skrives
+   ikke lenger). Feltet kan bli liggende i eksisterende dokumenter — helt
+   ufarlig, forsvinner ved neste tre-skriving via editoren/importen.
 
-### Alle fire faser er nå i drift
+### Alle fire faser er i drift, og hele appen er gjennomgått (22.08)
 
 Sjangertreet er fullt datadrevet, `content/genealogy` er rent strukturelt, og
 læreren kan opprette, endre og slette sjangre og metasjangre uten utvikler.
+
+**Gjennomgangen 22.08** (127 verifiserte funn → v4.65–v4.67) fikset bl.a.:
+kilde-editorene som strøk kategori/forfatter/år ved lagring; rebuild-
+rekkefølgen som ga grått kart ved kald start; varmestripa som ignorerte
+fargearven; student-skjemaet som ble nullstilt av content-snapshots;
+migreringens doc.delete som utslettet meta/story (sjangerhistorien!) for
+etiketter som deler navn med en metasjanger; STORY_ORDER som åttende
+identitetsbærer (visningene leser nå storyOrder()); merge-import av treet;
+«Utfør» som kastet planen ved feil og aldri fersk-sjekket den; confused
+deputy i approvePendingEdit; ~50 tankestrek-brudd i apptekst; og en
+sletterunde (død JS/CSS/markup, 862 KB ubrukt bilde, to utdaterte
+MD-dokumenter). Testene kjører nå v2-formen av treet (samme transformasjon
+som seed-generatoren, tools/build-genealogy-doc.js), fasiten regenereres med
+tools/dump-genre-fixture.js, og pre-push kjører testene + verktøyene +
+manglende-?v=-sjekk.
 
 ### Lukket i v4.62, v4.63 og v4.64
 
@@ -151,10 +189,10 @@ hent fila med en engangsparameter når du måler. **Merk:** gjør aldri søk-og-
 du vet hvilken versjon fila faktisk står på — det var rotårsaken til at hele
 lærersiden døde i v4.60.
 
-**Kontroller før commit:**
+**Kontroller før commit** (pre-push kjører alle tre automatisk):
 ```bash
-npm test                        # 225 tester
-node tools/check-imports.js     # brutte + ubrukte + brukt-uten-import
+npm test                        # 253 tester
+node tools/check-imports.js     # brutte/ubrukte importer + foreldreløse moduler + genealogy-data-regelen
 node tools/find-stale-refs.js   # referanser til fjernede navn
 ```
 
@@ -162,6 +200,9 @@ node tools/find-stale-refs.js   # referanser til fjernede navn
 ```bash
 node tools/seed-genealogy.js    # → "json files/genealogy-seed.json" (gitignored)
 ```
+NB: den bygger fra KODEFRØET (v4.47-treet) og advarer selv om at import av
+den ruller tilbake lærer-endringer gjort i tre-editoren. Testfasiten
+regenereres BEVISST med `node tools/dump-genre-fixture.js`.
 Importeres av læreren i Innholdspakke-flyten. Formen MÅ være
 `{ formatVersion, genealogy: {...} }` med `genealogy` på toppnivå.
 
@@ -224,13 +265,14 @@ skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
 ## 7. Neste steg, forslagsvis
 
-1. Avgjør hva `metaGenres[].order` skal være — i bruk eller borte.
-2. App Check før studentene får appen bredt. Dette er nå det største
-   gjenstående punktet.
+1. Publiser firestore.rules (se Åpne punkter, punkt 1).
+2. App Check før studentene får appen bredt.
 3. Fyll inn epoke og lytteforslag der de mangler: 11 sjangre har ennå ikke
    `activeFrom` (de åtte rot-nodene pluss Urban music, Rock'n'roll og Rock), og
    to sjangre har ingen lytteforslag. Begge redigeres nå samme sted som
    beskrivelsen.
+4. Rydd de to foreldreløse varmekart-radene og avgjør Pop/Rock-historiene og
+   «Hør etter»-feltet (Åpne punkter 3–5).
 
 ## 8. Minnefiler
 

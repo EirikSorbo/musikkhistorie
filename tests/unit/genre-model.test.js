@@ -1,14 +1,15 @@
 // ============================================================================
 //  SJANGERMODELLEN — avledningene må være uendret
 // ----------------------------------------------------------------------------
-//  tests/fixtures/genre-model.json er en FASIT tatt fra js/genealogy.js slik den
-//  så ut FØR treet ble flyttet ut av koden (v4.47). Testene her bygger modellen
-//  fra frøet og krever at hver avledede struktur er dypt lik fasiten.
+//  tests/fixtures/genre-model.json er en FASIT: avledningene fra frøet slik de
+//  var da treet ble flyttet ut av koden (v4.47). Testene her bygger modellen
+//  fra frøet — via byggGenealogyDoc, altså v2-FORMEN produksjonen leser — og
+//  krever at hver avledede struktur er dypt lik fasiten.
 //
 //  Feiler en av dem, er det én av to ting: enten er en formel endret ved et
-//  uhell, eller så er treet bevisst endret. I det andre tilfellet skal fasiten
-//  regenereres BEVISST (tools/dump-genre-fixture.js) og diffen leses som en
-//  pensumendring, ikke kvitteres bort.
+//  uhell, eller så er treet/transformasjonen bevisst endret. I det andre
+//  tilfellet skal fasiten regenereres BEVISST (node tools/dump-genre-fixture.js)
+//  og diffen leses som en pensumendring, ikke kvitteres bort.
 // ============================================================================
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -16,23 +17,28 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.66";
+import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.67";
+import { byggGenealogyDoc } from "../../tools/build-genealogy-doc.js";
 import {
   rebuild, GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_ORDER,
   GENEALOGY_EDGES, MAIN_GENRE_INFO, META_GENRE_COLOR, DECADE_ROWS,
   isMainGenre, findTreeGenreNode, canonMainGenre, genreNodeById, edgeKey,
   isGenreModelReady, onGenreModelChanged,
-} from "../../js/genre-model.js?v=4.66";
+} from "../../js/genre-model.js?v=4.67";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const fasit = JSON.parse(fs.readFileSync(path.join(HER, "../fixtures/genre-model.json"), "utf8"));
 
-const seed = () => rebuild({ nodes: SEED_NODES, families: SEED_FAMILIES, metaOrderHint: META_ORDER_HINT });
+const SEED_DOC = byggGenealogyDoc({ GENEALOGY: SEED_NODES, FAMILIES: SEED_FAMILIES, META_ORDER_HINT });
+const seed = () => rebuild(SEED_DOC);
 seed();
 
 test("frøet gir nøyaktig fasitens noder", () => {
   assert.equal(GENEALOGY.length, fasit.nodes.length);
   // rebuild normaliserer rx til alltid å finnes; sammenlign feltvis mot fasiten.
+  // NB: fam er nå et UNNTAKSFELT (v2-formen) — de fleste nodene arver familien
+  // fra metasjangeren, og den avledede per-node-familien låses i stedet av
+  // mainGenreInfo-fasiten under.
   GENEALOGY.forEach((n, i) => {
     const f = fasit.nodes[i];
     assert.equal(n.id, f.id, `node ${i} id`);

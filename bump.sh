@@ -9,7 +9,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"')
+# «|| true»: uten den dreper set -e pipelinen FØR feilmeldingen under rekker
+# å skrives (samme vern som .githooks/pre-push).
+VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"' || true)
 [ -n "$VER" ] || { echo "Fant ikke VERSION i js/version.js"; exit 1; }
 
 # nullglob: et mønster uten treff (f.eks. tomt tests/) skal forsvinne, ikke

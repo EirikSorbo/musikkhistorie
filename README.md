@@ -11,8 +11,9 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 ## Funksjoner
 
 - **Utforsk pensumet** — «Det store bildet» samler inngangene:
-  - **Slektstre** («Carta» i musicmap-stil): sjangrene fra røtter til i dag,
+  - **Slektstre** (bundlede bånd): sjangrene fra røtter til i dag på tiårslinjer,
     med klikkbare *koblinger* mellom dem (hvordan én sjanger påvirket den neste).
+    Treet bor i Firestore og redigeres av læreren i tre-editoren.
   - **Sjangerhistorier**, **sjangerbeskrivelser** i tre nivåer (meta/main/sub)
     og **koblingsbeskrivelser** for hver strek i treet.
   - **Tidslinje**, **varmekart** og **sjangerhimmel** (stjernekart), pluss
@@ -30,8 +31,10 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 - **Sanntid**: alle ser endringer umiddelbart (Firebase Firestore).
 - **Lærermodus** (Google-innlogging): Skrivebord med arbeidsflyt-innboks og
   sjekk-fremdrift per innholdskategori, Oversikt over pensumets form og hull,
-  innholdsredigering (beskrivelser/historier/koblinger/varmekart), godkjenn/
-  avvis/prioriter/skjul/rediger, import/eksport (JSON) og instrument-vokabular.
+  sjangertre-editor (opprette/endre/slette sjangre og metasjangre — navnebytter
+  og slettinger planlegges og skrives atomisk), innholdsredigering
+  (beskrivelser/historier/koblinger/varmekart), godkjenn/avvis/prioriter/
+  skjul/rediger og import/eksport (JSON).
 
 ---
 
@@ -43,43 +46,68 @@ Fire sider med felles datalag. Rene HTML/JS ES-moduler uten byggesteg.
 index.html            Forside: Det store bildet, Finn artister, dagens artist
 student.html          Studentside: foreslå artist
 teacher.html          Lærerside (Google-innlogging): Skrivebord, Oversikt, admin
-tre.html              Slektstre-siden (sjangerkart i musicmap-stil)
+tre.html              Slektstre-siden (bundlede bånd)
 css/styles.css        Styling (lyst, moderne tema)
 js/
   firebase-config.js  Firebase-nøkler + lærer-e-poster  ← DU FYLLER INN
   shared.js           Delte hjelpere (oppsett-sjekk, banner, $)
+  shared-data.js      DEN ENE dataroten: alle sider abonnerer på de syv delte
+                      samlingene gjennom denne (sharedStateDefaults + subscribeSharedData)
   util.js             Avhengighetsfrie hjelpere (escapeHtml, safeUrl, debounce)
-  store.js            Datalag mot Firestore (sanntid, CRUD, stemming)
+  store.js            Datalag mot Firestore (sanntid, CRUD, stemming, migreringsbatch)
+  version.js          Appversjonen (cache-busting; bump + ./bump.sh)
+  gate.js             Klassekoden foran appen (se eget avsnitt)
+  load-guard.js       Feilbanner når Firebase ikke laster
   artist-schema.js    ÉN sannhetskilde for artistfeltene (nøkler/etiketter/typer)
   artist-normalize.js Normalisering av artistdata (ren, enhetstestbar)
-  config-normalize.js Config-normalisering (instrument-vokabular)
+  artist-cache.js     localStorage-speil av artistlista
   import-format.js    Parselogikk for import-JSON (ren, enhetstestbar)
-  limits.js           Instrument-standard, DECADES, telling, isVisible, statistikk
-  genealogy.js        Slektstreet — sannhetskilde for sjangre + koblinger (edges)
+  limits.js           Instrumentvokabularet, DECADES, telling, isVisible, statistikk
+  genre-model.js      SJANGERMODELLEN: leser content/genealogy fra Firestore og
+                      avleder alt (vokabular, kanter, farger, tiårsakse) med live
+                      bindings — fang aldri en avledning i en modulnivå-konstant
+  genre-layout.js     Utregnet x per node (erstattet håndsatte koordinater)
+  genre-validate.js   Validerer et tre før import/lagring (sykler, duplikater …)
+  genre-migrate.js    PLANLEGGER identitetsbytter (navnebytte/sletting) — ren logikk
+  genealogy-data.js   FRØET (treet slik det sto i v4.47) — KUN for tools/ og tests/
+  genealogy.js        Sjanger- og koblingskortene (popupene)
+  genealogy-bundled.js Slektstre-rendereren (bundlede bånd)
+  gx-camera.js        Panorering/zoom/pinch for kartvisningene
   genre-descriptions.js  Nivådelte sjangerbeskrivelser (meta/main/sub)
+  story-format.js     Sjangerhistoriene og innholdssidene: oppslag + storyOrder
   constellation.js    Sjangerhimmelen (stjernekart)
-  kilder.js           Kilde-vokabular + aggregering bak Referanser-kortet
+  kilder.js           Kilde-gruppering bak Referanser-kortet
+  heat-strip.js       Varmestripa (delt av varmekartet og sjangerkortet)
   linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
+  rich-text.js / format-bar.js  Markdown-light i beskrivelser + formatlinja
+  row-editor.js       Spec-drevne rad-editorer (verk/lytteeksempler/kilder)
   ui.js               Rendering + re-eksport-knutepunkt for ui-*-modulene
   ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff
   explore.js          Utforsk — orkestrator (injiserer/wirer modalene, initExplore)
   explore-*.js        Utforsk-featurene: context (delt kjerne + gjenbrukshjelpere),
-                      modals, varmekart, tidslinje, tech, decade, referanser, sjanger, innhold
+                      modals, varmekart, tidslinje, tech, decade, referanser,
+                      sjanger, innhold, instrument
   proposals.js        Endringsforslag-editoren (student)
-  landing.js / student.js / tre.js   Side-logikk
-  teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler)
+  landing.js / student.js / tre.js / tre-page.js   Side-logikk
+  teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler,
+                      inkl. teacher-genres.js: sjangertre-editoren)
 tests/                Enhetstester (node --test) + regeltester (emulator)
+tools/                check-imports, find-stale-refs, seed-genealogy,
+                      build-genealogy-doc, dump-genre-fixture
 firestore.rules       Sikkerhetsregler for databasen
 bump.sh               Setter ?v=… (cache-busting) fra js/version.js
 ```
 
-**Datamodell (Firestore):** samlingene `artists`, `config` (instrument-
-vokabular + `teacherChecks`), `decades`, `genreDescriptions`,
-`edgeDescriptions` (koblingstekster), `content` (innholdssider + varmekart),
-`tech`, `podcasts` og `pendingEdits`. Alt pensuminnhold bor i Firestore — ingen
-fallback-tekster i koden. Artistfeltene er definert i `js/artist-schema.js`.
-Bare forslag med `status: "active"` som ikke er lærer-skjult (`priority: -1`)
-vises for studenter.
+**Datamodell (Firestore):** samlingene `artists`, `config` (`teacherChecks`),
+`decades`, `genreDescriptions` (nivåfeltene meta/main/sub + `story` =
+sjangerhistorien), `edgeDescriptions` (koblingstekster, doc-ID `fra__til`),
+`content` (innholdssider + varmekart + **`content/genealogy` = hele
+sjangertreet**, ett dokument), `tech`, `podcasts` og `pendingEdits`. Alt
+pensuminnhold bor i Firestore — ingen fallback-tekster i koden, og heller ingen
+kopi av sjangertreet: `js/genre-model.js` leser `content/genealogy` og avleder
+vokabularet. Artistfeltene er definert i `js/artist-schema.js`. Bare forslag
+med `status: "active"` som ikke er lærer-skjult (`priority: -1`) vises for
+studenter.
 
 ---
 
@@ -186,10 +214,13 @@ mest: bruk tre urelaterte ord, aldri et passord du bruker andre steder.
 
 ## Vokabular og strukturakser
 
-- **Metasjangre** utledes fra slektstreet (`js/genealogy.js`).
-- **Tiår** (1900–2020) er `DECADES`-konstanten i `js/limits.js`.
-- **Instrumenter** er den eneste redigerbare lista i innstillingene (styrer
-  nedtrekksmenyene i forslagsskjema og filtre).
+- **Sjangre og metasjangre** kommer fra sjangertreet i Firestore
+  (`content/genealogy`, avledet i `js/genre-model.js`) og redigeres av læreren
+  i tre-editoren.
+- **Tiår** (1900–2020) er `DECADES`-konstanten i `js/limits.js`; treets egen
+  akse utvides av seg selv når en sjanger settes på en ny rad.
+- **Instrumenter** er `INSTRUMENT_GROUPS`/`INSTRUMENTS` i `js/limits.js`
+  (fast liste i koden — styrer nedtrekksmenyene i forslagsskjema og filtre).
 
 ---
 

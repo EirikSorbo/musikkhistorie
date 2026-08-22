@@ -10,6 +10,13 @@
 //    · UBRUKT  — importert navn som ikke forekommer i filas kropp
 //    · UKJENT  — import av en lokal fil som ikke finnes
 //
+//  I tillegg to vakter:
+//    · FORELDRELØS — js-modul som verken importeres av noen eller lastes fra
+//      en HTML-side (død fil ingen verktøy ellers ser)
+//    · genealogy-data-REGELEN — ingen runtime-modul får importere frøet
+//      js/genealogy-data.js (appen skal ikke ha noen kopi av pensumet i koden;
+//      kun tools/ og tests/ leser det)
+//
 //  Kjør: node tools/check-imports.js      (exit 1 hvis noe er brutt)
 // ============================================================================
 import fs from "node:fs";
@@ -202,11 +209,37 @@ const skriv = (tittel, liste) => {
   liste.forEach((l) => console.log("  " + l));
 };
 
+// genealogy-data-regelen: appen har MED VILJE ingen kopi av pensumet i koden.
+const dataImportorer = filer.filter((f) =>
+  f !== "genealogy-data.js" && /from\s+["']\.\/genealogy-data\.js/.test(utenKommentarer(kilde[f])));
+const regelbrudd = dataImportorer.map((f) =>
+  `${f}: importerer js/genealogy-data.js — frøet er KUN for tools/ og tests/`);
+
+// Foreldreløse moduler: verken importert av en js-fil eller lastet fra HTML.
+const importerte = new Set();
+for (const f of filer) {
+  for (const m of utenKommentarer(kilde[f]).matchAll(/from\s+["']\.\/([^"'?]+\.js)/g)) importerte.add(m[1]);
+  for (const m of utenKommentarer(kilde[f]).matchAll(/import\s+["']\.\/([^"'?]+\.js)/g)) importerte.add(m[1]);
+}
+let htmlKilde = "";
+for (const h of fs.readdirSync(ROT).filter((x) => x.endsWith(".html"))) {
+  htmlKilde += fs.readFileSync(path.join(ROT, h), "utf8");
+}
+const foreldrelose = filer.filter((f) =>
+  !importerte.has(f) &&
+  !htmlKilde.includes(`js/${f}`) &&
+  f !== "genealogy-data.js");           // frøet leses av tools/ og tests/, med vilje
+
 skriv("BRUTTE IMPORTER", brutt);
 skriv("UKJENTE MODULER", ukjent);
 skriv("UBRUKTE IMPORTER", ubrukt);
+skriv("REGELBRUDD (genealogy-data)", regelbrudd);
+skriv("FORELDRELØSE MODULER", foreldrelose.map((f) => `js/${f}: verken importert eller lastet fra HTML`));
 
-if (!brutt.length && !ukjent.length && !ubrukt.length) console.log("Importgrafen er ren.");
-else console.log(`\n${filer.length} filer sjekket.`);
+if (!brutt.length && !ukjent.length && !ubrukt.length && !regelbrudd.length && !foreldrelose.length) {
+  console.log("Importgrafen er ren.");
+} else {
+  console.log(`\n${filer.length} filer sjekket.`);
+}
 
-process.exit(brutt.length || ukjent.length ? 1 : 0);
+process.exit(brutt.length || ukjent.length || regelbrudd.length || foreldrelose.length ? 1 : 0);

@@ -1,11 +1,35 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-#  Pre-push-sjekk: nekter push hvis noen ?v=-referanser (cache-busting) i
-#  HTML/JS ikke matcher VERSION i js/version.js. Retting: kjør ./bump.sh.
+#  Pre-push-sjekk. Nekter push hvis:
+#    · testene feiler (npm test — ~0,3 s, brutte importer har nådd produksjon
+#      som hvit side før)
+#    · importgrafen er skitten (tools/check-imports.js) eller det finnes
+#      stale referanser (tools/find-stale-refs.js)
+#    · en lokal js/css-referanse MANGLER ?v= (nettleseren ser «util.js» og
+#      «util.js?v=X» som TO moduler — en blandet graf laster modulen dobbelt,
+#      og med genre-modellens live bindings rendrer treet da tomt)
+#    · ?v=-referansene ikke matcher VERSION i js/version.js (kjør ./bump.sh)
 #  Aktiveres med:  git config core.hooksPath .githooks
 # ---------------------------------------------------------------------------
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+
+# Testene og verktøyene er raske (<1 s til sammen) og har fanget feilklasser
+# som ellers først dukket opp i produksjon.
+npm test --silent >/dev/null 2>&1 || { echo "pre-push: npm test feiler. Kjør npm test og se hva."; exit 1; }
+node tools/check-imports.js >/dev/null || { echo "pre-push: check-imports feiler. Kjør node tools/check-imports.js."; exit 1; }
+node tools/find-stale-refs.js >/dev/null || { echo "pre-push: stale referanser. Kjør node tools/find-stale-refs.js."; exit 1; }
+
+# Referanser UTEN ?v= i det som skipes (js/*.js og *.html): usynlige for både
+# bump.sh og konsistenssjekken under, og verre enn stale cache (dobbel modul).
+mangler=$(grep -naE 'from "\./[^"?]+\.js"' js/*.js || true)
+mangler2=$(grep -naE '(src|href)="(js|css)/[^"?]+\.(js|css)"' ./*.html || true)
+if [ -n "$mangler$mangler2" ]; then
+  echo "pre-push: lokale referanser uten ?v= (cache-busting mangler):"
+  printf '%s\n%s\n' "$mangler" "$mangler2" | grep -av '^$' | head -20
+  echo "Legg på ?v= (bump.sh tar dem med videre)."
+  exit 1
+fi
 
 # NB: konsistenssjekken under leser ARBEIDSTREET (bevisst enkelhet). Har du en
 # uncommitted VERSION-endring når du pusher eldre commits, kan den nekte feil

@@ -2,8 +2,8 @@
 
 Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdateres når skjemaet endres.
 
-**Versjon:** 2.85 (følger appversjonen i `js/version.js`)
-**Sist endret:** 2026-07-04
+**Versjon:** 4.67 (følger appversjonen i `js/version.js`)
+**Sist endret:** 2026-08-22
 
 ---
 
@@ -11,21 +11,37 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 
 ```json
 {
+  "formatVersion":     1,
   "artists":           [ /* array av artistobjekter */ ],
   "decades":           { "1920": { ... }, "1930": { ... } },
-  "genreDescriptions": { "meta": { "Blues": { ... } }, "main": { "Chicago blues": { ... } }, "sub": { "Delta blues": { ... } } },
-  "tech":              [ /* array av teknologiobjekter */ ]
+  "genreDescriptions": { "meta": { "Blues": { ... } }, "main": { "Electric blues": { ... } }, "sub": { "Delta blues": { ... } } },
+  "edgeDescriptions":  { "blues__rnb": { "description": "...", "kilder": [ ... ] } },
+  "tech":              [ /* array av teknologiobjekter */ ],
+  "pages":             { "omHistorie": { "body": "..." }, "rotter": { ... }, "appGuide": { ... }, "instrument-gitar": { ... } },
+  "podcasts":          [ /* episoder */ ],
+  "teacherChecks":     { /* lærerens sjekk-fremdrift */ },
+  "varmekart":         { "heat": { "Blues": [null, 2, 3, ...] } },
+  "referanser":        { "kilder": [ ... ] },
+  "genealogy":         { "version": 2, "nodes": [ ... ], "metaGenres": [ ... ], "families": { ... }, "metaOrderHint": [ ... ] }
 }
 ```
 
 | Nøkkel | Type | Beskrivelse |
 |---|---|---|
+| `formatVersion` | number | Filformat-merke (1). |
 | `artists` | array | ALLE artister uansett status — også ventende og fjernede forslag (tapsfri backup). Rekkefølge spiller ingen rolle. |
 | `decades` | objekt | Tiårsbeskrivelser. Nøkkel = tiåret som string ("1920", "1960"). |
-| `genreDescriptions` | objekt | Sjangerbeskrivelser, nestet i tre bolker etter sjangertype (`meta`/`main`/`sub`). Se seksjon 3. Eldre filer med flat toppnøkkel `subgenres` leses fortsatt ved import. |
+| `genreDescriptions` | objekt | Sjangerbeskrivelser, nestet i tre bolker etter sjangertype (`meta`/`main`/`sub`). `story`-feltet på metasjangrene = sjangerhistoriene. Se seksjon 3. |
+| `edgeDescriptions` | objekt | Koblingsbeskrivelser (strekene i slektstreet). Nøkkel = dokument-ID `fra__til`. |
 | `tech` | array | Teknologiske innovasjoner (alle statuser, også pending). Sortert etter `adoptedYear`. |
+| `pages` | objekt | Innholdssidene: `omHistorie`, `rotter`, `appGuide` og instrumentsammendragene (`instrument-<slug>`). |
+| `podcasts` | array | Podkast-episodene (matches på tittel ved import, så re-import ikke dupliserer). |
+| `teacherChecks` | objekt | Lærerens sjekk-fremdrift per kategori. |
+| `varmekart` | objekt | Varmekart-radene (`heat`: sjangeretikett → 13 tiårsnivåer). Flettes rad for rad ved import. |
+| `referanser` | objekt | Frittstående referanser (erstattes i sin helhet ved import). |
+| `genealogy` | objekt | HELE sjangertreet (`content/genealogy`). Valideres (genre-validate) og ERSTATTES i sin helhet ved import. |
 
-Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Firestore-collection `config`, ikke i denne filen.
+Konfig-samlingen er borte (v3.68): tiår og instrumenter er konstanter i `js/limits.js`, og sjangervokabularet kommer fra `genealogy` over.
 
 ---
 
@@ -78,9 +94,9 @@ Konfig (`maxTotal`, `metaGenres`, `decades`, `instruments`, grenser) ligger i Fi
 | `birthYear` | number \| null | | 4-sifret årstall. |
 | `deathYear` | number \| null | | 4-sifret årstall. |
 | `gender` | string | ✓ | Én av: `"kvinne"`, `"mann"`, `"annet"`, `"ukjent"`. |
-| `metaGenre` | string | ✓ | **Sjanger fra slektstreet.** Må være én av sjangrene i `GENEALOGY_MAIN_GENRES` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). Brukes i grenser/kvoter. |
-| `instrument` | string | ✓ | Må matche én verdi i `config.instruments` (eks. Vokal, Gitar, Piano/keyboards, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Elektronisk produksjon, Annet). |
-| `mainGenre` | array av strings | | **Sjangere fra slektstreet.** Strengene må matche en label i `GENEALOGY` (Blues, Jazz, Country, Bebop, Cool jazz, Hard bop, Modal jazz, Free jazz, Swing, Fusion, Nu-jazz, Chicago blues, Bluegrass, Honky tonk, Nashville, Outlaw, Americana, R&B, Soul, Funk, Reggae, Hip-hop, Neo-soul, Disco, House, Techno, Trance / DnB, Gospel). |
+| `metaGenre` | string | ✓ | **Metasjanger.** Én av treets metasjangre (i dag: Blues, Jazz, R&B, Hip-hop, Klubbmusikk, Gospel, Country, Pop, Rock — fasiten er `metaGenres` i treet, som læreren kan endre). |
+| `instrument` | string | ✓ | Må matche én verdi i `INSTRUMENTS` (js/limits.js — to-nivås vokabular, eks. Vokal, Gitar, Tangenter, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Elektronisk produksjon, Annet). |
+| `mainGenre` | array av strings | | **Sjangre fra slektstreet.** Strengene må matche en node-label i treet (46 sjangre i dag; fasiten er `nodes[].l` i `genealogy`). NB nyere navn: Hillbilly (før Country-noden), Electric blues (før Chicago blues), House & techno, Trance & DnB, Early hip-hop (70/80-tallet) og Hip-hop (gullalderen). |
 | `subGenre` | array av strings | | **Frie tags.** Hva som helst (Delta blues, Akustisk blues, New Orleans-jazz, …). Brukes til søk og filter. |
 | `influenceStart` | number | ✓ | Året kunstneren begynte å påvirke. Styrer tiår-tilhørighet. |
 | `influenceEnd` | number \| null | | Året innflytelsen tok slutt (eller null hvis aktiv/død). |
@@ -242,9 +258,7 @@ Per nivå:
 | `description` | | Beskrivelse av sjangeren på dette nivået. Vises i popup på alle sider. Overstyrer evt. standardbeskrivelsen i `genealogy.js`. |
 | `kilder` | | Kilder spesifikt for sjangeren, samme form som artistenes `kilder[]`. |
 
-For sjangere fra slektstreet: mangler `description`, brukes fallback fra `GENEALOGY`-noden (`d`-feltet i `genealogy.js`).
-
-**Bakoverkompat ved import:** eldre filer med flat form (`{ "Blues": { "description": … } }`, evt. under toppnøkkelen `subgenres`) leses fortsatt; flate dokumenter pakkes automatisk inn i riktig nivå ut fra sjangertypen.
+Det finnes INGEN fallback-tekster i koden (brukerkrav): mangler `description`, viser appen en tydelig «mangler»-melding. På `main`-nivået bor også `era` (fritekst-epoke), `activeFrom`/`activeTo` (strukturert epoke) og `lytt` (kuraterte lytteforslag, «Hør etter» på sjangerkortet).
 
 ---
 
@@ -344,13 +358,13 @@ teksten slik den er skrevet.
 - Akademiske artikler: full referanse, gjerne med DOI som `url`.
 
 ### Tagging — sjangre vs. undersjangre
-- **`mainGenre`** = en av de ~30 sjangrene fra slektstreet. Disse styrer filtre, søk, spillelister, slektstre-koblinger. Vær konservativ.
+- **`mainGenre`** = en av de 46 sjangrene fra slektstreet. Disse styrer filtre, søk, spillelister, slektstre-koblinger. Vær konservativ.
 - **`subGenre`** = frie tags. Brukes til mer spesifikke uttrykk (*Delta blues, Hard bop, Cool jazz, Neo-soul, Acid jazz, …*) eller geografiske/kontekstuelle markører. Bruk samme stavemåte konsekvent — bruk gjerne `genreDescriptions.sub` til å gi dem beskrivelser.
 - Hvis du er i tvil: er navnet en node i slektstreet? → `mainGenre`. Hvis ikke → `subGenre`.
 
-### `metaGenre` (sjanger fra slektstreet)
-- Skal alltid være satt. Velges fra `GENEALOGY_MAIN_GENRES`. Brukes til kvoter (`maxPerMetaGenre`).
-- For artister som krysser sjangere (eks. Ray Charles): velg den dominerende.
+### `metaGenre` (metasjanger)
+- Skal alltid være satt. Én av treets metasjangre (`metaGenres[].name` i `genealogy`).
+- For artister som krysser metasjangre (eks. Ray Charles): velg den dominerende.
 
 ### Influence vs. levetid
 - `birthYear`/`deathYear` = biografi.
@@ -446,7 +460,7 @@ teksten slik den er skrevet.
 
 ## Import-/eksport-flyt
 
-1. **Eksport** (lærersiden → «Eksporter»): `musikkhistorie-YYYY-MM-DD.json` med alle fire seksjoner. Tar med ALLE artister og tech-kort uansett status — også ventende forslag — så eksporten er en komplett, tapsfri backup.
+1. **Eksport** (lærersiden → «Eksporter»): `musikkhistorie-YYYY-MM-DD.json` med ALLE seksjonene i toppnivåstrukturen over (artister, tiår, sjanger- og koblingsbeskrivelser med historier, tech, innholdssider, podkaster, sjekk-fremdrift, varmekart, frittstående referanser og hele sjangertreet). Tar med alle artister og tech-kort uansett status — også ventende forslag — så eksporten er en komplett, tapsfri backup.
 2. **Import** (lærersiden → «Importer»): velg fil. Hele artistlista valideres FØR noe skrives eller slettes; feil rapporteres med radnummer og ingenting endres. Deretter valget *Erstatt* eller *Slå sammen*.
 3. **Erstatt alle**: laster ned en full sikkerhetskopi av dagens data og krever bekreftelse på at fila faktisk kom, FØR noe slettes.
 4. **Slå sammen**: artister matches på navn (case-insensitive). Tomme felter fylles automatisk fra importfilen. Konflikter løses interaktivt eller med *Behold alle*/*Importer alle*.

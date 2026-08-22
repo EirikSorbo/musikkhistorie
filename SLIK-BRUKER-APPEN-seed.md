@@ -1,5 +1,10 @@
 # «Slik bruker du appen» — seed-tekst
 
+> NB (2026-08-22): Teksten under er oppdatert i FILA (forsidekortene og
+> historiene stemte ikke lenger). Selve appen leser fra Firestore
+> (content/appGuide) — har du limt inn en eldre utgave der, må den
+> oppdateres via Rediger-knappen for at studentene skal se rettelsene.
+
 Dette er startteksten for innholdssiden `content/appGuide` (kortet «Slik bruker
 du appen» sist i «Det store bildet»). Teksten bor i Firestore, ikke i koden —
 lim inn blokken under via **Rediger**-knappen i modalen (lærer), eller importer
@@ -11,7 +16,7 @@ den. Skrevet i samme markdown-light som Om historie/Røtter (`### tittel`,
 Dette er ikke en vanlig lærebok, men et levende pensum du selv er med på å forme. Her er det viktigste for å få mest mulig ut av det — og noen funksjoner det er lett å gå glipp av.
 
 ### Begynn på forsiden
-Hvert kort på forsiden er sin egen inngang: **Artister**, **Sjangre**, **Teknologi**, **Samfunn**, **Podkast** og **Det store bildet**. Du trenger ingen bestemt rekkefølge — begynn der noe fanger deg, for alt henger sammen.
+Hvert kort på forsiden er sin egen inngang: **Det store bildet**, **Artister**, **Sjangre**, **Teknologi**, **Samfunn** og **Instrumenter**. Du trenger ingen bestemt rekkefølge — begynn der noe fanger deg, for alt henger sammen. (Podkastene finner du som egen fane under **Instrumenter**.)
 
 ### Finn og filtrer artister
 Under **Artister** kan du søke på navn og filtrere på **sjanger, metasjanger, tiår og instrument**. Kombiner filtrene for å snevre inn — for eksempel «gitarister på 1960-tallet». Trykk på en artist for å åpne kortet: bilde, leveår og virkested, sentrale verk, musikkeksempler du kan lytte til, og **beslektede artister** du kan hoppe videre til. Fra kortet tar knappen **«Tidslinje»** deg rett til artistens plass i tidslinjen, så du ser hvem andre som var aktive samtidig.
@@ -24,7 +29,7 @@ Bak **Det store bildet** ligger hele historien fremstilt på flere måter. Musik
 - **Varmekartet** viser hvor toneangivende hver sjanger var, tiår for tiår. Mørkere felt betyr større betydning.
 - **Referanser** samler alle kildene appen bygger på, gruppert etter hovedkilde. Åpne en linje for å se hvilke artikler som er brukt.
 - **Sjangerhimmelen** stiller artistene opp som stjerner rundt sjangrene sine. Trykk på en sjanger for å se hvem som hører til, og let etter «broene» — artistene som knytter flere sjangre sammen.
-- **Sjangerhistoriene** er seks sammenhengende fortellinger som til sammen dekker hele pensumet — en god vei inn hvis du heller vil lese enn å klikke deg rundt.
+- **Sjangerhistoriene** er sammenhengende fortellinger som til sammen dekker hele pensumet — en god vei inn hvis du heller vil lese enn å klikke deg rundt.
 - **Om historie** og **Røtter før 1910** setter musikken inn i en større sammenheng.
 
 ### Les tiårene som en fortelling

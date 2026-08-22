@@ -27,7 +27,7 @@ const STANDARD = ["canonMain", "FAM_STROKE", "MAIN_GENRE_SET", "META_SET"];
 
 const navn = process.argv.slice(2).length ? process.argv.slice(2) : STANDARD;
 
-const mapper = ["js", "tests/unit", "tests/helpers", "tools"];
+const mapper = ["js", "tests/unit", "tests/helpers", "tests/rules", "tools"];
 const filer = [];
 for (const m of mapper) {
   const d = path.join(ROT, m);
