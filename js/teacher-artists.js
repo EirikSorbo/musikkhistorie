@@ -4,16 +4,16 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=4.68";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=4.68";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=4.68";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=4.68";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=4.68";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=4.68";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.68";
-import { debounce } from "./util.js?v=4.68";
-import { $ } from "./shared.js?v=4.68";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.68";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=4.69";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=4.69";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=4.69";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=4.69";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=4.69";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=4.69";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.69";
+import { debounce } from "./util.js?v=4.69";
+import { $ } from "./shared.js?v=4.69";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.69";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore

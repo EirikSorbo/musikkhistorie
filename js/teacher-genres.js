@@ -25,17 +25,17 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=4.68";
-import { escapeHtml } from "./util.js?v=4.68";
-import { modalOpen, modalClose } from "./ui.js?v=4.68";
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.68";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.68";
-import { validateTree } from "./genre-validate.js?v=4.68";
+import { $ } from "./shared.js?v=4.69";
+import { escapeHtml } from "./util.js?v=4.69";
+import { modalOpen, modalClose } from "./ui.js?v=4.69";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.69";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.69";
+import { validateTree } from "./genre-validate.js?v=4.69";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup,
-} from "./genre-migrate.js?v=4.68";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.68";
+} from "./genre-migrate.js?v=4.69";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.69";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -76,8 +76,8 @@ export const GENRE_ADMIN_HTML = `
       <!-- Foreldreløse varmekart-rader: nøkler som ikke lenger peker på en
            sjanger i treet (rester etter navnebytter gjort før migreringen
            fantes). Usynlige i varmekartet, så dette er eneste vei til dem.
-           Knappen skjuler seg selv når det ikke er noe å rydde. -->
-      <button class="btn ghost small" id="gen-rydd-heat" hidden>Rydd foreldreløse varmekart-rader</button>
+           Knappen står alltid — se renderListe for hvorfor. -->
+      <button class="btn ghost small" id="gen-rydd-heat">Sjekk varmekartet for foreldreløse rader</button>
     </div>
     <div id="gen-liste"></div>
   </div>
@@ -154,14 +154,20 @@ function renderListe() {
     if (igjen) rydd.textContent = `Flytt epoke og lytteforslag til beskrivelsene (${igjen})`;
   }
 
-  // Varmekart-rader uten sjanger i treet (usynlige overalt ellers).
+  // Varmekart-rader uten sjanger i treet. Knappen står ALLTID: den var
+  // selvskjulende først, og da var funksjonen uoppdagelig i det øyeblikket
+  // tellingen (eller en cachet side) tok feil — nettopp fordi radene ikke
+  // vises noe annet sted i appen. Nå sier etiketten hva den fant, og et klikk
+  // på et rent varmekart svarer «rent» i planen i stedet for å gjøre noe.
   const ryddHeat = $("#gen-rydd-heat");
   if (ryddHeat) {
     const heat = state.content?.varmekart?.heat || {};
     const gyldige = t.nodes.filter((n) => n.g).map((n) => n.l.toLowerCase());
     const foreldrelose = Object.keys(heat).filter((k) => !gyldige.includes(k.toLowerCase()));
-    ryddHeat.hidden = foreldrelose.length === 0;
-    if (foreldrelose.length) ryddHeat.textContent = `Rydd foreldreløse varmekart-rader (${foreldrelose.length})`;
+    ryddHeat.textContent = foreldrelose.length
+      ? `Rydd foreldreløse varmekart-rader (${foreldrelose.length})`
+      : "Sjekk varmekartet for foreldreløse rader";
+    ryddHeat.classList.toggle("primary", foreldrelose.length > 0);
   }
 
   let h = "";

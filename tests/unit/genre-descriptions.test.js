@@ -1,9 +1,9 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.68";
-import { resolveMainDesc } from "../../js/genealogy.js?v=4.68";
-import { GENEALOGY } from "../../js/genre-model.js?v=4.68";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.69";
+import { resolveMainDesc } from "../../js/genealogy.js?v=4.69";
+import { GENEALOGY } from "../../js/genre-model.js?v=4.69";
 
 const descs = {
   Blues: {
@@ -104,7 +104,7 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-epoken", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.68");
+  const { eraText } = await import("../../js/genealogy.js?v=4.69");
   // Alt leses nå fra ÉN kilde (genreDescriptions). Fram til v4.64 kom friteksten
   // fra treets node, og da kunne kortet og tidslinjen vise ulik epoke.
   assert.equal(eraText({ activeFrom: 1935, activeTo: 1945, era: "1930–45" }), "1935–1945");
