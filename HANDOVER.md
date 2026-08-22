@@ -112,13 +112,14 @@ slektskapet, med liste over hva som må ryddes først.
    read: if true`, så REST-skraping er mulig. Bør på plass før appen deles
    bredt. (Regel-nivå kan heller ikke begrense ANTALL pending-dokumenter per
    anonym uid — kjent begrensning, også et App Check-argument.)
-3. **To foreldreløse varmekart-rader i live-data:** «Gullalder-hip-hop» og
-   «Country» (rester etter navnebyttene i v4.38). Ryddes nå med ETT KLIKK:
-   lærersiden → Sjangertreet → «Rydd foreldreløse varmekart-rader (2)»
-   (v4.68, `planHeatCleanup`). Knappen skjuler seg selv når det er rent.
-   Verifisert mot eksporten 22.08: begge er EKSAKTE duplikater av rader som
-   allerede ligger under de nye navnene (Hillbilly, Hip-hop), så ingenting
-   går tapt. Flagges som diagnostikk i `npm test` til de er borte.
+3. ~~**To foreldreløse varmekart-rader i live-data.**~~ RYDDET 22.08 av Eirik
+   via knappen i tre-editoren (`planHeatCleanup`, v4.68/4.69). Verifisert mot
+   Firestore etterpå: 46 heat-rader mot 46 tre-sjangre, 0 foreldreløse, og
+   Hillbilly/Hip-hop-radene bit-identiske med før.
+   **MERK for framtidige importer:** eksporten `musikkhistorie-2026-08-22.json`
+   ble tatt FØR ryddingen og inneholder fortsatt de to radene. Varmekart-import
+   fletter rad for rad, så en re-import av den fila ville lagt dem inn igjen.
+   Ta en fersk eksport hvis du vil ha en backup som speiler det rene kartet.
 4. ~~**Pop- og Rock-historiene.**~~ AVKLART 22.08: de skal IKKE vises, men
    teksten skal ligge. `STORY_SKJULT` i js/story-format.js holder dem utenfor
    visningen og lærer-tellingen (v4.68); tekstene (5403 og 6340 tegn) ligger
@@ -266,15 +267,15 @@ skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
 ## 7. Neste steg, forslagsvis
 
-1. Klikk ryddeknappen for de to varmekart-radene (Åpne punkter, punkt 3).
-2. App Check før studentene får appen bredt. Dette er nå det største
+1. App Check før studentene får appen bredt. Dette er nå det største
    gjenstående punktet.
-3. Fyll inn epoke og lytteforslag der de mangler: 11 sjangre har ennå ikke
+2. Fyll inn epoke og lytteforslag der de mangler: 11 sjangre har ennå ikke
    `activeFrom` (de åtte rot-nodene pluss Urban music, Rock'n'roll og Rock), og
    to sjangre har ingen lytteforslag. Begge redigeres nå samme sted som
    beskrivelsen.
-4. Avgjør «Hør etter»-feltet når tiden er inne (punkt 5) — brukeren sa 22.08
+3. Avgjør «Hør etter»-feltet når tiden er inne (punkt 5) — brukeren sa 22.08
    at det fortsatt kan vente.
+4. Ta en fersk eksport som speiler det ryddede varmekartet (punkt 3).
 
 ## 8. Minnefiler
 
