@@ -25,17 +25,17 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=4.67";
-import { escapeHtml } from "./util.js?v=4.67";
-import { modalOpen, modalClose } from "./ui.js?v=4.67";
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.67";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.67";
-import { validateTree } from "./genre-validate.js?v=4.67";
+import { $ } from "./shared.js?v=4.68";
+import { escapeHtml } from "./util.js?v=4.68";
+import { modalOpen, modalClose } from "./ui.js?v=4.68";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.68";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.68";
+import { validateTree } from "./genre-validate.js?v=4.68";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  planPasserIBatch, byggMetaTre, planTreeCleanup,
-} from "./genre-migrate.js?v=4.67";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.67";
+  planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup,
+} from "./genre-migrate.js?v=4.68";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.68";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -73,6 +73,11 @@ export const GENRE_ADMIN_HTML = `
            finnes noder med epoke eller lytteforslag, og forsvinner når treet er
            rent — da er den ferdig med jobben sin. -->
       <button class="btn ghost small" id="gen-rydd" hidden>Flytt epoke og lytteforslag til beskrivelsene</button>
+      <!-- Foreldreløse varmekart-rader: nøkler som ikke lenger peker på en
+           sjanger i treet (rester etter navnebytter gjort før migreringen
+           fantes). Usynlige i varmekartet, så dette er eneste vei til dem.
+           Knappen skjuler seg selv når det ikke er noe å rydde. -->
+      <button class="btn ghost small" id="gen-rydd-heat" hidden>Rydd foreldreløse varmekart-rader</button>
     </div>
     <div id="gen-liste"></div>
   </div>
@@ -147,6 +152,16 @@ function renderListe() {
     const igjen = t.nodes.filter((n) => String(n.era || "").trim() || n.t?.length).length;
     rydd.hidden = igjen === 0;
     if (igjen) rydd.textContent = `Flytt epoke og lytteforslag til beskrivelsene (${igjen})`;
+  }
+
+  // Varmekart-rader uten sjanger i treet (usynlige overalt ellers).
+  const ryddHeat = $("#gen-rydd-heat");
+  if (ryddHeat) {
+    const heat = state.content?.varmekart?.heat || {};
+    const gyldige = t.nodes.filter((n) => n.g).map((n) => n.l.toLowerCase());
+    const foreldrelose = Object.keys(heat).filter((k) => !gyldige.includes(k.toLowerCase()));
+    ryddHeat.hidden = foreldrelose.length === 0;
+    if (foreldrelose.length) ryddHeat.textContent = `Rydd foreldreløse varmekart-rader (${foreldrelose.length})`;
   }
 
   let h = "";
@@ -544,6 +559,9 @@ export function setupGenreAdmin() {
   $("#gen-rydd")?.addEventListener("click", () =>
     visPlan("Flytt epoke og lytteforslag ut av treet", planTreeCleanup(migrasjonsState()),
       () => planTreeCleanup(migrasjonsState())));
+  $("#gen-rydd-heat")?.addEventListener("click", () =>
+    visPlan("Rydd foreldreløse varmekart-rader", planHeatCleanup(migrasjonsState()),
+      () => planHeatCleanup(migrasjonsState())));
   $("#gen-edit-lagre")?.addEventListener("click", () => lagre());
   $("#gen-edit-slett")?.addEventListener("click", () => slett());
   $("#gen-meta-lagre")?.addEventListener("click", () => lagreMeta());

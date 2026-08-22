@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER } from "./story-format.js?v=4.67";
+import { STORY_ORDER } from "./story-format.js?v=4.68";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -524,6 +524,50 @@ export function planTreeCleanup(state) {
     advarsler.push(`${utenBeskrivelse.length} sjanger(e) har ingen beskrivelse ennå (${utenBeskrivelse.map((n) => n.l).join(", ")}). De får et dokument med bare epoke og lytteforslag, og det er meningen.`);
   }
 
+  return { ops, feil, advarsler, blokkeringer: [] };
+}
+
+// ----------------------------------------------------------------------------
+//  FORELDRELØSE VARMEKART-RADER
+// ----------------------------------------------------------------------------
+//  `content/varmekart` er nøklet på sjangerETIKETTEN. Et navnebytte utført før
+//  migreringsmaskineriet fantes (v4.38: Gullalder-hip-hop → Hip-hop, Country →
+//  Hillbilly) etterlot de gamle nøklene liggende, og de er usynlige: varmekartet
+//  tegner én rad per sjanger i TREET, så en nøkkel uten sjanger vises ingen
+//  steder og kan ikke slettes fra noen editor.
+//
+//  De er ufarlige, men de er skitt: de følger med i hver eksport, og en
+//  framtidig sjanger med samme navn ville arvet gamle tall. Ryddes her.
+//
+//  doc.replace, IKKE merge: Firestore dyp-fletter map-felter, så merge kan
+//  ikke fjerne en nøkkel — samme grunn som ved navnebytte.
+export function planHeatCleanup(state) {
+  const feil = [], advarsler = [], ops = [];
+  const noder = Array.isArray(state?.tree?.nodes) ? state.tree.nodes : [];
+  const varmekart = state?.content?.varmekart;
+  const heat = varmekart?.heat;
+
+  if (!noder.length) {
+    return { ops: [], feil: ["Sjangertreet er ikke lastet inn."], advarsler, blokkeringer: [] };
+  }
+  if (!heat || typeof heat !== "object") {
+    return { ops: [], feil: ["Varmekartet er ikke lastet inn."], advarsler, blokkeringer: [] };
+  }
+
+  const gyldige = noder.filter((n) => n.g).map((n) => n.l);
+  const foreldrelose = Object.keys(heat).filter((k) => !gyldige.some((g) => lik(g, k)));
+  if (!foreldrelose.length) {
+    return {
+      ops: [], advarsler, blokkeringer: [],
+      feil: ["Varmekartet er rent: alle radene peker på en sjanger i treet."],
+    };
+  }
+
+  const nyHeat = { ...heat };
+  for (const k of foreldrelose) delete nyHeat[k];
+  ops.push(op("doc.replace", "content", "varmekart", { ...varmekart, heat: nyHeat },
+    `Varmekartet: ${foreldrelose.length} foreldreløs(e) rad(er) fjernes (${foreldrelose.join(", ")})`));
+  advarsler.push(`Radene tilhører sjangre som ikke finnes i treet lenger, typisk rester etter et navnebytte gjort før migreringen fantes. Ingen visning i appen leser dem, så ingenting endrer seg for studentene. Tallene som fjernes: ${foreldrelose.map((k) => `${k} (${(heat[k] || []).filter((v) => v != null).length} tiår med nivå)`).join(", ")}.`);
   return { ops, feil, advarsler, blokkeringer: [] };
 }
 

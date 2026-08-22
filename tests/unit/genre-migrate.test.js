@@ -19,8 +19,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup,
-} from "../../js/genre-migrate.js?v=4.67";
+  planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup, planHeatCleanup,
+} from "../../js/genre-migrate.js?v=4.68";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -516,4 +516,45 @@ test("å kjøre migreringen to ganger er ufarlig — andre gang er det ingenting
 
 test("hele migreringen får plass i én atomisk batch", () => {
   assert.ok(planPasserIBatch(planTreeCleanup(medEraOgT())));
+});
+
+// --- Foreldreløse varmekart-rader --------------------------------------------
+//  Nøkler i content/varmekart som ikke lenger peker på en sjanger i treet.
+//  De er usynlige i appen (varmekartet tegner én rad per TRE-sjanger), så
+//  dette er eneste vei til dem.
+
+test("rene varmekart gir ingen plan, men sier fra", () => {
+  const plan = planHeatCleanup(lagState());
+  assert.equal(plan.ops.length, 0);
+  assert.ok(plan.feil.some((f) => f.includes("rent")));
+});
+
+test("foreldreløse rader fjernes, de gyldige står igjen", () => {
+  const s = lagState();
+  s.content.varmekart.heat["Gullalder-hip-hop"] = [1, 2, 3];
+  s.content.varmekart.heat["Country"] = [4];
+  const plan = planHeatCleanup(s);
+  assert.deepEqual(plan.feil, []);
+  assert.equal(plan.ops.length, 1);
+  const o = plan.ops[0];
+  // doc.replace, ikke merge: Firestore-merge kan ikke fjerne en nøkkel.
+  assert.equal(o.type, "doc.replace");
+  assert.equal(o.coll, "content");
+  assert.equal(o.id, "varmekart");
+  assert.deepEqual(Object.keys(o.data.heat).sort(), ["Blues", "R&B"]);
+  assert.equal(o.data.updatedAt, "i går", "resten av dokumentet skal bæres med");
+  assert.ok(plan.advarsler.some((a) => a.includes("navnebytte")));
+});
+
+test("case-forskjell alene gjør ikke en rad foreldreløs", () => {
+  const s = lagState();
+  delete s.content.varmekart.heat["R&B"];
+  s.content.varmekart.heat["r&b"] = [1, 2];
+  const plan = planHeatCleanup(s);
+  assert.ok(plan.feil.some((f) => f.includes("rent")), "«r&b» er samme sjanger som «R&B»");
+});
+
+test("uten tre eller varmekart planlegges ingenting", () => {
+  assert.ok(planHeatCleanup({ tree: { nodes: [] } }).feil.length);
+  assert.ok(planHeatCleanup({ ...lagState(), content: {} }).feil.length);
 });
