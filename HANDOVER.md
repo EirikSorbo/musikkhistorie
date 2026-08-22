@@ -1,9 +1,10 @@
 # Handover — pensum-appen, status 22. august 2026
 
 Skrevet ved kontekstbytte 21.08; oppdatert 22.08 etter den store gjennomgangen
-(v4.65 bugfikser + v4.66 sletterunde + v4.67 tester/verktøy/dokumentasjon).
-Appen er **v4.67**, utrullet på [historieappen.no](https://historieappen.no),
-253 tester grønne (0 hoppet over).
+(v4.65 bugfikser + v4.66 sletterunde + v4.67 tester/verktøy/dokumentasjon +
+v4.68 brukerens avklaringer).
+Appen er **v4.68**, utrullet på [historieappen.no](https://historieappen.no),
+259 tester grønne (0 hoppet over).
 
 ---
 
@@ -105,33 +106,33 @@ slektskapet, med liste over hva som må ryddes først.
 
 ## 4. Åpne punkter (etter gjennomgangen 22.08)
 
-1. **Publiser firestore.rules.** v4.65 la størrelses-/antallstak på
-   artists-create (metaGenre/mainGenre/subGenre/geography/recordLabel m.fl.).
-   Fila i repoet er oppdatert; konsollen må ha samme innhold
-   (Firebase Console → Firestore → Rules → Publish).
+1. ~~**Publiser firestore.rules.**~~ GJORT av Eirik 22.08. (v4.65 la
+   størrelses-/antallstak på artists-create.)
 2. **App Check** er fortsatt utsatt (fra tidligere). Firestore har `allow
    read: if true`, så REST-skraping er mulig. Bør på plass før appen deles
    bredt. (Regel-nivå kan heller ikke begrense ANTALL pending-dokumenter per
    anonym uid — kjent begrensning, også et App Check-argument.)
 3. **To foreldreløse varmekart-rader i live-data:** «Gullalder-hip-hop» og
-   «Country» (rester etter navnebyttene i v4.38 — fikspakken fra juli som
-   aldri ble kjørt). Ufarlige (visningen ignorerer dem), flagges som
-   diagnostikk av innholdspakke-testen. Ryddes med en varmekart-import uten
-   radene, eller en liten fikspakke ved lærer-innlogging.
-4. **Pop- og Rock-historiene er skrevet, men var usynlige.** Databasen har
-   `story` på alle NI metasjangre, mens den kuraterte lista (STORY_ORDER)
-   bare viser sju. Fra v4.65 leser visningene `storyOrder()`, som OGSÅ tar
-   med metasjangre som har historie — så Pop og Rock vises nå (bakerst).
-   Er det uønsket: slett story-feltet på Pop/Rock, eller si fra så legges
-   en eksplisitt utelukkelse inn.
+   «Country» (rester etter navnebyttene i v4.38). Ryddes nå med ETT KLIKK:
+   lærersiden → Sjangertreet → «Rydd foreldreløse varmekart-rader (2)»
+   (v4.68, `planHeatCleanup`). Knappen skjuler seg selv når det er rent.
+   Verifisert mot eksporten 22.08: begge er EKSAKTE duplikater av rader som
+   allerede ligger under de nye navnene (Hillbilly, Hip-hop), så ingenting
+   går tapt. Flagges som diagnostikk i `npm test` til de er borte.
+4. ~~**Pop- og Rock-historiene.**~~ AVKLART 22.08: de skal IKKE vises, men
+   teksten skal ligge. `STORY_SKJULT` i js/story-format.js holder dem utenfor
+   visningen og lærer-tellingen (v4.68); tekstene (5403 og 6340 tegn) ligger
+   urørt i Firestore og følger med i eksporten. MERK: de kan heller ikke
+   redigeres i appen mens de er skjult — historie-editoren nås fra knappene.
+   Skal de fram igjen: fjern navnet fra `STORY_SKJULT`.
 5. **«Hør etter»-feltet på musikkeksempler redigeres, men vises aldri.**
    Visningen ble fjernet i v3.71; redigeringsfeltet ble stående. Avgjør:
    gjeninnfør visningen (liten jobb) eller fjern feltet fra editorene.
    Se NB-en i HOR-ETTER-PROMPT.md. (Sjangernivåets «Hør etter» vises.)
-6. **Ta en fersk eksport.** Nyeste musikkhistorie-JSON er fra 18.08 — FØR
-   treet kom til Firestore og FØR navnebyttet som er kjørt live. Gamle
-   backuper er gift (import ruller tilbake); seed-generatoren advarer nå
-   om det samme.
+6. ~~**Ta en fersk eksport.**~~ GJORT 22.08:
+   `json files/musikkhistorie-2026-08-22.json` (46 tre-sjangre, hele treet,
+   alt innhold). Gamle backuper er fortsatt gift (import ruller tilbake);
+   seed-generatoren advarer om det samme.
 7. **metaGenres[].order er avviklet i koden** (ingenting leste det, skrives
    ikke lenger). Feltet kan bli liggende i eksisterende dokumenter — helt
    ufarlig, forsvinner ved neste tre-skriving via editoren/importen.
@@ -265,14 +266,15 @@ skrives med `doc.replace`, ellers blir den gamle heat-nøkkelen liggende.
 
 ## 7. Neste steg, forslagsvis
 
-1. Publiser firestore.rules (se Åpne punkter, punkt 1).
-2. App Check før studentene får appen bredt.
+1. Klikk ryddeknappen for de to varmekart-radene (Åpne punkter, punkt 3).
+2. App Check før studentene får appen bredt. Dette er nå det største
+   gjenstående punktet.
 3. Fyll inn epoke og lytteforslag der de mangler: 11 sjangre har ennå ikke
    `activeFrom` (de åtte rot-nodene pluss Urban music, Rock'n'roll og Rock), og
    to sjangre har ingen lytteforslag. Begge redigeres nå samme sted som
    beskrivelsen.
-4. Rydd de to foreldreløse varmekart-radene og avgjør Pop/Rock-historiene og
-   «Hør etter»-feltet (Åpne punkter 3–5).
+4. Avgjør «Hør etter»-feltet når tiden er inne (punkt 5) — brukeren sa 22.08
+   at det fortsatt kan vente.
 
 ## 8. Minnefiler
 
