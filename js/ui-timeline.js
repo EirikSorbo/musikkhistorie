@@ -7,14 +7,14 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.64";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.64";
-import { DECADES } from "./limits.js?v=4.64";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.64";
+import { escapeHtml } from "./util.js?v=4.65";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.65";
+import { DECADES } from "./limits.js?v=4.65";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.65";
 // Epoken bor i genreDescriptions fra v4.64. Vi går til den rene oppslags-
 // modulen, ikke til genealogy.js: den importerer denne veien rundt ellers.
-import { resolveDescAny } from "./genre-descriptions.js?v=4.64";
-import { isHendelse } from "./ui-tech.js?v=4.64";
+import { resolveDescAny } from "./genre-descriptions.js?v=4.65";
+import { isHendelse } from "./ui-tech.js?v=4.65";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene

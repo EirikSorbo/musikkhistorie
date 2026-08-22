@@ -5,18 +5,17 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.64";
-import { showSjangerInfo } from "./genealogy.js?v=4.64";
-import { MODAL_HTML } from "./explore-modals.js?v=4.64";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showPlaylistForMainGenre, showArtistsForInstrument, contentChanged } from "./explore-context.js?v=4.64";
-import { openVarmekart } from "./explore-varmekart.js?v=4.64";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.64";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.64";
-import { openDecadeList } from "./explore-decade.js?v=4.64";
-import { openReferanser } from "./explore-referanser.js?v=4.64";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.64";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.64";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.64";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.65";
+import { MODAL_HTML } from "./explore-modals.js?v=4.65";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.65";
+import { openVarmekart } from "./explore-varmekart.js?v=4.65";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.65";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.65";
+import { openDecadeList } from "./explore-decade.js?v=4.65";
+import { openReferanser } from "./explore-referanser.js?v=4.65";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.65";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.65";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.65";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -38,9 +37,12 @@ function wireModals() {
   // Delegert på document fordi kortene rendres tre steder — Teknologi-lista,
   // detaljmodalen og lærerens admin-liste — og alle skal oppføre seg likt.
   // stopPropagation: kortet selv åpner detaljvisningen ved klikk.
+  // Kategorifanene i Teknologi-modalen bærer OGSÅ data-tech-cat, men har sin
+  // egen klikklytter under — uten unntaket her kjørte et faneklikk begge veier:
+  // dobbel render, og modalOpen på en allerede åpen modal.
   document.addEventListener("click", (e) => {
     const kat = e.target.closest("[data-tech-cat]");
-    if (kat) {
+    if (kat && !kat.classList.contains("tech-tab")) {
       e.preventDefault(); e.stopPropagation();
       openTeknologi(kat.dataset.techCat);
       return;
@@ -140,9 +142,10 @@ function wireModals() {
   document.addEventListener("click", (e) => {
     const sjBtn = e.target.closest("[data-sjanger]");
     if (sjBtn) {
-      const name = sjBtn.dataset.sjanger;
-      showSjangerInfo(name, sjangerOpts()) || showSubsjangerInfo(name, sjangerOpts());
-      if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
+      // Samme rute som sjangerlenker ellers (explore-context) — kroppen var
+      // tidligere en tegn-for-tegn-kopi av onMainGenreClick, og slike kopier
+      // har drevet fra hverandre før.
+      onMainGenreClick(sjBtn.dataset.sjanger);
       return;
     }
     const underBtn = e.target.closest("[data-under]");
@@ -163,10 +166,13 @@ export function initExplore(options) {
   setOpts(options);
   injectModals();
   wireModals();
+  // Kun medlemmer sidene faktisk kaller. openVarmekart og showPlaylist-
+  // ForMainGenre lå her uten en eneste konsument (de nås via knappene i
+  // utforsk-laget selv). renderInstrumenter er no-op når seksjonen er lukket,
+  // så sidene kan kalle den trygt fra ethvert snapshot.
   return {
     openDecadeList,
     openSubgenreList,
-    openVarmekart,
     openTidslinje,
     openStoreBildet,
     openAppGuide,
@@ -180,9 +186,9 @@ export function initExplore(options) {
     refreshTechDetail,
     buildLinkCtx,
     showArtistsForSjanger,
-    showPlaylistForMainGenre,
     onMainGenreClick,
     openSubgenreInfo,
     contentChanged,
+    genreDescsChanged,
   };
 }

@@ -5,11 +5,11 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.64";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=4.64";
-import { resolveDesc } from "./genre-descriptions.js?v=4.64";
-import { resolveMainDesc } from "./genealogy.js?v=4.64";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=4.64";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.65";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=4.65";
+import { resolveDesc } from "./genre-descriptions.js?v=4.65";
+import { resolveMainDesc } from "./genealogy.js?v=4.65";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=4.65";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;
@@ -105,7 +105,7 @@ function openDiffModal(editId) {
   activeEditId = editId;
 
   document.getElementById("diff-title").textContent =
-    `${entityTypeLabel(edit.entityType)} — ${edit.entityName || edit.entityId}`;
+    `${entityTypeLabel(edit.entityType)}: ${edit.entityName || edit.entityId}`;
   document.getElementById("diff-meta").textContent =
     `Foreslått av ${edit.proposedBy || "Anonym"}. Klikk ✓ på radene du vil godta, ✕ på de du vil avvise. Velg «Lagre valgte endringer» til slutt.`;
   document.getElementById("diff-msg").textContent = "";
@@ -154,7 +154,7 @@ export function setupPendingEditsUi() {
     const approved = readApprovedFields(body);
     const msg = document.getElementById("diff-msg");
     if (!approved.length) {
-      msg.textContent = "Ingen felt valgt — bruk «Avvis alle» hvis du vil forkaste hele forslaget.";
+      msg.textContent = "Ingen felt valgt. Bruk «Avvis alle» hvis du vil forkaste hele forslaget.";
       msg.className = "form-msg warn";
       return;
     }

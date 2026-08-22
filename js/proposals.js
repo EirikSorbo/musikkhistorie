@@ -8,12 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.64";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.64";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.64";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.64";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.64";
-import { setupFormatBars } from "./format-bar.js?v=4.64";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.65";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.65";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.65";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.65";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.65";
+import { setupFormatBars } from "./format-bar.js?v=4.65";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -193,7 +193,9 @@ export function openProposalEditor(config) {
   }
 
   document.getElementById("prop-title").textContent =
-    `${TITLES[config.entityType] || "Foreslå endring"} — ${config.entityName || ""}`;
+    config.entityName
+      ? `${TITLES[config.entityType] || "Foreslå endring"}: ${config.entityName}`
+      : (TITLES[config.entityType] || "Foreslå endring");
   document.getElementById("prop-msg").textContent = "";
   document.getElementById("prop-by").value = "";
 
@@ -242,7 +244,7 @@ export function openProposalEditor(config) {
         level: config.level,
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
-      msg.className = "form-msg success";
+      msg.className = "form-msg ok";
       submit.textContent = "Forslag sendt ✓";
       submit.classList.remove("primary");
       submit.classList.add("sent");
@@ -273,7 +275,7 @@ export function openNewTechProposal(preset = null) {
   const forInstrument = !!preset?.instrument;
 
   document.getElementById("prop-title").textContent = forInstrument
-    ? `Foreslå nytt instrumentkort — ${preset.instrument}`
+    ? `Foreslå nytt instrumentkort: ${preset.instrument}`
     : TITLES["new-tech"];
   document.getElementById("prop-msg").textContent = "";
   document.getElementById("prop-by").value = "";
@@ -319,7 +321,7 @@ export function openNewTechProposal(preset = null) {
         proposedBy: document.getElementById("prop-by").value.trim() || "Anonym",
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
-      msg.className = "form-msg success";
+      msg.className = "form-msg ok";
       submit.textContent = "Forslag sendt ✓";
       submit.classList.remove("primary");
       submit.classList.add("sent");

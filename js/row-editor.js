@@ -8,11 +8,11 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.64";
+import { escapeHtml } from "./util.js?v=4.65";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=4.64";
+import { KILDE_KATEGORIER } from "./kilder.js?v=4.65";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
@@ -37,7 +37,7 @@ export const MUSIC_SPEC = {
     { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
     { key: "performanceYear", cls: "me-perf-year", type: "number", ph: "Framf.år", label: "Framføringsår", title: "Året for framføring/konsert (kun hvis annet enn utgivelsesår)" },
     { key: "note", cls: "me-note", type: "text", ph: "Hør etter … (valgfritt lytteanvisning)", label: "Hør etter", title: "Kort lytteanvisning: hva skal man legge merke til i akkurat denne innspillingen?" },
-    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til — styrer hvilken spilleliste det vises i. Viktig for artister med flere sjangre.", options: [] },
+    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til. Styrer hvilken spilleliste det vises i, viktig for artister med flere sjangre.", options: [] },
   ],
 };
 

@@ -72,6 +72,7 @@ service cloud.firestore {
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 120 &&
         request.resource.data.metaGenre is string &&
+        request.resource.data.metaGenre.size() <= 100 &&
         request.resource.data.influenceStart is number &&
         request.resource.data.status == "pending" &&
         request.resource.data.votedUpBy is list &&
@@ -82,6 +83,16 @@ service cloud.firestore {
         request.resource.data.get("description", "").size() <= 5000 &&
         request.resource.data.get("imageUrl", "").size() <= 2000 &&
         request.resource.data.get("proposedBy", "").size() <= 100 &&
+        // Samme tak som pendingEdits-reglene bruker for de samme feltene:
+        // uten dem var metaGenre/mainGenre/subGenre/geography/recordLabel
+        // ubegrensede strenger/lister her, mens forslags-flyten kappet dem.
+        request.resource.data.get("geography", "").size() <= 200 &&
+        request.resource.data.get("recordLabel", "").size() <= 200 &&
+        request.resource.data.get("instrument", "").size() <= 100 &&
+        request.resource.data.get("gender", "").size() <= 40 &&
+        request.resource.data.get("imageCredit", "").size() <= 300 &&
+        request.resource.data.get("mainGenre", []).size() <= 20 &&
+        request.resource.data.get("subGenre", []).size() <= 20 &&
         request.resource.data.get("keyWorks", []).size() <= 50 &&
         request.resource.data.get("musicExamples", []).size() <= 50 &&
         request.resource.data.get("kilder", []).size() <= 50

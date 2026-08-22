@@ -35,11 +35,13 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.64";
-import { isMainGenre } from "./genre-model.js?v=4.64";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.64";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.64";
-import { mergeHeatRows } from "./import-format.js?v=4.64";
+import { firebaseConfig } from "./firebase-config.js?v=4.65";
+import { isMainGenre } from "./genre-model.js?v=4.65";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.65";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.65";
+import { mergeHeatRows } from "./import-format.js?v=4.65";
+import { BATCH_MAX } from "./genre-migrate.js?v=4.65";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=4.65";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -167,7 +169,10 @@ export function subscribeArtists(callback) {
 // Engangs-henting av artistlista. Studentsiden bruker den KUN som reserve når
 // den lokale cachen er tom (direkte-besøk uten å ha vært innom forsiden) — den
 // trenger navnene til duplikatsjekken, ikke et sanntidsabonnement på hele
-// samlingen. Går mot den persistente cachen først, som alle andre lesinger.
+// samlingen. NB: getDocs spør SERVEREN når klienten er online (den persistente
+// cachen kutter kostnad for lyttere via resume-token, ikke for engangs-get),
+// så hvert kall koster en full samlingslesing. Derfor er den en sjelden
+// reserve, ikke en hovedvei.
 export async function fetchArtists() {
   const snapshot = await getDocs(artistsCol);
   return snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
@@ -216,8 +221,11 @@ export async function addArtist(data) {
   return addDoc(artistsCol, artistDocWithTimestamp(data));
 }
 
-// Firestore tillater maks 500 operasjoner per batch.
-const BATCH_LIMIT = 500;
+// Firestore tillater maks 500 operasjoner per batch. ÉN kilde (genre-migrate
+// eksporterer den, planPasserIBatch og skrivingen her leser samme tall) — to
+// uavhengige konstanter kunne drive fra hverandre, og da ville en plan passert
+// forhåndssjekken i editoren og likevel kastet ved kjøring.
+const BATCH_LIMIT = BATCH_MAX;
 
 // Legg inn mange artister på én gang (import). Batchet — dramatisk raskere
 // enn å skrive ett og ett dokument.
@@ -372,9 +380,6 @@ export async function saveDecadeDesc(decadeId, data) {
   return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
 }
 
-// Skriver mange dokumenter til én samling i batch (merge-set), i stedet for
-// én og én skriving — dramatisk raskere ved import. entries = [{ id, data }].
-// Returnerer antall skrevne dokumenter.
 // ----------------------------------------------------------------------------
 //  MIGRERING AV SJANGERTREET
 // ----------------------------------------------------------------------------
@@ -419,6 +424,9 @@ export async function saveGenealogyTree(tree) {
     { ...tree, updatedAt: new Date().toISOString() });
 }
 
+// Skriver mange dokumenter til én samling i batch (merge-set), i stedet for
+// én og én skriving — dramatisk raskere ved import. entries = [{ id, data }].
+// Returnerer antall skrevne dokumenter.
 export async function saveDocsBulk(collectionName, entries) {
   for (let i = 0; i < entries.length; i += BATCH_LIMIT) {
     const batch = writeBatch(db);
@@ -485,10 +493,7 @@ export function subscribeContent(callback) {
     const content = {};
     snapshot.docs.forEach((d) => { content[d.id] = d.data(); });
     callback(content);
-  }, (err) => {
-    console.error("Kunne ikke lese innhold (sjekk Firestore-regler):", err.code, err.message);
-    document.dispatchEvent(new CustomEvent("firestore-error", { detail: err }));
-  });
+  }, onSubscribeError("innhold"));
 }
 
 // Lagrer en innholdsside (editor og import). updatedAt fra data beholdes ved
@@ -634,9 +639,18 @@ function pendingEditTargetRef(entityType, entityId) {
     case "subgenre":       return doc(db, "genreDescriptions", entityId);
     // Instrumentsammendraget er en innholdsside (content/instrument-<slug>) og
     // kan opprettes ved første godkjente forslag — derfor ikke i mustExist.
-    case "instrument":     return doc(db, "content", entityId);
-    case "decade-society": return doc(db, "decades", String(entityId));
-    case "decade-tech":    return doc(db, "decades", String(entityId));
+    // entityId er STUDENT-skrevet (reglene krever bare en streng), så den MÅ
+    // valideres mot instrumentgruppene her: uvalidert kunne et forslag med
+    // entityId «omHistorie» fått lærerens godkjenning til å merge {body} rett
+    // inn i en annen innholdsside (confused deputy).
+    case "instrument":
+      return INSTRUMENT_TIMELINE_GROUPS.some((g) => instrumentPageId(g) === entityId)
+        ? doc(db, "content", entityId) : null;
+    // Samme vern: tiåret må være et av appens tiår.
+    case "decade-society":
+    case "decade-tech":
+      return DECADES.map(String).includes(String(entityId))
+        ? doc(db, "decades", String(entityId)) : null;
     default:               return null;
   }
 }

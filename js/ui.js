@@ -10,10 +10,10 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.64";
-import { showSjangerInfo } from "./genealogy.js?v=4.64";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.64";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.64";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.65";
+import { showSjangerInfo } from "./genealogy.js?v=4.65";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.65";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.65";
 import {
   escapeHtml,
   linkDesc,
@@ -33,12 +33,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.64";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.64";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.64";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.64";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.64";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.64";
+} from "./ui-helpers.js?v=4.65";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.65";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.65";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.65";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.65";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.65";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -462,7 +462,8 @@ function showGenreLevelInfo(label, level, opts = {}) {
     : "";
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
-  mTitle.textContent = level === "meta" ? `${label} (metasjanger)` : label;
+  // (Meta-grenen i tittelen er fjernet: funksjonen kalles kun med level="sub".)
+  mTitle.textContent = label;
   mBody.innerHTML = `
     ${seeGenreBtn}
     <div class="gx-desc rt">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc(level)}</span>`}</div>
@@ -548,7 +549,7 @@ export function openArtistListModal(title, list, onArtistClick, emptyText = "Ing
 // Fyller og åpner spilleliste-popupen (#modal-spilleliste).
 export function openPlaylistModal(fullName, node, artists) {
   const { total, html } = buildPlaylistHtml(node, artists);
-  document.getElementById("pl-title").textContent = `${fullName} — spilleliste (${total})`;
+  document.getElementById("pl-title").textContent = `Spilleliste: ${fullName} (${total})`;
   document.getElementById("pl-body").innerHTML = html;
   modalOpen(document.getElementById("modal-spilleliste"));
 }
@@ -597,7 +598,7 @@ function playlistRows(list, sj = null) {
       if (seen.has(key)) return;
       seen.add(key);
       const yInfo = musicExampleLabel(m);
-      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">— ${escapeHtml(a.name)}</span> ${rowTag(m)}</li>`);
+      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">· ${escapeHtml(a.name)}</span> ${rowTag(m)}</li>`);
     });
     return rows;
   });

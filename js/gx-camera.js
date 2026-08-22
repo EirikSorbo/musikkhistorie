@@ -22,8 +22,11 @@ export function attachCamera({
   // stort tomrom under (bundle-visningen er bredere enn den er høy).
   height = 0,
   onBackgroundClick = null,
-  // Elementer som IKKE skal telle som «tom flate» ved klikk.
-  ignoreSelector = ".gx-node, .gx-card",
+  // Elementer som IKKE skal telle som «tom flate» ved klikk. (.gxb-node er
+  // pillene i bundle-visningen; .gx-node var det pakkede kartets klasse og
+  // matchet ingenting lenger — vernet virket bare fordi pilleklikkene gjør
+  // stopPropagation selv.)
+  ignoreSelector = ".gxb-node, .gx-card",
   minScale = 0.3,
   maxScale = 1.8,
 }) {

@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.64";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=4.64";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=4.64";
-import { pageFor } from "./story-format.js?v=4.64";
-import { renderRichText } from "./rich-text.js?v=4.64";
-import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=4.64";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=4.64";
-import { openTechDetail } from "./explore-tech.js?v=4.64";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.65";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=4.65";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=4.65";
+import { pageFor } from "./story-format.js?v=4.65";
+import { renderRichText } from "./rich-text.js?v=4.65";
+import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=4.65";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=4.65";
+import { openTechDetail } from "./explore-tech.js?v=4.65";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -131,7 +131,7 @@ function renderGroup(group) {
   body.innerHTML = `
     <div class="instr-sum">
       <div class="instr-sum-head">
-        <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `${group} — utvikling`)}</h3>
+        <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`)}</h3>
         <div class="spacer"></div>
         <div class="instr-sum-actions"></div>
       </div>
@@ -168,7 +168,7 @@ function renderGroup(group) {
     sumActions.querySelector("button").addEventListener("click", () => opts.onProposeEdit({
       entityType: "instrument",
       entityId: pageId,
-      entityName: INSTRUMENT_TITLE[group] || `${group} — utvikling`,
+      entityName: INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`,
       currentValues: { body: page?.body || "" },
     }));
   }
@@ -211,9 +211,11 @@ function renderUtvikling() {
   renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0]);
 }
 
-// Tegner gjeldende fane på nytt — brukt når kort/episoder/innhold endres mens
-// seksjonen står åpen.
+// Tegner gjeldende fane på nytt når kort/episoder/innhold endres mens
+// seksjonen står åpen. No-op når modalen er lukket, så sidene kan kalle den
+// trygt fra ethvert snapshot (tech, podcasts, content) uten egen vakt.
 export function renderInstrumenter() {
+  if (!document.getElementById("modal-instrumenter")?.classList.contains("open")) return;
   renderTabs();
   selectTab(currentTab);
 }

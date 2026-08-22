@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.64";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn } from "./ui-helpers.js?v=4.64";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=4.64";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.64";
-import { STORY_ORDER, storyFor, pageFor } from "./story-format.js?v=4.64";
+} from "./limits.js?v=4.65";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS } from "./ui-helpers.js?v=4.65";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=4.65";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.65";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=4.65";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -102,7 +102,7 @@ export function contentGaps({ artists = [], genreDescs = {}, edgeDescs = {}, con
     ...(a.mainGenre || []).filter((x) => !isMainGenre(x)),
     ...(a.subGenre || []),
   ]))];
-  const stories = STORY_ORDER.filter((g) => !storyFor(g, genreDescs));
+  const stories = storyOrder(genreDescs).filter((g) => !storyFor(g, genreDescs));
   const pages = contentLoaded ? ["rotter", "omHistorie"].filter((id) => !pageFor(id, content)) : [];
   const mainDesc = GENEALOGY
     .filter((n) => !resolveDescAny(genreDescs, [n.l, n.f], "main").description)
@@ -229,6 +229,9 @@ export function renderDashboard(el, {
   // --- Innhold som mangler — samme telling som Skrivebordet (contentGaps) ------
   const gaps = contentGaps({ artists, genreDescs, edgeDescs, content, contentLoaded });
   const storiesMissing = gaps.stories;
+  // Historie-knappene og tellingen leser samme avledede liste som huben, så et
+  // metasjanger-navnebytte aldri gir ulikt bilde de to stedene.
+  const historieListe = storyOrder(genreDescs);
   const pageStatus = (id) => (contentLoaded ? !!pageFor(id, content) : null);
   const rotterOk = pageStatus("rotter");
   const omHistorieOk = pageStatus("omHistorie");
@@ -274,7 +277,7 @@ export function renderDashboard(el, {
 
   const histCols = decades.map((d) => {
     const n = counts.perDecade[d] || 0;
-    return `<button type="button" class="ov-hist-col" data-ov-decade="${d}" title="${d}-tallet: ${n} artister — klikk for liste">
+    return `<button type="button" class="ov-hist-col" data-ov-decade="${d}" title="${d}-tallet: ${n} artister. Klikk for liste">
       <span class="ov-hist-val">${n}</span>
       <span class="ov-hist-bar${n <= 1 ? " ov-thin" : ""}" style="height:${Math.max(2, (n / maxDecade) * 100)}%"></span>
       <span class="ov-hist-year">${d}</span>
@@ -310,7 +313,9 @@ export function renderDashboard(el, {
     .map((e) => {
       const missing = edgeMissingSet.has(edgeKey(e.from, e.to));
       const checked = edgeChecks.has(edgeKey(e.from, e.to));
-      const tags = `${missing ? `<span class="tag" style="color:var(--danger)">⚠ mangler</span>` : ""}${e.react ? `<span class="tag">motreaksjon</span>` : ""}`;
+      // SVG-ikon, ikke ⚠: U+26A0 rendres som farget emoji på flere plattformer
+      // (særlig iOS), og appen bruker SVG-ikoner i UI-et.
+      const tags = `${missing ? `<span class="tag" style="color:var(--danger);display:inline-flex;align-items:center;gap:3px">${PRIO_ICONS[2]} mangler</span>` : ""}${e.react ? `<span class="tag">motreaksjon</span>` : ""}`;
       return `<div class="ov-edge-card" data-ov-edge-from="${escapeHtml(e.from)}" data-ov-edge-to="${escapeHtml(e.to)}">
         <div class="ov-edge-head"><span class="ov-edge-name">${escapeHtml(nodeById[e.from].l)} → ${escapeHtml(nodeById[e.to].l)}</span>${tags}</div>
         ${teacherActionRow({ checked, edit: true, del: false })}
@@ -396,13 +401,13 @@ export function renderDashboard(el, {
         ${thinDecades.length
           ? `<div class="ov-chips">${thinDecades.map((d) =>
               `<button type="button" class="ov-chip ov-zero" data-ov-decade="${d}">${d} <strong>${counts.perDecade[d] || 0}</strong></button>`).join("")}</div>`
-          : `<p class="muted">Ingen — alle tiår har minst to artister.</p>`}
+          : `<p class="muted">Ingen. Alle tiår har minst to artister.</p>`}
       </div>
       <div class="ov-gap">
         <div class="ov-gap-t">Artister uten sjanger <span>${artistsNoSjanger.length}</span></div>
         ${artistsNoSjanger.length
           ? `<button type="button" class="btn ghost small" ${noSjangerX.btn}>Vis</button>${noSjangerX.panel}`
-          : `<p class="muted">Ingen — alle artister er plassert.</p>`}
+          : `<p class="muted">Ingen. Alle artister er plassert.</p>`}
       </div>
       <div class="ov-gap">
         <div class="ov-gap-t">Undersjangre uten artistkort <span>${orphanedSubgenres.length}</span></div>
@@ -415,9 +420,9 @@ export function renderDashboard(el, {
     <div class="ov-kick">Innhold som mangler</div>
     <div class="ov-miss">
       <div class="ov-miss-item">
-        <button type="button" class="ov-miss-head" ${storiesMissing.length ? `data-ov-toggle="ov-x-stories"` : `data-ov-story="${escapeHtml(STORY_ORDER[0])}"`}>
+        <button type="button" class="ov-miss-head" ${storiesMissing.length ? `data-ov-toggle="ov-x-stories"` : `data-ov-story="${escapeHtml(historieListe[0])}"`}>
           <span>Sjangerhistorier</span>
-          <span class="ov-count ${storiesMissing.length ? "ov-warn" : "ov-ok"}">${STORY_ORDER.length - storiesMissing.length}/${STORY_ORDER.length}</span>
+          <span class="ov-count ${storiesMissing.length ? "ov-warn" : "ov-ok"}">${historieListe.length - storiesMissing.length}/${historieListe.length}</span>
         </button>
         ${storyPanel}
       </div>

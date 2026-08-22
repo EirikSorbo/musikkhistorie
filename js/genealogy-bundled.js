@@ -1,7 +1,9 @@
 // ============================================================================
-//  SLEKTSTRE — BUNDLEDE BÅND (prototype)
+//  SLEKTSTRE — BUNDLEDE BÅND
 // ----------------------------------------------------------------------------
-//  Alternativ visning av NØYAKTIG samme data som genealogy.js tegner. Formen er
+//  Slektstreets renderer (tre.html) siden v4.58 — en låst designbeslutning.
+//  Startet som prototype ved siden av det pakkede kartet; kartet er slettet.
+//  Formen er
 //  «tangled tree»: nodene er piller på tiårslinjer, og alle foreldrene til én
 //  sjanger samles i ETT bånd i BARNETS familiefarge før de går inn i pilla.
 //
@@ -16,13 +18,13 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.64";
-import { GENEALOGY, nodeColor, layoutX } from "./genre-model.js?v=4.64";
-import { attachCamera } from "./gx-camera.js?v=4.64";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.64";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.65";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=4.65";
+import { attachCamera } from "./gx-camera.js?v=4.65";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.65";
 
 const SVGNS = "http://www.w3.org/2000/svg";
-const W = 2400;            // logisk kartbredde (kameraet skalerer til scenen)
+const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)
 const ROW_H = 100;         // avstand mellom tiårslinjene
 const TOP = 96;            // y for rad 0
 const NH = 30;             // pillehøyde
@@ -30,8 +32,12 @@ const PILL_PAD = 18;       // vannrett luft inni pilla, i tillegg til teksten
 const GAP = 22;            // minste luft mellom to piller i samme rad
 const BUNDLE_LIFT = 30;    // hvor høyt over pilla båndet samles
 const CORNER = 9;          // hjørneradius i båndene
-const DEC = ["Røtter", "1900", "1910-t", "1920-t", "1930-t", "1940-t", "1950-t",
-  "1960-t", "1970-t", "1980-t", "1990-t", "2000-t", "2010-t"];
+
+// Nederste rad i aksen NÅ. DECADE_ROWS er en live binding fra genre-model og
+// utvides av seg selv når en node settes på en ny rad (2020-t) — en hardkodet
+// liste her stoppet på 2010-t og ville tegnet en ny rad uten linje og etikett,
+// delvis utenfor kameraet. Leses ved KALL (aldri modulnivå-konstant).
+const maxRow = () => Math.max(DECADE_ROWS.length - 1, 12);
 
 const el = (tag, attrs) => {
   const e = document.createElementNS(SVGNS, tag);
@@ -100,12 +106,13 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   cam.appendChild(gBands);
   cam.appendChild(gNodes);
 
-  // Tiårsrutenett
-  for (let r = 0; r <= 12; r++) {
+  // Tiårsrutenett — så langt aksen faktisk rekker (DECADE_ROWS utvider seg
+  // selv når treet får en node på en ny rad).
+  for (let r = 0; r <= maxRow(); r++) {
     const y = TOP + r * ROW_H - 48;
     gGrid.appendChild(el("line", { x1: 0, y1: y, x2: W, y2: y, class: "gx-grid" }));
     const t = el("text", { x: 14, y: y + 20, class: "gx-decade" });
-    t.textContent = DEC[r];
+    t.textContent = DECADE_ROWS[r] || "";
     gGrid.appendChild(t);
   }
 
@@ -132,7 +139,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
     const measured = gnodes[n.id].text.getComputedTextLength?.() || n.l.length * 8;
     n._w = measured + PILL_PAD * 2;
     n._row = n.r + (n.yOffset || 0);
-    n._x = layoutX(n.id) * (W / LAYOUT_WIDTH);
+    n._x = layoutX(n.id);   // W === LAYOUT_WIDTH, ingen skalering
     n._y = TOP + n._row * ROW_H;
   });
   spreadRows(nodes);
@@ -374,7 +381,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
 
   const camera = attachCamera({
     root, stage, cam, width: W,
-    height: TOP + 12 * ROW_H + NH,   // nederste tiårsrad + pillehøyde
+    height: TOP + maxRow() * ROW_H + NH,   // nederste tiårsrad + pillehøyde
     onBackgroundClick: reset,
   });
 

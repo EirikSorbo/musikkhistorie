@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     b.id = "app-load-error";
     b.setAttribute("role", "alert");
     b.style.cssText = "position:sticky;top:0;z-index:9999;background:#b3261e;color:#fff;padding:12px 16px;text-align:center;font:500 15px system-ui,-apple-system,sans-serif";
-    b.textContent = "Kunne ikke laste appen — nettet eller en brannmur blokkerer kanskje Firebase. Sjekk forbindelsen og last siden på nytt.";
+    b.textContent = "Kunne ikke laste appen. Nettet eller en brannmur blokkerer kanskje Firebase. Sjekk forbindelsen og last siden på nytt.";
     document.body.insertBefore(b, document.body.firstChild);
     // Intervallet lever til appen faktisk blir klar (rydder da opp selv) —
     // et tidskutt her ville latt banneret stå permanent over en app som ble

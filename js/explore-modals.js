@@ -7,12 +7,11 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.64";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.64";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.65";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.65";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
-import { STORY_ORDER } from "./story-format.js?v=4.64";
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
@@ -109,7 +108,7 @@ export const MODAL_HTML = `
       <h2>Tyngdepunkt gjennom tiårene</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår — gruppert etter metasjanger. Mørkere = mer toneangivende.</p>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår, gruppert etter metasjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
   </div>
 </div>
@@ -135,7 +134,7 @@ export const MODAL_HTML = `
       <h2>Sjangerhimmelen</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Sjangrene står i slektstreets rekkefølge. Klikk (eller trykk på) en stjerne — sjangerens artister spretter frem, forbundet med stjernen. Hold musen over en prikk for navnet; klikk prikken for artistkortet. «Alle broer» viser artistene som hører til flere sjangre.</p>
+    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Sjangrene står i slektstreets rekkefølge. Klikk (eller trykk på) en stjerne, så spretter sjangerens artister frem, forbundet med stjernen. Hold musen over en prikk for navnet; klikk prikken for artistkortet. «Alle broer» viser artistene som hører til flere sjangre.</p>
     <div id="sh-body"></div>
   </div>
 </div>
@@ -144,10 +143,10 @@ export const MODAL_HTML = `
 <div class="modal-backdrop" id="modal-tidslinje">
   <div class="modal modal-wide">
     <div class="modal-head">
-      <h2>Tidslinje — når var artistene aktive?</h2>
+      <h2>Tidslinje: når var artistene aktive?</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode — gruppert etter metasjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode, gruppert etter metasjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
     <div id="tid-body"></div>
   </div>
 </div>
@@ -160,7 +159,7 @@ export const MODAL_HTML = `
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="sl-extra"></div>
-    <p class="muted" style="margin-bottom:14px;font-size:0.9rem" id="sl-hint">Trykk på en sjanger for å lese beskrivelsen.</p>
+    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
     <div id="sl-chips" class="subgenre-tag-list"></div>
   </div>
 </div>
@@ -330,7 +329,7 @@ ${TECH_DETAIL_MODAL_HTML}
       <div id="hist-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted hist-intro">${STORY_ORDER.length} fortellinger som til sammen dekker hele pensumet — trykk på navnene underveis for å åpne artistkortene.</p>
+    <p class="muted hist-intro">Fortellinger som til sammen dekker hele pensumet. Trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
     <!-- Sjangerfamilien som vannrett tidslinje, generert fra GENEALOGY
          (buildGenreTimeline). Erstatter den håndskrevne «Sjangertre-løype»-

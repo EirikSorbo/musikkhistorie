@@ -13,14 +13,14 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=4.64";
-import { modalOpen } from "./ui.js?v=4.64";
-import { renderPendingEditsList } from "./teacher-review.js?v=4.64";
-import { openDetail } from "./teacher-artists.js?v=4.64";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=4.64";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=4.64";
-import { DECADES, isVisible } from "./limits.js?v=4.64";
-import { escapeHtml, pct } from "./ui-helpers.js?v=4.64";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=4.65";
+import { modalOpen } from "./ui.js?v=4.65";
+import { renderPendingEditsList } from "./teacher-review.js?v=4.65";
+import { openDetail } from "./teacher-artists.js?v=4.65";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=4.65";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=4.65";
+import { DECADES, isVisible } from "./limits.js?v=4.65";
+import { escapeHtml, pct } from "./ui-helpers.js?v=4.65";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -115,7 +115,7 @@ function catCard(cat) {
   // Angre-chips for kategoriene som ikke har egen sjekk-flate å angre i
   // (artistkort angres i detaljvisningen / lista).
   const undo = (cat.key !== "artists" && checkedItems.length)
-    ? `<div class="desk-undo"><span class="desk-undo-l">Sjekket — klikk for å angre:</span>${
+    ? `<div class="desk-undo"><span class="desk-undo-l">Sjekket. Klikk for å angre:</span>${
         checkedItems.map((it) =>
           `<button type="button" class="desk-undo-chip" data-desk-uncheck="${cat.key}" data-id="${escapeHtml(it.id)}">${escapeHtml(it.name)} ✕</button>`).join("")
       }</div>`
@@ -147,7 +147,7 @@ export function renderDesk(el) {
     + state.techItems.filter((t) => t.status === "pending").length;
 
   const item = (icon, count, noun, action, active = false) => `
-    <button type="button" class="desk-item${active ? " active" : ""}" data-desk="${action}"${active ? ` title="Viser ventende i lista — klikk for å vise alle igjen"` : ""}>
+    <button type="button" class="desk-item${active ? " active" : ""}" data-desk="${action}"${active ? ` title="Viser ventende i lista. Klikk for å vise alle igjen"` : ""}>
       <span class="desk-ic">${icon}</span>
       <span class="desk-item-l"><b>${count}</b> ${noun}</span>
     </button>`;

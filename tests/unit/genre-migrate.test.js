@@ -20,7 +20,7 @@ import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup,
-} from "../../js/genre-migrate.js?v=4.64";
+} from "../../js/genre-migrate.js?v=4.65";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -132,10 +132,24 @@ test("shadowing: et dokument med både main og sub mister KUN main", () => {
   assert.ok(plan.advarsler.some((a) => a.includes("undersjanger")), "læreren skal få vite hvorfor");
 });
 
-test("uten sub slettes det gamle beskrivelsesdokumentet helt", () => {
-  const plan = planGenreRename(lagState(), "R&B", "Rhythm and blues");
+test("uten andre nivåer slettes det gamle beskrivelsesdokumentet helt", () => {
+  const s = lagState();
+  s.genreDescs["R&B"] = { main: { description: "tekst om R&B" } };   // KUN main
+  const plan = planGenreRename(s, "R&B", "Rhythm and blues");
   const gamle = ops(plan, "genreDescriptions").find((o) => o.id === "R&B");
   assert.equal(gamle.type, "doc.delete");
+});
+
+test("story på samme dokument overlever navnebyttet", () => {
+  // Fixturens R&B-dokument har main + story (normen: etiketter som deler navn
+  // med en metasjanger). Et doc.delete som bare sjekket sub, utslettet
+  // sjangerhistorien i «Det store bildet».
+  const plan = planGenreRename(lagState(), "R&B", "Rhythm and blues");
+  const gamle = ops(plan, "genreDescriptions").filter((o) => o.id === "R&B");
+  assert.equal(gamle.length, 1);
+  assert.equal(gamle[0].type, "field.delete", "story-feltet skal overleve");
+  assert.equal(gamle[0].data.felt, "main");
+  assert.ok(plan.advarsler.some((a) => a.includes("metasjanger")), "læreren skal få vite hvorfor");
 });
 
 test("navnekollisjon blokkeres", () => {
@@ -156,10 +170,21 @@ test("navnebytte til et navn som allerede har en main-beskrivelse blokkeres", ()
   assert.ok(plan.feil.some((f) => f.includes("allerede")));
 });
 
-test("tomt navn, samme navn og ukjent sjanger blokkeres", () => {
+test("tomt navn, eksakt samme navn og ukjent sjanger blokkeres", () => {
   assert.ok(planGenreRename(lagState(), "R&B", "  ").feil.length);
-  assert.ok(planGenreRename(lagState(), "R&B", "r&b").feil.length);
+  assert.ok(planGenreRename(lagState(), "R&B", "R&B").feil.length);
   assert.ok(planGenreRename(lagState(), "Finnes ikke", "Noe").feil.length);
+});
+
+test("en ren case-retting er et gyldig navnebytte", () => {
+  // Firestore-ID-er er case-sensitive, så «R&B» → «R&b» er en ekte
+  // identitetsflytting maskineriet kan utføre — den skal ikke avvises.
+  const plan = planGenreRename(lagState(), "R&B", "R&b");
+  assert.deepEqual(plan.feil, []);
+  // Varmekartraden må flytte, ikke forsvinne, når nøklene er ulike strenger.
+  const heat = ops(plan, "content").find((o) => o.id === "varmekart").data.heat;
+  assert.deepEqual(heat["R&b"], [1, 2]);
+  assert.ok(!("R&B" in heat));
 });
 
 // --- Metasjanger -------------------------------------------------------------

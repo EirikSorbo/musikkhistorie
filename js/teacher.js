@@ -14,15 +14,15 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.64";
-import { subscribeSharedData } from "./shared-data.js?v=4.64";
-import { onGenreModelChanged } from "./genre-model.js?v=4.64";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.64";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.64";
-import { initExplore } from "./explore.js?v=4.64";
+} from "./store.js?v=4.65";
+import { subscribeSharedData } from "./shared-data.js?v=4.65";
+import { onGenreModelChanged } from "./genre-model.js?v=4.65";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.65";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.65";
+import { initExplore } from "./explore.js?v=4.65";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.64";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.64";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.65";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.65";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -41,12 +41,12 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.64";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.64";
-import { renderDesk } from "./teacher-desk.js?v=4.64";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.64";
-import { setupFormatBars } from "./format-bar.js?v=4.64";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=4.64";
+} from "./teacher-content.js?v=4.65";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.65";
+import { renderDesk } from "./teacher-desk.js?v=4.65";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.65";
+import { setupFormatBars } from "./format-bar.js?v=4.65";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=4.65";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -102,6 +102,24 @@ function setupGate() {
 
 function startApp() {
   state.started = true;
+  // Hele oppsettet i try/catch: startApp kjører først ETTER Google-innlogging,
+  // og et ukjent kast her har før drept hele lærersiden STILLE (v4.60) —
+  // started sto som true, auth-callbacken prøvde aldri igjen, og siden så
+  // normal ut med døde knapper. Nå vises feilen i banneret i stedet.
+  try {
+    startAppInner();
+  } catch (err) {
+    console.error("Lærersiden feilet under oppstart:", err);
+    const banner = $("#banner");
+    if (banner) {
+      banner.textContent = `Lærersiden fikk en feil under oppstart (${err?.message || err}). Last siden på nytt. Hjelper ikke det, sjekk konsollen.`;
+      banner.className = "banner banner-error";
+      banner.style.display = "block";
+    }
+  }
+}
+
+function startAppInner() {
   setupFilters();
   // Sjangertre-editorens modaler injiseres FØR setupModals, som kobler lukking
   // på alle .modal-backdrop den finner.
@@ -166,16 +184,16 @@ function startApp() {
 
   // Tiårskortene åpner lærerens tiårsmodal (samme tidslinje-stripe som
   // studentsiden, pluss sjekk/rediger) — ikke explore-visningen.
-  $("#btn-t-society").addEventListener("click", () => openDecadeAdmin("society"));
-  $("#btn-t-tech").addEventListener("click", () => openDecadeAdmin("tech"));
+  $("#btn-t-society")?.addEventListener("click", () => openDecadeAdmin("society"));
+  $("#btn-t-tech")?.addEventListener("click", () => openDecadeAdmin("tech"));
   // Tidslinje-inngang fra artistlistas filterrad (samme delte modal som fra
   // Sjangre-modalen — én implementasjon i explore-tidslinje.js).
   const btnTid = document.getElementById("btn-tidslinje-artister");
   if (btnTid) btnTid.addEventListener("click", () => ctx.explore.openTidslinje());
-  $("#btn-t-genres").addEventListener("click", ctx.explore.openSubgenreList);
+  $("#btn-t-genres")?.addEventListener("click", ctx.explore.openSubgenreList);
   const btnStoreBildet = document.getElementById("btn-t-store-bildet");
   if (btnStoreBildet) btnStoreBildet.addEventListener("click", ctx.explore.openStoreBildet);
-  $("#btn-t-oversikt").addEventListener("click", openOversikt);
+  $("#btn-t-oversikt")?.addEventListener("click", openOversikt);
   const btnTInstr = document.getElementById("btn-t-instrumenter");
   if (btnTInstr) btnTInstr.addEventListener("click", ctx.explore.openInstrumenter);
   setupPodkastAdmin();
@@ -223,21 +241,25 @@ function startApp() {
       renderAll();
       refreshDesk();
     },
-    onGenreDescs: () => refreshDesk(),
+    // genreDescsChanged: et åpent sjangerkort viser fersk beskrivelse med én
+    // gang (beskrivelsene bor i egen samling — content-snapshotet dekker dem ikke).
+    onGenreDescs: () => { refreshDesk(); ctx.explore?.genreDescsChanged?.(); },
     onContent: () => {
-      // Åpne innholdsvisninger (sider/varmekart) re-rendres så import/
-      // redigering slår gjennom umiddelbart.
+      // Åpne innholdsvisninger (sider/varmekart/instrumentsammendrag)
+      // re-rendres så import/redigering slår gjennom umiddelbart.
       ctx.explore?.contentChanged?.();
+      ctx.explore?.renderInstrumenter?.();
       refreshGenreAdmin();
       refreshDesk();
     },
-    onPodcasts: () => renderPodkastAdmin(),
-    // Åpne teknologi-visninger (admin-lista og innovasjonskortet) tegnes på nytt,
-    // så lagring i redigerings-popupen slår gjennom umiddelbart.
+    onPodcasts: () => { renderPodkastAdmin(); ctx.explore?.renderInstrumenter?.(); },
+    // Åpne teknologi-visninger (admin-lista, innovasjonskortet og en åpen
+    // Instrumenter-fane) tegnes på nytt, så lagring slår gjennom umiddelbart.
     onTech: () => {
       renderPendingEditsList();
       refreshTechAdmin();
       ctx.explore?.refreshTechDetail?.();
+      ctx.explore?.renderInstrumenter?.();
       refreshDesk();
     },
   });

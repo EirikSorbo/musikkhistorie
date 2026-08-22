@@ -1,9 +1,9 @@
 // ============================================================================
 //  SLEKTSTRE-SIDE — DELT OPPSTART
 // ----------------------------------------------------------------------------
-//  Begge slektstre-sidene er den SAMME siden med ulik renderer:
-//    · tre.html            → renderGenealogy (pakket kart, i drift)
-//    · tre-prototype.html  → renderGenealogyBundled (bundlede bånd)
+//  Oppstarten for slektstresiden (tre.html). Rendereren injiseres (tre.js
+//  sender renderGenealogyBundled — bundlede bånd, en låst designbeslutning);
+//  det gamle pakkede kartet og prototypesiden tre-prototype.html er slettet.
 //
 //  All oppkobling bor her, og den går gjennom initExplore + subscribeSharedData
 //  — nøyaktig samme vei som forsiden. Før v4.44 hadde tre.js sin egen kopi av
@@ -14,12 +14,12 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=4.64";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=4.64";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.64";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=4.64";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=4.64";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.64";
+import { initExplore } from "./explore.js?v=4.65";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=4.65";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.65";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=4.65";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=4.65";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=4.65";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -130,8 +130,13 @@ export function initTrePage({ render }) {
       // Sjangertreet ligger i samme snapshot; er det ikke der, sier vi fra.
       onContent: () => {
         explore.contentChanged();
+        explore.renderInstrumenter?.();
         if (!isGenreModelReady()) visTreMangler(true);
       },
+      // Sjangerkort kan stå åpne også her — fersk beskrivelse med én gang.
+      onGenreDescs: () => explore.genreDescsChanged?.(),
+      onTech: () => explore.renderInstrumenter?.(),
+      onPodcasts: () => explore.renderInstrumenter?.(),
     });
   });
 

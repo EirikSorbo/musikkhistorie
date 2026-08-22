@@ -4,10 +4,10 @@
 //  Tiårsvisningen med klikkbar tidslinje-stripe. Flyttet ut av explore.js
 //  (v3.55, runde 2). contextMode/currentDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList, formatInfoText } from "./ui.js?v=4.64";
-import { DECADES } from "./limits.js?v=4.64";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=4.64";
-import { opts, getState } from "./explore-context.js?v=4.64";
+import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList, formatInfoText } from "./ui.js?v=4.65";
+import { DECADES } from "./limits.js?v=4.65";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=4.65";
+import { opts, getState } from "./explore-context.js?v=4.65";
 
 let contextMode = "society";
 // Sist viste tiår i Samfunn/Teknologi-visningen — huskes innen økten så
@@ -80,7 +80,7 @@ function renderDecadeView(decadeId) {
       isSociety,
       onTechClick: openTechDetail,
       onMore: (which, text) => openDecadeMore(
-        `${d}-tallet — ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`, text),
+        `${d}-tallet: ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`, text),
     }
   );
 
@@ -95,7 +95,7 @@ function renderDecadeView(decadeId) {
       propSociety.onclick = () => opts.onProposeEdit({
         entityType: "decade-society",
         entityId: String(d),
-        entityName: `${d}-tallet — samfunn`,
+        entityName: `${d}-tallet (samfunn)`,
         currentValues: { society: desc.society || "", societyMore: desc.societyMore || "", kilder: desc.kilder || [] },
       });
     } else {
@@ -111,7 +111,7 @@ function renderDecadeView(decadeId) {
       propTech.onclick = () => opts.onProposeEdit({
         entityType: "decade-tech",
         entityId: String(d),
-        entityName: `${d}-tallet — teknologi`,
+        entityName: `${d}-tallet (teknologi)`,
         currentValues: { tech: desc.tech || "", techMore: desc.techMore || "", kilder: desc.kilder || [] },
       });
     } else {

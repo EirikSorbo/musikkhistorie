@@ -13,15 +13,38 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-// Hvilke historier som finnes og rekkefølgen deres (struktur, ikke innhold):
-// én per metasjanger med forfattet fortelling. Pop og Rock dekkes gjennom de
-// andre og har bevisst ingen egen historie.
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=4.65";
+
+// Den KURATERTE historie-rekkefølgen (struktur, ikke innhold): én per
+// metasjanger som skal ha en forfattet fortelling. Pop og Rock dekkes gjennom
+// de andre og har bevisst ingen egen historie.
 //
 // Hip-hop står etter R&B fordi den ble skilt ut derfra (v3.88) og fortsatt
 // leses best i forlengelsen av soul og funk. Historien er ikke skrevet ennå —
 // knappen skal likevel stå: appen viser hull i innholdet i stedet for å skjule
 // dem, og lærer-oversikten teller den som en manglende historie.
+//
+// Visningene leser storyOrder() UNDER, ikke denne lista direkte: etiketten er
+// identitet også her (en åttende flate ved metasjanger-navnebytte), og uten
+// avledningen ville et navnebytte i tre-editoren gjort historien usynlig i
+// huben mens migreringen meldte at «historien følger med».
 export const STORY_ORDER = ["Blues", "Country", "Gospel", "Jazz", "R&B", "Hip-hop", "Klubbmusikk"];
+
+// Historie-knappene slik de skal vises NÅ:
+//   · den kuraterte rekkefølgen, men uten navn som verken finnes som
+//     metasjanger lenger eller har en historie (etterlatt av et navnebytte)
+//   · pluss metasjangre som HAR en historie uten å stå i lista (det nye navnet
+//     etter et navnebytte) — de legges bakerst i pedagogisk rekkefølge
+// Er treet ikke lastet ennå, vises den kuraterte lista som før.
+export function storyOrder(genreDescs = {}) {
+  const metas = GENEALOGY_META_GENRES;
+  if (!metas.length) return [...STORY_ORDER];
+  const ut = STORY_ORDER.filter((g) => metas.includes(g) || storyFor(g, genreDescs));
+  for (const g of META_GENRE_ORDER) {
+    if (!ut.includes(g) && storyFor(g, genreDescs)) ut.push(g);
+  }
+  return ut;
+}
 
 // Oppslaget: historien er den lærer-lagrede/importerte teksten på
 // genreDescriptions/<sjanger>.story.body — ingen fallback. Mangler den (eller

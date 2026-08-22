@@ -6,15 +6,15 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.64";
-import { isVisible } from "./limits.js?v=4.64";
-import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.64";
-import { pageFor, storyFor, stripGenrePath, STORY_ORDER } from "./story-format.js?v=4.64";
-import { renderRichText } from "./rich-text.js?v=4.64";
-import { buildGenreTimeline } from "./ui-timeline.js?v=4.64";
-import { wireLinks } from "./ui-helpers.js?v=4.64";
-import { renderSjangerhimmel } from "./constellation.js?v=4.64";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=4.64";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.65";
+import { isVisible } from "./limits.js?v=4.65";
+import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.65";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=4.65";
+import { renderRichText } from "./rich-text.js?v=4.65";
+import { buildGenreTimeline } from "./ui-timeline.js?v=4.65";
+import { wireLinks } from "./ui-helpers.js?v=4.65";
+import { renderSjangerhimmel } from "./constellation.js?v=4.65";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=4.65";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -120,20 +120,24 @@ export function openHistorier(genre) {
   const modal = document.getElementById("modal-historier");
   if (!modal) return;
   const chips = document.getElementById("hist-chips");
-  if (!chips.dataset.filled) {
-    // Hver metasjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
-    // så knappene, treet, varmekartet og himmelen snakker samme fargespråk.
-    // --hist-color settes per knapp; CSS bruker den til kant, tekst og fyll når
-    // knappen er aktiv. Knappene ligger i et grid med like kolonner (se CSS).
-    chips.innerHTML = STORY_ORDER.map((g) => {
-      const color = META_GENRE_COLOR[g] || FAMILIES.gray.stroke;
-      return `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}" style="--hist-color:${color}">${escapeHtml(g)}</button>`;
-    }).join("");
-    chips.querySelectorAll(".hist-chip").forEach((b) =>
-      b.addEventListener("click", () => renderHistorie(b.dataset.story)));
-    chips.dataset.filled = "1";
-  }
-  renderHistorie(typeof genre === "string" ? genre : (currentStoryGenre || STORY_ORDER[0]));
+  // Bygges ved HVER åpning (billig — en håndfull knapper): både lista
+  // (storyOrder følger navnebytter i treet) og fargene (META_GENRE_COLOR er en
+  // live binding som byttes ved hvert rebuild) skal være ferske. En engangs-
+  // bygging med dataset.filled frøs grå farger fra før treet hadde landet.
+  const rekkefolge = storyOrder(getState().genreDescs);
+  // Hver metasjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
+  // så knappene, treet, varmekartet og himmelen snakker samme fargespråk.
+  // --hist-color settes per knapp; CSS bruker den til kant, tekst og fyll når
+  // knappen er aktiv. Knappene ligger i et grid med like kolonner (se CSS).
+  chips.innerHTML = rekkefolge.map((g) => {
+    const color = META_GENRE_COLOR[g] || FAMILIES.gray.stroke;
+    return `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}" style="--hist-color:${color}">${escapeHtml(g)}</button>`;
+  }).join("");
+  chips.querySelectorAll(".hist-chip").forEach((b) =>
+    b.addEventListener("click", () => renderHistorie(b.dataset.story)));
+  const valgt = typeof genre === "string" ? genre
+    : (rekkefolge.includes(currentStoryGenre) ? currentStoryGenre : rekkefolge[0]);
+  renderHistorie(valgt);
   modalOpen(modal);
 }
 

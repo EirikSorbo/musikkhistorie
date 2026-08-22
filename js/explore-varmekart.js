@@ -5,11 +5,11 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.64";
-import { DECADES } from "./limits.js?v=4.64";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.64";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.64";
-import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=4.64";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.65";
+import { DECADES } from "./limits.js?v=4.65";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.65";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.65";
+import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=4.65";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -45,7 +45,7 @@ export function renderVarmekartBody() {
   let html = "";
   if (!hasData) {
     html += `<p class="gx-missing" style="margin-bottom:14px">${s.contentLoaded
-      ? "Varmekart-nivåene er ikke lagt inn ennå. Læreren legger dem inn via innholds-importen" + (opts.onHeatEdit ? " — eller ved å trykke på cellene under" : "") + "."
+      ? "Varmekart-nivåene er ikke lagt inn ennå. Læreren legger dem inn via innholds-importen" + (opts.onHeatEdit ? ", eller ved å trykke på cellene under" : "") + "."
       : "Laster innhold …"}</p>`;
   }
   html += `<div style="overflow-x:auto"><div style="min-width:600px">`;

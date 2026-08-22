@@ -1,14 +1,14 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.64";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.64";
-import { onGenreModelChanged } from "./genre-model.js?v=4.64";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.64";
-import { debounce, throttle } from "./util.js?v=4.64";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.64";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.64";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.64";
-import { initExplore } from "./explore.js?v=4.64";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.64";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.64";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.65";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.65";
+import { onGenreModelChanged } from "./genre-model.js?v=4.65";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.65";
+import { debounce, throttle } from "./util.js?v=4.65";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.65";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.65";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.65";
+import { initExplore } from "./explore.js?v=4.65";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.65";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.65";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -75,12 +75,10 @@ function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
   renderArtistDetail($("#detail-body"), artist, explore.buildLinkCtx());
   // «Vis i tidslinje» → fokus-API-et: åpner artistens gruppe/seksjoner og
-  // uthever blokkene. Skjules for artister uten startår (de har ingen blokk).
+  // uthever blokkene. Vises for ALLE artister (bevisst valg i v3.69); uten
+  // startår åpner den tidslinjen uten fokus-blokk.
   const tlBtn = document.getElementById("detail-tidslinje");
-  if (tlBtn) {
-    tlBtn.style.display = "";
-    tlBtn.onclick = () => explore.openTidslinje({ artistId: artist.id });
-  }
+  if (tlBtn) tlBtn.onclick = () => explore.openTidslinje({ artistId: artist.id });
   const btn = document.getElementById("detail-propose");
   if (btn) {
     const locked = hasPendingEdit("artist", artist.id);
@@ -538,12 +536,24 @@ function init() {
       // når det ikke venter noen).
       applyPendingDeepLink();
     },
-    onGenreDescs: () => { if (isArtistModalOpen()) renderFilterResults(); },
+    // genreDescsChanged: et åpent sjangerkort skal vise en fersk beskrivelse
+    // med én gang — beskrivelsene bor i sin egen samling, så content-snapshotet
+    // dekker dem ikke.
+    onGenreDescs: () => {
+      if (isArtistModalOpen()) renderFilterResults();
+      explore?.genreDescsChanged?.();
+    },
     // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
     // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
-    onTech: () => applyArtistSnapshot(),
+    // renderInstrumenter: en åpen Instrumenter-fane bygges av tech-kortene og
+    // skal følge med (no-op når seksjonen er lukket).
+    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); },
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
-    onContent: () => explore?.contentChanged?.(),
+    // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
+    // tegnes på nytt her også.
+    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); },
+    // En åpen Podkaster-fane skal vise nye episoder uten å lukkes/åpnes.
+    onPodcasts: () => explore?.renderInstrumenter?.(),
   });
 
   // Sjangervokabularet kommer fra Firestore og lander ETTER at filtrene ble

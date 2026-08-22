@@ -12,14 +12,15 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.64";
-import { renderRichText } from "./rich-text.js?v=4.64";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.64";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.64";
-import { modalOpen } from "./ui-modal.js?v=4.64";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.64";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.64";
-import { GENEALOGY, FAMILIES, edgeKey } from "./genre-model.js?v=4.64";
+import { wireAllLinks } from "./linkify.js?v=4.65";
+import { renderRichText } from "./rich-text.js?v=4.65";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.65";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.65";
+import { modalOpen } from "./ui-modal.js?v=4.65";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.65";
+import { wireProposeFoot } from "./ui-edit.js?v=4.65";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.65";
+import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.65";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -67,7 +68,9 @@ export function resolveMainDesc(genreDescs, genreId) {
 
 // Varmelinja øverst på sjangerkortet: samme glidende stripe som i varmekartet,
 // med tiårene over — så man ser sjangerens tyngdepunkt gjennom historien før man
-// leser et eneste ord. Fargen er nodens egen familiefarge fra treet.
+// leser et eneste ord. Fargen følger ARVEREGELEN (nodeColor): metasjangeren
+// eier fargen, noden bærer bare fam som unntak. Å lese n.fam rått ga grå
+// stripe for 44 av 46 sjangre, mens varmekartet viste familiefargen.
 //
 // Vises kun for ekte tre-sjangre (n.g) og kun når nivåene faktisk er lastet:
 // tre.html laster ikke innhold i det hele tatt, og da er en tom grå linje verre
@@ -78,7 +81,7 @@ function heatStripBlock(n) {
   const heat = getHeatData();
   if (!n.g || !heat) return "";
   const vals = heatRow(heat, n.l);
-  const color = FAMILIES[n.fam]?.stroke || FAMILIES.gray.stroke;
+  const color = nodeColor(n);
   const tom = vals.every((v) => v == null);
   return `<div class="gx-heat">${heatAxisHtml()}${heatStripHtml(color, vals)}` +
     (tom ? `<p class="gx-heat-missing">Ingen varmekart-nivåer for denne sjangeren ennå.</p>` : "") +
@@ -95,8 +98,16 @@ let openSjanger = null;
 
 // Tegn det åpne sjangerkortet på nytt. Gjør ingenting hvis ingen står åpent, så
 // den er trygg å kalle fra et hvilket som helst snapshot.
-export function refreshSjangerInfo() {
+//
+// `freshOpts` (valgfri) erstatter de lagrede opts før omtegningen. Uten den
+// tegnes kortet med data-referansene fra ÅPNINGSØYEBLIKKET: subscribe-
+// callbackene BYTTER referansene (state.genreDescs = descs), så de fangede
+// opts så aldri en fersk beskrivelse — bare varmestripa ble ny (den leses fra
+// modulnivå via getHeatData). Kallerne sender sjangerOpts(), som bygges fra
+// gjeldende state ved hvert kall.
+export function refreshSjangerInfo(freshOpts) {
   if (!openSjanger) return false;
+  if (freshOpts) openSjanger.opts = freshOpts;
   const modal = (openSjanger.opts.root || document).querySelector("#modal-sjanger");
   if (!modal?.classList.contains("open")) return false;
   return showSjangerInfo(openSjanger.label, openSjanger.opts);
@@ -159,31 +170,15 @@ export function showSjangerInfo(label, opts = {}) {
   // currentValues må bære ALLE feltene forslagsskjemaet har (også kilder og
   // epoke-årstallene) — bare description ga tomme kilderader over eksisterende
   // kilder, en falsk «kilder: []»-diff i hvert forslag, og kildetap ved
-  // godkjenning.
-  const foot = root.querySelector("#sj-foot");
-  const propBtn = root.querySelector("#sj-propose");
-  if (foot && propBtn) {
-    if (onPropose) {
-      const locked = hasPendingEdit?.("subgenre", n.l);
-      foot.style.display = "";
-      propBtn.disabled = !!locked;
-      propBtn.textContent = locked ? "Forslag venter på godkjenning" : "Foreslå endring";
-      propBtn.onclick = () => onPropose({
-        entityType: "subgenre",
-        entityId: n.l,
-        entityName: n.f,
-        level: "main",
-        currentValues: {
-          description: descText || "",
-          kilder: resolved.kilder || [],
-          activeFrom: resolved.activeFrom ?? null,
-          activeTo: resolved.activeTo ?? null,
-        },
-      });
-    } else {
-      foot.style.display = "none";
-    }
-  }
+  // godkjenning. Foten kobles av den DELTE wireProposeFoot (ui-edit.js) —
+  // showGenreLevelInfo i ui.js bruker samme hjelper for samme modal, og en
+  // lokal kopi her hadde alt begynt å leve sitt eget liv.
+  wireProposeFoot(root, onPropose, hasPendingEdit, "subgenre", n.l, n.f, {
+    description: descText || "",
+    kilder: resolved.kilder || [],
+    activeFrom: resolved.activeFrom ?? null,
+    activeTo: resolved.activeTo ?? null,
+  }, "main");
   modalOpen(modal);
   return true;
 }
@@ -248,11 +243,4 @@ export function showEdgeInfo(fromId, toId, opts = {}) {
 
   modalOpen(modal);
   return true;
-}
-
-const DEC = { 0: "Røtter", 1: "1900", 2: "1910-t", 3: "1920-t", 4: "1930-t", 5: "1940-t", 6: "1950-t", 7: "1960-t", 8: "1970-t", 9: "1980-t", 10: "1990-t", 11: "2000-t", 12: "2010-t" };
-function el(tag, attrs) {
-  const e = document.createElementNS(SVGNS, tag);
-  for (const k in attrs) e.setAttribute(k, attrs[k]);
-  return e;
 }

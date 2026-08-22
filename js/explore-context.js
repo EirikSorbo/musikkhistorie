@@ -8,16 +8,16 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.64";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.64";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.64";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.64";
-import { openTechDetail } from "./explore-tech.js?v=4.64";
-import { renderPage } from "./explore-innhold.js?v=4.64";
-import { openTidslinje } from "./explore-tidslinje.js?v=4.64";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=4.64";
-import { renderReferanser } from "./explore-referanser.js?v=4.64";
-import { setHeatData } from "./heat-strip.js?v=4.64";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=4.65";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=4.65";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.65";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=4.65";
+import { openTechDetail } from "./explore-tech.js?v=4.65";
+import { renderPage } from "./explore-innhold.js?v=4.65";
+import { openTidslinje } from "./explore-tidslinje.js?v=4.65";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=4.65";
+import { renderReferanser } from "./explore-referanser.js?v=4.65";
+import { setHeatData } from "./heat-strip.js?v=4.65";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -100,6 +100,14 @@ export function showArtistsForInstrument(instrument) {
   openArtistListModal(instrument, artistsByInstrument(getState().artists, instrument), opts.onArtistClick, "Ingen forslag med dette instrumentet ennå.");
 }
 
+// Kalles av sidene når genreDescriptions-snapshotet endres: et åpent
+// sjangerkort skal vise den nye beskrivelsen med én gang, ikke først når
+// kortet lukkes og åpnes igjen. (Egen inngang fordi beskrivelsene bor i sin
+// egen samling — content-snapshotet fyrer ikke når de endres.)
+export function genreDescsChanged() {
+  refreshSjangerInfo(sjangerOpts());
+}
+
 // Kalles av sidene når content-snapshotet endres (import, redigering,
 // celleklikk): re-rendrer innholdsvisninger som står åpne, så endringen
 // slår gjennom uten å lukke/åpne modalen.
@@ -112,7 +120,10 @@ export function contentChanged() {
   setHeatData(getState().content?.varmekart?.heat || null);
   // Står et sjangerkort åpent, tegnes det på nytt — da følger varmelinja med når
   // læreren endrer nivåer, i stedet for å vise gamle tall til kortet lukkes.
-  refreshSjangerInfo();
+  // sjangerOpts() sendes med så omtegningen leser GJELDENDE state: de fangede
+  // opts fra åpningsøyeblikket pekte på utbyttede referanser og viste aldri en
+  // fersk beskrivelse.
+  refreshSjangerInfo(sjangerOpts());
   const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
   if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
   if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");

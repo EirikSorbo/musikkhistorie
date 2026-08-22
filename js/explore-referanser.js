@@ -2,21 +2,25 @@
 //  REFERANSER: alle kildene appen bygger på, samlet
 // ----------------------------------------------------------------------------
 //  Kortet er en AVLEDNING av dataene: kildene hentes fra det som allerede
-//  ligger i minnet (artister, tiår, sjangre, innovasjonskort) og regnes om ved
-//  hver åpning, så listen aldri kan bli utdatert. I tillegg kan læreren legge
-//  inn frittstående referanser som ikke hører til noe kort (content/referanser,
-//  «Ny referanse» på lærersiden) — de blandes inn i samme liste. Slektstreets koblingskilder er bevisst holdt
-//  utenfor: de bor i en samling studentappen ellers ikke laster, og ville kostet
-//  80 ekstra dokumentlesninger per økt. De vises på hver kobling i treet.
+//  ligger i minnet (artister, tiår, sjangre, koblinger, innovasjonskort) og
+//  regnes om ved hver åpning, så listen aldri kan bli utdatert. I tillegg kan
+//  læreren legge inn frittstående referanser som ikke hører til noe kort
+//  (content/referanser, «Ny referanse» på lærersiden) — de blandes inn i samme
+//  liste. Slektstreets koblingskilder er MED siden v4.65: alle sider abonnerer
+//  på edgeDescriptions gjennom shared-data.js (v4.44), så de ligger allerede i
+//  minnet uten én ekstra lesing. (De var holdt utenfor fra før v4.44, da
+//  samlingen kostet ekstra lesinger — det premisset er dødt.)
 //  Grupperingen (kategori → hovedkilde → artikkel) kommer fra kilder.js.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.64";
-import { isVisible } from "./limits.js?v=4.64";
-import { samleKilder } from "./kilder.js?v=4.64";
-import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=4.64";
-import { openTechDetail } from "./explore-tech.js?v=4.64";
-import { openDecade } from "./explore-decade.js?v=4.64";
-import { openHistorier } from "./explore-innhold.js?v=4.64";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.65";
+import { isVisible } from "./limits.js?v=4.65";
+import { samleKilder } from "./kilder.js?v=4.65";
+import { genreNodeById } from "./genre-model.js?v=4.65";
+import { showEdgeInfo } from "./genealogy.js?v=4.65";
+import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=4.65";
+import { openTechDetail } from "./explore-tech.js?v=4.65";
+import { openDecade } from "./explore-decade.js?v=4.65";
+import { openHistorier } from "./explore-innhold.js?v=4.65";
 
 export function openReferanser() {
   const modal = document.getElementById("modal-referanser");
@@ -41,6 +45,14 @@ function alleKilder() {
     for (const niva of ["meta", "main", "sub"]) legg(g[niva] && g[niva].kilder, { type: "genre", id: navn, navn, niva });
   }
   for (const t of s.techItems || []) legg(t && t.kilder, { type: "tech", id: t.id, navn: t.name });
+  // Koblingene i slektstreet (edgeDescriptions, doc-ID «fra__til») — bl.a.
+  // forelesningsnotatene bor her. Navnet vises som «Blues → R&B».
+  for (const [key, e] of Object.entries(s.edgeDescs || {})) {
+    if (!e) continue;
+    const [fra, til] = String(key).split("__");
+    const navn = `${genreNodeById(fra)?.l || fra} → ${genreNodeById(til)?.l || til}`;
+    legg(e.kilder, { type: "edge", id: key, navn });
+  }
   // Frittstående referanser: bor i content-samlingen, som allerede lastes, og
   // har med vilje INGEN opphav — de hører ikke til noe kort.
   legg(s.content && s.content.referanser && s.content.referanser.kilder, null);
@@ -59,6 +71,9 @@ function apneOpphav(o) {
     if (t) openTechDetail(t);
   } else if (o.type === "decade") {
     openDecade(o.id, "society");
+  } else if (o.type === "edge") {
+    const [fra, til] = String(o.id).split("__");
+    showEdgeInfo(fra, til, sjangerOpts());
   } else if (o.type === "genre") {
     // Metasjangeren ER sjangerhistorien; de to andre nivåene har hvert sitt
     // sjangerkort (onMainGenreClick faller selv tilbake til undersjangeren).
@@ -146,7 +161,7 @@ export function renderReferanser() {
 
   radListe = [];
   let html = `<p class="muted" style="margin:0 0 6px;font-size:0.86rem">`;
-  html += `${antallOrd(data.unike, "kilde", "kilder")} samlet fra artistkortene, tiårene, sjangrene og innovasjonskortene.</p>`;
+  html += `${antallOrd(data.unike, "kilde", "kilder")} samlet fra artistkortene, tiårene, sjangrene, koblingene i slektstreet og innovasjonskortene.</p>`;
 
   // Seksjonene er overskrifter, ikke knapper: de står alltid åpne. Bare
   // nettstedene under «Nettsteder» har trekant, siden de kan romme hundrevis

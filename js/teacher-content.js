@@ -5,23 +5,23 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.64";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.64";
-import { resolveMainDesc } from "./genealogy.js?v=4.64";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.64";
-import { storyFor, pageFor } from "./story-format.js?v=4.64";
-import { renderRichText } from "./rich-text.js?v=4.64";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.64";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.64";
-import { resolveDesc } from "./genre-descriptions.js?v=4.64";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.64";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.64";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.64";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.65";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.65";
+import { resolveMainDesc } from "./genealogy.js?v=4.65";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.65";
+import { storyFor, pageFor } from "./story-format.js?v=4.65";
+import { renderRichText } from "./rich-text.js?v=4.65";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.65";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.65";
+import { resolveDesc } from "./genre-descriptions.js?v=4.65";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.65";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.65";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.65";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.64";
-import { $ } from "./shared.js?v=4.64";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.64";
+import { wireAllLinks } from "./linkify.js?v=4.65";
+import { $ } from "./shared.js?v=4.65";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.65";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -45,7 +45,7 @@ function renderDecadeSingleSections(decadeId, desc, isSociety) {
       onTechClick: (t) => ctx.explore.openTechDetail(t),
       onMore: (which, text) => {
         document.getElementById("dm-title").textContent =
-          `${decadeId}-tallet — ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`;
+          `${decadeId}-tallet: ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`;
         document.getElementById("dm-text").innerHTML = formatInfoText(text);
         modalOpen(document.getElementById("modal-decade-more"));
       },
@@ -136,12 +136,7 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
   $("#subgenre-single-title").textContent = `${subgenreId} (${LEVEL_LABEL[level] || level})`;
   $("#ss-desc").value = resolved.description || "";
   $("#ss-msg").textContent = "";
-  const kilderWrap = $("#ss-kilder-rows");
-  if (kilderWrap) {
-    kilderWrap.innerHTML = "";
-    const kilder = Array.isArray(resolved.kilder) ? resolved.kilder : [];
-    (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || "", "ss"));
-  }
+  buildKilderRows($("#ss-kilder-rows"), resolved.kilder);
   // Epoke-feltene gjelder bare tre-sjangre. Hint-linja viser hvilke tiår
   // varmekartet faktisk har tall for, så læreren ser epoken og pensumdekningen
   // side om side når de spriker (de måler ulike ting — se Oppskrift-fila).
@@ -224,16 +219,11 @@ export function openSingleEdgeModal(fromId, toId) {
   const docData = state.edgeDescs[edgeKey(fromId, toId)] || {};
   $("#edge-single-title").textContent = `${a.f} → ${b.f}`;
   $("#edge-single-type").textContent = react
-    ? "Motreaksjon — hvorfor gjorde den nye sjangeren opprør mot den gamle?"
-    : "Avstamning / påvirkning — hva ble ført videre, og hva ble nytt?";
+    ? "Motreaksjon: hvorfor gjorde den nye sjangeren opprør mot den gamle?"
+    : "Avstamning / påvirkning: hva ble ført videre, og hva ble nytt?";
   $("#es-desc").value = docData.description || "";
   $("#es-msg").textContent = "";
-  const kilderWrap = $("#es-kilder-rows");
-  if (kilderWrap) {
-    kilderWrap.innerHTML = "";
-    const kilder = Array.isArray(docData.kilder) ? docData.kilder : [];
-    (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(kilderWrap, k.text || "", k.url || ""));
-  }
+  buildKilderRows($("#es-kilder-rows"), docData.kilder);
   const modal = $("#modal-edge-single");
   modal.dataset.edgeFrom = fromId;
   modal.dataset.edgeTo = toId;
@@ -242,7 +232,7 @@ export function openSingleEdgeModal(fromId, toId) {
 
 export function setupEdgeSingleSave() {
   const addKilderBtn = $("#es-add-kilder");
-  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#es-kilder-rows"), "", ""));
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#es-kilder-rows")));
 
   $("#es-save").addEventListener("click", async () => {
     const modal = $("#modal-edge-single");
@@ -262,17 +252,26 @@ export function setupEdgeSingleSave() {
 }
 
 function buildDecadeKilderRows(kilder) {
-  const wrap = $("#ds-kilder-rows");
-  if (!wrap) return;
-  wrap.innerHTML = "";
-  (kilder.length ? kilder : [{ text: "", url: "" }]).forEach((k) => addKilderRow(wrap, k.text || "", k.url || "", "ds"));
+  buildKilderRows($("#ds-kilder-rows"), kilder);
 }
 
 // Kilder-radene bruker den delte row-editor.js (samme SOURCE_SPEC som student-
-// og lærer-artistskjemaet). prefix-argumentet beholdes for kall-kompatibilitet,
-// men brukes ikke lenger (de gamle prefiks-klassene var døde).
-function addKilderRow(wrap, text = "", url = "") {
-  return addRow(wrap, SOURCE_SPEC, { text, url });
+// og lærer-artistskjemaet). Tar HELE kildeobjektet: en variant som bare bar
+// text/url strøk kategori, forfatter og årstall fra samtlige kilder ved neste
+// lagring (feltene kom til i v4.39/v4.40 uten at denne ble med) — ett trykk på
+// Lagre flyttet alle kildene stille til «Ukategorisert» i Referanser-kortet.
+function addKilderRow(wrap, kilde = {}) {
+  return addRow(wrap, SOURCE_SPEC, kilde);
+}
+
+// Bygg kilderadene fra en lagret liste: normaliserer (strenger/gamle former)
+// og garanterer minst én tom rad. Samme rute for sjanger-, koblings- og
+// tiårseditoren, så ingen av dem kan miste et felt de andre bevarer.
+function buildKilderRows(wrap, kilder) {
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  const liste = normalizeSources(kilder);
+  (liste.length ? liste : [{}]).forEach((k) => addKilderRow(wrap, k));
 }
 
 function collectKilderRows(wrap) {
@@ -281,7 +280,7 @@ function collectKilderRows(wrap) {
 
 export function setupSubgenreSingleSave() {
   const addKilderBtn = $("#ss-add-kilder");
-  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ss-kilder-rows"), "", "", "ss"));
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ss-kilder-rows")));
 
   // «Avklart» fjerner bare raden fra DOM — den forsvinner først for godt når
   // læreren faktisk lagrer, så et feilklikk kan angres ved å lukke uten å lagre.
@@ -336,7 +335,7 @@ export function setupDecadeSingleSave() {
   // Rediger-knappen bor i #ds-actions-raden og kobles per åpning
   // (openSingleDecadeModal) — ingen statisk knapp lenger.
   const addKilderBtn = $("#ds-add-kilder");
-  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ds-kilder-rows"), "", "", "ds"));
+  if (addKilderBtn) addKilderBtn.addEventListener("click", () => addKilderRow($("#ds-kilder-rows")));
 
   $("#ds-save").addEventListener("click", async () => {
     const modal = $("#modal-decade-single");
@@ -373,6 +372,10 @@ export function setupDecadeSingleSave() {
 // ----------------------------------------------------------------------------
 
 export function openTechAdmin() {
+  // Nullstill filteret FØR render: fanevisningen ble satt til «Alle», men
+  // modulvariabelen beholdt forrige kategori — modalen åpnet da med «Alle»
+  // aktiv og lista fortsatt filtrert.
+  techAdminCat = "";
   renderTechAdmin();
   const modal = document.getElementById("modal-tech-admin");
   modal.querySelectorAll(".tech-tab").forEach(b => b.classList.toggle("active", !b.dataset.techCat));
@@ -393,8 +396,8 @@ export function openTechEditor(t, preset = null) {
   fillTechForm(t, preset);
   const title = document.getElementById("tech-single-title");
   if (title) {
-    title.textContent = t ? `Rediger — ${t.name}`
-      : preset?.instrument ? `Nytt kort — ${preset.instrument}`
+    title.textContent = t ? `Rediger: ${t.name}`
+      : preset?.instrument ? `Nytt kort: ${preset.instrument}`
       : "Ny innovasjon";
   }
   openAdminModal("modal-tech-single");
@@ -742,14 +745,14 @@ function renderStoryPreview() {
 
 function openContentEditor(target, title, existing) {
   editorTarget = target;
-  $("#se-title").textContent = `Rediger — ${title}`;
+  $("#se-title").textContent = `Rediger: ${title}`;
   $("#se-text").value = existing ? existing.body : "";
   const msg = $("#se-msg");
   msg.textContent = "";
   msg.className = "form-msg";
   $("#se-status").textContent = existing
-    ? "Lagret tekst — endringene vises for studentene idet du lagrer."
-    : "Ingen tekst lagret ennå — teksten vises som manglende til du lagrer (eller importerer innholdsfilen).";
+    ? "Lagret tekst. Endringene vises for studentene idet du lagrer."
+    : "Ingen tekst lagret ennå. Teksten vises som manglende til du lagrer (eller importerer innholdsfilen).";
   $("#se-reset").style.display = existing ? "" : "none";
   renderStoryPreview();
   openAdminModal("modal-story-edit");
@@ -795,7 +798,7 @@ export function setupStoryEditor() {
     const body = ta.value.trim();
     const msg = $("#se-msg");
     if (!body) {
-      msg.textContent = "Teksten kan ikke være tom — bruk «Slett teksten» i stedet.";
+      msg.textContent = "Teksten kan ikke være tom. Bruk «Slett teksten» i stedet.";
       msg.className = "form-msg error";
       return;
     }
@@ -814,7 +817,7 @@ export function setupStoryEditor() {
   });
 
   $("#se-reset").addEventListener("click", async () => {
-    if (!confirm("Slette teksten? Den vises som manglende til ny tekst lagres eller importeres — det finnes ingen reservetekst.")) return;
+    if (!confirm("Slette teksten? Den vises som manglende til ny tekst lagres eller importeres. Det finnes ingen reservetekst.")) return;
     try {
       if (editorTarget.type === "story") await clearStory(editorTarget.id);
       else await deletePage(editorTarget.id);

@@ -6,14 +6,14 @@ import {
   fetchArtists,
   addArtist,
   subscribeContent,
-} from "./store.js?v=4.64";
-import { loadArtists } from "./artist-cache.js?v=4.64";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.64";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=4.64";
-import { fillSelect } from "./ui.js?v=4.64";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.64";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.64";
-import { setupFormatBars } from "./format-bar.js?v=4.64";
+} from "./store.js?v=4.65";
+import { loadArtists } from "./artist-cache.js?v=4.65";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.65";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc, isMainGenre, isGenreModelReady } from "./genre-model.js?v=4.65";
+import { fillSelect } from "./ui.js?v=4.65";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.65";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.65";
+import { setupFormatBars } from "./format-bar.js?v=4.65";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -94,6 +94,22 @@ function setupForm() {
     // Rader med innhold men ugyldig/manglende lenke droppes ellers stille.
     const rowErr = validateExampleRows() || validateSourceRows();
     if (rowErr) return showMsg(msg, rowErr, "error");
+
+    // Sjangre valideres mot slektstreet — samme advarsel (ikke blokkering) som
+    // lærerens redigeringsskjema: en skrivefeil («Bluess») forsvinner ellers
+    // stille fra tre-visningene og dukker opp som falsk undersjanger hos
+    // læreren. Kun når treet faktisk er lastet, ellers flagges alt.
+    if (isGenreModelReady()) {
+      const ukjente = candidate.mainGenre.filter((g) => !isMainGenre(g));
+      if (ukjente.length) {
+        const ok = confirm(
+          `Disse sjangrene finnes ikke i slektstreet: ${ukjente.join(", ")}.\n\n` +
+          "Sjekk for skrivefeil (feltet Sjanger skal bruke navnene fra treet). " +
+          "Send likevel?"
+        );
+        if (!ok) return showMsg(msg, "Ikke sendt. Rett sjangernavnene og prøv igjen.", "error");
+      }
+    }
 
     if (!CONFIGURED) {
       return showMsg(
@@ -232,7 +248,16 @@ function init() {
   subscribeContent((c) => {
     applyGenealogyDoc(c?.genealogy);
     refreshControls();
-    resetMusicExampleRows();
+    // Bygg musikkeksempel-radene på nytt KUN når de er urørte. Snapshotet
+    // fyrer ved enhver endring i content-samlingen (varmekartceller,
+    // innholdssider, referanser) — en ubetinget rebuild slettet alt studenten
+    // hadde skrevet i radene, midt i utfyllingen. Hensikten her er bare å
+    // fylle sjangervelgeren når treet lander, og da er radene tomme.
+    // (Sjekker rå inputverdier, ikke collectRows: den dropper rader uten URL,
+    // og en halvskrevet rad skal også overleve.)
+    const harInnhold = [...($("#me-rows")?.querySelectorAll("input, select") || [])]
+      .some((el) => String(el.value || "").trim());
+    if (!harInnhold) resetMusicExampleRows();
   });
 }
 

@@ -25,17 +25,17 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=4.64";
-import { escapeHtml } from "./util.js?v=4.64";
-import { modalOpen, modalClose } from "./ui.js?v=4.64";
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.64";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.64";
-import { validateTree } from "./genre-validate.js?v=4.64";
+import { $ } from "./shared.js?v=4.65";
+import { escapeHtml } from "./util.js?v=4.65";
+import { modalOpen, modalClose } from "./ui.js?v=4.65";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.65";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=4.65";
+import { validateTree } from "./genre-validate.js?v=4.65";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  findReferences, planPasserIBatch, byggMetaTre, planTreeCleanup,
-} from "./genre-migrate.js?v=4.64";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.64";
+  planPasserIBatch, byggMetaTre, planTreeCleanup,
+} from "./genre-migrate.js?v=4.65";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=4.65";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -200,8 +200,14 @@ function openNodeEditor(nodeId) {
   const andre = t.nodes.filter((x) => x.id !== nodeId).sort((a, b) => a.r - b.r || a.l.localeCompare(b.l, "no"));
   const metaValg = (t.metaGenres || []).map((m) =>
     `<option value="${escapeHtml(m.name)}"${n?.g === m.name ? " selected" : ""}>${escapeHtml(m.name)}</option>`).join("");
+  // Én rad EKSTRA nederst: DECADE_ROWS går bare til dagens dypeste rad, og
+  // uten denne kunne aksen aldri utvides via editoren (høna-og-egget: 2020-t
+  // kommer først i DECADE_ROWS når en node står der).
+  const nesteRad = DECADE_ROWS.length;
+  const nesteEtikett = `${1900 + (nesteRad - 1) * 10}-t`;
   const radValg = DECADE_ROWS.map((etikett, i) =>
-    `<option value="${i}"${Math.floor(n?.r ?? 6) === i ? " selected" : ""}>${escapeHtml(etikett)}</option>`).join("");
+    `<option value="${i}"${Math.floor(n?.r ?? 6) === i ? " selected" : ""}>${escapeHtml(etikett)}</option>`).join("") +
+    `<option value="${nesteRad}">${escapeHtml(nesteEtikett)} (nytt tiår)</option>`;
   const famValg = Object.entries(FAMILIES).map(([k, v]) =>
     `<option value="${escapeHtml(k)}"${n?.fam === k ? " selected" : ""}>${escapeHtml(v.label || k)}</option>`).join("");
 
@@ -218,7 +224,7 @@ function openNodeEditor(nodeId) {
         <input type="text" id="gen-f" value="${escapeHtml(n?.f || "")}" maxlength="120">
       </label>
       <label>Metasjanger
-        <select id="gen-g"><option value="">(rot — ingen metasjanger)</option>${metaValg}</select>
+        <select id="gen-g"><option value="">(rot, ingen metasjanger)</option>${metaValg}</select>
       </label>
       <label>Tiår
         <select id="gen-r">${radValg}</select>
@@ -227,7 +233,7 @@ function openNodeEditor(nodeId) {
         <select id="gen-fam"><option value="">(arv fra metasjangeren)</option>${famValg}</select>
       </label>
     </div>
-    ${n ? `<p class="muted" style="margin:10px 0 4px">ID: <code>${escapeHtml(n.id)}</code> — kan ikke endres, koblingsbeskrivelsene henger i den.</p>` : ""}
+    ${n ? `<p class="muted" style="margin:10px 0 4px">ID: <code>${escapeHtml(n.id)}</code> kan ikke endres. Koblingsbeskrivelsene henger i den.</p>` : ""}
     <p class="muted" style="margin:4px 0">Epoke og lytteforslag redigeres sammen med beskrivelsen, ikke her: treet holder strukturen, beskrivelsen holder innholdet.</p>
     <details style="margin-top:10px"${n ? "" : " open"}>
       <summary>Vokste ut av (foreldre)</summary>
@@ -299,11 +305,16 @@ async function lagre() {
 
   // 2) Etiketten sist, som en egen migrering — den flytter identiteter.
   if (navnEndret) {
+    const bygg = () => {
+      const s = migrasjonsState();
+      s.tree = state.content?.genealogy || nyttTre;
+      return planGenreRename(s, gammel.l, felt.l);
+    };
     const s = migrasjonsState();
     s.tree = nyttTre;
     const plan = planGenreRename(s, gammel.l, felt.l);
     modalClose($("#modal-genre-edit"));
-    visPlan(`Endre navn: «${gammel.l}» → «${felt.l}»`, plan);
+    visPlan(`Endre navn: «${gammel.l}» → «${felt.l}»`, plan, bygg);
     return;
   }
 
@@ -317,16 +328,20 @@ async function slett() {
   if (!n) return;
   const plan = planGenreDelete(migrasjonsState(), n.l);
   modalClose($("#modal-genre-edit"));
-  visPlan(`Slette «${n.l}»`, plan);
+  visPlan(`Slette «${n.l}»`, plan, () => planGenreDelete(migrasjonsState(), n.l));
 }
 
 // ----------------------------------------------------------------------------
 //  Plan-visningen — læreren ser konsekvensen FØR noe skrives
 // ----------------------------------------------------------------------------
+// { tittel, plan, bygg } — bygg lager planen PÅ NYTT fra gjeldende state, så
+// «Utfør» kan oppdage at grunnlaget endret seg mens dialogen sto åpen (to
+// lærer-faner støttes eksplisitt, og planens doc.replace-operasjoner ville
+// ellers klemt en samtidig endring stille over).
 let ventendePlan = null;
 
-function visPlan(tittel, plan) {
-  ventendePlan = plan;
+function visPlan(tittel, plan, bygg) {
+  ventendePlan = { tittel, plan, bygg };
   $("#gen-plan-title").textContent = tittel;
   const body = $("#gen-plan-body");
   const utfor = $("#gen-plan-utfor");
@@ -349,7 +364,7 @@ function visPlan(tittel, plan) {
     utfor.style.display = "none";
   } else {
     body.innerHTML = `
-      <p>Dette skrives i én operasjon — enten alt, eller ingenting:</p>
+      <p>Dette skrives i én operasjon: enten alt, eller ingenting.</p>
       <ul>${plan.ops.map((o) => `<li>${escapeHtml(o.hva)}</li>`).join("")}</ul>
       ${plan.advarsler?.length ? `<p class="muted"><strong>Merk:</strong></p><ul class="muted">${
         plan.advarsler.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>` : ""}`;
@@ -359,11 +374,37 @@ function visPlan(tittel, plan) {
 }
 
 async function utforPlan() {
-  if (!ventendePlan?.ops?.length) return;
+  if (!ventendePlan?.plan?.ops?.length) return;
+  const { tittel, plan, bygg } = ventendePlan;
+
+  // Fersk-sjekk: har grunnlaget endret seg siden planen ble vist (snapshot fra
+  // en annen fane eller en student), bygges planen på nytt og vises igjen i
+  // stedet for å skrive fra foreldet tilstand. Skriver ingenting nå.
+  if (bygg) {
+    const fersk = bygg();
+    if (JSON.stringify(fersk.ops) !== JSON.stringify(plan.ops)) {
+      visPlan(tittel, fersk, bygg);
+      const body = $("#gen-plan-body");
+      if (body) body.insertAdjacentHTML("afterbegin",
+        `<p class="gx-missing">Dataene endret seg mens dialogen sto åpen. Planen er bygget på nytt. Se over og bekreft igjen.</p>`);
+      return;
+    }
+  }
+
   const knapp = $("#gen-plan-utfor");
   knapp.disabled = true;
   knapp.textContent = "Utfører …";
-  await guardTeacherAction(runMigrationPlan(ventendePlan.ops));
+  try {
+    await runMigrationPlan(plan.ops);
+  } catch (err) {
+    // Planen beholdes og dialogen står: læreren kan prøve «Utfør» igjen i
+    // stedet for å bygge hele endringen opp på nytt (nettglipp, utlogget økt).
+    console.error(err);
+    alert("Endringen ble IKKE skrevet: " + (err?.message || err) + "\nPlanen står, prøv «Utfør» igjen.");
+    knapp.disabled = false;
+    knapp.textContent = "Utfør";
+    return;
+  }
   knapp.disabled = false;
   knapp.textContent = "Utfør";
   ventendePlan = null;
@@ -471,10 +512,15 @@ async function lagreMeta() {
   await guardTeacherAction(saveGenealogyTree(nyttTre));
 
   if (navnEndret) {
+    const bygg = () => {
+      const s = migrasjonsState();
+      s.tree = state.content?.genealogy || nyttTre;
+      return planMetaRename(s, gammel.name, navn);
+    };
     const s = migrasjonsState();
     s.tree = nyttTre;
     modalClose($("#modal-genre-meta"));
-    visPlan(`Endre metasjanger: «${gammel.name}» → «${navn}»`, planMetaRename(s, gammel.name, navn));
+    visPlan(`Endre metasjanger: «${gammel.name}» → «${navn}»`, planMetaRename(s, gammel.name, navn), bygg);
     return;
   }
   modalClose($("#modal-genre-meta"));
@@ -485,7 +531,8 @@ function slettMeta() {
   if (!redigererMeta) return;
   const navn = redigererMeta;
   modalClose($("#modal-genre-meta"));
-  visPlan(`Slette metasjangeren «${navn}»`, planMetaDelete(migrasjonsState(), navn));
+  visPlan(`Slette metasjangeren «${navn}»`, planMetaDelete(migrasjonsState(), navn),
+    () => planMetaDelete(migrasjonsState(), navn));
 }
 
 // ----------------------------------------------------------------------------
@@ -495,7 +542,8 @@ export function setupGenreAdmin() {
   $("#gen-ny-sjanger")?.addEventListener("click", () => openNodeEditor(null));
   $("#gen-ny-meta")?.addEventListener("click", () => openMetaEditor(null));
   $("#gen-rydd")?.addEventListener("click", () =>
-    visPlan("Flytt epoke og lytteforslag ut av treet", planTreeCleanup(migrasjonsState())));
+    visPlan("Flytt epoke og lytteforslag ut av treet", planTreeCleanup(migrasjonsState()),
+      () => planTreeCleanup(migrasjonsState())));
   $("#gen-edit-lagre")?.addEventListener("click", () => lagre());
   $("#gen-edit-slett")?.addEventListener("click", () => slett());
   $("#gen-meta-lagre")?.addEventListener("click", () => lagreMeta());
@@ -517,5 +565,3 @@ export function refreshGenreAdmin() {
   if ($("#modal-genre-admin")?.classList.contains("open")) renderListe();
 }
 
-// Eksponert for oversikten: hvor mange peker på denne sjangeren?
-export { findReferences };

@@ -14,12 +14,12 @@
 //  drift ikke har noen kopi av det i koden.
 //
 //  NB: importene MÅ ha samme ?v=-suffiks som testene bruker. Node ser
-//  «genre-model.js» og «genre-model.js?v=4.64» som TO moduler med hver sin
+//  «genre-model.js» og «genre-model.js?v=4.65» som TO moduler med hver sin
 //  tilstand, og da ville hjelperen fylt en kopi ingen leser. bump.sh holder
 //  suffikset i synk (den dekker tests/*/*.js).
 // ============================================================================
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.64";
-import { rebuild } from "../../js/genre-model.js?v=4.64";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.65";
+import { rebuild } from "../../js/genre-model.js?v=4.65";
 
 rebuild({ nodes: GENEALOGY, families: FAMILIES, metaOrderHint: META_ORDER_HINT });
 

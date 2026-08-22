@@ -4,11 +4,11 @@
 //  Sjangre-/undersjangre-listene og sjanger-info-modalen (lærer-oversikten).
 //  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.64";
-import { isVisible } from "./limits.js?v=4.64";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, canonMainGenre } from "./genre-model.js?v=4.64";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.64";
-import { opts, getState, injectTeacherRow } from "./explore-context.js?v=4.64";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.65";
+import { isVisible } from "./limits.js?v=4.65";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, canonMainGenre } from "./genre-model.js?v=4.65";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.65";
+import { opts, getState, injectTeacherRow } from "./explore-context.js?v=4.65";
 
 export function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
@@ -85,7 +85,7 @@ export function openSubgenreInfo(subgenreId) {
     el.innerHTML = `
       <button class="btn ghost small sgi-toggle" style="margin-top:12px">Artister (${artists.length})</button>
       <div class="sgi-list" style="display:none;margin-top:10px">
-        ${artists.map(a => `<div class="result-row sgi-artist-row" data-id="${escapeHtml(a.id)}">
+        ${artists.map(a => `<div class="result-row sgi-artist-row" data-id="${escapeHtml(a.id)}" tabindex="0" role="button">
           <span class="result-name">${escapeHtml(a.name)}</span>
           <span class="result-meta">
             ${a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : ""}
@@ -100,10 +100,18 @@ export function openSubgenreInfo(subgenreId) {
       list.style.display = visible ? "none" : "block";
       e.target.textContent = visible ? `Artister (${artists.length})` : "Skjul artister";
     });
+    // Klikk OG tastatur (tabindex + Enter/mellomrom) — samme mønster som den
+    // delte artistlista (openArtistListModal); radene her var mus-only.
     el.querySelectorAll(".sgi-artist-row").forEach((row) => {
-      row.addEventListener("click", () => {
+      const åpne = () => {
         const artist = artists.find(a => a.id === row.dataset.id);
         if (artist) opts.onArtistClick(artist);
+      };
+      row.addEventListener("click", åpne);
+      row.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        åpne();
       });
     });
   }

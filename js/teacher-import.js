@@ -5,27 +5,28 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.64";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.65";
 import {
   addArtistsBulk,
   deleteAllArtists,
   updateTech,
   addTech,
   saveDocsBulk,
+  saveGenealogyTree,
   updateArtistFields,
   mergeVarmekartRows,
   saveReferanser,
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.64";
-import { escapeHtml } from "./ui.js?v=4.64";
-import { $ } from "./shared.js?v=4.64";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.64";
-import { validateTree } from "./genre-validate.js?v=4.64";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.64";
-import { INSTRUMENTS } from "./limits.js?v=4.64";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS } from "./import-format.js?v=4.64";
+} from "./store.js?v=4.65";
+import { escapeHtml } from "./ui.js?v=4.65";
+import { $ } from "./shared.js?v=4.65";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.65";
+import { validateTree } from "./genre-validate.js?v=4.65";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.65";
+import { INSTRUMENTS } from "./limits.js?v=4.65";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS } from "./import-format.js?v=4.65";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -51,7 +52,7 @@ export function setupDataButtons() {
 
   $("#btn-nuke").addEventListener("click", async () => {
     if (!state.artistsLoaded) {
-      alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du sletter — ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
+      alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du sletter. Ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
       return;
     }
     if (!confirm("Er du HELT sikker? Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.")) return;
@@ -64,7 +65,7 @@ export function setupDataButtons() {
     );
     if (svar === null) return;
     if (svar.trim().toUpperCase() !== "SLETT") {
-      alert("Sletting avbrutt — du må skrive SLETT for å bekrefte.");
+      alert("Sletting avbrutt. Du må skrive SLETT for å bekrefte.");
       return;
     }
     try {
@@ -129,7 +130,7 @@ function buildExportData() {
   const genreDescriptions = { meta: {}, main: {}, sub: {} };
   Object.entries(state.genreDescs)
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
-    .filter(([, rest]) => rest.main || rest.sub || rest.story)
+    .filter(([, rest]) => rest.main || rest.sub || rest.story || rest.meta)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
     .forEach(([id, rest]) => { genreDescriptions[genreSectionOf(id)][id] = rest; });
 
@@ -214,7 +215,7 @@ function formatImportErrors(errors) {
     `• Rad ${e.row}${e.name ? ` («${e.name}»)` : ""}: ${e.problems.join(" ")}`
   );
   const more = errors.length > 12 ? `\n… og ${errors.length - 12} rad(er) til.` : "";
-  return `Importen ble avbrutt — ${errors.length} rad(er) har feil, og INGENTING er endret:\n\n` +
+  return `Importen ble avbrutt. ${errors.length} rad(er) har feil, og INGENTING er endret:\n\n` +
          `${shown.join("\n")}${more}\n\nRett opp filen og prøv igjen.`;
 }
 
@@ -279,7 +280,7 @@ async function handleImportFile(file) {
 
   const data = normalizeImportFile(raw);
   if (!data) {
-    alert("Ugyldig format — filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
+    alert("Ugyldig format. Filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
   }
 
   // Valider HELE artistlista før noe kan skrives/slettes. Slår feil her ⇒
@@ -351,7 +352,7 @@ export function setupImportChoice() {
     new MutationObserver(() => {
       if (!mergeModal.classList.contains("open") && !mergeCommitting && mergeHasUnsaved()) {
         mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
-        alert("Flettingen ble avbrutt — ingen endringer er lagret. Importer fila på nytt for å prøve igjen.");
+        alert("Flettingen ble avbrutt. Ingen endringer er lagret. Importer fila på nytt for å prøve igjen.");
       }
     }).observe(mergeModal, { attributes: true, attributeFilter: ["class"] });
   }
@@ -366,7 +367,7 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
   // sjangerdokument ignoreres — og en fil uten dem har ingenting å skrive.
   const genreEntries = [];
   for (const [id, data] of Object.entries(genreDescriptions || {})) {
-    if (data && (data.main || data.sub || data.story)) genreEntries.push({ id, data });
+    if (data && (data.main || data.sub || data.story || data.meta)) genreEntries.push({ id, data });
   }
 
   // Koblingsbeskrivelser: nøkkelen ER dokument-ID-en («fra__til»); kun
@@ -434,7 +435,10 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       failed.push("sjangertreet");
     } else {
       try {
-        await saveDocsBulk("content", [{ id: "genealogy", data: { ...genealogy, updatedAt: new Date().toISOString() } }]);
+        // saveGenealogyTree skriver UTEN merge, slik kommentaren over lover:
+        // Firestore dyp-fletter map-felter ved merge, så en fjernet/omdøpt
+        // familie i families-mapen ville blitt liggende igjen usett.
+        await saveGenealogyTree(genealogy);
         done.push(`sjangertreet (${genealogy.nodes.length} noder)`);
         problemer.filter((x) => x.nivå === "advarsel")
           .forEach((a) => console.warn("Sjangertre-advarsel:", a.melding));
@@ -521,7 +525,7 @@ async function handleReplace(data) {
   // Vent på artist-snapshotet: uten det bygges backupen fra en tom state mens
   // deleteAllArtists sletter det som faktisk ligger på serveren.
   if (!state.artistsLoaded) {
-    alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du erstatter — ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
+    alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du erstatter. Ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
     return false;
   }
   const toAdd = data
@@ -535,7 +539,7 @@ async function handleReplace(data) {
   if (!confirm(
     `Dette sletter alle ${state.artists.length} eksisterende artister ` +
     `(inkludert stemmer og ventende forslag) og erstatter dem med ${toAdd.length} fra filen.\n\n` +
-    `Åpne endringsforslag på artister overlever ikke — de får nye ID-er.\n` +
+    `Åpne endringsforslag på artister overlever ikke. De får nye ID-er.\n` +
     `En full sikkerhetskopi av dagens data lastes ned først.\n\nFortsette?`
   )) return false;
   // Last ned backupen og KREV at læreren bekrefter at fila faktisk kom før vi
@@ -713,7 +717,7 @@ async function finishMerge() {
     // fil er trygt: alt-lagte artister matches på navn og dupliseres ikke.
     console.error("Fletting feilet:", err);
     alert("Flettingen feilet: " + err.message +
-      "\n\nNoen endringer kan være delvis lagret. Importer fila på nytt for å fullføre — allerede lagrede artister dupliseres ikke.");
+      "\n\nNoen endringer kan være delvis lagret. Importer fila på nytt for å fullføre. Allerede lagrede artister dupliseres ikke.");
   } finally {
     mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
     mergeCommitting = false;

@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from "./util.js?v=4.64";
+import { escapeHtml as esc } from "./util.js?v=4.65";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
@@ -47,12 +47,14 @@ export function linkifyAll(text, ctx = {}) {
   let last = 0;
   for (const m of markers) {
     result += escaped.slice(last, m.start);
+    // tabindex + role: ankere UTEN href står utenfor tab-rekkefølgen, så uten
+    // disse var alle klikkbare navn i løpende tekst mus/berøring-only.
     if (m.type === "artist") {
-      result += `<a class="artist-link" data-artist-id="${esc(m.id)}">${m.original}</a>`;
+      result += `<a class="artist-link" data-artist-id="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
     } else if (m.type === "tech") {
-      result += `<a class="tech-link" data-tech-id="${esc(m.id)}">${m.original}</a>`;
+      result += `<a class="tech-link" data-tech-id="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
     } else {
-      result += `<a class="genre-link" data-genre="${esc(m.id)}">${m.original}</a>`;
+      result += `<a class="genre-link" data-genre="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
     }
     last = m.end;
   }
@@ -93,11 +95,21 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
   }
 }
 
+// Klikk OG tastatur (Enter/mellomrom) — lenkene har role="button", så de skal
+// oppføre seg som knapper for tastaturbrukere.
+function wireLink(link, fn) {
+  link.addEventListener("click", (e) => { e.preventDefault(); fn(); });
+  link.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    fn();
+  });
+}
+
 export function wireAllLinks(container, { artists, techItems, onArtistClick, onTechClick, onMainGenreClick } = {}) {
   if (onArtistClick) {
     container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
+      wireLink(link, () => {
         const a = (artists || []).find(x => x.id === link.dataset.artistId);
         if (a) onArtistClick(a);
       });
@@ -105,8 +117,7 @@ export function wireAllLinks(container, { artists, techItems, onArtistClick, onT
   }
   if (onTechClick) {
     container.querySelectorAll(".tech-link[data-tech-id]").forEach(link => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
+      wireLink(link, () => {
         const t = (techItems || []).find(x => x.id === link.dataset.techId);
         if (t) onTechClick(t);
       });
@@ -114,10 +125,7 @@ export function wireAllLinks(container, { artists, techItems, onArtistClick, onT
   }
   if (onMainGenreClick) {
     container.querySelectorAll(".genre-link[data-genre]").forEach(link => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        onMainGenreClick(link.dataset.genre);
-      });
+      wireLink(link, () => onMainGenreClick(link.dataset.genre));
     });
   }
 }

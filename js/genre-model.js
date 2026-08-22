@@ -25,7 +25,7 @@
 //  (isGenreModelReady()).
 // ============================================================================
 
-import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.64";
+import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.65";
 
 // --- Modelltilstanden (byttes av rebuild) -----------------------------------
 
@@ -149,6 +149,15 @@ export function rebuild(tree) {
   });
   GENEALOGY_EDGES = edges;
 
+  // Metasjangrene MÅ stå før fargeavledningene: famOf/nodeColor og
+  // META_GENRE_COLOR slår opp i metaByName, og sto denne tilordningen etter
+  // dem, leste de forrige trees metasjangre. Ved kald start (tomt speil) var
+  // den tom, og hele kartet ble grått til NESTE snapshot.
+  META_GENRES = Array.isArray(tree?.metaGenres)
+    ? tree.metaGenres.map((m) => (typeof m === "string" ? { name: m } : { ...m })).filter((m) => m.name)
+    : GENEALOGY_META_GENRES.map((name, i) => ({ name, column: i }));
+  metaByName = new Map(META_GENRES.map((m) => [m.name, m]));
+
   const grayFallback = () => FAMILIES.gray?.stroke || "#9bada1";
   MAIN_GENRE_INFO = Object.fromEntries(
     GENEALOGY.filter((n) => n.g).map((n) => [n.l, {
@@ -173,10 +182,6 @@ export function rebuild(tree) {
     return [meta, FAMILIES[vanligst]?.stroke || grayFallback()];
   }));
 
-  META_GENRES = Array.isArray(tree?.metaGenres)
-    ? tree.metaGenres.map((m) => (typeof m === "string" ? { name: m } : { ...m })).filter((m) => m.name)
-    : GENEALOGY_META_GENRES.map((name, i) => ({ name, order: i, column: i }));
-  metaByName = new Map(META_GENRES.map((m) => [m.name, m]));
   LAYOUT_X = computeColumns(GENEALOGY, META_GENRES, { width: LAYOUT_WIDTH });
   DECADE_ROWS = buildDecadeRows(GENEALOGY);
   mainGenreSet = new Set(GENEALOGY_MAIN_GENRES.map((g) => g.toLowerCase()));
@@ -281,9 +286,12 @@ function lesSpeil() {
   } catch { return null; }
 }
 
-function skrivSpeil(tree) {
-  try { localStorage.setItem(SPEIL_NOKKEL, JSON.stringify(tree)); } catch { /* full storage */ }
-}
+// JSON-en for det sist anvendte treet. Brukes til å hoppe over rebuild når et
+// content-snapshot IKKE gjelder treet: samlingen bærer også varmekart,
+// innholdssider og referanser, og uten denne sjekken rev hvert lærer-klikk i
+// varmekartet med seg full omtegning (og nullstilt zoom/pan) hos alle elever
+// som sto i slektstreet.
+let sistAnvendtJson = "";
 
 // Tar imot dokumentet fra content-snapshotet. Kalles av subscribeSharedData.
 // Et TOMT/manglende dokument nullstiller IKKE en modell som allerede har data:
@@ -295,18 +303,22 @@ export function applyGenealogyDoc(doc) {
     if (!ready) rebuild(lesSpeil() || null);
     return ready;
   }
-  rebuild(doc);
   // Speilet må bære ALT rebuild leser. metaGenres manglet her først, og da falt
   // kolonnerekkefølgen — og dermed hele kartets venstre-mot-høyre — tilbake til
   // den pedagogiske ved kald start, altså en helt annen plassering enn den
   // læreren har satt.
-  skrivSpeil({
+  const speilbart = {
     nodes: doc.nodes,
     families: doc.families,
     metaOrderHint: doc.metaOrderHint,
     metaGenres: doc.metaGenres,
     version: doc.version,
-  });
+  };
+  const json = JSON.stringify(speilbart);
+  if (json === sistAnvendtJson) return true;
+  sistAnvendtJson = json;
+  rebuild(doc);
+  try { localStorage.setItem(SPEIL_NOKKEL, json); } catch { /* full storage */ }
   return true;
 }
 
