@@ -18,19 +18,27 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.69";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=4.69";
-import { attachCamera } from "./gx-camera.js?v=4.69";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.69";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=4.70";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=4.70";
+import { attachCamera } from "./gx-camera.js?v=4.70";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=4.70";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)
 const ROW_H = 100;         // avstand mellom tiårslinjene
 const TOP = 96;            // y for rad 0
-const NH = 30;             // pillehøyde
-const PILL_PAD = 18;       // vannrett luft inni pilla, i tillegg til teksten
-const GAP = 22;            // minste luft mellom to piller i samme rad
-const BUNDLE_LIFT = 30;    // hvor høyt over pilla båndet samles
+const NH = 44;             // pillehøyde
+const PILL_PAD = 13;       // vannrett luft inni pilla, i tillegg til teksten
+const GAP = 16;            // minste luft mellom to piller i samme rad
+const BUNDLE_LIFT = 26;    // hvor høyt over pilla båndet samles
+
+//  STØRRELSESFORHOLDET (v4.70): sjangernavnene er hovedsaken i kartet, båndene
+//  er sammenhengen mellom dem. Etiketten er derfor satt opp (15 → 22 px, se
+//  .gxb-label) og pilla med den, mens ROW_H og kartbredden W står stille — da
+//  vokser navnene i FORHOLD til strekene uten at kartet blir større.
+//  PILL_PAD og GAP er strammet inn for å kjøpe tilbake den vannrette plassen
+//  den større skriften spiser: de tetteste radene (11 sjangre i jazz-sonen)
+//  må fortsatt få plass innenfor W uten at klemmen på linje ~146 slår inn.
 const CORNER = 9;          // hjørneradius i båndene
 
 // Nederste rad i aksen NÅ. DECADE_ROWS er en live binding fra genre-model og
@@ -148,15 +156,17 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   // --- Pass 2: plasser pillene
   nodes.forEach((n) => {
     const { rect, text } = gnodes[n.id];
-    const merge = parentsOf(n).length >= 2;
     rect.setAttribute("x", n._x - n._w / 2);
     rect.setAttribute("y", n._y - NH / 2);
     rect.setAttribute("width", n._w);
     rect.setAttribute("stroke", nodeColor(n));
-    rect.setAttribute("stroke-width", merge ? 3.4 : 1.8);
+    // Samme rammetykkelse på ALLE piller (brukervalg v4.70). Tykkelsen og fet
+    // skrift markerte tidligere «to eller flere foreldre», men den opplysningen
+    // bæres allerede av det røde knutepunktet der båndene møtes — det står i
+    // tegnforklaringen, mens rammetykkelsen aldri gjorde det.
+    rect.setAttribute("stroke-width", 3.4);
     text.setAttribute("x", n._x);
     text.setAttribute("y", n._y);
-    if (merge) text.classList.add("gxb-merge");
   });
 
   // --- Pass 3: båndene. Én ledig korridor per lang loddrett strek, så en

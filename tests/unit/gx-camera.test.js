@@ -16,7 +16,7 @@
 // ============================================================================
 import test from "node:test";
 import assert from "node:assert/strict";
-import { attachCamera } from "../../js/gx-camera.js?v=4.69";
+import { attachCamera } from "../../js/gx-camera.js?v=4.70";
 
 // --- Minimal DOM ------------------------------------------------------------
 function lagElement(id) {

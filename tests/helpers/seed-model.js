@@ -20,12 +20,12 @@
 //  FORMLENE mot en kjent form, ikke dagens pensuminnhold.
 //
 //  NB: importene MÅ ha samme ?v=-suffiks som testene bruker. Node ser
-//  «genre-model.js» og «genre-model.js?v=4.69» som TO moduler med hver sin
+//  «genre-model.js» og «genre-model.js?v=4.70» som TO moduler med hver sin
 //  tilstand, og da ville hjelperen fylt en kopi ingen leser. bump.sh holder
 //  suffikset i synk (den dekker tests/*/*.js).
 // ============================================================================
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.69";
-import { rebuild } from "../../js/genre-model.js?v=4.69";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.70";
+import { rebuild } from "../../js/genre-model.js?v=4.70";
 import { byggGenealogyDoc } from "../../tools/build-genealogy-doc.js";
 
 export const SEED_DOC = byggGenealogyDoc({ GENEALOGY, FAMILIES, META_ORDER_HINT });

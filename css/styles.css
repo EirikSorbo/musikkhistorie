@@ -1823,7 +1823,11 @@ body.is-teacher #gate { display: none; }
 }
 .gx-ctrl button:hover { border-color: var(--accent); }
 .gx-grid { stroke: var(--line); stroke-width: 1; opacity: 0.6; }
-.gx-decade { font-size: 12px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
+/* Tiårsaksen til venstre. Fulgte med opp da sjangernavnene vokste til 22 px
+   (v4.70): på 12 px ble aksen nesten uleselig ved siden av dem, og den er
+   selve tidsreferansen kartet leses mot. Fortsatt tydelig underordnet
+   navnene, som den skal være. */
+.gx-decade { font-size: 17px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
 
 /* Usynlig, bred trykkbane oppå hver strek — fanger klikk/hover for koblingen
    (en tynn linje er umulig å treffe med finger). pointer-events: stroke gjør
@@ -1925,9 +1929,11 @@ body.is-teacher #gate { display: none; }
 .gxb-stub.gx-dim, .gxb-knot.gx-dim { opacity: 0.07; }
 .gxb-node { cursor: pointer; }
 .gxb-pill { fill: #fff; transition: filter 0.15s; }
-.gxb-label { font-size: 15px; font-weight: 500; fill: var(--text); pointer-events: none;
+/* Sjangernavnet er hovedsaken i kartet: stor og fet, så det leses før
+   båndene. Størrelsen henger sammen med NH/PILL_PAD i genealogy-bundled.js —
+   endres den ene, må den andre følge etter. */
+.gxb-label { font-size: 22px; font-weight: 700; fill: var(--text); pointer-events: none;
   font-family: "Inter", sans-serif; }
-.gxb-label.gxb-merge { font-weight: 700; }
 .gxb-node.gxb-focus .gxb-pill { filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.22)); }
 .gxb-sw-band { width: 18px; height: 0; border-top: 3px solid #dc2626; display: inline-block; vertical-align: middle; }
 .gxb-sw-knot { width: 10px; height: 10px; border-radius: 50%; background: #dc2626; display: inline-block;
