@@ -5,23 +5,23 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.70";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.70";
-import { resolveMainDesc } from "./genealogy.js?v=4.70";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.70";
-import { storyFor, pageFor } from "./story-format.js?v=4.70";
-import { renderRichText } from "./rich-text.js?v=4.70";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.70";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.70";
-import { resolveDesc } from "./genre-descriptions.js?v=4.70";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.70";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.70";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.70";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.71";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.71";
+import { resolveMainDesc } from "./genealogy.js?v=4.71";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.71";
+import { storyFor, pageFor } from "./story-format.js?v=4.71";
+import { renderRichText } from "./rich-text.js?v=4.71";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.71";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.71";
+import { resolveDesc } from "./genre-descriptions.js?v=4.71";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.71";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.71";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.71";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.70";
-import { $ } from "./shared.js?v=4.70";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.70";
+import { wireAllLinks } from "./linkify.js?v=4.71";
+import { $ } from "./shared.js?v=4.71";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.71";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

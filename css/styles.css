@@ -1929,10 +1929,12 @@ body.is-teacher #gate { display: none; }
 .gxb-stub.gx-dim, .gxb-knot.gx-dim { opacity: 0.07; }
 .gxb-node { cursor: pointer; }
 .gxb-pill { fill: #fff; transition: filter 0.15s; }
-/* Sjangernavnet er hovedsaken i kartet: stor og fet, så det leses før
-   båndene. Størrelsen henger sammen med NH/PILL_PAD i genealogy-bundled.js —
-   endres den ene, må den andre følge etter. */
-.gxb-label { font-size: 22px; font-weight: 700; fill: var(--text); pointer-events: none;
+/* Sjangernavnet er hovedsaken i kartet: stor nok til å leses før båndene.
+   STØRRELSEN gjør den jobben, ikke vekten — fet skrift på alle 54 pillene ble
+   for tungt (brukervalg v4.71), så vekten er tilbake på 500 som før v4.70.
+   Størrelsen henger sammen med NH/PILL_PAD i genealogy-bundled.js — endres den
+   ene, må den andre følge etter. */
+.gxb-label { font-size: 22px; font-weight: 500; fill: var(--text); pointer-events: none;
   font-family: "Inter", sans-serif; }
 .gxb-node.gxb-focus .gxb-pill { filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.22)); }
 .gxb-sw-band { width: 18px; height: 0; border-top: 3px solid #dc2626; display: inline-block; vertical-align: middle; }
