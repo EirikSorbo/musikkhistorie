@@ -5,23 +5,23 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.73";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.73";
-import { resolveMainDesc } from "./genealogy.js?v=4.73";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.73";
-import { storyFor, pageFor } from "./story-format.js?v=4.73";
-import { renderRichText } from "./rich-text.js?v=4.73";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.73";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.73";
-import { resolveDesc } from "./genre-descriptions.js?v=4.73";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.73";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.73";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.73";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.74";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.74";
+import { resolveMainDesc } from "./genealogy.js?v=4.74";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.74";
+import { storyFor, pageFor } from "./story-format.js?v=4.74";
+import { renderRichText } from "./rich-text.js?v=4.74";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.74";
+import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.74";
+import { resolveDesc } from "./genre-descriptions.js?v=4.74";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.74";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.74";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.74";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.73";
-import { $ } from "./shared.js?v=4.73";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.73";
+import { wireAllLinks } from "./linkify.js?v=4.74";
+import { $ } from "./shared.js?v=4.74";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.74";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -82,16 +82,18 @@ export function openSingleDecadeModal(decadeId, mode) {
     openSingleDecadeModal(y, teacherContextMode);
   });
 
-  // Sjekk + Rediger som ikonknapper (samme rad som alle andre kort). Sjekken
-  // gjelder hele tiåret (teacherChecks.decades), som på Skrivebordet.
+  // Sjekk + Rediger som ikonknapper (samme rad som alle andre kort). Samfunn og
+  // teknologi sjekkes hver for seg (teacherChecks.decades / decadesTech) — samme
+  // to kort som på Skrivebordet — så knappen følger hvilket aspekt som vises.
+  const checkField = isSociety ? "decades" : "decadesTech";
   const actions = $("#ds-actions");
   if (actions) {
     actions.innerHTML = teacherActionRow({
-      checked: (state.teacherChecks?.decades || []).includes(String(d)),
+      checked: (state.teacherChecks?.[checkField] || []).includes(String(d)),
       edit: true, del: false,
     });
     wireTeacherRow(actions, {
-      onCheck: (on) => setContentCheck("decades", String(d), on),
+      onCheck: (on) => setContentCheck(checkField, String(d), on),
       onEdit: () => {
         $("#ds-view").style.display = "none";
         $("#ds-edit").style.display = "";

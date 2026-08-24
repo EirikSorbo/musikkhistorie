@@ -14,12 +14,12 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=4.73";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.73";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.73";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=4.73";
-import { sharedStateDefaults } from "./shared-data.js?v=4.73";
-import { $ } from "./shared.js?v=4.73";
+} from "./store.js?v=4.74";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.74";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.74";
+import { DECADES, INSTRUMENTS } from "./limits.js?v=4.74";
+import { sharedStateDefaults } from "./shared-data.js?v=4.74";
+import { $ } from "./shared.js?v=4.74";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -74,7 +74,7 @@ export const handlers = {
 
 // Sett/fjern «sjekket» for et innholdselement. Artistkort bor på artist-
 // dokumentet (teacherChecked); alle andre kategorier er navnelister i
-// config/teacherChecks (genres/subgenres/metaGenres/tech/decades/pages).
+// config/teacherChecks (genres/subgenres/metaGenres/tech/decades/decadesTech/pages).
 // Deterministisk (on), så optimistiske knapper i detaljmodalene og Skrivebordet
 // aldri kommer i utakt. Delt av teacher-desk og detaljvisningenes Sjekk-knapp.
 export function setContentCheck(category, id, on) {
