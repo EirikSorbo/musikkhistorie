@@ -1953,7 +1953,7 @@ body.is-teacher #gate { display: none; }
 }
 
 .artist-link, .tech-link, .genre-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
-.artist-link { color: var(--accent); }
+.artist-link { color: #2563eb; }
 .tech-link { color: #d97706; }
 .genre-link { color: #059669; }
 .artist-link:hover, .tech-link:hover, .genre-link:hover { text-decoration-style: solid; }

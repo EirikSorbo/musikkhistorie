@@ -4,8 +4,8 @@
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=4.72";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=4.72";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=4.73";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=4.73";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
