@@ -7,10 +7,10 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.71";
-import { wireAllLinks } from "./linkify.js?v=4.71";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.71";
-import { GENDERS } from "./limits.js?v=4.71";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.72";
+import { wireAllLinks } from "./linkify.js?v=4.72";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.72";
+import { GENDERS } from "./limits.js?v=4.72";
 
 export { escapeHtml, buildKilderList, safeUrl };
 

@@ -10,10 +10,10 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.71";
-import { showSjangerInfo } from "./genealogy.js?v=4.71";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.71";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.71";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.72";
+import { showSjangerInfo } from "./genealogy.js?v=4.72";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.72";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.72";
 import {
   escapeHtml,
   linkDesc,
@@ -33,12 +33,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.71";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.71";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.71";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.71";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.71";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.71";
+} from "./ui-helpers.js?v=4.72";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.72";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.72";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.72";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.72";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.72";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };

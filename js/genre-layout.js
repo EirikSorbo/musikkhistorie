@@ -24,6 +24,15 @@ const MARGIN = 120;       // luft ytterst, så etiketter ikke havner i kanten
 const BAND_GAP = 40;      // luft mellom to metasjanger-soner
 const PASSES = 24;        // relaksasjonsrunder (konvergerer lenge før dette)
 
+// Hvor mye en forelder i en ANNEN metasjanger-sone trekker et barn vannrett,
+// i forhold til en forelder i barnets egen sone (som teller 1). En sjanger som
+// stammer fra en fjern sone (Nu-jazz fra House & techno, Cont. jazz fra Early
+// hip-hop) ble ellers dratt helt ut til sonens vegg og løsrevet fra sin egen
+// familie. Slektskapet er ekte og tegnes fortsatt som et bånd på tvers av
+// kartet; det skal bare ikke bestemme hvor noden HØRER HJEMME. Lav, ikke null,
+// så en lett lening mot opphavet består.
+const KRYSS_VEKT = 0.15;
+
 // Rad (tiår) som brøktall, slik nodene bærer den.
 const rowOf = (n) => (n.r || 0) + (n.yOffset || 0);
 
@@ -106,10 +115,18 @@ export function computeColumns(nodes = [], metaGenres = [], opts = {}) {
 
   for (let pass = 0; pass < PASSES; pass++) {
     for (const n of ikkeRot) {
-      const ps = parentsOf(n).map((id) => ut.get(id)).filter((v) => Number.isFinite(v));
-      if (!ps.length) continue;
-      const snitt = ps.reduce((a, b) => a + b, 0) / ps.length;
       const s = sonePerNode.get(n.id);
+      // Vektet snitt av foreldreposisjonene: foreldre i barnets egen sone
+      // teller fullt, foreldre i en annen sone (eller en rot) teller KRYSS_VEKT.
+      let sum = 0, vekt = 0;
+      for (const id of parentsOf(n)) {
+        const v = ut.get(id);
+        if (!Number.isFinite(v)) continue;
+        const w = byId.get(id)?.g === n.g ? 1 : KRYSS_VEKT;
+        sum += v * w; vekt += w;
+      }
+      if (!vekt) continue;
+      const snitt = sum / vekt;
       // 35 % dragning mot foreldrene: nok til at slektskapet former kartet,
       // lite nok til at sonene holder seg som kolonner.
       const ny = ut.get(n.id) + (snitt - ut.get(n.id)) * 0.35;
