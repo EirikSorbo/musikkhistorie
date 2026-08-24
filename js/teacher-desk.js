@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------
 //  To deler: innboksen (nye artistforslag + endringsforslag → eksisterende
 //  flater) og sjekk-fremdrift per innholdskategori (artistkort, sjangre,
-//  undersjangre, metasjangre, innovasjonskort, tiår (samfunn), tiår
+//  undersjangre, sjangerhistorier, innovasjonskort, tiår (samfunn), tiår
 //  (teknologi), sjangerkoblinger) —
 //  x/y sjekket med utvidbar liste over de usjekkede. Artistkort sjekkes via
 //  teacherChecked på artist-dokumentet; alle andre kategorier er navnelister
@@ -14,14 +14,15 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=4.74";
-import { modalOpen } from "./ui.js?v=4.74";
-import { renderPendingEditsList } from "./teacher-review.js?v=4.74";
-import { openDetail } from "./teacher-artists.js?v=4.74";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=4.74";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=4.74";
-import { DECADES, isVisible } from "./limits.js?v=4.74";
-import { escapeHtml, pct } from "./ui-helpers.js?v=4.74";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=4.75";
+import { modalOpen } from "./ui.js?v=4.75";
+import { renderPendingEditsList } from "./teacher-review.js?v=4.75";
+import { openDetail } from "./teacher-artists.js?v=4.75";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=4.75";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=4.75";
+import { storyOrder } from "./story-format.js?v=4.75";
+import { DECADES, isVisible } from "./limits.js?v=4.75";
+import { escapeHtml, pct } from "./ui-helpers.js?v=4.75";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -76,8 +77,14 @@ function buildCategories() {
       checkedSet: set("subgenres"),
     },
     {
-      key: "metaGenres", label: "Metasjangre",
-      items: GENEALOGY_META_GENRES.map((g) => ({ id: g, name: g })),
+      // Historien ER metasjangerens innhold, så sjekken bor fortsatt i
+      // teacherChecks.metaGenres — samme felt historie-modalens Sjekk-knapp
+      // skriver til (explore-innhold.js). Kortet viser historiene, ikke
+      // metasjangrene som helhet; universet er derfor storyOrder() = de
+      // metasjangrene som HAR en historie (Pop/Rock er bevisst skjult og faller
+      // ut). Nøkkelen «metaGenres» er beholdt fordi den ER sjekk-feltet.
+      key: "metaGenres", label: "Sjangerhistorier",
+      items: storyOrder(state.genreDescs).map((g) => ({ id: g, name: g })),
       checkedSet: set("metaGenres"),
     },
     {
@@ -237,8 +244,11 @@ function openItem(key, id) {
     case "subgenres":
       ctx.explore?.onMainGenreClick(id);
       break;
+    // Sjangerhistorier: åpne historien selv (før: artistlista for sjangeren,
+    // som ikke var det sjekken faktisk gjaldt). Historie-modalen har egen
+    // Sjekk-knapp mot samme felt, så status holder seg i takt.
     case "metaGenres":
-      ctx.explore?.showArtistsForSjanger({ label: id });
+      ctx.explore?.openHistorier(id);
       break;
     case "tech": {
       const t = state.techItems.find((x) => x.id === id);

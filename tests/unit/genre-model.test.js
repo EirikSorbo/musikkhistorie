@@ -17,14 +17,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.74";
+import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.75";
 import { byggGenealogyDoc } from "../../tools/build-genealogy-doc.js";
 import {
   rebuild, GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_ORDER,
   GENEALOGY_EDGES, MAIN_GENRE_INFO, META_GENRE_COLOR, DECADE_ROWS,
   isMainGenre, findTreeGenreNode, canonMainGenre, genreNodeById, edgeKey,
   isGenreModelReady, onGenreModelChanged,
-} from "../../js/genre-model.js?v=4.74";
+} from "../../js/genre-model.js?v=4.75";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const fasit = JSON.parse(fs.readFileSync(path.join(HER, "../fixtures/genre-model.json"), "utf8"));
