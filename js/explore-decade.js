@@ -4,10 +4,10 @@
 //  Tiårsvisningen med klikkbar tidslinje-stripe. Flyttet ut av explore.js
 //  (v3.55, runde 2). contextMode/currentDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList, formatInfoText } from "./ui.js?v=4.76";
-import { DECADES } from "./limits.js?v=4.76";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=4.76";
-import { opts, getState } from "./explore-context.js?v=4.76";
+import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList } from "./ui.js?v=4.78";
+import { DECADES } from "./limits.js?v=4.78";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=4.78";
+import { opts, getState } from "./explore-context.js?v=4.78";
 
 let contextMode = "society";
 // Sist viste tiår i Samfunn/Teknologi-visningen — huskes innen økten så
@@ -72,15 +72,11 @@ function renderDecadeView(decadeId) {
       techEl: document.getElementById("dv-tech"),
       societyTl: document.getElementById("dv-society-timeline"),
       techTl: document.getElementById("dv-tech-timeline"),
-      societyMoreBtn: document.getElementById("dv-society-more"),
-      techMoreBtn: document.getElementById("dv-tech-more"),
     },
     desc, d, s.techItems,
     {
       isSociety,
       onTechClick: openTechDetail,
-      onMore: (which, text) => openDecadeMore(
-        `${d}-tallet: ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`, text),
     }
   );
 
@@ -96,7 +92,7 @@ function renderDecadeView(decadeId) {
         entityType: "decade-society",
         entityId: String(d),
         entityName: `${d}-tallet (samfunn)`,
-        currentValues: { society: desc.society || "", societyMore: desc.societyMore || "", kilder: desc.kilder || [] },
+        currentValues: { society: desc.society || "", kilder: desc.kilder || [] },
       });
     } else {
       propSociety.style.display = "none";
@@ -112,7 +108,7 @@ function renderDecadeView(decadeId) {
         entityType: "decade-tech",
         entityId: String(d),
         entityName: `${d}-tallet (teknologi)`,
-        currentValues: { tech: desc.tech || "", techMore: desc.techMore || "", kilder: desc.kilder || [] },
+        currentValues: { tech: desc.tech || "", kilder: desc.kilder || [] },
       });
     } else {
       propTech.style.display = "none";
@@ -140,10 +136,3 @@ function renderDecadeView(decadeId) {
   }
 }
 
-function openDecadeMore(title, text) {
-  const modal = document.getElementById("modal-decade-more");
-  if (!modal) return;
-  document.getElementById("dm-title").textContent = title;
-  document.getElementById("dm-text").innerHTML = formatInfoText(text);
-  modalOpen(modal);
-}

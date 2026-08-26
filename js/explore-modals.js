@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.76";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.76";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.78";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.78";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -72,14 +72,12 @@ export const MODAL_HTML = `
       <h4 class="info-label">Samfunnsutvikling</h4>
       <div id="dv-society-timeline"></div>
       <div id="dv-society" class="info-text"></div>
-      <button class="btn ghost small" id="dv-society-more" style="display:none">Les mer</button>
       <button class="btn ghost small" id="dv-society-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div class="info-section" id="dv-tech-section">
       <h4 class="info-label">Teknologiutvikling</h4>
       <div id="dv-tech-timeline"></div>
       <div id="dv-tech" class="info-text"></div>
-      <button class="btn ghost small" id="dv-tech-more" style="display:none">Les mer</button>
       <button class="btn ghost small" id="dv-tech-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div id="dv-kilder"></div>
@@ -87,17 +85,6 @@ export const MODAL_HTML = `
       <button class="btn ghost small" id="dv-prev"></button>
       <button class="btn ghost small" id="dv-next"></button>
     </div>
-  </div>
-</div>
-
-<!-- Utvidet tiårsbeskrivelse -->
-<div class="modal-backdrop" id="modal-decade-more">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="dm-title"></h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <div id="dm-text" class="info-text"></div>
   </div>
 </div>
 

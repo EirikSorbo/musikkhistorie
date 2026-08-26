@@ -7,14 +7,14 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.76";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.76";
-import { DECADES } from "./limits.js?v=4.76";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.76";
+import { escapeHtml } from "./util.js?v=4.78";
+import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.78";
+import { DECADES } from "./limits.js?v=4.78";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.78";
 // Epoken bor i genreDescriptions fra v4.64. Vi går til den rene oppslags-
 // modulen, ikke til genealogy.js: den importerer denne veien rundt ellers.
-import { resolveDescAny } from "./genre-descriptions.js?v=4.76";
-import { isHendelse } from "./ui-tech.js?v=4.76";
+import { resolveDescAny } from "./genre-descriptions.js?v=4.78";
+import { isHendelse } from "./ui-tech.js?v=4.78";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -224,7 +224,7 @@ export function buildTimeline(text, decadeId) {
 // Kalt fra forsidens tiårsvisning (explore-decade.js) OG lærer-tiårsmodalen (også etter
 // lagring), så de tre tidligere kopiene holdes ett sted. `refs` er DOM-elementer
 // (ulike ID-prefikser dv-/ds- per bruk); manglende refs hoppes over.
-export function renderDecadeSections(refs, desc, decadeId, techItems, { isSociety = true, onTechClick, onMore } = {}) {
+export function renderDecadeSections(refs, desc, decadeId, techItems, { isSociety = true, onTechClick } = {}) {
   const noText = "Ingen beskrivelse ennå.";
   if (refs.societyEl) {
     refs.societyEl.innerHTML = desc.society ? formatInfoText(desc.society) : noText;
@@ -245,14 +245,6 @@ export function renderDecadeSections(refs, desc, decadeId, techItems, { isSociet
         });
       });
     }
-  }
-  if (refs.societyMoreBtn) {
-    refs.societyMoreBtn.style.display = desc.societyMore && isSociety ? "" : "none";
-    if (onMore) refs.societyMoreBtn.onclick = () => onMore("society", desc.societyMore);
-  }
-  if (refs.techMoreBtn) {
-    refs.techMoreBtn.style.display = desc.techMore && !isSociety ? "" : "none";
-    if (onMore) refs.techMoreBtn.onclick = () => onMore("tech", desc.techMore);
   }
 }
 

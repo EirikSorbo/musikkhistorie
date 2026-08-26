@@ -5,11 +5,11 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=4.76";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=4.76";
-import { resolveDesc } from "./genre-descriptions.js?v=4.76";
-import { resolveMainDesc } from "./genealogy.js?v=4.76";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=4.76";
+import { state, guardTeacherAction } from "./teacher-state.js?v=4.78";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=4.78";
+import { resolveDesc } from "./genre-descriptions.js?v=4.78";
+import { resolveMainDesc } from "./genealogy.js?v=4.78";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=4.78";
 
 function getCurrentEntityValues(edit) {
   const { entityType, entityId } = edit;
@@ -40,11 +40,11 @@ function getCurrentEntityValues(edit) {
     }
     case "decade-society": {
       const d = state.decadeDescs[String(entityId)] || {};
-      return { society: d.society || "", societyMore: d.societyMore || "", kilder: d.kilder || [] };
+      return { society: d.society || "", kilder: d.kilder || [] };
     }
     case "decade-tech": {
       const d = state.decadeDescs[String(entityId)] || {};
-      return { tech: d.tech || "", techMore: d.techMore || "", kilder: d.kilder || [] };
+      return { tech: d.tech || "", kilder: d.kilder || [] };
     }
     default: return {};
   }

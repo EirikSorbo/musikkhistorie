@@ -8,12 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.76";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.76";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.76";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.76";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.76";
-import { setupFormatBars } from "./format-bar.js?v=4.76";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.78";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.78";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.78";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.78";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.78";
+import { setupFormatBars } from "./format-bar.js?v=4.78";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -68,11 +68,9 @@ const FIELD_SPECS = {
   ],
   "decade-society": [
     { key: "society", label: "Samfunnsutvikling", type: "textarea", full: true },
-    { key: "societyMore", label: "Les mer (lengre tekst)", type: "textarea", full: true },
   ],
   "decade-tech": [
     { key: "tech", label: "Teknologiutvikling", type: "textarea", full: true },
-    { key: "techMore", label: "Les mer (lengre tekst)", type: "textarea", full: true },
   ],
 };
 

@@ -13,7 +13,7 @@
 //  Avhengighetsfri (kun artist-schema) → enhetstestbar i Node.
 // ============================================================================
 
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.76";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.78";
 
 export const PROPOSABLE_KEYS = {
   // «complex»-felter (verk/musikkeksempler/kilder) foreslås ikke via editoren.
@@ -25,8 +25,8 @@ export const PROPOSABLE_KEYS = {
   subgenre: ["description", "kilder", "activeFrom", "activeTo"],
   // Instrumentsammendraget bor i content-samlingen; body er hele teksten.
   instrument: ["body"],
-  "decade-society": ["society", "societyMore"],
-  "decade-tech": ["tech", "techMore"],
+  "decade-society": ["society"],
+  "decade-tech": ["tech"],
 };
 
 // Nøklene som lovlig kan skrives for en gitt entityType (tom liste = ukjent).

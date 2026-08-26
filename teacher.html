@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.76" />
-  <script src="js/gate.js?v=4.76"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.78" />
+  <script src="js/gate.js?v=4.78"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -360,31 +360,23 @@
           <h4 class="info-label">Samfunnsutvikling</h4>
           <div id="ds-society-timeline"></div>
           <div id="ds-society-text" class="info-text"></div>
-          <button class="btn ghost small" id="ds-society-more-btn" style="display:none">Les mer</button>
-        </div>
+          </div>
         <div class="info-section" id="ds-tech-section">
           <h4 class="info-label">Teknologiutvikling</h4>
           <div id="ds-tech-timeline"></div>
           <div id="ds-tech-text" class="info-text"></div>
-          <button class="btn ghost small" id="ds-tech-more-btn" style="display:none">Les mer</button>
-        </div>
+          </div>
         <div id="ds-kilder-view"></div>
         <div id="ds-actions"></div>
       </div>
       <!-- Redigerings-modus -->
       <div id="ds-edit" style="display:none">
         <div class="add-grid" style="grid-template-columns:1fr">
-          <label id="ds-edit-society">Samfunnsutvikling (kort)
-            <textarea id="ds-society" rows="3" data-format placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
+          <label id="ds-edit-society">Samfunnsutvikling
+            <textarea id="ds-society" rows="11" data-format placeholder="Beskrivelse, én linje per tema …"></textarea>
           </label>
-          <label id="ds-edit-society-more">Samfunnsutvikling, utvidet («Les mer»)
-            <textarea id="ds-society-more" rows="6" data-format="full" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
-          </label>
-          <label id="ds-edit-tech">Teknologiutvikling (kort)
-            <textarea id="ds-tech" rows="3" data-format placeholder="Kort beskrivelse for forhåndsvisning …"></textarea>
-          </label>
-          <label id="ds-edit-tech-more">Teknologiutvikling, utvidet («Les mer»)
-            <textarea id="ds-tech-more" rows="6" data-format="full" placeholder="Lengre beskrivelse som åpnes i eget popup …"></textarea>
+          <label id="ds-edit-tech">Teknologiutvikling
+            <textarea id="ds-tech" rows="11" data-format placeholder="Beskrivelse, én linje per tema …"></textarea>
           </label>
           <div>
             <span class="field-label">Kilder for tiåret</span>
@@ -666,7 +658,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.76"></script>
-  <script type="module" src="js/teacher.js?v=4.76"></script>
+  <script src="js/load-guard.js?v=4.78"></script>
+  <script type="module" src="js/teacher.js?v=4.78"></script>
 </body>
 </html>

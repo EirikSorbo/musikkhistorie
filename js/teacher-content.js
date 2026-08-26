@@ -5,23 +5,23 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.76";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.76";
-import { resolveMainDesc } from "./genealogy.js?v=4.76";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.76";
-import { storyFor, pageFor } from "./story-format.js?v=4.76";
-import { renderRichText } from "./rich-text.js?v=4.76";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.76";
-import { escapeHtml, formatInfoText, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.76";
-import { resolveDesc } from "./genre-descriptions.js?v=4.76";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.76";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.76";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.76";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.78";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.78";
+import { resolveMainDesc } from "./genealogy.js?v=4.78";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.78";
+import { storyFor, pageFor } from "./story-format.js?v=4.78";
+import { renderRichText } from "./rich-text.js?v=4.78";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.78";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.78";
+import { resolveDesc } from "./genre-descriptions.js?v=4.78";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.78";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.78";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.78";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.76";
-import { $ } from "./shared.js?v=4.76";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.76";
+import { wireAllLinks } from "./linkify.js?v=4.78";
+import { $ } from "./shared.js?v=4.78";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.78";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -37,18 +37,11 @@ function renderDecadeSingleSections(decadeId, desc, isSociety) {
     {
       societyEl: $("#ds-society-text"), techEl: $("#ds-tech-text"),
       societyTl: $("#ds-society-timeline"), techTl: $("#ds-tech-timeline"),
-      societyMoreBtn: $("#ds-society-more-btn"), techMoreBtn: $("#ds-tech-more-btn"),
     },
     desc, decadeId, state.techItems,
     {
       isSociety,
       onTechClick: (t) => ctx.explore.openTechDetail(t),
-      onMore: (which, text) => {
-        document.getElementById("dm-title").textContent =
-          `${decadeId}-tallet: ${which === "society" ? "samfunnsutvikling" : "teknologiutvikling"}`;
-        document.getElementById("dm-text").innerHTML = formatInfoText(text);
-        modalOpen(document.getElementById("modal-decade-more"));
-      },
     }
   );
   const kilderEl = $("#ds-kilder-view");
@@ -107,15 +100,11 @@ export function openSingleDecadeModal(decadeId, mode) {
 
   $("#ds-society").value = desc.society || "";
   $("#ds-tech").value = desc.tech || "";
-  $("#ds-society-more").value = desc.societyMore || "";
-  $("#ds-tech-more").value = desc.techMore || "";
   buildDecadeKilderRows(desc.kilder || []);
   $("#ds-msg").textContent = "";
 
   $("#ds-edit-society").style.display = isSociety ? "" : "none";
-  $("#ds-edit-society-more").style.display = isSociety ? "" : "none";
   $("#ds-edit-tech").style.display = isSociety ? "none" : "";
-  $("#ds-edit-tech-more").style.display = isSociety ? "none" : "";
 
   $("#ds-view").style.display = "";
   $("#ds-edit").style.display = "none";
@@ -344,18 +333,16 @@ export function setupDecadeSingleSave() {
     const decadeId = modal.dataset.decade;
     const society = $("#ds-society").value.trim();
     const tech = $("#ds-tech").value.trim();
-    const societyMore = $("#ds-society-more").value.trim();
-    const techMore = $("#ds-tech-more").value.trim();
     const kilder = collectKilderRows($("#ds-kilder-rows"));
     const msg = $("#ds-msg");
     try {
-      await saveDecadeDesc(decadeId, { society, tech, societyMore, techMore, kilder });
+      await saveDecadeDesc(decadeId, { society, tech, kilder });
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
 
       // Re-render fra de nettopp lagrede verdiene (også les-mer-knapper og
       // kilder — ikke bare tekst/tidslinjer som før, som ga stale visning).
-      renderDecadeSingleSections(decadeId, { society, tech, societyMore, techMore, kilder }, teacherContextMode === "society");
+      renderDecadeSingleSections(decadeId, { society, tech, kilder }, teacherContextMode === "society");
 
       setTimeout(() => {
         $("#ds-view").style.display = "";
