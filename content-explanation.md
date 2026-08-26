@@ -1,6 +1,7 @@
 # Innholdet i pensum-appen: orientering for en språkgjennomgang
 
 Skrevet 2026-08-26 for en modell som skal se over **språket** i appens innhold.
+Oppdatert samme dag, etter at «les mer» ble fjernet fra tiårsbeskrivelsene.
 Dette dokumentet forklarer hva innholdet er, hvilken husstil det følger, hvilke
 feller som finnes, og hvordan gjennomgangen er lagt opp sammen med læreren.
 
@@ -36,10 +37,16 @@ Tekstbærende felter:
 |---|---|
 | `artists[]` | `description` |
 | `genreDescriptions.{meta,main,sub}` | `description`, og `story.body` på metasjangrene |
-| `decades{}` | `society`, `tech`, `societyMore`, `techMore` |
+| `decades{}` | `society`, `tech` |
 | `tech[]` | `description` |
 | `pages{}` | `body` |
 | `edgeDescriptions{}` | `description` |
+
+**Merk:** `decades` har også `societyMore` og `techMore` i dataene. Det var en
+«les mer»-funksjon som ble **fjernet i v4.78**, fordi kildehenvisningene overtok
+rollen. Feltene ligger igjen i Firestore og i eksporten, men er verken synlige,
+redigerbare eller mulige å foreslå endret. **Ikke gå gjennom dem, og ikke
+foreslå endringer i dem.**
 
 ---
 
