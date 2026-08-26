@@ -12,15 +12,16 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.75";
-import { renderRichText } from "./rich-text.js?v=4.75";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.75";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.75";
-import { modalOpen } from "./ui-modal.js?v=4.75";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.75";
-import { wireProposeFoot } from "./ui-edit.js?v=4.75";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.75";
-import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.75";
+import { wireAllLinks } from "./linkify.js?v=4.76";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.76";
+import { renderRichText } from "./rich-text.js?v=4.76";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.76";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.76";
+import { modalOpen } from "./ui-modal.js?v=4.76";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.76";
+import { wireProposeFoot } from "./ui-edit.js?v=4.76";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.76";
+import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.76";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -147,7 +148,7 @@ export function showSjangerInfo(label, opts = {}) {
     ${heatStripBlock(n)}
     <p class="gx-era">${escapeHtml(eraText(resolved))}</p>
     <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>
-    ${lyttHtml(resolved.lytt)}
+    ${(onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : ""}
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
@@ -190,6 +191,11 @@ export function showSjangerInfo(label, opts = {}) {
 // techItems, genres, onArtistClick, onTechClick, onMainGenreClick, onEditEdge }
 export function showEdgeInfo(fromId, toId, opts = {}) {
   const { root = document, edgeDescs = {}, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onEditEdge } = opts;
+  // MIDLERTIDIG stengt for studenter (feature-flags.js): koblingsteksten er
+  // ikke kvalitetssikret ennå. Lærersignalet er onEdit, IKKE onEditEdge:
+  // sjangerOpts() sender aldri onEditEdge til treet (den hører til Oversikten),
+  // så onEditEdge her ville stengt koblingene for læreren også.
+  if (SKJUL_I_STUDENTVISNING.koblingsbeskrivelser && !opts.onEdit) return false;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const a = map[fromId], b = map[toId];
   if (!a || !b) return false;

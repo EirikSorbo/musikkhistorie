@@ -5,17 +5,18 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.75";
-import { MODAL_HTML } from "./explore-modals.js?v=4.75";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.75";
-import { openVarmekart } from "./explore-varmekart.js?v=4.75";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.75";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.75";
-import { openDecadeList } from "./explore-decade.js?v=4.75";
-import { openReferanser } from "./explore-referanser.js?v=4.75";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.75";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.75";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.75";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.76";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.76";
+import { MODAL_HTML } from "./explore-modals.js?v=4.76";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.76";
+import { openVarmekart } from "./explore-varmekart.js?v=4.76";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.76";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.76";
+import { openDecadeList } from "./explore-decade.js?v=4.76";
+import { openReferanser } from "./explore-referanser.js?v=4.76";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.76";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.76";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.76";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -81,7 +82,14 @@ function wireModals() {
     if (opts.onSlektstre) {
       btns += `<button class="btn primary" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
     }
-    btns += `<button class="btn primary" id="btn-metasjangere" style="flex:1">Metasjangere</button>`;
+    // MIDLERTIDIG (feature-flags.js): historiene er ikke kvalitetssikret, og
+    // dette er DEN ANDRE inngangen til dem ved siden av «Det store bildet».
+    // Skjules knappen her, må hubkortet skjules samtidig, ellers er de fortsatt
+    // åpne. Lærersiden gir onEdit og beholder knappen.
+    const visHistorier = !SKJUL_I_STUDENTVISNING.metasjangerhistorier || !!opts.onStoryEdit;
+    if (visHistorier) {
+      btns += `<button class="btn primary" id="btn-metasjangere" style="flex:1">Metasjangere</button>`;
+    }
     btns += `</div>`;
     btns += `<div style="display:flex;gap:8px;margin-bottom:14px">`;
     btns += `<button class="btn ghost compact" id="btn-undersjangere" style="flex:1">Undersjangere</button>`;
@@ -89,7 +97,8 @@ function wireModals() {
     btns += `<button class="btn ghost compact" id="btn-varmekart" style="flex:1">Varmekart</button>`;
     btns += `</div>`;
     slExtra.innerHTML = btns;
-    slExtra.querySelector("#btn-metasjangere").addEventListener("click", () => openHistorier());
+    const metaBtn = slExtra.querySelector("#btn-metasjangere");
+    if (metaBtn) metaBtn.addEventListener("click", () => openHistorier());
     slExtra.querySelector("#btn-undersjangere").addEventListener("click", openUndersjangre);
     const treBtn = slExtra.querySelector("#btn-slektstre");
     if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());

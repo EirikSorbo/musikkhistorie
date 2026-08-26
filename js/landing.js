@@ -1,14 +1,15 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.75";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.75";
-import { onGenreModelChanged } from "./genre-model.js?v=4.75";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.75";
-import { debounce, throttle } from "./util.js?v=4.75";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.75";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.75";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.75";
-import { initExplore } from "./explore.js?v=4.75";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.75";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.75";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.76";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.76";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.76";
+import { onGenreModelChanged } from "./genre-model.js?v=4.76";
+import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.76";
+import { debounce, throttle } from "./util.js?v=4.76";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.76";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.76";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.76";
+import { initExplore } from "./explore.js?v=4.76";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.76";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.76";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -147,8 +148,22 @@ function setupExplore() {
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
   const btnInstrumenter = document.getElementById("btn-instrumenter");
   if (btnInstrumenter) btnInstrumenter.addEventListener("click", explore.openInstrumenter);
+  // MIDLERTIDIG (feature-flags.js): hele hubkortet skjules. Det som må være
+  // tilgjengelig derfra, nås fortsatt andre steder: Tidslinje har eget kort på
+  // forsiden, og Varmekart ligger i knapperaden i sjangermodalen.
   const btnStoreBildet = document.getElementById("btn-store-bildet");
-  if (btnStoreBildet) btnStoreBildet.addEventListener("click", explore.openStoreBildet);
+  if (btnStoreBildet) {
+    // NB: hidden-attributtet duger ikke her. .dash-card setter display i CSS,
+    // og element-CSS slår nettleserens [hidden]-regel, så kortet ville blitt
+    // stående synlig. Inline display vinner.
+    if (SKJUL_I_STUDENTVISNING.storeBildet) btnStoreBildet.style.display = "none";
+    else btnStoreBildet.addEventListener("click", explore.openStoreBildet);
+  }
+  // Viktighetsgrad-filteret hører til samme midlertidige skjuling som
+  // prioritetsmerket på kortene.
+  const prioBar = document.getElementById("sp-prio-bar");
+  // Samme grunn som over: .priority-filter-bar har display: flex.
+  if (prioBar && SKJUL_I_STUDENTVISNING.viktighetsgrad) prioBar.style.display = "none";
 
   const btnDagens = document.getElementById("btn-dagens-navn");
   if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);

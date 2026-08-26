@@ -10,10 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.75";
-import { showSjangerInfo } from "./genealogy.js?v=4.75";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.75";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.75";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.76";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.76";
+import { showSjangerInfo } from "./genealogy.js?v=4.76";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.76";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.76";
 import {
   escapeHtml,
   linkDesc,
@@ -33,12 +34,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.75";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.75";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.75";
-import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.75";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.75";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.75";
+} from "./ui-helpers.js?v=4.76";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.76";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.76";
+import { buildTimeline, buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.76";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.76";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.76";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -159,7 +160,9 @@ export function renderSpotlightCards(el, artists, lc) {
 function spotlightCard(a, lc) {
   const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
-  const prio = a.priority || 0;
+  // Viktighetsgraden er MIDLERTIDIG skjult for studenter (feature-flags.js).
+  // Spotlight-kortene vises kun på forsiden, altså aldri for læreren.
+  const prio = SKJUL_I_STUDENTVISNING.viktighetsgrad ? 0 : (a.priority || 0);
   const prioTag = prio
     ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
     : "";
@@ -319,7 +322,10 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
     ? `<span class="badge pending">Venter på godkjenning</span>`
     : "";
 
-  const prioTag = prio
+  // MIDLERTIDIG skjult for studenter (feature-flags.js). Læreren ser merket
+  // som før, ellers kunne ikke prioriteringen kvalitetssikres.
+  const visPrio = isTeacher || !SKJUL_I_STUDENTVISNING.viktighetsgrad;
+  const prioTag = (prio && visPrio)
     ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
     : "";
 
