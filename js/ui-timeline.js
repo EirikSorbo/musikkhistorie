@@ -7,14 +7,14 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.78";
-import { extractBullets, formatInfoText } from "./ui-helpers.js?v=4.78";
-import { DECADES } from "./limits.js?v=4.78";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.78";
+import { escapeHtml } from "./util.js?v=4.79";
+import { formatInfoText } from "./ui-helpers.js?v=4.79";
+import { DECADES } from "./limits.js?v=4.79";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.79";
 // Epoken bor i genreDescriptions fra v4.64. Vi går til den rene oppslags-
 // modulen, ikke til genealogy.js: den importerer denne veien rundt ellers.
-import { resolveDescAny } from "./genre-descriptions.js?v=4.78";
-import { isHendelse } from "./ui-tech.js?v=4.78";
+import { resolveDescAny } from "./genre-descriptions.js?v=4.79";
+import { isHendelse } from "./ui-tech.js?v=4.79";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -36,13 +36,6 @@ export function renderDecadeRibbon(el, active, onSelect) {
     btn.addEventListener("click", () =>
       onSelect(btn.dataset.decade === "" ? null : Number(btn.dataset.decade)));
   });
-}
-
-function shortDesc(text) {
-  const first = text.replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim();
-  if (first.length <= 70) return first;
-  const cut = first.lastIndexOf(" ", 67);
-  return first.slice(0, cut > 30 ? cut : 67) + "…";
 }
 
 // Etikettene er 130px brede (CSS .tl-prop .tl-label) — ca. 24 % av minste
@@ -202,24 +195,6 @@ function buildProportionalTimeline(items, startYear, {
   return html;
 }
 
-export function buildTimeline(text, decadeId) {
-  if (!text) return "";
-  const bullets = extractBullets(text);
-  if (bullets.length < 2) return "";
-  const startYear = parseInt(decadeId, 10);
-  const events = bullets.map(b => {
-    const m = b.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b/);
-    return { year: m ? parseInt(m[1], 10) : null, text: b };
-  });
-  events.sort((a, b) => (a.year || startYear) - (b.year || startYear));
-  const items = events.map(ev => ({
-    year: ev.year,
-    label: ev.year ? String(ev.year) : `${startYear}‑årene`,
-    desc: shortDesc(ev.text),
-  }));
-  return buildProportionalTimeline(items, startYear);
-}
-
 // Delt tiårs-render: samfunn/teknologi-tekst + tidslinjer + «les mer»-knapper.
 // Kalt fra forsidens tiårsvisning (explore-decade.js) OG lærer-tiårsmodalen (også etter
 // lagring), så de tre tidligere kopiene holdes ett sted. `refs` er DOM-elementer
@@ -234,7 +209,6 @@ export function renderDecadeSections(refs, desc, decadeId, techItems, { isSociet
     refs.techEl.innerHTML = desc.tech ? formatInfoText(desc.tech) : noText;
     refs.techEl.className = "info-text" + (desc.tech ? "" : " muted");
   }
-  if (refs.societyTl) refs.societyTl.innerHTML = buildTimeline(desc.society, decadeId);
   if (refs.techTl) {
     refs.techTl.innerHTML = buildTechTimeline(techItems, decadeId);
     if (onTechClick) {
