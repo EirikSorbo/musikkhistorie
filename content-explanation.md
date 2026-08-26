@@ -45,7 +45,9 @@ Tekstbærende felter:
 
 ## 3. Innholdsoversikt
 
-Tall fra eksporten 26. august 2026. **594 tekstfelt, cirka 66 000 ord.**
+Tall fra eksporten 26. august 2026, etter at «les mer» og de gamle
+backup-blokkene i tiårstekstene er ute.
+**568 tekstfelt som skal gjennomgås, cirka 55 000 ord.**
 
 | Teksttype | Antall | Lengde (median, spenn) |
 |---|---|---|
@@ -54,7 +56,8 @@ Tall fra eksporten 26. august 2026. **594 tekstfelt, cirka 66 000 ord.**
 | Sjanger-beskrivelser (tre-noder) | 50 | 1 081 tegn (61–2 070) |
 | Undersjanger-beskrivelser | 90 | 203 tegn (137–842) |
 | Sjangerhistorier | 9 | 6 340 tegn (4 284–11 231) |
-| Tiår (4 felt × 13) | 52 | varierer sterkt |
+| Tiår, samfunn | 13 | 704 tegn (364–1 260) |
+| Tiår, teknologi | 13 | 1 125 tegn (695–1 408) |
 | Innovasjonskort | 66 | 407 tegn (181–760) |
 | Koblingsbeskrivelser | 82 | 618 tegn (332–852) |
 | Innholdssider | 3 | lange |
@@ -87,8 +90,8 @@ ett tema per linje, uten kulepunkt-tegn. Appen gjør dem om til punktliste ved
 visning. Hver linje starter med subjektet, har konkrete forankringer (årstall,
 modellnavn, personer) og ender i en konsekvens. 5 til 8 linjer per felt.
 
-`societyMore` og `techMore` er «les mer»-tekster bak en knapp, og er lengre og
-mer sammenhengende.
+Ett unntak: **1910 har bare fire linjer**, fordi originalteksten bare hadde fire
+temaer. Det er bevisst, og skal ikke fylles ut med oppdiktet stoff.
 
 **Artistkort, cirka 450 tegn.** Hvem det er, gjennombruddet, hva som kjennetegner
 uttrykket, og betydningen. Titler i anførselstegn med årstall i parentes.
@@ -239,12 +242,34 @@ eksporten, ellers ruller de tilbake arbeid som alt er gjort.
 
 ---
 
-## 8. Hva som gjenstår språklig
+## 8. Hva som nylig er gjennomgått
+
+Ikke gjør om igjen dette. Alt er avgjort av læreren og importert.
+
+- **Undersjanger-beskrivelsene** er gjennomgått av en språkvask: 16 prosatekster
+  skrevet om til telegramform, fem faktafeil rettet (blant annet Urban
+  contemporary gospel datert 20 år for sent), og seks regelendringer gjennomført.
+- **Formateringen** er samlet: 145 endringer der gale anførselstegn ble rettet,
+  41 kursiverte titler ble til «…», og hip-hop-skrivemåten ble normalisert i hele
+  appen.
+- **De fire rot-nodene** Europeisk, Vestafrikansk, Work songs og Spirituals fikk
+  prosa for første gang.
+- **Samfunnstekstene i tiårene** er skrevet om til punktform, med faktakontroll
+  som fjernet tillagte påstander i åtte av tolv utkast.
+- **Backup-blokkene** i teknologitekstene er slettet, etter at ti opplysninger
+  som bare fantes der ble berget inn i den aktive teksten.
+- **Sjangerårstall** er kildesjekket for elleve sjangre.
+
+---
+
+## 9. Hva som gjenstår språklig
 
 - **De 216 uttrykkene i `«…»` med liten forbokstav** må vurderes én for én som
   fagterm (blir kursiv), kallenavn eller sitat (blir stående). Ikke påbegynt.
 - **Tretten opplysninger** fra de slettede backup-blokkene i tiårstekstene er
-  vurdert som «kan vurderes» og ikke tatt inn.
+  vurdert som «kan vurderes» og ikke tatt inn. Blant dem: AM og FM skrevet ut,
+  at vinylen også var billigere enn skjellakk, og oppfinnelsesårene for Fender
+  Rhodes (1942) og Wurlitzer (1939).
 - **Fire sjangre uten lytteeksempel**: Rock, Pop, New jack swing og Cont. R&B.
 - **Fem funksjoner er midlertidig skjult** i elevvisningen fram til innholdet er
   kvalitetssikret, styrt fra `js/feature-flags.js`. Se filas egen kommentar.
