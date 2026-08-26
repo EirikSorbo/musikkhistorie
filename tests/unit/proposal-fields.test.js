@@ -29,8 +29,11 @@ test("tech/subgenre/decade-hvitelistene utelater status og andre systemfelter", 
   for (const key of FORBIDDEN) {
     assert.equal(PROPOSABLE_KEYS.subgenre.includes(key), false, `subgenre skal ikke tillate ${key}`);
   }
-  assert.deepEqual(PROPOSABLE_KEYS["decade-society"], ["society", "societyMore"]);
-  assert.deepEqual(PROPOSABLE_KEYS["decade-tech"], ["tech", "techMore"]);
+  // «Les mer» (societyMore/techMore) ble fjernet i v4.78: kildehenvisningene
+  // overtok rollen. Feltene finnes fortsatt i Firestore og i eksporten, men
+  // kan verken redigeres eller foreslås endret.
+  assert.deepEqual(PROPOSABLE_KEYS["decade-society"], ["society"]);
+  assert.deepEqual(PROPOSABLE_KEYS["decade-tech"], ["tech"]);
 });
 
 test("proposableKeysFor gir tom liste for ukjent entityType", () => {
