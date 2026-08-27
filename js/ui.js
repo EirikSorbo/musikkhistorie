@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.80";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.80";
-import { showSjangerInfo } from "./genealogy.js?v=4.80";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.80";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.80";
+import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.81";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.81";
+import { showSjangerInfo } from "./genealogy.js?v=4.81";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=4.81";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=4.81";
 import {
   escapeHtml,
   linkDesc,
@@ -34,12 +34,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=4.80";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.80";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.80";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.80";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.80";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.80";
+} from "./ui-helpers.js?v=4.81";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=4.81";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=4.81";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=4.81";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=4.81";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=4.81";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -514,12 +514,18 @@ const byInfluenceThenName = (a, b) =>
   (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no");
 
 // Aktive, synlige artister som hører til en sjanger (meta/main/sub matcher label).
+// Sjangernavnet MÅ måles mot tre-taggene (mainGenre/subGenre) alene. Klausulen
+// «a.metaGenre === label» sto her fra den gang artisten hadde ETT genre-felt, og
+// ble med mekanisk gjennom omdøpingen i juni. Med dagens modell er den direkte
+// feil for de seks navnene som finnes både som node i treet og som metasjanger
+// (Blues, Gospel, Jazz, Pop, R&B, Rock): «Jazz»-noden betyr TIDLIG jazz, men
+// klausulen dro inn hele jazzfamilien — 78 artister i stedet for 9. Vil man se
+// familien, finnes metasjangeren som egen inngang.
 export function artistsInGenre(artists, label) {
   const sj = label.toLowerCase();
   return (artists || [])
     .filter((a) => isVisible(a) && (
-      a.metaGenre === label
-      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
       || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
     ))
     .sort(byInfluenceThenName);
@@ -567,11 +573,12 @@ export function openPlaylistModal(fullName, node, artists) {
 function buildPlaylistHtml(node, artists) {
   const sj = (node.l || "").toLowerCase();
 
-  const matchesSj = (a) => {
-    if (a.metaGenre === node.l) return true;
-    const all = [...(a.mainGenre || []), ...(a.subGenre || [])];
-    return all.some((s) => String(s).toLowerCase() === sj);
-  };
+  // Samme regel som artistsInGenre: kun tre-taggene. Per-eksempel-filteret
+  // (exOk under) bygde alt på at noden er den PRESISE sjangeren, så artist-
+  // matchingen var det eneste som fortsatt leste paraplyen.
+  const matchesSj = (a) =>
+    [...(a.mainGenre || []), ...(a.subGenre || [])]
+      .some((s) => String(s).toLowerCase() === sj);
 
   const genreArtists = (artists || [])
     .filter((a) => isVisible(a) && matchesSj(a))

@@ -29,3 +29,40 @@ test("student- og lærer-dashbordet har samme kort i samme rekkefølge", () => {
     "Kortene i teacher.html må stå i samme rekkefølge som i index.html — endrer du den ene, endre den andre.",
   );
 });
+
+// --- Sjangernavn på to nivåer ------------------------------------------------
+// Oversiktens sjangerliste teller med artistsInGenre og countPlaylistExamples.
+// Begge må lese sjangertreet alene: seks navn (Blues, Gospel, Jazz, Pop, R&B,
+// Rock) finnes både som node og som metasjanger, og en metaGenre-match gjorde
+// «Jazz»-raden til hele jazzfamilien.
+
+test("sjangerraden teller treets sjanger, ikke metasjangeren", async () => {
+  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=4.81");
+  const artister = [
+    { id: "1", name: "Tidlig", status: "active", metaGenre: "Jazz",
+      mainGenre: ["Jazz"], subGenre: [], musicExamples: [{ label: "a", url: "u1" }] },
+    { id: "2", name: "Bebop", status: "active", metaGenre: "Jazz",
+      mainGenre: ["Bebop"], subGenre: [], musicExamples: [{ label: "b", url: "u2" }] },
+    { id: "3", name: "Cool", status: "active", metaGenre: "Jazz",
+      mainGenre: ["Cool jazz"], subGenre: [], musicExamples: [{ label: "c", url: "u3" }] },
+  ];
+  assert.deepEqual(artistsInGenre(artister, "Jazz").map((a) => a.name), ["Tidlig"]);
+  assert.equal(countPlaylistExamples(artister, "Jazz"), 1, "spillelista følger samme regel som lista");
+  // Bebop-noden er upåvirket — den kolliderer ikke med noe metasjangernavn.
+  assert.deepEqual(artistsInGenre(artister, "Bebop").map((a) => a.name), ["Bebop"]);
+});
+
+test("tellingen og lista bak klikket er fortsatt samme regnestykke", async () => {
+  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=4.81");
+  const artister = [
+    { id: "1", name: "A", status: "active", metaGenre: "R&B", mainGenre: ["Soul"], subGenre: [],
+      musicExamples: [{ label: "x", url: "u1" }, { label: "y", url: "u2", genre: "Funk" }] },
+    { id: "2", name: "B", status: "active", metaGenre: "R&B", mainGenre: ["R&B"], subGenre: [],
+      musicExamples: [{ label: "z", url: "u3" }] },
+  ];
+  assert.equal(artistsInGenre(artister, "R&B").length, 1);
+  assert.equal(countPlaylistExamples(artister, "R&B"), 1);
+  assert.equal(artistsInGenre(artister, "Soul").length, 1);
+  // Eksempelet tagget «Funk» hører ikke hjemme i Soul-spillelista.
+  assert.equal(countPlaylistExamples(artister, "Soul"), 1);
+});

@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=4.80";
+import { resolveSpan } from "./timeline-lanes.js?v=4.81";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -193,8 +193,10 @@ export function hasActiveFilters(f = {}) {
 export function filterArtists(list, filters = {}) {
   if (filters.mainGenre) {
     const sj = filters.mainGenre.toLowerCase();
-    list = list.filter((a) => a.metaGenre === filters.mainGenre
-      || (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+    // Kun tre-taggene — metasjangeren har sitt eget filter rett under, så det
+    // å blande dem inn her gjorde Sjanger-nedtrekket til et duplikat av
+    // Metasjanger for de seks navnene som finnes på begge nivåer.
+    list = list.filter((a) => (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
       || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
   }
   if (filters.metaGenre) list = list.filter((a) => a.metaGenre === filters.metaGenre);

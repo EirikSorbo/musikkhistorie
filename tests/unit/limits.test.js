@@ -9,7 +9,7 @@ import {
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=4.80";
+} from "../../js/limits.js?v=4.81";
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);
@@ -119,4 +119,33 @@ test("filterArtists: artist uten sluttår er med i alle tiår fram til nå", () 
   }
   assert.deepEqual(filterArtists(list, { decade: 1920 }).map((a) => a.name), ["Bessie Smith"]);
   assert.deepEqual(filterArtists(list, { decade: 1960 }).map((a) => a.name), []);
+});
+
+// --- Sjangernavn som finnes på TO nivåer -----------------------------------
+// Seks navn er både node i sjangertreet og metasjanger (Blues, Gospel, Jazz,
+// Pop, R&B, Rock). Treffer man dem mot metaGenre, svarer «Jazz» med hele
+// jazzfamilien i stedet for tidlig jazz. Metasjangeren har sitt eget filter.
+
+test("Sjanger-filteret leser tre-taggene, ikke metasjangeren", () => {
+  const artister = [
+    { name: "Tidlig",  metaGenre: "Jazz", mainGenre: ["Jazz"],   subGenre: [] },
+    { name: "Bebop",   metaGenre: "Jazz", mainGenre: ["Bebop"],  subGenre: [] },
+    { name: "Cool",    metaGenre: "Jazz", mainGenre: ["Cool jazz"], subGenre: [] },
+  ];
+  assert.deepEqual(
+    filterArtists(artister, { mainGenre: "Jazz" }).map((a) => a.name),
+    ["Tidlig"],
+    "«Jazz»-noden er tidlig jazz, ikke paraplyen"
+  );
+  // Paraplyen finnes fortsatt — som metasjanger.
+  assert.equal(filterArtists(artister, { metaGenre: "Jazz" }).length, 3);
+});
+
+test("Sjanger-filteret treffer undersjanger og tåler ulik store bokstaver", () => {
+  const artister = [
+    { name: "A", metaGenre: "R&B", mainGenre: ["Soul"], subGenre: ["Southern soul"] },
+    { name: "B", metaGenre: "R&B", mainGenre: ["Funk"], subGenre: [] },
+  ];
+  assert.deepEqual(filterArtists(artister, { mainGenre: "southern soul" }).map((a) => a.name), ["A"]);
+  assert.deepEqual(filterArtists(artister, { mainGenre: "Funk" }).map((a) => a.name), ["B"]);
 });

@@ -5,18 +5,18 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.80";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.80";
-import { MODAL_HTML } from "./explore-modals.js?v=4.80";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.80";
-import { openVarmekart } from "./explore-varmekart.js?v=4.80";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.80";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.80";
-import { openDecadeList } from "./explore-decade.js?v=4.80";
-import { openReferanser } from "./explore-referanser.js?v=4.80";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.80";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.80";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.80";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.81";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.81";
+import { MODAL_HTML } from "./explore-modals.js?v=4.81";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.81";
+import { openVarmekart } from "./explore-varmekart.js?v=4.81";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.81";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.81";
+import { openDecadeList } from "./explore-decade.js?v=4.81";
+import { openReferanser } from "./explore-referanser.js?v=4.81";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.81";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.81";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.81";
 
 function injectModals() {
   const wrap = document.createElement("div");

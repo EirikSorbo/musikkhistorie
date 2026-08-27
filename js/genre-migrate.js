@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER } from "./story-format.js?v=4.80";
+import { STORY_ORDER } from "./story-format.js?v=4.81";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
