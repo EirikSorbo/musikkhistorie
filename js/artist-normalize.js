@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=4.79";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.79";
+import { safeUrl } from "./util.js?v=4.80";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=4.80";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett

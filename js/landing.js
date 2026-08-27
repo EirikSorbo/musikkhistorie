@@ -1,15 +1,15 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.79";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.79";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.79";
-import { onGenreModelChanged } from "./genre-model.js?v=4.79";
-import { INSTRUMENTS, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.79";
-import { debounce, throttle } from "./util.js?v=4.79";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.79";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.79";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.79";
-import { initExplore } from "./explore.js?v=4.79";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.79";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.79";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.80";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.80";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.80";
+import { onGenreModelChanged } from "./genre-model.js?v=4.80";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.80";
+import { debounce, throttle } from "./util.js?v=4.80";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.80";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.80";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.80";
+import { initExplore } from "./explore.js?v=4.80";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.80";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.80";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -388,7 +388,7 @@ function openArtistModal() {
 function refreshFilterControls() {
   fillSelect($("#sp-sjanger"), GENEALOGY_MAIN_GENRES, { placeholder: "Sjanger" });
   fillSelect($("#sp-genre"), GENEALOGY_META_GENRES.map(g => ({ value: g, label: g })), { placeholder: "Metasjanger" });
-  fillSelect($("#sp-instrument"), INSTRUMENTS, { placeholder: "Instrument" });
+  fillSelect($("#sp-instrument"), instrumentsInUse(state.artists, state.filters.instrument), { placeholder: "Instrument" });
   fillSelect(
     $("#sp-decade"),
     DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),
@@ -546,6 +546,9 @@ function init() {
   // forslags-editoren åpnes (openProposalEditorGuarded).
   subscribeSharedData(state, {
     onArtists: () => {
+      // Instrumentnedtrekket bygges av artistene, så det må fylles på nytt når
+      // snapshotet lander — ved init finnes bare cachen (eller ingenting).
+      refreshFilterControls();
       applyArtistSnapshot();
       // Utenom throttlingen: deep-linken skal åpnes straks data finnes (no-op
       // når det ikke venter noen).

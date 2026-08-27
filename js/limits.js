@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=4.79";
+import { resolveSpan } from "./timeline-lanes.js?v=4.80";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -82,6 +82,21 @@ export const INSTRUMENT_TIMELINE_GROUPS =
 // Flat liste over lovlige artistverdier — utledet, så gruppene er ÉN kilde.
 // Brukt av forslagsskjema, lærerredigering, filtre og import-valideringen.
 export const INSTRUMENTS = Object.values(INSTRUMENT_GROUPS).flat();
+
+// Instrumentene som FAKTISK er i bruk, i vokabularets rekkefølge. Et filtervalg
+// eller en statistikkboble som garantert gir null treff er bare støy, så
+// filtrene og oversiktens instrumentbobler leser denne i stedet for hele
+// vokabularet. Skjemaene der man SETTER instrument på en artist bruker fortsatt
+// INSTRUMENTS: uten Banjo i lista kunne ingen noensinne lagt inn den første
+// banjospilleren, og instrumentet ville vært låst ute for alltid.
+// `behold` sikrer at et aktivt filtervalg blir stående i nedtrekket selv om
+// siste artist med instrumentet fjernes — ellers spriker nedtrekket og filteret.
+export function instrumentsInUse(artists, behold = "") {
+  const brukt = new Set(activeArtists(artists || []).map((a) => a.instrument).filter(Boolean));
+  const liste = INSTRUMENTS.filter((i) => brukt.has(i));
+  if (behold && !liste.includes(behold)) liste.push(behold);
+  return liste;
+}
 
 // (instrumentGroup/INSTRUMENT_TO_GROUP er fjernet: ingen runtime-kode mappet
 // noensinne et presist instrument til gruppe — tech-kortene lagrer GRUPPE-

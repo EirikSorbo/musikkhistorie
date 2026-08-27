@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveSpan, packLanes, timelineBounds } from "../../js/timeline-lanes.js?v=4.79";
+import { resolveSpan, packLanes, timelineBounds } from "../../js/timeline-lanes.js?v=4.80";
 
 const NOW = 2026;
 

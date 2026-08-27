@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.79";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS } from "./ui-helpers.js?v=4.79";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=4.79";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.79";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=4.79";
+} from "./limits.js?v=4.80";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS } from "./ui-helpers.js?v=4.80";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=4.80";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.80";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=4.80";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -206,13 +206,15 @@ export function renderDashboard(el, {
   const thinDecades = decades.filter((d) => (counts.perDecade[d] || 0) <= 1);
 
   // --- Instrument -------------------------------------------------------------
-  // Vokabularet (INSTRUMENTS) pluss eventuelle verdier i bruk utenfor lista —
-  // de siste er datafeil som ogsa flagges i «Innhold som mangler».
+  // Kun instrumenter som faktisk er i bruk: en boble med 0 forteller ingenting
+  // om samlingen, den forteller bare hva vokabularet inneholder. Verdier utenfor
+  // vokabularet blir stående så lenge noen bruker dem — de er datafeil, og
+  // flagges dessuten i «Innhold som mangler».
   const instruments = [
     ...INSTRUMENTS,
     ...Object.keys(counts.perInstrument)
       .filter((i) => i && i !== "undefined" && !INSTRUMENTS.includes(i)),
-  ];
+  ].filter((i) => (counts.perInstrument[i] || 0) > 0);
 
   // --- Hull -------------------------------------------------------------------
   const artistsNoSjanger = active
@@ -390,7 +392,7 @@ export function renderDashboard(el, {
       <div class="stat-label">Instrumenter</div>
       <div class="ov-chips">${instruments.map((i) => {
         const n = counts.perInstrument[i] || 0;
-        return `<button type="button" class="ov-chip${n ? "" : " ov-zero"}" data-ov-instr="${escapeHtml(i)}">${escapeHtml(i)} <strong>${n}</strong></button>`;
+        return `<button type="button" class="ov-chip" data-ov-instr="${escapeHtml(i)}">${escapeHtml(i)} <strong>${n}</strong></button>`;
       }).join("")}</div>
     </div>
 

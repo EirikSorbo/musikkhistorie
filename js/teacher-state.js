@@ -14,12 +14,12 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=4.79";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.79";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.79";
-import { DECADES, INSTRUMENTS } from "./limits.js?v=4.79";
-import { sharedStateDefaults } from "./shared-data.js?v=4.79";
-import { $ } from "./shared.js?v=4.79";
+} from "./store.js?v=4.80";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=4.80";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.80";
+import { DECADES, instrumentsInUse } from "./limits.js?v=4.80";
+import { sharedStateDefaults } from "./shared-data.js?v=4.80";
+import { $ } from "./shared.js?v=4.80";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -161,7 +161,7 @@ export function refreshControls() {
     DECADES.map((d) => ({ value: d, label: `${d}-tallet` })),
     { placeholder: "Alle tiår" }
   );
-  fillSelect($("#f-instrument"), INSTRUMENTS, { placeholder: "Alle instrumenter" });
+  fillSelect($("#f-instrument"), instrumentsInUse(state.artists, state.filters.instrument), { placeholder: "Alle instrumenter" });
   const allSubs = [...new Set(
     (state.artists || []).flatMap((a) => [...(a.mainGenre || []), ...(a.subGenre || [])])
   )].sort((a, b) => a.localeCompare(b, "no"));
