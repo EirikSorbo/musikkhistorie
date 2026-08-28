@@ -12,16 +12,16 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.82";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.82";
-import { renderRichText } from "./rich-text.js?v=4.82";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.82";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.82";
-import { modalOpen } from "./ui-modal.js?v=4.82";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.82";
-import { wireProposeFoot } from "./ui-edit.js?v=4.82";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.82";
-import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.82";
+import { wireAllLinks } from "./linkify.js?v=4.83";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.83";
+import { renderRichText } from "./rich-text.js?v=4.83";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.83";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.83";
+import { modalOpen } from "./ui-modal.js?v=4.83";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.83";
+import { wireProposeFoot } from "./ui-edit.js?v=4.83";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.83";
+import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.83";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -40,11 +40,33 @@ import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.82";
 // på treets node, og det gjorde at kortet og tidslinjen kunne vise ULIK epoke
 // for samme sjanger: kortet leste årstallene, tidslinjen leste nodens era.
 // Tomt sluttår betyr «fortsatt aktiv», ikke «ukjent»: en sjanger som lever i
-// dag skal lese «1990–i dag», ikke stå med en åpen strek.
-export function eraText(resolved) {
+// dag skal lese «ca. 1990–i dag», ikke stå med en åpen strek.
+//
+// «ca.» står foran BEGGE årstallene (v4.83): ingen sjanger begynner eller
+// slutter et bestemt år, og tallene er lærerens anslag. «i dag» får det ikke —
+// nåtiden er ikke omtrentlig.
+export function eraYears(resolved) {
   const from = resolved?.activeFrom, to = resolved?.activeTo;
-  if (Number.isInteger(from)) return `${from}–${Number.isInteger(to) ? to : "i dag"}`;
-  return resolved?.era || "";
+  if (!Number.isInteger(from)) return "";
+  return `ca. ${from}–${Number.isInteger(to) ? `ca. ${to}` : "i dag"}`;
+}
+
+// Årstallene, eller fritekst-epoken når de mangler. Brukt av koblings-popupen,
+// som bare har plass til ÉN epoke per sjanger. Sjangerkortet bruker eraLine.
+export function eraText(resolved) {
+  return eraYears(resolved) || resolved?.era || "";
+}
+
+// Epoke-linja på sjangerkortet: årstallene først, deretter «Epoke med ord» som
+// en egen setning i samme linje — altså samme font og størrelse (v4.83).
+// Friteksten er ikke lenger bare fallback: den sier noe årstallene ikke sier
+// («midten av 1940-tallet»), og skal stå selv når årstallene er utfylt.
+export function eraLine(resolved) {
+  const aar = eraYears(resolved);
+  const ord = (resolved?.era || "").trim();
+  if (!aar) return ord;
+  if (!ord) return aar;
+  return `${aar}. ${ord}`;
 }
 
 // Kuraterte lytteforslag for sjangeren. Sto som `t` på treets noder fram til
@@ -146,7 +168,7 @@ export function showSjangerInfo(label, opts = {}) {
   mTitle.textContent = n.f;
   mBody.innerHTML = `
     ${heatStripBlock(n)}
-    <p class="gx-era">${escapeHtml(eraText(resolved))}</p>
+    <p class="gx-era">${escapeHtml(eraLine(resolved))}</p>
     <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>
     ${(onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : ""}
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>

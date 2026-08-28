@@ -2055,7 +2055,23 @@ body.is-teacher #gate { display: none; }
 .vk-row.is-active,
 .vk-row:focus-within { background: var(--surface-2); }
 
-.vk-rowlabel { transition: font-weight .12s; }
+/* Etiketten er en knapp (klikk åpner sjangerkortet, v4.83). Knappestilen
+   nullstilles så raden leser som ren tekst — familiefargen i border-left og
+   typografien kommer fra element-stilen, som slår denne regelen. */
+.vk-rowlabel {
+  transition: font-weight .12s;
+  appearance: none;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .vk-rowlabel:hover { text-decoration: underline; }
+}
 .vk-row.is-active .vk-rowlabel,
 .vk-row:focus-within .vk-rowlabel { font-weight: 600; }
 @media (hover: hover) {

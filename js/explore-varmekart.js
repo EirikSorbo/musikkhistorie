@@ -5,11 +5,11 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.82";
-import { DECADES } from "./limits.js?v=4.82";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.82";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=4.82";
-import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=4.82";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=4.83";
+import { DECADES } from "./limits.js?v=4.83";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=4.83";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=4.83";
+import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=4.83";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -104,7 +104,10 @@ export function renderVarmekartBody() {
       // Den loddrette luften ligger derfor som padding inni raden, ikke som
       // margin utenfor — margin ville falt utenfor båndet.
       html += `<div class="vk-row" style="${gridStyle};margin-bottom:2px;padding:2px 0">`;
-      html += `<div class="vk-rowlabel" style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</div>`;
+      // Etiketten er en knapp: klikk åpner sjangerkortet (v4.83). Stripa er
+      // fortsatt lærerens redigeringsflate, så de to klikkmålene ligger side om
+      // side uten å slåss om samme hendelse.
+      html += `<button type="button" class="vk-rowlabel" data-vk-open="${escapeHtml(sj)}" title="Åpne sjangerkortet for ${escapeHtml(sj)}" style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</button>`;
       // Stripa er den delte (heat-strip.js). Her byttes bare tiårsfeltene ut med
       // varmekartets egne: full hjelpetekst, og for læreren klikkbare knapper.
       html += heatStripHtml(rowColor, vals, (v, i, pos) => {
@@ -162,6 +165,13 @@ export function renderVarmekartBody() {
       body.querySelectorAll(".vk-row.is-active").forEach((r) => r.classList.remove("is-active"));
       if (!wasActive) row.classList.add("is-active");
     });
+  });
+
+  // Klikk på sjangernavnet åpner sjangerkortet — samme inngang som overalt
+  // ellers (onMainGenreClick). Raden festes samtidig av lytteren over, så den
+  // står uthevet når kortet lukkes igjen.
+  body.querySelectorAll("[data-vk-open]").forEach((btn) => {
+    btn.addEventListener("click", () => onMainGenreClick(btn.dataset.vkOpen));
   });
 
   // Lærer: klikk på en celle åpner nivåvelgeren.
