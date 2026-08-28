@@ -8,12 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.95";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.95";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.95";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.95";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.95";
-import { setupFormatBars } from "./format-bar.js?v=4.95";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.96";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.96";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.96";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.96";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.96";
+import { setupFormatBars } from "./format-bar.js?v=4.96";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -57,10 +57,16 @@ const FIELD_SPECS = {
     { key: "imageUrl", label: "Bilde-URL", type: "text", full: true },
     { key: "imageCredit", label: "Bildekreditering", type: "text", full: true },
   ],
+  // `levels` avgrenser et felt til bestemte sjangernivåer. Epoke-feltene
+  // gjelder KUN tre-sjangrene (main) — samme regel som lærerens editor, som
+  // skjuler dem for undersjangre: en fri undersjanger har ingen epoke å måle,
+  // og lærersiden lagrer dem heller ikke på det nivået.
   subgenre: [
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
-    { key: "activeFrom", label: "Mest aktiv fra år", type: "number" },
-    { key: "activeTo", label: "Mest aktiv til år (tom = fortsatt aktiv)", type: "number" },
+    { key: "activeFrom", label: "Mest aktiv fra år", type: "number", levels: ["main"] },
+    { key: "activeTo", label: "Mest aktiv til år (tom = fortsatt aktiv)", type: "number", levels: ["main"] },
+    { key: "era", label: "Epoke med ord", type: "text", levels: ["main"], full: true, max: 60,
+      hint: "Vises ordrett på sjangertidslinjen, og på sjangerkortet når årstallene over står tomme. Bruk den når et presist årstall ville sett feil ut, f.eks. «midten av 1940-tallet»." },
     { key: "kilder", label: "Kilder", type: "sources", full: true },
   ],
   instrument: [
@@ -89,6 +95,11 @@ function inputForField(spec, value) {
   const id = `prop-f-${spec.key}`;
   const fullClass = spec.full ? ' class="full"' : "";
   const labelHtml = `<label${fullClass}>${escapeHtml(spec.label)}`;
+  // spec.hint: kort forklaringslinje under feltet (samme uttrykk som .hint
+  // ellers i skjemaene). spec.max: maxlength, for felter som har et tak i
+  // lærerens editor og i firestore.rules.
+  const hint = spec.hint ? `<p class="hint">${escapeHtml(spec.hint)}</p>` : "";
+  const maxAttr = spec.max ? ` maxlength="${spec.max}"` : "";
   if (spec.type === "textarea") {
     // data-format gir feltet formatlinja (fet/kursiv/lister) — se format-bar.js.
     // De lange tekstene får også mellomtittel-knappen.
@@ -125,7 +136,7 @@ function inputForField(spec, value) {
       `<div id="${id}"></div>` +
       `<button type="button" class="btn ghost small" data-add-src="${id}">+ Legg til kilde</button></div>`;
   }
-  return `${labelHtml}<input type="text" id="${id}" value="${escapeHtml(v)}" /></label>`;
+  return `${labelHtml}<input type="text" id="${id}" value="${escapeHtml(v)}"${maxAttr} />${hint}</label>`;
 }
 
 function readField(spec) {
@@ -184,11 +195,16 @@ function fillSourceRows(specs, values) {
 export function openProposalEditor(config) {
   const modal = document.getElementById("modal-proposal");
   if (!modal) return;
-  const specs = FIELD_SPECS[config.entityType];
-  if (!specs) {
+  const alleSpecs = FIELD_SPECS[config.entityType];
+  if (!alleSpecs) {
     console.warn("Ingen feltspesifikasjon for", config.entityType);
     return;
   }
+  // Felter merket med `levels` vises kun på de nivåene. Filtreres HER, ikke i
+  // visningen: da følger både innlesing (readField) og diffen samme liste, og
+  // et skjult felt kan ikke sende med en verdi studenten aldri så.
+  const niva = config.level || "main";
+  const specs = alleSpecs.filter((s) => !s.levels || s.levels.includes(niva));
 
   document.getElementById("prop-title").textContent =
     config.entityName

@@ -5,9 +5,9 @@
 //  ui.js, så teacher.js og proposals.js importerer dem derfra som før.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.95";
-import { ARTIST_LABELS } from "./artist-schema.js?v=4.95";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.95";
+import { escapeHtml } from "./util.js?v=4.96";
+import { ARTIST_LABELS } from "./artist-schema.js?v=4.96";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.96";
 
 const FIELD_LABELS = {
   artist: ARTIST_LABELS,
@@ -20,6 +20,7 @@ const FIELD_LABELS = {
   subgenre: {
     description: "Beskrivelse", kilder: "Kilder",
     activeFrom: "Mest aktiv fra år", activeTo: "Mest aktiv til år",
+    era: "Epoke med ord",
   },
   instrument: {
     body: "Sammendrag",

@@ -10,7 +10,7 @@ import {
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=4.95";
+} from "../../js/limits.js?v=4.96";
 
 // Etikettene er UI, verdiene er data. «ukjent» heter «Annet» i skjemaet fra
 // v4.95, men verdien ligger fast i Firestore — bytter noen den til "annet"

@@ -14,15 +14,15 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=4.95";
-import { subscribeSharedData } from "./shared-data.js?v=4.95";
-import { onGenreModelChanged } from "./genre-model.js?v=4.95";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=4.95";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.95";
-import { initExplore } from "./explore.js?v=4.95";
+} from "./store.js?v=4.96";
+import { subscribeSharedData } from "./shared-data.js?v=4.96";
+import { onGenreModelChanged } from "./genre-model.js?v=4.96";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=4.96";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.96";
+import { initExplore } from "./explore.js?v=4.96";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.95";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.95";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=4.96";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=4.96";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -41,12 +41,12 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=4.95";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.95";
-import { renderDesk } from "./teacher-desk.js?v=4.95";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.95";
-import { setupFormatBars } from "./format-bar.js?v=4.95";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=4.95";
+} from "./teacher-content.js?v=4.96";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=4.96";
+import { renderDesk } from "./teacher-desk.js?v=4.96";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=4.96";
+import { setupFormatBars } from "./format-bar.js?v=4.96";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=4.96";
 
 // ----------------------------------------------------------------------------
 //  Innlogging

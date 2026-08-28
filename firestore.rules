@@ -206,7 +206,7 @@ service cloud.firestore {
           "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
           "geography", "description", "imageUrl", "imageCredit",
           "type", "category", "decade", "adoptedYear", "adoptedLabel", "kilder",
-          "activeFrom", "activeTo", "body", "society", "tech"
+          "activeFrom", "activeTo", "era", "body", "society", "tech"
         ]) &&
         // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
         // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
@@ -228,6 +228,7 @@ service cloud.firestore {
         capOk("category", 100) &&
         capOk("decade", 20) &&
         capOk("adoptedLabel", 300) &&
+        capOk("era", 100) &&
         capOk("imageCredit", 300) &&
         capOk("imageUrl", 2000) &&
         capOk("description", 5000) &&
