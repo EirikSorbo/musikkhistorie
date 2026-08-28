@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.94";
-import { KILDE_KATEGORIER } from "../../js/kilder.js?v=4.94";
+import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=4.95";
+import { KILDE_KATEGORIER } from "../../js/kilder.js?v=4.95";
 
 test("rowInnerHtml escaper verdier (lukker XSS-fella)", () => {
   const html = rowInnerHtml(SOURCE_SPEC, { text: `"><img src=x onerror=alert(1)>`, url: "https://ex.com" });
@@ -21,6 +21,24 @@ test("rowInnerHtml bygger riktige felter og fjern-knapp per spec", () => {
   for (const cls of ["me-label", "me-year", "me-url", "me-perf-year", "me-genre"]) {
     assert.match(me, new RegExp(`class="${cls}"`));
   }
+});
+
+// v4.95: sjangervelgeren skal stå FØRST i musikkeksempel-raden, på egen linje
+// over tittelen. Bakerst ble den lett oversett, og et lytteeksempel uten
+// sjanger faller ut av spillelistene.
+test("musikkeksempel: sjangervelgeren står først, med linjeskift etter seg", () => {
+  assert.equal(MUSIC_SPEC.fields[0].key, "genre");
+  const me = rowInnerHtml(MUSIC_SPEC, {});
+  assert.ok(me.indexOf('class="me-genre"') < me.indexOf('class="me-label"'),
+    "sjangeren skal ligge foran tittelen i markupen");
+  assert.match(me, /<select class="me-genre"[\s\S]*?<\/select><span class="row-break"/);
+});
+
+// breakAfter er generisk i spec-en; felter uten flagget skal ikke få skiftet.
+test("breakAfter gir linjeskift kun for feltet som ber om det", () => {
+  assert.equal((rowInnerHtml(MUSIC_SPEC, {}).match(/row-break/g) || []).length, 1);
+  assert.equal(rowInnerHtml(WORK_SPEC, {}).includes("row-break"), false);
+  assert.equal(rowInnerHtml(SOURCE_SPEC, {}).includes("row-break"), false);
 });
 
 test("genre-select: options fylles, verdi utenfor lista beholdes, escaping holder", () => {

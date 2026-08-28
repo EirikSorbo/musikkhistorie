@@ -8,15 +8,16 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.94";
+import { escapeHtml } from "./util.js?v=4.95";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=4.94";
+import { KILDE_KATEGORIER } from "./kilder.js?v=4.95";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
-// always? (ta med i output selv når tom — ellers kun hvis utfylt) }.
+// always? (ta med i output selv når tom — ellers kun hvis utfylt),
+// breakAfter? (tving linjeskift etter feltet i den wrappende flex-raden) }.
 // removeLabel = aria-label på ✕-fjern-knappen.
 export const WORK_SPEC = {
   rowClass: "work-row", removeClass: "remove-work", keepKey: "title",
@@ -32,12 +33,15 @@ export const MUSIC_SPEC = {
   rowClass: "me-row", removeClass: "remove-me", keepKey: "url",
   removeLabel: "Fjern musikkeksempel",
   fields: [
+    // Sjangeren står ØVERST og på egen linje (v4.95): den gjelder HELE raden,
+    // og bakerst i rekka ble den lett oversett — et lytteeksempel uten sjanger
+    // faller ut av spillelistene. breakAfter tvinger linjeskift, se rowInnerHtml.
+    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til. Styrer hvilken spilleliste det vises i, viktig for artister med flere sjangre.", options: [], breakAfter: true },
     { key: "label", cls: "me-label", type: "text", ph: "Tittel (f.eks. «Hellhound on My Trail»)", label: "Tittel", always: true },
     { key: "year",  cls: "me-year",  type: "number", ph: "Årstall", label: "Årstall" },
     { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
     { key: "performanceYear", cls: "me-perf-year", type: "number", ph: "Framf.år", label: "Framføringsår", title: "Året for framføring/konsert (kun hvis annet enn utgivelsesår)" },
     { key: "note", cls: "me-note", type: "text", ph: "Hør etter … (valgfritt lytteanvisning)", label: "Hør etter", title: "Kort lytteanvisning: hva skal man legge merke til i akkurat denne innspillingen?" },
-    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til. Styrer hvilken spilleliste det vises i, viktig for artister med flere sjangre.", options: [] },
   ],
 };
 
@@ -121,7 +125,11 @@ function inputHtml(f, values) {
 
 // Ren HTML for én rads innhold (inputs + fjern-knapp). Ingen DOM — testbar.
 export function rowInnerHtml(spec, values = {}) {
-  return spec.fields.map((f) => inputHtml(f, values)).join("") +
+  // Tomt element med full bredde = linjeskift i en flex-rad med wrap. Eneste
+  // måten å styre linjedeling per felt uten å gjøre raden om til grid.
+  return spec.fields
+    .map((f) => inputHtml(f, values) + (f.breakAfter ? `<span class="row-break" aria-hidden="true"></span>` : ""))
+    .join("") +
     `<button type="button" class="btn ghost small ${spec.removeClass}" aria-label="${escapeHtml(spec.removeLabel || "Fjern rad")}">✕</button>`;
 }
 

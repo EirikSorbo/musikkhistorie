@@ -3,13 +3,24 @@ import assert from "node:assert/strict";
 import {
   INSTRUMENTS,
   DECADES,
+  GENDERS,
   isVisible,
   decadesForRange,
   decadesForArtist,
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=4.94";
+} from "../../js/limits.js?v=4.95";
+
+// Etikettene er UI, verdiene er data. «ukjent» heter «Annet» i skjemaet fra
+// v4.95, men verdien ligger fast i Firestore — bytter noen den til "annet"
+// kolliderer den med «Gruppe», og all eksisterende data mister kjønnet sitt.
+test("GENDERS: verdiene ligger fast, etikettene er de synlige", () => {
+  assert.deepEqual(GENDERS.map((g) => g.value), ["kvinne", "mann", "annet", "ukjent"]);
+  assert.equal(GENDERS.find((g) => g.value === "ukjent").label, "Annet");
+  assert.equal(GENDERS.find((g) => g.value === "annet").label, "Gruppe");
+  assert.equal(new Set(GENDERS.map((g) => g.label)).size, GENDERS.length, "etikettene må være unike");
+});
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {
   assert.equal(isVisible({ status: "active" }), true);

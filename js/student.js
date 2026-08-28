@@ -6,22 +6,22 @@ import {
   fetchArtists,
   addArtist,
   subscribeContent,
-} from "./store.js?v=4.94";
-import { loadArtists } from "./artist-cache.js?v=4.94";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.94";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc, isMainGenre, isGenreModelReady } from "./genre-model.js?v=4.94";
-import { fillSelect } from "./ui.js?v=4.94";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.94";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.94";
-import { setupFormatBars } from "./format-bar.js?v=4.94";
+} from "./store.js?v=4.95";
+import { loadArtists } from "./artist-cache.js?v=4.95";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.95";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=4.95";
+import { fillSelect } from "./ui.js?v=4.95";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.95";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.95";
+import { setupFormatBars } from "./format-bar.js?v=4.95";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=4.95";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
 // så vokabularet er tomt de første øyeblikkene. En modulnivå-konstant her ga
 // en tom sjangerliste i skjemaet for alltid.
-const musicSpecSj = () => musicSpecWithGenres(
-  [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"))
-);
+const sorterteSjangre = () => [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"));
+const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre());
 
 const state = {
   artists: [],
@@ -35,6 +35,9 @@ function refreshControls() {
   fillSelect($("#in-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg metasjanger …" });
   fillSelect($("#in-instrument"), INSTRUMENTS, { placeholder: "Velg instrument …" });
   fillSelect($("#in-gender"), GENDERS, { placeholder: "Velg kjønn …" });
+  // Sjangrene kommer fra samme tre som metasjangrene — kun vokabularet
+  // fylles her, studentens valgte brikker står urørt.
+  fillGenrePicker($("#in-mainGenre"), sorterteSjangre());
 }
 
 // ----------------------------------------------------------------------------
@@ -62,7 +65,7 @@ function setupForm() {
       gender: $("#in-gender").value,
       metaGenre: $("#in-metaGenre").value,
       instrument: $("#in-instrument").value,
-      mainGenre: $("#in-mainGenre").value.split(",").map(s => s.trim()).filter(Boolean),
+      mainGenre: collectGenrePicker($("#in-mainGenre")),
       subGenre: $("#in-subGenre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#in-start").value, 10) || null,
       influenceEnd: parseInt($("#in-end").value, 10) || null,
@@ -95,21 +98,10 @@ function setupForm() {
     const rowErr = validateExampleRows() || validateSourceRows();
     if (rowErr) return showMsg(msg, rowErr, "error");
 
-    // Sjangre valideres mot slektstreet — samme advarsel (ikke blokkering) som
-    // lærerens redigeringsskjema: en skrivefeil («Bluess») forsvinner ellers
-    // stille fra tre-visningene og dukker opp som falsk undersjanger hos
-    // læreren. Kun når treet faktisk er lastet, ellers flagges alt.
-    if (isGenreModelReady()) {
-      const ukjente = candidate.mainGenre.filter((g) => !isMainGenre(g));
-      if (ukjente.length) {
-        const ok = confirm(
-          `Disse sjangrene finnes ikke i slektstreet: ${ukjente.join(", ")}.\n\n` +
-          "Sjekk for skrivefeil (feltet Sjanger skal bruke navnene fra treet). " +
-          "Send likevel?"
-        );
-        if (!ok) return showMsg(msg, "Ikke sendt. Rett sjangernavnene og prøv igjen.", "error");
-      }
-    }
+    // Sjangrene trenger ingen skrivefeil-advarsel lenger: de VELGES fra
+    // slektstreet (js/genre-picker.js), så et navn utenfor treet kan ikke
+    // oppstå her. Lærerens skjema har fortsatt advarselen — der kan gammel
+    // data bære navn som er borte fra treet.
 
     if (!CONFIGURED) {
       return showMsg(
@@ -136,6 +128,7 @@ function setupForm() {
       resetWorkRows();
       resetMusicExampleRows();
       resetSourceRows();
+      buildGenrePicker($("#in-mainGenre"), []);
       showMsg(msg, `«${candidate.name}» er sendt inn og venter på godkjenning fra lærer`, "ok");
     } catch (err) {
       showMsg(msg, "Noe gikk galt: " + err.message, "error");
@@ -226,6 +219,7 @@ function showMsg(el, text, type) {
 
 function init() {
   setupForm();
+  setupGenrePicker($("#in-mainGenre"));
   setupFormatBars();
   resetWorkRows();
   resetMusicExampleRows();

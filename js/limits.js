@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=4.94";
+import { resolveSpan } from "./timeline-lanes.js?v=4.95";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -123,12 +123,16 @@ export const DECADES = [
   1960, 1970, 1980, 1990, 2000, 2010, 2020,
 ];
 
-// Kjønnskategorier brukt i skjema og statistikk
+// Kjønnskategorier brukt i skjema og statistikk. Etikettene er det eneste
+// brukeren ser (GENDER_LABEL i ui-helpers utleder alt fra denne lista) —
+// VERDIENE ligger fast i Firestore og kan ikke endres uten en migrering.
+// Derfor heter siste kategori fortsatt «ukjent» i data, men «Annet» i
+// skjemaet (v4.95); verdien «annet» var allerede opptatt av «Gruppe».
 export const GENDERS = [
   { value: "kvinne", label: "Kvinne" },
   { value: "mann", label: "Mann" },
   { value: "annet", label: "Gruppe" },
-  { value: "ukjent", label: "Ukjent / kollektiv" },
+  { value: "ukjent", label: "Annet" },
 ];
 
 // ----------------------------------------------------------------------------

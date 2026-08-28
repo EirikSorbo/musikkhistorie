@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.94" />
-  <script src="js/gate.js?v=4.94"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.95" />
+  <script src="js/gate.js?v=4.95"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -311,9 +311,11 @@
         <label>Plateselskap
           <input type="text" id="ed-recordLabel" placeholder="f.eks. Columbia, Stax" />
         </label>
-        <label class="full">Sjangre (fra slektstreet, kommaseparert)
-          <input type="text" id="ed-mainGenre" placeholder="f.eks. Blues, Jazz" />
-        </label>
+        <div class="full genre-picker" id="ed-mainGenre">
+          <span class="field-label">Sjangre (fra slektstreet)</span>
+          <select class="gp-velg" aria-label="Legg til sjanger"></select>
+          <div class="gp-valgte"></div>
+        </div>
         <label class="full">Undersjangre / tags (frie, kommaseparert)
           <input type="text" id="ed-subGenre" placeholder="f.eks. Delta blues, Akustisk blues" />
         </label>
@@ -668,7 +670,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.94"></script>
-  <script type="module" src="js/teacher.js?v=4.94"></script>
+  <script src="js/load-guard.js?v=4.95"></script>
+  <script type="module" src="js/teacher.js?v=4.95"></script>
 </body>
 </html>

@@ -4,16 +4,17 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=4.94";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=4.94";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=4.94";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=4.94";
-import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=4.94";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=4.94";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.94";
-import { debounce } from "./util.js?v=4.94";
-import { $ } from "./shared.js?v=4.94";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.94";
+import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=4.95";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=4.95";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=4.95";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=4.95";
+import { openSingleSubgenreModal, openSingleEdgeModal } from "./teacher-content.js?v=4.95";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=4.95";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=4.95";
+import { debounce } from "./util.js?v=4.95";
+import { $ } from "./shared.js?v=4.95";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=4.95";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=4.95";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore
@@ -21,9 +22,8 @@ import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collect
 // øyeblikket — tom liste ved kald start, og en sjanger læreren la til i
 // tre-editoren dukket aldri opp før sidelast. Samme felle som student.js
 // og genre-model-headeren beskriver.
-const musicSpecSj = () => musicSpecWithGenres(
-  [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"))
-);
+const sorterteSjangre = () => [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"));
+const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre());
 
 // ----------------------------------------------------------------------------
 //  Detalj / sjekk / oversikt
@@ -148,7 +148,6 @@ export function openEditModal(artistId) {
   $("#ed-start").value = a.influenceStart || "";
   $("#ed-end").value = a.influenceEnd || "";
   $("#ed-recordLabel").value = a.recordLabel || "";
-  $("#ed-mainGenre").value = (a.mainGenre || []).join(", ");
   $("#ed-subGenre").value = (a.subGenre || []).join(", ");
   $("#ed-desc").value = a.description || "";
   $("#ed-by").value = a.proposedBy || "";
@@ -161,6 +160,12 @@ export function openEditModal(artistId) {
   $("#ed-metaGenre").value = a.metaGenre || "";
   fillSelect($("#ed-instrument"), INSTRUMENTS, { placeholder: "Ingen / ukjent" });
   $("#ed-instrument").value = a.instrument || "";
+  // Sjangervelgeren: vokabularet FØRST, så artistens egne sjangre — da vet
+  // velgeren hvilke brikker som ikke lenger finnes i treet, og kan merke dem
+  // i stedet for å droppe dem stille.
+  setupGenrePicker($("#ed-mainGenre"));
+  fillGenrePicker($("#ed-mainGenre"), sorterteSjangre());
+  buildGenrePicker($("#ed-mainGenre"), a.mainGenre || []);
 
   buildEditMusicExampleRows(a.musicExamples || []);
   buildEditWorkRows(a.keyWorks || []);
@@ -210,7 +215,7 @@ export function setupEditForm() {
       gender:        $("#ed-gender").value,
       metaGenre:     $("#ed-metaGenre").value,
       instrument:    $("#ed-instrument").value,
-      mainGenre:     $("#ed-mainGenre").value.split(",").map(s => s.trim()).filter(Boolean),
+      mainGenre:     collectGenrePicker($("#ed-mainGenre")),
       subGenre:      $("#ed-subGenre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#ed-start").value, 10) || null,
       influenceEnd:   parseInt($("#ed-end").value, 10) || null,
@@ -224,9 +229,10 @@ export function setupEditForm() {
       imageCredit:   $("#ed-image-credit").value.trim(),
       proposedBy:    $("#ed-by").value.trim() || "Anonym",
     };
-    // Sjangre er «single source of truth» fra slektstreet. En skrivefeil her
-    // («Bluess») forsvinner stille fra tre-visningene og dukker opp som en falsk
-    // undersjanger i Skrivebordet/Oversikten. Advar (ikke blokker) før lagring.
+    // Sjangre er «single source of truth» fra slektstreet. Fra v4.95 VELGES de
+    // fra treet, så nye avvik kan ikke skrives inn — men gammel data kan bære
+    // navn som senere er fjernet fra treet, og de forsvinner stille fra tre-
+    // visningene. Advar (ikke blokker) før lagring, som før.
     const unknownGenres = fields.mainGenre.filter((g) => !isMainGenre(g));
     if (unknownGenres.length) {
       const ok = confirm(
