@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.92";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.93";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -19,14 +19,15 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.92";
-import { escapeHtml } from "./ui.js?v=4.92";
-import { $ } from "./shared.js?v=4.92";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.92";
-import { validateTree } from "./genre-validate.js?v=4.92";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.92";
-import { INSTRUMENTS } from "./limits.js?v=4.92";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS } from "./import-format.js?v=4.92";
+  runMigrationPlan,
+} from "./store.js?v=4.93";
+import { escapeHtml } from "./ui.js?v=4.93";
+import { $ } from "./shared.js?v=4.93";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.93";
+import { validateTree } from "./genre-validate.js?v=4.93";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.93";
+import { INSTRUMENTS } from "./limits.js?v=4.93";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=4.93";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -43,8 +44,63 @@ function mergeHasUnsaved() {
     mergeState.queue.some((it) => it.conflicts.length > 0 || Object.keys(it.resolved).length > 0);
 }
 
+// ----------------------------------------------------------------------------
+//  ENGANGSOPPRYDDING: «les mer»-restene i tiårsdokumentene
+// ----------------------------------------------------------------------------
+//  societyMore/techMore var en idé som ble prøvd ut og forkastet. Visningen gikk
+//  ut i v4.78, men tekstene ble liggende i Firestore — usynlige i appen, og med
+//  på hver eneste eksport. En import kan ikke fjerne dem (fletting kan aldri
+//  tømme et felt), så de må slettes eksplisitt med field.delete.
+//
+//  Knappen er BEVISST manuell og vises bare når restene faktisk finnes: de ni
+//  automatiske oppstartsmigreringene ble fjernet i v4.19, og en sletting skal
+//  ikke skje bak ryggen på læreren. Når den er kjørt, forsvinner seksjonen.
+const LESMER_FELT = ["societyMore", "techMore"];
+
+function lesmerRester() {
+  const ut = [];
+  for (const [id, d] of Object.entries(state.decadeDescs || {})) {
+    for (const felt of LESMER_FELT) {
+      if (d && Object.prototype.hasOwnProperty.call(d, felt)) ut.push({ id, felt });
+    }
+  }
+  return ut;
+}
+
+export function oppdaterRyddSeksjon() {
+  const seksjon = document.getElementById("rydd-seksjon");
+  if (!seksjon) return;
+  const rester = lesmerRester();
+  seksjon.hidden = rester.length === 0;
+  const tekst = document.getElementById("rydd-tekst");
+  if (tekst && rester.length) {
+    const tiar = new Set(rester.map((r) => r.id)).size;
+    tekst.textContent = `${rester.length} gamle «les mer»-felt ligger igjen i ${tiar} tiårsdokument${tiar === 1 ? "" : "er"}. De vises ingen steder i appen, men følger med i eksporten.`;
+  }
+}
+
+async function ryddLesmer() {
+  const rester = lesmerRester();
+  if (!rester.length) { oppdaterRyddSeksjon(); return; }
+  if (!confirm(`Slette ${rester.length} gamle «les mer»-felt permanent? Teksten finnes i eldre sikkerhetskopier, men forsvinner fra appen og fra framtidige eksporter.`)) return;
+  const ops = rester.map((r) => ({ type: "field.delete", coll: "decades", id: r.id, data: { felt: r.felt } }));
+  try {
+    const n = await runMigrationPlan(ops);
+    alert(`${n} felt slettet.`);
+  } catch (e) {
+    console.error("Opprydding feilet:", e);
+    alert("Slettingen feilet: " + (e?.message || e));
+  }
+  oppdaterRyddSeksjon();
+}
+
 export function setupDataButtons() {
   $("#btn-export").addEventListener("click", handleExport);
+  $("#btn-rydd-lesmer")?.addEventListener("click", ryddLesmer);
+  // Seksjonen vurderes hver gang Innstillinger åpnes, så den forsvinner med én
+  // gang oppryddingen er gjort — og aldri vises når det ikke er noe å rydde.
+  document.querySelector('[data-open-modal="modal-settings"]')
+    ?.addEventListener("click", oppdaterRyddSeksjon);
 
   const importInput = $("#input-import");
   $("#btn-import").addEventListener("click", () => { importInput.value = ""; importInput.click(); });
@@ -88,11 +144,10 @@ function genreSectionOf(name) {
   return GENEALOGY_META_GENRES.includes(name) ? "meta" : (isMainGenre(name) ? "main" : "sub");
 }
 
-// Har tiåret noe innhold verdt å eksportere/importere? (samfunn/teknologi,
-// «les mer»-tekstene, eller kilder).
+// Har tiåret noe innhold verdt å eksportere/importere? (samfunn, teknologi
+// eller kilder — det er alt et tiårsdokument består av.)
 function hasDecadeContent(d) {
-  return !!(d && (d.society || d.tech || d.societyMore || d.techMore ||
-    (Array.isArray(d.kilder) && d.kilder.length)));
+  return !!(d && (d.society || d.tech || (Array.isArray(d.kilder) && d.kilder.length)));
 }
 
 // Bygger hele eksport-objektet fra gjeldende state. Delt av den manuelle
@@ -109,11 +164,7 @@ function buildExportData() {
   const decades = {};
   for (const [id, d] of Object.entries(state.decadeDescs)) {
     if (hasDecadeContent(d)) {
-      decades[id] = {
-        society: d.society || "", tech: d.tech || "",
-        societyMore: d.societyMore || "", techMore: d.techMore || "",
-        kilder: Array.isArray(d.kilder) ? d.kilder : [],
-      };
+      decades[id] = decadeDoc(d);
     }
   }
 
@@ -359,9 +410,12 @@ export function setupImportChoice() {
 }
 
 async function importDescriptions({ decades, genreDescriptions, edgeDescriptions }) {
+  // decadeDoc plukker feltene ETT FOR ETT (samme hjelper som eksporten bruker):
+  // en rå skriving av objektet fra fila ville dratt inn igjen felter appen ikke
+  // har lenger, fra en eldre sikkerhetskopi.
   const decadeEntries = Object.entries(decades || {})
     .filter(([, data]) => hasDecadeContent(data))
-    .map(([id, data]) => ({ id, data }));
+    .map(([id, data]) => ({ id, data: decadeDoc(data) }));
 
   // Appen leser KUN nivåfeltene (main/sub) og story. Alt annet i et
   // sjangerdokument ignoreres — og en fil uten dem har ingenting å skrive.

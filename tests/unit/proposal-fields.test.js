@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.92";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.93";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -29,9 +29,8 @@ test("tech/subgenre/decade-hvitelistene utelater status og andre systemfelter", 
   for (const key of FORBIDDEN) {
     assert.equal(PROPOSABLE_KEYS.subgenre.includes(key), false, `subgenre skal ikke tillate ${key}`);
   }
-  // «Les mer» (societyMore/techMore) ble fjernet i v4.78: kildehenvisningene
-  // overtok rollen. Feltene finnes fortsatt i Firestore og i eksporten, men
-  // kan verken redigeres eller foreslås endret.
+  // «Les mer»-feltene ble fjernet i v4.78 (kildehenvisningene overtok rollen)
+  // og slettet helt i v4.93 — de finnes ikke lenger i data, eksport eller kode.
   assert.deepEqual(PROPOSABLE_KEYS["decade-society"], ["society"]);
   assert.deepEqual(PROPOSABLE_KEYS["decade-tech"], ["tech"]);
 });

@@ -37,7 +37,7 @@ test("student- og lærer-dashbordet har samme kort i samme rekkefølge", () => {
 // «Jazz»-raden til hele jazzfamilien.
 
 test("sjangerraden teller treets sjanger, ikke metasjangeren", async () => {
-  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=4.92");
+  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=4.93");
   const artister = [
     { id: "1", name: "Tidlig", status: "active", metaGenre: "Jazz",
       mainGenre: ["Jazz"], subGenre: [], musicExamples: [{ label: "a", url: "u1" }] },
@@ -53,7 +53,7 @@ test("sjangerraden teller treets sjanger, ikke metasjangeren", async () => {
 });
 
 test("tellingen og lista bak klikket er fortsatt samme regnestykke", async () => {
-  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=4.92");
+  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=4.93");
   const artister = [
     { id: "1", name: "A", status: "active", metaGenre: "R&B", mainGenre: ["Soul"], subGenre: [],
       musicExamples: [{ label: "x", url: "u1" }, { label: "y", url: "u2", genre: "Funk" }] },

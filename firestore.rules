@@ -206,7 +206,7 @@ service cloud.firestore {
           "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
           "geography", "description", "imageUrl", "imageCredit",
           "type", "category", "decade", "adoptedYear", "adoptedLabel", "kilder",
-          "activeFrom", "activeTo", "body", "society", "societyMore", "tech", "techMore"
+          "activeFrom", "activeTo", "body", "society", "tech"
         ]) &&
         // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
         // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
@@ -215,7 +215,7 @@ service cloud.firestore {
         // Størrelsestak per felt (samme vern som artists/tech-create), så ingen
         // kan fylle samlingen med ~1 MB-dokumenter: korte strenger med rause
         // tak, URL som artist-create (2000), beskrivelse 5000, langtekstene
-        // (instrumentsammendrag/«les mer») 20 000. Lister begrenses i ANTALL —
+        // (instrumentsammendrag/tiårstekst) 20 000. Lister begrenses i ANTALL —
         // regler kan ikke validere hvert element, så innholdet i kilder-rader
         // dekkes av moderasjonskøen (lærer ser og avviser).
         capOk("name", 120) &&
@@ -233,9 +233,7 @@ service cloud.firestore {
         capOk("description", 5000) &&
         capOk("body", 20000) &&
         capOk("society", 20000) &&
-        capOk("societyMore", 20000) &&
         capOk("tech", 20000) &&
-        capOk("techMore", 20000) &&
         capOk("mainGenre", 50) &&
         capOk("subGenre", 50) &&
         capOk("kilder", 50) &&

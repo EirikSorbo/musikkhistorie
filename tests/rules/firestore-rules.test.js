@@ -185,11 +185,11 @@ test("pendingEdits: alle entityTyper kan opprettes slik editoren skriver dem", a
   }));
   await assertSucceeds(db.collection("pendingEdits").add({
     entityType: "decade-society", entityId: "1950", entityName: "1950-tallet — samfunn",
-    proposedFields: { society: "Ny tekst", societyMore: "x".repeat(19000) }, proposedBy: "Anonym",
+    proposedFields: { society: "x".repeat(19000) }, proposedBy: "Anonym",
   }));
   await assertSucceeds(db.collection("pendingEdits").add({
     entityType: "decade-tech", entityId: "1950", entityName: "1950-tallet — teknologi",
-    proposedFields: { tech: "Ny tekst", techMore: "" }, proposedBy: "Anonym",
+    proposedFields: { tech: "Ny tekst" }, proposedBy: "Anonym",
   }));
 });
 
@@ -202,7 +202,7 @@ test("pendingEdits: ukjent proposedFields-nøkkel og oppblåste felter avvises",
   await assertFails(db.collection("pendingEdits").add({ ...base, proposedFields: { kilder: Array.from({ length: 51 }, () => ({ text: "k" })) } }));
   await assertFails(db.collection("pendingEdits").add({
     entityType: "decade-society", entityId: "1950", proposedBy: "Anonym",
-    proposedFields: { societyMore: "x".repeat(20001) },
+    proposedFields: { society: "x".repeat(20001) },
   }));
   await assertFails(db.collection("pendingEdits").add({
     entityType: "instrument", entityId: "instrument-gitar", proposedBy: "Anonym",

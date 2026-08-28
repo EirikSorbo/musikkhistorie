@@ -126,6 +126,20 @@ export function validateArtistsForImport(list) {
 // Innholdsdeler en importfil kan bære utover artistene.
 export const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts", "referanser", "genealogy"];
 
+// Et tiårsdokument er samfunn, teknologi og kilder — ikke noe mer. Feltene
+// plukkes ut ETT FOR ETT, både på vei ut i en eksport og på vei inn fra en fil:
+// «les mer»-tekstene (societyMore/techMore) ble prøvd ut, forkastet i v4.78 og
+// slettet i v4.93, og en rå kopiering av objektet ville dratt dem inn igjen fra
+// en eldre sikkerhetskopi. Samme grunn til at den bor her og ikke i
+// teacher-import: eksport og import kan ikke drive fra hverandre.
+export function decadeDoc(d = {}) {
+  return {
+    society: d.society || "",
+    tech: d.tech || "",
+    kilder: Array.isArray(d.kilder) ? d.kilder : [],
+  };
+}
+
 // Normaliserer en innlest importfil til appens interne form, eller returnerer
 // null når formatet ikke gjenkjennes. Skilt ut fra handleImportFile (v4.52) og
 // EKSPORTERT fordi den er ren og dermed testbar: objektet under er en

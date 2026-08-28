@@ -16,9 +16,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeImportFile } from "../../js/import-format.js?v=4.92";
-import { validateTree } from "../../js/genre-validate.js?v=4.92";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.92";
+import { normalizeImportFile, decadeDoc } from "../../js/import-format.js?v=4.93";
+import { validateTree } from "../../js/genre-validate.js?v=4.93";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.93";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const tre = () => ({ version: 1, nodes: GENEALOGY, families: FAMILIES, metaOrderHint: META_ORDER_HINT });
@@ -82,4 +82,22 @@ test("seed-fila har den formen importen faktisk godtar", { skip: seedSkip }, () 
   assert.ok(d, "seed-fila må godtas av formsjekken");
   assert.equal(d.genealogy.nodes.length, GENEALOGY.length);
   assert.deepEqual(validateTree(d.genealogy).filter((p) => p.nivå === "feil"), []);
+});
+
+// «Les mer»-tekstene ble forkastet i v4.78 og slettet i v4.93. Et tiårsdokument
+// bygges derfor felt for felt, både ut i eksporten og inn fra en fil — ellers
+// ville en eldre sikkerhetskopi dratt dem inn igjen.
+test("tiårsdokumentet har KUN samfunn, teknologi og kilder", () => {
+  const d = decadeDoc({
+    society: "Samfunn", tech: "Teknologi", kilder: [{ text: "SNL" }],
+    societyMore: "gammel les mer-tekst", techMore: "gammel les mer-tekst", noeAnnet: 1,
+  });
+  assert.deepEqual(Object.keys(d).sort(), ["kilder", "society", "tech"]);
+  assert.equal(d.society, "Samfunn");
+  assert.equal(d.kilder.length, 1);
+});
+
+test("et tomt tiår gir tomme felter, ikke undefined", () => {
+  assert.deepEqual(decadeDoc(), { society: "", tech: "", kilder: [] });
+  assert.deepEqual(decadeDoc({ kilder: "ikke en liste" }), { society: "", tech: "", kilder: [] });
 });

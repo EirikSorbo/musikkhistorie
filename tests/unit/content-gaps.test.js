@@ -4,8 +4,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=4.92";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=4.92";
+import { contentGaps } from "../../js/ui-dashboard.js?v=4.93";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=4.93";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],

@@ -13,7 +13,7 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=4.92";
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=4.93";
 
 // Den KURATERTE historie-rekkefølgen (struktur, ikke innhold): de sju
 // metasjangrene som utgjør MUR114-pensumet. Pop og Rock står i treet for å
