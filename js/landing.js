@@ -1,15 +1,15 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.93";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.93";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.93";
-import { onGenreModelChanged } from "./genre-model.js?v=4.93";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.93";
-import { debounce, throttle } from "./util.js?v=4.93";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.93";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.93";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.93";
-import { initExplore } from "./explore.js?v=4.93";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.93";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=4.93";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=4.94";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=4.94";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.94";
+import { onGenreModelChanged } from "./genre-model.js?v=4.94";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=4.94";
+import { debounce, throttle } from "./util.js?v=4.94";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=4.94";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=4.94";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=4.94";
+import { initExplore } from "./explore.js?v=4.94";
+import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=4.94";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=4.94";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

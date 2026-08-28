@@ -9,11 +9,11 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.93";
-import { wireAllLinks } from "./linkify.js?v=4.93";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.93";
-import { GENDERS } from "./limits.js?v=4.93";
-export { artistStripHtml } from "./artist-strip.js?v=4.93";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.94";
+import { wireAllLinks } from "./linkify.js?v=4.94";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.94";
+import { GENDERS } from "./limits.js?v=4.94";
+export { artistStripHtml } from "./artist-strip.js?v=4.94";
 
 export { escapeHtml, buildKilderList, safeUrl };
 

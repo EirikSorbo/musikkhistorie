@@ -5,19 +5,19 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.93";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.93";
-import { MODAL_HTML } from "./explore-modals.js?v=4.93";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.93";
-import { openVarmekart } from "./explore-varmekart.js?v=4.93";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.93";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.93";
-import { openDecadeList } from "./explore-decade.js?v=4.93";
-import { openReferanser } from "./explore-referanser.js?v=4.93";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.93";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.93";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.93";
-import { openSok, wireSok } from "./explore-search.js?v=4.93";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.94";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.94";
+import { MODAL_HTML } from "./explore-modals.js?v=4.94";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.94";
+import { openVarmekart } from "./explore-varmekart.js?v=4.94";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.94";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.94";
+import { openDecadeList } from "./explore-decade.js?v=4.94";
+import { openReferanser } from "./explore-referanser.js?v=4.94";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.94";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.94";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.94";
+import { openSok, wireSok } from "./explore-search.js?v=4.94";
 
 function injectModals() {
   const wrap = document.createElement("div");
