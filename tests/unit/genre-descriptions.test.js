@@ -1,9 +1,9 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.84";
-import { resolveMainDesc } from "../../js/genealogy.js?v=4.84";
-import { GENEALOGY } from "../../js/genre-model.js?v=4.84";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.85";
+import { resolveMainDesc } from "../../js/genealogy.js?v=4.85";
+import { GENEALOGY } from "../../js/genre-model.js?v=4.85";
 
 const descs = {
   Blues: {
@@ -104,7 +104,7 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-epoken", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.84");
+  const { eraText } = await import("../../js/genealogy.js?v=4.85");
   // Alt leses nå fra ÉN kilde (genreDescriptions). Fram til v4.64 kom friteksten
   // fra treets node, og da kunne kortet og tidslinjen vise ulik epoke.
   // «ca.» foran begge årstallene fra v4.83 — men aldri foran «i dag».
@@ -116,7 +116,7 @@ test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-ep
 });
 
 test("eraLine: sjangerkortet viser årstallene OG epoke-friteksten", async () => {
-  const { eraLine } = await import("../../js/genealogy.js?v=4.84");
+  const { eraLine } = await import("../../js/genealogy.js?v=4.85");
   // Friteksten er ikke fallback her — den står som egen setning etter årstallene.
   assert.equal(
     eraLine({ activeFrom: 1945, activeTo: 1960, era: "midten av 1940-tallet" }),

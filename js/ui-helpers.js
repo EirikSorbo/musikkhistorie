@@ -2,16 +2,18 @@
 //  UI — LAVNIVÅ-HJELPERE
 // ----------------------------------------------------------------------------
 //  Rene, gjenbrukbare byggeklosser for rendering (HTML-snutter, formattering).
-//  Avhenger kun av util + linkify + rich-text + limits (GENDERS) — INGEN
-//  render-funksjoner, så modulen kan importeres fritt uten import-sykler.
+//  Avhenger kun av util + linkify + rich-text + limits (GENDERS) + artist-strip
+//  — INGEN render-funksjoner, så modulen kan importeres fritt uten import-
+//  sykler. artistStripHtml re-eksporteres herfra, så ui.js henter alle
+//  byggeklossene sine ett sted.
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.84";
-import { wireAllLinks } from "./linkify.js?v=4.84";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.84";
-import { GENDERS } from "./limits.js?v=4.84";
-import { artistStripHtml } from "./artist-strip.js?v=4.84";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.85";
+import { wireAllLinks } from "./linkify.js?v=4.85";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.85";
+import { GENDERS } from "./limits.js?v=4.85";
+export { artistStripHtml } from "./artist-strip.js?v=4.85";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -348,10 +350,10 @@ export function pct(n, max) {
 // Faktalinjer under tittel: levetid, innflytelse, kjønn (kun lærer), virkested.
 // Vises som tekst (samme format som «Sentrale verk»), ikke som bobler.
 //
-// Under linjene ligger innflytelsesperioden som en liten tidslinje (v4.84) —
-// samme spenn og akse som artistenes tidslinje. Den legges HER, og ikke i de
-// tre kort-mallene, fordi alle tre går gjennom factsLines: da får kortet stripa
-// uansett hvor det åpnes fra (detaljmodal, dagens artist, liste, lærerkort).
+// Innflytelsesperioden som tidslinje (artistStripHtml) sto her i v4.84, men
+// hører hjemme rett under sjanger-/instrumentboblene, altså like over
+// beskrivelsen. Den kalles derfor fra hver av de tre kort-mallene i ui.js —
+// samme tre som kaller denne.
 export function factsLines(a, { showGender = false } = {}) {
   const rows = [];
   if (a.birthYear && a.deathYear) rows.push(["Levetid", `${a.birthYear}–${a.deathYear}`]);
@@ -369,7 +371,7 @@ export function factsLines(a, { showGender = false } = {}) {
   if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel]);
   if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
   if (a.geography) rows.push(["Virkested", a.geography]);
-  return factsHtml(rows) + artistStripHtml(a);
+  return factsHtml(rows);
 }
 
 // Delt renderer for «etikett: verdi»-linjene. Fet etikett, vanlig verdi —

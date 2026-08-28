@@ -2018,10 +2018,13 @@ body.is-teacher #gate { display: none; }
    artistenes tidslinje. Ligger under faktalinjene på ALLE artistkort
    (factsLines), uansett hvor kortet åpnes fra.
 
-   display:flow-root er ikke pynt: artistbildet er float:right, og en blokk med
-   bakgrunn ville lagt seg UNDER bildet i stedet for ved siden av det. Egen
-   blokkontekst krymper stripa til spalten den har, akkurat som teksten over —
-   og i motsetning til overflow:hidden klipper den ikke årstallene.
+   clear:right, ikke bare en egen blokkontekst: artistbildet er float:right, og
+   en stripe som la seg ved siden av bildet ble kortere på noen kort enn på
+   andre. Da måler ikke to kort det samme, og det er nettopp sammenligningen
+   stripa er til for. Nå står den alltid i full kortbredde, under bildet.
+   Etter boblene er bildet stort sett slutt uansett, så det koster nesten ingen
+   høyde. display:flow-root blir stående som vern mot at en blokk med bakgrunn
+   sklir inn under et flytende bilde.
 
    Den vannrette luften er nettopp til de ytterste årstallene: de er sentrert på
    sitt eget år, altså på sporets ytterkanter, og stikker ut et halvt årstall.
@@ -2030,13 +2033,15 @@ body.is-teacher #gate { display: none; }
    ANNET tiår: 2 x 100/13 = 15,3846 % per gjentakelse. */
 .ai-strip {
   display: flow-root;
+  clear: right;
   container-type: inline-size;
   padding: 0 14px;
-  margin: 3px 0 10px;
+  margin: 7px 0 12px;
 }
 .ai-axis {
   position: relative;
   height: 13px;
+  margin-bottom: 3px;
   font-size: 0.68rem;
   color: var(--muted);
 }
