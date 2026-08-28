@@ -4,7 +4,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderDashboard } from "../../js/ui-dashboard.js?v=4.88";
+import { renderDashboard } from "../../js/ui-dashboard.js?v=4.89";
 
 const artist = (id, priority, status = "active") => ({
   id, name: `Artist ${id}`, status, priority,
@@ -28,9 +28,10 @@ function tegn(artists) {
   return el.innerHTML;
 }
 
-// Tallet ER lenka: knappen bærer data-ov-prio og har tallet som eneste tekst.
+// Gradene er halvbrede felt i nøkkeltall-raden: knappen bærer data-ov-prio,
+// og tallet står i samme .ov-kpi-n som de andre nøkkeltallene.
 const tallFor = (html, grad) => {
-  const m = html.match(new RegExp(`data-ov-prio="${grad}"[\\s\\S]*?>(\\d+)</button>`));
+  const m = html.match(new RegExp(`data-ov-prio="${grad}"[\\s\\S]*?ov-kpi-n">(\\d+)<`));
   assert.ok(m, `fant ingen tall for viktighetsgrad ${grad}`);
   return Number(m[1]);
 };

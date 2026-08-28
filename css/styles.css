@@ -252,9 +252,14 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 /* Kompakte nøkkeltall — fire per rad, «vanlig» tekststørrelse */
 .ov-kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Åtte spor, ikke fire: et vanlig nøkkeltall spenner over to av dem, en
+     viktighetsgrad over ett. To grader blir da nøyaktig like brede som ett
+     nøkkeltall, og alt står i samme rutenett med samme kortform. */
+  grid-template-columns: repeat(8, 1fr);
   gap: 10px;
 }
+.ov-kpi { grid-column: span 2; }
+.ov-kpi-half { grid-column: span 1; }
 .ov-kpi {
   display: flex;
   align-items: baseline;
@@ -277,28 +282,18 @@ button.ov-kpi { cursor: pointer; transition: border-color 0.12s, box-shadow 0.12
 button.ov-kpi:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
 button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 
-/* Viktighetsgrad-kortet: de fire gradene på én rad i ett kort — bare symbolet
-   (samme som knappene på artistkortene) og tallet, som selv er lenka til
-   artistlista. Etikettene ligger i title/aria-label; fire ikoner på rad tåler
-   å stå uten tekst når de er de samme man klikker på kortene.
-   Skjult-graden er med her fordi det er den eneste bøtta som ikke teller med i
+/* Viktighetsgrad-feltene i nøkkeltall-raden: bare symbolet (samme som knappene
+   på artistkortene) og tallet. Etiketten ligger i title/aria-label — fire ikoner
+   på rad tåler å stå uten tekst når de er de samme man klikker på kortene.
+   Skjult-graden er med fordi det er den eneste bøtta som ikke teller med i
    artisttallene ellers. */
-.ov-prios {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 26px;
-  margin-top: 10px;
-}
-.ov-prio { display: inline-flex; align-items: center; gap: 7px; }
 .ov-prio-i { display: flex; flex: none; }
-.ov-prio .ov-num { font-size: 1rem; font-weight: 600; text-align: left; }
 /* Fargene er prioritetsmerkets egne (.tag-prio), så symbolet her og merket på
    kortet leses som samme sak. */
-.ov-prio.prio-3 .ov-prio-i { color: #854d0e; }
-.ov-prio.prio-2 .ov-prio-i { color: #075985; }
-.ov-prio.prio-1 .ov-prio-i { color: #166534; }
-.ov-prio.prio--1 .ov-prio-i { color: #64748b; }
+.prio-3 .ov-prio-i { color: #854d0e; }
+.prio-2 .ov-prio-i { color: #075985; }
+.prio-1 .ov-prio-i { color: #166534; }
+.prio--1 .ov-prio-i { color: #64748b; }
 
 .ov-block { margin-top: 12px; }
 .ov-two {
@@ -509,7 +504,7 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-expand { margin-top: 10px; }
 
 @media (max-width: 720px) {
-  .ov-kpis { grid-template-columns: repeat(2, 1fr); }
+  .ov-kpis { grid-template-columns: repeat(4, 1fr); }
   .ov-two { grid-template-columns: 1fr; }
   /* Ingen overstyring av .ov-genre-cols her: minstebredden over gjør jobben
      selv, og et fast kolonnetall her ville lagt kollisjonen tilbake. */

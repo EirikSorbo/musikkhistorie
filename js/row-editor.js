@@ -8,11 +8,11 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.88";
+import { escapeHtml } from "./util.js?v=4.89";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=4.88";
+import { KILDE_KATEGORIER } from "./kilder.js?v=4.89";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
