@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.81" />
-  <script src="js/gate.js?v=4.81"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.82" />
+  <script src="js/gate.js?v=4.82"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -351,6 +351,9 @@
         <h2 id="decade-single-title"></h2>
         <button class="modal-close btn ghost small">✕</button>
       </div>
+      <!-- Inngangen til teknologikortene står ØVERST, over tidslinje-stripa
+           (samme plassering som studentvisningen: #dv-extra). -->
+      <div id="ds-extra"></div>
       <!-- Tiårsvelger: samme tidslinje-stripe som studentvisningen -->
       <div class="decade-ribbon" id="ds-ribbon"></div>
       <h3 class="dv-decade" id="ds-decade"></h3>
@@ -567,7 +570,7 @@
         <label>Tatt i bruk (år)
           <input type="number" id="tech-adopted" placeholder="f.eks. 1950" />
         </label>
-        <label>Årstall forklaring
+        <label>Tatt i bruk
           <input type="text" id="tech-adopted-label" placeholder="f.eks. ca. 1950, sent 1960-tall" />
         </label>
         <label>Tiår (for filtrering)
@@ -657,7 +660,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.81"></script>
-  <script type="module" src="js/teacher.js?v=4.81"></script>
+  <script src="js/load-guard.js?v=4.82"></script>
+  <script type="module" src="js/teacher.js?v=4.82"></script>
 </body>
 </html>

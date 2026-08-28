@@ -5,23 +5,23 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.81";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.81";
-import { resolveMainDesc } from "./genealogy.js?v=4.81";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.81";
-import { storyFor, pageFor } from "./story-format.js?v=4.81";
-import { renderRichText } from "./rich-text.js?v=4.81";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.81";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.81";
-import { resolveDesc } from "./genre-descriptions.js?v=4.81";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.81";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.81";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.81";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.82";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.82";
+import { resolveMainDesc } from "./genealogy.js?v=4.82";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.82";
+import { storyFor, pageFor } from "./story-format.js?v=4.82";
+import { renderRichText } from "./rich-text.js?v=4.82";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.82";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.82";
+import { resolveDesc } from "./genre-descriptions.js?v=4.82";
+import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.82";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.82";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.82";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.81";
-import { $ } from "./shared.js?v=4.81";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.81";
+import { wireAllLinks } from "./linkify.js?v=4.82";
+import { $ } from "./shared.js?v=4.82";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.82";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -66,6 +66,19 @@ export function openSingleDecadeModal(decadeId, mode) {
   $("#decade-single-title").textContent = isSociety ? "Samfunn" : "Teknologi";
   const heading = $("#ds-decade");
   if (heading) heading.textContent = `${d}-tallet`;
+
+  // Teknologi har samme ekstra inngang til alle innovasjonskortene som
+  // studentvisningen (explore-decade.js: #dv-extra). Læreren får den samme
+  // kortlista — «Rediger kort» inne i den fører videre til admin-lista.
+  const extra = $("#ds-extra");
+  if (extra) {
+    if (isSociety) {
+      extra.innerHTML = "";
+    } else {
+      extra.innerHTML = `<button class="btn ghost" id="ds-btn-innovasjon" style="width:100%;margin:0 0 12px">Vis teknologi-kort</button>`;
+      extra.querySelector("#ds-btn-innovasjon").addEventListener("click", () => ctx.explore.openTeknologi());
+    }
+  }
 
   // Samme tidslinje-stripe som studentvisningen. Bytte av tiår i redigerings-
   // modus varsler først — ulagrede endringer forkastes ved re-render.

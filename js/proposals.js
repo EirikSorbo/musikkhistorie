@@ -8,12 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.81";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.81";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.81";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.81";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.81";
-import { setupFormatBars } from "./format-bar.js?v=4.81";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.82";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.82";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.82";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.82";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.82";
+import { setupFormatBars } from "./format-bar.js?v=4.82";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -50,8 +50,8 @@ const FIELD_SPECS = {
       ...INSTRUMENT_TIMELINE_GROUPS.map((i) => ({ value: i, label: i })),
     ] },
     { key: "decade", label: "Tiår (f.eks. 1950)", type: "text" },
-    { key: "adoptedYear", label: "Innført år", type: "number" },
-    { key: "adoptedLabel", label: "Årstall forklaring", type: "text" },
+    { key: "adoptedYear", label: "Oppfunnet", type: "number" },
+    { key: "adoptedLabel", label: "Tatt i bruk", type: "text" },
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
     { key: "kilder", label: "Kilder", type: "sources", full: true },
     { key: "imageUrl", label: "Bilde-URL", type: "text", full: true },

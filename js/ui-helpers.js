@@ -7,10 +7,10 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.81";
-import { wireAllLinks } from "./linkify.js?v=4.81";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.81";
-import { GENDERS } from "./limits.js?v=4.81";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.82";
+import { wireAllLinks } from "./linkify.js?v=4.82";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.82";
+import { GENDERS } from "./limits.js?v=4.82";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -384,8 +384,9 @@ function factsHtml(rows) {
 }
 
 // Faktalinjer på innovasjonskortet. Erstattet fargede bobler (v3.81), så
-// kortene leser likt som artistkortenes levetid/innflytelse. «Årstall» bærer
-// adoptedLabel, som ofte er en hel setning og aldri fikk plass i en boble.
+// kortene leser likt som artistkortenes levetid/innflytelse. «Tatt i bruk»
+// bærer adoptedLabel, som ofte er en hel setning og aldri fikk plass i en
+// boble (het «Årstall» fram til v4.82).
 export function techFactsLines(t) {
   return factsHtml([
     // Typen vises kun på hendelseskort — innovasjon er normalen og trenger
@@ -398,6 +399,6 @@ export function techFactsLines(t) {
     ["Kategori", t.category, { attr: "data-tech-cat" }],
     ["Instrument", t.instrument, { attr: "data-tech-instr" }],
     ["Oppfunnet", t.inventedYear],
-    ["Årstall", t.adoptedLabel],
+    ["Tatt i bruk", t.adoptedLabel],
   ]);
 }
