@@ -4,7 +4,7 @@
 // kildeteksten er generisk, og at ingen kilde forsvinner stille.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/kilder.js?v=4.86";
+import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/kilder.js?v=4.87";
 
 const nett = (text, url) => ({ text, url, kategori: "Nettsteder" });
 

@@ -10,7 +10,7 @@
 //  overleve at treet ble redigerbart, siden hver ny sjanger krevde at naboene
 //  ble flyttet for hånd.
 // ============================================================================
-import { initTrePage } from "./tre-page.js?v=4.86";
-import { renderGenealogyBundled } from "./genealogy-bundled.js?v=4.86";
+import { initTrePage } from "./tre-page.js?v=4.87";
+import { renderGenealogyBundled } from "./genealogy-bundled.js?v=4.87";
 
 initTrePage({ render: renderGenealogyBundled });
