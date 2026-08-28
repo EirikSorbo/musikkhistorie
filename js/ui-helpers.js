@@ -7,10 +7,11 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.83";
-import { wireAllLinks } from "./linkify.js?v=4.83";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.83";
-import { GENDERS } from "./limits.js?v=4.83";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.84";
+import { wireAllLinks } from "./linkify.js?v=4.84";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.84";
+import { GENDERS } from "./limits.js?v=4.84";
+import { artistStripHtml } from "./artist-strip.js?v=4.84";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -346,6 +347,11 @@ export function pct(n, max) {
 
 // Faktalinjer under tittel: levetid, innflytelse, kjønn (kun lærer), virkested.
 // Vises som tekst (samme format som «Sentrale verk»), ikke som bobler.
+//
+// Under linjene ligger innflytelsesperioden som en liten tidslinje (v4.84) —
+// samme spenn og akse som artistenes tidslinje. Den legges HER, og ikke i de
+// tre kort-mallene, fordi alle tre går gjennom factsLines: da får kortet stripa
+// uansett hvor det åpnes fra (detaljmodal, dagens artist, liste, lærerkort).
 export function factsLines(a, { showGender = false } = {}) {
   const rows = [];
   if (a.birthYear && a.deathYear) rows.push(["Levetid", `${a.birthYear}–${a.deathYear}`]);
@@ -363,7 +369,7 @@ export function factsLines(a, { showGender = false } = {}) {
   if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel]);
   if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
   if (a.geography) rows.push(["Virkested", a.geography]);
-  return factsHtml(rows);
+  return factsHtml(rows) + artistStripHtml(a);
 }
 
 // Delt renderer for «etikett: verdi»-linjene. Fet etikett, vanlig verdi —

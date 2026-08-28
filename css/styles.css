@@ -2014,6 +2014,73 @@ body.is-teacher #gate { display: none; }
   text-align: center;
 }
 
+/* Artistkortets egen tidslinje: innflytelsesperioden på samme tiårsrekke som
+   artistenes tidslinje. Ligger under faktalinjene på ALLE artistkort
+   (factsLines), uansett hvor kortet åpnes fra.
+
+   display:flow-root er ikke pynt: artistbildet er float:right, og en blokk med
+   bakgrunn ville lagt seg UNDER bildet i stedet for ved siden av det. Egen
+   blokkontekst krymper stripa til spalten den har, akkurat som teksten over —
+   og i motsetning til overflow:hidden klipper den ikke årstallene.
+
+   Den vannrette luften er nettopp til de ytterste årstallene: de er sentrert på
+   sitt eget år, altså på sporets ytterkanter, og stikker ut et halvt årstall.
+
+   Strekene i sporet står under de årstallene aksen faktisk skriver, altså hvert
+   ANNET tiår: 2 x 100/13 = 15,3846 % per gjentakelse. */
+.ai-strip {
+  display: flow-root;
+  container-type: inline-size;
+  padding: 0 14px;
+  margin: 3px 0 10px;
+}
+.ai-axis {
+  position: relative;
+  height: 13px;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.ai-axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.ai-track {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background-color: var(--surface-2);
+  background-image: repeating-linear-gradient(to right,
+    var(--line) 0 1px, transparent 1px 15.3846%);
+  overflow: hidden;
+}
+.ai-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1px solid;
+  border-radius: 5px;
+}
+/* Flat ende = «fortsetter utenfor bildet»: åpent sluttår, eller en periode som
+   begynner før 1900. Samme signal som de åpne blokkene i tidslinjen. */
+.ai-bar.is-cut-end { border-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.ai-bar.is-cut-start { border-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* Smal spalte (todelt kortgrid ved siden av bildet, ~200 px spor): der står
+   sju årstall 6 px fra hverandre og leses som én tallrekke. Da vises HVERT
+   FJERDE tiår i stedet, og strekene i sporet følger med — ellers pekte de på
+   årstall som ikke lenger står der. Container query, ikke media query: det er
+   stripas EGEN bredde som avgjør, og den varierer med kortets spalte, ikke med
+   skjermen. Uten støtte for @container beholdes alle sju, som før. */
+@container (max-width: 260px) {
+  .ai-axis span:nth-of-type(2n) { display: none; }
+  .ai-track {
+    background-image: repeating-linear-gradient(to right,
+      var(--line) 0 1px, transparent 1px 30.7692%);
+  }
+}
+
 /* Varmelinja øverst på sjangerkortet: tyngdepunktet gjennom historien, over
    selve teksten. Litt luft under, så den ikke klistrer seg til era-linja. */
 .gx-heat { margin: 0 0 14px; }
