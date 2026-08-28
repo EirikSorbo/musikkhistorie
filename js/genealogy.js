@@ -12,16 +12,16 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=4.85";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.85";
-import { renderRichText } from "./rich-text.js?v=4.85";
-import { escapeHtml, buildKilderList } from "./util.js?v=4.85";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.85";
-import { modalOpen } from "./ui-modal.js?v=4.85";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=4.85";
-import { wireProposeFoot } from "./ui-edit.js?v=4.85";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.85";
-import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.85";
+import { wireAllLinks } from "./linkify.js?v=4.86";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.86";
+import { renderRichText } from "./rich-text.js?v=4.86";
+import { escapeHtml, buildKilderList } from "./util.js?v=4.86";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=4.86";
+import { modalOpen } from "./ui-modal.js?v=4.86";
+import { renderGenreEditBtn } from "./ui-helpers.js?v=4.86";
+import { wireProposeFoot } from "./ui-edit.js?v=4.86";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=4.86";
+import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.86";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -42,13 +42,15 @@ import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=4.85";
 // Tomt sluttår betyr «fortsatt aktiv», ikke «ukjent»: en sjanger som lever i
 // dag skal lese «ca. 1990–i dag», ikke stå med en åpen strek.
 //
-// «ca.» står foran BEGGE årstallene (v4.83): ingen sjanger begynner eller
-// slutter et bestemt år, og tallene er lærerens anslag. «i dag» får det ikke —
-// nåtiden er ikke omtrentlig.
+// «ca.» står ÉN gang, foran hele perioden: ingen sjanger begynner eller slutter
+// et bestemt år, og tallene er lærerens anslag. Forbeholdet gjelder da begge
+// endene, akkurat som på artistkortenes innflytelseslinje. (I v4.83 sto det
+// foran begge årstallene — «ca. 1923–ca. 1942» leste stotrende.) «i dag» er
+// uansett ikke omtrentlig.
 export function eraYears(resolved) {
   const from = resolved?.activeFrom, to = resolved?.activeTo;
   if (!Number.isInteger(from)) return "";
-  return `ca. ${from}–${Number.isInteger(to) ? `ca. ${to}` : "i dag"}`;
+  return `ca. ${from}–${Number.isInteger(to) ? to : "i dag"}`;
 }
 
 // Årstallene, eller fritekst-epoken når de mangler. Brukt av koblings-popupen,

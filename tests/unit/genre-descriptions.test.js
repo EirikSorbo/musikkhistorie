@@ -1,9 +1,9 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.85";
-import { resolveMainDesc } from "../../js/genealogy.js?v=4.85";
-import { GENEALOGY } from "../../js/genre-model.js?v=4.85";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=4.86";
+import { resolveMainDesc } from "../../js/genealogy.js?v=4.86";
+import { GENEALOGY } from "../../js/genre-model.js?v=4.86";
 
 const descs = {
   Blues: {
@@ -104,11 +104,11 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-epoken", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=4.85");
+  const { eraText } = await import("../../js/genealogy.js?v=4.86");
   // Alt leses nå fra ÉN kilde (genreDescriptions). Fram til v4.64 kom friteksten
   // fra treets node, og da kunne kortet og tidslinjen vise ulik epoke.
-  // «ca.» foran begge årstallene fra v4.83 — men aldri foran «i dag».
-  assert.equal(eraText({ activeFrom: 1935, activeTo: 1945, era: "1930–45" }), "ca. 1935–ca. 1945");
+  // «ca.» står én gang og gjelder hele perioden (v4.86) — aldri foran «i dag».
+  assert.equal(eraText({ activeFrom: 1935, activeTo: 1945, era: "1930–45" }), "ca. 1935–1945");
   assert.equal(eraText({ activeFrom: 1990, activeTo: null, era: "1990-tallet" }), "ca. 1990–i dag");
   assert.equal(eraText({ activeFrom: null, activeTo: null, era: "1930–45" }), "1930–45");
   assert.equal(eraText({ era: "" }), "");
@@ -116,15 +116,15 @@ test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-ep
 });
 
 test("eraLine: sjangerkortet viser årstallene OG epoke-friteksten", async () => {
-  const { eraLine } = await import("../../js/genealogy.js?v=4.85");
+  const { eraLine } = await import("../../js/genealogy.js?v=4.86");
   // Friteksten er ikke fallback her — den står som egen setning etter årstallene.
   assert.equal(
     eraLine({ activeFrom: 1945, activeTo: 1960, era: "midten av 1940-tallet" }),
-    "ca. 1945–ca. 1960. midten av 1940-tallet"
+    "ca. 1945–1960. midten av 1940-tallet"
   );
   assert.equal(eraLine({ activeFrom: 1990, activeTo: null, era: "1990-tallet" }), "ca. 1990–i dag. 1990-tallet");
   // Bare den ene halvparten: ingen løs punktum, ingen tom setning.
-  assert.equal(eraLine({ activeFrom: 1980, activeTo: 1989, era: "" }), "ca. 1980–ca. 1989");
+  assert.equal(eraLine({ activeFrom: 1980, activeTo: 1989, era: "" }), "ca. 1980–1989");
   assert.equal(eraLine({ activeFrom: null, activeTo: null, era: "1930–45" }), "1930–45");
   assert.equal(eraLine({ era: "   " }), "");
   assert.equal(eraLine(undefined), "");
