@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.90";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.90";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.91";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.91";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -298,12 +298,12 @@ ${TECH_DETAIL_MODAL_HTML}
       <div id="rotter-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <!-- Røttene som klikkbare bobler, ØVERST: hvilke de er, før teksten om
-         dem. Fylles av openRotter (explore-innhold.js). -->
-    <div class="rotter-chips" id="rotter-chips"></div>
     <div class="rotter-links">
       <button class="btn primary" id="rotter-tre">Se slektstreet</button>
     </div>
+    <!-- Røttene som klikkbare bobler, rett under inngangen til treet: hvilke
+         de er, før teksten om dem. Fylles av openRotter (explore-innhold.js). -->
+    <div class="rotter-chips" id="rotter-chips"></div>
     <div id="rotter-body" class="story-body"></div>
   </div>
 </div>

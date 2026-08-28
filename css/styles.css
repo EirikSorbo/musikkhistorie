@@ -427,8 +427,9 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-genre-cols .ov-row { break-inside: avoid; margin-bottom: 8px; grid-template-columns: minmax(96px, auto) 1fr 54px; }
 .ov-genre-cols .ov-count { white-space: nowrap; }
 
-/* Røtter-kortets boblerad, øverst over «Se slektstreet». */
-.rotter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+/* Røtter-kortets boblerad, rett under «Se slektstreet». Knapperaden over har
+   allerede 18 px under seg, så raden trenger bare luft nedover mot teksten. */
+.rotter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
 .rotter-chips:empty { display: none; }
 
 /* Chips (instrument, tomme greiner, tynne tiår, historier) */
