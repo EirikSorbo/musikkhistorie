@@ -12,15 +12,15 @@
 //  samlingen kostet ekstra lesinger — det premisset er dødt.)
 //  Grupperingen (kategori → hovedkilde → artikkel) kommer fra kilder.js.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.87";
-import { isVisible } from "./limits.js?v=4.87";
-import { samleKilder } from "./kilder.js?v=4.87";
-import { genreNodeById } from "./genre-model.js?v=4.87";
-import { showEdgeInfo } from "./genealogy.js?v=4.87";
-import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=4.87";
-import { openTechDetail } from "./explore-tech.js?v=4.87";
-import { openDecade } from "./explore-decade.js?v=4.87";
-import { openHistorier } from "./explore-innhold.js?v=4.87";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.88";
+import { isVisible } from "./limits.js?v=4.88";
+import { samleKilder } from "./kilder.js?v=4.88";
+import { genreNodeById } from "./genre-model.js?v=4.88";
+import { showEdgeInfo } from "./genealogy.js?v=4.88";
+import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=4.88";
+import { openTechDetail } from "./explore-tech.js?v=4.88";
+import { openDecade } from "./explore-decade.js?v=4.88";
+import { openHistorier } from "./explore-innhold.js?v=4.88";
 
 export function openReferanser() {
   const modal = document.getElementById("modal-referanser");

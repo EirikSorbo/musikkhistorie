@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=4.87";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=4.87";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=4.87";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.87";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=4.87";
+} from "./limits.js?v=4.88";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=4.88";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=4.88";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=4.88";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=4.88";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -182,14 +182,15 @@ export function renderDashboard(el, {
   // Én liste per grad, så tallet og lista bak klikket er samme regnestykke.
   // Gradene 1–3 telles blant de SYNLIGE (active), fordi det er de studentene
   // ser; skjulte kort er sin egen bøtte og ligger utenfor `active` (isVisible).
-  // 3 + 2 + 1 + «uten grad» = artisttallet øverst; skjulte kommer i tillegg.
+  // Artister uten grad står IKKE i kortet — de hører hjemme under «Innhold som
+  // mangler» nederst, sammen med det andre som gjenstår å fylle ut.
   const prioLists = {
     3: active.filter((a) => a.priority === 3).sort(byName),
     2: active.filter((a) => a.priority === 2).sort(byName),
     1: active.filter((a) => a.priority === 1).sort(byName),
     "-1": hidden,
   };
-  const utenPrio = active.filter((a) => !a.priority).length;
+  const utenPrio = active.filter((a) => !a.priority).sort(byName);
 
   // --- Sjangerliste (treets sjangre, sortert etter antall artistkort) -------
   // Tellingen (countForGenre) matcher artistlista bak sjanger-popupen, så
@@ -371,12 +372,12 @@ export function renderDashboard(el, {
     <div class="stat-card ov-block">
       <div class="stat-label">Viktighetsgrad</div>
       <div class="ov-prios">${[3, 2, 1, -1].map((p) => `
-        <button type="button" class="ov-prio prio-${p}" data-ov-prio="${p}" title="Vis de ${prioLists[p].length} artistene">
+        <span class="ov-prio prio-${p}" title="${escapeHtml(PRIO_LABELS[p])}">
           <span class="ov-prio-i">${PRIO_ICONS[p]}</span>
-          <span class="ov-prio-n">${prioLists[p].length}</span>
-          <span class="ov-prio-l">${escapeHtml(PRIO_LABELS[p])}</span>
-        </button>`).join("")}</div>
-      <p class="ov-prio-rest">${utenPrio} uten viktighetsgrad. Skjulte kort vises ikke for studentene og teller ikke med i artisttallene ellers i oversikten.</p>
+          <button type="button" class="ov-num" data-ov-prio="${p}"
+            aria-label="${escapeHtml(PRIO_LABELS[p])}: ${prioLists[p].length} artister"
+            title="${escapeHtml(PRIO_LABELS[p])} — vis artistene">${prioLists[p].length}</button>
+        </span>`).join("")}</div>
     </div>
 
     <div class="stat-card ov-block">
@@ -468,6 +469,7 @@ export function renderDashboard(el, {
       ${missItem("Artister uten gyldig instrument", gaps.badInstrument.length,
         artistRows(gaps.badInstrument, (a) => a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
+      ${missItem("Artister uten viktighetsgrad", utenPrio.length, artistRows(utenPrio))}
     </div>
   `;
 

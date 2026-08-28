@@ -277,49 +277,28 @@ button.ov-kpi { cursor: pointer; transition: border-color 0.12s, box-shadow 0.12
 button.ov-kpi:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
 button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 
-/* Viktighetsgrad-kortet: ett felt per grad, tall + samme symbol som knappene
-   på artistkortene, i samme farger som prioritetsmerket. Klikk åpner artistene
-   bak tallet, som ellers i oversikten. Skjult-feltet er med her fordi det er
-   den eneste bøtta som ikke teller med i artisttallene ellers. */
+/* Viktighetsgrad-kortet: de fire gradene på én rad i ett kort — bare symbolet
+   (samme som knappene på artistkortene) og tallet, som selv er lenka til
+   artistlista. Etikettene ligger i title/aria-label; fire ikoner på rad tåler
+   å stå uten tekst når de er de samme man klikker på kortene.
+   Skjult-graden er med her fordi det er den eneste bøtta som ikke teller med i
+   artisttallene ellers. */
 .ov-prios {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-.ov-prio {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.12s, box-shadow 0.12s;
+  gap: 8px 26px;
+  margin-top: 10px;
 }
-.ov-prio:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
-.ov-prio:hover .ov-prio-l { color: var(--accent-2); }
+.ov-prio { display: inline-flex; align-items: center; gap: 7px; }
 .ov-prio-i { display: flex; flex: none; }
-.ov-prio-n {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-.ov-prio-l { font-size: 0.85rem; color: var(--muted); }
+.ov-prio .ov-num { font-size: 1rem; font-weight: 600; text-align: left; }
 /* Fargene er prioritetsmerkets egne (.tag-prio), så symbolet her og merket på
    kortet leses som samme sak. */
 .ov-prio.prio-3 .ov-prio-i { color: #854d0e; }
 .ov-prio.prio-2 .ov-prio-i { color: #075985; }
 .ov-prio.prio-1 .ov-prio-i { color: #166534; }
 .ov-prio.prio--1 .ov-prio-i { color: #64748b; }
-.ov-prio-rest {
-  margin: 10px 0 0;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
 
 .ov-block { margin-top: 12px; }
 .ov-two {
@@ -530,7 +509,7 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-expand { margin-top: 10px; }
 
 @media (max-width: 720px) {
-  .ov-kpis, .ov-prios { grid-template-columns: repeat(2, 1fr); }
+  .ov-kpis { grid-template-columns: repeat(2, 1fr); }
   .ov-two { grid-template-columns: 1fr; }
   /* Ingen overstyring av .ov-genre-cols her: minstebredden over gjør jobben
      selv, og et fast kolonnetall her ville lagt kollisjonen tilbake. */

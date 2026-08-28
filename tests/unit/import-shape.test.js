@@ -16,9 +16,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeImportFile } from "../../js/import-format.js?v=4.87";
-import { validateTree } from "../../js/genre-validate.js?v=4.87";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.87";
+import { normalizeImportFile } from "../../js/import-format.js?v=4.88";
+import { validateTree } from "../../js/genre-validate.js?v=4.88";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.88";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const tre = () => ({ version: 1, nodes: GENEALOGY, families: FAMILIES, metaOrderHint: META_ORDER_HINT });

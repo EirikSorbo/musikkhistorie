@@ -4,7 +4,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderDashboard } from "../../js/ui-dashboard.js?v=4.87";
+import { renderDashboard } from "../../js/ui-dashboard.js?v=4.88";
 
 const artist = (id, priority, status = "active") => ({
   id, name: `Artist ${id}`, status, priority,
@@ -28,9 +28,17 @@ function tegn(artists) {
   return el.innerHTML;
 }
 
+// Tallet ER lenka: knappen bærer data-ov-prio og har tallet som eneste tekst.
 const tallFor = (html, grad) => {
-  const m = html.match(new RegExp(`data-ov-prio="${grad}"[\\s\\S]*?ov-prio-n">(\\d+)<`));
-  assert.ok(m, `fant ingen rute for viktighetsgrad ${grad}`);
+  const m = html.match(new RegExp(`data-ov-prio="${grad}"[\\s\\S]*?>(\\d+)</button>`));
+  assert.ok(m, `fant ingen tall for viktighetsgrad ${grad}`);
+  return Number(m[1]);
+};
+
+// «Artister uten viktighetsgrad» står nederst, blant det som gjenstår å fylle.
+const utenGrad = (html) => {
+  const m = html.match(/<span>Artister uten viktighetsgrad<\/span>\s*<span class="ov-count [^"]*">(\d+)</);
+  assert.ok(m, "fant ikke «Artister uten viktighetsgrad» under Innhold som mangler");
   return Number(m[1]);
 };
 
@@ -56,14 +64,19 @@ test("forslag som venter på godkjenning teller ikke med", () => {
 test("gradene pluss «uten grad» går opp i artisttallet", () => {
   const html = tegn(ARTISTER);
   const sum = tallFor(html, 3) + tallFor(html, 2) + tallFor(html, 1);
-  const uten = Number(html.match(/ov-prio-rest">(\d+) uten viktighetsgrad/)[1]);
-  assert.equal(uten, 1);
-  assert.equal(sum + uten, 5, "summen skal være de synlige artistene");
+  assert.equal(utenGrad(html), 1);
+  assert.equal(sum + utenGrad(html), 5, "summen skal være de synlige artistene");
 });
 
 test("kortet står der også når ingen har fått en grad ennå", () => {
   const html = tegn([artist("x", 0), artist("y", 0)]);
   assert.equal(tallFor(html, 3), 0);
   assert.equal(tallFor(html, -1), 0);
-  assert.match(html, /ov-prio-rest">2 uten viktighetsgrad/);
+  assert.equal(utenGrad(html), 2);
+});
+
+test("skjulte kort teller ikke som «uten viktighetsgrad»", () => {
+  // -1 er en grad, ikke et tomt felt: uten dette ville de to skjulte havnet
+  // i lista over artister som mangler en grad.
+  assert.equal(utenGrad(tegn(ARTISTER)), 1);
 });
