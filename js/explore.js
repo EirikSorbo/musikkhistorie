@@ -5,18 +5,19 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.91";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.91";
-import { MODAL_HTML } from "./explore-modals.js?v=4.91";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.91";
-import { openVarmekart } from "./explore-varmekart.js?v=4.91";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.91";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.91";
-import { openDecadeList } from "./explore-decade.js?v=4.91";
-import { openReferanser } from "./explore-referanser.js?v=4.91";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.91";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.91";
-import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.91";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=4.92";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=4.92";
+import { MODAL_HTML } from "./explore-modals.js?v=4.92";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=4.92";
+import { openVarmekart } from "./explore-varmekart.js?v=4.92";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=4.92";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=4.92";
+import { openDecadeList } from "./explore-decade.js?v=4.92";
+import { openReferanser } from "./explore-referanser.js?v=4.92";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=4.92";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=4.92";
+import { openInstrumenter, renderInstrumenter } from "./explore-instrument.js?v=4.92";
+import { openSok, wireSok } from "./explore-search.js?v=4.92";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -32,7 +33,12 @@ function wireModals() {
    "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
    "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-referanser", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
-   "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier"].forEach((id) => setupModal(id));
+   "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier",
+   "modal-sok"].forEach((id) => setupModal(id));
+
+  // Søkefeltet i Utforsk-kortet står i sidenes egen markup med faste ID-er, så
+  // forsiden og lærersiden får søket av samme kode uten å wire noe selv.
+  wireSok();
 
   // Kategori- og instrumentlenkene på innovasjonskortene (techFactsLines).
   // Delegert på document fordi kortene rendres tre steder — Teknologi-lista,
@@ -180,6 +186,7 @@ export function initExplore(options) {
   // utforsk-laget selv). renderInstrumenter er no-op når seksjonen er lukket,
   // så sidene kan kalle den trygt fra ethvert snapshot.
   return {
+    openSok,
     openDecadeList,
     openSubgenreList,
     openTidslinje,

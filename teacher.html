@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.91" />
-  <script src="js/gate.js?v=4.91"></script>
+  <link rel="stylesheet" href="css/styles.css?v=4.92" />
+  <script src="js/gate.js?v=4.92"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -87,6 +87,14 @@
             <span class="dash-title">Instrumenter</span>
             <span class="dash-desc">Instrumentenes utvikling</span>
           </button>
+        </div>
+        <!-- Søk i alt innholdet. BEVISST ikke et <form>: lærersiden wirer først
+             etter innlogging, og et skjema uten lytter ville lastet siden på
+             nytt ved Enter. explore-search.js kobler Enter og knappen. -->
+        <div class="sok-rad" id="sok-rad">
+          <input type="search" id="sok-start" class="sok-felt" autocomplete="off"
+            enterkeyhint="search" placeholder="Søk i alt innholdet …" aria-label="Søk i alt innholdet">
+          <button type="button" class="btn primary" id="sok-start-knapp">Søk</button>
         </div>
       </section>
 
@@ -660,7 +668,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.91"></script>
-  <script type="module" src="js/teacher.js?v=4.91"></script>
+  <script src="js/load-guard.js?v=4.92"></script>
+  <script type="module" src="js/teacher.js?v=4.92"></script>
 </body>
 </html>

@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.91";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.91";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=4.92";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=4.92";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -54,6 +54,21 @@ export const MODAL_HTML = `
       <div id="podkast-extra" class="head-actions"></div>
       <div id="podkast-list" class="podkast-list"></div>
     </div>
+  </div>
+</div>
+
+<!-- Søk i alt innholdet. Feltet i Utforsk-kortet (index.html/teacher.html)
+     er inngangen; her søkes det videre, med treff mens man skriver. -->
+<div class="modal-backdrop" id="modal-sok">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Søk</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <input type="search" id="sok-felt" class="sok-felt" autocomplete="off"
+      placeholder="Søk i artister, sjangre, tekster …" aria-label="Søk i alt innholdet">
+    <p class="muted sok-status" id="sok-status"></p>
+    <div id="sok-treff"></div>
   </div>
 </div>
 
