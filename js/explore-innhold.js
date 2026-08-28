@@ -6,15 +6,15 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.89";
-import { isVisible } from "./limits.js?v=4.89";
-import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=4.89";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=4.89";
-import { renderRichText } from "./rich-text.js?v=4.89";
-import { buildGenreTimeline } from "./ui-timeline.js?v=4.89";
-import { wireLinks } from "./ui-helpers.js?v=4.89";
-import { renderSjangerhimmel } from "./constellation.js?v=4.89";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=4.89";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.90";
+import { isVisible } from "./limits.js?v=4.90";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES } from "./genre-model.js?v=4.90";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=4.90";
+import { renderRichText } from "./rich-text.js?v=4.90";
+import { buildGenreTimeline } from "./ui-timeline.js?v=4.90";
+import { wireLinks } from "./ui-helpers.js?v=4.90";
+import { renderSjangerhimmel } from "./constellation.js?v=4.90";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=4.90";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -69,8 +69,24 @@ export function openOmHistorie() {
 export function openRotter() {
   const modal = document.getElementById("modal-rotter");
   if (!modal) return;
+  renderRotterChips();
   renderPage("rotter", "rotter-body", "rotter-extra");
   modalOpen(modal);
+}
+
+// Røttene som grå bobler øverst i kortet — samme form som sjangerboblene i
+// Sjangre-kortet, men i røttenes egen gråtone (treets «Røtter»-familie).
+// Boblen viser nodens korte navn og bærer det fulle i title, som i kartet.
+// Klikk går gjennom onMainGenreClick, SAMME dør som sjangerbobler, tre-noder
+// og navn i løpende tekst — ett navn skal ikke åpne to ulike kort.
+function renderRotterChips() {
+  const el = document.getElementById("rotter-chips");
+  if (!el) return;
+  el.innerHTML = GENEALOGY_ROOT_GENRES.map((n) =>
+    `<button class="tag tag-rot" data-rot="${escapeHtml(n.l)}" title="${escapeHtml(n.f || n.l)}">${escapeHtml(n.l)}</button>`
+  ).join("");
+  el.querySelectorAll("[data-rot]").forEach((b) =>
+    b.addEventListener("click", () => onMainGenreClick(b.dataset.rot)));
 }
 
 // Sjangerhistoriene: teksten bor i Firestore (genreDescriptions/<sjanger>

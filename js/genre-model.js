@@ -25,7 +25,7 @@
 //  (isGenreModelReady()).
 // ============================================================================
 
-import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.89";
+import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=4.90";
 
 // --- Modelltilstanden (byttes av rebuild) -----------------------------------
 
@@ -34,6 +34,18 @@ export let GENEALOGY = [];
 
 // Sjangervokabular for filteret (alle ekte sjangre i treet, ikke røtter).
 export let GENEALOGY_MAIN_GENRES = [];
+
+// Røttene: treets lag FØR sjangrene — det pensumet vokser ut av. Utledet, ikke
+// en liste: en node er en rot når den selv mangler metasjanger OG alle
+// forfedrene også gjør det.
+//
+// Hvorfor ikke bare «mangler metasjanger»: Reggae står i dag uten metasjanger,
+// men har R&B som forelder og er altså en sjanger som mangler plassering, ikke
+// en rot. Og hvorfor ikke familien «gray» (som legenden kaller «Røtter»): Tin
+// Pan Alley bærer den fargen, men har metasjangeren Pop og hører hjemme i
+// sjangerlista. Fikspunkt-regelen treffer de åtte som faktisk ligger før alt
+// annet, og fanger opp nye røtter av seg selv.
+export let GENEALOGY_ROOT_GENRES = [];
 
 // Metasjangre (treets kolonner): én rad per hovedretning. Er VOKABULARET —
 // hvilke metasjangre som finnes — og brukes der rekkefølgen ikke betyr noe
@@ -122,6 +134,27 @@ function buildDecadeRows(nodes) {
 
 // Bygger hele modellen fra et treobjekt: { nodes, families, metaOrderHint }.
 // Kalles av snapshot-lytteren og av testene. Tåler delvis/tom input.
+// Fikspunkt: start med de metasjanger-løse nodene uten foreldre, og ta med
+// stadig flere metasjanger-løse noder så lenge ALLE foreldrene alt er med.
+// Rekkefølgen er treets egen, så røttene leses ovenfra og ned som i kartet.
+function utledRøtter(noder) {
+  const utenMeta = noder.filter((n) => !n.g);
+  const røtter = [];
+  const inne = new Set();
+  let vokste = true;
+  while (vokste) {
+    vokste = false;
+    for (const n of utenMeta) {
+      if (inne.has(n.id)) continue;
+      if (!n.p.every((pid) => inne.has(pid))) continue;
+      inne.add(n.id);
+      røtter.push(n);
+      vokste = true;
+    }
+  }
+  return røtter;
+}
+
 export function rebuild(tree) {
   const nodes = Array.isArray(tree?.nodes) ? tree.nodes : [];
   const families = tree?.families && typeof tree.families === "object" ? tree.families : {};
@@ -131,6 +164,8 @@ export function rebuild(tree) {
   // den alltid finnes som array (renderGenealogy muterte den tidligere på plass).
   GENEALOGY = nodes.map((n) => ({ ...n, p: Array.isArray(n.p) ? n.p : [], rx: Array.isArray(n.rx) ? n.rx : [] }));
   FAMILIES = families;
+
+  GENEALOGY_ROOT_GENRES = utledRøtter(GENEALOGY);
 
   GENEALOGY_MAIN_GENRES = [...new Set(GENEALOGY.filter((n) => n.g).map((n) => n.l))]
     .sort((a, b) => a.localeCompare(b, "no"));

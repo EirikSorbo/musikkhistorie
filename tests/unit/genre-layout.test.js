@@ -8,9 +8,9 @@
 // ============================================================================
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.89";
+import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=4.90";
 import { byggGenealogyDoc } from "../../tools/build-genealogy-doc.js";
-import { computeColumns, LAYOUT_WIDTH } from "../../js/genre-layout.js?v=4.89";
+import { computeColumns, LAYOUT_WIDTH } from "../../js/genre-layout.js?v=4.90";
 
 const doc = byggGenealogyDoc({ GENEALOGY: SEED_NODES, FAMILIES: SEED_FAMILIES, META_ORDER_HINT });
 const X = computeColumns(doc.nodes, doc.metaGenres, { width: LAYOUT_WIDTH });

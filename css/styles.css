@@ -427,6 +427,10 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-genre-cols .ov-row { break-inside: avoid; margin-bottom: 8px; grid-template-columns: minmax(96px, auto) 1fr 54px; }
 .ov-genre-cols .ov-count { white-space: nowrap; }
 
+/* Røtter-kortets boblerad, øverst over «Se slektstreet». */
+.rotter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.rotter-chips:empty { display: none; }
+
 /* Chips (instrument, tomme greiner, tynne tiår, historier) */
 .ov-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ov-chip {
@@ -680,6 +684,10 @@ button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background
 .tag.tag-sjanger.is-empty { color: #9ca3af; background: #f3f4f6; border-color: #e5e7eb; border-style: dashed; }
 button.tag.tag-sjanger.is-empty:hover { color: #065f46; background: #ecfdf5; border-color: #6ee7b7; }
 button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: #d1fae5; }
+/* Røtter-boblene i «Røtter før 1910»: samme form som sjangerboblene, men i
+   gråtonen treets fargeforklaring gir «Røtter» — de er ikke sjangre ennå. */
+.tag.tag-rot { color: #55635b; background: var(--surface-2); border-color: var(--line-strong); }
+button.tag.tag-rot:hover { color: var(--text); background: #e6ece8; border-color: #9bada1; }
 .tag.tag-instrument { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
 button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; background: #bfdbfe; }
 .tag.tag-prio { padding: 2px 8px; display: inline-flex; align-items: center; }
