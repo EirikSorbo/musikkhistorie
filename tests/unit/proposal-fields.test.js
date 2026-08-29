@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.96";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.97";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -23,6 +23,14 @@ test("artist-hvitelisten inneholder de reelle innholdsfeltene", () => {
 
 test("tech/subgenre/decade-hvitelistene utelater status og andre systemfelter", () => {
   assert.equal(PROPOSABLE_KEYS.tech.includes("status"), false);
+  // v4.97: BEGGE årstallene må være foreslåbare. Fram til da sto kun
+  // adoptedYear i lista, med etiketten «Oppfunnet» i skjemaet — en student som
+  // rettet oppfinnelsesåret skrev i praksis til året kortet plasseres etter på
+  // teknologitidslinjen. Holdes i synk med FIELD_SPECS.tech og firestore.rules
+  // (BÅDE tech-create og pendingEdits-create).
+  for (const key of ["inventedYear", "adoptedYear", "adoptedLabel"]) {
+    assert.equal(PROPOSABLE_KEYS.tech.includes(key), true, `tech skal tillate ${key}`);
+  }
   // Sjangre: beskrivelse, epoke-årstallene og kilder er foreslåbare — men
   // ingen systemfelter. Holdes i synk med FIELD_SPECS.subgenre i proposals.js.
   assert.deepEqual(PROPOSABLE_KEYS.subgenre, ["description", "kilder", "activeFrom", "activeTo", "era"]);

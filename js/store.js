@@ -35,13 +35,13 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=4.96";
-import { isMainGenre } from "./genre-model.js?v=4.96";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.96";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.96";
-import { mergeHeatRows } from "./import-format.js?v=4.96";
-import { BATCH_MAX } from "./genre-migrate.js?v=4.96";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=4.96";
+import { firebaseConfig } from "./firebase-config.js?v=4.97";
+import { isMainGenre } from "./genre-model.js?v=4.97";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=4.97";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=4.97";
+import { mergeHeatRows } from "./import-format.js?v=4.97";
+import { BATCH_MAX } from "./genre-migrate.js?v=4.97";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=4.97";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den

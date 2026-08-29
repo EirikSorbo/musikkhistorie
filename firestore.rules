@@ -154,7 +154,7 @@ service cloud.firestore {
       allow create: if isTeacher() || (
         request.auth != null &&
         request.resource.data.keys().hasOnly([
-          "name", "type", "category", "instrument", "decade", "adoptedYear", "adoptedLabel",
+          "name", "type", "category", "instrument", "decade", "inventedYear", "adoptedYear", "adoptedLabel",
           "description", "kilder", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt"
         ]) &&
         request.resource.data.status == "pending" &&
@@ -205,7 +205,7 @@ service cloud.firestore {
           "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
           "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
           "geography", "description", "imageUrl", "imageCredit",
-          "type", "category", "decade", "adoptedYear", "adoptedLabel", "kilder",
+          "type", "category", "decade", "inventedYear", "adoptedYear", "adoptedLabel", "kilder",
           "activeFrom", "activeTo", "era", "body", "society", "tech"
         ]) &&
         // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer

@@ -8,12 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.96";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.96";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.96";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.96";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.96";
-import { setupFormatBars } from "./format-bar.js?v=4.96";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.97";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.97";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.97";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.97";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.97";
+import { setupFormatBars } from "./format-bar.js?v=4.97";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -50,7 +50,16 @@ const FIELD_SPECS = {
       ...INSTRUMENT_TIMELINE_GROUPS.map((i) => ({ value: i, label: i })),
     ] },
     { key: "decade", label: "Tiår (f.eks. 1950)", type: "text" },
-    { key: "adoptedYear", label: "Oppfunnet", type: "number" },
+    // FEIL T.O.M. v4.96: adoptedYear sto her med etiketten «Oppfunnet», og
+    // inventedYear — feltet kortet FAKTISK viser som «Oppfunnet» — kunne ikke
+    // foreslås i det hele tatt. En student som rettet oppfinnelsesåret skrev
+    // altså til året kortet plasseres etter på teknologitidslinjen, og
+    // lærerens diff-tabell kalte endringen «Oppfunnet». Etikettene her er nå
+    // ordrett de samme som i lærerens editor (teacher.html).
+    { key: "inventedYear", label: "Oppfunnet (år)", type: "number",
+      hint: "Året teknologien ble oppfunnet eller patentert." },
+    { key: "adoptedYear", label: "Tatt i bruk (år)", type: "number",
+      hint: "Året den ble tatt i bruk av noen viktige nok til at det ble stående, eller tatt kommersielt i bruk i bred skala. Ofte flere år etter at den ble oppfunnet." },
     { key: "adoptedLabel", label: "Tatt i bruk (kort forklaring)", type: "text" },
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
     { key: "kilder", label: "Kilder", type: "sources", full: true },
@@ -113,7 +122,7 @@ function inputForField(spec, value) {
     return `${labelHtml}<select id="${id}">${opts}</select></label>`;
   }
   if (spec.type === "number") {
-    return `${labelHtml}<input type="number" id="${id}" value="${escapeHtml(v)}" /></label>`;
+    return `${labelHtml}<input type="number" id="${id}" value="${escapeHtml(v)}" />${hint}</label>`;
   }
   if (spec.type === "csv") {
     const display = Array.isArray(v) ? v.join(", ") : (v || "");
