@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=4.97";
+import { resolveSpan } from "./timeline-lanes.js?v=4.98";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -122,6 +122,12 @@ export const DECADES = [
   1900, 1910, 1920, 1930, 1940, 1950,
   1960, 1970, 1980, 1990, 2000, 2010, 2020,
 ];
+
+// Tiårene som nedtrekk (teknologikortenes `decade`-felt). VERDIEN må være
+// STRENGEN «1950», ikke tallet: buildTechTimeline filtrerer med
+// `t.decade === String(decadeId)`, og et tall ville falt ut av den
+// sammenligningen og tømt tiårets tidslinje uten feilmelding.
+export const DECADE_OPTIONS = DECADES.map((d) => ({ value: String(d), label: `${d}-tallet` }));
 
 // Kjønnskategorier brukt i skjema og statistikk. Etikettene er det eneste
 // brukeren ser (GENDER_LABEL i ui-helpers utleder alt fra denne lista) —

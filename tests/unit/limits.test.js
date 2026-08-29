@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   INSTRUMENTS,
   DECADES,
+  DECADE_OPTIONS,
   GENDERS,
   isVisible,
   decadesForRange,
@@ -10,7 +11,7 @@ import {
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=4.97";
+} from "../../js/limits.js?v=4.98";
 
 // Etikettene er UI, verdiene er data. «ukjent» heter «Annet» i skjemaet fra
 // v4.95, men verdien ligger fast i Firestore — bytter noen den til "annet"
@@ -20,6 +21,18 @@ test("GENDERS: verdiene ligger fast, etikettene er de synlige", () => {
   assert.equal(GENDERS.find((g) => g.value === "ukjent").label, "Annet");
   assert.equal(GENDERS.find((g) => g.value === "annet").label, "Gruppe");
   assert.equal(new Set(GENDERS.map((g) => g.label)).size, GENDERS.length, "etikettene må være unike");
+});
+
+// Tiårs-nedtrekket på teknologikortene (v4.98). Verdien MÅ være en streng:
+// buildTechTimeline filtrerer med `t.decade === String(decadeId)`, så et tall
+// ville tømt tiårets tidslinje uten noen feilmelding.
+test("DECADE_OPTIONS: strengverdier, «-tallet»-etiketter, dekker alle tiårene", () => {
+  assert.equal(DECADE_OPTIONS.length, DECADES.length);
+  for (const o of DECADE_OPTIONS) {
+    assert.equal(typeof o.value, "string", `${o.label} må ha strengverdi`);
+  }
+  assert.deepEqual(DECADE_OPTIONS.map((o) => o.value), DECADES.map(String));
+  assert.deepEqual(DECADE_OPTIONS[0], { value: "1900", label: "1900-tallet" });
 });
 
 test("isVisible: aktiv og ikke lærer-skjult", () => {

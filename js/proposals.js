@@ -8,12 +8,12 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.97";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.97";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.97";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.97";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.97";
-import { setupFormatBars } from "./format-bar.js?v=4.97";
+import { addPendingEdit, addTechProposal } from "./store.js?v=4.98";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.98";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=4.98";
+import { GENDERS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS } from "./limits.js?v=4.98";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.98";
+import { setupFormatBars } from "./format-bar.js?v=4.98";
 
 // Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
 // «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
@@ -49,7 +49,13 @@ const FIELD_SPECS = {
       { value: "", label: "Ingen / gjelder ikke ett instrument" },
       ...INSTRUMENT_TIMELINE_GROUPS.map((i) => ({ value: i, label: i })),
     ] },
-    { key: "decade", label: "Tiår (f.eks. 1950)", type: "text" },
+    // Tiåret styrer hvilken tiårs-tidslinje kortet havner på. Var fritekst
+    // t.o.m. v4.97; en skrivefeil («1955») ga et kort som falt ut av tidslinjen
+    // uten at noe så feil ut.
+    { key: "decade", label: "Tiår (for filtrering)", type: "select", options: [
+      { value: "", label: "Velg tiår …" },
+      ...DECADE_OPTIONS,
+    ] },
     // FEIL T.O.M. v4.96: adoptedYear sto her med etiketten «Oppfunnet», og
     // inventedYear — feltet kortet FAKTISK viser som «Oppfunnet» — kunne ikke
     // foreslås i det hele tatt. En student som rettet oppfinnelsesåret skrev
@@ -116,10 +122,16 @@ function inputForField(spec, value) {
     return `${labelHtml}<textarea id="${id}" rows="4" data-format="${langt ? "full" : "kort"}">${escapeHtml(v)}</textarea></label>`;
   }
   if (spec.type === "select") {
-    const opts = spec.options.map((o) =>
+    // En lagret verdi utenfor vokabularet beholdes som eget valg (samme vern
+    // som row-editor.js): et kort med et tiår skrevet inn før feltet ble et
+    // nedtrekk skal ikke miste det stille ved neste forslag.
+    const opts = (spec.options || []).some((o) => o.value === v) || v === ""
+      ? spec.options
+      : [...spec.options, { value: v, label: `${v} (utenfor lista)` }];
+    const optsHtml = opts.map((o) =>
       `<option value="${escapeHtml(o.value)}"${o.value === v ? " selected" : ""}>${escapeHtml(o.label)}</option>`
     ).join("");
-    return `${labelHtml}<select id="${id}">${opts}</select></label>`;
+    return `${labelHtml}<select id="${id}">${optsHtml}</select>${hint}</label>`;
   }
   if (spec.type === "number") {
     return `${labelHtml}<input type="number" id="${id}" value="${escapeHtml(v)}" />${hint}</label>`;
