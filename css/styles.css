@@ -1301,31 +1301,6 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-/* Hovedfanene (utvikling / podkaster) ligger I modalhodet, på samme rad som
-   ←/✕. Ekte fane-preg: ingen ramme, understrek på den aktive, og en tynn linje
-   langs hele hodet som fanene «sitter på». */
-.modal-head-tabs { align-items: flex-end; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
-.modal-head-tabs .modal-close,
-.modal-head-tabs .modal-close-all { margin-bottom: 6px; }
-.instr-tabs { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
-.instr-tab.btn {
-  background: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  padding: 8px 10px;
-  margin-bottom: -1px;             /* legger understreken oppå hodets linje */
-  font-size: 0.92rem;
-  color: var(--muted);
-}
-.instr-tab.btn:hover { background: none; color: var(--text); }
-.instr-tab.btn.active {
-  background: none;
-  color: var(--text);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
-}
-
 /* To rader à fire, ikke én à åtte: «Elektronisk produksjon» blir avkortet til
    «Elektronisk pro…» når åtte navn skal dele bredden. */
 .instr-chips {

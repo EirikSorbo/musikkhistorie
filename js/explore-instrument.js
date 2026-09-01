@@ -16,57 +16,23 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.06";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.06";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.06";
-import { pageFor } from "./story-format.js?v=5.06";
-import { renderRichText } from "./rich-text.js?v=5.06";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.06";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.06";
-import { openTechDetail } from "./explore-tech.js?v=5.06";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.07";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.07";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.07";
+import { pageFor } from "./story-format.js?v=5.07";
+import { renderRichText } from "./rich-text.js?v=5.07";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.07";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.07";
+import { openTechDetail } from "./explore-tech.js?v=5.07";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
 const INSTRUMENT_TECH_CATEGORY = "Instrumenter og lydutstyr";
 
-// Valgt fane huskes mellom åpninger, som sjangerhistoriene.
+// Valgt instrument huskes mellom åpninger, som sjangerhistoriene.
 let currentGroup = null;
-let currentTab = "utvikling";
 
-// Hovedfanene. Podkastene lå tidligere som eget dashbordkort — de hører hjemme
-// her fordi studentenes episoder handler om instrumentene.
-const TABS = [
-  { id: "utvikling", label: "Instrumentenes utvikling" },
-  { id: "podkast", label: "Podkaster" },
-];
-
-function renderTabs() {
-  const el = document.getElementById("instr-tabs");
-  if (!el) return;
-  if (!el.dataset.filled) {
-    el.innerHTML = TABS.map((t) =>
-      `<button type="button" class="btn ghost small instr-tab" data-tab="${t.id}">${escapeHtml(t.label)}</button>`
-    ).join("");
-    el.querySelectorAll(".instr-tab").forEach((b) =>
-      b.addEventListener("click", () => selectTab(b.dataset.tab)));
-    el.dataset.filled = "1";
-  }
-  el.querySelectorAll(".instr-tab").forEach((b) =>
-    b.classList.toggle("active", b.dataset.tab === currentTab));
-}
-
-function selectTab(tab) {
-  currentTab = TABS.some((t) => t.id === tab) ? tab : "utvikling";
-  renderTabs();
-  const utv = document.getElementById("instr-utvikling");
-  const pod = document.getElementById("instr-podkast");
-  if (utv) utv.hidden = currentTab !== "utvikling";
-  if (pod) pod.hidden = currentTab !== "podkast";
-  if (currentTab === "podkast") renderPodkast();
-  else renderUtvikling();
-}
-
-// Podkast-fanen: episodene lastes opp av lærer, så studentene ser bare lista.
+// Podkastene: episodene lastes opp av lærer, så studentene ser bare lista.
 // Lærer får inngangen til opplastingsskjemaet her, siden dashbordkortet er borte.
 function renderPodkast() {
   const el = document.getElementById("podkast-list");
@@ -104,7 +70,7 @@ function renderPodkastInngang() {
   const n = getState().podcasts.length;
   el.innerHTML = `<button type="button" class="btn primary instr-podkast-btn">` +
     `${IKON_PODKAST}<span>Hør podkastene${n ? ` (${n})` : ""}</span></button>`;
-  el.querySelector("button").addEventListener("click", () => selectTab("podkast"));
+  el.querySelector("button").addEventListener("click", () => openPodkaster());
 }
 
 function renderChips() {
@@ -179,7 +145,7 @@ function renderGroup(group) {
         `<button type="button" class="sh-linkbtn" id="instr-til-podkast">podkast</button>` +
         ` om instrumentets utvikling.</p>`
       : `<p class="gx-missing">Laster innhold …</p>`;
-    sum.querySelector("#instr-til-podkast")?.addEventListener("click", () => selectTab("podkast"));
+    sum.querySelector("#instr-til-podkast")?.addEventListener("click", () => openPodkaster());
   }
 
   // Rediger (lærer) eller Foreslå endring (student) på sammendraget.
@@ -281,25 +247,36 @@ function renderUtvikling() {
   renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0]);
 }
 
-// Tegner gjeldende fane på nytt når kort/episoder/innhold endres mens
-// seksjonen står åpen. No-op når modalen er lukket, så sidene kan kalle den
-// trygt fra ethvert snapshot (tech, podcasts, content) uten egen vakt.
+// Tegner de åpne visningene på nytt når kort/episoder/innhold/artister endres.
+// Dekker BEGGE vinduene, og er no-op for det som er lukket, så sidene kan kalle
+// den trygt fra ethvert snapshot uten egen vakt.
 export function renderInstrumenter() {
-  if (!document.getElementById("modal-instrumenter")?.classList.contains("open")) return;
-  renderTabs();
-  selectTab(currentTab);
+  if (erApen("modal-instrumenter")) renderUtvikling();
+  if (erApen("modal-podkaster")) renderPodkast();
 }
 
-// `tab` kan være "podkast" for å åpne rett på podkastfanen. `group` velger
-// hvilket instrument som vises — brukt av instrument-lenka på innovasjonskortene.
-export function openInstrumenter(tab, group) {
+const erApen = (id) => !!document.getElementById(id)?.classList.contains("open");
+
+// `group` velger hvilket instrument som vises — brukt av instrument-lenka på
+// innovasjonskortene og av søket. Kalles også rett fra en klikklytter, og får
+// da hendelsen som argument; includes-sjekken siler den bort.
+export function openInstrumenter(group) {
   const modal = document.getElementById("modal-instrumenter");
   if (!modal) return;
   if (group && INSTRUMENT_TIMELINE_GROUPS.includes(group)) currentGroup = group;
-  // Lukkes kortet mens en episode spiller, skal brukeren selv velge om lyden
-  // følger med ut. Fanebytte er IKKE lukking og spør ikke (brukervalg).
+  renderUtvikling();
+  modalOpen(modal);
+}
+
+// Podkastene i eget vindu (v5.07). Lå tidligere som fane nummer to i
+// Instrumenter-kortet; med «Hør podkastene»-knappen på plass var fanen bare et
+// ekstra lag rundt den samme lista.
+export function openPodkaster() {
+  const modal = document.getElementById("modal-podkaster");
+  if (!modal) return;
+  // Lukkes vinduet mens en episode spiller, skal brukeren selv velge om lyden
+  // følger med ut.
   wirePlayerCloseGuard(modal, "podkast-list");
-  renderTabs();
-  selectTab(typeof tab === "string" ? tab : currentTab);
+  renderPodkast();
   modalOpen(modal);
 }

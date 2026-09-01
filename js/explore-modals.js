@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.06";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.06";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.07";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.07";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -38,41 +38,47 @@ export const MODAL_HTML = `
      NB: markupen her er én stor template-literal — ingen backticks i teksten. -->
 <div class="modal-backdrop" id="modal-instrumenter">
   <div class="modal modal-wide">
-    <!-- Hovedfanene ligger I hodet, på samme rad som ←/✕, i stedet for en
-         tittel: «Instrumenter» sa ikke annet enn det fanene allerede sier.
-         Tittelen beholdes for skjermlesere, som ellers mistet modalens navn. -->
-    <div class="modal-head modal-head-tabs">
-      <h2 class="sr-only">Instrumenter</h2>
-      <div class="instr-tabs" id="instr-tabs"></div>
+    <!-- Tittelen er tilbake i hodet (v5.07). Kortet hadde to faner her, men
+         podkastene har fått sitt eget vindu, og én fane er ingen fane. -->
+    <div class="modal-head">
+      <h2>Instrumenter</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="instr-utvikling">
-      <!-- Podkast-inngangen står ØVERST, over instrumentknappene (brukervalg
-           2026-09-01). Episodene er studentenes eget arbeid, og som fane nummer
-           to var de lette å gå glipp av: fanen står i modalhodet og er ikke den
-           valgte når kortet åpnes. Knappen fylles av renderPodkastInngang. -->
-      <div id="instr-podkast-inngang" class="instr-podkast-inngang"></div>
-      <div class="instr-chips" id="instr-chips"></div>
-      <!-- Arbeidsforklaringen står UNDER instrumentknappene (brukervalg
-           2026-09-01): den hører til arbeidet med det valgte instrumentet, ikke
-           til selve valget. LUKKET som standard — den er en oppskrift man slår
-           opp i, ikke noe man skal lese hver gang. -->
-      <details class="instr-guide">
-        <summary>Slik jobber dere med denne delen</summary>
-        <p>Hver gruppe har ansvar for sitt instrument. Fire ting skal på plass:</p>
-        <ol>
-          <li><strong>Podkasten.</strong> Send den ferdige episoden til Eirik på e-post, så legges den ut under fanen «Podkaster».</li>
-          <li><strong>Sammendraget.</strong> Skriv teksten om instrumentets utvikling, og legg ved kildene dere har brukt. Knappen heter «Skriv sammendrag».</li>
-          <li><strong>Nyvinningene.</strong> Sørg for at sentrale teknologiske nyvinninger (eller sentrale måter å bruke instrumentet på) er med, slik at tidslinjen blir god. Knappen heter «Legg til nyvinning».</li>
-          <li><strong>Artistene.</strong> Sjekk at de viktigste utøverne på instrumentet ligger i appen, og legg til dem som mangler. Knappen heter «Legg til artist».</li>
-        </ol>
-      </details>
-      <div id="instr-body"></div>
+    <!-- Podkast-inngangen står ØVERST, over instrumentknappene (brukervalg
+         2026-09-01). Episodene er studentenes eget arbeid, og som fane nummer
+         to var de lette å gå glipp av. Knappen fylles av renderPodkastInngang
+         og åpner podkastvinduet under. -->
+    <div id="instr-podkast-inngang" class="instr-podkast-inngang"></div>
+    <div class="instr-chips" id="instr-chips"></div>
+    <!-- Arbeidsforklaringen står UNDER instrumentknappene (brukervalg
+         2026-09-01): den hører til arbeidet med det valgte instrumentet, ikke
+         til selve valget. LUKKET som standard — den er en oppskrift man slår
+         opp i, ikke noe man skal lese hver gang. -->
+    <details class="instr-guide">
+      <summary>Slik jobber dere med denne delen</summary>
+      <p>Hver gruppe har ansvar for sitt instrument. Fire ting skal på plass:</p>
+      <ol>
+        <li><strong>Podkasten.</strong> Send den ferdige episoden til Eirik på e-post, så legges den ut under «Hør podkastene».</li>
+        <li><strong>Sammendraget.</strong> Skriv teksten om instrumentets utvikling, og legg ved kildene dere har brukt. Knappen heter «Skriv sammendrag».</li>
+        <li><strong>Nyvinningene.</strong> Sørg for at sentrale teknologiske nyvinninger (eller sentrale måter å bruke instrumentet på) er med, slik at tidslinjen blir god. Knappen heter «Legg til nyvinning».</li>
+        <li><strong>Artistene.</strong> Sjekk at de viktigste utøverne på instrumentet ligger i appen, og legg til dem som mangler. Knappen heter «Legg til artist».</li>
+      </ol>
+    </details>
+    <div id="instr-body"></div>
+  </div>
+</div>
+
+<!-- Podkastene: eget vindu (v5.07), åpnet fra «Hør podkastene» øverst i
+     Instrumenter-kortet. Lå tidligere som fane nummer to der inne — med
+     knappen på plass var fanen bare et ekstra lag rundt den samme lista. -->
+<div class="modal-backdrop" id="modal-podkaster">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Podkaster</h2>
+      <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="instr-podkast" hidden>
-      <div id="podkast-extra" class="head-actions"></div>
-      <div id="podkast-list" class="podkast-list"></div>
-    </div>
+    <div id="podkast-extra" class="head-actions"></div>
+    <div id="podkast-list" class="podkast-list"></div>
   </div>
 </div>
 
