@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.01" />
-  <script src="js/gate.js?v=5.01"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.02" />
+  <script src="js/gate.js?v=5.02"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -230,6 +230,10 @@
         <textarea id="se-text" spellcheck="false"></textarea>
         <div id="se-preview" class="story-body story-preview"></div>
       </div>
+      <!-- Telleren står UTENFOR .story-edit-grid: inne i gridet ville den blitt
+           en tredje rute og dyttet forhåndsvisningen ned. Vises kun for
+           instrumentsammendragene, som er de eneste med tegntak. -->
+      <p id="se-char-count" class="char-count" hidden></p>
       <!-- Kilder: vises KUN for instrumentsammendragene (openContentEditor
            slår den på). De andre innholdssidene har ingen kildeliste. -->
       <div class="full" id="se-kilder-wrap" style="margin-top:14px" hidden>
@@ -678,7 +682,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=5.01"></script>
-  <script type="module" src="js/teacher.js?v=5.01"></script>
+  <script src="js/load-guard.js?v=5.02"></script>
+  <script type="module" src="js/teacher.js?v=5.02"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 //  og under den de enkelte artiklene. Ren logikk uten DOM, så den kan
 //  enhetstestes; tegningen bor i explore-referanser.js.
 // ============================================================================
-import { safeUrl } from "./util.js?v=5.01";
+import { safeUrl } from "./util.js?v=5.02";
 
 // Fast vokabular i koden, ikke i config — samme valg som INSTRUMENTS (v3.68).
 // Navnene er OGSÅ seksjonsoverskriftene i Referanser-kortet, derav

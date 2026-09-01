@@ -8,15 +8,15 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=5.01";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.01";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.01";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.01";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.01";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.01";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.01";
-import { setupFormatBars } from "./format-bar.js?v=5.01";
-import { wireCharCount } from "./ui-helpers.js?v=5.01";
+import { addPendingEdit, addTechProposal } from "./store.js?v=5.02";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.02";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.02";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.02";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.02";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.02";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.02";
+import { setupFormatBars } from "./format-bar.js?v=5.02";
+import { wireCharCount } from "./ui-helpers.js?v=5.02";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
