@@ -18,11 +18,11 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=5.04";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.04";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=5.04";
-import { attachCamera } from "./gx-camera.js?v=5.04";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=5.04";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=5.05";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.05";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=5.05";
+import { attachCamera } from "./gx-camera.js?v=5.05";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=5.05";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)

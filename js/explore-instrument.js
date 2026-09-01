@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.04";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.04";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.04";
-import { pageFor } from "./story-format.js?v=5.04";
-import { renderRichText } from "./rich-text.js?v=5.04";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.04";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.04";
-import { openTechDetail } from "./explore-tech.js?v=5.04";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.05";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.05";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.05";
+import { pageFor } from "./story-format.js?v=5.05";
+import { renderRichText } from "./rich-text.js?v=5.05";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.05";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.05";
+import { openTechDetail } from "./explore-tech.js?v=5.05";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -182,12 +182,14 @@ function renderGroup(group) {
   const foot = body.querySelector(".instr-foot");
   const knapper = [];
 
-  // Se hva som ALT finnes, før man legger til noe: knappene står først i raden,
-  // og tallet i etiketten sier med én gang om instrumentet er godt dekket.
+  // Raden har to halvdeler: SE hva som finnes til venstre, LEGG TIL til høyre.
+  // Skillet er selve poenget — man skal sjekke dekningen før man bidrar, og de
+  // to handlingene skal ikke se ut som fire like valg på rad.
   // Artistene hentes på GRUPPE, ikke på instrumentnavn — se
   // artistsInInstrumentGroup (en «Soloinstrument»-artist heter «Trompet»).
   const artister = artistsInInstrumentGroup(s.artists, group);
   knapper.push({
+    side: "venstre",
     tekst: `Alle artister (${artister.length})`,
     gjør: () => openArtistListModal(
       `Artister: ${group}`, artister, opts.onArtistClick,
@@ -195,24 +197,35 @@ function renderGroup(group) {
     ),
   });
   knapper.push({
+    side: "venstre",
     tekst: `Alle nyvinninger (${items.length})`,
     gjør: () => openTechListModal(group, items),
   });
 
   if (opts.onTechEdit) {
-    knapper.push({ tekst: "Legg til nyvinning", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
+    knapper.push({ side: "høyre", tekst: "Legg til nyvinning", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   } else if (opts.onProposeNewTech) {
-    knapper.push({ tekst: "Legg til nyvinning", gjør: () => opts.onProposeNewTech({ instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
+    knapper.push({ side: "høyre", tekst: "Legg til nyvinning", gjør: () => opts.onProposeNewTech({ instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   }
   // Artistskjemaet åpnes UTEN forhåndsvalgt instrument (brukervalg): gruppenavnene
   // «Soloinstrument» og «Trommer» er ikke gyldige artistverdier — artisten skal
   // ha det presise instrumentet (Saksofon, Trommer/perkusjon …).
-  knapper.push({ tekst: "Legg til artist", href: "student.html" });
+  knapper.push({ side: "høyre", tekst: "Legg til artist", href: "student.html" });
 
-  foot.innerHTML = knapper.map((k, i) => k.href
+  // data-k bærer indeksen i `knapper`, ikke i gruppen: klikk-koblingen under
+  // slår opp i den samlede lista, og den må stemme uansett hvordan knappene
+  // fordeler seg på de to halvdelene.
+  const knappHtml = (k, i) => k.href
     ? `<a class="btn ghost small" href="${k.href}">${escapeHtml(k.tekst)}</a>`
-    : `<button type="button" class="btn ghost small" data-k="${i}">${escapeHtml(k.tekst)}</button>`
-  ).join("");
+    : `<button type="button" class="btn ghost small" data-k="${i}">${escapeHtml(k.tekst)}</button>`;
+  const gruppe = (side) => knapper
+    .map((k, i) => [k, i])
+    .filter(([k]) => k.side === side)
+    .map(([k, i]) => knappHtml(k, i))
+    .join("");
+  foot.innerHTML =
+    `<div class="instr-foot-gruppe">${gruppe("venstre")}</div>` +
+    `<div class="instr-foot-gruppe">${gruppe("høyre")}</div>`;
   foot.querySelectorAll("[data-k]").forEach((b) =>
     b.addEventListener("click", () => knapper[+b.dataset.k].gjør()));
 

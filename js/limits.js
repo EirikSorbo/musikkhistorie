@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.04";
+import { resolveSpan } from "./timeline-lanes.js?v=5.05";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -71,7 +71,7 @@ export const INSTRUMENT_TITLE = {
 // en prioritering, ikke en hviteliste.
 const INSTRUMENT_REKKEFOLGE = [
   "Trommer", "Bass", "Tangenter", "Gitar", "Vokal",
-  "Soloinstrument", "Elektronisk produksjon", "Låtskriving",
+  "Soloinstrument", "Låtskriving", "Elektronisk produksjon",
 ];
 
 // Gruppene som får egen nyvinnings-tidslinje i Instrumenter-seksjonen.

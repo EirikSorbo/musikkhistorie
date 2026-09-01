@@ -1392,7 +1392,11 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    studentene, som resten av innholdet. */
 .instr-sum-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .instr-sum-head h3 { margin: 0; font-size: 1rem; }
-.instr-foot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+/* To halvdeler: «se hva som finnes» til venstre, «legg til» til høyre.
+   Egne beholdere framfor margin-left:auto på én knapp — det ville sluppet taket
+   så snart raden brøt, og halvdelene skal holde sammen også stablet. */
+.instr-foot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; justify-content: space-between; }
+.instr-foot-gruppe { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Skillelinjen følger tidslinjen, som nå ligger nederst. */
 .instr-tl { border-top: 1px solid var(--line, #e5e7eb); margin-top: 18px; padding-top: 6px; }
 
