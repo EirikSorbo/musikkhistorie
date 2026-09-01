@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.07";
+import { resolveSpan } from "./timeline-lanes.js?v=5.08";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -37,7 +37,7 @@ export const INSTRUMENT_GROUPS = {
     "Saksofon", "Trompet", "Strykeinstrumenter",
     "Klarinett", "Trombone", "Munnspill", "Mandolin",
   ],
-  "Elektronisk produksjon": ["Elektronisk produksjon"],
+  "Produksjon": ["Produksjon"],
   "Låtskriving": ["Låtskriving"],
   // Ensembler, bandledere og produsenter uten ett bestemt instrument. Har
   // bevisst INGEN nyvinnings-tidslinje — det finnes ikke instrumentnyvinninger
@@ -46,8 +46,8 @@ export const INSTRUMENT_GROUPS = {
 };
 
 // Overskriften over hvert instrumentsammendrag. Skrives ut i sin helhet fordi
-// norsk genitiv ikke lar seg utlede mekanisk — «Tangentenes», «Trommenes» og
-// «Den elektroniske produksjonens» følger tre ulike mønstre.
+// norsk genitiv ikke lar seg utlede mekanisk — «Vokalens», «Tangentenes» og
+// «Trommenes» følger tre ulike mønstre.
 export const INSTRUMENT_TITLE = {
   "Vokal": "Vokalens utvikling",
   "Gitar": "Gitarens utvikling",
@@ -55,7 +55,7 @@ export const INSTRUMENT_TITLE = {
   "Bass": "Bassens utvikling",
   "Trommer": "Trommenes utvikling",
   "Soloinstrument": "Soloinstrumentenes utvikling",
-  "Elektronisk produksjon": "Den elektroniske produksjonens utvikling",
+  "Produksjon": "Produksjonens utvikling",
   "Låtskriving": "Låtskrivingens utvikling",
 };
 
@@ -71,7 +71,7 @@ export const INSTRUMENT_TITLE = {
 // en prioritering, ikke en hviteliste.
 const INSTRUMENT_REKKEFOLGE = [
   "Trommer", "Bass", "Tangenter", "Gitar", "Vokal",
-  "Soloinstrument", "Låtskriving", "Elektronisk produksjon",
+  "Soloinstrument", "Låtskriving", "Produksjon",
 ];
 
 // Gruppene som får egen nyvinnings-tidslinje i Instrumenter-seksjonen.

@@ -10,19 +10,19 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml, showSubsjangerInfo } from "./ui.js?v=5.07";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.07";
-import { showEdgeInfo } from "./genealogy.js?v=5.07";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.07";
+import { modalOpen, escapeHtml, showSubsjangerInfo } from "./ui.js?v=5.08";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.08";
+import { showEdgeInfo } from "./genealogy.js?v=5.08";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.08";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
 const PER_GRUPPE = 6;
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.07";
-import { openTechDetail } from "./explore-tech.js?v=5.07";
-import { openDecade } from "./explore-decade.js?v=5.07";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide } from "./explore-innhold.js?v=5.07";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.07";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.08";
+import { openTechDetail } from "./explore-tech.js?v=5.08";
+import { openDecade } from "./explore-decade.js?v=5.08";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide } from "./explore-innhold.js?v=5.08";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.08";
 
 // Indeksen koster rundt 20 ms å bygge for hele pensumet (643 poster), og det
 // er unødvendig å gjøre for hvert tastetrykk. Den bygges derfor når søket

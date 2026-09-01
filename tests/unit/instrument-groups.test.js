@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   INSTRUMENT_GROUPS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, instrumentsInUse,
-} from "../../js/limits.js?v=5.07";
-import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=5.07";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=5.07";
+} from "../../js/limits.js?v=5.08";
+import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js?v=5.08";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=5.08";
 
 // To nivåer, som metaGenre over mainGenre: artistkortet beholder det PRESISE
 // instrumentet, tidslinjene ligger på GRUPPEN.
@@ -30,7 +30,7 @@ test("«Annet» er en gyldig artistverdi, men har ingen tidslinje", () => {
 test("instrumentgruppene vises i den valgte rekkefølgen", () => {
   assert.deepEqual(INSTRUMENT_TIMELINE_GROUPS, [
     "Trommer", "Bass", "Tangenter", "Gitar", "Vokal",
-    "Soloinstrument", "Låtskriving", "Elektronisk produksjon",
+    "Soloinstrument", "Låtskriving", "Produksjon",
   ]);
   // Visningsvalget skal IKKE stokke om artistskjemaets vokabular.
   assert.equal(INSTRUMENTS[0], "Vokal");
@@ -40,9 +40,12 @@ test("instrumentgruppene vises i den valgte rekkefølgen", () => {
 test("verdiene som fantes før omleggingen er fortsatt gyldige", () => {
   // Ingen av de 318 artistene skal bli ugyldige av grupperingen — bare
   // «Annet»-artistene med eget instrument flyttes manuelt.
+  // «Elektronisk produksjon» ble omdøpt til «Produksjon» (v5.08) og står derfor
+  // IKKE her lenger — dataene ble flyttet med en flettefil, ikke ved å la begge
+  // navnene være gyldige. Ett navn per verdi er hele poenget med vokabularet.
   for (const gammel of ["Vokal", "Gitar", "Tangenter", "Bass", "Trommer/perkusjon",
                         "Saksofon", "Trompet", "Strykeinstrumenter",
-                        "Elektronisk produksjon", "Annet"]) {
+                        "Produksjon", "Annet"]) {
     assert.ok(INSTRUMENTS.includes(gammel), `${gammel} må fortsatt være gyldig`);
   }
 });
@@ -86,10 +89,10 @@ test("instrument og kilder er foreslåbare felter", () => {
 // --- Sammendragssiden per instrumentgruppe -----------------------------------
 
 test("instrumentPageId gir lovlige, stabile Firestore-ID-er", async () => {
-  const { instrumentPageId } = await import("../../js/limits.js?v=5.07");
+  const { instrumentPageId } = await import("../../js/limits.js?v=5.08");
   assert.equal(instrumentPageId("Gitar"), "instrument-gitar");
   assert.equal(instrumentPageId("Låtskriving"), "instrument-latskriving");
-  assert.equal(instrumentPageId("Elektronisk produksjon"), "instrument-elektronisk-produksjon");
+  assert.equal(instrumentPageId("Produksjon"), "instrument-produksjon");
   for (const g of INSTRUMENT_TIMELINE_GROUPS) {
     const id = instrumentPageId(g);
     // Firestore-ID-er tåler ikke skråstrek, og æøå gir vondt-å-feilsøke ID-er.
@@ -121,7 +124,7 @@ test("«instrument» er en komplett forslagstype", async () => {
 // --- Korttype: innovasjon vs. hendelse ---------------------------------------
 
 test("kort uten type ER en innovasjon — de 66 gamle trengte ingen migrering", async () => {
-  const { techType, isHendelse } = await import("../../js/ui-tech.js?v=5.07");
+  const { techType, isHendelse } = await import("../../js/ui-tech.js?v=5.08");
   assert.equal(techType({ name: "Elektrisk gitar" }), "innovasjon");
   assert.equal(techType({ type: "" }), "innovasjon");
   assert.equal(techType({ type: "innovasjon" }), "innovasjon");
@@ -133,7 +136,7 @@ test("kort uten type ER en innovasjon — de 66 gamle trengte ingen migrering", 
 });
 
 test("begge typer havner på instrumenttidslinjen, kun hendelser merkes", async () => {
-  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js?v=5.07");
+  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js?v=5.08");
   const kort = [
     { id: "a", name: "Elektrisk gitar", adoptedYear: 1938, instrument: "Gitar", status: "active" },
     { id: "b", name: "Charlie Christian som soloinstrument", adoptedYear: 1939, instrument: "Gitar", status: "active", type: "hendelse" },
@@ -145,7 +148,7 @@ test("begge typer havner på instrumenttidslinjen, kun hendelser merkes", async 
 });
 
 test("tegnforklaringen vises IKKE når bare én type finnes", async () => {
-  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js?v=5.07");
+  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js?v=5.08");
   const bare = (type) => [1938, 1952].map((y, i) => ({
     id: "x" + i, name: "Kort " + i, adoptedYear: y, instrument: "Gitar", status: "active", ...(type ? { type } : {}),
   }));
@@ -154,7 +157,7 @@ test("tegnforklaringen vises IKKE når bare én type finnes", async () => {
 });
 
 test("hendelseskort vises ikke i Teknologi-seksjonen", async () => {
-  const { renderTechList } = await import("../../js/ui-tech.js?v=5.07");
+  const { renderTechList } = await import("../../js/ui-tech.js?v=5.08");
   const el = { innerHTML: "" };
   const kort = [
     { id: "a", name: "Vinylplata", category: "Opptak og avspilling" },

@@ -1,9 +1,9 @@
 import { SEED_GENRE_DESCS } from "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=5.07";
-import { GENEALOGY } from "../../js/genre-model.js?v=5.07";
-import { STORY_ORDER } from "../../js/story-format.js?v=5.07";
+import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=5.08";
+import { GENEALOGY } from "../../js/genre-model.js?v=5.08";
+import { STORY_ORDER } from "../../js/story-format.js?v=5.08";
 
 // Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.

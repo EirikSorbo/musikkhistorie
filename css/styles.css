@@ -1301,8 +1301,8 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-/* To rader à fire, ikke én à åtte: «Elektronisk produksjon» blir avkortet til
-   «Elektronisk pro…» når åtte navn skal dele bredden. */
+/* To rader à fire, ikke én à åtte: de lengste navnene («Soloinstrument»,
+   «Låtskriving») blir avkortet når åtte skal dele bredden. */
 .instr-chips {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
