@@ -2434,3 +2434,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .gen-kryss { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
 .gen-blokk { border-left: 3px solid var(--danger, #dc2626); padding: 2px 0 2px 10px; margin: 0 0 12px; border-radius: 0; }
 .gen-blokk p { margin: 0 0 2px; }
+
+/* Podkast-episode som ikke lot seg spille av: en forklaring med direktelenke
+   under spilleren, siden nettleserens egne kontroller bare sier «Feil». */
+.podkast-feil { font-size: 0.82rem; color: var(--muted); margin: 6px 0 0; }

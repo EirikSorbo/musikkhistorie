@@ -3,7 +3,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { byggIndeks, sok, utdrag, marker, normaliser, delOppSok } from "../../js/search.js?v=4.98";
+import { byggIndeks, sok, utdrag, marker, normaliser, delOppSok } from "../../js/search.js?v=4.99";
 
 const STATE = {
   isTeacher: false,

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS } from "../../js/util.js?v=4.98";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=4.99";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -21,6 +21,43 @@ test("safeUrl slipper kun http/https gjennom", () => {
   assert.equal(safeUrl("  javascript:alert(1)"), "");
   assert.equal(safeUrl(""), "");
   assert.equal(safeUrl(null), "");
+});
+
+// Dropbox-delingslenker må gjøres om for at <audio> skal kunne spille dem.
+// «dl=1» gir en nedlasting (application/binary + attachment) som iOS Safari
+// nekter å spille — det var nettopp den appen selv la på tidligere.
+test("dropboxDirectUrl gjør delingslenker om til direkte lydlenker", () => {
+  assert.equal(
+    dropboxDirectUrl("https://www.dropbox.com/scl/fi/abc/Ep.m4a?rlkey=nokkel&dl=1"),
+    "https://dl.dropboxusercontent.com/scl/fi/abc/Ep.m4a?rlkey=nokkel"
+  );
+  // dl=0 (rå «kopier lenke») og gamle /s/-lenker skal samme vei.
+  assert.equal(
+    dropboxDirectUrl("https://www.dropbox.com/scl/fi/abc/Ep.m4a?rlkey=nokkel&st=tegn&dl=0"),
+    "https://dl.dropboxusercontent.com/scl/fi/abc/Ep.m4a?rlkey=nokkel&st=tegn"
+  );
+  assert.equal(
+    dropboxDirectUrl("https://www.dropbox.com/s/xyz/gammel.mp3?dl=0"),
+    "https://dl.dropboxusercontent.com/s/xyz/gammel.mp3"
+  );
+  // Allerede riktig vert: dl=1 må likevel vekk, ellers blir det attachment.
+  assert.equal(
+    dropboxDirectUrl("https://dl.dropboxusercontent.com/scl/fi/abc/Ep.m4a?rlkey=n&dl=1"),
+    "https://dl.dropboxusercontent.com/scl/fi/abc/Ep.m4a?rlkey=n"
+  );
+});
+
+test("dropboxDirectUrl lar alt annet være i fred", () => {
+  assert.equal(dropboxDirectUrl("https://eksempel.no/episode.mp3"), "https://eksempel.no/episode.mp3");
+  // uc*-vertene er Dropbox' egne kortlevde omdirigeringsmål — ikke rør dem.
+  assert.equal(
+    dropboxDirectUrl("https://uc1.dl.dropboxusercontent.com/cd/0/inline/ABC/file?dl=1"),
+    "https://uc1.dl.dropboxusercontent.com/cd/0/inline/ABC/file?dl=1"
+  );
+  // Samme sperre som safeUrl: ingenting utenom http/https slipper gjennom.
+  assert.equal(dropboxDirectUrl("javascript:alert(1)"), "");
+  assert.equal(dropboxDirectUrl(""), "");
+  assert.equal(dropboxDirectUrl(null), "");
 });
 
 test("wikimediaThumb skriver om Wikimedia-originaler til thumbnail", () => {

@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.98";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=4.98";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=4.98";
-import { pageFor } from "./story-format.js?v=4.98";
-import { renderRichText } from "./rich-text.js?v=4.98";
-import { wireLinks, podcastEpisodeHtml } from "./ui-helpers.js?v=4.98";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=4.98";
-import { openTechDetail } from "./explore-tech.js?v=4.98";
+import { modalOpen, escapeHtml } from "./ui.js?v=4.99";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=4.99";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=4.99";
+import { pageFor } from "./story-format.js?v=4.99";
+import { renderRichText } from "./rich-text.js?v=4.99";
+import { wireLinks, renderPodcastList } from "./ui-helpers.js?v=4.99";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=4.99";
+import { openTechDetail } from "./explore-tech.js?v=4.99";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -73,9 +73,12 @@ function renderPodkast() {
   const extra = document.getElementById("podkast-extra");
   if (!el) return;
   const s = getState();
-  el.innerHTML = s.podcasts.length
-    ? s.podcasts.map((ep) => podcastEpisodeHtml(ep)).join("")
-    : `<p class="muted empty" style="background:#fff">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`;
+  // renderPodcastList lar lista stå urørt når episodene er uendret. Det er
+  // med vilje: en episode som spiller skal fortsette å spille når kortet lukkes,
+  // og stå der den var — samme episode, samme sted — når det åpnes igjen.
+  renderPodcastList(el, s.podcasts, {
+    empty: `<p class="muted empty" style="background:#fff">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`,
+  });
   if (extra) {
     extra.innerHTML = opts.onPodkastAdmin
       ? `<button type="button" class="btn ghost small">Rediger episoder</button>` : "";

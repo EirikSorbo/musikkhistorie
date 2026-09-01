@@ -5,23 +5,24 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.98";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.98";
-import { resolveMainDesc } from "./genealogy.js?v=4.98";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.98";
-import { storyFor, pageFor } from "./story-format.js?v=4.98";
-import { renderRichText } from "./rich-text.js?v=4.98";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.98";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.98";
-import { resolveDesc } from "./genre-descriptions.js?v=4.98";
-import { podcastEpisodeHtml, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.98";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.98";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.98";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.99";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.99";
+import { resolveMainDesc } from "./genealogy.js?v=4.99";
+import { dropboxDirectUrl } from "./util.js?v=4.99";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.99";
+import { storyFor, pageFor } from "./story-format.js?v=4.99";
+import { renderRichText } from "./rich-text.js?v=4.99";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=4.99";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.99";
+import { resolveDesc } from "./genre-descriptions.js?v=4.99";
+import { renderPodcastList, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.99";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.99";
+import { heatRow, getHeatData } from "./heat-strip.js?v=4.99";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.98";
-import { $ } from "./shared.js?v=4.98";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.98";
+import { wireAllLinks } from "./linkify.js?v=4.99";
+import { $ } from "./shared.js?v=4.99";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.99";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -592,11 +593,13 @@ export function renderPodkastAdmin() {
   // Episoden som redigeres kan ha blitt slettet i en annen fane — da må
   // skjemaet tilbake til «legg til», ellers skriver Lagre til et borte dokument.
   if (editingPodId && !state.podcasts.some((p) => p.id === editingPodId)) fillPodForm(null);
-  if (!state.podcasts.length) {
-    el.innerHTML = `<p class="muted empty">Ingen episoder ennå.</p>`;
-    return;
-  }
-  el.innerHTML = state.podcasts.map((ep) => podcastEpisodeHtml(ep, { admin: true })).join("");
+  // Usann = lista var uendret og DOM-en står urørt (så en episode læreren
+  // hører på ikke stoppes av hvert snapshot). Da henger knappelytterne
+  // fortsatt der de skal, og vi er ferdige.
+  if (!renderPodcastList(el, state.podcasts, {
+    admin: true,
+    empty: `<p class="muted empty">Ingen episoder ennå.</p>`,
+  })) return;
   el.querySelectorAll("[data-pod-edit]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const ep = state.podcasts.find((p) => p.id === btn.dataset.podEdit);
@@ -626,6 +629,14 @@ export function setupPodkastAdmin() {
     const audioUrl = document.getElementById("pod-url").value.trim();
     const msg = document.getElementById("pod-msg");
     if (!title) { msg.textContent = "Tittel er påkrevd."; msg.className = "form-msg error"; return; }
+    // Tomt svar på en utfylt lenke betyr at den ikke er en http(s)-adresse. Si
+    // fra framfor å lagre tomt — ellers forsvinner spilleren uten forklaring.
+    const lyd = dropboxDirectUrl(audioUrl);
+    if (audioUrl && !lyd) {
+      msg.textContent = "Lydlenken må være en full adresse som starter med https://";
+      msg.className = "form-msg error";
+      return;
+    }
 
     msg.textContent = "Lagrer …";
     msg.className = "form-msg ok";
@@ -633,7 +644,7 @@ export function setupPodkastAdmin() {
       title,
       description: document.getElementById("pod-desc").value.trim(),
       duration: document.getElementById("pod-duration").value.trim(),
-      audioUrl: audioUrl ? audioUrl.replace(/dl=0/, "dl=1").replace(/\?dl=1$/, "?raw=1") : "",
+      audioUrl: lyd,
     };
     try {
       if (editingPodId) {

@@ -110,3 +110,37 @@ export function buildKilderList(kilder, label = "Kilder") {
   }).join("");
   return `<div class="kilder"><strong>${escapeHtml(label)}:</strong><ul>${items}</ul></div>`;
 }
+
+// Gjør en Dropbox-DELINGSLENKE om til en lenke <audio>/<video> faktisk kan
+// spille av. En delingslenke peker på www.dropbox.com, som svarer med en
+// HTML-SIDE, ikke fila. «dl=1» (som appen selv la på før) er enda verre: da
+// serveres fila som en NEDLASTING, med «Content-Type: application/binary» og
+// «Content-Disposition: attachment». Chrome på Mac snuser seg fram til at
+// innholdet likevel er lyd og spiller av — iOS Safari nekter blankt, <audio>
+// feiler, og de innebygde kontrollene viser «Feil» der framdriftslinja skulle
+// stått.
+//
+// dl.dropboxusercontent.com serverer den SAMME fila direkte, uten
+// omdirigering, med riktig Content-Type (audio/mp4 for .m4a), «inline» og
+// Range-støtte (byte-serving) — alt iOS krever for å spille av i det hele
+// tatt. Vi flytter derfor verten dit og fjerner dl/raw-parameterne; rlkey
+// (tilgangsnøkkelen) og resten av spørrestrengen beholdes uendret.
+// Verifisert mot Dropbox 2026-09-01.
+//
+// Alt annet enn Dropbox slippes gjennom urørt, og uc*.dropboxusercontent.com
+// (Dropbox' egne ferske, kortlevde omdirigeringsmål) røres heller ikke.
+export function dropboxDirectUrl(url) {
+  const safe = safeUrl(url);
+  if (!safe) return "";
+  let u;
+  try { u = new URL(safe); } catch { return safe; }
+  const vert = u.hostname.toLowerCase();
+  if (vert !== "dropbox.com" && vert !== "www.dropbox.com" && vert !== "dl.dropboxusercontent.com") return safe;
+  u.hostname = "dl.dropboxusercontent.com";
+  u.searchParams.delete("dl");
+  u.searchParams.delete("raw");
+  // Dropbox legger «#» på slutten av sine egne omskrivinger; den har ingen
+  // funksjon og ser bare rar ut hvis lenken vises fram.
+  u.hash = "";
+  return u.toString();
+}

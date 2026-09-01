@@ -9,11 +9,11 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb } from "./util.js?v=4.98";
-import { wireAllLinks } from "./linkify.js?v=4.98";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.98";
-import { GENDERS } from "./limits.js?v=4.98";
-export { artistStripHtml } from "./artist-strip.js?v=4.98";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=4.99";
+import { wireAllLinks } from "./linkify.js?v=4.99";
+import { renderRichText, renderInline } from "./rich-text.js?v=4.99";
+import { GENDERS } from "./limits.js?v=4.99";
+export { artistStripHtml } from "./artist-strip.js?v=4.99";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -160,17 +160,21 @@ export function genreTags(a, { withInstrument = false, withSub = true, extraClas
   ].filter(Boolean).join("");
 }
 
-// Podkast-episodekort — delt av podkastfanen (explore-instrument.js) og lærer-
-// admin (teacher-content.js), så markupen ikke driver fra hverandre. `admin`
+// Podkast-episodekort — ett enkelt kort. Begge listene (podkastfanen i
+// explore-instrument.js og lærer-admin i teacher-content.js) tegnes gjennom
+// renderPodcastList under, så markupen ikke driver fra hverandre. `admin`
 // legger rediger + slett HELT TIL HØYRE i tittelraden, over avspilleren;
 // kalleren kobler lytterne (data-pod-edit / data-pod-delete).
-export function podcastEpisodeHtml(ep, { admin = false } = {}) {
+function podcastEpisodeHtml(ep, { admin = false } = {}) {
   const duration = ep.duration ? `<span class="podkast-duration">(${escapeHtml(ep.duration)})</span>` : "";
   const desc = ep.description ? `<div class="podkast-desc rt">${renderRichText(ep.description)}</div>` : "";
-  const audio = safeUrl(ep.audioUrl);
+  // Normaliseres HER, ikke bare når læreren lagrer, så episoder som allerede
+  // ligger i Firestore med en gammel «dl=1»-lenke spiller av på iOS med én gang
+  // — uten at noen må redigere dem på nytt.
+  const audio = dropboxDirectUrl(ep.audioUrl);
   const id = escapeHtml(ep.id);
   return `
-    <article class="podkast-episode">
+    <article class="podkast-episode" data-pod-id="${id}">
       <div class="podkast-header">
         <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
         ${duration}
@@ -182,6 +186,66 @@ export function podcastEpisodeHtml(ep, { admin = false } = {}) {
       ${desc}
       ${audio ? `<audio controls preload="none" src="${escapeHtml(audio)}"></audio>` : ""}
     </article>`;
+}
+
+// Tegner episodelista i `el`. To ting skjer utover en vanlig innerHTML:
+//
+//  1. Er lista uendret, røres DOM-en IKKE. Det er dette som gjør at en episode
+//     som spiller fortsetter å spille når instrumenter-kortet lukkes og åpnes
+//     igjen: et ferskt <audio>-element ville startet på null, og å sette det i
+//     gang igjen fra kode er uansett blokkert av iOS' autoplay-sperre — play()
+//     teller bare rett etter et brukertrykk.
+//  2. Må lista likevel bygges på nytt (læreren redigerer mens noen lytter),
+//     FLYTTES elementet som spiller over i det nye kortet framfor å erstattes.
+//     Flyttingen skjer synkront i samme steg: en nettleser pauser et
+//     medieelement som er tatt ut av dokumentet, men først ved neste stabile
+//     tilstand — er det tilbake i DOM-en innen den tid, spiller lyden videre
+//     uten et hakk.
+export function renderPodcastList(el, episodes, { admin = false, empty = "" } = {}) {
+  const sig = JSON.stringify([admin, episodes.map((ep) =>
+    [ep.id, ep.title, ep.description, ep.duration, ep.audioUrl])]);
+  if (el.dataset.podSig === sig) return false;
+
+  // Bare spillere som faktisk er i gang bevares. En urørt spiller skal bygges
+  // på nytt, ellers ville en rettet lenke aldri slått gjennom.
+  const iGang = new Map();
+  for (const a of el.querySelectorAll("audio")) {
+    if (a.paused && !a.currentTime) continue;
+    const id = a.closest(".podkast-episode")?.dataset.podId;
+    if (id) iGang.set(id, a);
+  }
+
+  el.innerHTML = episodes.length
+    ? episodes.map((ep) => podcastEpisodeHtml(ep, { admin })).join("")
+    : empty;
+  el.dataset.podSig = sig;
+
+  for (const [id, gammel] of iGang) {
+    const ny = el.querySelector(`.podkast-episode[data-pod-id="${CSS.escape(id)}"] audio`);
+    // Kun når kilden er den samme — er lydlenken endret, SKAL den nye brukes,
+    // selv om det koster avspillingen.
+    if (ny && ny.getAttribute("src") === gammel.getAttribute("src")) ny.replaceWith(gammel);
+  }
+  return true;
+}
+
+// Lyd som ikke lar seg spille av: de innebygde kontrollene sier bare «Feil»,
+// uten å antyde hva man gjør med det. Vi legger en forklaring og en
+// direktelenke under spilleren i stedet. error bobler ikke fra medieelementer,
+// så lytteren må stå i capture-fasen — samme grep som bilde-fallbacken over.
+if (typeof document !== "undefined") {
+  document.addEventListener("error", (e) => {
+    const a = e.target;
+    if (!(a instanceof HTMLAudioElement)) return;
+    const kort = a.closest(".podkast-episode");
+    if (!kort || kort.querySelector(".podkast-feil")) return;
+    const url = safeUrl(a.getAttribute("src"));
+    const p = document.createElement("p");
+    p.className = "podkast-feil";
+    p.innerHTML = "Episoden kunne ikke spilles av her." +
+      (url ? ` <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Åpne lydfila i ny fane</a>` : "");
+    a.insertAdjacentElement("afterend", p);
+  }, true);
 }
 
 function yearLabel(w) {
