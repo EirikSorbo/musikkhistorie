@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.02";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.02";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=5.02";
-import { pageFor } from "./story-format.js?v=5.02";
-import { renderRichText } from "./rich-text.js?v=5.02";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.02";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.02";
-import { openTechDetail } from "./explore-tech.js?v=5.02";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.03";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.03";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.03";
+import { pageFor } from "./story-format.js?v=5.03";
+import { renderRichText } from "./rich-text.js?v=5.03";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.03";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.03";
+import { openTechDetail } from "./explore-tech.js?v=5.03";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -89,11 +89,10 @@ function renderPodkast() {
 function renderChips() {
   const chips = document.getElementById("instr-chips");
   if (!chips || chips.dataset.filled) return;
-  // --instr-color per knapp; CSS bruker den til kant, tekst og fyll når knappen
-  // er aktiv — samme mønster som sjangerhistorienes chips.
+  // Alle knappene har samme blå (brukervalg 2026-09-01) — fargen ligger i CSS,
+  // ikke per knapp. Se .instr-chip i styles.css.
   chips.innerHTML = INSTRUMENT_TIMELINE_GROUPS.map((g) =>
-    `<button type="button" class="btn ghost small instr-chip" data-instr="${escapeHtml(g)}"` +
-    ` style="--instr-color:${INSTRUMENT_COLOR[g] || "var(--accent)"}">${escapeHtml(g)}</button>`
+    `<button type="button" class="btn ghost small instr-chip" data-instr="${escapeHtml(g)}">${escapeHtml(g)}</button>`
   ).join("");
   chips.querySelectorAll(".instr-chip").forEach((b) =>
     b.addEventListener("click", () => renderGroup(b.dataset.instr)));
@@ -182,6 +181,24 @@ function renderGroup(group) {
   // — å «foreslå» til seg selv gir ingen mening.
   const foot = body.querySelector(".instr-foot");
   const knapper = [];
+
+  // Se hva som ALT finnes, før man legger til noe: knappene står først i raden,
+  // og tallet i etiketten sier med én gang om instrumentet er godt dekket.
+  // Artistene hentes på GRUPPE, ikke på instrumentnavn — se
+  // artistsInInstrumentGroup (en «Soloinstrument»-artist heter «Trompet»).
+  const artister = artistsInInstrumentGroup(s.artists, group);
+  knapper.push({
+    tekst: `Alle artister (${artister.length})`,
+    gjør: () => openArtistListModal(
+      `Artister: ${group}`, artister, opts.onArtistClick,
+      `Ingen artister er lagt inn på ${group} ennå.`
+    ),
+  });
+  knapper.push({
+    tekst: `Alle nyvinninger (${items.length})`,
+    gjør: () => openTechListModal(group, items),
+  });
+
   if (opts.onTechEdit) {
     knapper.push({ tekst: "Legg til nyvinning", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   } else if (opts.onProposeNewTech) {
@@ -208,6 +225,20 @@ function renderGroup(group) {
       if (t) openTechDetail(t);
     });
   });
+}
+
+// Alle nyvinningene for ett instrument som kortliste. Samme kort som
+// Teknologi-seksjonen (renderTechCards), men uten kategorifiltrering og MED
+// hendelseskortene — lista skal stemme med tidslinjen rett under knappen.
+function openTechListModal(group, items) {
+  const modal = document.getElementById("modal-instr-tech");
+  if (!modal) return;
+  document.getElementById("itl-title").textContent = `Nyvinninger: ${group} (${items.length})`;
+  renderTechCards(
+    document.getElementById("itl-body"), items, buildLinkCtx(),
+    `Ingen nyvinninger er lagt inn for ${group} ennå.`
+  );
+  modalOpen(modal);
 }
 
 function renderUtvikling() {

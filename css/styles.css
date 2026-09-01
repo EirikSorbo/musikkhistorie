@@ -28,6 +28,9 @@
   --c-kvinne: #ec4899;
   --c-mann: #3b82f6;
   --c-annet: #f59e0b;
+
+  /* Instrumentknappene i Instrumenter-kortet — én felles blå. */
+  --instr-blaa: #1d4ed8;
   --c-ukjent: #94a3b8;
 
   --radius: 18px;
@@ -1337,6 +1340,10 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .instr-chips { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 /* .btn tas med i selektoren: ellers vinner `.btn.ghost { background }` på to
    klasser over en ren .instr-chip-regel, og aktiv-fargen slår aldri gjennom. */
+/* ÉN farge for alle instrumentknappene (brukervalg 2026-09-01). De hadde hver
+   sin kulør, men fargen bar ingen betydning: den kodet bare «dette er et annet
+   instrument», noe navnet allerede sier. Åtte kulører ved siden av hverandre
+   leste dessuten som et filter der det bare er et valg. */
 .instr-chip.btn {
   width: 100%;
   padding-left: 4px;
@@ -1345,19 +1352,17 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* Uvalgt: en lys tone av instrumentets egen farge, så alle åtte er fargekodet
-     hele tiden — ikke bare den som er valgt (som sjangerhistorienes chips). */
-  color: var(--instr-color, var(--text));
-  background: color-mix(in srgb, var(--instr-color, var(--line)) 14%, #fff);
-  border-color: color-mix(in srgb, var(--instr-color, var(--line)) 45%, transparent);
+  color: var(--instr-blaa);
+  background: color-mix(in srgb, var(--instr-blaa) 12%, #fff);
+  border-color: color-mix(in srgb, var(--instr-blaa) 40%, transparent);
 }
 .instr-chip.btn:hover {
-  background: color-mix(in srgb, var(--instr-color, var(--line)) 24%, #fff);
-  border-color: var(--instr-color, var(--line));
+  background: color-mix(in srgb, var(--instr-blaa) 22%, #fff);
+  border-color: var(--instr-blaa);
 }
 .instr-chip.btn.active {
-  background: var(--instr-color, var(--accent));
-  border-color: var(--instr-color, var(--accent));
+  background: var(--instr-blaa);
+  border-color: var(--instr-blaa);
   color: #fff;
 }
 /* Radiovalg i skjemaene (korttype: innovasjon / hendelse) */

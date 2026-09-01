@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.02";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=5.02";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.03";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=5.03";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -54,11 +54,20 @@ export function renderTechList(el, items, activeCategory, lc) {
   // De vises på instrumenttidslinjen i stedet.
   const innovasjoner = items.filter((t) => !isHendelse(t));
   const filtered = activeCategory ? innovasjoner.filter(t => t.category === activeCategory) : innovasjoner;
-  if (!filtered.length) {
-    el.innerHTML = `<p class="muted empty">Ingen teknologier i denne kategorien ennå.</p>`;
+  renderTechCards(el, filtered, lc, "Ingen teknologier i denne kategorien ennå.");
+}
+
+// Selve kortlisten, uten filtrering. Skilt ut (v5.03) da Instrumenter-kortet
+// fikk sin egen «Alle nyvinninger»-liste: DEN skal vise hendelseskortene også,
+// siden de står på instrumentets tidslinje, mens Teknologi-seksjonen holder
+// dem ute. Én markup, to innganger.
+export function renderTechCards(el, items, lc, emptyText = "Ingen kort ennå.") {
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = `<p class="muted empty">${escapeHtml(emptyText)}</p>`;
     return;
   }
-  el.innerHTML = filtered.map(t => {
+  el.innerHTML = items.map(t => {
     const img = techImage(t);
     const propBtn = lc?.isTeacher
       ? ""

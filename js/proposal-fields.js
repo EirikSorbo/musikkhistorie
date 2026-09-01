@@ -13,7 +13,7 @@
 //  Avhengighetsfri (kun artist-schema) → enhetstestbar i Node.
 // ============================================================================
 
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.02";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.03";
 
 export const PROPOSABLE_KEYS = {
   // ALLE artistfeltene, også «complex» (sentrale verk, musikkeksempler,

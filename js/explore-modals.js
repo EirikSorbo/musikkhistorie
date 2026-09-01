@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.02";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.02";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.03";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.03";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -68,6 +68,19 @@ export const MODAL_HTML = `
       <div id="podkast-extra" class="head-actions"></div>
       <div id="podkast-list" class="podkast-list"></div>
     </div>
+  </div>
+</div>
+
+<!-- Nyvinningene for ETT instrument, åpnet fra knapperaden i Instrumenter-
+     kortet. Samme kortmarkup som Teknologi-seksjonen, men uten kategorifaner
+     og MED hendelseskortene: lista skal svare til instrumentets tidslinje. -->
+<div class="modal-backdrop" id="modal-instr-tech">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2 id="itl-title">Nyvinninger</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="itl-body" class="tech-grid"></div>
   </div>
 </div>
 

@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.02";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.02";
-import { showSjangerInfo } from "./genealogy.js?v=5.02";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.02";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.02";
+import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.03";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.03";
+import { showSjangerInfo } from "./genealogy.js?v=5.03";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.03";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.03";
 import {
   escapeHtml,
   linkDesc,
@@ -35,17 +35,17 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.02";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.02";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage } from "./ui-tech.js?v=5.02";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.02";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.02";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.02";
+} from "./ui-helpers.js?v=5.03";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.03";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.03";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.03";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.03";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.03";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
 export { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders };
-export { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechDetail, techImage };
+export { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage };
 export { buildTechTimeline, renderDecadeSections, renderDecadeRibbon };
 export { renderDashboard, contentGaps };
 export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
@@ -540,6 +540,18 @@ export function artistsInGenre(artists, label) {
 export function artistsByInstrument(artists, instrument) {
   return (artists || [])
     .filter((a) => isVisible(a) && a.instrument === instrument)
+    .sort(byInfluenceThenName);
+}
+
+// Aktive, synlige artister i en instrumentGRUPPE. Artistkortet bærer det
+// PRESISE instrumentet («Trompet», «Banjo»), mens Instrumenter-seksjonen og
+// tidslinjene ligger på gruppen («Soloinstrument», «Gitar»). Et rent
+// a.instrument === group ville derfor gitt null treff for nettopp de gruppene
+// som samler flere instrumenter. Ukjent gruppenavn behandles som seg selv.
+export function artistsInInstrumentGroup(artists, group) {
+  const medlemmer = INSTRUMENT_GROUPS[group] || [group];
+  return (artists || [])
+    .filter((a) => isVisible(a) && medlemmer.includes(a.instrument))
     .sort(byInfluenceThenName);
 }
 
