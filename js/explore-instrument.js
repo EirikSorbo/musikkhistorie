@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.03";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.03";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.03";
-import { pageFor } from "./story-format.js?v=5.03";
-import { renderRichText } from "./rich-text.js?v=5.03";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.03";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.03";
-import { openTechDetail } from "./explore-tech.js?v=5.03";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.04";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.04";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.04";
+import { pageFor } from "./story-format.js?v=5.04";
+import { renderRichText } from "./rich-text.js?v=5.04";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.04";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.04";
+import { openTechDetail } from "./explore-tech.js?v=5.04";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.

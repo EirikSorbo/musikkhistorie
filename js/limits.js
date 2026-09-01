@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.03";
+import { resolveSpan } from "./timeline-lanes.js?v=5.04";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -59,11 +59,34 @@ export const INSTRUMENT_TITLE = {
   "Låtskriving": "Låtskrivingens utvikling",
 };
 
+// Rekkefølgen gruppene VISES i (brukervalg 2026-09-01): rytmeseksjonen først,
+// så de melodiførende, og til slutt de som ikke er ett fysisk instrument.
+//
+// Skilt fra INSTRUMENT_GROUPS, som er VOKABULARET: artistskjemaets nedtrekk
+// leser INSTRUMENTS rett fra gruppene, og det skal ikke stokkes om av et rent
+// visningsvalg. Rekkefølgen her styrer knappene i Instrumenter-kortet og
+// instrument-nedtrekket på innovasjonskortene, altså der gruppene selv vises.
+//
+// En gruppe som IKKE står her havner sist i stedet for å forsvinne — lista er
+// en prioritering, ikke en hviteliste.
+const INSTRUMENT_REKKEFOLGE = [
+  "Trommer", "Bass", "Tangenter", "Gitar", "Vokal",
+  "Soloinstrument", "Elektronisk produksjon", "Låtskriving",
+];
+
 // Gruppene som får egen nyvinnings-tidslinje i Instrumenter-seksjonen.
 // «Annet» er utelatt (se over) — alt annet følger med automatisk når en ny
 // gruppe legges inn over.
-export const INSTRUMENT_TIMELINE_GROUPS =
-  Object.keys(INSTRUMENT_GROUPS).filter((g) => g !== "Annet");
+export const INSTRUMENT_TIMELINE_GROUPS = Object.keys(INSTRUMENT_GROUPS)
+  .filter((g) => g !== "Annet")
+  .sort((a, b) => instrumentRang(a) - instrumentRang(b));
+
+// Uplassert gruppe får en rang bakenfor alle andre. Likt tall gir 0, og
+// Array.sort er stabil, så de beholder rekkefølgen fra INSTRUMENT_GROUPS.
+function instrumentRang(group) {
+  const i = INSTRUMENT_REKKEFOLGE.indexOf(group);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+}
 
 // Flat liste over lovlige artistverdier — utledet, så gruppene er ÉN kilde.
 // Brukt av forslagsskjema, lærerredigering, filtre og import-valideringen.
