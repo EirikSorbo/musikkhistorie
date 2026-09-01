@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.05";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.05";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.05";
-import { pageFor } from "./story-format.js?v=5.05";
-import { renderRichText } from "./rich-text.js?v=5.05";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.05";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.05";
-import { openTechDetail } from "./explore-tech.js?v=5.05";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.06";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.06";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.06";
+import { pageFor } from "./story-format.js?v=5.06";
+import { renderRichText } from "./rich-text.js?v=5.06";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.06";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.06";
+import { openTechDetail } from "./explore-tech.js?v=5.06";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -84,6 +84,27 @@ function renderPodkast() {
       ? `<button type="button" class="btn ghost small">Rediger episoder</button>` : "";
     extra.querySelector("button")?.addEventListener("click", () => opts.onPodkastAdmin());
   }
+}
+
+// Hodetelefoner. Egen SVG framfor ICONS-mappa i ui-helpers: den holder
+// lærer-ikonene i 16 px, mens dette er en stor innholdsknapp.
+const IKON_PODKAST =
+  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"` +
+  ` stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
+  `<path d="M3 18v-6a9 9 0 0118 0v6"/>` +
+  `<path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>` +
+  `</svg>`;
+
+// Inngangen til podkastene, øverst i utviklingsfanen. Tegnes på nytt ved hver
+// visning (ikke bare én gang som chipsene): tallet kommer fra episodelista, og
+// den lastes asynkront — en engangsrender ville frosset «(0)».
+function renderPodkastInngang() {
+  const el = document.getElementById("instr-podkast-inngang");
+  if (!el) return;
+  const n = getState().podcasts.length;
+  el.innerHTML = `<button type="button" class="btn primary instr-podkast-btn">` +
+    `${IKON_PODKAST}<span>Hør podkastene${n ? ` (${n})` : ""}</span></button>`;
+  el.querySelector("button").addEventListener("click", () => selectTab("podkast"));
 }
 
 function renderChips() {
@@ -255,6 +276,7 @@ function openTechListModal(group, items) {
 }
 
 function renderUtvikling() {
+  renderPodkastInngang();
   renderChips();
   renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0]);
 }

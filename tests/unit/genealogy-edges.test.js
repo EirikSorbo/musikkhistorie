@@ -5,7 +5,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=5.05";
+import { GENEALOGY, GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=5.06";
 
 test("GENEALOGY_EDGES: alle koblinger peker på eksisterende noder", () => {
   const ids = new Set(GENEALOGY.map((n) => n.id));

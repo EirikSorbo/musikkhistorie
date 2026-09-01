@@ -6,15 +6,15 @@ import {
   fetchArtists,
   addArtist,
   subscribeContent,
-} from "./store.js?v=5.05";
-import { loadArtists } from "./artist-cache.js?v=5.05";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.05";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.05";
-import { fillSelect } from "./ui.js?v=5.05";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.05";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.05";
-import { setupFormatBars } from "./format-bar.js?v=5.05";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.05";
+} from "./store.js?v=5.06";
+import { loadArtists } from "./artist-cache.js?v=5.06";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.06";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.06";
+import { fillSelect } from "./ui.js?v=5.06";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.06";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.06";
+import { setupFormatBars } from "./format-bar.js?v=5.06";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.06";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
