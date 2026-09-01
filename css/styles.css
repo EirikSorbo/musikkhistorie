@@ -1932,8 +1932,18 @@ body.is-teacher #gate { display: none; }
   /* Stablet er «øverst til høyre» meningsløst: tilbake til DOM-rekkefølge. */
   .me-row .me-genre { order: 0; }
   .me-row .remove-me { order: 0; margin-left: 0; align-self: flex-end; }
-  .source-row { flex-direction: column; }
-  .source-row > * { flex: 1 1 auto; }
+  /* align-items styrer BREDDEN når raden er stablet: uten stretch krympet
+     hvert felt til innholdet sitt og etterlot et hull til høyre. */
+  .source-row { flex-direction: column; align-items: stretch; }
+  /* Samme felle som .me-row over: stablet blir flex-basis en HØYDE, og
+     «.source-row > *» TAPER på spesifisitet mot «.source-row .source-text».
+     Resultatet var en kilderad på 913 px, med tekstfeltet 220 px høyt og
+     kategorivelgeren 150. Feltene må derfor nevnes ved navn. */
+  .source-row .source-text,
+  .source-row .source-forfatter,
+  .source-row .source-year,
+  .source-row .source-url,
+  .source-row .source-kat { flex: 1 1 auto; }
   .source-row .remove-source { margin-left: 0; align-self: flex-end; }
   .work-row { flex-direction: column; }
   .work-row .work-year { flex: 1; }
@@ -2447,3 +2457,8 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .instr-guide ol { margin: 0; padding-left: 20px; font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
 .instr-guide li { margin-bottom: 4px; }
 .instr-guide strong { color: var(--text); }
+
+/* Tegnteller under et tekstfelt med tak (instrumentsammendraget). */
+.char-count { margin: 4px 0 0; font-size: 0.78rem; color: var(--muted); text-align: right; }
+.char-count.naer-taket { color: var(--warn); }
+.char-count.pa-taket { color: var(--danger); font-weight: 600; }

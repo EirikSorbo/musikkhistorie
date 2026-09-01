@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.00";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.00";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=5.00";
-import { pageFor } from "./story-format.js?v=5.00";
-import { renderRichText } from "./rich-text.js?v=5.00";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.00";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.00";
-import { openTechDetail } from "./explore-tech.js?v=5.00";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.01";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.01";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=5.01";
+import { pageFor } from "./story-format.js?v=5.01";
+import { renderRichText } from "./rich-text.js?v=5.01";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.01";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.01";
+import { openTechDetail } from "./explore-tech.js?v=5.01";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -165,10 +165,10 @@ function renderGroup(group) {
   // Rediger (lærer) eller Foreslå endring (student) på sammendraget.
   const sumActions = body.querySelector(".instr-sum-actions");
   if (opts.onPageEdit) {
-    sumActions.innerHTML = `<button type="button" class="btn ghost small">Rediger sammendrag</button>`;
+    sumActions.innerHTML = `<button type="button" class="btn ghost small">Skriv sammendrag</button>`;
     sumActions.querySelector("button").addEventListener("click", () => opts.onPageEdit(pageId));
   } else if (opts.onProposeEdit) {
-    sumActions.innerHTML = `<button type="button" class="btn ghost small">Rediger sammendrag</button>`;
+    sumActions.innerHTML = `<button type="button" class="btn ghost small">Skriv sammendrag</button>`;
     sumActions.querySelector("button").addEventListener("click", () => opts.onProposeEdit({
       entityType: "instrument",
       entityId: pageId,
@@ -183,9 +183,9 @@ function renderGroup(group) {
   const foot = body.querySelector(".instr-foot");
   const knapper = [];
   if (opts.onTechEdit) {
-    knapper.push({ tekst: "Legg til instrument-utvikling", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
+    knapper.push({ tekst: "Legg til nyvinning", gjør: () => opts.onTechEdit(null, { instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   } else if (opts.onProposeNewTech) {
-    knapper.push({ tekst: "Legg til instrument-utvikling", gjør: () => opts.onProposeNewTech({ instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
+    knapper.push({ tekst: "Legg til nyvinning", gjør: () => opts.onProposeNewTech({ instrument: group, category: INSTRUMENT_TECH_CATEGORY }) });
   }
   // Artistskjemaet åpnes UTEN forhåndsvalgt instrument (brukervalg): gruppenavnene
   // «Soloinstrument» og «Trommer» er ikke gyldige artistverdier — artisten skal

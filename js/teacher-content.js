@@ -5,24 +5,24 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.00";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.00";
-import { resolveMainDesc } from "./genealogy.js?v=5.00";
-import { dropboxDirectUrl } from "./util.js?v=5.00";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.00";
-import { storyFor, pageFor } from "./story-format.js?v=5.00";
-import { renderRichText } from "./rich-text.js?v=5.00";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=5.00";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.00";
-import { resolveDesc } from "./genre-descriptions.js?v=5.00";
-import { renderPodcastList, wirePlayerCloseGuard, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=5.00";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.00";
-import { heatRow, getHeatData } from "./heat-strip.js?v=5.00";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.01";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.01";
+import { resolveMainDesc } from "./genealogy.js?v=5.01";
+import { dropboxDirectUrl } from "./util.js?v=5.01";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.01";
+import { storyFor, pageFor } from "./story-format.js?v=5.01";
+import { renderRichText } from "./rich-text.js?v=5.01";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=5.01";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.01";
+import { resolveDesc } from "./genre-descriptions.js?v=5.01";
+import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=5.01";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=5.01";
+import { heatRow, getHeatData } from "./heat-strip.js?v=5.01";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=5.00";
-import { $ } from "./shared.js?v=5.00";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.00";
+import { wireAllLinks } from "./linkify.js?v=5.01";
+import { $ } from "./shared.js?v=5.01";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.01";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -783,6 +783,10 @@ function openContentEditor(target, title, existing) {
   else $("#se-kilder").innerHTML = "";
   $("#se-title").textContent = `Rediger: ${title}`;
   $("#se-text").value = existing ? existing.body : "";
+  // Taket gjelder KUN instrumentsammendragene: editoren deles med historiene og
+  // de andre innholdssidene, som skal kunne være så lange de trenger. Kalles
+  // ETTER at verdien er satt, ellers viser telleren forrige teksts lengde.
+  wireCharCount($("#se-text"), medKilder ? SAMMENDRAG_MAKS : 0);
   const msg = $("#se-msg");
   msg.textContent = "";
   msg.className = "form-msg";
@@ -845,6 +849,13 @@ export function setupStoryEditor() {
     const msg = $("#se-msg");
     if (!body) {
       msg.textContent = "Teksten kan ikke være tom. Bruk «Slett teksten» i stedet.";
+      msg.className = "form-msg error";
+      return;
+    }
+    // maxlength stopper tasting, men ikke tekst som alt ligger der (importert
+    // eller skrevet før taket kom). Da skal lagringen si tydelig ifra.
+    if (erInstrumentside(editorTarget) && body.length > SAMMENDRAG_MAKS) {
+      msg.textContent = `Sammendraget kan være maks ${SAMMENDRAG_MAKS} tegn (er ${body.length}).`;
       msg.className = "form-msg error";
       return;
     }

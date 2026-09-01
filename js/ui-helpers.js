@@ -9,12 +9,12 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.00";
-import { wireAllLinks } from "./linkify.js?v=5.00";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.00";
-import { GENDERS } from "./limits.js?v=5.00";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.00";
-export { artistStripHtml } from "./artist-strip.js?v=5.00";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.01";
+import { wireAllLinks } from "./linkify.js?v=5.01";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.01";
+import { GENDERS } from "./limits.js?v=5.01";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.01";
+export { artistStripHtml } from "./artist-strip.js?v=5.01";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -228,6 +228,41 @@ export function renderPodcastList(el, episodes, { admin = false, empty = "" } = 
     if (ny && ny.getAttribute("src") === gammel.getAttribute("src")) ny.replaceWith(gammel);
   }
   return true;
+}
+
+// Tegnteller under et tekstfelt med tak. `max` = 0/null slår den AV igjen
+// (feltet deles av flere tekster, og bare noen av dem har tak).
+//
+// Feltet stopper selv på maxlength, men uten en synlig teller merker man ikke
+// at det har sluttet å ta imot: man skriver videre, og tegnene forsvinner
+// stille. Telleren farges når man nærmer seg, og rødt når taket er nådd.
+export function wireCharCount(ta, max) {
+  if (!ta) return;
+  let teller = ta.nextElementSibling?.classList?.contains("char-count") ? ta.nextElementSibling : null;
+  if (!max) {
+    ta.removeAttribute("maxlength");
+    teller?.remove();
+    return;
+  }
+  ta.maxLength = max;
+  if (!teller) {
+    teller = document.createElement("p");
+    teller.className = "char-count";
+    ta.insertAdjacentElement("afterend", teller);
+  }
+  const tegn = () => {
+    const n = ta.value.length;
+    teller.textContent = `${n} / ${max} tegn`;
+    teller.classList.toggle("naer-taket", n >= max * 0.9 && n < max);
+    teller.classList.toggle("pa-taket", n >= max);
+  };
+  // Feltet kan være det samme elementet ved neste åpning (lærerens editor), så
+  // lytteren kobles bare én gang — telleren tegnes uansett på nytt.
+  if (!ta.dataset.charCountWired) {
+    ta.dataset.charCountWired = "1";
+    ta.addEventListener("input", tegn);
+  }
+  tegn();
 }
 
 // Episoden som spiller akkurat nå i `el`, eller null. Pauset OG ferdigspilt

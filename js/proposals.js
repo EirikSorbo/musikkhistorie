@@ -8,14 +8,15 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=5.00";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.00";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.00";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS } from "./limits.js?v=5.00";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.00";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.00";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.00";
-import { setupFormatBars } from "./format-bar.js?v=5.00";
+import { addPendingEdit, addTechProposal } from "./store.js?v=5.01";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.01";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.01";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.01";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.01";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.01";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.01";
+import { setupFormatBars } from "./format-bar.js?v=5.01";
+import { wireCharCount } from "./ui-helpers.js?v=5.01";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -124,7 +125,7 @@ const FIELD_SPECS = {
   // studentarbeid som skal kunne etterprøves, akkurat som instrumentkortene.
   // Læreren skriver i sin egen editor og møter ikke kravet.
   instrument: [
-    { key: "body", label: "Sammendrag av instrumentets utvikling", type: "textarea", full: true },
+    { key: "body", label: "Sammendrag av instrumentets utvikling", type: "textarea", full: true, max: SAMMENDRAG_MAKS },
     { ...KILDE_FELT, label: "Kilder *" },
   ],
   "decade-society": [
@@ -164,7 +165,9 @@ function inputForField(spec, value) {
     // data-format gir feltet formatlinja (fet/kursiv/lister) — se format-bar.js.
     // De lange tekstene får også mellomtittel-knappen.
     const langt = spec.key === "description" || spec.key === "body" || /More$/.test(spec.key);
-    return `${labelHtml}<textarea id="${id}" rows="4" data-format="${langt ? "full" : "kort"}">${escapeHtml(v)}</textarea></label>`;
+    // maxlength settes her OG telleren kobles i fillRows — attributtet alene
+    // stopper skrivingen uten å si hvorfor.
+    return `${labelHtml}<textarea id="${id}" rows="4" data-format="${langt ? "full" : "kort"}"${maxAttr}>${escapeHtml(v)}</textarea>${hint}</label>`;
   }
   if (spec.type === "select") {
     // En lagret verdi utenfor vokabularet beholdes som eget valg (samme vern
@@ -258,7 +261,9 @@ function fillRows(specs, values) {
   for (const s of specs) {
     const wrap = document.getElementById(`prop-f-${s.key}`);
     if (!wrap) continue;
-    if (s.type === "rows") {
+    if (s.type === "textarea" && s.max) {
+      wireCharCount(wrap, s.max);
+    } else if (s.type === "rows") {
       // Samme normalisering som diffen bruker, så radene og sammenligningen
       // alltid ser identiske verdier.
       buildRows(wrap, s.spec(), normalizeRows(s.spec(), values?.[s.key]));
@@ -366,6 +371,14 @@ export function openProposalEditor(config) {
     const radFeil = validateRows(specs);
     if (radFeil) {
       msg.textContent = radFeil;
+      msg.className = "form-msg error";
+      return;
+    }
+    // maxlength stopper tasting og liming, men ikke tekst som alt lå der da
+    // taket kom. Da skal innsendingen si tydelig ifra.
+    const forLangt = specs.find((s) => s.max && s.type === "textarea" && (proposed[s.key] || "").length > s.max);
+    if (forLangt) {
+      msg.textContent = `${forLangt.label} kan være maks ${forLangt.max} tegn (er ${proposed[forLangt.key].length}).`;
       msg.className = "form-msg error";
       return;
     }

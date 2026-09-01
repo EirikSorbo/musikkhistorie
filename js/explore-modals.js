@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.00";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.00";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.01";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.01";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -49,16 +49,16 @@ export const MODAL_HTML = `
     <div id="instr-utvikling">
       <!-- Arbeidsforklaringen står ØVERST, over instrumentknappene: det er
            første skjermbilde i kortet, og gruppene skal vite hva som forventes
-           før de begynner å skrive. Sammenleggbar, så den ikke er i veien når
-           man bare slår opp. -->
-      <details class="instr-guide" open>
+           før de begynner å skrive. LUKKET som standard (brukervalg) — den er
+           en oppskrift man slår opp i, ikke noe man skal lese hver gang. -->
+      <details class="instr-guide">
         <summary>Slik jobber dere med denne delen</summary>
-        <p>Hver gruppe har ansvar for ett instrument. Fire ting skal på plass:</p>
+        <p>Hver gruppe har ansvar for sitt instrument. Fire ting skal på plass:</p>
         <ol>
-          <li><strong>Sammendraget.</strong> Skriv teksten om instrumentets utvikling, og legg ved kildene dere har brukt. Knappen heter «Rediger sammendrag».</li>
-          <li><strong>Nyvinningene.</strong> Legg inn teknologikortene som hører til instrumentet, slik at tidslinjen nederst blir fyldig. Knappen heter «Legg til instrument-utvikling».</li>
+          <li><strong>Podkasten.</strong> Send den ferdige episoden til Eirik på e-post, så legges den ut under fanen «Podkaster».</li>
+          <li><strong>Sammendraget.</strong> Skriv teksten om instrumentets utvikling, og legg ved kildene dere har brukt. Knappen heter «Skriv sammendrag».</li>
+          <li><strong>Nyvinningene.</strong> Sørg for at sentrale teknologiske nyvinninger (eller sentrale måter å bruke instrumentet på) er med, slik at tidslinjen blir god. Knappen heter «Legg til nyvinning».</li>
           <li><strong>Artistene.</strong> Sjekk at de viktigste utøverne på instrumentet ligger i appen, og legg til dem som mangler. Knappen heter «Legg til artist».</li>
-          <li><strong>Podkasten.</strong> Send den ferdige episoden til læreren på e-post. Læreren legger den ut under fanen «Podkaster».</li>
         </ol>
       </details>
       <div class="instr-chips" id="instr-chips"></div>

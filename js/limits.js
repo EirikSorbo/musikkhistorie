@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.00";
+import { resolveSpan } from "./timeline-lanes.js?v=5.01";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -273,3 +273,10 @@ export function genderDistribution(artists) {
   }
   return { ...dist, total: active.length };
 }
+
+// Tak for instrumentsammendraget (content/instrument-<slug>.body). Satt av
+// brukeren 2026-09-01: sammendraget skal være et sammendrag, ikke en oppgave.
+// Håndheves i BEGGE skjemaene (lærerens innholdseditor og studentenes
+// forslagsskjema) med maxlength + synlig teller. firestore.rules har fortsatt
+// et løsere tak på 20 000 for `body`; det er misbruksgrensen, ikke skriveregelen.
+export const SAMMENDRAG_MAKS = 4000;
