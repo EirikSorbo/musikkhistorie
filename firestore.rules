@@ -206,6 +206,7 @@ service cloud.firestore {
           "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
           "geography", "description", "imageUrl", "imageCredit",
           "type", "category", "decade", "inventedYear", "adoptedYear", "adoptedLabel", "kilder",
+          "keyWorks", "musicExamples",
           "activeFrom", "activeTo", "era", "body", "society", "tech"
         ]) &&
         // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
@@ -238,6 +239,9 @@ service cloud.firestore {
         capOk("mainGenre", 50) &&
         capOk("subGenre", 50) &&
         capOk("kilder", 50) &&
+        // Samme tak som artists/create bruker for de samme listene.
+        capOk("keyWorks", 50) &&
+        capOk("musicExamples", 50) &&
         request.resource.data.get("entityName", "").size() <= 200 &&
         request.resource.data.get("proposedBy", "").size() <= 100
       );

@@ -13,7 +13,7 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=4.99";
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=5.00";
 
 // Den KURATERTE historie-rekkefølgen (struktur, ikke innhold): de sju
 // metasjangrene som utgjør MUR114-pensumet. Pop og Rock står i treet for å
@@ -84,6 +84,10 @@ export function stripGenrePath(text) {
 
 // Samme oppslag for innholdssidene (content/<id>.body fra Firestore).
 export function pageFor(pageId, content = {}) {
-  const body = content?.[pageId]?.body;
-  return typeof body === "string" && body.trim() ? { body } : null;
+  const doc = content?.[pageId];
+  const body = doc?.body;
+  if (typeof body !== "string" || !body.trim()) return null;
+  // kilder følger med for sidene som har dem (instrumentsammendragene, v5.00).
+  // Sidene uten kilder får en tom liste, så kallerne slipper egen vakt.
+  return { body, kilder: Array.isArray(doc.kilder) ? doc.kilder : [] };
 }

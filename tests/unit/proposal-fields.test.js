@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=4.99";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.00";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -15,9 +15,10 @@ test("artist-hvitelisten inneholder de reelle innholdsfeltene", () => {
   for (const key of ["name", "description", "mainGenre", "metaGenre", "influenceStart", "imageUrl"]) {
     assert.equal(PROPOSABLE_KEYS.artist.includes(key), true, `artist skal tillate ${key}`);
   }
-  // complex-felter foreslås ikke via editoren
+  // v5.00: rad-feltene er foreslåbare. Uten dem kunne en student ikke foreslå
+  // et lytteeksempel til en artist som allerede lå inne.
   for (const key of ["keyWorks", "musicExamples", "kilder"]) {
-    assert.equal(PROPOSABLE_KEYS.artist.includes(key), false, `artist skal ikke tillate complex-felt ${key}`);
+    assert.equal(PROPOSABLE_KEYS.artist.includes(key), true, `artist skal tillate rad-feltet ${key}`);
   }
 });
 

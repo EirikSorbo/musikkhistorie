@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=4.99";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.00";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -19,14 +19,14 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=4.99";
-import { escapeHtml } from "./ui.js?v=4.99";
-import { $ } from "./shared.js?v=4.99";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=4.99";
-import { validateTree } from "./genre-validate.js?v=4.99";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=4.99";
-import { INSTRUMENTS } from "./limits.js?v=4.99";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=4.99";
+} from "./store.js?v=5.00";
+import { escapeHtml } from "./ui.js?v=5.00";
+import { $ } from "./shared.js?v=5.00";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.00";
+import { validateTree } from "./genre-validate.js?v=5.00";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.00";
+import { INSTRUMENTS } from "./limits.js?v=5.00";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.00";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -400,7 +400,14 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
 
   const pageEntries = Object.entries(pages || {})
     .filter(([id, d]) => id !== "varmekart" && d && typeof d.body === "string" && d.body.trim())
-    .map(([id, d]) => ({ id, data: { body: d.body, updatedAt: d.updatedAt || new Date().toISOString() } }));
+    // kilder tas MED (instrumentsammendragene har dem): uten dette ville en
+    // eksport→import stille tømt kildelistene, siden saveDocsBulk skriver hele
+    // dokumentet og ikke fletter. Sider uten kilder får ikke feltet påført.
+    .map(([id, d]) => {
+      const data = { body: d.body, updatedAt: d.updatedAt || new Date().toISOString() };
+      if (Array.isArray(d.kilder) && d.kilder.length) data.kilder = d.kilder;
+      return { id, data };
+    });
   if (pageEntries.length) {
     try { await saveDocsBulk("content", pageEntries); done.push(`${pageEntries.length} innholdsside(r)`); }
     catch (e) { console.error("Side-import feilet:", e); failed.push("innholdssidene"); }

@@ -3,17 +3,18 @@
 // ----------------------------------------------------------------------------
 //  Rene, gjenbrukbare byggeklosser for rendering (HTML-snutter, formattering).
 //  Avhenger kun av util + linkify + rich-text + limits (GENDERS) + artist-strip
-//  — INGEN render-funksjoner, så modulen kan importeres fritt uten import-
-//  sykler. artistStripHtml re-eksporteres herfra, så ui.js henter alle
-//  byggeklossene sine ett sted.
+//  + ui-modal (avhengighetsfri) — INGEN render-funksjoner, så modulen kan
+//  importeres fritt uten import-sykler. artistStripHtml re-eksporteres herfra,
+//  så ui.js henter alle byggeklossene sine ett sted.
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=4.99";
-import { wireAllLinks } from "./linkify.js?v=4.99";
-import { renderRichText, renderInline } from "./rich-text.js?v=4.99";
-import { GENDERS } from "./limits.js?v=4.99";
-export { artistStripHtml } from "./artist-strip.js?v=4.99";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.00";
+import { wireAllLinks } from "./linkify.js?v=5.00";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.00";
+import { GENDERS } from "./limits.js?v=5.00";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.00";
+export { artistStripHtml } from "./artist-strip.js?v=5.00";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -227,6 +228,51 @@ export function renderPodcastList(el, episodes, { admin = false, empty = "" } = 
     if (ny && ny.getAttribute("src") === gammel.getAttribute("src")) ny.replaceWith(gammel);
   }
   return true;
+}
+
+// Episoden som spiller akkurat nå i `el`, eller null. Pauset OG ferdigspilt
+// teller som «spiller ikke»: ingen av delene skal utløse et spørsmål.
+export function playingEpisodeIn(el) {
+  if (!el) return null;
+  return [...el.querySelectorAll("audio")].find((a) => !a.paused && !a.ended) || null;
+}
+
+// «Stopp eller fortsett?» ved lukking av en podkastspiller. Kobles som
+// _beforeClose på modalen (se ui-modal.js), så den dekker alle lukkeveiene:
+// ✕, ←, «Lukk alle», Escape og klikk på bakgrunnen.
+//
+// Returnerer true når ingenting spiller (lukk som normalt). Spiller noe,
+// returneres false og dialogen tar over: den lukker modalen selv når
+// studenten har svart. Escape og bakgrunnsklikk i dialogen betyr «fortsett» —
+// lukkingen var det brukeren ba om, og å la lyden gå er det ufarlige valget.
+export function askBeforeClosingPlayer(listEl, modal) {
+  const lyd = playingEpisodeIn(listEl);
+  if (!lyd) return true;
+  const tittel = lyd.closest(".podkast-episode")?.querySelector(".podkast-title")?.textContent?.trim();
+  askChoice({
+    title: "Episoden spiller fortsatt",
+    text: tittel
+      ? `«${tittel}» spiller nå. Vil du at den skal fortsette mens du bruker resten av appen?`
+      : "Episoden spiller nå. Vil du at den skal fortsette mens du bruker resten av appen?",
+    buttons: [
+      { value: "stopp", label: "Stopp episoden", className: "ghost" },
+      { value: "fortsett", label: "Fortsett å spille", className: "primary" },
+    ],
+    dismissValue: "fortsett",
+  }).then((svar) => {
+    if (svar === "stopp") lyd.pause();
+    modal._skipBeforeClose = true;
+    modalClose(modal);
+  });
+  return false;
+}
+
+// Kobler «stopp eller fortsett»-spørsmålet på en modal som inneholder en
+// podkastliste. Idempotent, så den kan kalles ved hver åpning.
+export function wirePlayerCloseGuard(modal, listId) {
+  if (!modal || modal._podLukkKlar) return;
+  modal._podLukkKlar = true;
+  modal._beforeClose = () => askBeforeClosingPlayer(document.getElementById(listId), modal);
 }
 
 // Lyd som ikke lar seg spille av: de innebygde kontrollene sier bare «Feil»,

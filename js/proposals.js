@@ -8,30 +8,66 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=4.99";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=4.99";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=4.99";
-import { GENDERS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS } from "./limits.js?v=4.99";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.99";
-import { setupFormatBars } from "./format-bar.js?v=4.99";
+import { addPendingEdit, addTechProposal } from "./store.js?v=5.00";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.00";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.00";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS } from "./limits.js?v=5.00";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.00";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.00";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.00";
+import { setupFormatBars } from "./format-bar.js?v=5.00";
 
-// Artistfeltene utledes fra det delte skjemaet (artist-schema.js).
-// «complex»-felter (verk/musikkeksempler/kilder) har egne rad-editorer i
-// hovedskjemaene og kan ikke foreslås her.
-const ARTIST_PROPOSAL_SPECS = ARTIST_FIELDS
-  .filter((f) => f.type !== "complex")
-  .map((f) => {
+// Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
+// Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
+// frosset en tom liste for alltid (samme felle som student.js dokumenterer).
+const sorterteSjangre = () => [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"));
+const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre());
+const valgListe = (verdier, tom) => [{ value: "", label: tom }, ...verdier.map((v) => ({ value: v, label: v }))];
+
+// Artistfeltene utledes fra det delte skjemaet (artist-schema.js), og skal ha
+// NØYAKTIG de samme inngangene som «Foreslå en artist» (student.html).
+// T.o.m. v4.99 falt «complex»-feltene (sentrale verk, musikkeksempler, kilder)
+// ut her: en student kunne foreslå en HELT ny artist med lytteeksempler, men
+// ikke føye ett til på en artist som alt lå inne. Nå har de samme rad-editorer
+// begge steder. Funksjon, ikke konstant: sjangre og metasjangre kommer fra
+// treet i Firestore.
+function artistSpecs() {
+  return ARTIST_FIELDS.map((f) => {
     if (f.type === "gender") {
       return { ...f, type: "select", options: [{ value: "", label: "Velg…" }, ...GENDERS] };
+    }
+    // Kontrollerte vokabularer, som i skjemaet for ny artist. Et fritekstfelt
+    // her lot studenten foreslå en verdi som ikke finnes noe sted i appen.
+    // En lagret verdi utenfor lista beholdes av select-koden under, så gammel
+    // data aldri mistes stille.
+    if (f.key === "metaGenre") {
+      return { ...f, type: "select", options: valgListe(GENEALOGY_META_GENRES, "Velg metasjanger …") };
+    }
+    if (f.key === "instrument") {
+      return { ...f, type: "select", options: valgListe(INSTRUMENTS, "Velg instrument …") };
+    }
+    if (f.key === "mainGenre") {
+      return { ...f, type: "genres", label: "Sjangre (fra slektstreet)", full: true };
+    }
+    if (f.key === "keyWorks") {
+      return { ...f, type: "rows", spec: () => WORK_SPEC, addLabel: "+ Legg til verk", full: true };
+    }
+    if (f.key === "musicExamples") {
+      return { ...f, type: "rows", spec: musicSpecSj, addLabel: "+ Legg til musikkeksempel", full: true };
+    }
+    if (f.key === "kilder") {
+      return { ...f, type: "rows", spec: () => SOURCE_SPEC, addLabel: "+ Legg til kilde", full: true };
     }
     if (f.type === "csv") {
       return { ...f, label: `${f.label} (kommaseparert)` };
     }
     return { ...f };
   });
+}
+
+const KILDE_FELT = { key: "kilder", label: "Kilder", type: "rows", spec: () => SOURCE_SPEC, addLabel: "+ Legg til kilde", full: true };
 
 const FIELD_SPECS = {
-  artist: ARTIST_PROPOSAL_SPECS,
   tech: [
     // Typen står ØVERST fordi den styrer resten av skjemaet: velger man
     // «Viktig hendelse», skjules kategori (som bare gjelder teknologi).
@@ -65,10 +101,10 @@ const FIELD_SPECS = {
     { key: "inventedYear", label: "Oppfunnet (år)", type: "number",
       hint: "Året teknologien ble oppfunnet eller patentert." },
     { key: "adoptedYear", label: "Tatt i bruk (år)", type: "number",
-      hint: "Året den ble tatt i bruk av noen viktige nok til at det ble stående, eller tatt kommersielt i bruk i bred skala. Ofte flere år etter at den ble oppfunnet." },
+      hint: "Året det ble tatt i bruk i nevneverdig skala." },
     { key: "adoptedLabel", label: "Tatt i bruk (kort forklaring)", type: "text" },
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
-    { key: "kilder", label: "Kilder", type: "sources", full: true },
+    KILDE_FELT,
     { key: "imageUrl", label: "Bilde-URL", type: "text", full: true },
     { key: "imageCredit", label: "Bildekreditering", type: "text", full: true },
   ],
@@ -81,11 +117,15 @@ const FIELD_SPECS = {
     { key: "activeFrom", label: "Mest aktiv fra år", type: "number", levels: ["main"] },
     { key: "activeTo", label: "Mest aktiv til år (tom = fortsatt aktiv)", type: "number", levels: ["main"] },
     { key: "era", label: "Epoke med ord", type: "text", levels: ["main"], full: true, max: 60,
-      hint: "Vises ordrett på sjangertidslinjen, og på sjangerkortet når årstallene over står tomme. Bruk den når et presist årstall ville sett feil ut, f.eks. «midten av 1940-tallet»." },
-    { key: "kilder", label: "Kilder", type: "sources", full: true },
+      hint: "Vises ordrett på sjangertidslinjen, og på sjangerkortet når årstallene over står tomme. Bruk den for nyansering av årstallene hvis nødvendig." },
+    KILDE_FELT,
   ],
+  // Kilder er PÅKREVD for studentforslag her (brukerkrav): sammendraget er
+  // studentarbeid som skal kunne etterprøves, akkurat som instrumentkortene.
+  // Læreren skriver i sin egen editor og møter ikke kravet.
   instrument: [
     { key: "body", label: "Sammendrag av instrumentets utvikling", type: "textarea", full: true },
+    { ...KILDE_FELT, label: "Kilder *" },
   ],
   "decade-society": [
     { key: "society", label: "Samfunnsutvikling", type: "textarea", full: true },
@@ -94,6 +134,11 @@ const FIELD_SPECS = {
     { key: "tech", label: "Teknologiutvikling", type: "textarea", full: true },
   ],
 };
+
+// Feltene for en entityType. Artist bygges ved kall (asynkront vokabular).
+function fieldSpecsFor(entityType) {
+  return entityType === "artist" ? artistSpecs() : (FIELD_SPECS[entityType] || null);
+}
 
 const TITLES = {
   artist: "Foreslå endring på artist",
@@ -140,9 +185,6 @@ function inputForField(spec, value) {
     const display = Array.isArray(v) ? v.join(", ") : (v || "");
     return `${labelHtml}<input type="text" id="${id}" value="${escapeHtml(display)}" /></label>`;
   }
-  // «sources»: strukturerte kilder ({ text, url }) med samme rad-editor som
-  // artistskjemaet, så en kilde kan bære lenke. Radene bygges etter innsetting
-  // i DOM (fillSourceRows) — innerHTML her ville ikke fått med hendelsene.
   if (spec.type === "radio") {
     // Standard er første valg — et kort uten `type` ER en innovasjon.
     const valgt = spec.options.some((o) => o.value === v) ? v : spec.options[0].value;
@@ -152,10 +194,22 @@ function inputForField(spec, value) {
         `${o.value === valgt ? " checked" : ""} /> ${escapeHtml(o.label)}</label>`
       ).join("") + `</div></div>`;
   }
-  if (spec.type === "sources") {
-    return `<div${fullClass}><span class="field-label">${escapeHtml(spec.label)}</span>` +
+  // «rows»: strukturerte rader (sentrale verk, musikkeksempler, kilder) med
+  // NØYAKTIG de samme rad-editorene som hovedskjemaene bruker. Selve radene
+  // bygges etter innsetting i DOM (fillRows) — en innerHTML-streng her ville
+  // ikke fått med fjern-knappenes hendelser.
+  if (spec.type === "rows") {
+    return `<div${fullClass}><span class="field-label">${escapeHtml(spec.label)}</span>${hint}` +
       `<div id="${id}"></div>` +
-      `<button type="button" class="btn ghost small" data-add-src="${id}">+ Legg til kilde</button></div>`;
+      `<button type="button" class="btn ghost small" data-add-rows="${id}">${escapeHtml(spec.addLabel || "+ Legg til")}</button></div>`;
+  }
+  // «genres»: sjangervelgeren fra slektstreet (js/genre-picker.js), samme som
+  // i skjemaet for ny artist. Brikkene og vokabularet fylles i fillRows.
+  if (spec.type === "genres") {
+    return `<div class="full genre-picker" id="${id}">` +
+      `<span class="field-label">${escapeHtml(spec.label)}</span>` +
+      `<select class="gp-velg" aria-label="Legg til sjanger"></select>` +
+      `<div class="gp-valgte"></div></div>`;
   }
   return `${labelHtml}<input type="text" id="${id}" value="${escapeHtml(v)}"${maxAttr} />${hint}</label>`;
 }
@@ -170,8 +224,11 @@ function readField(spec) {
   if (spec.type === "csv") {
     return el.value.split(",").map((s) => s.trim()).filter(Boolean);
   }
-  if (spec.type === "sources") {
-    return collectRows(el, SOURCE_SPEC).filter((k) => k.text);
+  if (spec.type === "rows") {
+    return collectRows(el, spec.spec());
+  }
+  if (spec.type === "genres") {
+    return collectGenrePicker(el);
   }
   if (spec.type === "radio") {
     return el.querySelector("input:checked")?.value || spec.options[0].value;
@@ -195,20 +252,63 @@ function wireTypeToggle() {
   oppdater();
 }
 
-// Kilde-radene må bygges ETTER at skjemaet står i DOM — rowInnerHtml kobler
-// fjern-knappen per rad, og det overlever ikke en innerHTML-streng.
-function fillSourceRows(specs, values) {
+// Rad-editorene og sjangervelgeren må bygges ETTER at skjemaet står i DOM:
+// begge kobler hendelser per element, og det overlever ikke en innerHTML-streng.
+function fillRows(specs, values) {
   for (const s of specs) {
-    if (s.type !== "sources") continue;
     const wrap = document.getElementById(`prop-f-${s.key}`);
     if (!wrap) continue;
-    // Samme normalisering som diffen bruker, så radene og sammenligningen
-    // alltid ser identiske verdier.
-    buildRows(wrap, SOURCE_SPEC, normalizeSources(values?.[s.key]));
+    if (s.type === "rows") {
+      // Samme normalisering som diffen bruker, så radene og sammenligningen
+      // alltid ser identiske verdier.
+      buildRows(wrap, s.spec(), normalizeRows(s.spec(), values?.[s.key]));
+    } else if (s.type === "genres") {
+      setupGenrePicker(wrap);
+      fillGenrePicker(wrap, sorterteSjangre());
+      buildGenrePicker(wrap, Array.isArray(values?.[s.key]) ? values[s.key] : []);
+    }
   }
-  document.querySelectorAll("#prop-form [data-add-src]").forEach((btn) => {
-    btn.onclick = () => addRow(document.getElementById(btn.dataset.addSrc), SOURCE_SPEC, {});
+  document.querySelectorAll("#prop-form [data-add-rows]").forEach((btn) => {
+    const s = specs.find((x) => `prop-f-${x.key}` === btn.dataset.addRows);
+    if (!s) return;
+    btn.onclick = () => addRow(document.getElementById(btn.dataset.addRows), s.spec(), {});
   });
+}
+
+// http/https-sjekk (samme regel som safeUrl bruker ved lagring).
+const erHttpUrl = (u) => /^https?:\/\//i.test((u || "").trim());
+
+// En halvutfylt rad droppes stille av collectRows (den filtrerer på keepKey, og
+// tallfelter/URL-er som ikke holder mål forsvinner). Studenten skal få vite det
+// framfor å tro at raden ble sendt inn. Speiler validateExampleRows/
+// validateSourceRows i student.js.
+function validateRows(specs) {
+  for (const spec of specs) {
+    if (spec.type !== "rows") continue;
+    const wrap = document.getElementById(`prop-f-${spec.key}`);
+    if (!wrap) continue;
+    const rowSpec = spec.spec();
+    for (const rad of wrap.querySelectorAll("." + rowSpec.rowClass)) {
+      const les = (cls) => rad.querySelector("." + cls)?.value.trim() || "";
+      if (rowSpec === SOURCE_SPEC) {
+        const tekst = les("source-text"), url = les("source-url");
+        if (!tekst && !url) continue;
+        if (!tekst) return "En kilde har en lenke, men mangler tekst. Skriv inn kildehenvisningen.";
+        if (url && !erHttpUrl(url)) return `Kilden «${tekst}» har en ugyldig lenke (må starte med https://). Fjern eller rett lenken.`;
+      } else if (rowSpec.rowClass === "me-row") {
+        const tittel = les("me-label"), url = les("me-url");
+        if (!tittel && !url) continue;
+        if (!erHttpUrl(url)) {
+          return `Musikkeksempelet ${tittel ? `«${tittel}»` : "(uten tittel)"} mangler en gyldig lenke (må starte med https://).`;
+        }
+      } else if (rowSpec === WORK_SPEC) {
+        const tittel = les("work-title"), url = les("work-url");
+        if (!tittel && url) return "Et verk har en lenke, men mangler tittel. Skriv inn tittelen.";
+        if (tittel && url && !erHttpUrl(url)) return `Verket «${tittel}» har en ugyldig lenke (må starte med https://).`;
+      }
+    }
+  }
+  return null;
 }
 
 // Hoved-API: åpne redigereren for en eksisterende entitet.
@@ -216,7 +316,7 @@ function fillSourceRows(specs, values) {
 export function openProposalEditor(config) {
   const modal = document.getElementById("modal-proposal");
   if (!modal) return;
-  const alleSpecs = FIELD_SPECS[config.entityType];
+  const alleSpecs = fieldSpecsFor(config.entityType);
   if (!alleSpecs) {
     console.warn("Ingen feltspesifikasjon for", config.entityType);
     return;
@@ -236,7 +336,7 @@ export function openProposalEditor(config) {
 
   const form = document.getElementById("prop-form");
   form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
-  fillSourceRows(specs, config.currentValues || {});
+  fillRows(specs, config.currentValues || {});
   setupFormatBars(form);
   wireTypeToggle();
 
@@ -258,10 +358,25 @@ export function openProposalEditor(config) {
     // kunne viske ut kilder ved godkjenning.
     const current = { ...(config.currentValues || {}) };
     for (const s of specs) {
-      if (s.type === "sources") current[s.key] = normalizeSources(current[s.key]);
+      if (s.type === "rows") current[s.key] = normalizeRows(s.spec(), current[s.key]);
+    }
+    const msg = document.getElementById("prop-msg");
+    // Rader med innhold men uten gyldig lenke/tekst ville blitt droppet stille
+    // av collectRows. Samme sjekk som skjemaet for ny artist gjør.
+    const radFeil = validateRows(specs);
+    if (radFeil) {
+      msg.textContent = radFeil;
+      msg.className = "form-msg error";
+      return;
+    }
+    // Instrumentsammendraget SKAL ha kilder (brukerkrav): teksten er
+    // studentarbeid som skal kunne etterprøves.
+    if (config.entityType === "instrument" && !(proposed.kilder || []).length) {
+      msg.textContent = "Legg til minst én kilde til sammendraget.";
+      msg.className = "form-msg error";
+      return;
     }
     const diff = diffFields(current, proposed);
-    const msg = document.getElementById("prop-msg");
     if (!Object.keys(diff).length) {
       msg.textContent = "Du har ikke endret noe ennå.";
       msg.className = "form-msg error";
@@ -322,7 +437,7 @@ export function openNewTechProposal(preset = null) {
       preset?.[s.key] ?? ""
     ))
     .join("");
-  fillSourceRows(specs, preset || {});
+  fillRows(specs, preset || {});
   setupFormatBars(form);
   wireTypeToggle();
 

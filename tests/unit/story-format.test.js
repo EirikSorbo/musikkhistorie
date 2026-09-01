@@ -1,8 +1,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=4.99";
-import { rebuild } from "../../js/genre-model.js?v=4.99";
+import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=5.00";
+import { rebuild } from "../../js/genre-model.js?v=5.00";
 import { SEED_DOC } from "../helpers/seed-model.js";
 
 test("storyFor: null når ingen tekst er lagret (ingen fallback)", () => {
@@ -23,6 +23,18 @@ test("pageFor: samme regler for innholdssidene", () => {
   assert.equal(pageFor("omHistorie", {}), null);
   assert.equal(pageFor("omHistorie", { omHistorie: { body: " " } }), null);
   assert.equal(pageFor("omHistorie", { omHistorie: { body: "Tekst." } }).body, "Tekst.");
+});
+
+// Instrumentsammendragene har kildeliste (v5.00). Sidene uten kilder skal gi en
+// TOM liste, ikke undefined: visningen sender verdien rett til buildKilderList,
+// og forslagseditoren differ mot den.
+test("pageFor: kilder følger med, og er alltid en liste", () => {
+  const kilder = [{ text: "Store norske leksikon", url: "https://snl.no/vokal" }];
+  const c = { "instrument-vokal": { body: "Om vokalen.", kilder } };
+  assert.deepEqual(pageFor("instrument-vokal", c).kilder, kilder);
+  assert.deepEqual(pageFor("omHistorie", { omHistorie: { body: "Tekst." } }).kilder, []);
+  // Søppel i feltet skal ikke velte visningen.
+  assert.deepEqual(pageFor("x", { x: { body: "T.", kilder: "ikke en liste" } }).kilder, []);
 });
 
 test("STORY_ORDER er de sju historiene i fast rekkefølge", () => {

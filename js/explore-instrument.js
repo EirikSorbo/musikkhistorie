@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=4.99";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=4.99";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=4.99";
-import { pageFor } from "./story-format.js?v=4.99";
-import { renderRichText } from "./rich-text.js?v=4.99";
-import { wireLinks, renderPodcastList } from "./ui-helpers.js?v=4.99";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=4.99";
-import { openTechDetail } from "./explore-tech.js?v=4.99";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.00";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.00";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, INSTRUMENT_COLOR, instrumentPageId } from "./limits.js?v=5.00";
+import { pageFor } from "./story-format.js?v=5.00";
+import { renderRichText } from "./rich-text.js?v=5.00";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.00";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.00";
+import { openTechDetail } from "./explore-tech.js?v=5.00";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -148,7 +148,8 @@ function renderGroup(group) {
   const sum = body.querySelector(".instr-sum-body");
   const lc = buildLinkCtx();
   if (page) {
-    sum.innerHTML = renderRichText(page.body, lc);
+    // Kildene står under teksten, i samme form som på sjangerkortene.
+    sum.innerHTML = renderRichText(page.body, lc) + buildKilderList(page.kilder, "Kilder");
     wireLinks(sum, lc);
   } else {
     // Teksten peker på HVEM som skriver den, ikke bare at den mangler —
@@ -172,7 +173,7 @@ function renderGroup(group) {
       entityType: "instrument",
       entityId: pageId,
       entityName: INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`,
-      currentValues: { body: page?.body || "" },
+      currentValues: { body: page?.body || "", kilder: page?.kilder || [] },
     }));
   }
 
@@ -229,6 +230,9 @@ export function openInstrumenter(tab, group) {
   const modal = document.getElementById("modal-instrumenter");
   if (!modal) return;
   if (group && INSTRUMENT_TIMELINE_GROUPS.includes(group)) currentGroup = group;
+  // Lukkes kortet mens en episode spiller, skal brukeren selv velge om lyden
+  // følger med ut. Fanebytte er IKKE lukking og spør ikke (brukervalg).
+  wirePlayerCloseGuard(modal, "podkast-list");
   renderTabs();
   selectTab(typeof tab === "string" ? tab : currentTab);
   modalOpen(modal);

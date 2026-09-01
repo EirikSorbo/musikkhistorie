@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=4.99" />
-  <script src="js/gate.js?v=4.99"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.00" />
+  <script src="js/gate.js?v=5.00"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -230,6 +230,14 @@
         <textarea id="se-text" spellcheck="false"></textarea>
         <div id="se-preview" class="story-body story-preview"></div>
       </div>
+      <!-- Kilder: vises KUN for instrumentsammendragene (openContentEditor
+           slår den på). De andre innholdssidene har ingen kildeliste. -->
+      <div class="full" id="se-kilder-wrap" style="margin-top:14px" hidden>
+        <span class="field-label">Kilder</span>
+        <p class="hint">Vises under sammendraget, på samme måte som på sjangerkortene.</p>
+        <div id="se-kilder"></div>
+        <button type="button" class="btn ghost small" id="se-add-kilde">+ Legg til kilde</button>
+      </div>
       <div class="admin-actions" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;align-items:center">
         <span id="se-msg" class="form-msg"></span>
         <button type="button" id="se-reset" class="btn danger">Slett teksten</button>
@@ -433,7 +441,7 @@
           <label>Epoke med ord
             <input type="text" id="ss-era" maxlength="60" placeholder="f.eks. «midten av 1940-tallet»">
           </label>
-          <p class="hint">Vises på sjangertidslinjen ORDRETT, og på sjangerkortet når årstallene over står tomme. Bruk den når et presist årstall ville sett feil ut.</p>
+          <p class="hint">Vises ordrett på sjangertidslinjen, og på sjangerkortet når årstallene over står tomme. Bruk den for nyansering av årstallene hvis nødvendig.</p>
           <p class="hint" id="ss-epoke-hint"></p>
         </div>
         <!-- Lytteforslag for sjangeren som sådan. Skilt fra artistenes
@@ -670,7 +678,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=4.99"></script>
-  <script type="module" src="js/teacher.js?v=4.99"></script>
+  <script src="js/load-guard.js?v=5.00"></script>
+  <script type="module" src="js/teacher.js?v=5.00"></script>
 </body>
 </html>

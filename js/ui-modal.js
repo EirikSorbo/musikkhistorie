@@ -52,7 +52,16 @@ export function modalOpen(el) {
   (focusables(el)[0] || dialog)?.focus();
 }
 
+// En modal kan sette el._beforeClose = () => boolean. Returnerer den false,
+// AVBRYTES lukkingen: hooken har tatt over (typisk «spør først»), og lukker
+// selv etterpå ved å sette el._skipBeforeClose = true rett før neste kall.
+// Kroken sitter her fordi ALLE lukkeveiene går gjennom modalClose: ✕, ←,
+// «Lukk alle», Escape (modalCloseTop) og klikk på bakgrunnen. En hook per
+// knapp ville måttet gjentas fem steder, og Escape ville uansett gått forbi.
 export function modalClose(el) {
+  const hopp = el._skipBeforeClose;
+  el._skipBeforeClose = false;
+  if (!hopp && typeof el._beforeClose === "function" && el._beforeClose() === false) return;
   el.classList.remove("open");
   if (el._restoreFocus && document.contains(el._restoreFocus)) {
     el._restoreFocus.focus();
@@ -125,4 +134,73 @@ if (IS_BROWSER) {
   } else {
     initModalHeaders();
   }
+}
+
+// ----------------------------------------------------------------------------
+//  LITEN VALG-DIALOG
+// ----------------------------------------------------------------------------
+//  Bygges i farten i stedet for som markup i sidene: den trengs på forsiden,
+//  lærersiden og tre-siden, og tre kopier av samme HTML ville drevet fra
+//  hverandre. Bruker de samme klassene som de faste modalene, så den arver
+//  utseende, z-index-stabling og fokusfelle uten egen CSS.
+//
+//  Returnerer valgets `value`. Escape og klikk på bakgrunnen gir
+//  `dismissValue` — sett den til det ufarlige valget, siden det er dét en
+//  bortkommen Escape havner på.
+export function askChoice({ title, text = "", buttons = [], dismissValue = null }) {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    const dialog = document.createElement("div");
+    dialog.className = "modal";
+    backdrop.append(dialog);
+
+    const head = document.createElement("div");
+    head.className = "modal-head";
+    const h = document.createElement("h2");
+    h.textContent = title;
+    head.append(h);
+    dialog.append(head);
+
+    if (text) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.textContent = text;
+      dialog.append(p);
+    }
+
+    const foot = document.createElement("div");
+    foot.className = "modal-foot-right";
+    foot.style.gap = "8px";
+    dialog.append(foot);
+
+    // Idempotent: både knappene, bakgrunnsklikket og Escape lander her, og
+    // bare det første kallet teller.
+    let ferdig = false;
+    const avslutt = (value) => {
+      if (ferdig) return;
+      ferdig = true;
+      backdrop._beforeClose = null;
+      backdrop._skipBeforeClose = true;
+      modalClose(backdrop);
+      backdrop.remove();
+      resolve(value);
+    };
+
+    for (const b of buttons) {
+      const knapp = document.createElement("button");
+      knapp.type = "button";
+      knapp.className = `btn ${b.className || "ghost"}`;
+      knapp.textContent = b.label;
+      knapp.addEventListener("click", () => avslutt(b.value));
+      foot.append(knapp);
+    }
+
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) avslutt(dismissValue); });
+    // Escape går via modalCloseTop → modalClose, altså gjennom kroken over.
+    backdrop._beforeClose = () => { avslutt(dismissValue); return false; };
+
+    document.body.append(backdrop);
+    modalOpen(backdrop);
+  });
 }

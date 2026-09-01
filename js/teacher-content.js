@@ -5,24 +5,24 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=4.99";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=4.99";
-import { resolveMainDesc } from "./genealogy.js?v=4.99";
-import { dropboxDirectUrl } from "./util.js?v=4.99";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=4.99";
-import { storyFor, pageFor } from "./story-format.js?v=4.99";
-import { renderRichText } from "./rich-text.js?v=4.99";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=4.99";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=4.99";
-import { resolveDesc } from "./genre-descriptions.js?v=4.99";
-import { renderPodcastList, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=4.99";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=4.99";
-import { heatRow, getHeatData } from "./heat-strip.js?v=4.99";
+import { state, ctx, openAdminModal, closeAdminModal, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.00";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.00";
+import { resolveMainDesc } from "./genealogy.js?v=5.00";
+import { dropboxDirectUrl } from "./util.js?v=5.00";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.00";
+import { storyFor, pageFor } from "./story-format.js?v=5.00";
+import { renderRichText } from "./rich-text.js?v=5.00";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=5.00";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.00";
+import { resolveDesc } from "./genre-descriptions.js?v=5.00";
+import { renderPodcastList, wirePlayerCloseGuard, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=5.00";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.00";
+import { heatRow, getHeatData } from "./heat-strip.js?v=5.00";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=4.99";
-import { $ } from "./shared.js?v=4.99";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=4.99";
+import { wireAllLinks } from "./linkify.js?v=5.00";
+import { $ } from "./shared.js?v=5.00";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.00";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -565,8 +565,12 @@ export function setupTechAdmin() {
 // ----------------------------------------------------------------------------
 
 export function openPodkastAdmin() {
+  const modal = document.getElementById("modal-podkast-admin");
+  // Samme spørsmål som studentene får: lukker læreren modalen midt i en
+  // episode, velger hen selv om lyden skal følge med ut.
+  wirePlayerCloseGuard(modal, "podkast-admin-list");
   renderPodkastAdmin();
-  modalOpen(document.getElementById("modal-podkast-admin"));
+  modalOpen(modal);
 }
 
 // Episoden som redigeres nå, eller null for «legg til ny». Skjemaet er det
@@ -749,6 +753,8 @@ const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910", ap
 
 // { type: "story", id: <sjanger> } eller { type: "page", id: <sideId> }
 let editorTarget = null;
+// Kildene siden hadde da editoren ble åpnet (se openContentEditor).
+let editorKilder = [];
 
 function storyLinkCtx() {
   return { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) };
@@ -759,8 +765,22 @@ function renderStoryPreview() {
   if (el) el.innerHTML = renderRichText($("#se-text").value, storyLinkCtx());
 }
 
+// Instrumentsammendragene (content/instrument-<slug>) er de eneste
+// innholdssidene med kildeliste. De andre (Om historie, Røtter, Slik bruker du
+// appen) er lærerens egen prosa uten kildeapparat, og skal ikke få feltet.
+const erInstrumentside = (t) => t?.type === "page" && String(t.id || "").startsWith("instrument-");
+
 function openContentEditor(target, title, existing) {
   editorTarget = target;
+  // Kildene fra dokumentet tas vare på her, så en lagring av en side UTEN
+  // kildefelt ikke tømmer dem: savePage skriver hele dokumentet, den fletter ikke.
+  editorKilder = normalizeSources(existing?.kilder);
+  const medKilder = erInstrumentside(target);
+  $("#se-kilder-wrap").hidden = !medKilder;
+  // Radene tømmes for sider uten kildefelt, så forrige instruments kilder ikke
+  // blir stående i et skjult felt og forvirre neste gang det åpnes.
+  if (medKilder) buildRows($("#se-kilder"), SOURCE_SPEC, editorKilder);
+  else $("#se-kilder").innerHTML = "";
   $("#se-title").textContent = `Rediger: ${title}`;
   $("#se-text").value = existing ? existing.body : "";
   const msg = $("#se-msg");
@@ -779,7 +799,15 @@ export function openStoryEditor(genre) {
 }
 
 export function openPageEditor(pageId) {
-  openContentEditor({ type: "page", id: pageId }, PAGE_TITLES[pageId] || pageId, pageFor(pageId, state.content));
+  openContentEditor({ type: "page", id: pageId }, sideTittel(pageId), pageFor(pageId, state.content));
+}
+
+// Instrumentsammendragene står ikke i PAGE_TITLES (de er avledet av
+// instrumentgruppene), og editoren viste derfor rå side-ID: «instrument-gitar».
+function sideTittel(pageId) {
+  if (PAGE_TITLES[pageId]) return PAGE_TITLES[pageId];
+  const gruppe = INSTRUMENT_TIMELINE_GROUPS.find((g) => instrumentPageId(g) === pageId);
+  return gruppe ? (INSTRUMENT_TITLE[gruppe] || `Utviklingen av ${gruppe}`) : pageId;
 }
 
 // Knappene i historie-editorens formatlinje (den ligger i teacher.html, med
@@ -801,6 +829,8 @@ export function setupStoryEditor() {
   $("#se-ul").addEventListener("click", () => sePrefix(() => "- "));
   $("#se-ol").addEventListener("click", () => sePrefix((i) => `${i + 1}. `));
 
+  $("#se-add-kilde").addEventListener("click", () => addRow($("#se-kilder"), SOURCE_SPEC, {}));
+
   // Gjenåpner visningen teksten hører til, så lagring/sletting synes straks.
   const reopenTarget = () => {
     if (!ctx.explore || !editorTarget) return;
@@ -821,8 +851,17 @@ export function setupStoryEditor() {
     msg.textContent = "Lagrer …";
     msg.className = "form-msg ok";
     try {
-      if (editorTarget.type === "story") await saveStoryBody(editorTarget.id, body);
-      else await savePage(editorTarget.id, { body });
+      if (editorTarget.type === "story") {
+        await saveStoryBody(editorTarget.id, body);
+      } else {
+        // savePage ERSTATTER hele dokumentet (ingen merge), så kildene må
+        // skrives med hver gang de finnes. Sider uten kildefelt får ikke et
+        // tomt kilder-felt påført, men beholder det de eventuelt hadde.
+        const data = { body };
+        if (erInstrumentside(editorTarget)) data.kilder = collectRows($("#se-kilder"), SOURCE_SPEC);
+        else if (editorKilder.length) data.kilder = editorKilder;
+        await savePage(editorTarget.id, data);
+      }
       closeAdminModal("modal-story-edit");
       reopenTarget();
     } catch (err) {

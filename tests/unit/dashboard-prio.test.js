@@ -4,7 +4,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderDashboard } from "../../js/ui-dashboard.js?v=4.99";
+import { renderDashboard } from "../../js/ui-dashboard.js?v=5.00";
 
 const artist = (id, priority, status = "active") => ({
   id, name: `Artist ${id}`, status, priority,

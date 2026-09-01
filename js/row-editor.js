@@ -8,11 +8,11 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=4.99";
+import { escapeHtml } from "./util.js?v=5.00";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=4.99";
+import { KILDE_KATEGORIER } from "./kilder.js?v=5.00";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
@@ -74,29 +74,41 @@ export const SOURCE_SPEC = {
   ],
 };
 
-// Normaliserer en lagret kilde-liste til NØYAKTIG formen collectRows leverer
-// for SOURCE_SPEC: [{ text, forfatter, url, kategori }] alltid til stede (year kun
-// når det er et gyldig tall), tomme
-// rader filtrert bort. Kilder er historisk lagret både som rene strenger og
-// som objekter uten url-felt — uten denne ga en UENDRET kilde en falsk diff i
-// forslagseditoren ({ text } ≠ { text, url: "" }), og et sjangerkort uten
-// kilder ga en falsk «kilder: []»-endring i hvert eneste forslag.
+// Normaliserer en LAGRET liste til NØYAKTIG formen collectRows leverer for
+// samme spec: `always`-felter alltid til stede (tomme som ""), tallfelter kun
+// når de er gyldige, øvrige kun når de er utfylt, og rader uten keepKey borte.
+//
+// Dette er selve vernet mot FALSKE DIFFER i forslagseditoren. Uten det ville en
+// urørt rad sett endret ut fordi den lagrede formen mangler et felt editoren
+// alltid skriver ({ text } mot { text, url: "" }), og et kort helt uten liste
+// ga en falsk «kilder: []»-endring i hvert eneste forslag. Med lytteeksempler
+// og sentrale verk i editoren (v5.00) gjelder nøyaktig det samme der.
+//
+// En rad lagret som en ren STRENG (gamle kilder var det) leses som keepKey-en.
+export function normalizeRows(spec, list) {
+  if (!Array.isArray(list)) return [];
+  return list.map((rå) => {
+    const kilde = typeof rå === "string" ? { [spec.keepKey]: rå }
+      : (rå && typeof rå === "object" ? rå : {});
+    const ut = {};
+    for (const f of spec.fields) {
+      if (f.type === "number") {
+        const n = parseInt(kilde[f.key], 10);
+        if (Number.isFinite(n)) ut[f.key] = n;
+        continue;
+      }
+      const v = String(kilde[f.key] ?? "").trim();
+      if (f.always) ut[f.key] = v;
+      else if (v) ut[f.key] = v;
+    }
+    return ut;
+  }).filter((o) => o[spec.keepKey]);
+}
+
+// Kilde-lista spesifikt. Beholdt som eget navn fordi den er kalt fra flere
+// moduler; implementasjonen er den generelle over.
 export function normalizeSources(v) {
-  if (!Array.isArray(v)) return [];
-  return v.map((k) => {
-    if (typeof k === "string") return { text: k, forfatter: "", url: "", kategori: "" };
-    const rad = {
-      text: (k && k.text) || "",
-      forfatter: (k && k.forfatter) || "",
-      url: (k && k.url) || "",
-      kategori: (k && k.kategori) || "",
-    };
-    // Årstall er tallfelt: collectRows tar det bare med når det er gyldig, og
-    // normaliseringen må gi NØYAKTIG samme form (ellers falsk diff).
-    const aar = parseInt(k && k.year, 10);
-    if (Number.isFinite(aar)) rad.year = aar;
-    return rad;
-  }).filter((k) => k.text);
+  return normalizeRows(SOURCE_SPEC, v);
 }
 
 function inputHtml(f, values) {
