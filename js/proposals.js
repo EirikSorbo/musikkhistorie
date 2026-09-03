@@ -8,15 +8,15 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=5.08";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.08";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.08";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.08";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.08";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.08";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.08";
-import { setupFormatBars } from "./format-bar.js?v=5.08";
-import { wireCharCount } from "./ui-helpers.js?v=5.08";
+import { addPendingEdit, addTechProposal } from "./store.js?v=5.09";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.09";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.09";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.09";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.09";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.09";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.09";
+import { setupFormatBars } from "./format-bar.js?v=5.09";
+import { wireCharCount } from "./ui-helpers.js?v=5.09";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -283,6 +283,21 @@ function fillRows(specs, values) {
 // http/https-sjekk (samme regel som safeUrl bruker ved lagring).
 const erHttpUrl = (u) => /^https?:\/\//i.test((u || "").trim());
 
+// Navnet på den som foreslår er PÅKREVD (brukervalg 2026-09-02): et forslag
+// læreren ikke vet opphavet til, kan hen ikke gå i dialog om. Returnerer
+// fornavnet, eller tom streng etter å ha vist feilen og flyttet fokus dit.
+// Delt av begge flytene, så kravet ikke kan gjelde bare den ene.
+function lesForslagsstiller() {
+  const el = document.getElementById("prop-by");
+  const navn = el.value.trim();
+  if (navn) return navn;
+  const msg = document.getElementById("prop-msg");
+  msg.textContent = "Skriv fornavnet ditt nederst, så læreren vet hvem forslaget kommer fra.";
+  msg.className = "form-msg error";
+  el.focus();
+  return "";
+}
+
 // En halvutfylt rad droppes stille av collectRows (den filtrerer på keepKey, og
 // tallfelter/URL-er som ikke holder mål forsvinner). Studenten skal få vite det
 // framfor å tro at raden ble sendt inn. Speiler validateExampleRows/
@@ -395,6 +410,8 @@ export function openProposalEditor(config) {
       msg.className = "form-msg error";
       return;
     }
+    const forslagsstiller = lesForslagsstiller();
+    if (!forslagsstiller) return;
     submit.disabled = true;
     submit.textContent = "Sender …";
     try {
@@ -403,7 +420,7 @@ export function openProposalEditor(config) {
         entityId: config.entityId,
         entityName: config.entityName,
         proposedFields: diff,
-        proposedBy: document.getElementById("prop-by").value.trim() || "Anonym",
+        proposedBy: forslagsstiller,
         level: config.level,
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
@@ -476,12 +493,14 @@ export function openNewTechProposal(preset = null) {
       msg.className = "form-msg error";
       return;
     }
+    const forslagsstiller = lesForslagsstiller();
+    if (!forslagsstiller) return;
     submit.disabled = true;
     submit.textContent = "Sender …";
     try {
       await addTechProposal({
         ...data,
-        proposedBy: document.getElementById("prop-by").value.trim() || "Anonym",
+        proposedBy: forslagsstiller,
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";

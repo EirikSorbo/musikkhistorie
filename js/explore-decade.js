@@ -4,10 +4,10 @@
 //  Tiårsvisningen med klikkbar tidslinje-stripe. Flyttet ut av explore.js
 //  (v3.55, runde 2). contextMode/currentDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList } from "./ui.js?v=5.08";
-import { DECADES } from "./limits.js?v=5.08";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.08";
-import { opts, getState } from "./explore-context.js?v=5.08";
+import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList } from "./ui.js?v=5.09";
+import { DECADES } from "./limits.js?v=5.09";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.09";
+import { opts, getState } from "./explore-context.js?v=5.09";
 
 let contextMode = "society";
 // Sist viste tiår i Samfunn/Teknologi-visningen — huskes innen økten så

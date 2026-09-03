@@ -6,15 +6,15 @@ import {
   fetchArtists,
   addArtist,
   subscribeContent,
-} from "./store.js?v=5.08";
-import { loadArtists } from "./artist-cache.js?v=5.08";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.08";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.08";
-import { fillSelect } from "./ui.js?v=5.08";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.08";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.08";
-import { setupFormatBars } from "./format-bar.js?v=5.08";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.08";
+} from "./store.js?v=5.09";
+import { loadArtists } from "./artist-cache.js?v=5.09";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.09";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.09";
+import { fillSelect } from "./ui.js?v=5.09";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.09";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.09";
+import { setupFormatBars } from "./format-bar.js?v=5.09";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.09";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -74,7 +74,7 @@ function setupForm() {
       geography: $("#in-geo").value.trim(),
       imageUrl: $("#in-image-url").value.trim(),
       imageCredit: $("#in-image-credit").value.trim(),
-      proposedBy: $("#in-by").value.trim() || "Anonym",
+      proposedBy: $("#in-by").value.trim(),
       musicExamples: collectMusicExamples(),
       kilder: collectSources(),
     };
@@ -84,6 +84,13 @@ function setupForm() {
     }
     if (!candidate.kilder.length) {
       return showMsg(msg, "Legg til minst én kilde.", "error");
+    }
+    // Navnet er PÅKREVD (brukervalg 2026-09-02): læreren skal kunne gå i dialog
+    // med den som foreslår. Feltet står nederst i et langt skjema, så vi flytter
+    // fokus dit — ellers leter studenten etter hva som mangler.
+    if (!candidate.proposedBy) {
+      $("#in-by").focus();
+      return showMsg(msg, "Skriv fornavnet ditt nederst, så læreren vet hvem forslaget kommer fra.", "error");
     }
 
     // Årstall-rekkefølge: hindrer at artisten stille forsvinner fra tiårsfiltre.

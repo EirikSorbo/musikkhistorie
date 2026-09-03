@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.08";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.09";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -46,4 +46,35 @@ test("tech/subgenre/decade-hvitelistene utelater status og andre systemfelter", 
 
 test("proposableKeysFor gir tom liste for ukjent entityType", () => {
   assert.deepEqual(proposableKeysFor("finnes-ikke"), []);
+});
+
+// Navnet på den som foreslår er PÅKREVD i ALLE studentflatene (brukervalg
+// 2026-09-02): læreren skal kunne gå i dialog med den som sendte inn. Kravet
+// bor i tre innsendingsstier og kan ikke enhetstestes (de leser DOM), så vi
+// låser kilden — samme grep som instrument-groups.test.js bruker.
+test("navnet er påkrevd i alle tre studentflatene", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+
+  // 1) Nytt artistforslag (student.html)
+  const student = les("student.js");
+  assert.match(student, /if \(!candidate\.proposedBy\)/,
+    "student.js mangler vakten for forslagsstillerens navn");
+  assert.doesNotMatch(student, /#in-by"\)\.value\.trim\(\) \|\| "Anonym"/,
+    "student.js skal ikke lenger falle tilbake på «Anonym» ved innsending");
+
+  // 2 og 3) Endring på eksisterende kort OG helt nytt kort deler samme vakt.
+  const proposals = les("proposals.js");
+  assert.match(proposals, /function lesForslagsstiller\(\)/,
+    "proposals.js mangler den delte navnevakten");
+  assert.equal((proposals.match(/lesForslagsstiller\(\);/g) || []).length, 2,
+    "begge forslagsflytene må kalle vakten — endring OG nytt kort");
+  assert.doesNotMatch(proposals, /prop-by"\)\.value\.trim\(\) \|\| "Anonym"/,
+    "proposals.js skal ikke lenger falle tilbake på «Anonym» ved innsending");
+
+  // Datalaget beholder BEVISST sin fallback: gamle og importerte rader har
+  // «Anonym» lagret, og de skal fortsatt vises.
+  const store = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
+  assert.match(store, /proposedBy \|\| "Anonym"/,
+    "store.js skal beholde fallbacken for eldre data");
 });

@@ -6,15 +6,15 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.08";
-import { isVisible } from "./limits.js?v=5.08";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES } from "./genre-model.js?v=5.08";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.08";
-import { renderRichText } from "./rich-text.js?v=5.08";
-import { buildGenreTimeline } from "./ui-timeline.js?v=5.08";
-import { wireLinks } from "./ui-helpers.js?v=5.08";
-import { renderSjangerhimmel } from "./constellation.js?v=5.08";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.08";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.09";
+import { isVisible } from "./limits.js?v=5.09";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES } from "./genre-model.js?v=5.09";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.09";
+import { renderRichText } from "./rich-text.js?v=5.09";
+import { buildGenreTimeline } from "./ui-timeline.js?v=5.09";
+import { wireLinks } from "./ui-helpers.js?v=5.09";
+import { renderSjangerhimmel } from "./constellation.js?v=5.09";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.09";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
