@@ -359,7 +359,7 @@ export function buildGenreTimeline(metaGenre, genreDescs = {}) {
   const items = nodes.map(({ n, year, label }) => ({
     year, label, desc: n.l, genre: n.l,
   }));
-  const color = META_GENRE_COLOR[metaGenre] || FAMILIES.gray.stroke;
+  const color = META_GENRE_COLOR[metaGenre] || FAMILIES.gray?.stroke || "#9bada1";
   return buildProportionalTimeline(items, items[0].year, {
     color,
     extraClass: "tl-rich tl-genre",   // tl-rich = den forfinede utformingen, delt med instrumenttidslinjen

@@ -130,16 +130,25 @@ let openSjanger = null;
 // opts så aldri en fersk beskrivelse — bare varmestripa ble ny (den leses fra
 // modulnivå via getHeatData). Kallerne sender sjangerOpts(), som bygges fra
 // gjeldende state ved hvert kall.
+// Nullstiller «hvilket sjangerkort står åpent». Må kunne kalles utenfra:
+// showGenreLevelInfo i ui.js tegner i SAMME modal, og lot openSjanger stå fra
+// kortet før — et content-snapshot tegnet da det gamle kortet oppå det nye.
+export function clearOpenSjanger() { openSjanger = null; }
+
 export function refreshSjangerInfo(freshOpts) {
   if (!openSjanger) return false;
   if (freshOpts) openSjanger.opts = freshOpts;
   const modal = (openSjanger.opts.root || document).querySelector("#modal-sjanger");
+  // Ligger det modaler OPPÅ sjangerkortet (artistliste, spilleliste …), skal en
+  // omtegning ikke heve kortet over dem. showSjangerInfo kaller modalOpen, som
+  // gir ny z-index — samme grunn som refreshTechDetail tegner uten å åpne.
+  if (modal && !modal.classList.contains("open")) return false;
   if (!modal?.classList.contains("open")) return false;
   return showSjangerInfo(openSjanger.label, openSjanger.opts);
 }
 
 export function showSjangerInfo(label, opts = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onEdit, onPropose, hasPendingEdit } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -189,6 +198,10 @@ export function showSjangerInfo(label, opts = {}) {
   // Rediger (lærer): n.l er doc-ID-en i genreDescriptions — samme ID som
   // «Foreslå endring» under bruker, så begge veier treffer samme dokument.
   renderGenreEditBtn(root, onEdit ? () => onEdit(n.l, "main") : null);
+  // Lærerens sjekk-knapp bygges HER, som de andre lærer-elementene. Den ble
+  // tidligere appendet utenfra etter klikk, og forsvant derfor ved hver
+  // omtegning (mBody.innerHTML settes på nytt) uten å bli lagt tilbake.
+  if (onMainGenreCheck) onMainGenreCheck(n.l);
   // Foreslå endring (student). entityId = n.l — SAMME dokument-ID som lærer-
   // redigering bruker (tidligere n.f, som traff et annet dokument). Nivået
   // «main» følger med så godkjenning skriver til riktig nivåfelt.

@@ -80,12 +80,19 @@ export function sjangerOpts() {
     } : undefined,
     onPropose: opts.onProposeEdit,
     hasPendingEdit: opts.hasPendingEdit,
+    onMainGenreCheck: opts.onMainGenreCheck,
   };
 }
 
 export function onMainGenreClick(genre) {
-  showSjangerInfo(genre, sjangerOpts()) || showSubsjangerInfo(genre, sjangerOpts());
-  if (opts.onMainGenreCheck) opts.onMainGenreCheck(genre);
+  // Tre-sjangerkortet bygger sjekk-knappen SELV (den overlever da en
+  // omtegning), så et ekstra kall her ville gitt to knapper. Faller vi ned på
+  // undersjanger-kortet, tegnes det av showGenreLevelInfo, som ikke gjør det —
+  // der legges knappen fortsatt på utenfra.
+  if (showSjangerInfo(genre, sjangerOpts())) return;
+  if (showSubsjangerInfo(genre, sjangerOpts()) && opts.onMainGenreCheck) {
+    opts.onMainGenreCheck(genre);
+  }
 }
 
 export function showPlaylistForMainGenre({ fullName, node }) {
@@ -143,7 +150,7 @@ export function contentChanged() {
 export const groupColor = (labels) => {
   const tally = {};
   for (const l of labels) { const c = MAIN_GENRE_INFO[l]?.color; if (c) tally[c] = (tally[c] || 0) + 1; }
-  return Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] || FAMILIES.gray.stroke;
+  return Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] || FAMILIES.gray?.stroke || "#9bada1";
 };
 
 // Gruppehode for meta-akkordeonen (varmekart + tidslinje): caret + farget prikk

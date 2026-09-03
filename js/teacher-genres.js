@@ -366,7 +366,16 @@ async function lagre() {
     )) { msg.textContent = "Avbrutt. Ingenting er lagret."; return; }
   }
 
-  await guardTeacherAction(saveGenealogyTree(nyttTre));
+  // guardTeacherAction FANGER feilen og returnerer normalt. Sto tre-lagringen,
+  // kjørte navnebytte-planen likevel — og den flytter identiteter (beskrivelser,
+  // varmekart, tagger) til et navn treet aldri fikk. Her må vi vite om det gikk.
+  try {
+    await saveGenealogyTree(nyttTre);
+  } catch (err) {
+    console.error("Kunne ikke lagre sjangertreet:", err);
+    msg.textContent = "Treet ble ikke lagret (" + (err?.message || err) + "). Ingenting er endret. Prøv igjen.";
+    return;
+  }
 
   // 2) Etiketten sist, som en egen migrering — den flytter identiteter.
   if (navnEndret) {
@@ -447,7 +456,15 @@ async function utforPlan() {
   // stedet for å skrive fra foreldet tilstand. Skriver ingenting nå.
   if (bygg) {
     const fersk = bygg();
-    if (JSON.stringify(fersk.ops) !== JSON.stringify(plan.ops)) {
+    // updatedAt settes til «nå» hver gang en plan bygges, så en rå
+    // JSON-sammenligning var ULIK ved hvert eneste kall — advarselen kom alltid,
+    // og læreren lærte å klikke forbi den. Strip tidsstemplene før sammenligning.
+    const utenTid = (ops) => JSON.stringify((ops || []).map((o) => {
+      if (!o?.data || typeof o.data !== "object") return o;
+      const { updatedAt: _t, ...resten } = o.data;
+      return { ...o, data: resten };
+    }));
+    if (utenTid(fersk.ops) !== utenTid(plan.ops)) {
       visPlan(tittel, fersk, bygg);
       const body = $("#gen-plan-body");
       if (body) body.insertAdjacentHTML("afterbegin",
@@ -574,7 +591,15 @@ async function lagreMeta() {
   const problemer = validateTree(nyttTre).filter((p) => p.nivå === "feil");
   if (problemer.length) { msg.textContent = problemer[0].melding; return; }
 
-  await guardTeacherAction(saveGenealogyTree(nyttTre));
+  // Samme grunn som i lagre(): en svelget feil her ville latt navnebytte-planen
+  // flytte identiteter til et navn treet aldri fikk.
+  try {
+    await saveGenealogyTree(nyttTre);
+  } catch (err) {
+    console.error("Kunne ikke lagre sjangertreet:", err);
+    msg.textContent = "Treet ble ikke lagret (" + (err?.message || err) + "). Ingenting er endret. Prøv igjen.";
+    return;
+  }
 
   if (navnEndret) {
     const bygg = () => {

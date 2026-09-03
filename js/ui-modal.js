@@ -103,6 +103,11 @@ if (IS_BROWSER) document.addEventListener("keydown", (e) => {
 export function setupModal(idOrEl, onClose) {
   const m = typeof idOrEl === "string" ? document.getElementById(idOrEl) : idOrEl;
   if (!m) return;
+  // Idempotent: kalles setupModal to ganger på samme modal (podkast-admin ble
+  // koblet ved hver åpning), får den doble lyttere, og lukkingen spør to
+  // ganger om avspilling. Fjerner hele klassen, også de latente tilfellene.
+  if (m.dataset.modalWired) return;
+  m.dataset.modalWired = "1";
   const close = onClose || (() => modalClose(m));
   m.addEventListener("click", (e) => { if (e.target === m) close(); });
   m.querySelector(".modal-close")?.addEventListener("click", close);

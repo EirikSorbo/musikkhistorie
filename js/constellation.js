@@ -33,7 +33,7 @@ const SKY_PAD_V = 60, SKY_PAD_H = 165;
 const ZOOM_MIN = 0.7, ZOOM_MAX = 7;
 
 
-const famColor = (fam) => FAMILIES[fam]?.stroke || FAMILIES.gray.stroke;
+const famColor = (fam) => FAMILIES[fam]?.stroke || FAMILIES.gray?.stroke || "#9bada1";
 const el = (tag, attrs = {}) => {
   const e = document.createElementNS(SVGNS, tag);
   for (const k in attrs) e.setAttribute(k, attrs[k]);

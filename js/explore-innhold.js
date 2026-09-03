@@ -146,7 +146,7 @@ export function openHistorier(genre) {
   // --hist-color settes per knapp; CSS bruker den til kant, tekst og fyll når
   // knappen er aktiv. Knappene ligger i et grid med like kolonner (se CSS).
   chips.innerHTML = rekkefolge.map((g) => {
-    const color = META_GENRE_COLOR[g] || FAMILIES.gray.stroke;
+    const color = META_GENRE_COLOR[g] || FAMILIES.gray?.stroke || "#9bada1";
     return `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}" style="--hist-color:${color}">${escapeHtml(g)}</button>`;
   }).join("");
   chips.querySelectorAll(".hist-chip").forEach((b) =>

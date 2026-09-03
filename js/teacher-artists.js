@@ -64,11 +64,19 @@ export function addMainGenreCheckToggle(genre) {
   wrap.innerHTML = checkBtnHtml(checked);
   body.appendChild(wrap);
   const btn = wrap.querySelector("button");
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", async () => {
     const now = toggleCheckBtn(btn);
     const cur = new Set(state.teacherChecks[field] || []);
     now ? cur.add(genre) : cur.delete(genre);
-    setTeacherChecks({ [field]: [...cur] });
+    // Knappen settes optimistisk (modalen tegnes ikke av snapshotet). Feiler
+    // skrivingen, sto den likevel som avhaket — læreren trodde den var lagret.
+    try {
+      await setTeacherChecks({ [field]: [...cur] });
+    } catch (err) {
+      console.error("Kunne ikke lagre avhukingen:", err);
+      toggleCheckBtn(btn);
+      alert("Avhukingen ble ikke lagret (" + (err?.message || err) + "). Prøv igjen.");
+    }
   });
 }
 

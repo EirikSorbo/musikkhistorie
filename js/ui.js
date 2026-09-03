@@ -12,7 +12,7 @@
 
 import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.10";
 import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.10";
-import { showSjangerInfo } from "./genealogy.js?v=5.10";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.10";
 import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.10";
 import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.10";
 import {
@@ -441,6 +441,9 @@ export function fillSelect(select, values, { placeholder } = {}) {
 // ikke lenger egne beskrivelser; metasjangere peker til sjangerhistoriene.
 // (showSjangerInfo i genealogy.js er egen fordi den også viser tre-relasjoner.)
 function showGenreLevelInfo(label, level, opts = {}) {
+  // Tegner i samme modal som sjangerkortet. Uten dette ble et content-snapshot
+  // til at refreshSjangerInfo tegnet det FORRIGE kortet oppå dette.
+  clearOpenSjanger();
   const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onEdit, onPropose, hasPendingEdit } = opts;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
