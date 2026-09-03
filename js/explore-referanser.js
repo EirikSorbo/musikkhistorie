@@ -15,7 +15,7 @@
 import { modalOpen, escapeHtml } from "./ui.js?v=5.10";
 import { isVisible } from "./limits.js?v=5.10";
 import { samleKilder } from "./kilder.js?v=5.10";
-import { genreNodeById } from "./genre-model.js?v=5.10";
+import { genreNodeById, edgeExists } from "./genre-model.js?v=5.10";
 import { showEdgeInfo } from "./genealogy.js?v=5.10";
 import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.10";
 import { openTechDetail } from "./explore-tech.js?v=5.10";
@@ -49,6 +49,9 @@ function alleKilder() {
   // forelesningsnotatene bor her. Navnet vises som «Blues → R&B».
   for (const [key, e] of Object.entries(s.edgeDescs || {})) {
     if (!e) continue;
+    // Kobling treet ikke har lenger (typisk etter re-parenting): teksten står
+    // igjen i basen, men skal ikke presenteres som en avstamning i appen.
+    if (!edgeExists(key)) continue;
     const [fra, til] = String(key).split("__");
     const navn = `${genreNodeById(fra)?.l || fra} → ${genreNodeById(til)?.l || til}`;
     legg(e.kilder, { type: "edge", id: key, navn });

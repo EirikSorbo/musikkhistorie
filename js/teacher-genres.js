@@ -34,6 +34,7 @@ import { validateTree } from "./genre-validate.js?v=5.10";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup, heatOrphanKeys,
+  planEdgeCleanup, edgeOrphanKeys,
 } from "./genre-migrate.js?v=5.10";
 import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=5.10";
 
@@ -78,6 +79,10 @@ export const GENRE_ADMIN_HTML = `
            fantes). Usynlige i varmekartet, så dette er eneste vei til dem.
            Knappen står alltid — se renderListe for hvorfor. -->
       <button class="btn ghost small" id="gen-rydd-heat">Sjekk varmekartet for foreldreløse rader</button>
+      <!-- Samme sak for koblingsbeskrivelsene: doc-ID er «forelderid__barnid»,
+           så det å fjerne en forelder etterlater dokumentet. De er usynlige i
+           appen (edgeExists), og dette er eneste vei til dem. -->
+      <button class="btn ghost small" id="gen-rydd-kobling">Sjekk koblingsbeskrivelsene for foreldreløse</button>
     </div>
     <div id="gen-liste"></div>
   </div>
@@ -169,6 +174,15 @@ function renderListe() {
       ? `Rydd foreldreløse varmekart-rader (${foreldrelose.length})`
       : "Sjekk varmekartet for foreldreløse rader";
     ryddHeat.classList.toggle("primary", foreldrelose.length > 0);
+  }
+
+  const ryddKobling = $("#gen-rydd-kobling");
+  if (ryddKobling) {
+    const n = edgeOrphanKeys(t.nodes, state.edgeDescs).length;
+    ryddKobling.textContent = n
+      ? `Rydd foreldreløse koblingsbeskrivelser (${n})`
+      : "Sjekk koblingsbeskrivelsene for foreldreløse";
+    ryddKobling.classList.toggle("primary", n > 0);
   }
 
   let h = "";
@@ -301,6 +315,13 @@ async function lagre() {
   if (!felt.l) { msg.textContent = "Etiketten kan ikke være tom."; return; }
 
   const gammel = redigerer ? t.nodes.find((n) => n.id === redigerer) : null;
+  // Slettet i en annen fane mens editoren sto åpen: uten dette falt vi ned i
+  // «ny node»-grenen og gjenopprettet sjangeren med en FERSK id — treet fikk
+  // en dublett, og alle koblingsbeskrivelsene pekte fortsatt på den gamle.
+  if (redigerer && !gammel) {
+    msg.textContent = "Sjangeren finnes ikke lenger (slettet i en annen fane?). Lukk og åpne editoren på nytt.";
+    return;
+  }
   const navnEndret = gammel && gammel.l !== felt.l;
 
   // 1) Bygg det nye treet med ALT unntatt etiketten (den går via migreringen).
@@ -321,6 +342,28 @@ async function lagre() {
   if (problemer.length) {
     msg.textContent = problemer[0].melding;
     return;
+  }
+
+  // Foreldre og motreaksjon er klassifisert som TRYGGE endringer og skrives
+  // rett. Men edgeDescriptions har «forelderid__barnid» som dokument-ID, så å
+  // fjerne en forelder ØDELEGGER en identitet på samme måte som en sletting.
+  // Vi kan ikke flytte teksten automatisk (den nye kanten er en annen kobling),
+  // så læreren får se hva som blir stående igjen og bekrefte.
+  const førKanter = edgeOrphanKeys(t.nodes, state.edgeDescs);
+  const etterKanter = edgeOrphanKeys(nyttTre.nodes, state.edgeDescs);
+  const nyeForeldrelose = etterKanter.filter((k) => !førKanter.includes(k));
+  if (nyeForeldrelose.length) {
+    const navn = Object.fromEntries(t.nodes.map((n) => [n.id, n.l]));
+    const liste = nyeForeldrelose.map((k) => {
+      const [fra, til] = k.split("__");
+      const d = (state.edgeDescs?.[k]?.description || "").trim();
+      return `  ${navn[fra] || fra} → ${navn[til] || til} (${d.length} tegn)`;
+    }).join("\n");
+    if (!confirm(
+      `Denne endringen fjerner ${nyeForeldrelose.length} kobling(er) fra treet.\n\n` +
+      `Koblingsbeskrivelsene blir liggende i basen, men slutter å vises noe sted:\n${liste}\n\n` +
+      `Teksten går ikke tapt, og du finner den igjen under «Rydd foreldreløse koblingsbeskrivelser». Fortsette?`
+    )) { msg.textContent = "Avbrutt. Ingenting er lagret."; return; }
   }
 
   await guardTeacherAction(saveGenealogyTree(nyttTre));
@@ -569,6 +612,9 @@ export function setupGenreAdmin() {
   $("#gen-rydd-heat")?.addEventListener("click", () =>
     visPlan("Rydd foreldreløse varmekart-rader", planHeatCleanup(migrasjonsState()),
       () => planHeatCleanup(migrasjonsState())));
+  $("#gen-rydd-kobling")?.addEventListener("click", () =>
+    visPlan("Rydd foreldreløse koblingsbeskrivelser", planEdgeCleanup(migrasjonsState()),
+      () => planEdgeCleanup(migrasjonsState())));
   $("#gen-edit-lagre")?.addEventListener("click", () => lagre());
   $("#gen-edit-slett")?.addEventListener("click", () => slett());
   $("#gen-meta-lagre")?.addEventListener("click", () => lagreMeta());

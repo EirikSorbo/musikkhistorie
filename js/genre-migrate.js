@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER } from "./story-format.js?v=5.10";
+import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.10";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -72,7 +72,11 @@ export function findReferences(state, label) {
   const heat = state?.content?.varmekart?.heat || {};
   const harVarmekart = Object.keys(heat).some((k) => lik(k, label));
 
+  // BEGGE navnelistene: en tre-sjanger kan være avhaket som «genres», og et
+  // navn som deler etikett med en fri undersjanger kan stå i «subgenres».
+  // Bare den første ble flyttet ved navnebytte, så avhukingen falt av.
   const sjekket = (state?.teacherChecks?.genres || []).some((g) => lik(g, label));
+  const sjekketSub = (state?.teacherChecks?.subgenres || []).some((g) => lik(g, label));
 
   // Nivå-bevisst (shadowing): et forslag med level "sub" gjelder den FRIE
   // undersjangeren som tilfeldigvis deler navn — et annet vokabular. Det skal
@@ -80,6 +84,21 @@ export function findReferences(state, label) {
   // uten level (eldre) regnes som tre-sjangerens.
   const forslag = (state?.pendingEdits || []).filter((e) =>
     e.entityType === "subgenre" && lik(e.entityId, label) && e.level !== "sub");
+
+  // ARTISTFORSLAG bærer også sjangeretiketter: fra v5.00 er mainGenre,
+  // metaGenre, subGenre og musicExamples foreslåbare. Et godkjent forslag
+  // skriver etikettene RÅTT tilbake (approvePendingEdit merger uten
+  // sjangervalidering), så et forslag som lå i køen under et navnebytte kunne
+  // gjeninnføre det gamle navnet etterpå — og ved sletting gjeninnføre en
+  // sjanger som nettopp var fjernet. Alle andre skrivestier for mainGenre har
+  // en slik vakt; denne var den siste uten.
+  const artistForslag = (state?.pendingEdits || []).filter((e) => {
+    if (e.entityType !== "artist") return false;
+    const f = e.proposedFields || {};
+    const iListe = (v) => (Array.isArray(v) ? v : (v ? [v] : [])).some((g) => lik(g, label));
+    return iListe(f.mainGenre) || iListe(f.subGenre) || lik(f.metaGenre, label)
+      || (Array.isArray(f.musicExamples) && f.musicExamples.some((m) => lik(m?.genre, label)));
+  });
 
   // Koblingsbeskrivelser henger på node-ID, ikke etikett, og berøres derfor
   // ikke av et navnebytte. De teller likevel som innhold som forsvinner ved
@@ -91,7 +110,33 @@ export function findReferences(state, label) {
     })
     : [];
 
-  return { node, artister, eksempler, friUndersjanger, barn, beskrivelse, harMain, harSub, harMeta, harStory, harVarmekart, sjekket, forslag, koblinger };
+  return { node, artister, eksempler, friUndersjanger, barn, beskrivelse, harMain, harSub, harMeta, harStory, harVarmekart, sjekket, sjekketSub, forslag, artistForslag, koblinger };
+}
+
+// Bygger de feltene som må skrives om i et artistforslag når etiketten `fra`
+// byttes til `til` (til = null betyr STRYK, brukt ved sletting). Returnerer kun
+// feltene som faktisk endres, så doc.merge ikke rører noe annet i forslaget.
+export function artistForslagOmskriving(e, fra, til) {
+  const f = e?.proposedFields || {};
+  const ut = {};
+  const bytt = (v) => {
+    const liste = Array.isArray(v) ? v : (v ? [v] : []);
+    const ny = til
+      ? liste.map((g) => (lik(g, fra) ? til : g))
+      : liste.filter((g) => !lik(g, fra));
+    return JSON.stringify(ny) === JSON.stringify(liste) ? null : ny;
+  };
+  for (const nokkel of ["mainGenre", "subGenre"]) {
+    if (!(nokkel in f)) continue;
+    const ny = bytt(f[nokkel]);
+    if (ny) ut[nokkel] = ny;
+  }
+  if ("metaGenre" in f && lik(f.metaGenre, fra)) ut.metaGenre = til || "";
+  if (Array.isArray(f.musicExamples) && f.musicExamples.some((m) => lik(m?.genre, fra))) {
+    ut.musicExamples = f.musicExamples.map((m) =>
+      lik(m?.genre, fra) ? { ...m, genre: til || "" } : m);
+  }
+  return ut;
 }
 
 // ----------------------------------------------------------------------------
@@ -200,11 +245,27 @@ export function planGenreRename(state, fra, til) {
     ops.push(op("doc.merge", "config", "teacherChecks", { genres: liste },
       "Avkryssingen følger med"));
   }
+  if (ref.sjekketSub) {
+    const liste = (state.teacherChecks.subgenres || []).map((g) => (lik(g, fra) ? nyttNavn : g));
+    ops.push(op("doc.merge", "config", "teacherChecks", { subgenres: liste },
+      "Avkryssingen på undersjanger-nivå følger med"));
+  }
 
   // 6) Åpne forslag fra studenter
   for (const e of ref.forslag) {
     ops.push(op("doc.merge", "pendingEdits", e.id, { entityId: nyttNavn, entityName: nyttNavn },
       `Åpent forslag følger med`));
+  }
+
+  // 6b) ARTISTforslag som bærer etiketten. Uten dette kunne et forslag som lå i
+  // køen under navnebyttet skrive det GAMLE navnet tilbake på artisten når det
+  // ble godkjent etterpå.
+  for (const e of ref.artistForslag || []) {
+    const felter = artistForslagOmskriving(e, fra, nyttNavn);
+    if (Object.keys(felter).length) {
+      ops.push(op("doc.merge", "pendingEdits", e.id, { proposedFields: { ...e.proposedFields, ...felter } },
+        `Artistforslag «${e.entityName || e.entityId}» får det nye navnet`));
+    }
   }
 
   return { ops, feil, advarsler };
@@ -231,6 +292,15 @@ export function planMetaRename(state, fra, til) {
   // ellers skrevet over målets sjangerhistorie stille.
   if (state?.genreDescs?.[nyttNavn]?.story) feil.push(`Det finnes allerede en sjangerhistorie på «${nyttNavn}». Slå dem sammen først.`);
   if (feil.length) return { ops: [], feil, advarsler };
+
+  // STORY_SKJULT bor i KODEN (js/story-format.js) og filtrerer på eksakt navn.
+  // Et navnebytte tar derfor historien UT av skjulinga: storyOrder() legger
+  // enhver metasjanger som HAR en historie til bakerst, og den ikke
+  // kvalitetssikrede teksten får plutselig en synlig knapp i «Det store
+  // bildet», blir søkbar og dukker opp i lærerens sjekk-univers.
+  if (STORY_SKJULT.some((n) => lik(n, fra)) && state?.genreDescs?.[fra]?.story) {
+    advarsler.push(`«${fra}» står i STORY_SKJULT i koden, så sjangerhistorien er bevisst holdt utenfor visningen. Byttes navnet til «${nyttNavn}», treffer ikke lista lenger, og historien blir SYNLIG for studentene. Be om at STORY_SKJULT oppdateres i js/story-format.js i samme slengen.`);
+  }
 
   const berorteNoder = noder.filter((n) => lik(n.g, fra));
   // metaOrderHint er en NAVNELISTE som rangerer metasjangrene pedagogisk
@@ -369,6 +439,16 @@ export function planGenreDelete(state, label) {
   }
   for (const e of ref.forslag) {
     ops.push(op("doc.delete", "pendingEdits", e.id, null, "Åpent forslag på sjangeren slettes"));
+  }
+  // Artistforslag slettes IKKE — de handler om artisten, ikke om sjangeren.
+  // Men den slettede etiketten strykes fra dem, ellers kunne en godkjenning
+  // etterpå gjeninnføre en sjanger som nettopp ble fjernet.
+  for (const e of ref.artistForslag || []) {
+    const felter = artistForslagOmskriving(e, label, null);
+    if (Object.keys(felter).length) {
+      ops.push(op("doc.merge", "pendingEdits", e.id, { proposedFields: { ...e.proposedFields, ...felter } },
+        `Sjangeren strykes fra artistforslaget «${e.entityName || e.entityId}»`));
+    }
   }
 
   return { ops, feil, advarsler, blokkeringer: [] };
@@ -529,6 +609,48 @@ export function planTreeCleanup(state) {
 
 // ----------------------------------------------------------------------------
 //  FORELDRELØSE VARMEKART-RADER
+// Koblingsbeskrivelser hvis kant ikke finnes i treet. Doc-ID-en er
+// «forelderid__barnid», så å fjerne en forelder (re-parenting) etterlater
+// dokumentet uten at noe rydder det. De er nå usynlige i appen (edgeExists i
+// søk, Referanser og popupen), men de bærer ekte lærertekst — derfor et
+// verktøy som VISER dem og lar læreren slette bevisst, ikke en automatikk.
+export function edgeOrphanKeys(nodes, edgeDescs) {
+  const noder = Array.isArray(nodes) ? nodes : [];
+  const kanter = new Set();
+  for (const n of noder) {
+    for (const p of (n.p || [])) kanter.add(`${p}__${n.id}`);
+    for (const r of (n.rx || [])) kanter.add(`${r}__${n.id}`);
+  }
+  return Object.keys(edgeDescs || {}).filter((k) => !kanter.has(k));
+}
+
+// Sletteplan for dem. Samme form som planHeatCleanup: ingenting skjer før
+// læreren har sett hva som forsvinner.
+export function planEdgeCleanup(state) {
+  const advarsler = [], ops = [];
+  const noder = Array.isArray(state?.tree?.nodes) ? state.tree.nodes : [];
+  const edgeDescs = state?.edgeDescs || {};
+  if (!noder.length) {
+    return { ops: [], feil: ["Sjangertreet er ikke lastet inn."], advarsler, blokkeringer: [] };
+  }
+  const foreldrelose = edgeOrphanKeys(noder, edgeDescs);
+  if (!foreldrelose.length) {
+    return {
+      ops: [], advarsler, blokkeringer: [],
+      feil: ["Ingen foreldreløse koblingsbeskrivelser: alle peker på en kobling i treet."],
+    };
+  }
+  const navn = Object.fromEntries(noder.map((n) => [n.id, n.l]));
+  for (const k of foreldrelose) {
+    const [fra, til] = String(k).split("__");
+    const d = (edgeDescs[k]?.description || "").trim();
+    ops.push(op("doc.delete", "edgeDescriptions", k, null,
+      `${navn[fra] || fra} → ${navn[til] || til} (${d.length} tegn, ${(edgeDescs[k]?.kilder || []).length} kilder)`));
+  }
+  advarsler.push(`Koblingene finnes ikke i treet lenger, så tekstene vises ikke noe sted i appen. De bærer likevel ekte tekst du har skrevet. SLETTINGEN KAN IKKE ANGRES — ta en eksport først hvis du vil beholde dem. Vil du heller ha tekstene tilbake, legg koblingen inn i treet igjen i stedet for å slette her.`);
+  return { ops, feil: [], advarsler, blokkeringer: [] };
+}
+
 // Varmekart-nøkler INGEN node i treet bærer navnet til. Eksportert fordi BÅDE
 // planen under og etiketten på knappen (teacher-genres.js) må bruke nøyaktig
 // samme predikat — de hadde hver sin kopi, og begge var feil på samme måte.

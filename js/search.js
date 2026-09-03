@@ -18,7 +18,7 @@
 // ============================================================================
 
 import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.10";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode } from "./genre-model.js?v=5.10";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.10";
 import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.10";
 import { escapeHtml } from "./util.js?v=5.10";
 
@@ -207,6 +207,9 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {} } = {}) {
   if (erLærer || !skjul.koblingsbeskrivelser) {
     for (const [key, e] of Object.entries(state.edgeDescs || {})) {
       if (!e || !e.description) continue;
+      // Samme vakt som Referanser og popupen: en kobling treet ikke har,
+      // skal ikke være søkbar.
+      if (!edgeExists(key)) continue;
       const [fra, til] = String(key).split("__");
       const navn = `${genreNodeById(fra)?.l || fra} → ${genreNodeById(til)?.l || til}`;
       ut.push(post("kobling", key, navn, "Sjangerkobling", [e.description],

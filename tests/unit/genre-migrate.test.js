@@ -584,3 +584,49 @@ test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => 
     assert.deepEqual(heatOrphanKeys([], {}), []);
   });
 });
+
+// Artistforslag bærer sjangeretiketter (mainGenre/subGenre/metaGenre og
+// musicExamples[].genre er foreslåbare fra v5.00). Godkjenning skriver dem
+// RÅTT tilbake, så et forslag som lå i køen under et navnebytte kunne
+// gjeninnføre det gamle navnet — og etter en sletting gjeninnføre sjangeren.
+test("artistForslagOmskriving: navnebytte treffer alle fire flatene", async () => {
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.10");
+  const e = { proposedFields: {
+    mainGenre: ["Bebop", "Cool jazz"], subGenre: ["Cool jazz"], metaGenre: "Cool jazz",
+    musicExamples: [{ label: "So What", genre: "Cool jazz" }, { label: "X", genre: "Bebop" }],
+    description: "skal ikke røres",
+  } };
+  const ut = artistForslagOmskriving(e, "Cool jazz", "Cool-jazz");
+  assert.deepEqual(ut.mainGenre, ["Bebop", "Cool-jazz"]);
+  assert.deepEqual(ut.subGenre, ["Cool-jazz"]);
+  assert.equal(ut.metaGenre, "Cool-jazz");
+  assert.equal(ut.musicExamples[0].genre, "Cool-jazz");
+  assert.equal(ut.musicExamples[1].genre, "Bebop", "andre sjangre skal stå urørt");
+  assert.equal("description" in ut, false, "urørte felter skal ikke skrives");
+});
+
+test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async () => {
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.10");
+  const e = { proposedFields: { mainGenre: ["Bebop", "Reggae"], metaGenre: "Reggae" } };
+  const ut = artistForslagOmskriving(e, "Reggae", null);
+  assert.deepEqual(ut.mainGenre, ["Bebop"]);
+  assert.equal(ut.metaGenre, "");
+  assert.deepEqual(artistForslagOmskriving(e, "Finnes ikke", "X"), {},
+    "et forslag uten etiketten skal ikke gi noen skriving");
+});
+
+// Doc-ID-en i edgeDescriptions er «forelderid__barnid». Fjernes en forelder,
+// blir dokumentet liggende uten at noe rydder det. 11 slike lå live.
+test("edgeOrphanKeys: motreaksjon teller som kant, rester fanges", async () => {
+  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.10");
+  const noder = [
+    { id: "a", l: "A", p: [], rx: [] },
+    { id: "b", l: "B", p: ["a"], rx: [] },
+    { id: "c", l: "C", p: [], rx: ["a"] },
+  ];
+  assert.deepEqual(
+    edgeOrphanKeys(noder, { a__b: {}, a__c: {}, x__b: {}, a__z: {} }).sort(),
+    ["a__z", "x__b"]
+  );
+  assert.deepEqual(edgeOrphanKeys(null, null), []);
+});

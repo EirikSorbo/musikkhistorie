@@ -230,6 +230,17 @@ export function rebuild(tree) {
 // --- Oppslag ----------------------------------------------------------------
 
 // Dokument-ID i Firestore-samlingen edgeDescriptions for koblingen fra → til.
+// Finnes kanten «fra__til» i treet? edgeDescriptions har den strengen som
+// dokument-ID, og en kobling som fjernes fra treet (re-parenting) etterlater
+// dokumentet liggende. Slike beskrivelser skal ikke vises noe sted, for da
+// presenterer appen en avstamning treet ikke lenger viser. 11 slike lå live
+// 2026-09-04. Delt predikat, så søk, Referanser og popupen ikke driver fra
+// hverandre.
+export function edgeExists(key) {
+  const n = String(key || "");
+  return GENEALOGY_EDGES.some((e) => edgeKey(e.from, e.to) === n);
+}
+
 export function edgeKey(fromId, toId) {
   return `${fromId}__${toId}`;
 }

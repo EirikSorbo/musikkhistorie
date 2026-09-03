@@ -28,6 +28,13 @@ export function validateTree(tree) {
   for (const n of nodes) {
     if (!n || typeof n.id !== "string" || !n.id.trim()) { feil(`Node uten id: ${JSON.stringify(n)?.slice(0, 60)}`); continue; }
     if (idSett.has(n.id)) feil(`To noder har id «${n.id}».`);
+    // Node-ID-en er halve dokument-ID-en i edgeDescriptions («fra__til»), og
+    // den kan ALDRI endres etterpå. Etiketten valideres mot ugyldige tegn
+    // under; ID-en gjorde det ikke, selv om den er den strengeste av de to.
+    // Samme tegnsett som lagId() produserer, pluss «__» som er skilletegnet.
+    if (!/^[a-z0-9]+$/.test(n.id)) {
+      feil(`Node-ID «${n.id}» har ugyldige tegn. Bruk kun små bokstaver a-z og tall (ID-en inngår i koblingsbeskrivelsenes dokument-ID og kan ikke endres senere).`);
+    }
     idSett.add(n.id);
 
     if (typeof n.l !== "string" || !n.l.trim()) { feil(`Noden «${n.id}» mangler etikett (l).`); continue; }

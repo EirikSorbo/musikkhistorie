@@ -21,7 +21,7 @@ import { modalOpen } from "./ui-modal.js?v=5.10";
 import { renderGenreEditBtn } from "./ui-helpers.js?v=5.10";
 import { wireProposeFoot } from "./ui-edit.js?v=5.10";
 import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.10";
-import { GENEALOGY, edgeKey, nodeColor } from "./genre-model.js?v=5.10";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.10";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -224,6 +224,10 @@ export function showEdgeInfo(fromId, toId, opts = {}) {
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const a = map[fromId], b = map[toId];
   if (!a || !b) return false;
+  // Begge NODENE kan finnes uten at KANTEN gjør det (re-parenting etterlater
+  // dokumentet). Popupen tegnet da glatt en «Avstamning / påvirkning» treet
+  // ikke lenger viser.
+  if (!edgeExists(edgeKey(fromId, toId))) return false;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");

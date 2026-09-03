@@ -103,3 +103,16 @@ test("assertTreeOk kaster på feil, men ikke på advarsler", () => {
   t.nodes[5].p = ["finnes-ikke"];
   assert.throws(() => assertTreeOk(t, "importfila"), /importfila/);
 });
+
+// Node-ID-en er halve dokument-ID-en i edgeDescriptions og kan ALDRI endres.
+// Etiketten ble validert mot ugyldige tegn; ID-en ikke, selv om den er den
+// strengeste av de to.
+test("validateTree avviser node-ID med ugyldige tegn", () => {
+  const feil = (id) => validateTree({ nodes: [{ id, l: "X", r: 1, p: [], rx: [] }] })
+    .filter((p) => p.nivå === "feil").map((p) => p.melding);
+  assert.equal(feil("bebop").length, 0);
+  assert.equal(feil("cool2").length, 0);
+  assert.ok(feil("be__op").length, "«__» er skilletegnet i edge-ID-en og må avvises");
+  assert.ok(feil("Be Bop").length, "mellomrom og store bokstaver må avvises");
+  assert.ok(feil("bé").length, "aksenter må avvises");
+});
