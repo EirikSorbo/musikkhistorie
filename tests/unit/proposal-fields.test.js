@@ -78,3 +78,29 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
   assert.match(store, /proposedBy \|\| "Anonym"/,
     "store.js skal beholde fallbacken for eldre data");
 });
+
+// «Gjeldende»-kolonnen i lærerens diff er hele grunnlaget for å se hva som
+// forsvinner ved godkjenning (som ERSTATTER, ikke fletter). Har den ikke med
+// et foreslåbart felt, står det «(tom)» der det finnes data. Dette har skjedd
+// to ganger: kilder på subgenre, så era og instrumentkilder. Kildesjekk, siden
+// getCurrentEntityValues leser lærer-state og ikke kan enhetstestes.
+test("getCurrentEntityValues dekker alle foreslåbare felter", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/teacher-review.js", import.meta.url), "utf8");
+  const grener = {
+    subgenre: ["description", "kilder", "activeFrom", "activeTo", "era"],
+    instrument: ["body", "kilder"],
+    "decade-society": ["society"],
+    "decade-tech": ["tech"],
+  };
+  for (const [type, felter] of Object.entries(grener)) {
+    // Hver gren skal nevne hvert foreslåbart felt for sin entityType.
+    const mangler = PROPOSABLE_KEYS[type].filter((k) => !felter.includes(k));
+    assert.deepEqual(mangler, [],
+      `testens egen liste for ${type} er utdatert mot PROPOSABLE_KEYS`);
+    for (const f of felter) {
+      assert.ok(src.includes(`${f}:`),
+        `teacher-review.js mangler «${f}» i Gjeldende-kolonnen for ${type}`);
+    }
+  }
+});

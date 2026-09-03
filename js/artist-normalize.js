@@ -23,8 +23,13 @@ export function normalizeArtist(a) {
   // Behold kun rene, ikke-tomme tekster i sjangerarrayene. null/tall/nestede
   // lister/objekter (f.eks. fra en håndredigert importfil) ville ellers bli
   // liggende og krasje sjanger-filter/søk nedstrøms (s.toLowerCase()).
-  const cleanGenres = (v) =>
-    Array.isArray(v) ? v.filter((s) => typeof s === "string" && s.trim()) : [];
+  // En enkelt streng godtas og pakkes inn: importvalidatoren slipper
+  // «mainGenre»: "Blues" gjennom, og uten dette ble verdien stille kastet her
+  // — artisten havnet inn uten sjanger, med grønt lys i kvitteringen.
+  const cleanGenres = (v) => {
+    const liste = typeof v === "string" ? [v] : (Array.isArray(v) ? v : []);
+    return liste.filter((s) => typeof s === "string" && s.trim());
+  };
   out.mainGenre = cleanGenres(out.mainGenre);
   out.subGenre = cleanGenres(out.subGenre);
 

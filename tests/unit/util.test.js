@@ -128,3 +128,18 @@ test("throttle: kjører umiddelbart, slår sammen storm, kjører siste på slutt
   t.mock.timers.tick(1000);  // ingen nye kall → ingen ekstra kjøring
   assert.equal(calls, 2);
 });
+
+// Feilbanneret sa «publiser oppdaterte regler» for ALLE lesefeil. Da kvoten
+// gikk tom 2026-09-02 pekte den derfor på feil årsak for både studenter og
+// lærer. Kildesjekk: teksten bygges i en DOM-lytter og kan ikke enhetstestes.
+test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/shared.js", import.meta.url), "utf8");
+  for (const kode of ["resource-exhausted", "permission-denied", "unavailable"]) {
+    assert.ok(src.includes(`"${kode}"`) || src.includes(`${kode}:`),
+      `mangler egen tekst for ${kode}`);
+  }
+  assert.match(src, /lesekvote/i, "kvotefeilen må forklares som kvote, ikke regler");
+  assert.doesNotMatch(src, /banner\.textContent = `Kunne ikke laste data fra databasen \(\$\{/,
+    "teksten skal ikke lenger være hardkodet til én årsak");
+});

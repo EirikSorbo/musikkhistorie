@@ -163,7 +163,10 @@ function buildExportData() {
   // instrument-vokabularet bor i koden — INSTRUMENTS i limits.js.)
   const pages = {};
   for (const [id, docData] of Object.entries(state.content || {})) {
-    if (id !== "varmekart" && docData?.body) pages[id] = docData;
+    // Samme predikat som pageFor: en side med kilder men uten tekst er ekte
+    // innhold og skal med i sikkerhetskopien.
+    const harInnhold = docData && (docData.body || (Array.isArray(docData.kilder) && docData.kilder.length));
+    if (id !== "varmekart" && harInnhold) pages[id] = docData;
   }
   const varmekart = state.content?.varmekart?.heat
     ? { heat: state.content.varmekart.heat, updatedAt: state.content.varmekart.updatedAt || null }
@@ -212,6 +215,13 @@ function downloadJson(data, filename) {
 }
 
 function handleExport() {
+  // Uten denne kunne læreren laste ned en «backup» som manglet alt som ikke
+  // hadde rukket å lande — og en amputert backup er verre enn ingen, fordi den
+  // ser komplett ut. buildExportData leser rett fra state.
+  if (!state.artistsLoaded || !state.contentLoaded) {
+    alert("Dataene laster fortsatt. Vent noen sekunder og prøv igjen, ellers blir sikkerhetskopien ufullstendig.");
+    return;
+  }
   downloadJson(buildExportData(), `musikkhistorie-${dateStamp()}.json`);
 }
 
@@ -278,6 +288,10 @@ function importParts(data) {
   if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
   if (Array.isArray(data.genealogy?.nodes) && data.genealogy.nodes.length) {
     parts.push(`sjangertreet (${data.genealogy.nodes.length} sjangre)`);
+  }
+  // Sjekk-fremdriften ble skrevet uten å stå i «Filen inneholder …».
+  if (data.teacherChecks && typeof data.teacherChecks === "object") {
+    parts.push("sjekk-fremdrift (slås sammen med din, ingenting fjernes)");
   }
   return parts;
 }
@@ -423,17 +437,32 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
 // Innholdssider, varmekart og podkaster fra importfila. Podkaster
 // oppdateres på tittel-match (så en re-import ikke dupliserer episoder);
 // (Config i gamle backuper ignoreres — vokabularet bor i koden, v3.68.)
+// Union av to sjekk-kart: { kategori: [id, ...] }. Verdier som ikke er lister
+// hoppes over framfor å velte importen. Ren funksjon, testet.
+export function flettSjekker(gjeldende, fraFil) {
+  const ut = { ...(gjeldende || {}) };
+  for (const [kategori, liste] of Object.entries(fraFil || {})) {
+    if (!Array.isArray(liste)) continue;
+    const fra = Array.isArray(ut[kategori]) ? ut[kategori] : [];
+    ut[kategori] = [...new Set([...fra, ...liste])];
+  }
+  return ut;
+}
+
 async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks, genealogy }) {
   const done = [];
   const failed = [];
 
   const pageEntries = Object.entries(pages || {})
-    .filter(([id, d]) => id !== "varmekart" && d && typeof d.body === "string" && d.body.trim())
+    .filter(([id, d]) => id !== "varmekart" && d
+      && ((typeof d.body === "string" && d.body.trim())
+        || (Array.isArray(d.kilder) && d.kilder.length)))
     // kilder tas MED (instrumentsammendragene har dem): uten dette ville en
     // eksport→import stille tømt kildelistene, siden saveDocsBulk skriver hele
     // dokumentet og ikke fletter. Sider uten kilder får ikke feltet påført.
     .map(([id, d]) => {
-      const data = { body: d.body, updatedAt: d.updatedAt || new Date().toISOString() };
+      const data = { updatedAt: d.updatedAt || new Date().toISOString() };
+      if (typeof d.body === "string" && d.body.trim()) data.body = d.body;
       if (Array.isArray(d.kilder) && d.kilder.length) data.kilder = d.kilder;
       return { id, data };
     });
@@ -510,7 +539,15 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
   // som ikke er stabile på tvers av prosjekter — trygt ved restore til SAMME
   // prosjekt, kan peke feil ved import til et annet.
   if (teacherChecks && typeof teacherChecks === "object") {
-    try { await setTeacherChecks(teacherChecks); done.push("sjekk-fremdrift"); }
+    // UNION, ikke erstatning (brukervalg 2026-09-04). setTeacherChecks er
+    // setDoc med merge, men Firestore dyp-fletter kun MAP-felter — arrays
+    // erstattes. Hver kategoriliste ble derfor byttet ut med filas, så en eldre
+    // backup kunne stille fjerne avhukinger læreren hadde gjort etterpå.
+    // Fremdriften kan nå bare gå oppover.
+    try {
+      await setTeacherChecks(flettSjekker(state.teacherChecks, teacherChecks));
+      done.push("sjekk-fremdrift (slått sammen)");
+    }
     catch (e) { console.error("teacherChecks-import feilet:", e); failed.push("sjekk-fremdriften"); }
   }
 

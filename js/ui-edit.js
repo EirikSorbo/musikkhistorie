@@ -87,7 +87,15 @@ function formatDiffValue(v) {
   if (Array.isArray(v)) {
     if (!v.length) return `<span class="diff-empty">(tom liste)</span>`;
     if (typeof v[0] === "object") {
-      return v.map((it) => escapeHtml(it.title || it.label || it.text || it.name || JSON.stringify(it))).join(", ");
+      // Etiketten ALENE skjulte url, og fra v5.00 er kilder, verk og
+      // lytteeksempler foreslåbare for artist. En student kunne la teksten stå
+      // og bytte bare lenken: diffen viste da to identiske kolonner, læreren
+      // godkjente, og buildKilderList lagde en <a href> av den nye URL-en.
+      // Lenken er den farlige endringen, så den skal alltid stå i klartekst.
+      return v.map((it) => {
+        const etikett = it.title || it.label || it.text || it.name || JSON.stringify(it);
+        return escapeHtml(it.url ? `${etikett} (${it.url})` : etikett);
+      }).join(", ");
     }
     return v.map((x) => escapeHtml(String(x))).join(", ");
   }

@@ -690,7 +690,19 @@ function referanseRader() {
 
 // `fokus` = url-en (eller teksten) til raden som skal utheves — sendes fra
 // Rediger-knappen i Referanser-lista, så læreren slipper å lete i lista.
+// Begge innholdseditorene lagrer med setDoc UTEN merge. Åpnes de før
+// content-snapshotet har landet, fylles skjemaet fra en tom state, og en
+// lagring ERSTATTER dokumentet med det tomme skjemaet. pageFor kan dessuten
+// ikke skille «laster» fra «finnes ikke», så statuslinja lyver også.
+// Varmekartet har nøyaktig denne vakten av nøyaktig denne grunnen.
+function innholdKlart() {
+  if (state.contentLoaded) return true;
+  alert("Innholdet laster fortsatt. Vent et øyeblikk og prøv igjen, ellers kan du komme til å overskrive tekst som ikke har rukket å vises.");
+  return false;
+}
+
 export function openReferanseEditor(fokus) {
+  if (!innholdKlart()) return;
   const wrap = $("#ref-edit-rows");
   if (!wrap) return;
   buildRows(wrap, SOURCE_SPEC, referanseRader());
@@ -799,10 +811,18 @@ function openContentEditor(target, title, existing) {
 }
 
 export function openStoryEditor(genre) {
+  // Historien bor på genreDescriptions, ikke content — men samme felle:
+  // saveStoryBody bruker riktignok merge, så her holder det å hindre at
+  // læreren skriver oppå en tekst hen ikke har fått se.
+  if (!state.genreDescs || !Object.keys(state.genreDescs).length) {
+    alert("Sjangerbeskrivelsene laster fortsatt. Vent et øyeblikk og prøv igjen.");
+    return;
+  }
   openContentEditor({ type: "story", id: genre }, `historien om ${genre}`, storyFor(genre, state.genreDescs));
 }
 
 export function openPageEditor(pageId) {
+  if (!innholdKlart()) return;
   openContentEditor({ type: "page", id: pageId }, sideTittel(pageId), pageFor(pageId, state.content));
 }
 

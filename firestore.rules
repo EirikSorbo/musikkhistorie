@@ -61,6 +61,11 @@ service cloud.firestore {
       // Lærer kan opprette uten feltrestriksjoner (import).
       allow create: if isTeacher() || (
         request.auth != null &&
+        // Dokument-ID-en havner i data-attributter i lærerens visning. Koden
+        // escaper den nå, men Firestore tillater anførselstegn i en ID, og
+        // appen selv bruker addDoc (auto-ID) — så et menneskevalgt ID-format
+        // her stenger hele klassen ved døren. Samme tegnsett som addDoc gir.
+        id.matches("^[A-Za-z0-9_-]{1,64}$") &&
         request.resource.data.keys().hasOnly([
           "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
           "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
@@ -166,7 +171,16 @@ service cloud.firestore {
         request.resource.data.get("proposedBy", "").size() <= 100 &&
         // Kilder er en liste med korte strenger — hindrer at feltet brukes til
         // å dytte inn vilkårlig store data via et «forslag».
-        request.resource.data.get("kilder", []).size() <= 20
+        request.resource.data.get("kilder", []).size() <= 20 &&
+        // Samme tak som pendingEdits bruker for de samme feltene. Uten dem var
+        // ti av femten felter ubegrensede strenger her, mens forslags-flyten
+        // kappet dem — et kort opprettet direkte mot REST kunne bære ~1 MB.
+        request.resource.data.get("type", "").size() <= 40 &&
+        request.resource.data.get("category", "").size() <= 100 &&
+        request.resource.data.get("instrument", "").size() <= 100 &&
+        request.resource.data.get("decade", "").size() <= 20 &&
+        request.resource.data.get("adoptedLabel", "").size() <= 300 &&
+        request.resource.data.get("imageCredit", "").size() <= 300
       );
       allow update, delete: if isTeacher();
     }

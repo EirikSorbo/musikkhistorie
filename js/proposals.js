@@ -483,6 +483,15 @@ export function openNewTechProposal(preset = null) {
       if (v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)) data[s.key] = v;
     }
     const msg = document.getElementById("prop-msg");
+    // Samme radvalidering som endringsflyten: en kilderad med lenke uten tekst,
+    // eller en ugyldig URL, droppes ellers STILLE av collectRows, og studenten
+    // tror den ble sendt inn.
+    const radFeil = validateRows(specs);
+    if (radFeil) {
+      msg.textContent = radFeil;
+      msg.className = "form-msg error";
+      return;
+    }
     if (!data.name) {
       msg.textContent = "Navn må fylles ut.";
       msg.className = "form-msg error";

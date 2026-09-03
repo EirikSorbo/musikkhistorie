@@ -189,8 +189,8 @@ function spotlightCard(a, lc) {
       ${relatedArtistsHtml(a, lc)}
       <footer class="card-foot">
         <div class="spacer"></div>
-        <button class="btn ghost small" data-timeline-id="${a.id}">Vis i tidslinje</button>
-        <button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>
+        <button class="btn ghost small" data-timeline-id="${escapeHtml(a.id)}">Vis i tidslinje</button>
+        <button class="btn ghost small" data-propose-type="artist" data-propose-id="${escapeHtml(a.id)}">Foreslå endring</button>
       </footer>
     </article>
   `;
@@ -338,8 +338,8 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   let voteBtn = "";
   if (!removed && !pending) {
     voteBtn = hasUpvoted
-      ? `<button class="btn ghost small" data-action="undoVoteUp" data-id="${a.id}">Angre merking</button>`
-      : `<button class="btn ghost small accent" data-action="voteUp" data-id="${a.id}" title="Merk som svært relevant">Merk ${PRIO_ICONS[3]}</button>`;
+      ? `<button class="btn ghost small" data-action="undoVoteUp" data-id="${escapeHtml(a.id)}">Angre merking</button>`
+      : `<button class="btn ghost small accent" data-action="voteUp" data-id="${escapeHtml(a.id)}" title="Merk som svært relevant">Merk ${PRIO_ICONS[3]}</button>`;
   }
 
   // Delte ikoner fra ui-helpers (samme sett som teacherActionRow/checkBtnHtml,
@@ -356,25 +356,25 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   if (isTeacher && pending) {
     teacherBtns = `
       <div class="teacher-actions">
-        <button class="icon-btn primary" data-action="approve" data-id="${a.id}" title="Godkjenn">${ICO_APPROVE}</button>
-        <button class="icon-btn danger" data-action="reject" data-id="${a.id}" title="Avvis">${ICO_REJECT}</button>
-        <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
+        <button class="icon-btn primary" data-action="approve" data-id="${escapeHtml(a.id)}" title="Godkjenn">${ICO_APPROVE}</button>
+        <button class="icon-btn danger" data-action="reject" data-id="${escapeHtml(a.id)}" title="Avvis">${ICO_REJECT}</button>
+        <button class="icon-btn" data-action="edit" data-id="${escapeHtml(a.id)}" title="Rediger">${ICO_EDIT}</button>
       </div>`;
   } else if (isTeacher) {
     teacherBtns = `
       <div class="teacher-actions">
         <div class="ta-left">
-          <button class="icon-btn ${checked ? "active" : ""}" data-action="toggleCheck" data-id="${a.id}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${ICO_CHECK}</button>
+          <button class="icon-btn ${checked ? "active" : ""}" data-action="toggleCheck" data-id="${escapeHtml(a.id)}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${ICO_CHECK}</button>
         </div>
         <div class="ta-center">
-          <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${a.id}" title="Viktigst">${ICO_STAR}</button>
-          <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${a.id}" title="Viktig">${ICO_ALERT}</button>
-          <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${a.id}" title="Mindre viktig">${ICO_THUMB}</button>
-          <button class="icon-btn ${removed ? "active" : ""}" data-action="${removed ? "restore" : "remove"}" data-id="${a.id}" title="${removed ? "Gjør synlig" : "Skjul for studenter"}">${ICO_BAN}</button>
+          <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${escapeHtml(a.id)}" title="Viktigst">${ICO_STAR}</button>
+          <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${escapeHtml(a.id)}" title="Viktig">${ICO_ALERT}</button>
+          <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${escapeHtml(a.id)}" title="Mindre viktig">${ICO_THUMB}</button>
+          <button class="icon-btn ${removed ? "active" : ""}" data-action="${removed ? "restore" : "remove"}" data-id="${escapeHtml(a.id)}" title="${removed ? "Gjør synlig" : "Skjul for studenter"}">${ICO_BAN}</button>
         </div>
         <div class="ta-right">
-          <button class="icon-btn" data-action="edit" data-id="${a.id}" title="Rediger">${ICO_EDIT}</button>
-          <button class="icon-btn danger" data-action="del" data-id="${a.id}" title="Slett">${ICO_TRASH}</button>
+          <button class="icon-btn" data-action="edit" data-id="${escapeHtml(a.id)}" title="Rediger">${ICO_EDIT}</button>
+          <button class="icon-btn danger" data-action="del" data-id="${escapeHtml(a.id)}" title="Slett">${ICO_TRASH}</button>
         </div>
       </div>`;
   }
@@ -406,8 +406,8 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
         <div class="spacer"></div>
-        <button class="btn ghost small" data-action="showTimeline" data-id="${a.id}">Vis i tidslinje</button>
-        ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${a.id}">Foreslå endring</button>` : ""}
+        <button class="btn ghost small" data-action="showTimeline" data-id="${escapeHtml(a.id)}">Vis i tidslinje</button>
+        ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${escapeHtml(a.id)}">Foreslå endring</button>` : ""}
         ${voteBtn}
       </footer>
       ${teacherBtns}

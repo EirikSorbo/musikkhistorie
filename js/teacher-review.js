@@ -31,12 +31,19 @@ function getCurrentEntityValues(edit) {
         kilder: r.kilder || [],
         activeFrom: r.activeFrom ?? null,
         activeTo: r.activeTo ?? null,
+        // era kom som foreslåbart felt i v4.03, men ble aldri lagt til her.
+        // 35 av 141 beskrivelser har en epoketekst, og godkjenning ERSTATTER:
+        // læreren så «(tom)» og trodde feltet var ledig.
+        era: r.era || "",
       };
     }
     // Instrumentsammendraget er en innholdsside (content/instrument-<slug>).
     case "instrument": {
       const page = state.content?.[entityId] || {};
-      return { body: page.body || "" };
+      // kilder ble foreslåbart i v5.00. Uten det her leste læreren «Kilder |
+      // (tom) | ny kilde» som en ren tilføyelse, mens godkjenning i praksis
+      // BYTTET UT lista (Firestore erstatter arrays ved merge).
+      return { body: page.body || "", kilder: page.kilder || [] };
     }
     case "decade-society": {
       const d = state.decadeDescs[String(entityId)] || {};
@@ -104,8 +111,14 @@ function openDiffModal(editId) {
   if (!edit) return;
   activeEditId = editId;
 
+  // entityName er FRITT satt av innsenderen, mens entityId er det som faktisk
+  // skrives til. Var de ulike, kunne et forslag stå som «Bebop» i køen og
+  // skrive til Blues. Vis begge når de spriker.
+  const visning = edit.entityName && edit.entityName !== edit.entityId
+    ? `${edit.entityName} (skriver til: ${edit.entityId})`
+    : (edit.entityId || edit.entityName || "");
   document.getElementById("diff-title").textContent =
-    `${entityTypeLabel(edit.entityType)}: ${edit.entityName || edit.entityId}`;
+    `${entityTypeLabel(edit.entityType)}: ${visning}`;
   document.getElementById("diff-meta").textContent =
     `Foreslått av ${edit.proposedBy || "Anonym"}. Klikk ✓ på radene du vil godta, ✕ på de du vil avvise. Velg «Lagre valgte endringer» til slutt.`;
   document.getElementById("diff-msg").textContent = "";

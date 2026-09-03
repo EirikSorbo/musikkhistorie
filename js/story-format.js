@@ -85,9 +85,14 @@ export function stripGenrePath(text) {
 // Samme oppslag for innholdssidene (content/<id>.body fra Firestore).
 export function pageFor(pageId, content = {}) {
   const doc = content?.[pageId];
-  const body = doc?.body;
-  if (typeof body !== "string" || !body.trim()) return null;
-  // kilder følger med for sidene som har dem (instrumentsammendragene, v5.00).
-  // Sidene uten kilder får en tom liste, så kallerne slipper egen vakt.
-  return { body, kilder: Array.isArray(doc.kilder) ? doc.kilder : [] };
+  if (!doc) return null;
+  const body = typeof doc.body === "string" ? doc.body : "";
+  const kilder = Array.isArray(doc.kilder) ? doc.kilder : [];
+  // body ELLER kilder (v5.11). Kun-body-testen gjorde en side med godkjente
+  // kilder, men uten tekst, USYNLIG: den falt ut av eksporten, og neste gang
+  // læreren skrev teksten leste editoren null, fikk tom kildeliste, og savePage
+  // (uten merge) slettet kildene. Godkjenningskøen kan lage nettopp en slik
+  // side, siden hver rad i diffen godkjennes for seg.
+  if (!body.trim() && !kilder.length) return null;
+  return { body, kilder };
 }

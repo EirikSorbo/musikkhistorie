@@ -36,7 +36,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js?v=5.10";
-import { isMainGenre } from "./genre-model.js?v=5.10";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.10";
 import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.10";
 import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.10";
 import { mergeHeatRows } from "./import-format.js?v=5.10";
@@ -609,7 +609,7 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
     toApply = { [genreEditLevel(data)]: toApply };
   }
 
-  const targetRef = pendingEditTargetRef(data.entityType, data.entityId);
+  const targetRef = pendingEditTargetRef(data.entityType, data.entityId, genreEditLevel(data));
   if (targetRef && Object.keys(toApply).length) {
     // artist/tech MÅ finnes fra før — ellers ville merge opprettet et tomt
     // spøkelsesdokument (uten navn/status) hvis forslaget godkjennes etter at
@@ -630,13 +630,34 @@ export async function rejectPendingEdit(pendingEditId) {
   return deleteDoc(doc(db, "pendingEdits", pendingEditId));
 }
 
-function pendingEditTargetRef(entityType, entityId) {
+// Er navnet et sjangernavn appen kjenner på DETTE nivået?
+//
+// meta/main skriver til kuraterte dokumenter — metasjangernes doc bærer også
+// sjangerHISTORIENE — så der kreves treffe i treet. sub er frie undersjangre
+// som per definisjon IKKE står i treet, og et sub-forslag skriver bare til
+// dokumentets `sub`-felt; der slipper vi alt gjennom.
+function kjentSjangernavn(navn, level) {
+  const n = String(navn || "").trim().toLowerCase();
+  if (!n) return false;
+  if (level === "sub") return true;
+  const treff = (liste) => (liste || []).some((x) => String(x || "").trim().toLowerCase() === n);
+  return treff(GENEALOGY_MAIN_GENRES) || treff(GENEALOGY_META_GENRES) || !!findTreeGenreNode(navn);
+}
+
+function pendingEditTargetRef(entityType, entityId, level) {
   switch (entityType) {
     case "artist":         return doc(db, "artists", entityId);
     case "tech":           return doc(db, "tech", entityId);
     // entityType beholdes som «subgenre» for bakoverkompat med eksisterende
     // pendingEdits-dokumenter; målet er nå genreDescriptions-samlingen.
-    case "subgenre":       return doc(db, "genreDescriptions", entityId);
+    // entityId er STUDENT-skrevet, akkurat som for instrument og tiår under.
+    // Uvalidert kunne et forslag med entityId «Pop» eller et vilkårlig navn få
+    // lærerens godkjenning til å merge inn i et hvilket som helst dokument i
+    // genreDescriptions — også metasjangernes, der historiene bor. Vi krever
+    // derfor at navnet finnes i sjangermodellen (tre-node, metasjanger eller
+    // kjent undersjanger) FØR skrivingen får en adresse.
+    case "subgenre":
+      return kjentSjangernavn(entityId, level) ? doc(db, "genreDescriptions", entityId) : null;
     // Instrumentsammendraget er en innholdsside (content/instrument-<slug>) og
     // kan opprettes ved første godkjente forslag — derfor ikke i mustExist.
     // entityId er STUDENT-skrevet (reglene krever bare en streng), så den MÅ
