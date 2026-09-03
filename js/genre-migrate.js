@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER } from "./story-format.js?v=5.09";
+import { STORY_ORDER } from "./story-format.js?v=5.10";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -529,6 +529,24 @@ export function planTreeCleanup(state) {
 
 // ----------------------------------------------------------------------------
 //  FORELDRELØSE VARMEKART-RADER
+// Varmekart-nøkler INGEN node i treet bærer navnet til. Eksportert fordi BÅDE
+// planen under og etiketten på knappen (teacher-genres.js) må bruke nøyaktig
+// samme predikat — de hadde hver sin kopi, og begge var feil på samme måte.
+//
+// Predikatet var «node MED metasjanger» (n.g). Det er noe helt annet: rot- og
+// uplasserte noder har g === null, men de FINNES i treet. Reggae er en av dem,
+// og knappen sto derfor og tilbød seg å slette sju tiår med kuratert varmedata
+// under påskudd av at raden var foreldreløs.
+//
+// Matcher både etiketten (som varmekartet er nøklet på) og fullnavnet: denne
+// slettingen er uopprettelig, så tvil skal falle ut i «behold».
+export function heatOrphanKeys(nodes, heat) {
+  const noder = Array.isArray(nodes) ? nodes : [];
+  return Object.keys(heat || {}).filter(
+    (k) => !noder.some((n) => lik(n.l, k) || lik(n.f, k))
+  );
+}
+
 // ----------------------------------------------------------------------------
 //  `content/varmekart` er nøklet på sjangerETIKETTEN. Et navnebytte utført før
 //  migreringsmaskineriet fantes (v4.38: Gullalder-hip-hop → Hip-hop, Country →
@@ -554,8 +572,7 @@ export function planHeatCleanup(state) {
     return { ops: [], feil: ["Varmekartet er ikke lastet inn."], advarsler, blokkeringer: [] };
   }
 
-  const gyldige = noder.filter((n) => n.g).map((n) => n.l);
-  const foreldrelose = Object.keys(heat).filter((k) => !gyldige.some((g) => lik(g, k)));
+  const foreldrelose = heatOrphanKeys(noder, heat);
   if (!foreldrelose.length) {
     return {
       ops: [], advarsler, blokkeringer: [],
@@ -567,7 +584,7 @@ export function planHeatCleanup(state) {
   for (const k of foreldrelose) delete nyHeat[k];
   ops.push(op("doc.replace", "content", "varmekart", { ...varmekart, heat: nyHeat },
     `Varmekartet: ${foreldrelose.length} foreldreløs(e) rad(er) fjernes (${foreldrelose.join(", ")})`));
-  advarsler.push(`Radene tilhører sjangre som ikke finnes i treet lenger, typisk rester etter et navnebytte gjort før migreringen fantes. Ingen visning i appen leser dem, så ingenting endrer seg for studentene. Tallene som fjernes: ${foreldrelose.map((k) => `${k} (${(heat[k] || []).filter((v) => v != null).length} tiår med nivå)`).join(", ")}.`);
+  advarsler.push(`Ingen node i treet heter dette, så radene vises ikke noe sted i appen i dag. De er typisk rester etter et navnebytte gjort før migreringen fantes. SLETTINGEN KAN IKKE ANGRES: oppretter du senere en sjanger med samme navn, starter den uten tall. Dette fjernes: ${foreldrelose.map((k) => `${k} (${(heat[k] || []).filter((v) => v != null).length} tiår med nivå)`).join(", ")}.`);
   return { ops, feil, advarsler, blokkeringer: [] };
 }
 

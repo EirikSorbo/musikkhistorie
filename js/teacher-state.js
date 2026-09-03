@@ -14,12 +14,12 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=5.09";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.09";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.09";
-import { DECADES, instrumentsInUse } from "./limits.js?v=5.09";
-import { sharedStateDefaults } from "./shared-data.js?v=5.09";
-import { $ } from "./shared.js?v=5.09";
+} from "./store.js?v=5.10";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.10";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.10";
+import { DECADES, instrumentsInUse } from "./limits.js?v=5.10";
+import { sharedStateDefaults } from "./shared-data.js?v=5.10";
+import { $ } from "./shared.js?v=5.10";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

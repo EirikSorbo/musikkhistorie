@@ -14,12 +14,12 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.09";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.09";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.09";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.09";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.09";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.09";
+import { initExplore } from "./explore.js?v=5.10";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.10";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.10";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.10";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.10";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.10";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:

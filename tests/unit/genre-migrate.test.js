@@ -20,7 +20,7 @@ import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup, planHeatCleanup,
-} from "../../js/genre-migrate.js?v=5.09";
+} from "../../js/genre-migrate.js?v=5.10";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -557,4 +557,30 @@ test("case-forskjell alene gjør ikke en rad foreldreløs", () => {
 test("uten tre eller varmekart planlegges ingenting", () => {
   assert.ok(planHeatCleanup({ tree: { nodes: [] } }).feil.length);
   assert.ok(planHeatCleanup({ ...lagState(), content: {} }).feil.length);
+});
+
+// Predikatet bak «Rydd foreldreløse varmekart-rader». Det var «node MED
+// metasjanger», og rot-noder (g === null) FINNES i treet — knappen sto derfor
+// og tilbød seg å slette ekte, kuratert varmedata. Slettingen er uopprettelig.
+test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async () => {
+  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.10");
+  const noder = [
+    { id: "reggae", l: "Reggae", f: "Reggae", g: null },   // rot-node, ekte
+    { id: "bebop", l: "Bebop", f: "Bebop", g: "Jazz" },
+  ];
+  const heat = { Reggae: [1, 2], Bebop: [3], "Gullalder-hip-hop": [4] };
+  const ut = heatOrphanKeys(noder, heat);
+  assert.deepEqual(ut, ["Gullalder-hip-hop"], "kun ekte rester skal fanges");
+  assert.equal(ut.includes("Reggae"), false, "Reggae har g:null, men finnes i treet");
+});
+
+test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => {
+  return import("../../js/genre-migrate.js?v=5.10").then(({ heatOrphanKeys }) => {
+    const noder = [{ id: "x", l: "Kort", f: "Langt fullnavn", g: "Jazz" }];
+    assert.deepEqual(heatOrphanKeys(noder, { Kort: [1] }), []);
+    assert.deepEqual(heatOrphanKeys(noder, { "Langt fullnavn": [1] }), []);
+    assert.deepEqual(heatOrphanKeys(noder, { Ukjent: [1] }), ["Ukjent"]);
+    assert.deepEqual(heatOrphanKeys(null, null), []);
+    assert.deepEqual(heatOrphanKeys([], {}), []);
+  });
 });

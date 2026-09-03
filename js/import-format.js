@@ -132,12 +132,26 @@ export const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions",
 // slettet i v4.93, og en rå kopiering av objektet ville dratt dem inn igjen fra
 // en eldre sikkerhetskopi. Samme grunn til at den bor her og ikke i
 // teacher-import: eksport og import kan ikke drive fra hverandre.
-export function decadeDoc(d = {}) {
-  return {
-    society: d.society || "",
-    tech: d.tech || "",
-    kilder: Array.isArray(d.kilder) ? d.kilder : [],
-  };
+// `partial: true` tar KUN med feltene som faktisk har innhold.
+//
+// Importen skriver med { merge: true }, og Firestore SKRIVER en tom verdi i
+// stedet for å hoppe over den. Full form betydde derfor at en fil med bare
+// { society } nullstilte tiårets teknologitekst OG kildeliste — stille, med
+// kvitteringen «1 beskrivelse(r) importert», og uten reservetekst i koden til å
+// dekke over tapet. JSON-OPPSKRIFT.md tillater eksplisitt slike delvise filer.
+//
+// Eksporten bruker FULL form: en backup skal ha samme skjema for hvert tiår.
+export function decadeDoc(d = {}, { partial = false } = {}) {
+  const society = typeof d.society === "string" ? d.society : "";
+  const tech = typeof d.tech === "string" ? d.tech : "";
+  const kilder = Array.isArray(d.kilder) ? d.kilder : [];
+  if (!partial) return { society, tech, kilder };
+  // Samme regel som sidene og sjangerbeskrivelsene: fletting kan aldri tømme.
+  const ut = {};
+  if (society) ut.society = society;
+  if (tech) ut.tech = tech;
+  if (kilder.length) ut.kilder = kilder;
+  return ut;
 }
 
 // Normaliserer en innlest importfil til appens interne form, eller returnerer

@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.09";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.10";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -19,21 +19,35 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=5.09";
-import { escapeHtml } from "./ui.js?v=5.09";
-import { $ } from "./shared.js?v=5.09";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.09";
-import { validateTree } from "./genre-validate.js?v=5.09";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.09";
-import { INSTRUMENTS } from "./limits.js?v=5.09";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.09";
+} from "./store.js?v=5.10";
+import { escapeHtml } from "./ui.js?v=5.10";
+import { $ } from "./shared.js?v=5.10";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.10";
+import { validateTree } from "./genre-validate.js?v=5.10";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.10";
+import { INSTRUMENTS } from "./limits.js?v=5.10";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.10";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
 const MERGE_LABELS = ARTIST_LABELS;
 const COMPARE_FIELDS = ARTIST_COMPARE_FIELDS;
 
-const mergeState = { queue: [], newArtists: [], index: 0 };
+const mergeState = { queue: [], newArtists: [], index: 0, ferdig: null };
+
+// Konfliktdialogen løses av læreren LENGE etter at handleMergeFile returnerer.
+// Uten dette løftet fortsatte importen med beskrivelser, teknologi, sider,
+// varmekart og sjangertre mens dialogen fortsatt sto åpen — og avbrøt læreren,
+// sa appen «ingen endringer er lagret» mens alt det andre alt lå i databasen.
+// meldMergeFerdig(false) = avbrutt, (true) = fullført.
+function ventPaMerge() {
+  return new Promise((res) => { mergeState.ferdig = res; });
+}
+function meldMergeFerdig(fullfort) {
+  const res = mergeState.ferdig;
+  mergeState.ferdig = null;
+  if (res) res(fullfort);
+}
 // true mens finishMerge faktisk lagrer — så flette-avbrudd-vakten ikke tolker
 // en normal fullføring som et avbrudd.
 let mergeCommitting = false;
@@ -331,10 +345,14 @@ export function setupImportChoice() {
   $("#import-merge").addEventListener("click", async () => {
     closeAdminModal("modal-import-choice");
     if (pendingImportData) {
-      await handleMergeFile(pendingImportData.artists);
-      await importDescriptions(pendingImportData);
-      await importTechItems(pendingImportData.tech);
-      await importExtras(pendingImportData);
+      // Avbryter læreren konfliktdialogen, skal HELE importen avbrytes — ikke
+      // bare artistdelen. Alt annet innhold ble tidligere skrevet uansett.
+      const fullfort = await handleMergeFile(pendingImportData.artists);
+      if (fullfort) {
+        await importDescriptions(pendingImportData);
+        await importTechItems(pendingImportData.tech);
+        await importExtras(pendingImportData);
+      }
     }
     pendingImportData = null;
   });
@@ -345,10 +363,16 @@ export function setupImportChoice() {
   const mergeModal = document.getElementById("modal-merge");
   if (mergeModal && "MutationObserver" in window) {
     new MutationObserver(() => {
-      if (!mergeModal.classList.contains("open") && !mergeCommitting && mergeHasUnsaved()) {
+      if (mergeModal.classList.contains("open")) return;
+      // finishMerge lukker dialogen SELV før den skriver, og melder fra i sin
+      // egen finally. Blander vi oss her, ville resten av importen startet
+      // midt i artistskrivingen.
+      if (mergeCommitting) return;
+      if (mergeHasUnsaved()) {
         mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
-        alert("Flettingen ble avbrutt. Ingen endringer er lagret. Importer fila på nytt for å prøve igjen.");
+        alert("Flettingen ble avbrutt. Ingenting er lagret, heller ikke beskrivelser, teknologikort eller annet innhold i fila. Importer fila på nytt for å prøve igjen.");
       }
+      meldMergeFerdig(false);
     }).observe(mergeModal, { attributes: true, attributeFilter: ["class"] });
   }
 }
@@ -357,9 +381,14 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
   // decadeDoc plukker feltene ETT FOR ETT (samme hjelper som eksporten bruker):
   // en rå skriving av objektet fra fila ville dratt inn igjen felter appen ikke
   // har lenger, fra en eldre sikkerhetskopi.
+  //
+  // partial: skrivingen går med merge, og et felt fila ikke nevner skal stå
+  // urørt. Uten dette nullstilte en fil med bare { society } både tiårets
+  // teknologitekst og kildene dets.
   const decadeEntries = Object.entries(decades || {})
     .filter(([, data]) => hasDecadeContent(data))
-    .map(([id, data]) => ({ id, data: decadeDoc(data) }));
+    .map(([id, data]) => ({ id, data: decadeDoc(data, { partial: true }) }))
+    .filter(({ data }) => Object.keys(data).length);
 
   // Appen leser KUN nivåfeltene (main/sub) og story. Alt annet i et
   // sjangerdokument ignoreres — og en fil uten dem har ingenting å skrive.
@@ -604,14 +633,18 @@ async function handleMergeFile(data) {
 
   const hasConflicts = mergeState.queue.some(item => item.conflicts.length > 0);
 
+  // Ingenting å flette på artistene betyr IKKE at fila er tom — resten av
+  // innholdet skal fortsatt importeres, så dette teller som fullført.
   if (!mergeState.queue.length && !mergeState.newArtists.length) {
-    alert("Ingen endringer å flette inn."); return;
+    alert("Ingen endringer å flette inn."); return true;
   }
-  if (!hasConflicts) { await finishMerge(); return; }
+  if (!hasConflicts) { await finishMerge(); return true; }
 
   mergeState.index = mergeState.queue.findIndex(item => item.conflicts.length > 0);
+  const ferdig = ventPaMerge();
   openAdminModal("modal-merge");
   renderMergeConflict();
+  return ferdig;
 }
 
 function renderMergeConflict() {
@@ -726,5 +759,7 @@ async function finishMerge() {
   } finally {
     mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
     mergeCommitting = false;
+    // Slipper resten av importen løs — først NÅ er artistskrivingen ferdig.
+    meldMergeFerdig(true);
   }
 }

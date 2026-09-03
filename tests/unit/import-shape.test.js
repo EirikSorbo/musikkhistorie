@@ -16,9 +16,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeImportFile, decadeDoc } from "../../js/import-format.js?v=5.09";
-import { validateTree } from "../../js/genre-validate.js?v=5.09";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=5.09";
+import { normalizeImportFile, decadeDoc } from "../../js/import-format.js?v=5.10";
+import { validateTree } from "../../js/genre-validate.js?v=5.10";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=5.10";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const tre = () => ({ version: 1, nodes: GENEALOGY, families: FAMILIES, metaOrderHint: META_ORDER_HINT });
@@ -100,4 +100,44 @@ test("tiårsdokumentet har KUN samfunn, teknologi og kilder", () => {
 test("et tomt tiår gir tomme felter, ikke undefined", () => {
   assert.deepEqual(decadeDoc(), { society: "", tech: "", kilder: [] });
   assert.deepEqual(decadeDoc({ kilder: "ikke en liste" }), { society: "", tech: "", kilder: [] });
+});
+
+// Importen skriver tiår med { merge: true }, og Firestore SKRIVER en tom verdi
+// framfor å hoppe over den. Full form betydde at en fil med bare { society }
+// nullstilte tiårets teknologitekst og kilder, stille.
+test("decadeDoc partial: felter fila ikke nevner, skrives ikke", () => {
+  assert.deepEqual(decadeDoc({ society: "ny tekst" }, { partial: true }), { society: "ny tekst" });
+  assert.deepEqual(decadeDoc({ tech: "T" }, { partial: true }), { tech: "T" });
+  assert.deepEqual(
+    decadeDoc({ society: "S", kilder: [{ text: "SNL" }] }, { partial: true }),
+    { society: "S", kilder: [{ text: "SNL" }] }
+  );
+  // Eksplisitt tomme verdier teller heller ikke: fletting kan aldri tømme.
+  assert.deepEqual(decadeDoc({ society: "S", tech: "", kilder: [] }, { partial: true }), { society: "S" });
+  assert.deepEqual(decadeDoc({}, { partial: true }), {});
+  // Gamle «les mer»-felter siles bort også i partial-form.
+  assert.deepEqual(decadeDoc({ society: "S", societyMore: "x" }, { partial: true }), { society: "S" });
+});
+
+test("decadeDoc uten partial er UENDRET — eksporten skal ha full form", () => {
+  assert.deepEqual(decadeDoc({ society: "S" }), { society: "S", tech: "", kilder: [] });
+  assert.deepEqual(decadeDoc(), { society: "", tech: "", kilder: [] });
+});
+
+// Konfliktdialogen løses av læreren lenge etter at handleMergeFile returnerer.
+// Uten et løft imellom skrev importen alt annet innhold mens dialogen sto åpen,
+// og et avbrudd meldte «ingen endringer er lagret» selv om alt lå i databasen.
+// Flyten leser DOM og kan ikke enhetstestes, så vi låser kilden.
+test("importen venter på flettedialogen før resten skrives", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/teacher-import.js", import.meta.url), "utf8");
+  assert.match(src, /function ventPaMerge\(\)/, "løftet mangler");
+  assert.match(src, /const fullfort = await handleMergeFile\(/,
+    "resultatet av flettingen må fanges");
+  assert.match(src, /if \(fullfort\) \{\s*\n\s*await importDescriptions/,
+    "resten av importen må ligge bak fullfort-sjekken");
+  assert.match(src, /meldMergeFerdig\(true\)/, "finishMerge må melde fullført");
+  assert.match(src, /meldMergeFerdig\(false\)/, "avbrudds-vakten må melde avbrutt");
+  assert.match(src, /if \(mergeCommitting\) return;/,
+    "vakten må la finishMerge melde selv, ellers starter resten midt i skrivingen");
 });
