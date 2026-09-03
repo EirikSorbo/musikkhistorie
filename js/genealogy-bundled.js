@@ -18,11 +18,11 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=5.10";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.10";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=5.10";
-import { attachCamera } from "./gx-camera.js?v=5.10";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=5.10";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=5.11";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.11";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=5.11";
+import { attachCamera } from "./gx-camera.js?v=5.11";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=5.11";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)
@@ -110,7 +110,13 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   // faktisk fylles (geometrien krever at pillene er målt først).
   const gGrid = el("g", { class: "gxb-grid-layer" });
   const gBands = el("g", { class: "gxb-band-layer" });
-  const gNodes = el("g", { class: "gxb-node-layer" });
+  // Nodelaget er en liste med knapper for en skjermleser. role+label gir den
+  // et navn, i stedet for at brukeren møter 53 navnløse grafikkelementer.
+  const gNodes = el("g", {
+    class: "gxb-node-layer",
+    role: "group",
+    "aria-label": "Sjangertreet: velg en sjanger for å lese om den",
+  });
   cam.appendChild(gGrid);
   cam.appendChild(gBands);
   cam.appendChild(gNodes);
@@ -130,7 +136,15 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   //     teksten står i et synlig dokument.
   const gnodes = {};
   nodes.forEach((n) => {
-    const g = el("g", { class: "gxb-node" });
+    // Tastatur og skjermleser: <g> er ikke fokuserbart av seg selv, så hele
+    // treet var uspillbart uten mus. role+tabindex+aria-label gjør hver pille
+    // til en ekte knapp; keydown under kobler Enter og Mellomrom.
+    const g = el("g", {
+      class: "gxb-node",
+      role: "button",
+      tabindex: "0",
+      "aria-label": `Sjanger: ${n.f || n.l}`,
+    });
     g.dataset.id = n.id;
     const rect = el("rect", { rx: NH / 2, height: NH, class: "gxb-pill" });
     const text = el("text", { "text-anchor": "middle", "dominant-baseline": "central", class: "gxb-label" });
@@ -400,6 +414,16 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
     const { g } = gnodes[n.id];
     g.addEventListener("mouseenter", () => { if (!selectedId) light(n.id); });
     g.addEventListener("mouseleave", () => { if (!selectedId) clearLight(); });
+    // Enter/Mellomrom = klikk. Kameraet er irrelevant her (ingen dra-gest),
+    // så vi åpner noden direkte framfor å gå veien om touch-kortet.
+    g.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      openNode(n.id);
+    });
+    g.addEventListener("focus", () => light(n.id));
+    g.addEventListener("blur", () => { if (!selectedId) clearLight(); });
     g.addEventListener("click", (ev) => {
       if (camera.isMoved()) return;
       ev.stopPropagation();

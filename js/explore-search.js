@@ -10,19 +10,19 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml, showSubsjangerInfo } from "./ui.js?v=5.10";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.10";
-import { showEdgeInfo } from "./genealogy.js?v=5.10";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.10";
+import { modalOpen, escapeHtml, showSubsjangerInfo } from "./ui.js?v=5.11";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.11";
+import { showEdgeInfo } from "./genealogy.js?v=5.11";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.11";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
 const PER_GRUPPE = 6;
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.10";
-import { openTechDetail } from "./explore-tech.js?v=5.10";
-import { openDecade } from "./explore-decade.js?v=5.10";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide } from "./explore-innhold.js?v=5.10";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.10";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.11";
+import { openTechDetail } from "./explore-tech.js?v=5.11";
+import { openDecade } from "./explore-decade.js?v=5.11";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide } from "./explore-innhold.js?v=5.11";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.11";
 
 // Indeksen koster rundt 20 ms å bygge for hele pensumet (643 poster), og det
 // er unødvendig å gjøre for hvert tastetrykk. Den bygges derfor når søket
@@ -99,7 +99,17 @@ export function wireSok() {
   if (treffEl) {
     treffEl.addEventListener("click", (e) => {
       const mer = e.target.closest("[data-sok-mer]");
-      if (mer) { utvidet.add(mer.dataset.sokMer); renderSok(); return; }
+      if (mer) {
+        const type = mer.dataset.sokMer;
+        utvidet.add(type);
+        renderSok();
+        // renderSok bygger lista på nytt, så knappen som hadde fokus er borte
+        // og fokus faller til <body>: en tastaturbruker mister plassen sin midt
+        // i lista. Flytt fokus til den første raden i gruppa som nettopp åpnet.
+        const gruppe = document.querySelector(`#sok-treff [data-sok-gruppe="${CSS.escape(type)}"]`);
+        (gruppe?.querySelector("[data-sok-i]") || document.getElementById("sok-felt"))?.focus();
+        return;
+      }
       const rad = e.target.closest("[data-sok-i]");
       if (!rad) return;
       const t = visteTreff[Number(rad.dataset.sokI)];
@@ -152,7 +162,7 @@ function renderSok() {
     const flere = g.antall > vis.length
       ? `<button type="button" class="sok-g-flere" data-sok-mer="${escapeHtml(g.type)}">Vis alle ${g.antall}</button>`
       : "";
-    return `<div class="sok-gruppe">
+    return `<div class="sok-gruppe" data-sok-gruppe="${escapeHtml(g.type)}">
       <div class="sok-g-hode"><span>${escapeHtml(g.label)}</span>${flere}</div>
       ${rader}
     </div>`;

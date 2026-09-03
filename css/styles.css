@@ -59,7 +59,11 @@ body {
 
 h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: -0.01em; }
 
-.wrap { max-width: 1100px; margin: 0 auto; padding: 0 22px; }
+/* padding-inline, IKKE korthånden: «padding: 0 22px» satte også padding-top og
+   -bottom til 0, og siden main.wrap treffer begge selektorene med lik
+   spesifisitet vant den som kom sist — den loddrette luften i «main» under var
+   død. */
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 22px; }
 
 /* ----- Topbar ----- */
 .topbar {
@@ -106,7 +110,7 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
 }
 
 /* ----- Paneler ----- */
-main { padding: 30px 0 70px; }
+main { padding-block: 30px 70px; }
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1056,6 +1060,18 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   left: 50%;
   transform: translateX(-50%);
 }
+/* På smale skjermer er det ikke plass til tittel + bar + ←/✕ på én rad, og
+   absolutt posisjonering la baren OPPÅ tittelen. Egen rad i stedet, som på
+   lærersiden (#t-prio-bar). */
+@media (max-width: 640px) {
+  #modal-artister #sp-prio-bar {
+    position: static;
+    left: auto;
+    transform: none;
+    flex: 0 0 100%;
+    justify-content: center;
+  }
+}
 #t-prio-bar { flex: 0 0 100%; justify-content: center; }
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -1413,6 +1429,13 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   }
   .diff-table .diff-current::before { content: "Gjeldende: "; font-weight: 600; color: var(--muted); }
   .diff-table .diff-proposed::before { content: "Foreslått: "; font-weight: 600; color: var(--text); }
+
+  /* Samme stabling for forslagslista. Den har fem kolonner og lå og skled
+     vannrett ut av modalen på telefon. */
+  .pending-table, .pending-table thead, .pending-table tbody, .pending-table tr, .pending-table td { display: block; }
+  .pending-table thead { display: none; }
+  .pending-table tr { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .pending-table td { width: auto; padding: 3px 0; border-bottom: none; }
 }
 
 /* ----- Teknologi-kort ----- */
@@ -1939,6 +1962,9 @@ body.is-teacher #gate { display: none; }
   .source-row .remove-source { margin-left: 0; align-self: flex-end; }
   .work-row { flex-direction: column; }
   .work-row .work-year { flex: 1; }
+  /* Uten dette strakk ✕-knappen seg over hele raden og så ut som et felt.
+     Samme grep som .me-row og .source-row har. */
+  .work-row .remove-work { flex: 0 0 auto; align-self: flex-end; }
   .artist-image { float: none; max-width: 100%; margin: 0 0 12px; }
   .artist-image.big { max-width: 100%; }
 
@@ -2454,3 +2480,12 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .char-count { margin: 4px 0 0; font-size: 0.78rem; color: var(--muted); text-align: right; }
 .char-count.naer-taket { color: var(--warn); }
 .char-count.pa-taket { color: var(--danger); font-weight: 600; }
+
+
+/* Tastaturfokus i slektstreet. SVG-noder har ingen standard fokusring i alle
+   nettlesere, og uten den ser en tastaturbruker ikke hvor hen står. */
+.gxb-node:focus { outline: none; }
+.gxb-node:focus-visible .gxb-pill {
+  stroke-width: 5;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.45));
+}

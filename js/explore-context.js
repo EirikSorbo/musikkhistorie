@@ -8,16 +8,16 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.10";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.10";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.10";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.10";
-import { openTechDetail } from "./explore-tech.js?v=5.10";
-import { renderPage } from "./explore-innhold.js?v=5.10";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.10";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=5.10";
-import { renderReferanser } from "./explore-referanser.js?v=5.10";
-import { setHeatData } from "./heat-strip.js?v=5.10";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.11";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.11";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.11";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.11";
+import { openTechDetail } from "./explore-tech.js?v=5.11";
+import { renderPage, renderRotterChips } from "./explore-innhold.js?v=5.11";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.11";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=5.11";
+import { renderReferanser } from "./explore-referanser.js?v=5.11";
+import { setHeatData } from "./heat-strip.js?v=5.11";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -133,7 +133,13 @@ export function contentChanged() {
   refreshSjangerInfo(sjangerOpts());
   const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
   if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
-  if (isOpen("modal-rotter")) renderPage("rotter", "rotter-body", "rotter-extra");
+  if (isOpen("modal-rotter")) {
+    renderPage("rotter", "rotter-body", "rotter-extra");
+    // Rot-boblene bygges av sjangertreet, som lander ASYNKRONT. Sto kortet
+    // åpent da snapshotet kom, ble de stående tomme til det ble lukket og
+    // åpnet igjen.
+    renderRotterChips();
+  }
   if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
   if (isOpen("modal-varmekart")) renderVarmekartBody();
   // Frittstående referanser bor i content: lagrer læreren en ny, skal kortet

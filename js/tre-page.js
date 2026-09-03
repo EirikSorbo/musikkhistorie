@@ -14,12 +14,12 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.10";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.10";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.10";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.10";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.10";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.10";
+import { initExplore } from "./explore.js?v=5.11";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.11";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.11";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.11";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.11";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.11";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -86,15 +86,21 @@ export function initTrePage({ render }) {
     if (stageEl) stageEl.style.display = på ? "none" : "";
   }
 
+  // Deklarert UTENFOR if-en: onGenreModelChanged-grenen under må kunne koble
+  // den fra når monteringen lykkes den veien.
+  let ro = null;
   if (!mount() && stageEl && "ResizeObserver" in window) {
-    const ro = new ResizeObserver(() => { if (mount()) ro.disconnect(); });
+    ro = new ResizeObserver(() => { if (mount()) ro.disconnect(); });
     ro.observe(stageEl);
   }
 
   // Nytt tre fra Firestore (første snapshot, eller lærerens import mens siden
   // står åpen): tegn på nytt. Kameraet ryddes i mount(), så lytterne ikke hoper
   // seg opp.
-  onGenreModelChanged(() => { mount(); });
+  // Lykkes monteringen via DENNE veien (treet lander etter at observatøren ble
+  // satt opp), skal observatøren også kobles fra. Den så bare sitt eget kall,
+  // og ble ellers hengende og kalle mount() ved hver eneste størrelsesendring.
+  onGenreModelChanged(() => { if (mount()) ro?.disconnect(); });
 
   // «← Tilbake» på selve siden (treet er en side, ikke en modal). Har man kommet
   // hit fra Det store bildet eller et artistkort, går history.back() dit. Åpnet

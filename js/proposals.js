@@ -8,15 +8,15 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=5.10";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.10";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.10";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.10";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.10";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.10";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.10";
-import { setupFormatBars } from "./format-bar.js?v=5.10";
-import { wireCharCount } from "./ui-helpers.js?v=5.10";
+import { addPendingEdit, addTechProposal } from "./store.js?v=5.11";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.11";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.11";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.11";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.11";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.11";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.11";
+import { setupFormatBars } from "./format-bar.js?v=5.11";
+import { wireCharCount } from "./ui-helpers.js?v=5.11";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -280,6 +280,28 @@ function fillRows(specs, values) {
   });
 }
 
+// Timeren som lukker modalen etter «Forslag sendt ✓». Modul-lokal og alltid
+// avbrutt ved ny åpning: rakk studenten å sende ett forslag og åpne et nytt
+// innen 1,6 sekunder, lukket den gamle timeren det NYE skjemaet midt i
+// utfyllingen.
+let lukkeTimer = null;
+function lukkEtterKvittering(modal) {
+  clearTimeout(lukkeTimer);
+  lukkeTimer = setTimeout(() => modalClose(modal), 1600);
+}
+function avbrytLukking() { clearTimeout(lukkeTimer); lukkeTimer = null; }
+
+// Firestore-SDK-en køer en skriving og prøver på nytt i det uendelige når
+// nettet er borte — løftet avvises ALDRI. Knappen sto derfor i «Sender …» til
+// siden ble lastet på nytt, og studenten sendte inn på nytt «for sikkerhets
+// skyld». Vi avbryter ikke skrivingen (den fullføres av seg selv), men sier
+// fra når den tar uvanlig lang tid.
+const SEND_VARSEL_MS = 8000;
+function medTidsvarsel(promise, nårTreg) {
+  const timer = setTimeout(nårTreg, SEND_VARSEL_MS);
+  return Promise.resolve(promise).finally(() => clearTimeout(timer));
+}
+
 // http/https-sjekk (samme regel som safeUrl bruker ved lagring).
 const erHttpUrl = (u) => /^https?:\/\//i.test((u || "").trim());
 
@@ -354,6 +376,7 @@ export function openProposalEditor(config) {
   document.getElementById("prop-msg").textContent = "";
   document.getElementById("prop-by").value = "";
 
+  avbrytLukking();
   const form = document.getElementById("prop-form");
   form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
   fillRows(specs, config.currentValues || {});
@@ -415,20 +438,23 @@ export function openProposalEditor(config) {
     submit.disabled = true;
     submit.textContent = "Sender …";
     try {
-      await addPendingEdit({
+      await medTidsvarsel(addPendingEdit({
         entityType: config.entityType,
         entityId: config.entityId,
         entityName: config.entityName,
         proposedFields: diff,
         proposedBy: forslagsstiller,
         level: config.level,
+      }), () => {
+        msg.textContent = "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.";
+        msg.className = "form-msg warn";
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";
       submit.textContent = "Forslag sendt ✓";
       submit.classList.remove("primary");
       submit.classList.add("sent");
-      setTimeout(() => modalClose(modal), 1600);
+      lukkEtterKvittering(modal);
     } catch (e) {
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
@@ -460,6 +486,7 @@ export function openNewTechProposal(preset = null) {
   document.getElementById("prop-msg").textContent = "";
   document.getElementById("prop-by").value = "";
 
+  avbrytLukking();
   const form = document.getElementById("prop-form");
   form.innerHTML = specs
     .map((s) => inputForField(
@@ -507,16 +534,19 @@ export function openNewTechProposal(preset = null) {
     submit.disabled = true;
     submit.textContent = "Sender …";
     try {
-      await addTechProposal({
+      await medTidsvarsel(addTechProposal({
         ...data,
         proposedBy: forslagsstiller,
+      }), () => {
+        msg.textContent = "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.";
+        msg.className = "form-msg warn";
       });
       msg.textContent = "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";
       submit.textContent = "Forslag sendt ✓";
       submit.classList.remove("primary");
       submit.classList.add("sent");
-      setTimeout(() => modalClose(modal), 1600);
+      lukkEtterKvittering(modal);
     } catch (e) {
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";

@@ -20,7 +20,7 @@ import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup, planHeatCleanup,
-} from "../../js/genre-migrate.js?v=5.10";
+} from "../../js/genre-migrate.js?v=5.11";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -563,7 +563,7 @@ test("uten tre eller varmekart planlegges ingenting", () => {
 // metasjanger», og rot-noder (g === null) FINNES i treet — knappen sto derfor
 // og tilbød seg å slette ekte, kuratert varmedata. Slettingen er uopprettelig.
 test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async () => {
-  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.10");
+  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.11");
   const noder = [
     { id: "reggae", l: "Reggae", f: "Reggae", g: null },   // rot-node, ekte
     { id: "bebop", l: "Bebop", f: "Bebop", g: "Jazz" },
@@ -575,7 +575,7 @@ test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async (
 });
 
 test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => {
-  return import("../../js/genre-migrate.js?v=5.10").then(({ heatOrphanKeys }) => {
+  return import("../../js/genre-migrate.js?v=5.11").then(({ heatOrphanKeys }) => {
     const noder = [{ id: "x", l: "Kort", f: "Langt fullnavn", g: "Jazz" }];
     assert.deepEqual(heatOrphanKeys(noder, { Kort: [1] }), []);
     assert.deepEqual(heatOrphanKeys(noder, { "Langt fullnavn": [1] }), []);
@@ -590,7 +590,7 @@ test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => 
 // RÅTT tilbake, så et forslag som lå i køen under et navnebytte kunne
 // gjeninnføre det gamle navnet — og etter en sletting gjeninnføre sjangeren.
 test("artistForslagOmskriving: navnebytte treffer alle fire flatene", async () => {
-  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.10");
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.11");
   const e = { proposedFields: {
     mainGenre: ["Bebop", "Cool jazz"], subGenre: ["Cool jazz"], metaGenre: "Cool jazz",
     musicExamples: [{ label: "So What", genre: "Cool jazz" }, { label: "X", genre: "Bebop" }],
@@ -606,7 +606,7 @@ test("artistForslagOmskriving: navnebytte treffer alle fire flatene", async () =
 });
 
 test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async () => {
-  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.10");
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.11");
   const e = { proposedFields: { mainGenre: ["Bebop", "Reggae"], metaGenre: "Reggae" } };
   const ut = artistForslagOmskriving(e, "Reggae", null);
   assert.deepEqual(ut.mainGenre, ["Bebop"]);
@@ -618,7 +618,7 @@ test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async ()
 // Doc-ID-en i edgeDescriptions er «forelderid__barnid». Fjernes en forelder,
 // blir dokumentet liggende uten at noe rydder det. 11 slike lå live.
 test("edgeOrphanKeys: motreaksjon teller som kant, rester fanges", async () => {
-  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.10");
+  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.11");
   const noder = [
     { id: "a", l: "A", p: [], rx: [] },
     { id: "b", l: "B", p: ["a"], rx: [] },

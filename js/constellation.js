@@ -16,9 +16,9 @@
 //  Fargene følger slektstreets familier (FAMILIES/node.fam). Egen liten
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
-import { GENEALOGY, FAMILIES, canonMainGenre, famOf, nodeColor, layoutX } from "./genre-model.js?v=5.10";
-import { escapeHtml } from "./ui-helpers.js?v=5.10";
-import { safeUrl, wikimediaThumb } from "./util.js?v=5.10";
+import { GENEALOGY, FAMILIES, canonMainGenre, famOf, nodeColor, layoutX } from "./genre-model.js?v=5.11";
+import { escapeHtml } from "./ui-helpers.js?v=5.11";
+import { safeUrl, wikimediaThumb } from "./util.js?v=5.11";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er

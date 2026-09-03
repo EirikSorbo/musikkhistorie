@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.10";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.10";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.11";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.11";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -105,7 +105,9 @@ export const MODAL_HTML = `
     </div>
     <input type="search" id="sok-felt" class="sok-felt" autocomplete="off"
       placeholder="Søk i artister, sjangre, tekster …" aria-label="Søk i alt innholdet">
-    <p class="muted sok-status" id="sok-status"></p>
+    <!-- role=status: treffantallet endrer seg mens man skriver, og en
+         skjermleserbruker fikk det ellers aldri lest opp. -->
+    <p class="muted sok-status" id="sok-status" role="status" aria-live="polite"></p>
     <div id="sok-treff"></div>
   </div>
 </div>

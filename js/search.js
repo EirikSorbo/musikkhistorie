@@ -17,10 +17,10 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.10";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.10";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.10";
-import { escapeHtml } from "./util.js?v=5.10";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.11";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.11";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.11";
+import { escapeHtml } from "./util.js?v=5.11";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -133,7 +133,7 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {} } = {}) {
     const d = (genreDescs[n.l] && genreDescs[n.l].main) || (genreDescs[n.f] && genreDescs[n.f].main) || {};
     ut.push(post(erRot.has(n.id) ? "rot" : "sjanger", n.l, n.f || n.l,
       n.g || "Røtter",
-      [n.l !== n.f ? n.l : "", d.description, d.era, (d.lytt || []).join(", ")],
+      [n.l !== n.f ? n.l : "", d.description, d.era, (erLærer || !skjul.horEtter ? (d.lytt || []).join(", ") : "")],
       { hva: "sjanger", id: n.l }));
   }
 

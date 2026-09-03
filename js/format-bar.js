@@ -1,3 +1,11 @@
+
+// setRangeText respekterer ikke maxlength. Har feltet et tak (instrument-
+// sammendraget har 4000), kutter vi det som ble for mye — ellers ville teksten
+// blitt avvist først ved lagring, etter at studenten hadde skrevet ferdig.
+function klippTilTak(ta) {
+  const maks = Number(ta.getAttribute("maxlength")) || 0;
+  if (maks && ta.value.length > maks) ta.value = ta.value.slice(0, maks);
+}
 // ============================================================================
 //  FORMATLINJE — knappene over tekstfeltene
 // ----------------------------------------------------------------------------
@@ -21,7 +29,11 @@ export function wrapSelection(ta, marker, onChange) {
   const { selectionStart: s, selectionEnd: e, value: v } = ta;
   const valgt = v.slice(s, e) || "tekst";
   ta.setRangeText(marker + valgt + marker, s, e, "select");
+  klippTilTak(ta);
   ta.focus();
+  // setRangeText utløser IKKE «input». Uten dette sto tegntelleren stille, og
+  // et felt med tak kunne passere det via formatlinja.
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
   onChange?.();
 }
 
@@ -37,7 +49,9 @@ export function prefixLines(ta, prefixFor, onChange) {
     .map((l) => l.trim() ? prefixFor(n++) + l.replace(/^\s*(#{1,6}|[-•–]|\d+[.)])\s+/, "") : l)
     .join("\n");
   ta.setRangeText(ut, start, slutt, "select");
+  klippTilTak(ta);
   ta.focus();
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
   onChange?.();
 }
 

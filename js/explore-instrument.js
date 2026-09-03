@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.10";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.10";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.10";
-import { pageFor } from "./story-format.js?v=5.10";
-import { renderRichText } from "./rich-text.js?v=5.10";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.10";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.10";
-import { openTechDetail } from "./explore-tech.js?v=5.10";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.11";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.11";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.11";
+import { pageFor } from "./story-format.js?v=5.11";
+import { renderRichText } from "./rich-text.js?v=5.11";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.11";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.11";
+import { openTechDetail } from "./explore-tech.js?v=5.11";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -82,7 +82,7 @@ function renderChips() {
     `<button type="button" class="btn ghost small instr-chip" data-instr="${escapeHtml(g)}">${escapeHtml(g)}</button>`
   ).join("");
   chips.querySelectorAll(".instr-chip").forEach((b) =>
-    b.addEventListener("click", () => renderGroup(b.dataset.instr)));
+    b.addEventListener("click", () => renderGroup(b.dataset.instr, true)));
   chips.dataset.filled = "1";
 }
 
@@ -102,10 +102,24 @@ function timelineHtml(group, items) {
   return `<p class="gx-missing">Ingen nyvinninger lagt inn for ${escapeHtml(group)} ennå.</p>`;
 }
 
-function renderGroup(group) {
+function renderGroup(group, tvunget = false) {
   currentGroup = group;
   const body = document.getElementById("instr-body");
   if (!body) return;
+
+  // Kortet tegnes av HVERT snapshot (artister, tech, content, podkaster).
+  // Berører snapshotet ikke det instrumentet som vises, river en full
+  // omtegning likevel bort åpne detaljer og ruller til topps midt i lesing.
+  const s0 = getState();
+  const signatur = JSON.stringify([
+    group,
+    artistsInInstrumentGroup(s0.artists, group).length,
+    instrumentInnovations(s0.techItems, group).map((t) => [t.id, t.name, t.adoptedYear]),
+    s0.content?.[instrumentPageId(group)] || null,
+    !!s0.contentLoaded,
+  ]);
+  if (!tvunget && signatur === sisteSignatur && body.childElementCount) return;
+  sisteSignatur = signatur;
 
   document.querySelectorAll("#instr-chips .instr-chip").forEach((b) =>
     b.classList.toggle("active", b.dataset.instr === group));
@@ -197,6 +211,12 @@ function renderGroup(group) {
   // Artistskjemaet åpnes UTEN forhåndsvalgt instrument (brukervalg): gruppenavnene
   // «Soloinstrument» og «Trommer» er ikke gyldige artistverdier — artisten skal
   // ha det presise instrumentet (Saksofon, Trommer/perkusjon …).
+  // FORKASTET FIKS (audit-funn 47): rapporten foreslo å sende læreren til hens
+  // eget skjema via opts.onEditArtist. Det går ikke — openEditModal krever en
+  // artist som ALT finnes (den returnerer på `if (!a) return`), og lærersiden
+  // har ingen «ny artist»-form. Knappen ville blitt død. Læreren går derfor
+  // fortsatt via studentskjemaet og godkjenner sitt eget forslag; en egen
+  // opprettingsform på lærersiden er en større sak.
   knapper.push({ side: "høyre", tekst: "Legg til artist", href: "student.html" });
 
   // data-k bærer indeksen i `knapper`, ikke i gruppen: klikk-koblingen under
@@ -254,6 +274,11 @@ export function renderInstrumenter() {
   if (erApen("modal-instrumenter")) renderUtvikling();
   if (erApen("modal-podkaster")) renderPodkast();
 }
+
+// Kortet tegnes av HVERT snapshot (artister, tech, content, podkaster). En full
+// omtegning river da åpne detaljer og ruller brukeren til topps midt i lesing.
+// Signaturen dekker det kortet faktisk viser for det VALGTE instrumentet.
+let sisteSignatur = null;
 
 const erApen = (id) => !!document.getElementById(id)?.classList.contains("open");
 

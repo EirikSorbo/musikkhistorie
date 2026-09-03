@@ -187,9 +187,7 @@ Nøkkel = tiåret som string. Verdi:
 ```json
 {
   "society": "Borgerrettsbevegelsen vokser frem som politisk kraft etter Brown vs. Board of Education (1954). Civil Rights Act (1964) og Voting Rights Act (1965) markerer juridiske vendepunkter. Vietnam-krigen polariserer USA, motkulturen vokser.",
-  "societyMore": "1960-tallet rommer kontraster det er vanskelig å overdrive: …\n\nMartin Luther King Jr.s «I Have a Dream»-tale (28. august 1963) samlet 250 000 mennesker i Washington. Drapet på Malcolm X (1965) og King (1968) markerte en mer militant fase. Black Power-bevegelsen, ledet av blant andre Stokely Carmichael og Black Panther Party (1966), endret retning og retorikk.\n\nKulturelt: motkulturen, Summer of Love (1967), Woodstock (1969), Stonewall-opprøret (1969). Vietnam-krigen mobiliserte studenter og kunstnere mot statens autoritet. Musikken — fra soul til psykedelisk rock — fungerte som lydspor og politisk uttrykk samtidig.",
   "tech": "Transistorradioen blir allemannseie. FM-radio og stereoanlegg gjør populærmusikk til en sentral del av hjemmet. Multitrack-innspilling endrer studioproduksjon.",
-  "techMore": "Frem til 1960 var monoinnspilling normen. Les Pauls åtte-spors maskin (1957) og Ampex 8-spors (1960-tallet) ga produsenter helt nye muligheter. Phil Spectors «Wall of Sound», Beach Boys' *Pet Sounds* (1966) og Beatles' *Sgt. Pepper's* (1967) demonstrerer hva studioet kunne være — et instrument i seg selv.\n\nMoog-synthesizeren (1964) introduserte elektroniske lyder for popmusikken. Stereoformatet erstattet mono mot slutten av tiåret. Kassettbåndet (1962) startet privat musikkdeling — en forløper til all senere bærbar musikk.",
   "kilder": [
     { "text": "Branch, T. Parting the Waters: America in the King Years 1954–63. Simon & Schuster, 1988." },
     { "text": "Marcus, G. Mystery Train. Plume, 1975." },
@@ -201,9 +199,7 @@ Nøkkel = tiåret som string. Verdi:
 | Felt | Påkrevd | Notater |
 |---|---|---|
 | `society` | | Kort tekst (1–3 setninger). Vises rett i tiår-popupen. |
-| `societyMore` | | Utvidet tekst. «Les mer»-knappen blir synlig når dette finnes. Linjeskift (`\n\n`) blir bevart. |
 | `tech` | | Samme som over, for teknologi. |
-| `techMore` | | Utvidet teknologi. |
 | `kilder` | | Felles kilder for tiåret (samfunn + teknologi). |
 
 Tomt felt = ikke vises. «Les mer»-knappen er kun synlig hvis tilhørende `…More`-felt har innhold.
@@ -421,9 +417,7 @@ teksten slik den er skrevet.
   "decades": {
     "1920": {
       "society": "Prohibition (1920–33), urban migrasjon fra sør til nord, Harlem-renessansen, og kvinners stemmerett (19th Amendment, 1920).",
-      "societyMore": "Great Migration sendte millioner afroamerikanere nordover…\n\nHarlem-renessansen blomstret rundt forfattere som Langston Hughes og Zora Neale Hurston, men også musikere — jazzen forflyttet seg fra New Orleans til Chicago og New York.",
       "tech": "Den elektriske mikrofonen (1925) revolusjonerte innspilling. Radioen blir et masseformat.",
-      "techMore": "Frem til 1925 ble plater spilt inn akustisk — sangere måtte rope i en horn. Western Electrics elektriske system (Victor og Columbia, 1925) endret alt: nyanse, bredde, intimitet ble mulig. Bessie Smith, Louis Armstrong og senere Bing Crosby bygde stilen rundt det nye mediet.",
       "kilder": [
         { "text": "Lewis, D. L. When Harlem Was in Vogue. Knopf, 1981." },
         { "text": "Suisman, D. Selling Sounds. Harvard University Press, 2009." }

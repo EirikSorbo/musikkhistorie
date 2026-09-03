@@ -6,15 +6,15 @@ import {
   fetchArtists,
   addArtist,
   subscribeContent,
-} from "./store.js?v=5.10";
-import { loadArtists } from "./artist-cache.js?v=5.10";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.10";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.10";
-import { fillSelect } from "./ui.js?v=5.10";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.10";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.10";
-import { setupFormatBars } from "./format-bar.js?v=5.10";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.10";
+} from "./store.js?v=5.11";
+import { loadArtists } from "./artist-cache.js?v=5.11";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.11";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.11";
+import { fillSelect } from "./ui.js?v=5.11";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.11";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.11";
+import { setupFormatBars } from "./format-bar.js?v=5.11";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.11";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -129,6 +129,12 @@ function setupForm() {
     submitBtn.disabled = true;
     const origText = submitBtn.textContent;
     submitBtn.textContent = "Sender …";
+    // Firestore køer skrivingen og retryer i det uendelige uten å avvise når
+    // nettet er borte: knappen sto i «Sender …» til siden ble lastet på nytt,
+    // og studenten sendte inn på nytt. Vi avbryter ikke skrivingen, men sier
+    // fra når den drøyer.
+    const tregVarsel = setTimeout(() => showMsg(msg,
+      "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.", "warn"), 8000);
     try {
       await addArtist(candidate);
       form.reset();
@@ -140,6 +146,7 @@ function setupForm() {
     } catch (err) {
       showMsg(msg, "Noe gikk galt: " + err.message, "error");
     } finally {
+      clearTimeout(tregVarsel);
       submitBtn.disabled = false;
       submitBtn.textContent = origText;
     }

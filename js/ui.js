@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.10";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.10";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.10";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.10";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.10";
+import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.11";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.11";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.11";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.11";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.11";
 import {
   escapeHtml,
   linkDesc,
@@ -35,12 +35,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.10";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.10";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.10";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.10";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.10";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.10";
+} from "./ui-helpers.js?v=5.11";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.11";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.11";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.11";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.11";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.11";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -53,9 +53,14 @@ export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEd
 // Memoisert på artist-array-referansen: subscribeArtists bytter referanse ved
 // hver oppdatering, så samme render-pass treffer cachen i stedet for å bygge
 // lista på nytt for hvert klikk/popup.
-let _mainGenreCache = { ref: null, val: null };
+// Cachen nøkles på BÅDE artistlista og sjangermodellen. Lista bygges av
+// GENEALOGY_MAIN_GENRES pluss artistenes tagger, og treet lastes ASYNKRONT:
+// med bare artistlista som nøkkel ble den første (tomme-tre-)beregningen
+// liggende til artistene tilfeldigvis byttet referanse.
+let _mainGenreCache = { ref: null, modell: null, val: null };
 export function buildMainGenreList(artists) {
-  if (artists === _mainGenreCache.ref) return _mainGenreCache.val;
+  const modell = GENEALOGY_MAIN_GENRES;
+  if (artists === _mainGenreCache.ref && modell === _mainGenreCache.modell) return _mainGenreCache.val;
   const set = new Set(GENEALOGY_MAIN_GENRES);
   for (const a of (artists || [])) {
     if (a.status !== "active") continue;
@@ -63,7 +68,7 @@ export function buildMainGenreList(artists) {
     for (const s of (a.subGenre || [])) set.add(s);
   }
   const val = [...set];
-  _mainGenreCache = { ref: artists, val };
+  _mainGenreCache = { ref: artists, modell, val };
   return val;
 }
 
