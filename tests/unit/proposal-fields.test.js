@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.11";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.12";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -102,5 +102,31 @@ test("getCurrentEntityValues dekker alle foreslåbare felter", async () => {
       assert.ok(src.includes(`${f}:`),
         `teacher-review.js mangler «${f}» i Gjeldende-kolonnen for ${type}`);
     }
+  }
+});
+
+// firestore.rules kapper adoptedLabel og imageCredit på 300 tegn ved oppretting
+// av teknologikort. Uten et LAVERE tak i skjemaet ville en ordrik student fått
+// «Missing or insufficient permissions» i stedet for en grense hen ser.
+// Klienten skal alltid være strengest.
+test("skjemaets tegntak er strengere enn regelens", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+  const proposals = les("js/proposals.js");
+  const teacher = les("teacher.html");
+  const rules = les("firestore.rules");
+
+  for (const felt of ["adoptedLabel", "imageCredit"]) {
+    const iSkjema = proposals.match(new RegExp(`key: "${felt}"[^}]*max: (\\d+)`));
+    assert.ok(iSkjema, `${felt} mangler max i forslagsskjemaet`);
+    const iRegel = rules.match(new RegExp(`get\\("${felt}", ""\\).size\\(\\) <= (\\d+)`));
+    assert.ok(iRegel, `${felt} mangler tak i firestore.rules`);
+    assert.ok(Number(iSkjema[1]) <= Number(iRegel[1]),
+      `${felt}: skjemaet (${iSkjema[1]}) må være strengere enn regelen (${iRegel[1]})`);
+  }
+  // Lærerens eget skjema skriver til samme regel.
+  for (const id of ["tech-adopted-label", "tech-image-credit"]) {
+    assert.match(teacher, new RegExp(`id="${id}"[^>]*maxlength="\\d+"`),
+      `teacher.html: ${id} mangler maxlength`);
   }
 });

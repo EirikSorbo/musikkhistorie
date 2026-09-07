@@ -8,15 +8,15 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=5.11";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.11";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.11";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.11";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.11";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.11";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.11";
-import { setupFormatBars } from "./format-bar.js?v=5.11";
-import { wireCharCount } from "./ui-helpers.js?v=5.11";
+import { addPendingEdit, addTechProposal } from "./store.js?v=5.12";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.12";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.12";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.12";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.12";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.12";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.12";
+import { setupFormatBars } from "./format-bar.js?v=5.12";
+import { wireCharCount } from "./ui-helpers.js?v=5.12";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -103,11 +103,11 @@ const FIELD_SPECS = {
       hint: "Året teknologien ble oppfunnet eller patentert." },
     { key: "adoptedYear", label: "Tatt i bruk (år)", type: "number",
       hint: "Året det ble tatt i bruk i nevneverdig skala." },
-    { key: "adoptedLabel", label: "Tatt i bruk (kort forklaring)", type: "text" },
+    { key: "adoptedLabel", label: "Tatt i bruk (kort forklaring)", type: "text", max: 150 },
     { key: "description", label: "Beskrivelse", type: "textarea", full: true },
     KILDE_FELT,
     { key: "imageUrl", label: "Bilde-URL", type: "text", full: true },
-    { key: "imageCredit", label: "Bildekreditering", type: "text", full: true },
+    { key: "imageCredit", label: "Bildekreditering", type: "text", full: true, max: 150 },
   ],
   // `levels` avgrenser et felt til bestemte sjangernivåer. Epoke-feltene
   // gjelder KUN tre-sjangrene (main) — samme regel som lærerens editor, som
