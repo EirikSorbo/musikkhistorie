@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.12" />
-  <script src="js/gate.js?v=5.12"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.13" />
+  <script src="js/gate.js?v=5.13"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -45,7 +45,14 @@
 
     <!-- Legg inn forslag -->
     <section class="panel">
-      <h2>Foreslå en artist / musiker</h2>
+      <h2 id="form-tittel">Foreslå en artist / musiker</h2>
+      <!-- Returflyt (?retur=<id>): lærerens tilbakemelding + kommentar tilbake -->
+      <div id="retur-banner" class="retur-info" hidden>
+        <span id="retur-banner-tekst"></span>
+        <label style="display:block;margin-top:6px">Kommentar til læreren (valgfritt)
+          <textarea id="retur-comment" rows="2" maxlength="1000" style="width:100%" placeholder="F.eks. hva du har endret"></textarea>
+        </label>
+      </div>
       <form id="add-form" class="add-grid">
         <label>Navn *
           <input type="text" id="in-name" required placeholder="f.eks. Robert Johnson" />
@@ -127,7 +134,7 @@
 
   </footer>
 
-  <script src="js/load-guard.js?v=5.12"></script>
-  <script type="module" src="js/student.js?v=5.12"></script>
+  <script src="js/load-guard.js?v=5.13"></script>
+  <script type="module" src="js/student.js?v=5.13"></script>
 </body>
 </html>

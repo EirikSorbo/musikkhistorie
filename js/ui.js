@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.12";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.12";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.12";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.12";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.12";
+import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.13";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.13";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.13";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.13";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.13";
 import {
   escapeHtml,
   linkDesc,
@@ -35,12 +35,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.12";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.12";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.12";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.12";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.12";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.12";
+} from "./ui-helpers.js?v=5.13";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.13";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.13";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.13";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.13";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.13";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -318,6 +318,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   const prio = a.priority || 0;
   const removed = prio === -1;
   const pending = a.status === "pending";
+  const returned = a.status === "returnert";
 
   const examplesHtml = musicExamplesHtml(a);
 
@@ -331,6 +332,23 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
     ? `<span class="badge pending">Venter på godkjenning</span>`
     : "";
 
+  const returnedBadge = returned
+    ? `<span class="badge returned">Hos studenten</span>`
+    : "";
+
+  // Returflyt (kun lærer ser disse kortene i denne tilstanden): koden læreren
+  // skal gi studenten + tilbakemeldingen som ble sendt med. Etter ny
+  // innsending (pending igjen) vises studentens kommentar tilbake.
+  let returInfo = "";
+  if (isTeacher && returned) {
+    returInfo = `<div class="retur-info">
+      <span>Send koden til studenten: <code class="retur-kode-inline">${escapeHtml(a.returKode || "")}</code></span>
+      ${a.teacherFeedback ? `<span class="muted">Din tilbakemelding: ${escapeHtml(a.teacherFeedback)}</span>` : ""}
+    </div>`;
+  } else if (isTeacher && pending && a.studentComment) {
+    returInfo = `<div class="retur-info"><span><strong>Kommentar fra studenten:</strong> ${escapeHtml(a.studentComment)}</span></div>`;
+  }
+
   // MIDLERTIDIG skjult for studenter (feature-flags.js). Læreren ser merket
   // som før, ellers kunne ikke prioriteringen kvalitetssikres.
   const visPrio = isTeacher || !SKJUL_I_STUDENTVISNING.viktighetsgrad;
@@ -342,7 +360,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   // stedet for «Svært relevant» — small-knapp så den ligger på samme rad som
   // «Vis i tidslinje» / «Foreslå endring».
   let voteBtn = "";
-  if (!removed && !pending) {
+  if (!removed && !pending && !returned) {
     voteBtn = hasUpvoted
       ? `<button class="btn ghost small" data-action="undoVoteUp" data-id="${escapeHtml(a.id)}">Angre merking</button>`
       : `<button class="btn ghost small accent" data-action="voteUp" data-id="${escapeHtml(a.id)}" title="Merk som svært relevant">Merk ${PRIO_ICONS[3]}</button>`;
@@ -357,13 +375,16 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   const ICO_ALERT = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
   const ICO_THUMB = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`;
 
-  // Lærerhandlinger
+  // Lærerhandlinger. Ventende og returnerte deler rad: godkjenn/avvis gjelder
+  // begge, og «send tilbake» på et alt returnert kort lager ny kode og ny
+  // tilbakemelding (til studenten som mistet koden).
   let teacherBtns = "";
-  if (isTeacher && pending) {
+  if (isTeacher && (pending || returned)) {
     teacherBtns = `
       <div class="teacher-actions">
         <button class="icon-btn primary" data-action="approve" data-id="${escapeHtml(a.id)}" title="Godkjenn">${ICO_APPROVE}</button>
         <button class="icon-btn danger" data-action="reject" data-id="${escapeHtml(a.id)}" title="Avvis">${ICO_REJECT}</button>
+        <button class="icon-btn" data-action="sendBack" data-id="${escapeHtml(a.id)}" title="${returned ? "Send tilbake på nytt (ny kode)" : "Send tilbake til studenten"}">${ICONS.retur}</button>
         <button class="icon-btn" data-action="edit" data-id="${escapeHtml(a.id)}" title="Rediger">${ICO_EDIT}</button>
       </div>`;
   } else if (isTeacher) {
@@ -388,11 +409,11 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   const worksHtml = keyWorksText(a.keyWorks);
 
   return `
-    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${prio ? "is-prio-" + prio : ""} ${checked ? "is-checked" : ""}">
+    <article class="card ${removed ? "is-removed" : ""} ${pending ? "is-pending" : ""} ${returned ? "is-returned" : ""} ${prio ? "is-prio-" + prio : ""} ${checked ? "is-checked" : ""}">
       <header class="card-head">
         ${artistImage(a)}
         <div>
-          <h3>${escapeHtml(a.name)} ${pendingBadge} ${removedBadge}</h3>
+          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${prioTag}
@@ -408,6 +429,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
       ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
       ${relatedArtistsHtml(a, linkCtx)}
+      ${returInfo}
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}

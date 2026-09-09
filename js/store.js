@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.12";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.12";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.12";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.12";
-import { genererReturKode, normaliserReturKode } from "./util.js?v=5.12";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.12";
-import { mergeHeatRows } from "./import-format.js?v=5.12";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.12";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.12";
+import { firebaseConfig } from "./firebase-config.js?v=5.13";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.13";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.13";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.13";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.13";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.13";
+import { mergeHeatRows } from "./import-format.js?v=5.13";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.13";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.13";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -225,7 +225,9 @@ export async function addArtist(data) {
   // ownerUid: avsenderens anonyme uid, så samme nettleser automatisk finner
   // igjen sine egne innsendinger hvis læreren sender dem tilbake (returflyten,
   // v5.13). Tom streng når innloggingen feilet — da virker fortsatt koden.
-  return addDoc(artistsCol, { ...artistDocWithTimestamp(data), ownerUid: auth.currentUser?.uid || "" });
+  const ref = await addDoc(artistsCol, { ...artistDocWithTimestamp(data), ownerUid: auth.currentUser?.uid || "" });
+  merkHarSendtInn();
+  return ref;
 }
 
 // Firestore tillater maks 500 operasjoner per batch. ÉN kilde (genre-migrate
@@ -270,13 +272,27 @@ export async function undoVoteUp(artistId) {
 // Lærer godkjenner et ventende forslag. updateDoc (ikke setDoc+merge) feiler
 // med not-found hvis dokumentet er slettet i mellomtiden, i stedet for å
 // gjenopplive det som et tomt spøkelsesdokument (f.eks. ved to lærer-faner).
+// Returapparatet (kode, tilbakemelding, kommentar) fjernes når saken er
+// avgjort — ellers ble en gammel lærertilbakemelding med i eksporten av en
+// artist som for lengst er godkjent. deleteField er no-op der feltene mangler.
+// ownerUid beholdes: den er nyttig den dagen studentene får innlogging.
+function ryddReturfelter() {
+  return {
+    teacherFeedback: deleteField(),
+    returKode: deleteField(),
+    innsendtKode: deleteField(),
+    studentComment: deleteField(),
+    returnedAt: deleteField(),
+  };
+}
+
 export async function teacherApprove(artistId) {
-  return updateDoc(doc(db, "artists", artistId), { status: "active" });
+  return updateDoc(doc(db, "artists", artistId), { status: "active", ...ryddReturfelter() });
 }
 
 // Lærer avviser et ventende forslag
 export async function teacherReject(artistId) {
-  return updateDoc(doc(db, "artists", artistId), { status: "removed", removedBy: "teacher" });
+  return updateDoc(doc(db, "artists", artistId), { status: "removed", removedBy: "teacher", ...ryddReturfelter() });
 }
 
 // Sett prioritetsnivå (3=viktigst, 2=viktig, 1=mindre viktig, 0=ingen)
@@ -578,7 +594,7 @@ export async function addPendingEdit({ entityType, entityId, entityName, propose
     ownerUid: auth.currentUser?.uid || "",   // se addArtist: returflytens gjenfinning
     ...(level ? { level } : {}),
     createdAt: serverTimestamp(),
-  });
+  }).then((ref) => { merkHarSendtInn(); return ref; });
 }
 
 // Nivået et sjangerbeskrivelse-forslag hører til. Eldre forslag mangler
@@ -672,6 +688,7 @@ export async function sendTilbake(type, id, feedback) {
 // (stemmer, prioritet, lærerens retur-felter) — reglene avviser det uansett.
 export async function resubmitArtist(id, data, kode, studentComment) {
   await ensureAuth().catch(() => {});
+  merkHarSendtInn();   // ny innsending med kode fra annen enhet: auto-oppslag der også
   const n = normalizeArtist(data);
   const felter = {};
   for (const f of ARTIST_FIELDS) felter[f.key] = n[f.key] ?? emptyValueFor(f.type);
@@ -687,6 +704,7 @@ export async function resubmitArtist(id, data, kode, studentComment) {
 // Student: ny innsending av et returnert KORTforslag (tech).
 export async function resubmitTech(id, data, kode, studentComment) {
   await ensureAuth().catch(() => {});
+  merkHarSendtInn();
   return updateDoc(doc(db, "tech", id), {
     ...data,
     proposedBy: data.proposedBy || "Anonym",
@@ -699,6 +717,7 @@ export async function resubmitTech(id, data, kode, studentComment) {
 // Student: ny innsending av et returnert ENDRINGSforslag.
 export async function resubmitPendingEdit(id, proposedFields, proposedBy, kode, studentComment) {
   await ensureAuth().catch(() => {});
+  merkHarSendtInn();
   return updateDoc(doc(db, "pendingEdits", id), {
     proposedFields: proposedFields || {},
     proposedBy: proposedBy || "Anonym",
@@ -799,17 +818,19 @@ function pendingEditTargetRef(entityType, entityId, level) {
 // tech-dokumenter uten status-felt regnes som aktive.
 export async function addTechProposal(data) {
   await ensureAuth().catch(() => {});   // se addArtist: selvheler feilet oppstarts-innlogging
-  return addDoc(techCol, {
+  const ref = await addDoc(techCol, {
     ...data,
     status: "pending",
     proposedBy: data.proposedBy || "Anonym",
     ownerUid: auth.currentUser?.uid || "",   // se addArtist: returflytens gjenfinning
     createdAt: serverTimestamp(),
   });
+  merkHarSendtInn();
+  return ref;
 }
 
 export async function approveTech(techId) {
-  return updateDoc(doc(db, "tech", techId), { status: "active" });
+  return updateDoc(doc(db, "tech", techId), { status: "active", ...ryddReturfelter() });
 }
 
 const teacherChecksRef = doc(db, "config", "teacherChecks");

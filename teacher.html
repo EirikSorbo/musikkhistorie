@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.12" />
-  <script src="js/gate.js?v=5.12"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.13" />
+  <script src="js/gate.js?v=5.13"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -677,12 +677,46 @@
       <div id="diff-msg" class="form-msg" style="margin-top:10px"></div>
       <div class="modal-foot-right" style="gap:8px;display:flex;justify-content:flex-end">
         <button type="button" class="btn ghost small" id="diff-reject-all">Avvis alle</button>
+        <button type="button" class="btn ghost small" id="diff-retur">Send tilbake</button>
         <button type="button" class="btn primary" id="diff-save">Lagre valgte endringer</button>
       </div>
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=5.12"></script>
-  <script type="module" src="js/teacher.js?v=5.12"></script>
+  <!-- Send tilbake til studenten (returflyt): tilbakemelding + kode -->
+  <div class="modal-backdrop" id="modal-retur">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="retur-title">Send tilbake</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <div id="retur-form">
+        <p class="muted" style="margin:0 0 10px;font-size:0.88rem">
+          Forslaget skjules for studentene til det leveres på nytt.
+          Skriv hva som må rettes; studenten ser teksten sammen med forslaget sitt.
+        </p>
+        <textarea id="retur-feedback" rows="5" maxlength="1000" style="width:100%" placeholder="Hva må studenten rette før du kan godkjenne?"></textarea>
+        <div id="retur-msg" class="form-msg" style="margin-top:8px"></div>
+        <div class="modal-foot-right" style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button type="button" class="btn primary" id="retur-send">Send tilbake</button>
+        </div>
+      </div>
+      <div id="retur-result" hidden>
+        <p style="margin:0 0 10px">Sendt tilbake. Gi studenten denne koden:</p>
+        <div class="retur-kode" id="retur-kode"></div>
+        <p class="muted" style="font-size:0.88rem">
+          På enheten forslaget ble sendt fra, dukker det opp av seg selv på forsiden.
+          Fra en annen enhet bruker studenten «Har du fått en kode fra læreren?»
+          nederst på forsiden og skriver inn koden.
+        </p>
+        <div class="modal-foot-right" style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button type="button" class="btn primary" id="retur-done">Ferdig</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/load-guard.js?v=5.13"></script>
+  <script type="module" src="js/teacher.js?v=5.13"></script>
 </body>
 </html>

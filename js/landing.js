@@ -1,15 +1,16 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange } from "./store.js?v=5.12";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.12";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.12";
-import { onGenreModelChanged } from "./genre-model.js?v=5.12";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.12";
-import { debounce, throttle } from "./util.js?v=5.12";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal } from "./ui.js?v=5.12";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.12";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.12";
-import { initExplore } from "./explore.js?v=5.12";
-import { openProposalEditor, openNewTechProposal } from "./proposals.js?v=5.12";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.12";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.13";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.13";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.13";
+import { onGenreModelChanged } from "./genre-model.js?v=5.13";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.13";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.13";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.13";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.13";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.13";
+import { initExplore } from "./explore.js?v=5.13";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.13";
+import { currentEntityValues } from "./entity-values.js?v=5.13";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.13";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -17,6 +18,9 @@ const state = {
   // slektstresidene, så en delt komponent aldri kan få ulikt innhold her.
   ...sharedStateDefaults(),
   pendingEdits: [],
+  // Innsendinger læreren har sendt tilbake til DENNE studenten (returflyten):
+  // fylt automatisk via ownerUid, eller via kode fra læreren.
+  returer: [],
   filters: { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: "", showRemoved: false, priority: 0 },
   isTeacher: false,
   clientId: getClientId(),
@@ -493,6 +497,99 @@ function setupCachePersist() {
 //  Oppstart
 // ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+//  Returpanelet («Har du fått en kode fra læreren?»)
+// ----------------------------------------------------------------------------
+
+function visReturer(liste) {
+  state.returer = liste;
+  const el = $("#retur-liste");
+  if (!el) return;
+  if (!liste.length) { el.innerHTML = ""; return; }
+  const typeLabel = { artist: "Artistforslag", tech: "Innovasjonskort", edit: "Endringsforslag" };
+  el.innerHTML = liste.map((r) => {
+    const navn = r.type === "edit" ? (r.entityName || r.entityId || "") : (r.name || "(uten navn)");
+    return `<div class="retur-student-kort">
+      <span><span class="badge returned">Sendt tilbake</span> <strong>${escapeHtml(typeLabel[r.type] || "Innsending")}: ${escapeHtml(navn)}</strong></span>
+      <p><strong>Fra læreren:</strong> ${escapeHtml(r.teacherFeedback || "")}</p>
+      <button type="button" class="btn primary small" data-retur-id="${escapeHtml(r.id)}">Rett og send inn på nytt</button>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("[data-retur-id]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const r = state.returer.find((x) => x.id === btn.dataset.returId);
+      if (r) aapneRetur(r);
+    })
+  );
+}
+
+function aapneRetur(r) {
+  // Artistforslag har eget skjema (student.html); resten gjenbruker
+  // forslags-editoren i retur-modus. Dagens verdier for et endringsforslag
+  // leses med SAMME oppslag som lærerens diff-visning (entity-values.js).
+  if (r.type === "artist") {
+    location.href = "student.html?retur=" + encodeURIComponent(r.id);
+    return;
+  }
+  openReturInnsending(r, r.type === "edit" ? currentEntityValues(state, r) : null);
+}
+
+function setupReturPanel() {
+  const toggle = $("#btn-retur-kode");
+  const skjema = $("#retur-kode-skjema");
+  const input = $("#retur-kode-input");
+  const msg = $("#retur-msg");
+  if (!toggle || !skjema) return;
+
+  toggle.addEventListener("click", () => {
+    skjema.hidden = !skjema.hidden;
+    if (!skjema.hidden) input.focus();
+  });
+
+  const hent = async () => {
+    if (!normaliserReturKode(input.value)) {
+      msg.textContent = "Skriv inn koden du fikk av læreren.";
+      msg.className = "form-msg warn";
+      return;
+    }
+    msg.textContent = "Henter …";
+    msg.className = "form-msg";
+    try {
+      const funn = await fetchReturMedKode(input.value);
+      if (!funn.length) {
+        msg.textContent = "Fant ingenting på denne koden. Sjekk at den er skrevet riktig. Er forslaget alt levert på nytt, er koden brukt.";
+        msg.className = "form-msg warn";
+        return;
+      }
+      const kjente = new Set(state.returer.map((r) => r.id));
+      visReturer([...state.returer, ...funn.filter((r) => !kjente.has(r.id))]);
+      msg.textContent = "";
+      input.value = "";
+      skjema.hidden = true;
+    } catch (err) {
+      msg.textContent = "Kunne ikke hente: " + (err?.message || err);
+      msg.className = "form-msg error";
+    }
+  };
+  $("#btn-retur-hent").addEventListener("click", hent);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); hent(); }
+  });
+
+  // Levert på nytt (fra forslags-editoren i retur-modus): ut av panelet.
+  document.addEventListener("pensum:retur-sendt", (e) => {
+    visReturer(state.returer.filter((r) => r.id !== e.detail?.id));
+  });
+
+  // Automatisk oppslag KUN når denne nettleseren faktisk har sendt inn noe
+  // (flagget settes av datalaget) — tre målrettede lesinger, ikke noe abonnement.
+  if (harSendtInn()) {
+    fetchMineReturer()
+      .then((funn) => { if (funn.length) visReturer(funn); })
+      .catch((err) => console.warn("Retur-oppslag feilet:", err?.message || err));
+  }
+}
+
 function init() {
   setupFilters();
   setupProposeButtons();
@@ -526,6 +623,7 @@ function init() {
   }
 
   wireFirestoreErrorBanner();
+  setupReturPanel();
 
   // Når anonym innlogging er klar, blir uid stemme-identiteten. Oppdater
   // clientId og re-render så «Angre stemme»-tilstanden vises riktig.

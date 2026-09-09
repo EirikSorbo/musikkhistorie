@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.12";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.13";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -83,10 +83,12 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
 // forsvinner ved godkjenning (som ERSTATTER, ikke fletter). Har den ikke med
 // et foreslåbart felt, står det «(tom)» der det finnes data. Dette har skjedd
 // to ganger: kilder på subgenre, så era og instrumentkilder. Kildesjekk, siden
-// getCurrentEntityValues leser lærer-state og ikke kan enhetstestes.
-test("getCurrentEntityValues dekker alle foreslåbare felter", async () => {
+// currentEntityValues (js/entity-values.js, delt av lærerens diff og
+// studentens retur-editor fra v5.13) leser sidens state og trekker inn
+// Firestore-avhengigheter som ikke kan lastes i Node.
+test("currentEntityValues dekker alle foreslåbare felter", async () => {
   const fs = await import("node:fs");
-  const src = fs.readFileSync(new URL("../../js/teacher-review.js", import.meta.url), "utf8");
+  const src = fs.readFileSync(new URL("../../js/entity-values.js", import.meta.url), "utf8");
   const grener = {
     subgenre: ["description", "kilder", "activeFrom", "activeTo", "era"],
     instrument: ["body", "kilder"],
@@ -100,7 +102,7 @@ test("getCurrentEntityValues dekker alle foreslåbare felter", async () => {
       `testens egen liste for ${type} er utdatert mot PROPOSABLE_KEYS`);
     for (const f of felter) {
       assert.ok(src.includes(`${f}:`),
-        `teacher-review.js mangler «${f}» i Gjeldende-kolonnen for ${type}`);
+        `entity-values.js mangler «${f}» i Gjeldende-kolonnen for ${type}`);
     }
   }
 });

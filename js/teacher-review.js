@@ -5,57 +5,14 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, guardTeacherAction } from "./teacher-state.js?v=5.12";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=5.12";
-import { resolveDesc } from "./genre-descriptions.js?v=5.12";
-import { resolveMainDesc } from "./genealogy.js?v=5.12";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, genreEditLevel } from "./store.js?v=5.12";
+import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=5.13";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=5.13";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=5.13";
+import { currentEntityValues } from "./entity-values.js?v=5.13";
 
-function getCurrentEntityValues(edit) {
-  const { entityType, entityId } = edit;
-  switch (entityType) {
-    case "artist": return state.artists.find(a => a.id === entityId) || {};
-    case "tech":   return state.techItems.find(t => t.id === entityId) || {};
-    case "subgenre": {
-      // Les fra SAMME nivå som forslaget gjelder, og med SAMME oppslag som
-      // sjangerkortet (main går via resolveMainDesc, som også prøver nodens
-      // fulle navn). Alle foreslåbare felter må med — «Gjeldende»-kolonnen
-      // viste før «(tom)» for kilder selv når sjangeren hadde kilder, og
-      // godkjenning kunne dermed viske dem ut.
-      const level = genreEditLevel(edit);
-      const r = level === "main"
-        ? resolveMainDesc(state.genreDescs, entityId)
-        : resolveDesc(state.genreDescs, entityId, level);
-      return {
-        description: r.description || "",
-        kilder: r.kilder || [],
-        activeFrom: r.activeFrom ?? null,
-        activeTo: r.activeTo ?? null,
-        // era kom som foreslåbart felt i v4.03, men ble aldri lagt til her.
-        // 35 av 141 beskrivelser har en epoketekst, og godkjenning ERSTATTER:
-        // læreren så «(tom)» og trodde feltet var ledig.
-        era: r.era || "",
-      };
-    }
-    // Instrumentsammendraget er en innholdsside (content/instrument-<slug>).
-    case "instrument": {
-      const page = state.content?.[entityId] || {};
-      // kilder ble foreslåbart i v5.00. Uten det her leste læreren «Kilder |
-      // (tom) | ny kilde» som en ren tilføyelse, mens godkjenning i praksis
-      // BYTTET UT lista (Firestore erstatter arrays ved merge).
-      return { body: page.body || "", kilder: page.kilder || [] };
-    }
-    case "decade-society": {
-      const d = state.decadeDescs[String(entityId)] || {};
-      return { society: d.society || "", kilder: d.kilder || [] };
-    }
-    case "decade-tech": {
-      const d = state.decadeDescs[String(entityId)] || {};
-      return { tech: d.tech || "", kilder: d.kilder || [] };
-    }
-    default: return {};
-  }
-}
+// Dagens verdier bor i den delte modulen (studentens retur-editor leser de
+// samme): her bindes bare lærersidens state.
+const getCurrentEntityValues = (edit) => currentEntityValues(state, edit);
 
 function entityTypeLabel(t) {
   return ({
@@ -69,7 +26,9 @@ function entityTypeLabel(t) {
 export function renderPendingEditsList() {
   const el = document.getElementById("pending-edits-list");
   if (!el) return;
-  const newTech = state.techItems.filter(t => t.status === "pending");
+  // Ventende OG returnerte: et returnert kort er fortsatt lærerens sak
+  // (studenten har det til retting), så det skal stå i køen med merke.
+  const newTech = state.techItems.filter(t => t.status === "pending" || t.status === "returnert");
   const edits = state.pendingEdits;
 
   if (!edits.length && !newTech.length) {
@@ -81,7 +40,7 @@ export function renderPendingEditsList() {
     const fieldCount = Object.keys(e.proposedFields || {}).length;
     return `<tr class="pending-row" data-edit-id="${escapeHtml(e.id)}">
       <td><span class="tag">${escapeHtml(entityTypeLabel(e.entityType))}</span></td>
-      <td>${escapeHtml(e.entityName || e.entityId)}</td>
+      <td>${escapeHtml(e.entityName || e.entityId)}${returCelle(e)}</td>
       <td>${fieldCount} felt</td>
       <td class="muted">${escapeHtml(e.proposedBy || "Anonym")}</td>
       <td><button type="button" class="btn ghost small" data-action="open-edit" data-id="${escapeHtml(e.id)}">Se forslag</button></td>
@@ -89,12 +48,13 @@ export function renderPendingEditsList() {
   });
   const techRows = newTech.map((t) => `<tr class="pending-row" data-tech-id="${escapeHtml(t.id)}">
     <td><span class="tag">${escapeHtml(entityTypeLabel("new-tech"))}</span></td>
-    <td>${escapeHtml(t.name || "(uten navn)")}</td>
+    <td>${escapeHtml(t.name || "(uten navn)")}${returCelle(t)}</td>
     <td>—</td>
     <td class="muted">${escapeHtml(t.proposedBy || "Anonym")}</td>
     <td>
       <button type="button" class="btn ghost small" data-action="approve-tech" data-id="${escapeHtml(t.id)}">Godkjenn</button>
       <button type="button" class="btn ghost small" data-action="reject-tech" data-id="${escapeHtml(t.id)}">Avvis</button>
+      <button type="button" class="btn ghost small" data-action="return-tech" data-id="${escapeHtml(t.id)}">${t.status === "returnert" ? "Ny kode" : "Send tilbake"}</button>
     </td>
   </tr>`);
 
@@ -102,6 +62,18 @@ export function renderPendingEditsList() {
     <thead><tr><th>Type</th><th>Entitet</th><th>Endringer</th><th>Foreslått av</th><th></th></tr></thead>
     <tbody>${editRows.join("")}${techRows.join("")}</tbody>
   </table>`;
+}
+
+// Returstatus i navnecella: hos studenten (med koden læreren skal dele) eller
+// studentens kommentar ved ny innsending. Delt av tech- og forslagsradene.
+function returCelle(item) {
+  if (item.status === "returnert") {
+    return `<div class="retur-linje"><span class="badge returned">Hos studenten</span> Kode: <code class="retur-kode-inline">${escapeHtml(item.returKode || "")}</code></div>`;
+  }
+  if (item.studentComment) {
+    return `<div class="retur-linje muted">Kommentar fra studenten: ${escapeHtml(item.studentComment)}</div>`;
+  }
+  return "";
 }
 
 let activeEditId = null;
@@ -119,9 +91,16 @@ function openDiffModal(editId) {
     : (edit.entityId || edit.entityName || "");
   document.getElementById("diff-title").textContent =
     `${entityTypeLabel(edit.entityType)}: ${visning}`;
-  document.getElementById("diff-meta").textContent =
-    `Foreslått av ${edit.proposedBy || "Anonym"}. Klikk ✓ på radene du vil godta, ✕ på de du vil avvise. Velg «Lagre valgte endringer» til slutt.`;
+  let meta = `Foreslått av ${edit.proposedBy || "Anonym"}. Klikk ✓ på radene du vil godta, ✕ på de du vil avvise. Velg «Lagre valgte endringer» til slutt.`;
+  if (edit.status === "returnert") {
+    meta = `Hos studenten til retting (kode ${edit.returKode || ""}). Foreslått av ${edit.proposedBy || "Anonym"}.`;
+  } else if (edit.studentComment) {
+    meta = `Ny innsending etter retur. Kommentar fra studenten: «${edit.studentComment}». Foreslått av ${edit.proposedBy || "Anonym"}.`;
+  }
+  document.getElementById("diff-meta").textContent = meta;
   document.getElementById("diff-msg").textContent = "";
+  const returBtn = document.getElementById("diff-retur");
+  if (returBtn) returBtn.textContent = edit.status === "returnert" ? "Ny kode til studenten" : "Send tilbake";
 
   const current = getCurrentEntityValues(edit);
   const body = document.getElementById("diff-body");
@@ -153,9 +132,15 @@ export function setupPendingEditsUi() {
         if (confirm("Avvise (slette) dette innovasjonskortet?")) {
           await guardTeacherAction(deleteTech(rejBtn.dataset.id));
         }
+        return;
       }
+      const returBtn = e.target.closest('[data-action="return-tech"]');
+      if (returBtn) openReturDialog("tech", returBtn.dataset.id);
     });
   }
+
+  setupReturDialog();
+  ctx.openReturDialog = openReturDialog;
 
   const saveBtn = document.getElementById("diff-save");
   const rejectAllBtn = document.getElementById("diff-reject-all");
@@ -190,5 +175,80 @@ export function setupPendingEditsUi() {
     await guardTeacherAction(rejectPendingEdit(activeEditId));
     modalClose(diffModal);
     activeEditId = null;
+  });
+
+  const diffReturBtn = document.getElementById("diff-retur");
+  if (diffReturBtn) diffReturBtn.addEventListener("click", () => {
+    if (activeEditId) openReturDialog("edit", activeEditId);
+  });
+}
+
+// ----------------------------------------------------------------------------
+//  «Send tilbake»-dialogen (delt av artistkort, tech-rader og diff-modalen)
+// ----------------------------------------------------------------------------
+//  Fase 1: skriv tilbakemelding. Fase 2 (etter lagring): vis koden studenten
+//  trenger for å hente forslaget på en annen enhet. Å sende på nytt mens noe
+//  alt er hos studenten gir ny kode og ny tilbakemelding (gammel kode dør).
+
+let activeRetur = null; // { type: "artist"|"tech"|"edit", id }
+
+function openReturDialog(type, id) {
+  const item = type === "artist" ? state.artists.find(x => x.id === id)
+    : type === "tech" ? state.techItems.find(x => x.id === id)
+    : state.pendingEdits.find(x => x.id === id);
+  if (!item) return;
+  activeRetur = { type, id };
+
+  const navn = type === "edit"
+    ? `${entityTypeLabel(item.entityType)}: ${item.entityName || item.entityId}`
+    : (item.name || "(uten navn)");
+  document.getElementById("retur-title").textContent = `Send tilbake: ${navn}`;
+  const ta = document.getElementById("retur-feedback");
+  ta.value = item.teacherFeedback || "";
+  const msg = document.getElementById("retur-msg");
+  msg.textContent = "";
+  msg.className = "form-msg";
+  document.getElementById("retur-form").hidden = false;
+  document.getElementById("retur-result").hidden = true;
+  modalOpen(document.getElementById("modal-retur"));
+  ta.focus();
+}
+
+function setupReturDialog() {
+  const sendBtn = document.getElementById("retur-send");
+  if (!sendBtn) return;
+
+  sendBtn.addEventListener("click", async () => {
+    if (!activeRetur) return;
+    const feedback = document.getElementById("retur-feedback").value.trim();
+    const msg = document.getElementById("retur-msg");
+    if (!feedback) {
+      msg.textContent = "Skriv hva studenten må rette. Uten tilbakemelding vet de ikke hvorfor de fikk forslaget tilbake.";
+      msg.className = "form-msg warn";
+      return;
+    }
+    sendBtn.disabled = true;
+    try {
+      const kode = await sendTilbake(activeRetur.type, activeRetur.id, feedback);
+      document.getElementById("retur-kode").textContent = kode;
+      document.getElementById("retur-form").hidden = true;
+      document.getElementById("retur-result").hidden = false;
+      // Kom dialogen fra diff-modalen, er saken avgjort der: lukk den under.
+      if (activeRetur.type === "edit") {
+        modalClose(document.getElementById("modal-diff"));
+        activeEditId = null;
+      }
+    } catch (e) {
+      msg.textContent = "Feil ved sending: " + (e?.message || e);
+      msg.className = "form-msg error";
+    } finally {
+      sendBtn.disabled = false;
+    }
+  });
+
+  const doneBtn = document.getElementById("retur-done");
+  if (doneBtn) doneBtn.addEventListener("click", () => {
+    modalClose(document.getElementById("modal-retur"));
+    activeRetur = null;
   });
 }

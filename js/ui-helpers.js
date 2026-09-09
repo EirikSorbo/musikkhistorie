@@ -9,12 +9,12 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.12";
-import { wireAllLinks } from "./linkify.js?v=5.12";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.12";
-import { GENDERS } from "./limits.js?v=5.12";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.12";
-export { artistStripHtml } from "./artist-strip.js?v=5.12";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.13";
+import { wireAllLinks } from "./linkify.js?v=5.13";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.13";
+import { GENDERS } from "./limits.js?v=5.13";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.13";
+export { artistStripHtml } from "./artist-strip.js?v=5.13";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -74,6 +74,7 @@ export const ICONS = {
   restore: ico("M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8") + ico("M21 3v5h-5"),
   approve: ico("M22 11.08V12a10 10 0 11-5.93-9.14") + ico("M22 4L12 14.01l-3-3"),
   reject: ico("M18 6L6 18M6 6l12 12"),
+  retur: ico("M9 14L4 9l5-5") + ico("M20 20v-7a4 4 0 00-4-4H4"),
 };
 
 // Delt «Sjekket»-knapp — ÉN kilde til markup/klasser, så alle sjekk-flatene

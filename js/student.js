@@ -5,16 +5,18 @@
 import {
   fetchArtists,
   addArtist,
+  fetchArtist,
+  resubmitArtist,
   subscribeContent,
-} from "./store.js?v=5.12";
-import { loadArtists } from "./artist-cache.js?v=5.12";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.12";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.12";
-import { fillSelect } from "./ui.js?v=5.12";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.12";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.12";
-import { setupFormatBars } from "./format-bar.js?v=5.12";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.12";
+} from "./store.js?v=5.13";
+import { loadArtists } from "./artist-cache.js?v=5.13";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.13";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.13";
+import { fillSelect, escapeHtml } from "./ui.js?v=5.13";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.13";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.13";
+import { setupFormatBars } from "./format-bar.js?v=5.13";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.13";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -26,6 +28,21 @@ const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre());
 const state = {
   artists: [],
 };
+
+// Returflyt (v5.13): åpnes siden med ?retur=<id>, er dette en NY INNSENDING av
+// et returnert forslag — samme skjema, prefylt, og lagringen går til samme
+// dokument med koden som bevis (fetchArtist leverer returKode sammen med
+// resten; koden i seg selv er ikke hemmelig, hele basen er lesbar — den er
+// reglenes bevis på at klienten faktisk har LEST returen den skriver over).
+const returState = { aktiv: false, id: null, kode: "" };
+
+// Sjangervokabularet (metasjanger-nedtrekket + sjangervelgeren) kommer
+// asynkront fra Firestore. Prefyllingen må vente på det: å sette et select-
+// felt uten options gir tom verdi. Løses i subscribeContent-callbacken;
+// racer mot en tidsfrist så en feilet content-lasting ikke henger siden.
+let vokabKlarResolve;
+const vokabKlar = new Promise((r) => { vokabKlarResolve = r; });
+const vokabEllerFrist = () => Promise.race([vokabKlar, new Promise((r) => setTimeout(r, 5000))]);
 
 // ----------------------------------------------------------------------------
 //  Render
@@ -119,11 +136,14 @@ function setupForm() {
     }
 
     // Myk duplikatsjekk — navnekollisjoner kan være legitime, så vi lar
-    // studenten sende inn likevel etter en bekreftelse.
-    await ensureArtists();
-    const dup = findDuplicate(candidate.name);
-    if (dup && !confirm(`«${candidate.name}» ser ut til å finnes fra før${dup.status === "pending" ? " (venter på godkjenning)" : ""}. Sende inn likevel?`)) {
-      return;
+    // studenten sende inn likevel etter en bekreftelse. Ved retur er
+    // «duplikatet» studentens eget forslag, så sjekken hoppes over.
+    if (!returState.aktiv) {
+      await ensureArtists();
+      const dup = findDuplicate(candidate.name);
+      if (dup && !confirm(`«${candidate.name}» ser ut til å finnes fra før${dup.status === "pending" ? " (venter på godkjenning)" : ""}. Sende inn likevel?`)) {
+        return;
+      }
     }
 
     submitBtn.disabled = true;
@@ -135,20 +155,33 @@ function setupForm() {
     // fra når den drøyer.
     const tregVarsel = setTimeout(() => showMsg(msg,
       "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.", "warn"), 8000);
+    let levertPaNytt = false;
     try {
-      await addArtist(candidate);
-      form.reset();
-      resetWorkRows();
-      resetMusicExampleRows();
-      resetSourceRows();
-      buildGenrePicker($("#in-mainGenre"), []);
-      showMsg(msg, `«${candidate.name}» er sendt inn og venter på godkjenning fra lærer`, "ok");
+      if (returState.aktiv) {
+        await resubmitArtist(returState.id, candidate, returState.kode, $("#retur-comment")?.value.trim() || "");
+        // Skjemaet blir stående (studenten kan ville se over), men knappen
+        // låses: en ny innsending oppå en alt levert avvises av reglene og
+        // ville bare gitt en kryptisk feil.
+        levertPaNytt = true;
+        showMsg(msg, `«${candidate.name}» er sendt inn på nytt. Læreren ser den i køen sin.`, "ok");
+        submitBtn.textContent = "Sendt inn på nytt ✓";
+      } else {
+        await addArtist(candidate);
+        form.reset();
+        resetWorkRows();
+        resetMusicExampleRows();
+        resetSourceRows();
+        buildGenrePicker($("#in-mainGenre"), []);
+        showMsg(msg, `«${candidate.name}» er sendt inn og venter på godkjenning fra lærer`, "ok");
+      }
     } catch (err) {
       showMsg(msg, "Noe gikk galt: " + err.message, "error");
     } finally {
       clearTimeout(tregVarsel);
-      submitBtn.disabled = false;
-      submitBtn.textContent = origText;
+      if (!levertPaNytt) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+      }
     }
   });
 }
@@ -223,6 +256,61 @@ function resetSourceRows() { buildRows($("#source-rows"), SOURCE_SPEC); }
 function collectSources() { return collectRows($("#source-rows"), SOURCE_SPEC); }
 
 // ----------------------------------------------------------------------------
+//  Returflyt: prefyll skjemaet fra det returnerte forslaget
+// ----------------------------------------------------------------------------
+
+function fyllSkjema(a) {
+  $("#in-name").value = a.name || "";
+  $("#in-birthyear").value = a.birthYear ?? "";
+  $("#in-deathyear").value = a.deathYear ?? "";
+  $("#in-gender").value = a.gender || "";
+  $("#in-metaGenre").value = a.metaGenre || "";
+  $("#in-instrument").value = a.instrument || "";
+  buildGenrePicker($("#in-mainGenre"), a.mainGenre || []);
+  $("#in-subGenre").value = (a.subGenre || []).join(", ");
+  $("#in-start").value = a.influenceStart ?? "";
+  $("#in-end").value = a.influenceEnd ?? "";
+  $("#in-desc").value = a.description || "";
+  $("#in-geo").value = a.geography || "";
+  $("#in-image-url").value = a.imageUrl || "";
+  $("#in-image-credit").value = a.imageCredit || "";
+  $("#in-by").value = a.proposedBy || "";
+  buildRows($("#work-rows"), WORK_SPEC, a.keyWorks || []);
+  buildRows($("#me-rows"), musicSpecSj(), a.musicExamples || []);
+  buildRows($("#source-rows"), SOURCE_SPEC, a.kilder || []);
+}
+
+async function startRetur(id) {
+  const banner = $("#retur-banner");
+  const tekst = $("#retur-banner-tekst");
+  try {
+    // Vent på både dokumentet og sjangervokabularet: nedtrekkene kan ikke
+    // prefylles før options finnes (fillSelect bevarer verdien etterpå).
+    const [a] = await Promise.all([fetchArtist(id), vokabEllerFrist()]);
+    if (!a || a.status !== "returnert") {
+      banner.hidden = false;
+      tekst.innerHTML = "<strong>Dette forslaget er ikke til retting lenger.</strong> Kanskje det alt er levert på nytt eller behandlet av læreren. Skjemaet under legger inn et nytt forslag.";
+      const kommentar = $("#retur-comment")?.closest("label");
+      if (kommentar) kommentar.hidden = true;
+      return;
+    }
+    returState.aktiv = true;
+    returState.id = id;
+    returState.kode = a.returKode || "";
+    banner.hidden = false;
+    tekst.innerHTML = `<strong>Tilbakemelding fra læreren:</strong> ${escapeHtml(a.teacherFeedback || "")}`;
+    const tittel = $("#form-tittel");
+    if (tittel) tittel.textContent = `Lever på nytt: ${a.name || ""}`;
+    const submitBtn = document.querySelector('#add-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = "Send inn på nytt";
+    fyllSkjema(a);
+  } catch (err) {
+    banner.hidden = false;
+    tekst.textContent = "Kunne ikke hente forslaget (" + (err?.message || err) + "). Gå tilbake til forsiden og prøv igjen.";
+  }
+}
+
+// ----------------------------------------------------------------------------
 //  Hjelpere + oppstart
 // ----------------------------------------------------------------------------
 
@@ -247,6 +335,10 @@ function init() {
 
   wireFirestoreErrorBanner();
   refreshControls();
+
+  // Returflyt: ?retur=<id> gjør skjemaet om til «lever på nytt».
+  const returId = new URLSearchParams(location.search).get("retur");
+  if (returId) startRetur(returId);
   // Artistlista hentes først ved innsending (ensureArtists) — siden viser
   // ingen artister, så et sanntidsabonnement her var ren kostnad.
   //
@@ -256,6 +348,7 @@ function init() {
   subscribeContent((c) => {
     applyGenealogyDoc(c?.genealogy);
     refreshControls();
+    vokabKlarResolve();
     // Bygg musikkeksempel-radene på nytt KUN når de er urørte. Snapshotet
     // fyrer ved enhver endring i content-samlingen (varmekartceller,
     // innholdssider, referanser) — en ubetinget rebuild slettet alt studenten

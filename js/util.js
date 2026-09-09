@@ -162,3 +162,17 @@ export function genererReturKode() {
 export function normaliserReturKode(inp) {
   return String(inp || "").toUpperCase().replace(/[\s-]+/g, "");
 }
+
+// «Har denne nettleseren sendt inn noe?» — vokter forsidens retur-oppslag
+// (fetchMineReturer koster tre lesinger; uten flagget hadde ALLE sidelastene
+// betalt dem). Settes av datalaget ved enhver innsending, også ny innsending
+// med kode fra en annen enhet, så returer dukker opp automatisk der etterpå.
+// localStorage kan kaste (blokkerte nettsteddata) — flagget feiler da stille
+// mot false, og kodeoppslaget virker fortsatt.
+const INNSENDT_FLAGG = "pensumHarSendtInn";
+export function merkHarSendtInn() {
+  try { localStorage.setItem(INNSENDT_FLAGG, "1"); } catch (e) {}
+}
+export function harSendtInn() {
+  try { return localStorage.getItem(INNSENDT_FLAGG) === "1"; } catch (e) { return false; }
+}

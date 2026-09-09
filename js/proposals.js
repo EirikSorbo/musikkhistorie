@@ -8,15 +8,15 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal } from "./store.js?v=5.12";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.12";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.12";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.12";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.12";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.12";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.12";
-import { setupFormatBars } from "./format-bar.js?v=5.12";
-import { wireCharCount } from "./ui-helpers.js?v=5.12";
+import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.13";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.13";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.13";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.13";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.13";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.13";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.13";
+import { setupFormatBars } from "./format-bar.js?v=5.13";
+import { wireCharCount } from "./ui-helpers.js?v=5.13";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -353,8 +353,58 @@ function validateRows(specs) {
   return null;
 }
 
+// ----------------------------------------------------------------------------
+//  Returflyt (v5.13): lever en returnert innsending på nytt
+// ----------------------------------------------------------------------------
+
+// Banner mellom tittel og skjema: lærerens tilbakemelding + valgfri kommentar
+// tilbake. Modalen deles med vanlige forslag, så banneret fjernes eksplisitt
+// ved åpninger uten retur.
+function visReturBanner(retur) {
+  const form = document.getElementById("prop-form");
+  let b = document.getElementById("prop-retur-banner");
+  if (!retur) { b?.remove(); return; }
+  if (!b) {
+    b = document.createElement("div");
+    b.id = "prop-retur-banner";
+    b.className = "retur-info";
+    form.parentNode.insertBefore(b, form);
+  }
+  b.innerHTML = `
+    <span><strong>Tilbakemelding fra læreren:</strong> ${escapeHtml(retur.teacherFeedback || "")}</span>
+    <label style="display:block;margin-top:6px">Kommentar til læreren (valgfritt)
+      <textarea id="prop-retur-comment" rows="2" maxlength="1000" style="width:100%" placeholder="F.eks. hva du har endret"></textarea>
+    </label>`;
+}
+
+function lesReturKommentar() {
+  return document.getElementById("prop-retur-comment")?.value.trim() || "";
+}
+
+// Forsiden lytter og fjerner innsendingen fra retur-panelet når den er levert.
+function meldReturSendt(id) {
+  document.dispatchEvent(new CustomEvent("pensum:retur-sendt", { detail: { id } }));
+}
+
+// Inngangen fra forsidens retur-panel: gjenåpne riktig editor for en
+// returnert innsending, prefylt med studentens eget forslag. Artist-returer
+// rutes IKKE hit — de har eget skjema (student.html?retur=<id>).
+export function openReturInnsending(retur, currentValues) {
+  if (retur.type === "tech") return openNewTechProposal(retur, retur);
+  if (retur.type === "edit") {
+    return openProposalEditor({
+      entityType: retur.entityType,
+      entityId: retur.entityId,
+      entityName: retur.entityName,
+      level: retur.level,
+      currentValues: currentValues || {},
+      retur,
+    });
+  }
+}
+
 // Hoved-API: åpne redigereren for en eksisterende entitet.
-// config = { entityType, entityId, entityName, currentValues }
+// config = { entityType, entityId, entityName, currentValues, retur? }
 export function openProposalEditor(config) {
   const modal = document.getElementById("modal-proposal");
   if (!modal) return;
@@ -369,23 +419,32 @@ export function openProposalEditor(config) {
   const niva = config.level || "main";
   const specs = alleSpecs.filter((s) => !s.levels || s.levels.includes(niva));
 
-  document.getElementById("prop-title").textContent =
-    config.entityName
+  const retur = config.retur || null;
+  document.getElementById("prop-title").textContent = retur
+    ? `Lever på nytt: ${config.entityName || config.entityId || ""}`
+    : (config.entityName
       ? `${TITLES[config.entityType] || "Foreslå endring"}: ${config.entityName}`
-      : (TITLES[config.entityType] || "Foreslå endring");
+      : (TITLES[config.entityType] || "Foreslå endring"));
   document.getElementById("prop-msg").textContent = "";
-  document.getElementById("prop-by").value = "";
+  document.getElementById("prop-by").value = retur?.proposedBy || "";
 
   avbrytLukking();
+  visReturBanner(retur);
+  // Ved retur redigerer studenten VIDERE på sitt eget forslag: skjemaet fylles
+  // med forslaget lagt oppå dagens verdier. Diffen regnes fortsatt mot dagens
+  // verdier (uendret under), så det som sendes er hele det gjeldende avviket.
+  const grunnlag = retur
+    ? { ...(config.currentValues || {}), ...(retur.proposedFields || {}) }
+    : (config.currentValues || {});
   const form = document.getElementById("prop-form");
-  form.innerHTML = specs.map((s) => inputForField(s, config.currentValues?.[s.key])).join("");
-  fillRows(specs, config.currentValues || {});
+  form.innerHTML = specs.map((s) => inputForField(s, grunnlag?.[s.key])).join("");
+  fillRows(specs, grunnlag);
   setupFormatBars(form);
   wireTypeToggle();
 
   const submit = document.getElementById("prop-submit");
   submit.disabled = false;
-  submit.textContent = "Send forslag";
+  submit.textContent = retur ? "Send inn på nytt" : "Send forslag";
   submit.classList.remove("sent");
   submit.classList.add("primary");
   submit.onclick = async () => {
@@ -429,7 +488,9 @@ export function openProposalEditor(config) {
     }
     const diff = diffFields(current, proposed);
     if (!Object.keys(diff).length) {
-      msg.textContent = "Du har ikke endret noe ennå.";
+      msg.textContent = retur
+        ? "Forslaget er nå helt likt det som alt står i appen, så det er ingenting å sende inn."
+        : "Du har ikke endret noe ennå.";
       msg.className = "form-msg error";
       return;
     }
@@ -438,20 +499,24 @@ export function openProposalEditor(config) {
     submit.disabled = true;
     submit.textContent = "Sender …";
     try {
-      await medTidsvarsel(addPendingEdit({
-        entityType: config.entityType,
-        entityId: config.entityId,
-        entityName: config.entityName,
-        proposedFields: diff,
-        proposedBy: forslagsstiller,
-        level: config.level,
-      }), () => {
+      const skriv = retur
+        ? resubmitPendingEdit(retur.id, diff, forslagsstiller, retur.returKode, lesReturKommentar())
+        : addPendingEdit({
+            entityType: config.entityType,
+            entityId: config.entityId,
+            entityName: config.entityName,
+            proposedFields: diff,
+            proposedBy: forslagsstiller,
+            level: config.level,
+          });
+      await medTidsvarsel(skriv, () => {
         msg.textContent = "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.";
         msg.className = "form-msg warn";
       });
-      msg.textContent = "Takk! Forslaget er sendt til lærer.";
+      if (retur) meldReturSendt(retur.id);
+      msg.textContent = retur ? "Sendt inn på nytt. Læreren ser den i køen sin." : "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";
-      submit.textContent = "Forslag sendt ✓";
+      submit.textContent = retur ? "Sendt inn på nytt ✓" : "Forslag sendt ✓";
       submit.classList.remove("primary");
       submit.classList.add("sent");
       lukkEtterKvittering(modal);
@@ -459,7 +524,7 @@ export function openProposalEditor(config) {
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
       submit.disabled = false;
-      submit.textContent = "Send forslag";
+      submit.textContent = retur ? "Send inn på nytt" : "Send forslag";
     }
   };
 
@@ -474,19 +539,22 @@ export function openProposalEditor(config) {
 // vite hvilken gruppe og kategori kortet skal ha — og kortet havner garantert
 // på riktig tidslinje. Da er KILDER obligatorisk (brukerkrav): et instrumentkort
 // er studentarbeid som skal kunne etterprøves.
-export function openNewTechProposal(preset = null) {
+export function openNewTechProposal(preset = null, retur = null) {
   const modal = document.getElementById("modal-proposal");
   if (!modal) return;
   const specs = FIELD_SPECS.tech;
   const forInstrument = !!preset?.instrument;
 
-  document.getElementById("prop-title").textContent = forInstrument
-    ? `Foreslå nytt instrumentkort: ${preset.instrument}`
-    : TITLES["new-tech"];
+  document.getElementById("prop-title").textContent = retur
+    ? `Lever på nytt: ${retur.name || "(uten navn)"}`
+    : (forInstrument
+      ? `Foreslå nytt instrumentkort: ${preset.instrument}`
+      : TITLES["new-tech"]);
   document.getElementById("prop-msg").textContent = "";
-  document.getElementById("prop-by").value = "";
+  document.getElementById("prop-by").value = retur?.proposedBy || "";
 
   avbrytLukking();
+  visReturBanner(retur);
   const form = document.getElementById("prop-form");
   form.innerHTML = specs
     .map((s) => inputForField(
@@ -500,14 +568,18 @@ export function openNewTechProposal(preset = null) {
 
   const submit = document.getElementById("prop-submit");
   submit.disabled = false;
-  submit.textContent = "Send forslag";
+  submit.textContent = retur ? "Send inn på nytt" : "Send forslag";
   submit.classList.remove("sent");
   submit.classList.add("primary");
   submit.onclick = async () => {
     const data = {};
     for (const s of specs) {
       const v = readField(s);
-      if (v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)) data[s.key] = v;
+      // Retur: også TØMTE felter skrives (studenten kan ha fjernet noe læreren
+      // ba dem fjerne) — en utelatt nøkkel ville latt den gamle verdien stå.
+      // Ny innsending: tomme felter utelates som før.
+      if (retur) { if (v !== undefined) data[s.key] = v; }
+      else if (v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)) data[s.key] = v;
     }
     const msg = document.getElementById("prop-msg");
     // Samme radvalidering som endringsflyten: en kilderad med lenke uten tekst,
@@ -534,16 +606,17 @@ export function openNewTechProposal(preset = null) {
     submit.disabled = true;
     submit.textContent = "Sender …";
     try {
-      await medTidsvarsel(addTechProposal({
-        ...data,
-        proposedBy: forslagsstiller,
-      }), () => {
+      const skriv = retur
+        ? resubmitTech(retur.id, { ...data, proposedBy: forslagsstiller }, retur.returKode, lesReturKommentar())
+        : addTechProposal({ ...data, proposedBy: forslagsstiller });
+      await medTidsvarsel(skriv, () => {
         msg.textContent = "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.";
         msg.className = "form-msg warn";
       });
-      msg.textContent = "Takk! Forslaget er sendt til lærer.";
+      if (retur) meldReturSendt(retur.id);
+      msg.textContent = retur ? "Sendt inn på nytt. Læreren ser den i køen sin." : "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";
-      submit.textContent = "Forslag sendt ✓";
+      submit.textContent = retur ? "Sendt inn på nytt ✓" : "Forslag sendt ✓";
       submit.classList.remove("primary");
       submit.classList.add("sent");
       lukkEtterKvittering(modal);
@@ -551,7 +624,7 @@ export function openNewTechProposal(preset = null) {
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
       submit.disabled = false;
-      submit.textContent = "Send forslag";
+      submit.textContent = retur ? "Send inn på nytt" : "Send forslag";
     }
   };
 
