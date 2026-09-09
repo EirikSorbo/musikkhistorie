@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.13";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.13";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.13";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.13";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.13";
+import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.14";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.14";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.14";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.14";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.14";
 import {
   escapeHtml,
   linkDesc,
@@ -35,12 +35,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.13";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.13";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.13";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.13";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.13";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.13";
+} from "./ui-helpers.js?v=5.14";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.14";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.14";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.14";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.14";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.14";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };

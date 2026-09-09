@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.13";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.13";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.13";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.13";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.13";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.13";
-import { mergeHeatRows } from "./import-format.js?v=5.13";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.13";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.13";
+import { firebaseConfig } from "./firebase-config.js?v=5.14";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.14";
+import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.14";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.14";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.14";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.14";
+import { mergeHeatRows } from "./import-format.js?v=5.14";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.14";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.14";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -108,10 +108,21 @@ const AUTH_CONFIGURED = !String(firebaseConfig.apiKey).startsWith("DIN_");
 // er ferdig, så en senere utlogging kan logge inn på nytt.
 let signInInFlight = null;
 function signInAnonymouslyOnce() {
-  if (auth.currentUser) return Promise.resolve(auth.currentUser);
   if (!signInInFlight) {
-    signInInFlight = signInAnonymously(auth)
-      .then((cred) => cred.user)
+    // authStateReady() venter på at Firebase har gjenopprettet en lagret
+    // innlogging fra IndexedDB. Uten den ventingen er auth.currentUser null de
+    // første øyeblikkene etter hver sidelast — OGSÅ for en innlogget lærer — og
+    // da bytter signInAnonymously() ut Google-økta med en fersk anonym bruker:
+    // SDK-en gjenbruker bare ANONYME økter («if (currentUser?.isAnonymous)
+    // return …», ellers signUp + _updateCurrentUser). Læreren ble altså logget
+    // ut av å være innom forsiden (v5.13, der fetchMineReturer ble det første
+    // kallet som traff dette vinduet ved sidelast i stedet for ved et klikk).
+    // currentUser-sjekken ETTER ventingen er den absolutte sperren: en ekte
+    // innlogging skal aldri erstattes av en anonym økt.
+    // NB: authStateReady kom i SDK 10.3 — sjekk at den finnes hvis versjonen
+    // i importen øverst endres.
+    signInInFlight = auth.authStateReady()
+      .then(() => auth.currentUser || signInAnonymously(auth).then((cred) => cred.user))
       .finally(() => { signInInFlight = null; });
   }
   return signInInFlight;
@@ -133,6 +144,8 @@ if (AUTH_CONFIGURED) {
 // innlogging ikke er aktivert — da feiler stemmingen synlig (voteFailed), i
 // stedet for å skrive en identitet reglene uansett avviser.
 async function ensureAuth() {
+  // Rask vei når økta alt er avklart. En currentUser som FINNES er alltid den
+  // riktige; det er fraværet som ikke kan tolkes før authStateReady (se over).
   if (auth.currentUser) return auth.currentUser;
   return signInAnonymouslyOnce();
 }

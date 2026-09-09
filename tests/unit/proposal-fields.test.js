@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.13";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.14";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -163,4 +163,24 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
   for (const f of ["teacherFeedback", "returKode", "studentComment", "ownerUid"]) {
     assert.ok(schema.includes(`"${f}"`), `ARTIST_EXPORT_FIELDS mangler ${f}`);
   }
+});
+
+// En innlogget lærer ble logget ut av å være innom studentvisningen: Firebase
+// gjenoppretter økta asynkront, så auth.currentUser er null rett etter
+// sidelast, og signInAnonymously() erstatter da en Google-økt med en ny anonym
+// bruker (SDK-en gjenbruker kun anonyme). Kildesjekk, siden store.js henter
+// Firebase fra CDN og ikke kan lastes i Node.
+test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
+  const i = src.indexOf("function signInAnonymouslyOnce()");
+  const j = src.indexOf("\n}", i);
+  assert.ok(i > -1 && j > i, "fant ikke signInAnonymouslyOnce");
+  const kropp = src.slice(i, j);
+  assert.match(kropp, /authStateReady\(\)/,
+    "må vente på authStateReady før den avgjør om noen er innlogget");
+  assert.match(kropp, /auth\.currentUser \|\| signInAnonymously\(/,
+    "en eksisterende bruker må returneres, aldri erstattes av en anonym økt");
+  assert.ok(kropp.indexOf("authStateReady") < kropp.indexOf("signInAnonymously("),
+    "ventingen må komme FØR innloggingen, ellers består kappløpet");
 });
