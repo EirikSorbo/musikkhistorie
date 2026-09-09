@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.14" />
-  <script src="js/gate.js?v=5.14"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.15" />
+  <script src="js/gate.js?v=5.15"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -107,11 +107,13 @@
          automatisk (samme nettleser som sendte inn) eller via kode. -->
     <section class="panel retur-panel" id="retur-section">
       <div id="retur-liste"></div>
-      <button type="button" class="btn ghost small" id="btn-retur-kode">Har du fått en kode fra læreren?</button>
-      <div id="retur-kode-skjema" class="retur-kode-rad" hidden>
-        <input type="text" id="retur-kode-input" maxlength="12" autocomplete="off"
-          autocapitalize="characters" spellcheck="false" placeholder="Skriv inn koden" aria-label="Kode fra læreren" />
-        <button type="button" class="btn primary" id="btn-retur-hent">Hent</button>
+      <div class="retur-kode-rad">
+        <button type="button" class="btn ghost small" id="btn-retur-kode">Fått kode fra lærer?</button>
+        <div id="retur-kode-skjema" class="retur-kode-felt" hidden>
+          <input type="text" id="retur-kode-input" maxlength="12" autocomplete="off"
+            autocapitalize="characters" spellcheck="false" placeholder="Skriv inn koden" aria-label="Kode fra læreren" />
+          <button type="button" class="btn primary small" id="btn-retur-hent">Hent</button>
+        </div>
       </div>
       <div id="retur-msg" class="form-msg"></div>
     </section>
@@ -199,7 +201,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=5.14"></script>
-  <script type="module" src="js/landing.js?v=5.14"></script>
+  <script src="js/load-guard.js?v=5.15"></script>
+  <script type="module" src="js/landing.js?v=5.15"></script>
 </body>
 </html>
