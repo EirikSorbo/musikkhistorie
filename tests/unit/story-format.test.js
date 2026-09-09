@@ -1,8 +1,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=5.15";
-import { rebuild } from "../../js/genre-model.js?v=5.15";
+import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=5.16";
+import { rebuild } from "../../js/genre-model.js?v=5.16";
 import { SEED_DOC } from "../helpers/seed-model.js";
 
 test("storyFor: null når ingen tekst er lagret (ingen fallback)", () => {
@@ -72,8 +72,8 @@ test("storyOrder henter opp en historie som har fått nytt metasjanger-navn", ()
   rebuild(SEED_DOC);
 });
 
-// --- stripGenrePath: den håndskrevne løype-linjen erstattes av den genererte
-//     sjangertidslinjen (buildGenreTimeline), og fjernes derfor ved rendring.
+// --- stripGenrePath: den håndskrevne løype-linjen er erstattet av
+//     varmestripene over historien, og fjernes derfor ved rendring.
 test("stripGenrePath fjerner HELE løype-linjen, ikke bare fram til kolonet", () => {
   // Regresjon: en lat kvantor stoppet på kolonet, så resten av løypen ble
   // stående igjen som brødtekst øverst i historien.

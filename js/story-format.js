@@ -13,7 +13,7 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=5.15";
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=5.16";
 
 // Den KURATERTE historie-rekkefølgen (struktur, ikke innhold): de sju
 // metasjangrene som utgjør MUR114-pensumet. Pop og Rock står i treet for å
@@ -69,8 +69,8 @@ export function storyFor(genre, genreDescs = {}) {
 
 // Alle seks historiene åpner med en håndskrevet linje av formen
 //   *Sjangertre-løype: Work songs → Blues → Chicago blues → …*
-// Den er nå erstattet av den genererte sjangertidslinjen (buildGenreTimeline),
-// og fjernes her i stedet for i Firestore. Grunnen til at det gjøres i koden:
+// Den er nå erstattet av varmestripene over historien (v5.16; først av en
+// generert sjangertidslinje), og fjernes her i stedet for i Firestore. Grunnen til at det gjøres i koden:
 // teksten ligger i innhold vi ikke skriver til, og en re-import av en eldre
 // backup ville ellers dratt linjen inn igjen. Tåler både «løype» og «loype»,
 // valgfri kursiv, og at linjen ikke står helt først.

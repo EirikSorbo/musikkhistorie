@@ -7,14 +7,14 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=5.15";
-import { formatInfoText } from "./ui-helpers.js?v=5.15";
-import { DECADES } from "./limits.js?v=5.15";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=5.15";
+import { escapeHtml } from "./util.js?v=5.16";
+import { formatInfoText } from "./ui-helpers.js?v=5.16";
+import { DECADES } from "./limits.js?v=5.16";
+import { GENEALOGY } from "./genre-model.js?v=5.16";
 // Epoken bor i genreDescriptions fra v4.64. Vi går til den rene oppslags-
 // modulen, ikke til genealogy.js: den importerer denne veien rundt ellers.
-import { resolveDescAny } from "./genre-descriptions.js?v=5.15";
-import { isHendelse } from "./ui-tech.js?v=5.15";
+import { resolveDescAny } from "./genre-descriptions.js?v=5.16";
+import { isHendelse } from "./ui-tech.js?v=5.16";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -351,21 +351,8 @@ export function genreFamilyNodes(metaGenre, genreDescs = {}) {
     .sort((a, b) => a.year - b.year);
 }
 
-// Bygger tidslinjen for én metasjanger. Farges av familiefargen fra treet, så
-// den snakker samme fargespråk som knappene, varmekartet og sjangerhimmelen.
-export function buildGenreTimeline(metaGenre, genreDescs = {}) {
-  const nodes = genreFamilyNodes(metaGenre, genreDescs);
-  if (nodes.length < 2) return "";
-  const items = nodes.map(({ n, year, label }) => ({
-    year, label, desc: n.l, genre: n.l,
-  }));
-  const color = META_GENRE_COLOR[metaGenre] || FAMILIES.gray?.stroke || "#9bada1";
-  return buildProportionalTimeline(items, items[0].year, {
-    color,
-    extraClass: "tl-rich tl-genre",   // tl-rich = den forfinede utformingen, delt med instrumenttidslinjen
-    minGapPct: 6,
-    lineH: 21,          // .tl-genre .tl-desc er 0.82rem/600 — se estimateLabelHeight
-    stemLevels: 2,      // kort/lang i stedet for stadig lengre stilker
-    edgeAlign: false,   // etikettene midtstilles også ytterst, ikke kantstilles
-  });
-}
+// buildGenreTimeline lå her til v5.16. Sjangerhistoriene viser nå varmestriper
+// for hele familien i stedet for startårene deres (se explore-innhold.js), og
+// genreFamilyNodes over er det eneste som ble igjen: den gir fortsatt
+// rekkefølgen, kronologisk etter startår. buildProportionalTimeline lever
+// videre for tiårs- og instrumenttidslinjene.

@@ -1372,13 +1372,12 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .tl-prop .tl-desc[data-tech-id] { cursor: pointer; }
 .tl-prop .tl-desc[data-tech-id]:hover { color: var(--accent-2); opacity: 1; text-decoration: underline; }
 
-/* ----- Sjangertidslinje (over hver sjangerhistorie) -----
-   Samme spor som innovasjonstidslinjen, men farget av familiefargen og med
-   sjangernavnet som det bærende elementet. Genereres fra GENEALOGY. */
-/* .tl-rich = den forfinede utformingen, delt av sjanger- OG instrumenttidslinjen:
-   navnet bærer etiketten, midtstilte etiketter, navnet nærmest streken.
-   .tl-genre legger familiefargen oppå; instrumenttidslinjen har ingen farge og
-   arver dermed den grønne --accent, som innovasjonstidslinjen den stammer fra.
+/* ----- Den forfinede tidslinjen (.tl-rich) -----
+   Navnet bærer etiketten, etikettene er midtstilte, og navnet ligger nærmest
+   streken. Utformingen ble laget for sjangertidslinjen over hver historie; den
+   er erstattet av varmestriper i v5.16, så instrumenttidslinjen er nå eneste
+   bruker. Den har ingen farge og arver dermed den grønne --accent, som
+   innovasjonstidslinjen den stammer fra.
 
    Sidepolstringen gir de midtstilte ytterste etikettene plass utenfor sporet.
    Uten den ville halve etiketten havnet utenfor scroll-kanten, siden punktene
@@ -2377,6 +2376,26 @@ body.is-teacher #gate { display: none; }
 @media (max-width: 480px) {
   .gx-heat .hs-axis > :nth-child(even) { visibility: hidden; }
 }
+/* Varmestripene over hver sjangerhistorie (v5.16). Blokka ligger i en SMAL
+   lesespalte (modalen er 640 px, altså 584 px innhold), mens varmekartets
+   scroller krever 600 px. Differansen er bare 16 px, men den ville tvunget
+   leseren sidelengs midt i en fortelling. Minstebredden slippes derfor her.
+   Den var aldri et krav fra innholdet: etikettkolonnen beholder varmekartets
+   128 px, og de resterende 446 px gir ~34 px per tiår, mens de fire-sifrede
+   årstallene bare trenger ~28. Radene er altså IDENTISKE med varmekartets,
+   som var hele poenget. */
+.hist-heat { margin-bottom: 16px; }
+.hist-heat .vk-scroll-inner { min-width: 0; }
+/* Under 520 px er det ikke plass til etikettkolonnen OG tretten fire-sifrede
+   årstall: aksen faller til ~15 px per tiår, og «2000» og «2020» legger seg
+   oppå hverandre. Å skjule annethvert årstall (som sjangerkortet gjør) holder
+   ikke her, for etikettene er bredere enn sporene sine og flyter utenfor
+   uansett. Blokka faller derfor tilbake på varmekartets vannrette scroller,
+   som er den samme bevegelsen studentene kjenner derfra. */
+@media (max-width: 520px) {
+  .hist-heat .vk-scroll-inner { min-width: 600px; }
+}
+
 .gx-heat-missing {
   margin: 5px 0 0;
   font-size: 0.76rem;
@@ -2391,7 +2410,18 @@ body.is-teacher #gate { display: none; }
    Bare hover-enheter får :hover — på berøring ville den hengt igjen etter et
    trykk. Der settes .is-active fra JS i stedet (samme utseende), og
    :focus-within tar tastaturet gjennom lærerens celleknapper. */
-.vk-row { border-radius: 8px; transition: background-color .12s; }
+/* Raden er to spor: etiketten og ÉN sammenhengende stripe. Aksehodet bruker
+   samme grid, ellers glir årstallene ut av stilling over segmentene sine. */
+.vk-row, .vk-axisrow {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.vk-axisrow { align-items: end; margin-bottom: 6px; }
+.vk-scroll { overflow-x: auto; }
+.vk-scroll-inner { min-width: 600px; }
+.vk-row { border-radius: 8px; margin-bottom: 2px; padding: 2px 0; transition: background-color .12s; }
 @media (hover: hover) {
   .vk-row:hover { background: var(--surface-2); }
 }

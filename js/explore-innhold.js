@@ -6,15 +6,16 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.15";
-import { isVisible } from "./limits.js?v=5.15";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES } from "./genre-model.js?v=5.15";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.15";
-import { renderRichText } from "./rich-text.js?v=5.15";
-import { buildGenreTimeline } from "./ui-timeline.js?v=5.15";
-import { wireLinks } from "./ui-helpers.js?v=5.15";
-import { renderSjangerhimmel } from "./constellation.js?v=5.15";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.15";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.16";
+import { isVisible } from "./limits.js?v=5.16";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.16";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.16";
+import { renderRichText } from "./rich-text.js?v=5.16";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.16";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.16";
+import { wireLinks } from "./ui-helpers.js?v=5.16";
+import { renderSjangerhimmel } from "./constellation.js?v=5.16";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.16";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -102,14 +103,31 @@ function renderHistorie(genre) {
   modal.querySelectorAll(".hist-chip").forEach((b) =>
     b.classList.toggle("active", b.dataset.story === genre));
 
-  // Sjangerfamilien som vannrett tidslinje, utledet av slektstreet. Tegnes
-  // uavhengig av om historieteksten finnes — treet er alltid der, så løypen
-  // vises også for en metasjanger som ennå mangler tekst.
+  // Sjangerfamilien som varmestriper, én rad per sjanger under metasjangeren
+  // (v5.16). Her lå tidligere en proporsjonal tidslinje over startårene, men
+  // en historie handler om hvor toneangivende sjangrene VAR gjennom tiårene,
+  // ikke bare når de oppsto — og det er nettopp det stripene viser. Radene er
+  // de samme som i varmekartet, så de to flatene leses likt.
+  //
+  // Rekkefølgen er kronologisk etter startår (brukervalg): genreFamilyNodes
+  // sorterer familien slik, i motsetning til varmekartet, som sorterer etter
+  // første tiår med varme. Tegnes uavhengig av om historieteksten finnes —
+  // treet er alltid der.
   const tre = document.getElementById("hist-tre");
   if (tre) {
-    tre.innerHTML = buildGenreTimeline(genre, getState().genreDescs);
-    tre.querySelectorAll(".tl-desc[data-genre]").forEach((el) =>
-      el.addEventListener("click", () => onMainGenreClick(el.dataset.genre)));
+    const familie = genreFamilyNodes(genre, getState().genreDescs).map(({ n }) => n.l);
+    const heat = getState().content?.varmekart?.heat || null;
+    // Uten varmedata ville hele blokka stått som tretten grå felter per rad.
+    // Da sier vi det heller med ord, som varmekartet og sjangerkortet gjør.
+    tre.innerHTML = !familie.length ? ""
+      : heat ? heatBlockHtml(heatAxisRowHtml() + heatRowsHtml(familie, {
+          heat, meta: genre,
+          colorFor: (sj) => MAIN_GENRE_INFO[sj]?.color || META_GENRE_COLOR[genre] || FAMILIES.gray?.stroke,
+        }), "hist-heat")
+      : `<p class="gx-missing">${getState().contentLoaded
+          ? "Varmekart-nivåene er ikke lagt inn ennå."
+          : "Laster innhold …"}</p>`;
+    wireHeatRows(tre);
   }
 
   const story = storyFor(genre, getState().genreDescs);

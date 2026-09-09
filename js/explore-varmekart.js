@@ -5,11 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=5.15";
-import { DECADES } from "./limits.js?v=5.15";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.15";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=5.15";
-import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./heat-strip.js?v=5.15";
+import { escapeHtml, modalOpen } from "./ui.js?v=5.16";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.16";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=5.16";
+import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=5.16";
+// Aksen, radene og lærerens nivåvelger er delt med sjangerhistoriene (v5.16).
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.16";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -17,10 +18,9 @@ import { heatColor, heatRow, heatStripHtml, heatAxisHtml, HEAT_NODATA } from "./
 // tiåret. Nivåene bor i Firestore (content/varmekart.heat, importert fra
 // innholds-JSON eller redigert via celleklikk som lærer) — sjangre uten data
 // vises som «ingen data».
-// Varmekart-kolonnene ER tiårsaksen (DECADES) — samme kilde, så en utvidelse
-// (2030-t) slår gjennom begge steder samtidig. Heat-radene er indeksbaserte og
-// vkRow padder korte rader, så en utvidelse er bakoverkompatibel.
-const VK_DECADES = DECADES;
+// Tiårsaksen og radene bor i heat-rows.js/heat-strip.js, som begge leser
+// DECADES direkte. Heat-radene er indeksbaserte og heatRow padder korte rader,
+// så en utvidelse (2030-t) slår gjennom alle flatene samtidig.
 // Selve stripa — fargeskala, gradient og rad-oppslag — bor i heat-strip.js,
 // delt med sjangerkortet. VK_INK er en nøytral grå brukt i nivå-forklaringen.
 const VK_INK = "#5b6b7a";
@@ -37,10 +37,6 @@ export function renderVarmekartBody() {
   const s = getState();
   const heat = s.content?.varmekart?.heat || null;
   const hasData = !!heat && Object.keys(heat).length > 0;
-  // Raden er nå to spor: etiketten og ÉN sammenhengende stripe. Tiårsoverskriftene
-  // ligger i et eget 13-kolonners rutenett UTEN luft inni stripe-sporet, så
-  // etikettmidtene treffer segmentmidtene på prosenten.
-  const gridStyle = `display:grid;grid-template-columns:128px 1fr;gap:10px;align-items:center`;
 
   let html = "";
   if (!hasData) {
@@ -48,10 +44,9 @@ export function renderVarmekartBody() {
       ? "Varmekart-nivåene er ikke lagt inn ennå. Læreren legger dem inn via innholds-importen" + (opts.onHeatEdit ? ", eller ved å trykke på cellene under" : "") + "."
       : "Laster innhold …"}</p>`;
   }
-  html += `<div style="overflow-x:auto"><div style="min-width:600px">`;
-  html += `<div style="${gridStyle};align-items:end;margin-bottom:6px"><div></div>`;
-  html += heatAxisHtml();   // delt tiårsakse, samme som på sjangerkortet
-  html += `</div>`;
+  // Scrolleren, aksen og radene er de delte (heat-rows.js) — historiene viser
+  // nøyaktig samme rad over fortellingen sin.
+  let rader = heatAxisRowHtml();
 
   const firstHot = (sj) => { const i = vkRow(heat, sj).findIndex((v) => v > 0); return i < 0 ? 99 : i; };
 
@@ -87,42 +82,23 @@ export function renderVarmekartBody() {
     const open = vkOpenMeta ? meta === vkOpenMeta : groupIdx === 0;
 
     // Gruppeoverskrift: klikkbar akkordeon-bryter — caret + farget prikk + navn + antall.
-    html += metaGroupHeadHtml({
+    rader += metaGroupHeadHtml({
       prefix: "vk", meta, gColor, open, groupIdx,
       count: `${labels.length} sjanger${labels.length === 1 ? "" : "e"}`,
       metaAttr: ` data-vk-meta="${escapeHtml(meta)}"`,
     });
     groupIdx++;
 
-    html += `<div class="vk-group-rows" style="display:${open ? "block" : "none"}">`;
-    for (const sj of labels) {
-      const rowColor = MAIN_GENRE_INFO[sj]?.color || gColor;
-      usedFams.add(MAIN_GENRE_INFO[sj]?.fam);
-      const vals = vkRow(heat, sj);
-      // Raden er ett fremhevings-mål (.vk-row): båndet under pekeren må dekke
-      // BÅDE etiketten og stripa, ellers hjelper det ikke å finne igjen linja.
-      // Den loddrette luften ligger derfor som padding inni raden, ikke som
-      // margin utenfor — margin ville falt utenfor båndet.
-      html += `<div class="vk-row" style="${gridStyle};margin-bottom:2px;padding:2px 0">`;
-      // Etiketten er en knapp: klikk åpner sjangerkortet (v4.83). Stripa er
-      // fortsatt lærerens redigeringsflate, så de to klikkmålene ligger side om
-      // side uten å slåss om samme hendelse.
-      html += `<button type="button" class="vk-rowlabel" data-vk-open="${escapeHtml(sj)}" title="Åpne sjangerkortet for ${escapeHtml(sj)}" style="font-size:0.82rem;color:var(--text);line-height:1.2;border-left:3px solid ${rowColor};padding:1px 8px 1px 9px">${escapeHtml(sj)}</button>`;
-      // Stripa er den delte (heat-strip.js). Her byttes bare tiårsfeltene ut med
-      // varmekartets egne: full hjelpetekst, og for læreren klikkbare knapper.
-      html += heatStripHtml(rowColor, vals, (v, i, pos) => {
-        const has = v != null;
-        const title = `${sj} · ${meta} · ${VK_DECADES[i]}-tallet${has ? ` · nivå ${v}/5` : " · ingen data"}${opts.onHeatEdit ? " · klikk for å endre" : ""}`;
-        return opts.onHeatEdit
-          ? `<button type="button" class="vk-cell" data-vk-genre="${escapeHtml(sj)}" data-vk-idx="${i}" title="${escapeHtml(title)}" style="${pos}"></button>`
-          : `<div class="vk-cell" title="${escapeHtml(title)}" style="${pos}"></div>`;
-      });
-      html += `</div>`;
-    }
-    html += `</div>`;   // .vk-group-rows
-    html += `</div>`;   // .vk-group
+    labels.forEach((sj) => usedFams.add(MAIN_GENRE_INFO[sj]?.fam));
+    rader += `<div class="vk-group-rows" style="display:${open ? "block" : "none"}">`;
+    rader += heatRowsHtml(labels, {
+      heat, meta,
+      colorFor: (sj) => MAIN_GENRE_INFO[sj]?.color || gColor,
+    });
+    rader += `</div>`;   // .vk-group-rows
+    rader += `</div>`;   // .vk-group
   }
-  html += `</div></div>`;
+  html += heatBlockHtml(rader);
 
   // Forklaring 1: varmenivå (valør) — nøytral grå, da kuløren nå viser familie.
   html += `<div style="display:flex;align-items:center;gap:8px;margin-top:18px;font-size:0.8rem;color:var(--muted);flex-wrap:wrap">`;
@@ -153,34 +129,9 @@ export function renderVarmekartBody() {
     vkOpenMeta = wasOpen ? "__ingen" : (group?.dataset.vkMeta || null);
   });
 
-  // Fremheving av én rad. Hover-enheter får den fra CSS; berøring har ingen
-  // hover, så der låser et trykk raden i stedet (nytt trykk på samme rad slår
-  // den av, trykk på en annen flytter den). Klikk oppfører seg likt på
-  // pekerenheter — da kan man «feste» en rad mens man leser den.
-  // Lærerens celleklikk lever videre ved siden av: begge lytterne får hendelsen,
-  // så raden festes samtidig som nivåvelgeren åpnes.
-  body.querySelectorAll(".vk-row").forEach((row) => {
-    row.addEventListener("click", () => {
-      const wasActive = row.classList.contains("is-active");
-      body.querySelectorAll(".vk-row.is-active").forEach((r) => r.classList.remove("is-active"));
-      if (!wasActive) row.classList.add("is-active");
-    });
-  });
-
-  // Klikk på sjangernavnet åpner sjangerkortet — samme inngang som overalt
-  // ellers (onMainGenreClick). Raden festes samtidig av lytteren over, så den
-  // står uthevet når kortet lukkes igjen.
-  body.querySelectorAll("[data-vk-open]").forEach((btn) => {
-    btn.addEventListener("click", () => onMainGenreClick(btn.dataset.vkOpen));
-  });
-
-  // Lærer: klikk på en celle åpner nivåvelgeren.
-  if (opts.onHeatEdit) {
-    body.querySelectorAll(".vk-cell").forEach((cell) => {
-      cell.addEventListener("click", () =>
-        openVkEdit(cell.dataset.vkGenre, Number(cell.dataset.vkIdx)));
-    });
-  }
+  // Radfremheving, sjangerkort-klikk og lærerens celleklikk: alt sammen delt
+  // med historiene (heat-rows.js).
+  wireHeatRows(body);
 }
 
 export function openVarmekart() {
@@ -191,41 +142,3 @@ export function openVarmekart() {
   modalOpen(modal);
 }
 
-// Nivåvelgeren (lærer): «Blues · 1950-tallet» med knappene 0–5 + «Ingen
-// data». Lagring skjer via opts.onHeatEdit(sjanger, nyRad) — hele raden
-// sendes, så datalaget slipper å kjenne tiårsindeksen. Snapshotet oppdaterer
-// state.content → contentChanged() → varmekartet re-rendres bak velgeren.
-function openVkEdit(genre, idx) {
-  const modal = document.getElementById("modal-vk-edit");
-  if (!modal) return;
-  const heat = getState().content?.varmekart?.heat || {};
-  const row = vkRow(heat, genre);
-  const current = row[idx];
-  document.getElementById("vke-title").textContent = `${genre} · ${VK_DECADES[idx]}-tallet`;
-  const msg = document.getElementById("vke-msg");
-  msg.textContent = "";
-  msg.className = "form-msg";
-  const btns = document.getElementById("vke-buttons");
-  btns.innerHTML = [0, 1, 2, 3, 4, 5].map((v) =>
-    `<button type="button" class="btn ${current === v ? "primary" : "ghost"}" data-vke-level="${v}" style="min-width:44px">${v}</button>`
-  ).join("") +
-    `<button type="button" class="btn ${current == null ? "primary" : "ghost"}" data-vke-level="" style="flex:1">Ingen data</button>`;
-  btns.querySelectorAll("[data-vke-level]").forEach((b) => {
-    b.addEventListener("click", async () => {
-      const level = b.dataset.vkeLevel === "" ? null : Number(b.dataset.vkeLevel);
-      const newRow = row.slice();
-      newRow[idx] = level;
-      msg.textContent = "Lagrer …";
-      msg.className = "form-msg ok";
-      try {
-        await opts.onHeatEdit(genre, newRow);
-        modalClose(modal);
-      } catch (err) {
-        console.error("Varmekart-lagring feilet:", err);
-        msg.textContent = "Feil: " + (err?.message || err);
-        msg.className = "form-msg error";
-      }
-    });
-  });
-  modalOpen(modal);
-}

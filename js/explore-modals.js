@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.15";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.15";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.16";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.16";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -375,9 +375,10 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
     <p class="muted hist-intro">Fortellinger som til sammen dekker hele pensumet. Trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
-    <!-- Sjangerfamilien som vannrett tidslinje, generert fra GENEALOGY
-         (buildGenreTimeline). Erstatter den håndskrevne «Sjangertre-løype»-
-         linjen som lå øverst i hver historietekst. -->
+    <!-- Sjangerfamilien som varmestriper (v5.16): én rad per sjanger under
+         metasjangeren, samme rad som i varmekartet. Her lå først den
+         håndskrevne «Sjangertre-løype»-linjen i teksten, så en generert
+         tidslinje over startårene. -->
     <div id="hist-tre"></div>
     <div id="hist-body" class="story-body"></div>
   </div>

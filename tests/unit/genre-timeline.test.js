@@ -1,12 +1,19 @@
 import { SEED_GENRE_DESCS } from "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes, buildGenreTimeline } from "../../js/ui-timeline.js?v=5.15";
-import { GENEALOGY } from "../../js/genre-model.js?v=5.15";
-import { STORY_ORDER } from "../../js/story-format.js?v=5.15";
+import { genreFamilyNodes } from "../../js/ui-timeline.js?v=5.16";
+import { GENEALOGY } from "../../js/genre-model.js?v=5.16";
+import { STORY_ORDER } from "../../js/story-format.js?v=5.16";
 
-// Sjangertidslinjen over hver historie utledes av treet. Poenget med å generere
+// Sjangerfamilien over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.
+//
+// Fram til v5.16 tegnet buildGenreTimeline familien som en proporsjonal
+// tidslinje, og tre tester her prøvde den markupen (akse, stilker,
+// etikettstilling). Historiene viser nå varmestriper i stedet, og funksjonen er
+// borte; testene gikk med den. genreFamilyNodes består som eneste bruker, og
+// den er viktigere enn før: den bestemmer BÅDE hvilke rader historien får og
+// rekkefølgen deres.
 
 test("hver historie får med NØYAKTIG tre-nodene i metasjangeren sin", () => {
   for (const meta of STORY_ORDER) {
@@ -65,41 +72,22 @@ test("de nye v3.73-nodene er med i løypene sine", () => {
   assert.ok(navn("Hip-hop").includes("Cont. hip-hop"));
 });
 
-test("aksen er ubrutt og bruker hele sporet", () => {
-  // Aksebruddet (.tl-break / --tl-line-start) fantes kun for rot-nodene og er
-  // borte sammen med dem — ingen rester i markupen.
-  for (const meta of STORY_ORDER) {
-    const html = buildGenreTimeline(meta, SEED_GENRE_DESCS);
-    assert.ok(!html.includes("tl-break"), `${meta} skal ikke ha aksebrudd`);
-    assert.ok(!html.includes("--tl-line-start"), `${meta} skal tegne heltrukken strek hele veien`);
-    assert.ok(!html.includes("tl-item-root") && !html.includes("tl-root"),
-      `${meta} skal ikke ha rot-markering`);
-    // Første og siste punkt ligger ytterst — hele bredden er i bruk.
-    const pos = [...html.matchAll(/left:([\d.]+)%/g)].map((m) => +m[1]).sort((a, b) => a - b);
-    assert.ok(pos[0] <= 5, `${meta} starter ytterst til venstre, fikk ${pos[0]}`);
-    assert.ok(pos[pos.length - 1] >= 95, `${meta} slutter ytterst til høyre`);
-  }
-});
 
-const stemsOf = (html) =>
-  [...html.matchAll(/--stem:(\d+)px/g)].map((m) => +m[1]);
-
-test("stilkene veksler mellom to lengder i stedet for å eskalere", () => {
-  // Den frie stablingen vokste monotont — hver ny etikett måtte klarere alle de
-  // forrige — så i tette familier ble stilkene lengre og lengre utover i sporet.
+// Radene i historien er kronologiske (brukervalg 2026-09-09), i motsetning til
+// varmekartet, som sorterer etter første tiår med varme. Rekkefølgen kommer
+// rett fra genreFamilyNodes, så den låses her.
+test("familien kommer kronologisk, med metasjangeren selv først", () => {
   for (const meta of STORY_ORDER) {
-    const stems = new Set(stemsOf(buildGenreTimeline(meta, SEED_GENRE_DESCS)));
-    assert.ok(stems.size <= 2, `${meta} skal ha høyst to stilklengder, fikk ${[...stems].join(", ")}`);
+    const nodes = genreFamilyNodes(meta, SEED_GENRE_DESCS);
+    const ar = nodes.map((x) => x.year);
+    assert.deepEqual(ar, [...ar].sort((a, b) => a - b),
+      `${meta} skal komme i stigende årstall, fikk ${ar.join(", ")}`);
   }
-  // Jazz er den tetteste familien (12 punkter) og den som eskalerte verst.
-  const jazz = stemsOf(buildGenreTimeline("Jazz", SEED_GENRE_DESCS));
-  assert.ok(jazz.length >= 10, "Jazz skal ha mange punkter");
-  assert.equal(new Set(jazz).size, 2, "Jazz skal veksle mellom kort og lang");
-});
-
-test("etikettene kantstilles aldri — de er midtstilt over prikken overalt", () => {
-  for (const meta of STORY_ORDER) {
-    const html = buildGenreTimeline(meta, SEED_GENRE_DESCS);
-    assert.ok(!/tl-start|tl-end/.test(html), `${meta} skal ikke ha kantstilte etiketter`);
-  }
+  // Jazz er den tetteste familien og den beste prøven på at avstamningen
+  // låser rekkefølgen: Bebop før Hard bop før Fusion.
+  const jazz = genreFamilyNodes("Jazz", SEED_GENRE_DESCS).map((x) => x.n.l);
+  const i = (n) => jazz.indexOf(n);
+  assert.ok(i("Bebop") > -1 && i("Hard bop") > -1 && i("Fusion") > -1, "nodene skal finnes");
+  assert.ok(i("Bebop") < i("Hard bop"), "Bebop før Hard bop");
+  assert.ok(i("Hard bop") < i("Fusion"), "Hard bop før Fusion");
 });
