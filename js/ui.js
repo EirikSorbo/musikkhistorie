@@ -214,11 +214,12 @@ export function renderArtists(el, state) {
   let list = [...artists];
 
   if (filters.showPending) {
-    list = list.filter((a) => a.status === "pending");
+    // Hele moderasjonsuniverset: ventende OG returnerte (hos studenten).
+    list = list.filter((a) => a.status === "pending" || a.status === "returnert");
   } else if (!filters.showRemoved && filters.priority !== -1) {
     list = list.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   } else {
-    list = list.filter((a) => a.status !== "pending");
+    list = list.filter((a) => a.status !== "pending" && a.status !== "returnert");
   }
   if (filters.hideChecked) list = list.filter((a) => !a.teacherChecked);
   // Delt innholdsfilter (sjanger/meta/instrument/undersjanger/prioritet/tiår/søk)

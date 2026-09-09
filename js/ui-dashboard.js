@@ -162,7 +162,7 @@ export function renderDashboard(el, {
 
   // --- Nøkkeltall -----------------------------------------------------------
   // Innovasjonskort uten status-felt regnes som aktive (samme regel som store).
-  const techCount = techItems.filter((t) => t.status !== "pending").length;
+  const techCount = techItems.filter((t) => (t.status || "active") === "active").length;
   const subTags = [...new Set(active.flatMap((a) => [
     ...(a.mainGenre || []).filter((x) => !isMainGenre(x)),
     ...(a.subGenre || []),

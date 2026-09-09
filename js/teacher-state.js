@@ -147,7 +147,7 @@ export function renderAll() {
   // Ventende-filteret slås på fra Skrivebordet (som også slår det av igjen).
   // Når siste forslag er behandlet, slås det av automatisk — ellers ville
   // lista stått igjen tom uten noen synlig grunn.
-  if (state.filters.showPending && !state.artists.some((a) => a.status === "pending")) {
+  if (state.filters.showPending && !state.artists.some((a) => a.status === "pending" || a.status === "returnert")) {
     state.filters.showPending = false;
   }
   renderList();

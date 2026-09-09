@@ -25,6 +25,8 @@ import {
   arrayRemove,
   serverTimestamp,
   writeBatch,
+  query,
+  where,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth,
@@ -38,6 +40,8 @@ import {
 import { firebaseConfig } from "./firebase-config.js?v=5.12";
 import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.12";
 import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.12";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.12";
+import { genererReturKode, normaliserReturKode } from "./util.js?v=5.12";
 import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.12";
 import { mergeHeatRows } from "./import-format.js?v=5.12";
 import { BATCH_MAX } from "./genre-migrate.js?v=5.12";
@@ -218,7 +222,10 @@ function artistDocWithTimestamp(data) {
 // ville økta forbli uinnlogget og hver innsending avvist av reglene til reload.
 export async function addArtist(data) {
   await ensureAuth().catch(() => {});
-  return addDoc(artistsCol, artistDocWithTimestamp(data));
+  // ownerUid: avsenderens anonyme uid, så samme nettleser automatisk finner
+  // igjen sine egne innsendinger hvis læreren sender dem tilbake (returflyten,
+  // v5.13). Tom streng når innloggingen feilet — da virker fortsatt koden.
+  return addDoc(artistsCol, { ...artistDocWithTimestamp(data), ownerUid: auth.currentUser?.uid || "" });
 }
 
 // Firestore tillater maks 500 operasjoner per batch. ÉN kilde (genre-migrate
@@ -568,6 +575,7 @@ export async function addPendingEdit({ entityType, entityId, entityName, propose
     entityName: entityName || "",
     proposedFields: proposedFields || {},
     proposedBy: proposedBy || "Anonym",
+    ownerUid: auth.currentUser?.uid || "",   // se addArtist: returflytens gjenfinning
     ...(level ? { level } : {}),
     createdAt: serverTimestamp(),
   });
@@ -630,6 +638,116 @@ export async function rejectPendingEdit(pendingEditId) {
   return deleteDoc(doc(db, "pendingEdits", pendingEditId));
 }
 
+// ----------------------------------------------------------------------------
+//  RETURFLYT — «send tilbake med kommentar» (v5.13)
+// ----------------------------------------------------------------------------
+//  Læreren sender en innsending tilbake i stedet for å godkjenne/avvise:
+//  status → "returnert", med kommentar og en kort kode. Studenten finner den
+//  igjen automatisk (samme nettleser, via ownerUid) eller med koden (annen
+//  enhet), retter og sender inn på nytt. Reglenes bevis for ny innsending er
+//  KODEN (innsendtKode == returKode), aldri uid — se firestore.rules.
+//
+//  pendingEdits har ikke hatt status-felt: fravær = åpent. Retur setter
+//  "returnert", ny innsending setter "open" — køen leser «ikke returnert».
+
+const RETUR_SAMLING = { artist: "artists", tech: "tech", edit: "pendingEdits" };
+
+// Lærer: send tilbake. Returnerer koden, så dialogen kan vise den.
+export async function sendTilbake(type, id, feedback) {
+  const kode = genererReturKode();
+  await updateDoc(doc(db, RETUR_SAMLING[type], id), {
+    status: "returnert",
+    teacherFeedback: String(feedback || "").trim(),
+    returKode: kode,
+    returnedAt: new Date().toISOString(),
+    // Nullstilles ved hver retur, så en gammel studentkommentar ikke blir
+    // stående og se ut som et svar på den NYE tilbakemeldingen.
+    studentComment: "",
+  });
+  return kode;
+}
+
+// Student: ny innsending av et returnert ARTISTforslag. Bygger innholdsfeltene
+// gjennom samme normalisering som addArtist, men rører aldri systemfeltene
+// (stemmer, prioritet, lærerens retur-felter) — reglene avviser det uansett.
+export async function resubmitArtist(id, data, kode, studentComment) {
+  await ensureAuth().catch(() => {});
+  const n = normalizeArtist(data);
+  const felter = {};
+  for (const f of ARTIST_FIELDS) felter[f.key] = n[f.key] ?? emptyValueFor(f.type);
+  return updateDoc(doc(db, "artists", id), {
+    ...felter,
+    proposedBy: data.proposedBy || "Anonym",
+    status: "pending",
+    innsendtKode: kode,
+    studentComment: String(studentComment || "").trim(),
+  });
+}
+
+// Student: ny innsending av et returnert KORTforslag (tech).
+export async function resubmitTech(id, data, kode, studentComment) {
+  await ensureAuth().catch(() => {});
+  return updateDoc(doc(db, "tech", id), {
+    ...data,
+    proposedBy: data.proposedBy || "Anonym",
+    status: "pending",
+    innsendtKode: kode,
+    studentComment: String(studentComment || "").trim(),
+  });
+}
+
+// Student: ny innsending av et returnert ENDRINGSforslag.
+export async function resubmitPendingEdit(id, proposedFields, proposedBy, kode, studentComment) {
+  await ensureAuth().catch(() => {});
+  return updateDoc(doc(db, "pendingEdits", id), {
+    proposedFields: proposedFields || {},
+    proposedBy: proposedBy || "Anonym",
+    status: "open",
+    innsendtKode: kode,
+    studentComment: String(studentComment || "").trim(),
+  });
+}
+
+// Tre målrettede spørringer (likhetsfiltre trenger ingen sammensatt indeks).
+// Merket med type, så kalleren vet hvilken flyt som skal gjenåpnes.
+async function returSporring(felt, verdi) {
+  const ut = [];
+  for (const [type, samling] of Object.entries(RETUR_SAMLING)) {
+    const snap = await getDocs(query(
+      collection(db, samling),
+      where(felt, "==", verdi),
+      where("status", "==", "returnert")
+    ));
+    snap.docs.forEach((d) => ut.push({ type, id: d.id, ...d.data() }));
+  }
+  return ut;
+}
+
+// Studentens egne returer — samme nettleser som sendte inn. Kalles KUN når
+// nettleseren faktisk har sendt inn noe (kalleren vokter med localStorage-
+// flagget), så forsiden ikke koster tre ekstra lesinger per last for alle.
+export async function fetchMineReturer() {
+  await ensureAuth().catch(() => {});
+  const uid = auth.currentUser?.uid;
+  if (!uid) return [];
+  return returSporring("ownerUid", uid);
+}
+
+// Oppslag med kode — annen enhet enn den som sendte inn.
+export async function fetchReturMedKode(kode) {
+  await ensureAuth().catch(() => {});
+  const k = normaliserReturKode(kode);
+  if (!k) return [];
+  return returSporring("returKode", k);
+}
+
+// Ett enkelt artistdokument — brukes når studentsiden åpnes med ?retur=<id>
+// (én lesing, ikke hele samlingen).
+export async function fetchArtist(id) {
+  const snap = await getDoc(doc(db, "artists", id));
+  return snap.exists() ? normalizeArtist({ id: snap.id, ...snap.data() }) : null;
+}
+
 // Er navnet et sjangernavn appen kjenner på DETTE nivået?
 //
 // meta/main skriver til kuraterte dokumenter — metasjangernes doc bærer også
@@ -685,6 +803,7 @@ export async function addTechProposal(data) {
     ...data,
     status: "pending",
     proposedBy: data.proposedBy || "Anonym",
+    ownerUid: auth.currentUser?.uid || "",   // se addArtist: returflytens gjenfinning
     createdAt: serverTimestamp(),
   });
 }

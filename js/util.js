@@ -144,3 +144,21 @@ export function dropboxDirectUrl(url) {
   u.hash = "";
   return u.toString();
 }
+
+// Returkode for «send tilbake»-flyten: en kort kode læreren gir studenten, som
+// låser opp ny innsending av et returnert forslag fra en hvilken som helst
+// enhet. Alfabetet er uten forvekslbare tegn (O/0, I/1/L, U/V), for koden skal
+// kunne leses opp muntlig i et klasserom og tastes på en telefon.
+export const RETUR_KODE_ALFABET = "ABCDEFGHJKMNPQRSTWXYZ23456789";
+export const RETUR_KODE_LENGDE = 5;
+
+export function genererReturKode() {
+  const tilfeldig = new Uint32Array(RETUR_KODE_LENGDE);
+  crypto.getRandomValues(tilfeldig);
+  return [...tilfeldig].map((n) => RETUR_KODE_ALFABET[n % RETUR_KODE_ALFABET.length]).join("");
+}
+
+// Normaliserer det studenten taster: store bokstaver, uten mellomrom/bindestrek.
+export function normaliserReturKode(inp) {
+  return String(inp || "").toUpperCase().replace(/[\s-]+/g, "");
+}

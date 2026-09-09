@@ -52,6 +52,50 @@ service cloud.firestore {
         );
       }
 
+      // Innholdskrav og størrelsestak for et studentskrevet artistdokument.
+      // DELT av create og retur-innsendingen under: hadde de hver sin kopi,
+      // ville de drevet fra hverandre (samme lærdom som revisjonen 2026-09-02).
+      function artistInnholdOk() {
+        return request.resource.data.name is string &&
+          request.resource.data.name.size() > 0 &&
+          request.resource.data.name.size() <= 120 &&
+          request.resource.data.metaGenre is string &&
+          request.resource.data.metaGenre.size() <= 100 &&
+          request.resource.data.influenceStart is number &&
+          request.resource.data.get("description", "").size() <= 5000 &&
+          request.resource.data.get("imageUrl", "").size() <= 2000 &&
+          request.resource.data.get("proposedBy", "").size() <= 100 &&
+          // Samme tak som pendingEdits-reglene bruker for de samme feltene:
+          // uten dem var metaGenre/mainGenre/subGenre/geography/recordLabel
+          // ubegrensede strenger/lister her, mens forslags-flyten kappet dem.
+          request.resource.data.get("geography", "").size() <= 200 &&
+          request.resource.data.get("recordLabel", "").size() <= 200 &&
+          request.resource.data.get("instrument", "").size() <= 100 &&
+          request.resource.data.get("gender", "").size() <= 40 &&
+          request.resource.data.get("imageCredit", "").size() <= 300 &&
+          request.resource.data.get("mainGenre", []).size() <= 20 &&
+          request.resource.data.get("subGenre", []).size() <= 20 &&
+          request.resource.data.get("keyWorks", []).size() <= 50 &&
+          request.resource.data.get("musicExamples", []).size() <= 50 &&
+          request.resource.data.get("kilder", []).size() <= 50;
+      }
+
+      // Retur-innsending: studenten retter et forslag læreren har sendt
+      // tilbake. Beviset er KODEN (innsendtKode må matche dokumentets
+      // returKode, som bare lærer kan sette) — ikke uid, siden studenten kan
+      // sitte på en annen enhet enn den som sendte inn. Koden er lesbar for
+      // den som leser rått (samlingen er offentlig lesbar), så dette er
+      // klasseroms-vern på linje med resten av appen, ikke kryptografi.
+      function erReturInnsending() {
+        return request.auth != null &&
+          resource.data.get("status", "") == "returnert" &&
+          resource.data.get("returKode", "") != "" &&
+          request.resource.data.get("innsendtKode", "") == resource.data.get("returKode", "") &&
+          request.resource.data.status == "pending" &&
+          request.resource.data.get("studentComment", "").size() <= 1000 &&
+          request.resource.data.get("innsendtKode", "").size() <= 12;
+      }
+
       allow read: if true;
 
       // Studenter (anonymt innlogget) kan sende inn forslag; de opprettes
@@ -71,45 +115,40 @@ service cloud.firestore {
           "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
           "geography", "description", "keyWorks", "musicExamples", "kilder",
           "imageUrl", "imageCredit", "proposedBy", "status", "removedBy",
-          "teacherChecked", "priority", "votedUpBy", "addedYear", "createdAt"
+          "teacherChecked", "priority", "votedUpBy", "addedYear", "createdAt",
+          "ownerUid"
         ]) &&
-        request.resource.data.name is string &&
-        request.resource.data.name.size() > 0 &&
-        request.resource.data.name.size() <= 120 &&
-        request.resource.data.metaGenre is string &&
-        request.resource.data.metaGenre.size() <= 100 &&
-        request.resource.data.influenceStart is number &&
         request.resource.data.status == "pending" &&
         request.resource.data.votedUpBy is list &&
         request.resource.data.votedUpBy.size() == 0 &&
         request.resource.data.get("priority", 0) == 0 &&
         request.resource.data.get("teacherChecked", false) == false &&
         request.resource.data.get("removedBy", null) == null &&
-        request.resource.data.get("description", "").size() <= 5000 &&
-        request.resource.data.get("imageUrl", "").size() <= 2000 &&
-        request.resource.data.get("proposedBy", "").size() <= 100 &&
-        // Samme tak som pendingEdits-reglene bruker for de samme feltene:
-        // uten dem var metaGenre/mainGenre/subGenre/geography/recordLabel
-        // ubegrensede strenger/lister her, mens forslags-flyten kappet dem.
-        request.resource.data.get("geography", "").size() <= 200 &&
-        request.resource.data.get("recordLabel", "").size() <= 200 &&
-        request.resource.data.get("instrument", "").size() <= 100 &&
-        request.resource.data.get("gender", "").size() <= 40 &&
-        request.resource.data.get("imageCredit", "").size() <= 300 &&
-        request.resource.data.get("mainGenre", []).size() <= 20 &&
-        request.resource.data.get("subGenre", []).size() <= 20 &&
-        request.resource.data.get("keyWorks", []).size() <= 50 &&
-        request.resource.data.get("musicExamples", []).size() <= 50 &&
-        request.resource.data.get("kilder", []).size() <= 50
+        // Avsenderens anonyme uid — brukes til at samme nettleser finner igjen
+        // sine egne returer. Må være ens egen (eller tom fra eldre klienter).
+        request.resource.data.get("ownerUid", "") in ["", request.auth.uid] &&
+        artistInnholdOk()
       );
 
-      // Studenter kan KUN endre stemmelista, og KUN sin egen uid.
-      // Alt annet (status, prioritet, innhold) krever lærer.
+      // Studenter kan endre stemmelista (kun sin egen uid) — eller sende inn
+      // på nytt et forslag læreren har sendt tilbake. Retur-innsendingen kan
+      // KUN røre innholdsfeltene pluss retur-mekanikken: lærerens felter
+      // (teacherFeedback, returKode), stemmer og privilegier står urørlige.
       allow update: if isTeacher() || (
         request.auth != null &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(["votedUpBy"]) &&
         isOwnVoteChange()
+      ) || (
+        erReturInnsending() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "name", "birthYear", "deathYear", "gender", "metaGenre", "instrument",
+          "mainGenre", "subGenre", "influenceStart", "influenceEnd", "recordLabel",
+          "geography", "description", "keyWorks", "musicExamples", "kilder",
+          "imageUrl", "imageCredit", "proposedBy",
+          "status", "innsendtKode", "studentComment"
+        ]) &&
+        artistInnholdOk()
       );
 
       allow delete: if isTeacher();
@@ -153,6 +192,39 @@ service cloud.firestore {
 
     // ---- Teknologiske innovasjoner ----
     match /tech/{doc} {
+      // Innholdskrav og tak for et studentskrevet kort — delt av create og
+      // retur-innsendingen, samme grunn som artistInnholdOk over.
+      function techInnholdOk() {
+        return request.resource.data.name is string &&
+          request.resource.data.name.size() > 0 &&
+          request.resource.data.name.size() <= 120 &&
+          request.resource.data.get("description", "").size() <= 5000 &&
+          request.resource.data.get("imageUrl", "").size() <= 2000 &&
+          request.resource.data.get("proposedBy", "").size() <= 100 &&
+          // Kilder er en liste med korte strenger — hindrer at feltet brukes til
+          // å dytte inn vilkårlig store data via et «forslag».
+          request.resource.data.get("kilder", []).size() <= 20 &&
+          // Samme tak som pendingEdits bruker for de samme feltene. Uten dem var
+          // ti av femten felter ubegrensede strenger her, mens forslags-flyten
+          // kappet dem — et kort opprettet direkte mot REST kunne bære ~1 MB.
+          request.resource.data.get("type", "").size() <= 40 &&
+          request.resource.data.get("category", "").size() <= 100 &&
+          request.resource.data.get("instrument", "").size() <= 100 &&
+          request.resource.data.get("decade", "").size() <= 20 &&
+          request.resource.data.get("adoptedLabel", "").size() <= 300 &&
+          request.resource.data.get("imageCredit", "").size() <= 300;
+      }
+      // Se artists: koden er beviset, uid er bare gjenfinning.
+      function erReturInnsending() {
+        return request.auth != null &&
+          resource.data.get("status", "") == "returnert" &&
+          resource.data.get("returKode", "") != "" &&
+          request.resource.data.get("innsendtKode", "") == resource.data.get("returKode", "") &&
+          request.resource.data.status == "pending" &&
+          request.resource.data.get("studentComment", "").size() <= 1000 &&
+          request.resource.data.get("innsendtKode", "").size() <= 12;
+      }
+
       allow read: if true;
       // Studenter (anonymt innlogget) kan foreslå nye innovasjonskort med
       // status:"pending". Lærer kan endre/slette alt og opprette fritt.
@@ -160,29 +232,26 @@ service cloud.firestore {
         request.auth != null &&
         request.resource.data.keys().hasOnly([
           "name", "type", "category", "instrument", "decade", "inventedYear", "adoptedYear", "adoptedLabel",
-          "description", "kilder", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt"
+          "description", "kilder", "imageUrl", "imageCredit", "proposedBy", "status", "createdAt",
+          "ownerUid"
         ]) &&
         request.resource.data.status == "pending" &&
-        request.resource.data.name is string &&
-        request.resource.data.name.size() > 0 &&
-        request.resource.data.name.size() <= 120 &&
-        request.resource.data.get("description", "").size() <= 5000 &&
-        request.resource.data.get("imageUrl", "").size() <= 2000 &&
-        request.resource.data.get("proposedBy", "").size() <= 100 &&
-        // Kilder er en liste med korte strenger — hindrer at feltet brukes til
-        // å dytte inn vilkårlig store data via et «forslag».
-        request.resource.data.get("kilder", []).size() <= 20 &&
-        // Samme tak som pendingEdits bruker for de samme feltene. Uten dem var
-        // ti av femten felter ubegrensede strenger her, mens forslags-flyten
-        // kappet dem — et kort opprettet direkte mot REST kunne bære ~1 MB.
-        request.resource.data.get("type", "").size() <= 40 &&
-        request.resource.data.get("category", "").size() <= 100 &&
-        request.resource.data.get("instrument", "").size() <= 100 &&
-        request.resource.data.get("decade", "").size() <= 20 &&
-        request.resource.data.get("adoptedLabel", "").size() <= 300 &&
-        request.resource.data.get("imageCredit", "").size() <= 300
+        request.resource.data.get("ownerUid", "") in ["", request.auth.uid] &&
+        techInnholdOk()
       );
-      allow update, delete: if isTeacher();
+      // Retur-innsending: kun innholdsfeltene + retur-mekanikken kan røres,
+      // aldri lærerens felter (teacherFeedback/returKode) eller status utover
+      // returnert → pending.
+      allow update: if isTeacher() || (
+        erReturInnsending() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "name", "type", "category", "instrument", "decade", "inventedYear", "adoptedYear", "adoptedLabel",
+          "description", "kilder", "imageUrl", "imageCredit", "proposedBy",
+          "status", "innsendtKode", "studentComment"
+        ]) &&
+        techInnholdOk()
+      );
+      allow delete: if isTeacher();
     }
 
     // ---- Endringsforslag (foreslåtte endringer på eksisterende kort) ----
@@ -198,18 +267,16 @@ service cloud.firestore {
       function capOk(key, max) {
         return pf().get(key, "").size() <= max;
       }
-
-      allow read: if true;
-      allow create: if (
-        request.auth != null &&
-        request.resource.data.keys().hasOnly([
-          "entityType", "entityId", "entityName", "proposedFields",
-          "proposedBy", "level", "createdAt"
-        ]) &&
-        request.resource.data.entityType in ["artist", "tech", "subgenre", "instrument", "decade-society", "decade-tech"] &&
-        request.resource.data.entityId is string &&
-        request.resource.data.entityId.size() <= 200 &&
-        request.resource.data.proposedFields is map &&
+      // Validering av selve forslags-feltene, DELT av create og retur-
+      // innsendingen: hadde de hver sin kopi, ville de drevet fra hverandre.
+      // Størrelsestak per felt (samme vern som artists/tech-create), så ingen
+      // kan fylle samlingen med ~1 MB-dokumenter: korte strenger med rause
+      // tak, URL som artist-create (2000), beskrivelse 5000, langtekstene
+      // (instrumentsammendrag/tiårstekst) 20 000. Lister begrenses i ANTALL —
+      // regler kan ikke validere hvert element, så innholdet i kilder-rader
+      // dekkes av moderasjonskøen (lærer ser og avviser).
+      function forslagOk() {
+        return request.resource.data.proposedFields is map &&
         request.resource.data.proposedFields.size() <= 30 &&
         // KUN kjente foreslåbare nøkler: unionen av PROPOSABLE_KEYS i
         // js/proposal-fields.js — HOLD LISTENE I SYNK (nytt foreslåbart felt må
@@ -223,16 +290,6 @@ service cloud.firestore {
           "keyWorks", "musicExamples",
           "activeFrom", "activeTo", "era", "body", "society", "tech"
         ]) &&
-        // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
-        // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
-        // dessuten kun main/sub; her tillates også meta som gyldig nivåverdi.
-        request.resource.data.get("level", "main") in ["meta", "main", "sub"] &&
-        // Størrelsestak per felt (samme vern som artists/tech-create), så ingen
-        // kan fylle samlingen med ~1 MB-dokumenter: korte strenger med rause
-        // tak, URL som artist-create (2000), beskrivelse 5000, langtekstene
-        // (instrumentsammendrag/tiårstekst) 20 000. Lister begrenses i ANTALL —
-        // regler kan ikke validere hvert element, så innholdet i kilder-rader
-        // dekkes av moderasjonskøen (lærer ser og avviser).
         capOk("name", 120) &&
         capOk("gender", 40) &&
         capOk("metaGenre", 100) &&
@@ -255,11 +312,50 @@ service cloud.firestore {
         capOk("kilder", 50) &&
         // Samme tak som artists/create bruker for de samme listene.
         capOk("keyWorks", 50) &&
-        capOk("musicExamples", 50) &&
+        capOk("musicExamples", 50);
+      }
+      // Se artists: koden er beviset, uid er bare gjenfinning.
+      function erReturInnsending() {
+        return request.auth != null &&
+          resource.data.get("status", "") == "returnert" &&
+          resource.data.get("returKode", "") != "" &&
+          request.resource.data.get("innsendtKode", "") == resource.data.get("returKode", "") &&
+          request.resource.data.get("status", "") == "open" &&
+          request.resource.data.get("studentComment", "").size() <= 1000 &&
+          request.resource.data.get("innsendtKode", "").size() <= 12;
+      }
+
+      allow read: if true;
+      allow create: if (
+        request.auth != null &&
+        request.resource.data.keys().hasOnly([
+          "entityType", "entityId", "entityName", "proposedFields",
+          "proposedBy", "level", "createdAt", "ownerUid"
+        ]) &&
+        request.resource.data.get("ownerUid", "") in ["", request.auth.uid] &&
+        request.resource.data.entityType in ["artist", "tech", "subgenre", "instrument", "decade-society", "decade-tech"] &&
+        request.resource.data.entityId is string &&
+        request.resource.data.entityId.size() <= 200 &&
+        forslagOk() &&
+        // level (kun brukt av subgenre-forslag) må være en kjent verdi — hindrer
+        // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
+        // dessuten kun main/sub; her tillates også meta som gyldig nivåverdi.
+        request.resource.data.get("level", "main") in ["meta", "main", "sub"] &&
         request.resource.data.get("entityName", "").size() <= 200 &&
         request.resource.data.get("proposedBy", "").size() <= 100
       );
-      allow update, delete: if isTeacher();
+      // Retur-innsending: forslags-feltene byttes ut, proposedBy og kommentar
+      // kan settes, status går returnert → open. Identiteten (entityType/
+      // entityId/entityName/level) og lærerens felter kan IKKE røres.
+      allow update: if isTeacher() || (
+        erReturInnsending() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "proposedFields", "proposedBy", "status", "innsendtKode", "studentComment"
+        ]) &&
+        request.resource.data.get("proposedBy", "").size() <= 100 &&
+        forslagOk()
+      );
+      allow delete: if isTeacher();
     }
   }
 }

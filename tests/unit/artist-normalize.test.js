@@ -91,3 +91,30 @@ test("null/søppel-elementer i kilder/keyWorks/musicExamples krasjer ikke", () =
   assert.deepEqual(n.keyWorks, [{ title: "Bare en streng" }, { title: "Verk" }]);
   assert.deepEqual(n.musicExamples.map((m) => m.url), ["https://ok.no"]);
 });
+
+// Returflyten (v5.13): status «returnert» og returfeltene skal overleve en
+// eksport → import — ellers mister en gjenoppretting både tilbakemeldingen og
+// koden mens et forslag er hos studenten. En STUDENTinnsending (uten feltene)
+// skal derimot ikke få dem påført: reglene ville avvist dokumentet.
+test("buildArtistDoc: returnert-status og returfeltene bevares ved import", async () => {
+  const { buildArtistDoc } = await import("../../js/artist-normalize.js?v=5.12");
+  const inn = {
+    name: "Test", status: "returnert", ownerUid: "abc123",
+    teacherFeedback: "Mangler kilder.", returKode: "X7K2P",
+    studentComment: "", innsendtKode: "X7K2P", returnedAt: "2026-09-09T10:00:00Z",
+  };
+  const ut = buildArtistDoc(inn);
+  assert.equal(ut.status, "returnert");
+  assert.equal(ut.teacherFeedback, "Mangler kilder.");
+  assert.equal(ut.returKode, "X7K2P");
+  assert.equal(ut.ownerUid, "abc123");
+  assert.equal("studentComment" in ut, false, "tomme returfelter skal ikke påføres");
+
+  const student = buildArtistDoc({ name: "Fersk" });
+  assert.equal(student.status, "pending");
+  for (const f of ["ownerUid", "teacherFeedback", "returKode", "innsendtKode"]) {
+    assert.equal(f in student, false, `studentinnsending skal ikke bære ${f}`);
+  }
+  // Ukjent status normaliseres fortsatt til pending.
+  assert.equal(buildArtistDoc({ name: "X", status: "tull" }).status, "pending");
+});

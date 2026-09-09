@@ -90,7 +90,10 @@ export function subscribeSharedData(state, hooks = {}) {
   });
 
   subscribeTech((items) => {
-    state.techItems = keepPendingTech ? items : items.filter((t) => t.status !== "pending");
+    // TILLATliste, ikke nektliste: studentene skal se aktive kort (eldre
+    // lærerkort mangler status-felt og teller som aktive). En nektliste mot
+    // «pending» ville lekket enhver NY status — «returnert» (v5.13) inkludert.
+    state.techItems = keepPendingTech ? items : items.filter((t) => (t.status || "active") === "active");
     onTech?.(state.techItems);
   });
 

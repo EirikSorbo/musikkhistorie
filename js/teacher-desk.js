@@ -57,7 +57,7 @@ function buildCategories() {
   ]))].sort(byNo);
 
   const activeTech = state.techItems
-    .filter((t) => t.status !== "pending")
+    .filter((t) => (t.status || "active") === "active")
     .sort((a, b) => byNo(a.name || "", b.name || ""));
 
   return [

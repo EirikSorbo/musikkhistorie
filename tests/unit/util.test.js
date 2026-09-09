@@ -143,3 +143,20 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
   assert.doesNotMatch(src, /banner\.textContent = `Kunne ikke laste data fra databasen \(\$\{/,
     "teksten skal ikke lenger være hardkodet til én årsak");
 });
+
+// Returkoden leses opp muntlig i klasserommet og tastes på telefon: fast
+// lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
+test("genererReturKode: lengde, alfabet og normalisering", async () => {
+  const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
+    = await import("../../js/util.js?v=5.12");
+  for (let i = 0; i < 50; i++) {
+    const k = genererReturKode();
+    assert.equal(k.length, RETUR_KODE_LENGDE);
+    assert.ok([...k].every((c) => RETUR_KODE_ALFABET.includes(c)), `ugyldig tegn i ${k}`);
+  }
+  for (const t of ["O", "0", "I", "1", "L", "U", "V"]) {
+    assert.equal(RETUR_KODE_ALFABET.includes(t), false, `forvekslbart tegn ${t} i alfabetet`);
+  }
+  assert.equal(normaliserReturKode("  x7 k-2p "), "X7K2P");
+  assert.equal(normaliserReturKode(null), "");
+});

@@ -93,10 +93,18 @@ export function buildArtistDoc(data) {
   for (const f of ARTIST_FIELDS) {
     docData[f.key] = n[f.key] ?? emptyValueFor(f.type);
   }
-  // Status bevares ved lærer-import (active/removed); alt annet → pending.
-  const status = ["active", "removed"].includes(data.status) ? data.status : "pending";
+  // Status bevares ved lærer-import (active/removed/returnert — den siste er
+  // returflytens «hos studenten», v5.13); alt annet → pending.
+  const status = ["active", "removed", "returnert"].includes(data.status) ? data.status : "pending";
+  // Returflytens felter følger KUN med når de finnes (lærer-import av backup).
+  // En studentinnsending sender dem aldri, og reglene ville avvist dem der.
+  const retur = {};
+  for (const f of ["ownerUid", "teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]) {
+    if (data[f] != null && data[f] !== "") retur[f] = data[f];
+  }
   return {
     ...docData,
+    ...retur,
     proposedBy: n.proposedBy || "Anonym",
     status,
     removedBy: status === "removed" ? "teacher" : null,

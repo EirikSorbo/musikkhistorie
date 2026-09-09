@@ -61,4 +61,7 @@ export const ARTIST_EXPORT_FIELDS = [
   ...ARTIST_FIELDS.map((f) => f.key),
   "proposedBy", "priority", "teacherChecked", "status",
   "votedUpBy", "addedYear",
+  // Returflyten (v5.13): uten disse ville en backup tatt mens et forslag var
+  // «hos studenten» mistet både tilbakemeldingen og koden ved gjenoppretting.
+  "ownerUid", "teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt",
 ];

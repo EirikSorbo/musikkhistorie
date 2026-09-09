@@ -130,3 +130,35 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
       `teacher.html: ${id} mangler maxlength`);
   }
 });
+
+// Returflyten (v5.13) henger på fire ting som ikke kan enhetstestes (DOM,
+// Firestore): lekkasjefilteret, regel-grenene, uid-stemplingen og eksporten.
+// Låses på kildenivå, som de andre flersteds-invarianten i denne fila.
+test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+
+  // Studentenes tech-filter skal være en TILLATliste — en nektliste mot
+  // «pending» lekket enhver ny status.
+  assert.match(les("js/shared-data.js"), /\(t\.status \|\| "active"\) === "active"/,
+    "shared-data må filtrere med tillatliste");
+
+  // Alle tre samlingene må ha retur-grenen i reglene, med kode som bevis.
+  const rules = les("firestore.rules");
+  assert.equal((rules.match(/function erReturInnsending\(\)/g) || []).length, 3,
+    "alle tre samlingene trenger retur-grenen");
+  assert.equal((rules.match(/innsendtKode/g) || []).length >= 6, true,
+    "kodebeviset må stå i alle grenene");
+  assert.ok(rules.includes('"ownerUid"'), "ownerUid må være tillatt ved create");
+
+  // Alle tre innsendingsstiene stempler eier-uid.
+  const store = les("js/store.js");
+  assert.equal((store.match(/ownerUid: auth\.currentUser\?\.uid \|\| ""/g) || []).length, 3,
+    "addArtist, addTechProposal og addPendingEdit må alle stemple ownerUid");
+
+  // Eksporten bærer returfeltene, ellers er ikke backupen tapsfri.
+  const schema = les("js/artist-schema.js");
+  for (const f of ["teacherFeedback", "returKode", "studentComment", "ownerUid"]) {
+    assert.ok(schema.includes(`"${f}"`), `ARTIST_EXPORT_FIELDS mangler ${f}`);
+  }
+});
