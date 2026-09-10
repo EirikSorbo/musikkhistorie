@@ -36,8 +36,8 @@ import {
   subscribeContent,
   subscribeDecades,
   subscribePodcasts,
-} from "./store.js?v=5.19";
-import { applyGenealogyDoc } from "./genre-model.js?v=5.19";
+} from "./store.js?v=5.20";
+import { applyGenealogyDoc } from "./genre-model.js?v=5.20";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan
@@ -49,6 +49,11 @@ export function sharedStateDefaults() {
     // «datasettet er faktisk tomt».
     artistsLoaded: false,
     genreDescs: {},
+    // true etter første genreDescriptions-snapshot. Sjangerperioder (v5.20)
+    // bruker det til å skille «laster fortsatt» fra «samlingen er tom»: uten
+    // flagget sto figuren på «Laster …» for alltid i en database uten
+    // beskrivelser.
+    genreDescsLoaded: false,
     // Koblingsbeskrivelser (strekene i slektstreet), doc-ID «fra__til».
     edgeDescs: {},
     techItems: [],
@@ -81,6 +86,7 @@ export function subscribeSharedData(state, hooks = {}) {
 
   subscribeGenreDescs((descs) => {
     state.genreDescs = descs;
+    state.genreDescsLoaded = true;
     onGenreDescs?.(descs);
   });
 

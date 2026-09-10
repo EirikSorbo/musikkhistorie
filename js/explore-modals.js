@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.19";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.19";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.20";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.20";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -154,6 +154,22 @@ export const MODAL_HTML = `
   </div>
 </div>
 
+<!-- Sjangerperioder (v5.20): når hver sjanger var aktiv, som liggende stolper
+     gruppert etter metasjanger. Årstallene er de samme som sjangerkortet viser
+     (activeFrom/activeTo i genreDescriptions) og sjangrene kommer fra
+     slektstreet, så figuren følger endringer uten at noe må vedlikeholdes.
+     Tegnes av js/explore-sjangerperioder.js. -->
+<div class="modal-backdrop" id="modal-sjangerperioder">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Sjangerperioder</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Når sjangrene var aktive, gruppert etter metasjanger. Trykk på en sjanger for å åpne sjangerkortet.</p>
+    <div id="sp-body"></div>
+  </div>
+</div>
+
 <!-- Varmekart-redigering (lærer): klikk på en celle åpner nivåvelgeren -->
 <div class="modal-backdrop" id="modal-vk-edit">
   <div class="modal" style="max-width:400px">
@@ -282,6 +298,11 @@ ${TECH_DETAIL_MODAL_HTML}
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
         <span class="dash-title">Varmekart</span>
         <span class="dash-desc">Hvor toneangivende sjangrene var i ulike tiår</span>
+      </button>
+      <button class="dash-card" id="sb-sjangerperioder">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M4 16h7"/><path d="M8 11h8"/><path d="M13 6h7"/></svg>
+        <span class="dash-title">Sjangerperioder</span>
+        <span class="dash-desc">Når sjangrene var aktive</span>
       </button>
       <button class="dash-card" id="sb-himmel">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>

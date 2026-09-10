@@ -29,7 +29,7 @@ function yr(v) {
   return Number.isInteger(v) && v >= AAR_MIN && v <= AAR_MAKS ? v : null;
 }
 
-const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, usikre: [], era: "", lytt: [] };
+const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, activeToUgyldig: false, usikre: [], era: "", lytt: [] };
 
 function fromOverride(o, level) {
   if (!o) return null;
@@ -53,6 +53,11 @@ function fromOverride(o, level) {
     kilder: lvl.kilder || [],
     activeFrom: yr(lvl.activeFrom),
     activeTo: yr(lvl.activeTo),
+    // Satt, men ikke et årstall (streng, 0, femsifret …). yr() gjør verdien om
+    // til null, og da kan ingen skille den fra et tomt felt, som betyr «fortsatt
+    // aktiv». Sjangerperioder (v5.20) viser slike rader som et merket hull i
+    // stedet for en stolpe fram til i dag. Tomt i dataene er alltid null.
+    activeToUgyldig: lvl.activeTo != null && lvl.activeTo !== "" && yr(lvl.activeTo) === null,
     usikre: Array.isArray(lvl.usikre) ? lvl.usikre : [],
     // Epoken som FRITEKST («midten av 1940-tallet», «ca. 1979»). Årstallene over
     // er det presise; denne bærer nyansen, og tidslinjen viser den ordrett.

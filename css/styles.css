@@ -1799,8 +1799,8 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    :has() framfor en egen klasse: da treffer regelen nøyaktig de gridene som
    FAKTISK har seks kort (student- og lærerdashbordet), og faller trygt tilbake
    til auto-fit den dagen et sjuende kort kommer til. Hub-griden «Det store
-   bildet» har ni kort og er bevisst utenfor: like rader der ville tvunget den
-   ned i ett kort per rad på mobil. */
+   bildet» er bevisst utenfor denne regelen: fra v5.20 har den fire kort for
+   studentene og ti for læreren, og får egne regler under. */
 .dash-grid:has(> :nth-child(6):last-child) {
   grid-template-columns: repeat(6, minmax(150px, 240px));
   justify-content: center;
@@ -1820,6 +1820,21 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    griden, venstrestilt under kickeren.
    MÅ stå etter .dash-grid: lik spesifisitet, så kilderekkefølgen avgjør. */
 .dash-grid--enkelt { grid-template-columns: minmax(150px, 240px); justify-content: start; }
+/* Fire kort: studentenes hub fra v5.20 (tidslinje, slektstre, varmekart og
+   sjangerperioder). auto-fit ga 3+1 i hub-modalen, der 584 px innhold har plass
+   til tre kort à 150 px. To og to gir like rader, med samme tak som over.
+   Treffer bare grider som FAKTISK har fire kort. */
+.dash-grid:has(> :nth-child(4):last-child),
+.dash-grid:has(> :nth-child(10):last-child) {
+  /* minmax(0, …), ikke 150 px: på en 320 px-telefon har hub-modalen bare
+     ~272 px innhold, og to spor på minst 150 px ga sidelengs scroll med et
+     avkuttet kort. Mobilregelens repeat(2, 1fr) krympet; det skal denne også. */
+  grid-template-columns: repeat(2, minmax(0, 240px));
+  justify-content: center;
+}
+/* Ti kort: lærerens hub fra v5.20. Tre kolonner (det auto-fit gir i 640 px-
+   modalen) ga 3+3+3+1 med et ensomt kort nederst. To kolonner er eneste
+   jevne oppsett som får plass. Står i samme regel som fire kort over. */
 .dash-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -2623,4 +2638,55 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .gxb-node:focus-visible .gxb-pill {
   stroke-width: 5;
   filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.45));
+}
+
+
+/* ----- Sjangerperioder (v5.20, js/explore-sjangerperioder.js) -----
+   Liggende stolper per sjanger, navnet over stolpen som i diagrammet brukeren
+   likte. Stolper, navn, tiårsstreker og akse posisjoneres i prosent av SAMME
+   spor, så alt holder seg på linje uansett bredde. Minstebredden gir scroll i
+   stedet for sammenpressede navn på mobil, som i varmekartet. */
+.sp-scroll { overflow-x: auto; }
+.sp-figur { min-width: 560px; padding: 6px 28px 0; }
+.sp-rader { position: relative; }
+/* Lagdeling: tiårsstrekene over radens hover-bakgrunn (ellers forsvant de
+   nøyaktig i raden man leser av), stolpe og navn over strekene. .sp-rad lager
+   ingen stablingskontekst, så z-indeksene virker på tvers av radene. */
+.sp-strek {
+  position: absolute; top: 0; bottom: 0; width: 0; z-index: 1;
+  border-left: 1px dashed var(--line-strong);
+  opacity: 0.55; pointer-events: none;
+}
+.sp-rad {
+  position: relative; display: block; width: 100%; height: 40px;
+  padding: 0; border: 0; border-radius: 6px;
+  background: none; font: inherit; color: inherit; cursor: pointer;
+}
+@media (hover: hover) {
+  .sp-rad:hover { background: var(--surface-2); }
+}
+.sp-rad:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* min-width: en gyldig periode skal alltid synes, også når den er kort. */
+.sp-stolpe { position: absolute; bottom: 7px; height: 11px; min-width: 3px; border-radius: 2px; z-index: 2; }
+.sp-navn {
+  position: absolute; bottom: 20px; white-space: nowrap; z-index: 2;
+  font-size: 0.8rem; font-weight: 700; line-height: 1.2; color: var(--text);
+}
+.sp-navn[data-anker="midt"] { transform: translateX(-50%); }
+.sp-navn[data-anker="slutt"] { transform: translateX(-100%); }
+/* Sjanger uten brukbare årstall: vises som hull, ikke skjult. */
+.sp-rad--mangler { height: 30px; text-align: left; padding: 0 4px; }
+.sp-rad--mangler .sp-navn { position: static; }
+.sp-mangler { margin-left: 8px; font-size: 0.76rem; font-weight: 500; color: var(--warn); }
+.sp-akse { position: relative; height: 28px; margin: 2px 0 10px; border-top: 2px solid var(--text); }
+.sp-akse span {
+  position: absolute; top: 6px; transform: translateX(-50%);
+  font-size: 0.74rem; color: var(--muted);
+}
+.sp-forklaring { margin: 16px 0 0; font-size: 0.8rem; line-height: 1.6; color: var(--muted); }
+/* Fargeprøven og teksten den forklarer brytes alltid sammen. */
+.sp-forklaring-par { display: inline-flex; align-items: center; gap: 8px; }
+.sp-toning {
+  display: inline-block; width: 44px; height: 9px; border-radius: 2px;
+  background: linear-gradient(to right, var(--muted) 45%, transparent);
 }

@@ -5,19 +5,20 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=5.19";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.19";
-import { MODAL_HTML } from "./explore-modals.js?v=5.19";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=5.19";
-import { openVarmekart } from "./explore-varmekart.js?v=5.19";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=5.19";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=5.19";
-import { openDecadeList } from "./explore-decade.js?v=5.19";
-import { openReferanser } from "./explore-referanser.js?v=5.19";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=5.19";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=5.19";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=5.19";
-import { openSok, wireSok } from "./explore-search.js?v=5.19";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=5.20";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.20";
+import { MODAL_HTML } from "./explore-modals.js?v=5.20";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=5.20";
+import { openVarmekart } from "./explore-varmekart.js?v=5.20";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.20";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=5.20";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=5.20";
+import { openDecadeList } from "./explore-decade.js?v=5.20";
+import { openReferanser } from "./explore-referanser.js?v=5.20";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=5.20";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=5.20";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=5.20";
+import { openSok, wireSok } from "./explore-search.js?v=5.20";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -31,7 +32,7 @@ function injectModals() {
 function wireModals() {
   ["modal-teknologi", "modal-instrumenter", "modal-decade-view",
    "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
-   "modal-varmekart", "modal-vk-edit", "modal-tidslinje", "modal-referanser", "modal-sjangerhimmel",
+   "modal-varmekart", "modal-vk-edit", "modal-sjangerperioder", "modal-tidslinje", "modal-referanser", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier",
    "modal-instr-tech", "modal-podkaster", "modal-sok"].forEach((id) => setupModal(id));
@@ -118,10 +119,10 @@ function wireModals() {
   const sbModal = document.getElementById("modal-store-bildet");
   if (sbModal) {
     // MIDLERTIDIG (feature-flags.js): studentene slippes inn i huben, men bare
-    // til de tre visualiseringene. Kortene FJERNES, ikke display:none — griden
+    // til visualiseringene (tre fra 2026-09-10, fire med sjangerperioder). Kortene FJERNES, ikke display:none — griden
     // er en :has()-basert auto-layout som teller BARNA, så et skjult kort ville
     // etterlatt et hull i rutenettet (samme felle som forsidens hubkort, se
-    // js/landing.js). Læreren beholder alle ni: hen skal kunne kvalitetssikre
+    // js/landing.js). Læreren beholder alle kortene: hen skal kunne kvalitetssikre
     // innholdet nettopp mens studentene ikke ser det.
     if (!opts.onStoryEdit) {
       sbModal.querySelectorAll(".dash-card").forEach((kort) => {
@@ -142,6 +143,7 @@ function wireModals() {
     if (sbTre && opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
     else sbTre?.remove();
     paaKort("sb-varmekart", openVarmekart);
+    paaKort("sb-sjangerperioder", openSjangerperioder);
     paaKort("sb-himmel", openSjangerhimmel);
     paaKort("sb-referanser", openReferanser);
     paaKort("sb-guide", openAppGuide);

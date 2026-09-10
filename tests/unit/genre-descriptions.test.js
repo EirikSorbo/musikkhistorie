@@ -1,9 +1,9 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=5.19";
-import { resolveMainDesc } from "../../js/genealogy.js?v=5.19";
-import { GENEALOGY } from "../../js/genre-model.js?v=5.19";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=5.20";
+import { resolveMainDesc } from "../../js/genealogy.js?v=5.20";
+import { GENEALOGY } from "../../js/genre-model.js?v=5.20";
 
 const descs = {
   Blues: {
@@ -104,7 +104,7 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-epoken", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=5.19");
+  const { eraText } = await import("../../js/genealogy.js?v=5.20");
   // Alt leses nå fra ÉN kilde (genreDescriptions). Fram til v4.64 kom friteksten
   // fra treets node, og da kunne kortet og tidslinjen vise ulik epoke.
   // «ca.» står én gang og gjelder hele perioden (v4.86) — aldri foran «i dag».
@@ -116,7 +116,7 @@ test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-ep
 });
 
 test("eraLine: sjangerkortet viser årstallene OG epoke-friteksten", async () => {
-  const { eraLine } = await import("../../js/genealogy.js?v=5.19");
+  const { eraLine } = await import("../../js/genealogy.js?v=5.20");
   // Friteksten er ikke fallback her — den står som egen setning etter årstallene.
   assert.equal(
     eraLine({ activeFrom: 1945, activeTo: 1960, era: "midten av 1940-tallet" }),
@@ -158,4 +158,27 @@ test("usikre påstander følger med, og er alltid en liste", () => {
   assert.deepEqual(resolveDesc(d, "B", "main").usikre, []);
   assert.deepEqual(resolveDesc(d, "C", "main").usikre, [], "ugyldig form skal bli tom liste, ikke krasje");
   assert.deepEqual(resolveDesc(d, "Finnes ikke", "main").usikre, []);
+});
+
+// Et sluttår som er SATT men ikke et årstall må kunne skilles fra et tomt felt:
+// yr() gjør begge om til null, og tomt betyr «fortsatt aktiv». Sjangerperioder
+// (v5.20) viser det ugyldige som et hull i stedet for en stolpe til i dag.
+test("activeToUgyldig skiller et korrupt sluttår fra et tomt", () => {
+  const d = {
+    Tomt: { main: { activeFrom: 1990, activeTo: null } },
+    Mangler: { main: { activeFrom: 1990 } },
+    Gyldig: { main: { activeFrom: 1935, activeTo: 1945 } },
+    Streng: { main: { activeFrom: 1935, activeTo: "1945" } },
+    Null: { main: { activeFrom: 1935, activeTo: 0 } },
+    Femsifret: { main: { activeFrom: 1935, activeTo: 19999 } },
+  };
+  for (const n of ["Tomt", "Mangler", "Gyldig"]) {
+    assert.equal(resolveDesc(d, n, "main").activeToUgyldig, false, n);
+  }
+  for (const n of ["Streng", "Null", "Femsifret"]) {
+    const r = resolveDesc(d, n, "main");
+    assert.equal(r.activeTo, null, `${n}: årstallet skal fortsatt leses som null`);
+    assert.equal(r.activeToUgyldig, true, n);
+  }
+  assert.equal(resolveDesc(d, "Finnes ikke", "main").activeToUgyldig, false);
 });
