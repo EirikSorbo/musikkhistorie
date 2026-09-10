@@ -1,16 +1,16 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.18";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.18";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.18";
-import { onGenreModelChanged } from "./genre-model.js?v=5.18";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.18";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.18";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.18";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.18";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.18";
-import { initExplore } from "./explore.js?v=5.18";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.18";
-import { currentEntityValues } from "./entity-values.js?v=5.18";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.18";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.19";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.19";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.19";
+import { onGenreModelChanged } from "./genre-model.js?v=5.19";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.19";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.19";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.19";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.19";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.19";
+import { initExplore } from "./explore.js?v=5.19";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.19";
+import { currentEntityValues } from "./entity-values.js?v=5.19";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.19";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

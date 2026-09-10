@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=5.18";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.18";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.18";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.18";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.18";
+} from "./limits.js?v=5.19";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.19";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.19";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.19";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.19";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -450,7 +450,7 @@ export function renderDashboard(el, {
       </div>
       ${pageItem("Røtter før 1910", rotterOk, "rotter")}
       ${pageItem("Om historie", omHistorieOk, "omHistorie")}
-      ${pageItem("Skriveveiledning (Foreslå en artist)", pageStatus("skriveveiledning"), "skriveveiledning")}
+      ${pageItem("Skriveveiledning", pageStatus("skriveveiledning"), "skriveveiledning")}
       ${missItem("Sjangre uten beskrivelse", mainMissing.length,
         mainMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="main"`)).join(""))}
       ${missItem("Undersjangre uten beskrivelse", subMissing.length,

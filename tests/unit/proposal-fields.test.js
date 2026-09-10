@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.18";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.19";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -191,7 +191,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.18");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.19");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -246,7 +246,7 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
 
   assert.match(les("js/teacher-content.js"), /skriveveiledning:\s*"Slik skriver du beskrivelsen"/);
   const dash = les("js/ui-dashboard.js");
-  assert.ok(dash.includes('pageItem("Skriveveiledning (Foreslå en artist)"'),
+  assert.ok(dash.includes('pageItem("Skriveveiledning", '),
     "læreren må nå siden fra «Innhold som mangler»");
   assert.match(dash, /return onEditPage\?\.\(id\)/, "ukjente sider skal gå til editoren");
   assert.match(les("js/teacher-artists.js"), /onEditPage:\s*\(id\)\s*=>\s*openPageEditor\(id\)/);
