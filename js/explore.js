@@ -5,19 +5,19 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=5.16";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.16";
-import { MODAL_HTML } from "./explore-modals.js?v=5.16";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=5.16";
-import { openVarmekart } from "./explore-varmekart.js?v=5.16";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=5.16";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=5.16";
-import { openDecadeList } from "./explore-decade.js?v=5.16";
-import { openReferanser } from "./explore-referanser.js?v=5.16";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=5.16";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=5.16";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=5.16";
-import { openSok, wireSok } from "./explore-search.js?v=5.16";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=5.17";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.17";
+import { MODAL_HTML } from "./explore-modals.js?v=5.17";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=5.17";
+import { openVarmekart } from "./explore-varmekart.js?v=5.17";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=5.17";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=5.17";
+import { openDecadeList } from "./explore-decade.js?v=5.17";
+import { openReferanser } from "./explore-referanser.js?v=5.17";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=5.17";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=5.17";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=5.17";
+import { openSok, wireSok } from "./explore-search.js?v=5.17";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -117,17 +117,34 @@ function wireModals() {
   // og navigerer bort — knappen skjules om siden ikke ga en handler.
   const sbModal = document.getElementById("modal-store-bildet");
   if (sbModal) {
-    sbModal.querySelector("#sb-om-historie").addEventListener("click", openOmHistorie);
-    sbModal.querySelector("#sb-rotter").addEventListener("click", openRotter);
-    sbModal.querySelector("#sb-historier").addEventListener("click", () => openHistorier());
-    sbModal.querySelector("#sb-tidslinje").addEventListener("click", () => openTidslinje());
+    // MIDLERTIDIG (feature-flags.js): studentene slippes inn i huben, men bare
+    // til de tre visualiseringene. Kortene FJERNES, ikke display:none — griden
+    // er en :has()-basert auto-layout som teller BARNA, så et skjult kort ville
+    // etterlatt et hull i rutenettet (samme felle som forsidens hubkort, se
+    // js/landing.js). Læreren beholder alle ni: hen skal kunne kvalitetssikre
+    // innholdet nettopp mens studentene ikke ser det.
+    if (!opts.onStoryEdit) {
+      sbModal.querySelectorAll(".dash-card").forEach((kort) => {
+        if (SKJUL_I_HUBEN[kort.id]) kort.remove();
+      });
+    }
+    // Optional chaining hele veien: et fjernet kort skal ikke stoppe koblingen
+    // av de som står igjen.
+    const paaKort = (id, fn) => sbModal.querySelector("#" + id)?.addEventListener("click", fn);
+    paaKort("sb-om-historie", openOmHistorie);
+    paaKort("sb-rotter", openRotter);
+    paaKort("sb-historier", () => openHistorier());
+    paaKort("sb-tidslinje", () => openTidslinje());
     const sbTre = sbModal.querySelector("#sb-slektstre");
-    if (opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
-    else sbTre.style.display = "none";
-    sbModal.querySelector("#sb-varmekart").addEventListener("click", openVarmekart);
-    sbModal.querySelector("#sb-himmel").addEventListener("click", openSjangerhimmel);
-    sbModal.querySelector("#sb-referanser").addEventListener("click", openReferanser);
-    sbModal.querySelector("#sb-guide").addEventListener("click", openAppGuide);
+    // Slektstre-siden selv gir ingen onSlektstre (vi ER i treet). Kortet
+    // fjernes da av samme grunn som over: display:none ville latt det telle med
+    // i griden og gitt et hull.
+    if (sbTre && opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
+    else sbTre?.remove();
+    paaKort("sb-varmekart", openVarmekart);
+    paaKort("sb-himmel", openSjangerhimmel);
+    paaKort("sb-referanser", openReferanser);
+    paaKort("sb-guide", openAppGuide);
   }
 
   // Ligger i kategorirad-en (se MODAL_HTML) — samme knappestørrelse som fanene.

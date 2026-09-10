@@ -3,7 +3,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { byggIndeks, sok, utdrag, marker, normaliser, delOppSok } from "../../js/search.js?v=5.16";
+import { byggIndeks, sok, utdrag, marker, normaliser, delOppSok } from "../../js/search.js?v=5.17";
 
 const STATE = {
   isTeacher: false,
@@ -78,18 +78,31 @@ test("indeksen dekker alt innholdet, én post per ting", () => {
 });
 
 test("studenten søker bare i det studenten kan åpne", () => {
-  const skjul = { storeBildet: true, metasjangerhistorier: true, koblingsbeskrivelser: true };
-  const t = typer(byggIndeks(STATE, { erLærer: false, skjul }));
+  const skjul = { metasjangerhistorier: true, koblingsbeskrivelser: true };
+  // Innholdssidene henger på hvert sitt kort i huben, ikke på huben som helhet
+  // (v5.17): huben er åpen for studentene, men kortene er skjult hver for seg.
+  const skjulHub = { "sb-rotter": true, "sb-om-historie": true, "sb-guide": true };
+  const t = typer(byggIndeks(STATE, { erLærer: false, skjul, skjulHub }));
   assert.equal(t.artist, 2, "skjulte kort og forslag som venter, er ute");
   assert.equal(t.historie, undefined, "sjangerhistoriene er skjult");
-  assert.equal(t.side, undefined, "innholdssidene nås fra en skjult hub");
+  assert.equal(t.side, undefined, "sidene bak de skjulte hub-kortene er ute");
   assert.equal(t.kobling, undefined, "koblingsbeskrivelsene er skjult");
   // Læreren ser de samme fire, med samme brytere.
-  const tl = typer(byggIndeks(STATE, { erLærer: true, skjul }));
+  const tl = typer(byggIndeks(STATE, { erLærer: true, skjul, skjulHub }));
   assert.equal(tl.artist, 4);
   assert.equal(tl.historie, 1);
   assert.equal(tl.side, 2);
   assert.equal(tl.kobling, 1);
+});
+
+// Motstykket: slippes et kort inn i huben, SKAL søket føre dit. Ellers ville
+// studenten få treff på en side hen ikke kan åpne, eller motsatt: en åpen side
+// hen aldri finner.
+test("et synlig hub-kort gjør siden søkbar igjen", () => {
+  const skjul = { metasjangerhistorier: true, koblingsbeskrivelser: true };
+  const bareRotter = { "sb-om-historie": true, "sb-guide": true };
+  const t = typer(byggIndeks(STATE, { erLærer: false, skjul, skjulHub: bareRotter }));
+  assert.equal(t.side, 1, "Røtter er åpen og skal finnes i søket");
 });
 
 test("artisten finnes på alt som står på kortet", () => {

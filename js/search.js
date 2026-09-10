@@ -17,10 +17,10 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.16";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.16";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.16";
-import { escapeHtml } from "./util.js?v=5.16";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.17";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.17";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.17";
+import { escapeHtml } from "./util.js?v=5.17";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -100,10 +100,11 @@ function post(type, id, tittel, sti, biter, apne) {
 // ---------------------------------------------------------------------------
 //  INDEKSEN
 // ---------------------------------------------------------------------------
-//  `skjul` er studentvisningens midlertidige brytere (feature-flags.js). Et
+//  `skjul` er studentvisningens midlertidige brytere (feature-flags.js), og
+//  `skjulHub` de samme bryterne for kortene inne i «Det store bildet». Et
 //  treff som fører til en flate studenten ikke kan åpne, skal ikke være der:
 //  søket ville ellers vært en bakvei rundt akkurat de bryterne.
-export function byggIndeks(state = {}, { erLærer = false, skjul = {} } = {}) {
+export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub = {} } = {}) {
   const ut = [];
   const artists = state.artists || [];
   const genreDescs = state.genreDescs || {};
@@ -179,20 +180,17 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {} } = {}) {
   }
 
   // --- Innholdssidene -------------------------------------------------------
-  // Røtter og Om historie nås fra «Det store bildet», som er skjult for
-  // studentene så lenge bryteren står på.
-  if (erLærer || !skjul.storeBildet) {
-    for (const id of ["rotter", "omHistorie"]) {
-      const side = pageFor(id, content);
-      if (!side) continue;
-      ut.push(post("side", id, SIDE_TITTEL[id] || id, "Det store bildet", [side.body],
-        { hva: "side", id }));
-    }
-  }
-  // «Slik bruker du appen» står i huben på lik linje med de to over.
-  if ((erLærer || !skjul.storeBildet) && pageFor("appGuide", content)) {
-    ut.push(post("side", "appGuide", SIDE_TITTEL.appGuide, "Det store bildet",
-      [pageFor("appGuide", content).body], { hva: "side", id: "appGuide" }));
+  // Røtter, Om historie og «Slik bruker du appen» nås KUN fra hvert sitt kort i
+  // «Det store bildet». Huben er åpen for studentene igjen (v5.17), men de tre
+  // kortene er fortsatt skjult, og da skal søket heller ikke føre dit
+  // (brukervalg 2026-09-10). Nøklene er kort-id-ene i SKJUL_I_HUBEN.
+  const HUB_KORT = { rotter: "sb-rotter", omHistorie: "sb-om-historie", appGuide: "sb-guide" };
+  for (const id of ["rotter", "omHistorie", "appGuide"]) {
+    if (!erLærer && skjulHub[HUB_KORT[id]]) continue;
+    const side = pageFor(id, content);
+    if (!side) continue;
+    ut.push(post("side", id, SIDE_TITTEL[id] || id, "Det store bildet", [side.body],
+      { hva: "side", id }));
   }
 
   // --- Instrumentsammendragene ---------------------------------------------

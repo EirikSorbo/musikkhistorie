@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.16";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.17";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -183,4 +183,37 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
     "en eksisterende bruker må returneres, aldri erstattes av en anonym økt");
   assert.ok(kropp.indexOf("authStateReady") < kropp.indexOf("signInAnonymously("),
     "ventingen må komme FØR innloggingen, ellers består kappløpet");
+});
+
+// Hub-bryterne (v5.17) er nøkkel-per-kort-id. En typo, eller et kort som får ny
+// id i markupen, ville gjort flagget til en stille no-op: kortet står synlig og
+// ingenting sier fra. Kildesjekk mot markupen, som ikke kan lastes i Node.
+test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.17");
+
+  // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
+  const markup = les("js/explore-modals.js");
+  const fra = markup.indexOf('id="modal-store-bildet"');
+  const til = markup.indexOf("modal-backdrop", fra + 40);
+  const ider = [...markup.slice(fra, til).matchAll(/id="(sb-[a-z-]+)"/g)].map((m) => m[1]);
+  assert.ok(ider.length >= 9, `fant bare ${ider.length} hub-kort`);
+
+  assert.deepEqual([...Object.keys(SKJUL_I_HUBEN)].sort(), [...ider].sort(),
+    "hvert kort skal ha nøyaktig ett flagg, og hvert flagg peke på et kort");
+
+  // Brukervalget 2026-09-10: bare de tre visualiseringene er åpne.
+  const synlige = ider.filter((id) => !SKJUL_I_HUBEN[id]).sort();
+  assert.deepEqual(synlige, ["sb-slektstre", "sb-tidslinje", "sb-varmekart"]);
+
+  // Huben må være PÅ, ellers ser studenten ingen av dem uansett.
+  assert.equal(SKJUL_I_STUDENTVISNING.storeBildet, false);
+
+  // Sjangerhistoriene har to innganger. Er hub-kortet skjult, må «Metasjangere»
+  // i sjangermodalen være det også, ellers står døra åpen ved siden av.
+  if (SKJUL_I_HUBEN["sb-historier"]) {
+    assert.equal(SKJUL_I_STUDENTVISNING.metasjangerhistorier, true,
+      "hub-kortet og «Metasjangere»-knappen må skjules sammen");
+  }
 });
