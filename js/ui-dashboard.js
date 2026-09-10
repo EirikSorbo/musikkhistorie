@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=5.17";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.17";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.17";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.17";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.17";
+} from "./limits.js?v=5.18";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.18";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.18";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.18";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.18";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -151,6 +151,9 @@ export function renderDashboard(el, {
   countExamplesFor = (list) => list.reduce((n, a) => n + (a.musicExamples || []).length, 0),
   onEditArtist,
   onEditDesc,
+  // Åpner lærerens sideeditor for en innholdsside som ikke har noen egen
+  // visning på lærersiden (skriveveiledningen står i studentskjemaet).
+  onEditPage,
   onEditEdge,
   onEdgeCheck,
   onShowArtistList,
@@ -447,6 +450,7 @@ export function renderDashboard(el, {
       </div>
       ${pageItem("Røtter før 1910", rotterOk, "rotter")}
       ${pageItem("Om historie", omHistorieOk, "omHistorie")}
+      ${pageItem("Skriveveiledning (Foreslå en artist)", pageStatus("skriveveiledning"), "skriveveiledning")}
       ${missItem("Sjangre uten beskrivelse", mainMissing.length,
         mainMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="main"`)).join(""))}
       ${missItem("Undersjangre uten beskrivelse", subMissing.length,
@@ -527,7 +531,16 @@ export function renderDashboard(el, {
     if (story) return explore?.openHistorier(story.dataset.ovStory);
 
     const page = hit("[data-ov-page]");
-    if (page) return page.dataset.ovPage === "rotter" ? explore?.openRotter() : explore?.openOmHistorie();
+    // Røtter og Om historie har egne visninger (med Rediger-knapp). Resten,
+    // som skriveveiledningen, vises bare for studentene, og klikket går rett
+    // til editoren. Ternæren som sto her sendte ALT som ikke var «rotter» til
+    // Om historie.
+    if (page) {
+      const id = page.dataset.ovPage;
+      if (id === "rotter") return explore?.openRotter();
+      if (id === "omHistorie") return explore?.openOmHistorie();
+      return onEditPage?.(id);
+    }
 
     const desc = hit("[data-ov-desc]");
     if (desc) return onEditDesc?.(desc.dataset.ovDesc, desc.dataset.ovLevel);

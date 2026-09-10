@@ -8,15 +8,17 @@ import {
   fetchArtist,
   resubmitArtist,
   subscribeContent,
-} from "./store.js?v=5.17";
-import { loadArtists } from "./artist-cache.js?v=5.17";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.17";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.17";
-import { fillSelect, escapeHtml } from "./ui.js?v=5.17";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.17";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.17";
-import { setupFormatBars } from "./format-bar.js?v=5.17";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.17";
+} from "./store.js?v=5.18";
+import { loadArtists } from "./artist-cache.js?v=5.18";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.18";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.18";
+import { fillSelect, escapeHtml } from "./ui.js?v=5.18";
+import { renderRichText } from "./rich-text.js?v=5.18";
+import { pageFor } from "./story-format.js?v=5.18";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.18";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.18";
+import { setupFormatBars } from "./format-bar.js?v=5.18";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.18";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -290,8 +292,7 @@ async function startRetur(id) {
     if (!a || a.status !== "returnert") {
       banner.hidden = false;
       tekst.innerHTML = "<strong>Dette forslaget er ikke til retting lenger.</strong> Kanskje det alt er levert på nytt eller behandlet av læreren. Skjemaet under legger inn et nytt forslag.";
-      const kommentar = $("#retur-comment")?.closest("label");
-      if (kommentar) kommentar.hidden = true;
+      // Kommentarfeltet blir stående skjult: det er ingen retur å svare på.
       return;
     }
     returState.aktiv = true;
@@ -299,6 +300,8 @@ async function startRetur(id) {
     returState.kode = a.returKode || "";
     banner.hidden = false;
     tekst.innerHTML = `<strong>Tilbakemelding fra læreren:</strong> ${escapeHtml(a.teacherFeedback || "")}`;
+    // Kommentarfeltet står nederst ved navnet (v5.18), og vises bare her.
+    $("#retur-comment-felt").hidden = false;
     const tittel = $("#form-tittel");
     if (tittel) tittel.textContent = `Lever på nytt: ${a.name || ""}`;
     const submitBtn = document.querySelector('#add-form button[type="submit"]');
@@ -308,6 +311,26 @@ async function startRetur(id) {
     banner.hidden = false;
     tekst.textContent = "Kunne ikke hente forslaget (" + (err?.message || err) + "). Gå tilbake til forsiden og prøv igjen.";
   }
+}
+
+// ----------------------------------------------------------------------------
+//  Skriveveiledningen
+// ----------------------------------------------------------------------------
+
+// Teksten er innholdssiden content/skriveveiledning, redigerbar for læreren fra
+// «Innhold som mangler» på Oversikten. Ingen reservetekst i koden (brukerkrav
+// fra v3.3): mangler siden, står hele blokka skjult i stedet for å vise en tom
+// veiledning til studentene. Tegnes på nytt ved hvert content-snapshot, så en
+// lærerendring slår gjennom uten sidelast. <details> beholder åpen/lukket-
+// tilstanden sin, fordi bare innholdet inni byttes ut.
+function visSkrivehjelp(content) {
+  const boks = $("#skrivehjelp");
+  const tekst = $("#skrivehjelp-tekst");
+  if (!boks || !tekst) return;
+  const side = pageFor("skriveveiledning", content);
+  if (!side?.body) { boks.hidden = true; return; }
+  tekst.innerHTML = renderRichText(side.body);
+  boks.hidden = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -349,6 +372,7 @@ function init() {
     applyGenealogyDoc(c?.genealogy);
     refreshControls();
     vokabKlarResolve();
+    visSkrivehjelp(c);
     // Bygg musikkeksempel-radene på nytt KUN når de er urørte. Snapshotet
     // fyrer ved enhver endring i content-samlingen (varmekartceller,
     // innholdssider, referanser) — en ubetinget rebuild slettet alt studenten

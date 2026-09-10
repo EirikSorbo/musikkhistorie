@@ -1042,6 +1042,15 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .card.is-returned { border-left: 3px solid #8b5cf6; opacity: 0.92; }
 
 /* ----- Returflyt («send tilbake») ----- */
+/* [hidden] må vinne over display:flex under. En forfatterstil med display slår
+   nettleserens egen [hidden]-regel uansett spesifisitet, så returbanneret på
+   studentsiden sto synlig for ALLE fra v5.13, med kommentarfeltet øverst i et
+   skjema der det ikke var noen retur å svare på. */
+.retur-info[hidden] { display: none; }
+/* Kommentarfeltet nederst i artistskjemaet: høyere spesifisitet enn
+   skjemaets egne label-regler, av samme grunn. */
+.add-grid .retur-kommentar[hidden] { display: none; }
+.retur-kommentar textarea { width: 100%; }
 .retur-info {
   display: flex;
   flex-direction: column;
@@ -2595,6 +2604,12 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .instr-guide ol { margin: 0; padding-left: 20px; font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
 .instr-guide li { margin-bottom: 4px; }
 .instr-guide strong { color: var(--text); }
+/* Skriveveiledningen i artistskjemaet deler utseendet med instrumentguiden,
+   men teksten er rik tekst fra Firestore (div.rt), ikke en <ol> i markupen. */
+.skrivehjelp .rt { font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
+.skrivehjelp .rt p { margin: 8px 0 6px; }
+.skrivehjelp .rt ol, .skrivehjelp .rt ul { margin: 0 0 6px; padding-left: 20px; }
+.skrivehjelp .rt li { margin-bottom: 4px; }
 
 /* Tegnteller under et tekstfelt med tak (instrumentsammendraget). */
 .char-count { margin: 4px 0 0; font-size: 0.78rem; color: var(--muted); text-align: right; }

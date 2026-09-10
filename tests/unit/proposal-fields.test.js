@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.17";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.18";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -191,7 +191,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.17");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.18");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -216,4 +216,38 @@ test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
     assert.equal(SKJUL_I_STUDENTVISNING.metasjangerhistorier, true,
       "hub-kortet og «Metasjangere»-knappen må skjules sammen");
   }
+});
+
+// Skriveveiledningen og kommentarfeltet (v5.18). To feller låses her:
+//  1. [hidden] på et element med display i CSS ble ignorert, så returbanneret
+//     (med kommentarfeltet) sto synlig for alle studenter fra v5.13.
+//  2. Oversiktens sideklikk sendte alt som ikke var «rotter» til Om historie,
+//     så en ny innholdsside ville åpnet feil side i stedet for editoren.
+// Kildesjekk: markup, CSS og lærerens dashbord kan ikke lastes i Node.
+test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerbar", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+
+  const css = les("css/styles.css");
+  assert.match(css, /\.retur-info\[hidden\]\s*\{\s*display:\s*none/,
+    "returbanneret må kunne skjules selv om .retur-info setter display");
+  assert.match(css, /\.add-grid \.retur-kommentar\[hidden\]\s*\{\s*display:\s*none/,
+    "kommentarfeltet i skjemaet må kunne skjules");
+
+  const html = les("student.html");
+  const iBy = html.indexOf('id="in-by"');
+  const iKommentar = html.indexOf('id="retur-comment"');
+  const iSkjema = html.indexOf('id="add-form"');
+  const iVeiledning = html.indexOf('id="skrivehjelp"');
+  assert.ok(iBy > 0 && iKommentar > iBy, "kommentarfeltet skal stå under navnefeltet");
+  assert.ok(iVeiledning > 0 && iVeiledning < iSkjema, "veiledningen skal stå øverst, over skjemaet");
+  assert.match(html, /<details[^>]*id="skrivehjelp"[^>]*hidden/, "veiledningen starter skjult");
+  assert.match(html, /id="retur-comment-felt"[^>]*hidden/, "kommentarfeltet starter skjult");
+
+  assert.match(les("js/teacher-content.js"), /skriveveiledning:\s*"Slik skriver du beskrivelsen"/);
+  const dash = les("js/ui-dashboard.js");
+  assert.ok(dash.includes('pageItem("Skriveveiledning (Foreslå en artist)"'),
+    "læreren må nå siden fra «Innhold som mangler»");
+  assert.match(dash, /return onEditPage\?\.\(id\)/, "ukjente sider skal gå til editoren");
+  assert.match(les("js/teacher-artists.js"), /onEditPage:\s*\(id\)\s*=>\s*openPageEditor\(id\)/);
 });

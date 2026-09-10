@@ -34,7 +34,7 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 | `genreDescriptions` | objekt | Sjangerbeskrivelser, nestet i tre bolker etter sjangertype (`meta`/`main`/`sub`). `story`-feltet på metasjangrene = sjangerhistoriene. Se seksjon 3. |
 | `edgeDescriptions` | objekt | Koblingsbeskrivelser (strekene i slektstreet). Nøkkel = dokument-ID `fra__til`. |
 | `tech` | array | Teknologiske innovasjoner (alle statuser, også pending). Sortert etter `adoptedYear`. |
-| `pages` | objekt | Innholdssidene: `omHistorie`, `rotter`, `appGuide` og instrumentsammendragene (`instrument-<slug>`). |
+| `pages` | objekt | Innholdssidene: `omHistorie`, `rotter`, `appGuide`, `skriveveiledning` (veiledningen øverst i «Foreslå en artist») og instrumentsammendragene (`instrument-<slug>`). |
 | `podcasts` | array | Podkast-episodene (matches på tittel ved import, så re-import ikke dupliserer). |
 | `teacherChecks` | objekt | Lærerens sjekk-fremdrift per kategori. |
 | `varmekart` | objekt | Varmekart-radene (`heat`: sjangeretikett → 13 tiårsnivåer). Flettes rad for rad ved import. |

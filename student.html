@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.17" />
-  <script src="js/gate.js?v=5.17"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.18" />
+  <script src="js/gate.js?v=5.18"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -46,13 +46,20 @@
     <!-- Legg inn forslag -->
     <section class="panel">
       <h2 id="form-tittel">Foreslå en artist / musiker</h2>
-      <!-- Returflyt (?retur=<id>): lærerens tilbakemelding + kommentar tilbake -->
+      <!-- Returflyt (?retur=<id>): lærerens tilbakemelding. Den står øverst
+           fordi den må leses FØR studenten begynner å rette; kommentarfeltet
+           tilbake står nederst ved navnet, der man skriver det til slutt. -->
       <div id="retur-banner" class="retur-info" hidden>
         <span id="retur-banner-tekst"></span>
-        <label style="display:block;margin-top:6px">Kommentar til læreren (valgfritt)
-          <textarea id="retur-comment" rows="2" maxlength="1000" style="width:100%" placeholder="F.eks. hva du har endret"></textarea>
-        </label>
       </div>
+      <!-- Skriveveiledningen (v5.18). Teksten bor i Firestore
+           (content/skriveveiledning) så læreren eier ordlyden; appen har ingen
+           reservetekster i koden, så blokka står skjult til siden finnes.
+           Sammenklappet som standard, som «Slik jobber dere med denne delen». -->
+      <details class="instr-guide skrivehjelp" id="skrivehjelp" hidden>
+        <summary>Slik skriver du beskrivelsen</summary>
+        <div id="skrivehjelp-tekst" class="rt"></div>
+      </details>
       <form id="add-form" class="add-grid">
         <label>Navn *
           <input type="text" id="in-name" required placeholder="f.eks. Robert Johnson" />
@@ -122,6 +129,11 @@
           <input type="text" id="in-by" placeholder="Fornavn" required maxlength="100" />
         </label>
 
+        <!-- Kun i returflyten: vises av startRetur i js/student.js. -->
+        <label class="full retur-kommentar" id="retur-comment-felt" hidden>Kommentar til læreren (valgfritt)
+          <textarea id="retur-comment" rows="2" maxlength="1000" placeholder="F.eks. hva du har endret"></textarea>
+        </label>
+
         <div class="full add-actions">
           <button type="submit" class="btn primary">Legg til forslag</button>
           <span id="form-msg" class="form-msg"></span>
@@ -134,7 +146,7 @@
 
   </footer>
 
-  <script src="js/load-guard.js?v=5.17"></script>
-  <script type="module" src="js/student.js?v=5.17"></script>
+  <script src="js/load-guard.js?v=5.18"></script>
+  <script type="module" src="js/student.js?v=5.18"></script>
 </body>
 </html>
