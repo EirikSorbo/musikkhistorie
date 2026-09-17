@@ -1,18 +1,18 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.24";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.24";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.24";
-import { onGenreModelChanged } from "./genre-model.js?v=5.24";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.24";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.24";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.24";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.24";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.24";
-import { initExplore } from "./explore.js?v=5.24";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.24";
-import { initPresentasjon } from "./presentasjon.js?v=5.24";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.24";
-import { currentEntityValues } from "./entity-values.js?v=5.24";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.24";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.25";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.25";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.25";
+import { onGenreModelChanged } from "./genre-model.js?v=5.25";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.25";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.25";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.25";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.25";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.25";
+import { initExplore } from "./explore.js?v=5.25";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.25";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.25";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.25";
+import { currentEntityValues } from "./entity-values.js?v=5.25";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.25";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -684,7 +684,7 @@ function init() {
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
     // tegnes på nytt her også.
-    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); },
+    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); },
     // Tiårstekstene: en ?vis=tiår-lenke venter på at de har landet.
     onDecades: () => provVisMaal(),
     // En åpen Podkaster-fane skal vise nye episoder uten å lukkes/åpnes.

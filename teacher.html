@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.24" />
-  <script src="js/gate.js?v=5.24"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.25" />
+  <script src="js/gate.js?v=5.25"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -172,6 +172,11 @@
             <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6"/><path d="M6 21v-4a2 2 0 012-2h8a2 2 0 012 2v4"/><circle cx="12" cy="3" r="1.6"/><circle cx="6" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/></svg>
             <span class="dash-title">Sjangertreet</span>
             <span class="dash-desc">Legg inn, endre og fjern sjangre</span>
+          </button>
+          <button class="dash-card" id="btn-t-kjoreplaner">
+            <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 7.5l5 2.5-5 2.5z"/></svg>
+            <span class="dash-title">Kjøreplaner</span>
+            <span class="dash-desc">Forbered stopp for presentasjonsvisningen</span>
           </button>
         </div>
       </div>
@@ -536,6 +541,38 @@
     </div>
   </div>
 
+  <!-- Kjøreplaner for presentasjonsvisningen (v5.25) -->
+  <div class="modal-backdrop" id="modal-presentasjoner">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Kjøreplaner</h2>
+        <button class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted" style="margin-top:0">Forberedte stopp for presentasjonsvisningen. Finn fram i appen,
+        trykk lenkeknappen i kortets tittellinje («Kopier lenke»), og lim inn her som et stopp.
+        Avspilling: «Spill av», eller presentasjonsikonet i toppmenyen. Piltaster, PageUp/PageDown
+        eller en presentasjonsfjernkontroll blar mellom stoppene.</p>
+      <div id="pres-adm-liste"></div>
+      <div id="pres-adm-rediger" hidden>
+        <div class="add-grid" style="grid-template-columns:1fr">
+          <label>Tittel *
+            <input type="text" id="pres-adm-tittel" maxlength="80" placeholder="F.eks. Uke 39: Blues og gospel" />
+          </label>
+        </div>
+        <div id="pres-adm-stopp" style="margin-top:10px"></div>
+        <div class="pres-adm-leggtil">
+          <input type="text" id="pres-adm-lenke" placeholder="Lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
+          <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
+        </div>
+        <div class="add-actions" style="margin-top:14px">
+          <button type="button" id="pres-adm-lagre" class="btn primary">Lagre kjøreplanen</button>
+          <button type="button" id="pres-adm-avbryt" class="btn ghost">Avbryt</button>
+        </div>
+      </div>
+      <span id="pres-adm-msg" class="form-msg ok"></span>
+    </div>
+  </div>
+
   <!-- Teknologi-admin -->
   <div class="modal-backdrop" id="modal-tech-admin">
     <div class="modal modal-wide">
@@ -717,7 +754,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=5.24"></script>
-  <script type="module" src="js/teacher.js?v=5.24"></script>
+  <script src="js/load-guard.js?v=5.25"></script>
+  <script type="module" src="js/teacher.js?v=5.25"></script>
 </body>
 </html>

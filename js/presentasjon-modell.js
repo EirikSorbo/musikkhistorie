@@ -136,6 +136,59 @@ function lesList(u) {
   return LIST_OK.test(list) ? list : null;
 }
 
+// ----------------------------------------------------------------------------
+//  Kjøreplaner (fase 4, v5.25): forberedte stopp læreren blar gjennom med
+//  piltaster eller klikker. Lagres samlet i ETT Firestore-dokument
+//  (content/presentasjoner, husets varmekart-mønster): { planer: { <id>:
+//  { tittel, laget, stopp: [{ vis, nivaa?, unntak? }] } } }. `vis` er samme
+//  verdi som ?vis=-lenkene (vis-lenke.js), så et stopp ER en dyp lenke.
+// ----------------------------------------------------------------------------
+
+const PLAN_ID_TEGN = "abcdefghijklmnopqrstuvwxyz23456789";
+
+export function nyPlanId() {
+  const tilfeldig = new Uint32Array(6);
+  globalThis.crypto.getRandomValues(tilfeldig);
+  return "plan-" + [...tilfeldig].map((n) => PLAN_ID_TEGN[n % PLAN_ID_TEGN.length]).join("");
+}
+
+// Ett stopp, vasket: vis må være en ikke-tom streng, nivået klemmes til 1-3
+// (eller utelates), unntak må være et objekt. Alt annet gir null.
+function normaliserStopp(raa) {
+  if (!raa || typeof raa.vis !== "string" || !raa.vis) return null;
+  const ut = { vis: raa.vis };
+  const n = Number(raa.nivaa);
+  if (n >= 1 && n <= 3) ut.nivaa = Math.round(n);
+  if (raa.unntak && typeof raa.unntak === "object" && !Array.isArray(raa.unntak)) ut.unntak = raa.unntak;
+  return ut;
+}
+
+// Vasker hele planer-feltet fra Firestore. Dokumentet er offentlig lesbart og
+// skrives av editoren, men avspilleren skal aldri knekke på et håndredigert
+// eller halvgammelt dokument: ødelagte planer og stopp droppes stille.
+export function normaliserPlaner(raa) {
+  const ut = {};
+  if (!raa || typeof raa !== "object") return ut;
+  for (const [id, plan] of Object.entries(raa)) {
+    if (!plan || typeof plan !== "object") continue;
+    const stopp = (Array.isArray(plan.stopp) ? plan.stopp : []).map(normaliserStopp).filter(Boolean);
+    ut[id] = {
+      tittel: typeof plan.tittel === "string" && plan.tittel.trim() ? plan.tittel.trim() : "(uten tittel)",
+      laget: typeof plan.laget === "string" ? plan.laget : "",
+      stopp,
+    };
+  }
+  return ut;
+}
+
+// Neste stoppindeks: klemmes i [0, antall-1], ingen rundgang — etter siste
+// stopp blir man stående der (en forelesning skal ikke hoppe til start ved
+// ett tastetrykk for mye).
+export function klampStopp(i, antall) {
+  if (!Number.isFinite(antall) || antall < 1) return 0;
+  return Math.min(antall - 1, Math.max(0, Math.trunc(Number(i) || 0)));
+}
+
 // Embed-URL for spilleren (privacy-varianten uten sporingscookies før
 // avspilling). autoplay er trygt: spilleren åpnes alltid av et klikk.
 export function ytEmbedUrl(url) {

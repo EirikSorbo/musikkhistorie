@@ -14,13 +14,14 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.24";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.24";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.24";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.24";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.24";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.24";
-import { initPresentasjon } from "./presentasjon.js?v=5.24";
+import { initExplore } from "./explore.js?v=5.25";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.25";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.25";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.25";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.25";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.25";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.25";
+import { provVisMaal } from "./explore-apne.js?v=5.25";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -144,11 +145,16 @@ export function initTrePage({ render }) {
         explore.contentChanged();
         explore.renderInstrumenter?.();
         if (!isGenreModelReady()) visTreMangler(true);
+        // Kjøreplan-stopp virker også her (v5.25): modalene er injisert, og
+        // ventende mål trenger samme dytt som på forsiden.
+        provVisMaal();
+        presPlanTikk();
       },
       // Sjangerkort kan stå åpne også her — fersk beskrivelse med én gang.
-      onGenreDescs: () => explore.genreDescsChanged?.(),
+      onGenreDescs: () => { explore.genreDescsChanged?.(); provVisMaal(); },
       // Artistene teller på «Alle artister (n)» i Instrumenter-kortet.
-      onArtists: () => explore.renderInstrumenter?.(),
+      onArtists: () => { explore.renderInstrumenter?.(); provVisMaal(); },
+      onDecades: () => provVisMaal(),
       onTech: () => explore.renderInstrumenter?.(),
       onPodcasts: () => explore.renderInstrumenter?.(),
     });

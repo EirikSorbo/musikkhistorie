@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.24";
+import { resolveSpan } from "./timeline-lanes.js?v=5.25";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet

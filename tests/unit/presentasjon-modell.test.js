@@ -1,7 +1,49 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, ytMaal, ytEmbedUrl } from "../../js/presentasjon-modell.js?v=5.24";
+import { FLATER, NIVAA_SEKT, erSynlig, ytMaal, ytEmbedUrl, normaliserPlaner, klampStopp, nyPlanId } from "../../js/presentasjon-modell.js?v=5.25";
+
+test("normaliserPlaner: vasker søppel og bevarer det gyldige", () => {
+  const raa = {
+    plan1: { tittel: "  Uke 39  ", laget: "2026-09-17", stopp: [
+      { vis: "artist:abc", nivaa: 2, unntak: { "artist.kilder": false } },
+      { vis: "varmekart", nivaa: "7" },          // nivå utenfor 1-3 droppes
+      { vis: "" },                                // tomt mål droppes
+      { nivaa: 2 },                               // mangler vis: droppes
+      { vis: "tiår:1950:society", unntak: ["x"] } // unntak må være objekt
+    ] },
+    plan2: "ikke et objekt",
+    plan3: { stopp: "ikke en liste" },
+  };
+  const ut = normaliserPlaner(raa);
+  assert.deepEqual(Object.keys(ut).sort(), ["plan1", "plan3"]);
+  assert.equal(ut.plan1.tittel, "Uke 39");
+  assert.deepEqual(ut.plan1.stopp, [
+    { vis: "artist:abc", nivaa: 2, unntak: { "artist.kilder": false } },
+    { vis: "varmekart" },
+    { vis: "tiår:1950:society" },
+  ]);
+  assert.equal(ut.plan3.tittel, "(uten tittel)");
+  assert.deepEqual(ut.plan3.stopp, []);
+  assert.deepEqual(normaliserPlaner(null), {});
+  assert.deepEqual(normaliserPlaner("tull"), {});
+});
+
+test("klampStopp: klemmes i [0, antall-1], ingen rundgang", () => {
+  assert.equal(klampStopp(0, 5), 0);
+  assert.equal(klampStopp(4, 5), 4);
+  assert.equal(klampStopp(5, 5), 4, "etter siste stopp blir man stående");
+  assert.equal(klampStopp(-1, 5), 0, "før første stopp blir man stående");
+  assert.equal(klampStopp(2.9, 5), 2);
+  assert.equal(klampStopp(NaN, 5), 0);
+  assert.equal(klampStopp(3, 0), 0, "tom plan gir alltid 0");
+});
+
+test("nyPlanId: URL-vennlig og unik nok", () => {
+  const id = nyPlanId();
+  assert.match(id, /^plan-[a-z2-9]{6}$/);
+  assert.notEqual(nyPlanId(), nyPlanId());
+});
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 

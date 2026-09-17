@@ -11,19 +11,19 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.24";
-import { showSubsjangerInfo } from "./ui.js?v=5.24";
-import { showEdgeInfo } from "./genealogy.js?v=5.24";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.24";
-import { openDecade } from "./explore-decade.js?v=5.24";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.24";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.24";
-import { openVarmekart } from "./explore-varmekart.js?v=5.24";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.24";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.24";
-import { openReferanser } from "./explore-referanser.js?v=5.24";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.24";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.24";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.25";
+import { showSubsjangerInfo } from "./ui.js?v=5.25";
+import { showEdgeInfo } from "./genealogy.js?v=5.25";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.25";
+import { openDecade } from "./explore-decade.js?v=5.25";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.25";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.25";
+import { openVarmekart } from "./explore-varmekart.js?v=5.25";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.25";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.25";
+import { openReferanser } from "./explore-referanser.js?v=5.25";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.25";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.25";
 
 // Åpner ett mål: { hva, id?, modus? }. Kortene åpnes OPPÅ det som alt står
 // åpent (modaler stables), så ← fører tilbake dit man kom fra.
@@ -104,15 +104,21 @@ function klarFor(apne, s) {
 
 let ventendeVis = null;
 
+// Åpne et mål så snart datagrunnlaget dets har landet — brukes av ?vis=-
+// lenkene og av kjøreplanens stopp (presentasjon.js). Et nytt mål erstatter
+// et som fortsatt venter: det siste ønsket gjelder.
+export function apneVisNaarKlart(maal) {
+  if (!maal) return;
+  ventendeVis = maal;
+  provVisMaal();
+}
+
 // Leses ÉN gang ved oppstart (forsiden). try/catch: URL-API-et kan i teorien
 // kastes av en misdannet query, og en dyp lenke skal aldri velte sidelasten.
 export function lesVisFraUrl() {
   let verdi = null;
   try { verdi = new URLSearchParams(window.location.search).get("vis"); } catch (e) {}
-  const maal = parseVisVerdi(verdi || "");
-  if (!maal) return;
-  ventendeVis = maal;
-  provVisMaal();
+  apneVisNaarKlart(parseVisVerdi(verdi || ""));
 }
 
 // Kalles fra snapshot-hookene. No-op når ingenting venter.

@@ -24,11 +24,13 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.24";
-import { FLATER, NIVAA_SEKT, NIVAA_NAVN, erSynlig, ytEmbedUrl } from "./presentasjon-modell.js?v=5.24";
-import { erSkrivefelt } from "./vis-lenke.js?v=5.24";
-import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.24";
-import { escapeHtml } from "./util.js?v=5.24";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.25";
+import { FLATER, NIVAA_SEKT, NIVAA_NAVN, erSynlig, ytEmbedUrl, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.25";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.25";
+import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.25";
+import { escapeHtml } from "./util.js?v=5.25";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.25";
+import { getState } from "./explore-context.js?v=5.25";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -46,6 +48,8 @@ const LAGRING = {
   unntak: "pensumPresUnntak",
   stor: "pensumPresStor",
   qa: "pensumPresQA",
+  plan: "pensumPresPlan",
+  stopp: "pensumPresStopp",
 };
 
 // sessionStorage kan kaste (blokkerte nettsteddata) — presentasjonen skal
@@ -56,13 +60,24 @@ const skriv = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} };
 let aktiv = null;
 
 // Kan kalles fra hvor som helst (explore.js spør før hub-kortene fjernes),
-// uavhengig av om initPresentasjon har kjørt.
+// uavhengig av om initPresentasjon har kjørt. ?presentasjon alene slår på
+// modusen; ?presentasjon=<planId> starter i tillegg en kjøreplan (fase 4),
+// med ?stopp=<n> (1-basert) som posisjon — slik overlever både hoppet til
+// tre.html (sessionStorage) og en omlasting (URL-en) hele tilstanden.
 export function erPresentasjon() {
   if (aktiv !== null) return aktiv;
-  let param = false;
-  try { param = new URLSearchParams(window.location.search).has("presentasjon"); } catch (e) {}
-  aktiv = param || les(LAGRING.aktiv) === "1";
-  if (param) skriv(LAGRING.aktiv, "1");
+  let param = null;
+  try { param = new URLSearchParams(window.location.search).get("presentasjon"); } catch (e) {}
+  aktiv = param !== null || les(LAGRING.aktiv) === "1";
+  if (param !== null) {
+    skriv(LAGRING.aktiv, "1");
+    if (param && param !== "1") {
+      skriv(LAGRING.plan, param);
+      let s = 0;
+      try { s = Number(new URLSearchParams(window.location.search).get("stopp")) - 1; } catch (e) {}
+      skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? s : 0));
+    }
+  }
   return aktiv;
 }
 
@@ -206,6 +221,93 @@ function wireYtIntercept() {
 }
 
 // ----------------------------------------------------------------------------
+//  Kjøreplan-avspilling (fase 4, v5.25). Planene bor i content/presentasjoner
+//  og leses fra det delte state-treet; presPlanTikk kalles fra sidenes
+//  content-hooks til planen har landet (snapshot-drevet, ingen frister —
+//  samme filosofi som ?vis=-ruteren). Hvert stopp er en ?vis=-verdi, så
+//  åpningen gjenbruker apneVisNaarKlart, med all ventelogikken den alt har.
+//  Stoppene virker på BEGGE sidene: utforsk-modalene injiseres også på
+//  tre.html, og «slektstre»-målet er no-op der (vi ER i treet).
+// ----------------------------------------------------------------------------
+
+let planId = null;
+let plan = null;      // normalisert plan, satt når content har landet
+let stoppIdx = 0;
+
+function oppdaterTeller() {
+  const teller = document.getElementById("pres-teller");
+  if (!teller) return;
+  if (!plan) { teller.textContent = "…"; return; }
+  teller.textContent = `${stoppIdx + 1}/${plan.stopp.length}`;
+}
+
+// Gå til et stopp: lukk det som står åpent, sett stoppets nivå og unntak, og
+// åpne målet når dataene dets er klare. Kalles også som «Til stoppet» etter
+// en avstikker (samme indeks på nytt).
+function gaTilStopp(i) {
+  if (!plan || !plan.stopp.length) return;
+  stoppIdx = klampStopp(i, plan.stopp.length);
+  skriv(LAGRING.stopp, String(stoppIdx));
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.set("presentasjon", planId);
+    u.searchParams.set("stopp", String(stoppIdx + 1));
+    u.searchParams.delete("vis");   // et gammelt dyplenke-mål skal ikke gjenåpnes ved reload
+    window.history.replaceState(null, "", u);
+  } catch (e) {}
+
+  const stopp = plan.stopp[stoppIdx];
+  if (stopp.nivaa) nivaa = stopp.nivaa;
+  // Stoppets definisjon gjelder: unntak satt i farten lever bare fram til
+  // neste stoppbytte.
+  unntak = stopp.unntak ? { ...stopp.unntak } : {};
+  lagreTilstand();
+  brukNivaa();
+
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+  apneVisNaarKlart(parseVisVerdi(stopp.vis));
+  oppdaterTeller();
+}
+
+// Kalles fra sidenes content-hooks. No-op til planId finnes og content har
+// landet; åpner så startstoppet ÉN gang.
+export function presPlanTikk() {
+  if (!planId || plan) return;
+  const s = getState();
+  const planer = normaliserPlaner(s.content?.presentasjoner?.planer);
+  if (planer[planId]) {
+    plan = planer[planId];
+    if (!plan.stopp.length) {
+      const teller = document.getElementById("pres-teller");
+      if (teller) teller.textContent = "tom plan";
+      return;
+    }
+    gaTilStopp(stoppIdx);
+  } else if (s.contentLoaded) {
+    // Slettet plan eller feilskrevet lenke: si det stille i telleren i
+    // stedet for å la «…» stå og lyve.
+    const teller = document.getElementById("pres-teller");
+    if (teller) { teller.textContent = "plan mangler"; teller.title = `Fant ingen kjøreplan med id «${planId}»`; }
+    console.warn("Kjøreplanen finnes ikke:", planId);
+    planId = null;
+  }
+}
+
+function wirePlanTaster() {
+  document.addEventListener("keydown", (e) => {
+    if (!plan) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    // PageUp/PageDown er presentasjonsfjernkontrollenes taster og tas alltid;
+    // pilene bare utenfor skrivefelt (tekstmarkøren trenger dem der).
+    const fram = e.key === "PageDown" || (e.key === "ArrowRight" && !erSkrivefelt(document.activeElement));
+    const tilbake = e.key === "PageUp" || (e.key === "ArrowLeft" && !erSkrivefelt(document.activeElement));
+    if (!fram && !tilbake) return;
+    e.preventDefault();
+    gaTilStopp(stoppIdx + (fram ? 1 : -1));
+  });
+}
+
+// ----------------------------------------------------------------------------
 //  Verktøylinja og tannhjul-panelet
 // ----------------------------------------------------------------------------
 
@@ -218,6 +320,11 @@ function byggBar() {
   const bar = document.createElement("div");
   bar.id = "pres-bar";
   bar.innerHTML = `
+    <span class="pres-plan" id="pres-plan" hidden role="group" aria-label="Kjøreplan">
+      <button type="button" class="pres-knapp" id="pres-forrige" title="Forrige stopp (PageUp / ←)" aria-label="Forrige stopp">‹</button>
+      <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet">…</button>
+      <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / →)" aria-label="Neste stopp">›</button>
+    </span>
     <span class="pres-nivaa" role="group" aria-label="Detaljnivå">
       ${[1, 2, 3].map((n) => `<button type="button" class="pres-knapp" data-nivaa="${n}" title="${NIVAA_NAVN[n]} (tast ${n})">${n}</button>`).join("")}
     </span>
@@ -231,6 +338,10 @@ function byggBar() {
   bar.addEventListener("click", (e) => {
     const nb = e.target.closest("[data-nivaa]");
     if (nb) return settNivaa(nb.dataset.nivaa);
+    if (e.target.closest("#pres-forrige")) return gaTilStopp(stoppIdx - 1);
+    if (e.target.closest("#pres-neste")) return gaTilStopp(stoppIdx + 1);
+    // Telleren selv er «Til stoppet»: veien tilbake etter en avstikker.
+    if (e.target.closest("#pres-teller")) return gaTilStopp(stoppIdx);
     if (e.target.closest("#pres-skala")) return vekslSkala();
     if (e.target.closest("#pres-full")) return vekslFullskjerm();
     if (e.target.closest("#pres-tannhjul")) return vekslPanel();
@@ -325,11 +436,24 @@ export function initPresentasjon() {
   try { unntak = JSON.parse(les(LAGRING.unntak) || "{}") || {}; } catch (e) { unntak = {}; }
   if (les(LAGRING.stor) === "1") document.documentElement.classList.add("pres-stor");
 
+  // Kjøreplanen (fase 4): id og posisjon fra sessionStorage — erPresentasjon
+  // har alt skrevet URL-parametrene dit, og et sidebytte bærer dem videre.
+  planId = les(LAGRING.plan) || null;
+  stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
+
   byggBar();
+  if (planId) {
+    const planUi = document.getElementById("pres-plan");
+    if (planUi) planUi.hidden = false;
+    wirePlanTaster();
+  }
   if (qaPaa()) settQA(true); else oppdaterHubKort();
   observerModaler();
   brukNivaa();
   wireYtIntercept();
+  // Content kan alt ligge i state (lokal cache): prøv med en gang, ellers
+  // tar sidenes content-hooks det når snapshotet lander.
+  presPlanTikk();
 
   // Tastene 1/2/3 bytter nivå — men aldri når fokus står i et skrivefelt
   // (søkefeltet bruker sifre i helt vanlig forstand).
