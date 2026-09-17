@@ -13,12 +13,12 @@
 //  podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.25";
-import { escapeHtml } from "./ui.js?v=5.25";
-import { savePresentasjoner } from "./store.js?v=5.25";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.25";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.25";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.25";
+import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.26";
+import { escapeHtml } from "./ui.js?v=5.26";
+import { savePresentasjoner } from "./store.js?v=5.26";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.26";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.26";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.26";
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",

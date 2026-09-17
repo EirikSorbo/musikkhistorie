@@ -2772,3 +2772,25 @@ body.presentasjon [data-action="voteUp"] { display: none !important; }
 .pres-adm-leggtil input { flex: 1; }
 .pres-plan { display: inline-flex; gap: 4px; align-items: center; padding-right: 4px; border-right: 1px solid var(--line); }
 .pres-teller-knapp { font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+
+/* «Legg til i kjøreplan»-menyen på lenkeknappen (v5.26, kun lærer-innlogging).
+   Ankres i .modal-head (position:relative) og legger seg under tittellinja. */
+.lenke-meny {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+  min-width: 250px; max-width: 330px;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 12px; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16);
+  padding: 8px; font-weight: 400;
+}
+.lenke-meny-hode {
+  margin: 2px 6px 6px; font-size: 0.72rem; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.lenke-meny-ok { text-transform: none; letter-spacing: 0; font-size: 0.88rem; color: var(--accent-2); margin: 6px; }
+.lenke-meny-valg {
+  display: block; width: 100%; text-align: left; font: inherit; font-size: 0.88rem;
+  padding: 7px 8px; border: 0; background: none; border-radius: 8px;
+  cursor: pointer; color: var(--text);
+}
+.lenke-meny-valg:hover { background: var(--surface-2); }
+.lenke-meny-ny { color: var(--muted); margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; padding-top: 9px; }

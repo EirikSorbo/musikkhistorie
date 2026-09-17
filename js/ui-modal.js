@@ -144,9 +144,18 @@ function kopierTilUtklipp(tekst) {
   }));
 }
 
+// «Legg til i kjøreplan»-menyen (v5.26). ui-modal kjenner bevisst ingen
+// Firestore (testene importerer denne fila via ui.js, og store.js drar inn
+// SDK-en over nett) — sidene registrerer i stedet en leverandør som får
+// knappen etter hvert kopiklikk. js/plan-meny.js kobler den på, og viser
+// menyen bare når nettleseren er logget inn som lærer.
+let lenkeMenyProvider = null;
+export function setLenkeMenyProvider(fn) { lenkeMenyProvider = fn; }
+
 async function kopierVisLenke(knapp) {
   const verdi = knapp.closest(".modal-backdrop")?.dataset.vis;
   if (!verdi) return;
+  lenkeMenyProvider?.(knapp);
   // Lenken peker alltid på forsiden — det er den som har ?vis=-ruteren, og
   // fra lærersiden/tre-siden ligger index.html i samme mappe.
   const url = new URL("index.html", window.location.href);

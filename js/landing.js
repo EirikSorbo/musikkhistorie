@@ -1,18 +1,19 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.25";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.25";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.25";
-import { onGenreModelChanged } from "./genre-model.js?v=5.25";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.25";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.25";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.25";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.25";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.25";
-import { initExplore } from "./explore.js?v=5.25";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.25";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.25";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.25";
-import { currentEntityValues } from "./entity-values.js?v=5.25";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.25";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.26";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.26";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.26";
+import { onGenreModelChanged } from "./genre-model.js?v=5.26";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.26";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.26";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.26";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.26";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.26";
+import { initExplore } from "./explore.js?v=5.26";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.26";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.26";
+import { initPlanMeny } from "./plan-meny.js?v=5.26";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.26";
+import { currentEntityValues } from "./entity-values.js?v=5.26";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.26";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -603,6 +604,8 @@ function init() {
   // QA-tilstanden finner modalene som nettopp ble injisert. No-op når
   // modusen er av.
   initPresentasjon();
+  // «Legg til i kjøreplan» på lenkeknappene — synlig kun for lærer-innlogging.
+  initPlanMeny();
 
   if (!CONFIGURED) {
     refreshFilterControls();
