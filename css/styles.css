@@ -2719,6 +2719,35 @@ body.presentasjon[data-pres-nivaa="1"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="1"] #modal-artist-detail .artist-image img {
   max-height: 56vh;
 }
+/* Fotokrediteringen tas ut av lerretet (v5.30) — den står fortsatt i appen,
+   der studentene ser den. Levetiden flyttes hit i stedet (presentasjon.js),
+   altså rett under portrettet. */
+body.presentasjon .artist-image .image-credit { display: none; }
+body.presentasjon .artist-image .pres-levetid {
+  margin: 10px 0 0; text-align: center; font-size: 0.95rem;
+}
+/* Nivå 2 og 3: bildet til høyre, så instrument og sjanger får plass som en
+   liste ved siden av. Nivå 1 beholder det store, sentrerte portrettet. */
+body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image,
+body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image,
+body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image,
+body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image {
+  float: right; width: 42%; max-width: 42%; margin: 0 0 16px 22px;
+}
+body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image img,
+body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image img,
+body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img,
+body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image img {
+  max-height: 42vh;
+}
+body.presentasjon[data-pres-nivaa="2"] #modal-detail .meta,
+body.presentasjon[data-pres-nivaa="3"] #modal-detail .meta,
+body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .meta,
+body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .meta {
+  flex-direction: column; align-items: flex-start; gap: 8px;
+}
+/* «Vis i tidslinje» og «Foreslå endring» hører til appen, ikke lerretet. */
+body.presentasjon #modal-detail .modal-foot-right { display: none !important; }
 /* Instrument og sjanger som vanlig tekst, ikke bobler — men fortsatt
    klikkbare, med samme mål som boblene ellers i appen. */
 body.presentasjon #modal-detail .meta .tag,

@@ -24,14 +24,14 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.29";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.29";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.29";
-import { modalClose } from "./ui-modal.js?v=5.29";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.29";
-import { escapeHtml } from "./util.js?v=5.29";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.29";
-import { getState } from "./explore-context.js?v=5.29";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.30";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.30";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.30";
+import { modalClose } from "./ui-modal.js?v=5.30";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.30";
+import { escapeHtml } from "./util.js?v=5.30";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.30";
+import { getState } from "./explore-context.js?v=5.30";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -104,6 +104,20 @@ function brukNivaaPaa(flate, modal) {
   modal.querySelectorAll("[data-fakta]").forEach((el) => {
     el.hidden = !faktaSynlig(flate, el.dataset.fakta, nivaa);
   });
+  if (flate === "artist") flyttLevetid(modal);
+}
+
+// Levetiden hører til under portrettet på lerretet (v5.30), der
+// fotokrediteringen ellers står — den er skjult i visning (CSS). Flyttingen
+// gjøres i DOM-en fordi linja bor i faktablokka, langt fra figuren, og
+// gjentas ved hver omtegning: renderArtistDetail bygger kroppen på nytt.
+// Uten bilde blir linja stående der den er.
+function flyttLevetid(modal) {
+  const figur = modal.querySelector(".artist-image");
+  const levetid = modal.querySelector('[data-fakta="levetid"]');
+  if (!figur || !levetid || figur.contains(levetid)) return;
+  levetid.classList.add("pres-levetid");
+  figur.appendChild(levetid);
 }
 
 function brukNivaa() {

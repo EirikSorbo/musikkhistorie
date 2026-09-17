@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeArtist } from "../../js/artist-normalize.js?v=5.29";
+import { normalizeArtist } from "../../js/artist-normalize.js?v=5.30";
 
 test("idempotent på allerede normalisert artist", () => {
   const a = {
@@ -97,7 +97,7 @@ test("null/søppel-elementer i kilder/keyWorks/musicExamples krasjer ikke", () =
 // koden mens et forslag er hos studenten. En STUDENTinnsending (uten feltene)
 // skal derimot ikke få dem påført: reglene ville avvist dokumentet.
 test("buildArtistDoc: returnert-status og returfeltene bevares ved import", async () => {
-  const { buildArtistDoc } = await import("../../js/artist-normalize.js?v=5.29");
+  const { buildArtistDoc } = await import("../../js/artist-normalize.js?v=5.30");
   const inn = {
     name: "Test", status: "returnert", ownerUid: "abc123",
     teacherFeedback: "Mangler kilder.", returKode: "X7K2P",
