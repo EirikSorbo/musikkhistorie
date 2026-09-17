@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.20";
+import { resolveSpan } from "./timeline-lanes.js?v=5.21";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -158,6 +158,15 @@ export const GENDERS = [
 // Delt predikat — brukes av alle student-visninger og tellinger.
 export function isVisible(a) {
   return a.status === "active" && (a.priority || 0) !== -1;
+}
+
+// Hos læreren til moderasjon: ventende, ELLER sendt tilbake til studenten.
+// Et returnert kort er fortsatt lærerens sak (koden og «Ny kode» ligger bare
+// på moderasjonskortet), så det skal telle og vises overalt der ventende gjør
+// det. Delt predikat siden v5.21 — Skrivebordets teller brukte bare «pending»
+// og lot returnerte innsendinger bli uoppnåelige (audit v5.19, funn 1).
+export function erTilModerasjon(x) {
+  return x.status === "pending" || x.status === "returnert";
 }
 
 // Bare aktive, synlige forslag teller i statistikken. Skjulte utelates.

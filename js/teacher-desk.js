@@ -14,15 +14,15 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=5.20";
-import { modalOpen } from "./ui.js?v=5.20";
-import { renderPendingEditsList } from "./teacher-review.js?v=5.20";
-import { openDetail } from "./teacher-artists.js?v=5.20";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=5.20";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=5.20";
-import { storyOrder } from "./story-format.js?v=5.20";
-import { DECADES, isVisible } from "./limits.js?v=5.20";
-import { escapeHtml, pct } from "./ui-helpers.js?v=5.20";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=5.21";
+import { modalOpen } from "./ui.js?v=5.21";
+import { renderPendingEditsList } from "./teacher-review.js?v=5.21";
+import { openDetail } from "./teacher-artists.js?v=5.21";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=5.21";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=5.21";
+import { storyOrder } from "./story-format.js?v=5.21";
+import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=5.21";
+import { escapeHtml, pct } from "./ui-helpers.js?v=5.21";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -154,10 +154,12 @@ function catCard(cat) {
 export function renderDesk(el) {
   if (!el) return;
 
-  const pendingArtists = state.artists.filter((a) => a.status === "pending").length;
+  // Ventende OG returnerte — samme predikat som køen og lista, ellers
+  // forsvinner innboks-kortet (eneste vei til koden) mens noe er hos studenten.
+  const pendingArtists = state.artists.filter(erTilModerasjon).length;
   // Samme sum som endringsforslag-badgen: redigeringer + nye innovasjonskort.
   const pendingEdits = state.pendingEdits.length
-    + state.techItems.filter((t) => t.status === "pending").length;
+    + state.techItems.filter(erTilModerasjon).length;
 
   const item = (icon, count, noun, action, active = false) => `
     <button type="button" class="desk-item${active ? " active" : ""}" data-desk="${action}"${active ? ` title="Viser ventende i lista. Klikk for å vise alle igjen"` : ""}>

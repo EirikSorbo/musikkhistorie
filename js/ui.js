@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.20";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.20";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.20";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.20";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.20";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.21";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.21";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.21";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.21";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.21";
 import {
   escapeHtml,
   linkDesc,
@@ -35,12 +35,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.20";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.20";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.20";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.20";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.20";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.20";
+} from "./ui-helpers.js?v=5.21";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.21";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.21";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.21";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.21";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.21";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -215,7 +215,7 @@ export function renderArtists(el, state) {
 
   if (filters.showPending) {
     // Hele moderasjonsuniverset: ventende OG returnerte (hos studenten).
-    list = list.filter((a) => a.status === "pending" || a.status === "returnert");
+    list = list.filter(erTilModerasjon);
   } else if (!filters.showRemoved && filters.priority !== -1) {
     list = list.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
   } else {

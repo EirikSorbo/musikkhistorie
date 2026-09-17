@@ -14,12 +14,12 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=5.20";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.20";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.20";
-import { DECADES, instrumentsInUse } from "./limits.js?v=5.20";
-import { sharedStateDefaults } from "./shared-data.js?v=5.20";
-import { $ } from "./shared.js?v=5.20";
+} from "./store.js?v=5.21";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.21";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.21";
+import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=5.21";
+import { sharedStateDefaults } from "./shared-data.js?v=5.21";
+import { $ } from "./shared.js?v=5.21";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -148,7 +148,7 @@ export function renderAll() {
   // Ventende-filteret slås på fra Skrivebordet (som også slår det av igjen).
   // Når siste forslag er behandlet, slås det av automatisk — ellers ville
   // lista stått igjen tom uten noen synlig grunn.
-  if (state.filters.showPending && !state.artists.some((a) => a.status === "pending" || a.status === "returnert")) {
+  if (state.filters.showPending && !state.artists.some(erTilModerasjon)) {
     state.filters.showPending = false;
   }
   renderList();

@@ -5,10 +5,11 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=5.20";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=5.20";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=5.20";
-import { currentEntityValues } from "./entity-values.js?v=5.20";
+import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=5.21";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=5.21";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=5.21";
+import { currentEntityValues } from "./entity-values.js?v=5.21";
+import { erTilModerasjon } from "./limits.js?v=5.21";
 
 // Dagens verdier bor i den delte modulen (studentens retur-editor leser de
 // samme): her bindes bare lærersidens state.
@@ -28,7 +29,7 @@ export function renderPendingEditsList() {
   if (!el) return;
   // Ventende OG returnerte: et returnert kort er fortsatt lærerens sak
   // (studenten har det til retting), så det skal stå i køen med merke.
-  const newTech = state.techItems.filter(t => t.status === "pending" || t.status === "returnert");
+  const newTech = state.techItems.filter(erTilModerasjon);
   const edits = state.pendingEdits;
 
   if (!edits.length && !newTech.length) {

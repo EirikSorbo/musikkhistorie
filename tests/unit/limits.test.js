@@ -1,17 +1,54 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   INSTRUMENTS,
   DECADES,
   DECADE_OPTIONS,
   GENDERS,
   isVisible,
+  erTilModerasjon,
   decadesForRange,
   decadesForArtist,
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=5.20";
+} from "../../js/limits.js?v=5.21";
+
+const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+
+test("erTilModerasjon: ventende og returnerte, ingenting annet", () => {
+  assert.equal(erTilModerasjon({ status: "pending" }), true);
+  assert.equal(erTilModerasjon({ status: "returnert" }), true);
+  assert.equal(erTilModerasjon({ status: "active" }), false);
+  assert.equal(erTilModerasjon({ status: "rejected" }), false);
+  assert.equal(erTilModerasjon({}), false);
+});
+
+// Audit v5.19, funn 1: Skrivebordets teller brukte bare «pending», så et
+// returnert forslag mistet innboks-kortet — eneste vei til returkoden. Lås at
+// alle fire flatene bruker det delte predikatet, så de ikke glir fra
+// hverandre igjen.
+test("moderasjonspredikatet er delt: skrivebord, kø, liste og auto-av", () => {
+  for (const f of ["teacher-desk.js", "teacher-review.js", "teacher-state.js", "ui.js"]) {
+    // Krev faktisk BRUK (filter/some med referansen), ikke bare importlinjen.
+    assert.match(kilde(f), /\b(?:filter|some)\(erTilModerasjon\)/, `${f} må bruke erTilModerasjon`);
+  }
+  // Skrivebordet teller BEGGE samlingene (artister og tech) med predikatet.
+  assert.equal((kilde("teacher-desk.js").match(/filter\(erTilModerasjon\)/g) || []).length, 2,
+    "teacher-desk.js må filtrere både artists og techItems med erTilModerasjon");
+});
+
+// Audit v5.19, funn 2: returSporring må spre dokumentet FØRST — ellers vinner
+// tech-dokumentets eget «type»-felt («innovasjon») over retur-typen, og «Rett
+// og send inn på nytt» blir en død knapp for returnerte innovasjonskort.
+test("returSporring: retur-typen overskriver dokumentets eget type-felt", () => {
+  const store = kilde("store.js");
+  assert.match(store, /\{ \.\.\.d\.data\(\), type, id: d\.id \}/,
+    "spredningen av d.data() må stå først i returSporring");
+  assert.doesNotMatch(store, /\{ type, id: d\.id, \.\.\.d\.data\(\) \}/,
+    "den gamle rekkefølgen (type før spredningen) må ikke komme tilbake");
+});
 
 // Etikettene er UI, verdiene er data. «ukjent» heter «Annet» i skjemaet fra
 // v4.95, men verdien ligger fast i Firestore — bytter noen den til "annet"
