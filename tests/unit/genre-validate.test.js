@@ -7,8 +7,8 @@
 // ============================================================================
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateTree, assertTreeOk } from "../../js/genre-validate.js?v=5.26";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=5.26";
+import { validateTree, assertTreeOk } from "../../js/genre-validate.js?v=5.27";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js?v=5.27";
 
 const feilene = (tree) => validateTree(tree).filter((p) => p.nivå === "feil").map((p) => p.melding);
 const ekte = () => ({

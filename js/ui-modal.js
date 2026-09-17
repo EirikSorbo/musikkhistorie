@@ -53,6 +53,13 @@ export function modalOpen(el) {
   // markupen for de statiske (varmekart, sidene, …).
   const lenkeKnapp = el.querySelector(".modal-head .modal-lenke");
   if (lenkeKnapp) lenkeKnapp.hidden = !el.dataset.vis;
+  // Samleøktas plussknapp (v5.27, injiseres av plan-innsamling.js) følger
+  // samme regel som lenkeknappen: bare mål som kan bli et stopp.
+  const plussKnapp = el.querySelector(".modal-head .plan-pluss");
+  if (plussKnapp) plussKnapp.hidden = !el.dataset.vis;
+  // Opptaks-kroken (v5.27): hver faktiske åpning av et lenkbart mål meldes
+  // til leverandøren — plan-innsamling.js tar opp når en økt er i gang.
+  if (el.dataset.vis) modalApnetProvider?.(el.dataset.vis);
   el.classList.add("open");
   (focusables(el)[0] || dialog)?.focus();
 }
@@ -151,6 +158,12 @@ function kopierTilUtklipp(tekst) {
 // menyen bare når nettleseren er logget inn som lærer.
 let lenkeMenyProvider = null;
 export function setLenkeMenyProvider(fn) { lenkeMenyProvider = fn; }
+
+// Kalles fra modalOpen med modalens data-vis — opptaksmodusen i
+// plan-innsamling.js (v5.27) lytter. Samme frikobling som lenkeMenyProvider:
+// ui-modal skal aldri dra inn Firestore.
+let modalApnetProvider = null;
+export function setModalApnetProvider(fn) { modalApnetProvider = fn; }
 
 async function kopierVisLenke(knapp) {
   const verdi = knapp.closest(".modal-backdrop")?.dataset.vis;

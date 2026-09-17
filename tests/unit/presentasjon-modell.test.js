@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, ytMaal, ytEmbedUrl, normaliserPlaner, klampStopp, nyPlanId } from "../../js/presentasjon-modell.js?v=5.26";
+import { FLATER, NIVAA_SEKT, erSynlig, ytMaal, ytEmbedUrl, normaliserPlaner, klampStopp, nyPlanId } from "../../js/presentasjon-modell.js?v=5.27";
 
 test("normaliserPlaner: vasker søppel og bevarer det gyldige", () => {
   const raa = {

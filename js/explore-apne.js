@@ -11,19 +11,19 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.26";
-import { showSubsjangerInfo } from "./ui.js?v=5.26";
-import { showEdgeInfo } from "./genealogy.js?v=5.26";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.26";
-import { openDecade } from "./explore-decade.js?v=5.26";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.26";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.26";
-import { openVarmekart } from "./explore-varmekart.js?v=5.26";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.26";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.26";
-import { openReferanser } from "./explore-referanser.js?v=5.26";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.26";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.26";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.27";
+import { showSubsjangerInfo } from "./ui.js?v=5.27";
+import { showEdgeInfo } from "./genealogy.js?v=5.27";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.27";
+import { openDecade } from "./explore-decade.js?v=5.27";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.27";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.27";
+import { openVarmekart } from "./explore-varmekart.js?v=5.27";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.27";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.27";
+import { openReferanser } from "./explore-referanser.js?v=5.27";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.27";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.27";
 
 // Åpner ett mål: { hva, id?, modus? }. Kortene åpnes OPPÅ det som alt står
 // åpent (modaler stables), så ← fører tilbake dit man kom fra.

@@ -14,15 +14,16 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.26";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.26";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.26";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.26";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.26";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.26";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.26";
-import { initPlanMeny } from "./plan-meny.js?v=5.26";
-import { provVisMaal } from "./explore-apne.js?v=5.26";
+import { initExplore } from "./explore.js?v=5.27";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.27";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.27";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.27";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.27";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.27";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.27";
+import { initPlanMeny } from "./plan-meny.js?v=5.27";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.27";
+import { provVisMaal } from "./explore-apne.js?v=5.27";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -59,6 +60,8 @@ export function initTrePage({ render }) {
   // så hoppet hit beholder verktøylinja og nivåene. No-op når den er av.
   initPresentasjon();
   initPlanMeny();
+  // Treet er en side, ikke en modal: et opptak logger ankomsten her selv.
+  initPlanInnsamling({ erTreSide: true });
 
   // Rendereren får sidens FELLES sjangerOpts. Den bygger ikke lenger sin egen,
   // så node-klikk i kartet og sjanger-chip på et artistkort åpner identisk kort.
@@ -151,6 +154,7 @@ export function initTrePage({ render }) {
         // ventende mål trenger samme dytt som på forsiden.
         provVisMaal();
         presPlanTikk();
+        samleTikk();
       },
       // Sjangerkort kan stå åpne også her — fersk beskrivelse med én gang.
       onGenreDescs: () => { explore.genreDescsChanged?.(); provVisMaal(); },

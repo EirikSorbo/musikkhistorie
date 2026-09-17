@@ -2794,3 +2794,21 @@ body.presentasjon [data-action="voteUp"] { display: none !important; }
 }
 .lenke-meny-valg:hover { background: var(--surface-2); }
 .lenke-meny-ny { color: var(--muted); margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; padding-top: 9px; }
+
+/* Samleøkta (v5.27): linja nede til VENSTRE (presentasjonslinja bor til
+   høyre) + plussknappen i kortenes tittellinje under plukk-modus. */
+#samle-bar {
+  position: fixed; left: 14px; bottom: 14px; z-index: 99999;
+  display: flex; gap: 8px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 6px 10px; font-size: 0.88rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+.samle-rec {
+  width: 10px; height: 10px; border-radius: 50%; background: #dc2626; flex: none;
+  animation: samle-puls 1.2s ease-in-out infinite;
+}
+@keyframes samle-puls { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.samle-navn { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal-head .plan-pluss { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; color: var(--accent-2); }
+.modal-head .plan-pluss svg { display: block; }

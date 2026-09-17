@@ -13,12 +13,14 @@
 //  podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.26";
-import { escapeHtml } from "./ui.js?v=5.26";
-import { savePresentasjoner } from "./store.js?v=5.26";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.26";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.26";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.26";
+import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.27";
+import { escapeHtml } from "./ui.js?v=5.27";
+import { savePresentasjoner } from "./store.js?v=5.27";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.27";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.27";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.27";
+import { askChoice } from "./ui-modal.js?v=5.27";
+import { startInnsamling } from "./plan-innsamling.js?v=5.27";
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -100,12 +102,16 @@ function renderListe() {
           <span class="muted">${p.stopp.length} stopp</span></span>
         <span class="pres-adm-knapper">
           <button type="button" class="btn ghost small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
+          <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Legg til stopp mens du blar, eller ta opp alt du åpner">Samle</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>
         </span>
       </div>`).join("")
     : `<p class="muted">Ingen kjøreplaner ennå. Lag den første, så blir den tilgjengelig fra presentasjonsikonet.</p>`}
-    <button type="button" class="btn primary small" id="pres-adm-ny" style="margin-top:10px">Ny kjøreplan</button>`;
+    <div class="add-actions" style="margin-top:10px">
+      <button type="button" class="btn primary small" id="pres-adm-ny">Ny kjøreplan</button>
+      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og fyll den mens du blar eller tar opp">Ny + samle …</button>
+    </div>`;
 }
 
 function renderKladd() {
@@ -175,6 +181,28 @@ function leggTilStopp() {
   felt.focus();
 }
 
+// Samleøkt (v5.27): velg modus, lukk editoren og la linja nede til venstre
+// ta over. planId er null for «Ny + samle» — da genereres id her, og planen
+// skrives først når det første stoppet legges til.
+async function velgModusOgStart(planId, tittelForNy) {
+  const navn = planId ? planerNaa()[planId]?.tittel : tittelForNy;
+  if (!navn) return;
+  const modus = await askChoice({
+    title: `Samle stopp i «${navn}»`,
+    text: "Plukk: en plussknapp i kortenes tittellinje legger til det du velger. "
+      + "Ta opp: alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre.",
+    buttons: [
+      { label: "Plukk mens jeg blar", value: "plukk", className: "primary" },
+      { label: "Ta opp alt jeg åpner", value: "opptak" },
+      { label: "Avbryt", value: null },
+    ],
+    dismissValue: null,
+  });
+  if (!modus) return;
+  startInnsamling(planId || nyPlanId(), modus, navn);
+  closeAdminModal("modal-presentasjoner");
+}
+
 export function openPresentasjonAdmin() {
   kladd = null;
   renderListe();
@@ -219,6 +247,13 @@ export function setupPresentasjonAdmin() {
       if (!p) return;
       kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })) };
       renderKladd();
+      return;
+    }
+    const samle = hit("[data-pres-samle]");
+    if (samle) return velgModusOgStart(samle.dataset.presSamle);
+    if (hit("#pres-adm-ny-samle")) {
+      const tittel = window.prompt("Navn på den nye kjøreplanen:", "");
+      if (tittel && tittel.trim()) velgModusOgStart(null, tittel.trim());
       return;
     }
     const spill = hit("[data-pres-spill]");
