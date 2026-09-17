@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=5.27";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.27";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=5.27";
-import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=5.27";
+import { escapeHtml, modalOpen } from "./ui.js?v=5.28";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.28";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=5.28";
+import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=5.28";
 // Aksen, radene og lærerens nivåvelger er delt med sjangerhistoriene (v5.16).
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.27";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.28";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -127,6 +127,13 @@ export function renderVarmekartBody() {
   // selector-problemer med metanavn som «R&B».
   wireMetaAccordion(body, "vk", (wasOpen, group) => {
     vkOpenMeta = wasOpen ? "__ingen" : (group?.dataset.vkMeta || null);
+    // Målet følger VALGET (v5.28): «Kopier lenke», plussknappen og opptaket
+    // skal peke på gruppa læreren faktisk viser, ikke på standardvisningen.
+    const modal = document.getElementById("modal-varmekart");
+    if (modal) {
+      const meta = !wasOpen && group?.dataset.vkMeta;
+      modal.dataset.vis = meta ? `varmekart:${meta}` : "varmekart";
+    }
   });
 
   // Radfremheving, sjangerkort-klikk og lærerens celleklikk: alt sammen delt
@@ -134,10 +141,13 @@ export function renderVarmekartBody() {
   wireHeatRows(body);
 }
 
-export function openVarmekart() {
+// Med `meta` (dyp lenke «varmekart:Country», kjøreplan-stopp) åpnes den
+// gruppa i stedet for den første.
+export function openVarmekart(meta) {
   const modal = document.getElementById("modal-varmekart");
   if (!modal) return;
-  vkOpenMeta = null;   // frisk åpning: første gruppe åpen
+  vkOpenMeta = meta || null;   // frisk åpning uten meta: første gruppe åpen
+  modal.dataset.vis = meta ? `varmekart:${meta}` : "varmekart";
   renderVarmekartBody();
   modalOpen(modal);
 }

@@ -57,9 +57,10 @@ export function modalOpen(el) {
   // samme regel som lenkeknappen: bare mål som kan bli et stopp.
   const plussKnapp = el.querySelector(".modal-head .plan-pluss");
   if (plussKnapp) plussKnapp.hidden = !el.dataset.vis;
-  // Opptaks-kroken (v5.27): hver faktiske åpning av et lenkbart mål meldes
-  // til leverandøren — plan-innsamling.js tar opp når en økt er i gang.
-  if (el.dataset.vis) modalApnetProvider?.(el.dataset.vis);
+  // Samleøkt-kroken (v5.27): hver faktiske åpning av et lenkbart mål meldes
+  // til leverandøren — plan-innsamling.js tar opp (opptak) eller sørger for
+  // plussknapp (plukk, også på modaler laget etter øktstart, som spilleren).
+  if (el.dataset.vis) modalApnetProvider?.(el.dataset.vis, el);
   el.classList.add("open");
   (focusables(el)[0] || dialog)?.focus();
 }

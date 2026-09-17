@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { VIS_TYPER, parseVisVerdi, byggVisVerdi, erSkrivefelt, erSokHurtigtast } from "../../js/vis-lenke.js?v=5.27";
+import { VIS_TYPER, parseVisVerdi, byggVisVerdi, erSkrivefelt, erSokHurtigtast } from "../../js/vis-lenke.js?v=5.28";
 
 // Rundtur: alt «Kopier lenke» kan bygge, må parseren lese tilbake identisk —
 // ellers kopierer læreren en lenke som åpner noe annet (eller ingenting).
@@ -29,6 +29,9 @@ test("vis-verdi: rundtur for alle måltypene", () => {
     { hva: "teknologi" },
     { hva: "teknologi", id: "Opptak og avspilling" },
     { hva: "slektstre" },
+    { hva: "varmekart", id: "Country" },
+    { hva: "yt", id: "dQw4w9WgXcQ" },
+    { hva: "yt", id: "dQw4w9WgXcQ", modus: "PLabc123456789" },
   ];
   for (const m of eksempler) {
     const verdi = byggVisVerdi(m);

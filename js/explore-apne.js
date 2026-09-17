@@ -11,19 +11,31 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.27";
-import { showSubsjangerInfo } from "./ui.js?v=5.27";
-import { showEdgeInfo } from "./genealogy.js?v=5.27";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.27";
-import { openDecade } from "./explore-decade.js?v=5.27";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.27";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.27";
-import { openVarmekart } from "./explore-varmekart.js?v=5.27";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.27";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.27";
-import { openReferanser } from "./explore-referanser.js?v=5.27";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.27";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.27";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.28";
+import { showSubsjangerInfo } from "./ui.js?v=5.28";
+import { showEdgeInfo } from "./genealogy.js?v=5.28";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.28";
+import { openDecade } from "./explore-decade.js?v=5.28";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.28";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.28";
+import { openVarmekart } from "./explore-varmekart.js?v=5.28";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.28";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.28";
+import { openReferanser } from "./explore-referanser.js?v=5.28";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.28";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.28";
+import { ytWatchUrl, ytMaal } from "./presentasjon-modell.js?v=5.28";
+import { apneYtSpiller } from "./yt-spiller.js?v=5.28";
+
+// Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
+// spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
+function ytTittel(videoId, s) {
+  for (const a of s.artists || []) {
+    const m = (a.musicExamples || []).find((x) => ytMaal(x.url || "")?.video === videoId);
+    if (m) return `${m.label || "Lytteeksempel"} (${a.name})`;
+  }
+  return "Lytteeksempel";
+}
 
 // Åpner ett mål: { hva, id?, modus? }. Kortene åpnes OPPÅ det som alt står
 // åpent (modaler stables), så ← fører tilbake dit man kom fra.
@@ -48,11 +60,18 @@ export function apneMaal(apne) {
       return;
     }
     case "tiår": return openDecade(apne.id, apne.modus);
+    // Et lytteeksempel (v5.28): spill i den innebygde spilleren. Tittelen
+    // slås opp i artistenes egne eksempler når de har landet — best effort.
+    case "yt": {
+      apneYtSpiller(ytWatchUrl(apne.id, apne.modus), ytTittel(apne.id, s));
+      return;
+    }
     case "side":
       if (apne.id === "rotter") return openRotter();
       if (apne.id === "omHistorie") return openOmHistorie();
       return openAppGuide();
     case "instrument": return openInstrumenter(apne.id);
+    case "varmekart": return openVarmekart(apne.id);
     case "kobling": {
       const [fra, til] = String(apne.id).split("__");
       showEdgeInfo(fra, til, sjangerOpts());
@@ -60,7 +79,6 @@ export function apneMaal(apne) {
     }
     case "podkaster": case "podkast": return openPodkaster();
     case "tidslinje": return openTidslinje();
-    case "varmekart": return openVarmekart();
     case "sjangerperioder": return openSjangerperioder();
     case "himmel": return openSjangerhimmel();
     case "referanser": return openReferanser();
@@ -93,8 +111,11 @@ function klarFor(apne, s) {
       return s.genreDescsLoaded && isGenreModelReady() ? "klar" : "vent";
     case "tiår":
       return Object.keys(s.decadeDescs || {}).length ? "klar" : "vent";
-    case "side": case "varmekart": case "sjangerperioder": case "referanser": case "store-bildet":
+    case "side": case "sjangerperioder": case "referanser": case "store-bildet":
       return s.contentLoaded ? "klar" : "vent";
+    case "varmekart":
+      // Med metasjanger som id trengs også treet (gruppene bygges av det).
+      return s.contentLoaded && (!apne.id || isGenreModelReady()) ? "klar" : "vent";
     case "instrument":
       return s.contentLoaded && s.artistsLoaded ? "klar" : "vent";
     default:

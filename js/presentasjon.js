@@ -24,13 +24,14 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.27";
-import { FLATER, NIVAA_SEKT, NIVAA_NAVN, erSynlig, ytEmbedUrl, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.27";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.27";
-import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.27";
-import { escapeHtml } from "./util.js?v=5.27";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.27";
-import { getState } from "./explore-context.js?v=5.27";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.28";
+import { FLATER, NIVAA_SEKT, NIVAA_NAVN, erSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.28";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.28";
+import { modalClose } from "./ui-modal.js?v=5.28";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.28";
+import { escapeHtml } from "./util.js?v=5.28";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.28";
+import { getState } from "./explore-context.js?v=5.28";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -163,62 +164,8 @@ function oppdaterHubKort() {
   });
 }
 
-// ----------------------------------------------------------------------------
-//  Innebygd YouTube-avspilling (brukerkrav 2026-09-17): lytteeksempler
-//  spilles i appen i stedet for ny fane. Søkelenker har ingen video-ID og
-//  åpner som før; «Åpne på YouTube» står alltid som reserve, siden enkelte
-//  musikkvideoer har innbygging avslått av rettighetshaveren.
-// ----------------------------------------------------------------------------
-
-function ytModal() {
-  let m = document.getElementById("modal-yt");
-  if (m) return m;
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `
-<div class="modal-backdrop" id="modal-yt">
-  <div class="modal modal-yt-boks">
-    <div class="modal-head">
-      <h2 id="yt-tittel">Avspilling</h2>
-      <button class="modal-close btn ghost small">✕</button>
-    </div>
-    <div class="yt-ramme"><iframe id="yt-iframe" title="YouTube-avspilling"
-      allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
-    <p class="muted yt-reserve">Spilles ikke videoen her (noen rettighetshavere tillater ikke innbygging):
-      <a id="yt-ekstern" href="#" target="_blank" rel="noopener">Åpne på YouTube</a></p>
-  </div>
-</div>`;
-  m = wrap.firstElementChild;
-  document.body.appendChild(m);
-  setupModal(m);
-  initModalHeaders();
-  // Alle lukkeveier (✕, ←, Escape, bakgrunn) går gjennom modalClose — tøm
-  // iframen der, ellers fortsetter lyden bak en lukket modal.
-  m._beforeClose = () => {
-    const fr = m.querySelector("#yt-iframe");
-    if (fr) fr.src = "";
-    return true;
-  };
-  return m;
-}
-
-function apneSpiller(embed, originalUrl, tittel) {
-  const m = ytModal();
-  m.querySelector("#yt-tittel").textContent = tittel || "Avspilling";
-  m.querySelector("#yt-ekstern").href = originalUrl;
-  m.querySelector("#yt-iframe").src = embed;
-  modalOpen(m);
-}
-
-function wireYtIntercept() {
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[href*="yout"]');
-    if (!a || a.id === "yt-ekstern") return;
-    const embed = ytEmbedUrl(a.href);
-    if (!embed) return;   // søkelenker o.l.: ny fane som før
-    e.preventDefault();
-    apneSpiller(embed, a.href, a.textContent.trim());
-  });
-}
+// Den innebygde YouTube-spilleren bor i js/yt-spiller.js fra v5.28 — delt
+// med samleøktene (plan-innsamling.js), som også skal fange lytteeksempler.
 
 // ----------------------------------------------------------------------------
 //  Kjøreplan-avspilling (fase 4, v5.25). Planene bor i content/presentasjoner
@@ -450,7 +397,9 @@ export function initPresentasjon() {
   if (qaPaa()) settQA(true); else oppdaterHubKort();
   observerModaler();
   brukNivaa();
-  wireYtIntercept();
+  // Betingelsen er alltid sann HER: registreringen skjer bare når modusen er
+  // aktiv (vi returnerte tidlig ellers). Samleøktene registrerer sin egen.
+  registrerYtIntercept(() => true);
   // Content kan alt ligge i state (lokal cache): prøv med en gang, ellers
   // tar sidenes content-hooks det når snapshotet lander.
   presPlanTikk();

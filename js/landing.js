@@ -1,20 +1,20 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.27";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.27";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.27";
-import { onGenreModelChanged } from "./genre-model.js?v=5.27";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.27";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.27";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.27";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.27";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.27";
-import { initExplore } from "./explore.js?v=5.27";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.27";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.27";
-import { initPlanMeny } from "./plan-meny.js?v=5.27";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.27";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.27";
-import { currentEntityValues } from "./entity-values.js?v=5.27";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.27";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.28";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.28";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.28";
+import { onGenreModelChanged } from "./genre-model.js?v=5.28";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.28";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.28";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.28";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.28";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.28";
+import { initExplore } from "./explore.js?v=5.28";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.28";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.28";
+import { initPlanMeny } from "./plan-meny.js?v=5.28";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.28";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.28";
+import { currentEntityValues } from "./entity-values.js?v=5.28";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.28";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

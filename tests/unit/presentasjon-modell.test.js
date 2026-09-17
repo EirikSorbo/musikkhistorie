@@ -1,7 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, ytMaal, ytEmbedUrl, normaliserPlaner, klampStopp, nyPlanId } from "../../js/presentasjon-modell.js?v=5.27";
+import { FLATER, NIVAA_SEKT, erSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, normaliserPlaner, klampStopp, nyPlanId } from "../../js/presentasjon-modell.js?v=5.28";
+
+// yt-stoppene (v5.28) lagrer bare ID-ene; ytWatchUrl må gi en adresse ytMaal
+// leser tilbake identisk, ellers spiller stoppet noe annet enn det som ble
+// tatt opp.
+test("ytWatchUrl: rundtur mot ytMaal", () => {
+  assert.deepEqual(ytMaal(ytWatchUrl("dQw4w9WgXcQ", null)), { video: "dQw4w9WgXcQ", list: null });
+  assert.deepEqual(ytMaal(ytWatchUrl("dQw4w9WgXcQ", "PLabc123456789")), { video: "dQw4w9WgXcQ", list: "PLabc123456789" });
+  assert.deepEqual(ytMaal(ytWatchUrl(null, "PLabc123456789")), { video: null, list: "PLabc123456789" });
+});
 
 test("normaliserPlaner: vasker søppel og bevarer det gyldige", () => {
   const raa = {

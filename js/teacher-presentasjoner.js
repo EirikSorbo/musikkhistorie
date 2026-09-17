@@ -13,14 +13,14 @@
 //  podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.27";
-import { escapeHtml } from "./ui.js?v=5.27";
-import { savePresentasjoner } from "./store.js?v=5.27";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.27";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.27";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.27";
-import { askChoice } from "./ui-modal.js?v=5.27";
-import { startInnsamling } from "./plan-innsamling.js?v=5.27";
+import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.28";
+import { escapeHtml } from "./ui.js?v=5.28";
+import { savePresentasjoner } from "./store.js?v=5.28";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.28";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, ytMaal } from "./presentasjon-modell.js?v=5.28";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.28";
+import { askChoice } from "./ui-modal.js?v=5.28";
+import { startInnsamling } from "./plan-innsamling.js?v=5.28";
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -29,7 +29,7 @@ const TYPE_NAVN = {
   varmekart: "Varmekart", sjangerperioder: "Sjangerperioder",
   himmel: "Sjangerhimmel", referanser: "Referanser",
   "store-bildet": "Det store bildet", podkaster: "Podkaster",
-  teknologi: "Teknologi", slektstre: "Slektstre",
+  teknologi: "Teknologi", slektstre: "Slektstre", yt: "Lytteeksempel",
 };
 
 let kladd = null;   // { id, tittel, stopp } — settes ved Ny/Rediger, null i lista
@@ -57,6 +57,14 @@ function stoppEtikett(stopp) {
       return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : "finnes ikke lenger" };
     case "tiår":
       return { tekst: `${navn}: ${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})` };
+    // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
+    case "yt": {
+      for (const a of state.artists || []) {
+        const eks = (a.musicExamples || []).find((x) => ytMaal(x.url || "")?.video === m.id);
+        if (eks) return { tekst: `${navn}: ${eks.label || "(uten navn)"} (${a.name})` };
+      }
+      return { tekst: `${navn} (YouTube)` };
+    }
     default:
       return { tekst: m.id ? `${navn}: ${m.id}` : navn };
   }

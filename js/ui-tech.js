@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.27";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=5.27";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.28";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=5.28";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {

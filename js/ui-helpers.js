@@ -9,12 +9,12 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.27";
-import { wireAllLinks } from "./linkify.js?v=5.27";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.27";
-import { GENDERS } from "./limits.js?v=5.27";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.27";
-export { artistStripHtml } from "./artist-strip.js?v=5.27";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.28";
+import { wireAllLinks } from "./linkify.js?v=5.28";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.28";
+import { GENDERS } from "./limits.js?v=5.28";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.28";
+export { artistStripHtml } from "./artist-strip.js?v=5.28";
 
 export { escapeHtml, buildKilderList, safeUrl };
 

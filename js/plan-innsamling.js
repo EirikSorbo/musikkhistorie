@@ -22,11 +22,13 @@
 //  startes fra lærersidens editor.
 // ============================================================================
 
-import { savePresentasjoner } from "./store.js?v=5.27";
-import { getState } from "./explore-context.js?v=5.27";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=5.27";
-import { setModalApnetProvider } from "./ui-modal.js?v=5.27";
-import { escapeHtml } from "./util.js?v=5.27";
+import { savePresentasjoner } from "./store.js?v=5.28";
+import { getState } from "./explore-context.js?v=5.28";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=5.28";
+import { setModalApnetProvider } from "./ui-modal.js?v=5.28";
+import { escapeHtml } from "./util.js?v=5.28";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.28";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.28";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -88,19 +90,37 @@ function lagreØkt() {
 // lastetid.
 let venter = [];
 
+// Siste innslag DENNE økta la til: {vis, hva, kilde}. Grunnlaget for
+// erstatningsregelen under; null etter seed (eldre stopp røres aldri).
+let sisteInnslag = null;
+
+// kilde: "apning" (modalOpen under opptak), "endring" (data-vis endret seg i
+// en åpen modal under opptak — læreren VALGTE noe: sjangergruppe i
+// varmekartet, instrumentfane, historie-chip), "plukk" (plussknappen).
 function leggTil(vis, kilde) {
-  if (!økt || (kilde === "opptak" && økt.modus !== "opptak")) return;
+  if (!økt || (kilde !== "plukk" && økt.modus !== "opptak")) return;
   if (!seedStopp()) {
-    if (kilde === "opptak") venter.push(vis);
+    if (kilde !== "plukk") venter.push({ vis, kilde });
     const status = document.getElementById("samle-status");
     if (status) status.textContent = "laster …";
     return;
   }
-  // Opptak: samme kort åpnet to ganger på rad er én hendelse (omtegninger og
-  // dobbeltklikk skal ikke bli doble stopp). Plukk er et bevisst klikk.
   const siste = økt.stopp[økt.stopp.length - 1];
-  if (kilde === "opptak" && siste && siste.vis === vis) return;
-  økt.stopp.push({ vis });
+  // Samme mål to ganger på rad er én hendelse (omtegninger, dobbeltklikk).
+  if (kilde !== "plukk" && siste && siste.vis === vis) return;
+  // Erstatningsregelen (v5.28): et VALG rett etter en åpning av samme flate
+  // presiserer stoppet i stedet for å legge til et nytt. Åpner læreren
+  // varmekartet (standard: første gruppe) og velger Country, blir stoppet
+  // «varmekart:Country» — ikke standardvisningen pluss valget. Neste valg på
+  // samme flate er derimot et nytt stopp (Blues, så Country = to poenger).
+  const hva = parseVisVerdi(vis)?.hva || "";
+  if (kilde === "endring" && sisteInnslag && sisteInnslag.kilde === "apning"
+      && sisteInnslag.hva === hva && siste && siste.vis === sisteInnslag.vis) {
+    økt.stopp[økt.stopp.length - 1] = { vis };
+  } else {
+    økt.stopp.push({ vis });
+  }
+  sisteInnslag = { vis, hva, kilde };
   lagreØkt();
   oppdaterBar();
 }
@@ -108,8 +128,32 @@ function leggTil(vis, kilde) {
 function angreSiste() {
   if (!økt || !seedStopp() || !økt.stopp.length) return;
   økt.stopp.pop();
+  sisteInnslag = null;   // det angrede skal ikke kunne «erstattes» av et valg
   lagreØkt();
   oppdaterBar();
+}
+
+// Opptak: data-vis ENDRET seg i en åpen modal — læreren valgte noe (sjanger-
+// gruppe i varmekartet, instrumentfane, historie-chip, tiår i båndet).
+// Observatøren dekker alle flater som oppdaterer målet sitt, også framtidige.
+let visObservator = null;
+
+function startVisObservator() {
+  if (visObservator || !("MutationObserver" in window)) return;
+  visObservator = new MutationObserver((mutasjoner) => {
+    if (økt?.modus !== "opptak") return;
+    for (const m of mutasjoner) {
+      const el = m.target;
+      if (!el.classList?.contains("open")) continue;   // bare synlige valg
+      if (el.dataset.vis) leggTil(el.dataset.vis, "endring");
+    }
+  });
+  visObservator.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["data-vis"] });
+}
+
+function stoppVisObservator() {
+  visObservator?.disconnect();
+  visObservator = null;
 }
 
 // ----------------------------------------------------------------------------
@@ -187,19 +231,23 @@ function fjernPlussKnapper() {
 // til). Tittelen overstyres av den lagrede planens når den finnes.
 export function startInnsamling(planId, modus, tittel) {
   økt = { planId, modus, tittel, stopp: [], seeded: false };
+  sisteInnslag = null;
   skriv(LAGRING.plan, planId);
   skriv(LAGRING.modus, modus);
   skriv(LAGRING.tittel, tittel);
   seedStopp();
   visBar();
   monterPlussKnapper();
+  if (modus === "opptak") startVisObservator();
 }
 
 export function avsluttInnsamling() {
   for (const k of Object.values(LAGRING)) slett(k);
   økt = null;
+  sisteInnslag = null;
   document.getElementById("samle-bar")?.remove();
   fjernPlussKnapper();
+  stoppVisObservator();
 }
 
 // Kalles fra sidenes oppstart. Gjenopptar en økt fra sessionStorage (den
@@ -207,7 +255,22 @@ export function avsluttInnsamling() {
 // slektstresiden som stopp når et opptak ankommer den (treet er en side,
 // ikke en modal, så modalkroken ser den aldri).
 export function initPlanInnsamling({ erTreSide = false } = {}) {
-  setModalApnetProvider((vis) => leggTil(vis, "opptak"));
+  setModalApnetProvider((vis, modal) => {
+    if (!økt) return;
+    if (økt.modus === "opptak") leggTil(vis, "apning");
+    // Plukk: modaler laget ETTER øktstart (spilleren) mangler plussknappen —
+    // monter idempotent og slå den på for akkurat denne åpningen (modalen er
+    // ennå ikke .open når kroken kjører, så den generelle synlighetsrunden
+    // ser den ikke).
+    if (økt.modus === "plukk") {
+      monterPlussKnapper();
+      const b = modal?.querySelector(".plan-pluss");
+      if (b) b.hidden = !vis;
+    }
+  });
+  // Lytteeksempler (v5.28): spilleren fanger YouTube-lenker også under en
+  // samleøkt, så eksemplene kan plukkes og tas opp som stopp.
+  registrerYtIntercept(() => !!økt);
 
   const planId = les(LAGRING.plan);
   const modus = les(LAGRING.modus);
@@ -216,7 +279,8 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
   seedStopp();
   visBar();
   monterPlussKnapper();
-  if (erTreSide && modus === "opptak") leggTil("slektstre", "opptak");
+  if (modus === "opptak") startVisObservator();
+  if (erTreSide && modus === "opptak") leggTil("slektstre", "apning");
 }
 
 // Snapshot-hook fra sidene: seeder økta når content lander (og oppdaterer
@@ -226,6 +290,6 @@ export function samleTikk() {
   if (!seedStopp()) return;
   const ventet = venter;
   venter = [];
-  for (const vis of ventet) leggTil(vis, "opptak");
+  for (const v of ventet) leggTil(v.vis, v.kilde);
   oppdaterBar();
 }

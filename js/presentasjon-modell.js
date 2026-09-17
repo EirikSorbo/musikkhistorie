@@ -189,6 +189,15 @@ export function klampStopp(i, antall) {
   return Math.min(antall - 1, Math.max(0, Math.trunc(Number(i) || 0)));
 }
 
+// Vanlig YouTube-adresse fra et yt-måls deler — motstykket til ytMaal. Brukt
+// av «Åpne på YouTube»-reserven og av kjøreplan-stopp («yt:<id>[:<liste>]»).
+export function ytWatchUrl(video, list) {
+  const u = new URL(video ? "https://www.youtube.com/watch" : "https://www.youtube.com/playlist");
+  if (video) u.searchParams.set("v", video);
+  if (list) u.searchParams.set("list", list);
+  return u.href;
+}
+
 // Embed-URL for spilleren (privacy-varianten uten sporingscookies før
 // avspilling). autoplay er trygt: spilleren åpnes alltid av et klikk.
 export function ytEmbedUrl(url) {

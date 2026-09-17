@@ -25,6 +25,10 @@ export const VIS_TYPER = new Set([
   "instrument", "kobling",
   "tidslinje", "varmekart", "sjangerperioder", "himmel", "referanser",
   "store-bildet", "podkaster", "teknologi", "slektstre",
+  // Et lytteeksempel (v5.28): «yt:<video-id>» eller «yt:<video-id>:<liste>».
+  // YouTube-ID-er er kolonfrie, så de passer i vis-formatet. Varmekartet kan
+  // også bære en metasjanger som id («varmekart:Country») fra samme versjon.
+  "yt",
 ]);
 
 // «artist:abc123» → { hva: "artist", id: "abc123" }. Ukjent type → null, så
