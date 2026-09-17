@@ -12,16 +12,16 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.23";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.23";
-import { renderRichText } from "./rich-text.js?v=5.23";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.23";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.23";
-import { modalOpen } from "./ui-modal.js?v=5.23";
-import { renderGenreEditBtn } from "./ui-helpers.js?v=5.23";
-import { wireProposeFoot } from "./ui-edit.js?v=5.23";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.23";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.23";
+import { wireAllLinks } from "./linkify.js?v=5.24";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.24";
+import { renderRichText } from "./rich-text.js?v=5.24";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.24";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.24";
+import { modalOpen } from "./ui-modal.js?v=5.24";
+import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.24";
+import { wireProposeFoot } from "./ui-edit.js?v=5.24";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.24";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.24";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -179,16 +179,19 @@ export function showSjangerInfo(label, opts = {}) {
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
   openSjanger = { label, opts };
   mTitle.textContent = n.f;
+  // data-sekt-merkene styrer detaljnivået i presentasjonsvisningen (v5.24).
+  // Knapperaden (Artister/Spilleliste/Tidslinje) er navigasjon og står alltid.
   mBody.innerHTML = `
-    ${heatStripBlock(n)}
-    <p class="gx-era">${escapeHtml(eraLine(resolved))}</p>
-    <div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>
-    ${(onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : ""}
+    ${sekt("stripe", heatStripBlock(n))}
+    ${sekt("era", `<p class="gx-era">${escapeHtml(eraLine(resolved))}</p>`)}
+    ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
+    ${sekt("lytt", (onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : "")}
+    ${sekt("relasjoner", `
     <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
     ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
     <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
-    ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}
-    ${kilderHtml}
+    ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}`)}
+    ${sekt("kilder", kilderHtml)}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireAllLinks(mBody, lc);
   const b = mBody.querySelector(".gx-artists-btn");

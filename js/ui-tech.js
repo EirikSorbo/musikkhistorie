@@ -4,8 +4,8 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.23";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines } from "./ui-helpers.js?v=5.23";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.24";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=5.24";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin).
 export function techImage(t) {
@@ -87,8 +87,9 @@ export function renderTechCards(el, items, lc, emptyText = "Ingen kort ennå.") 
 
 export function renderTechDetail(el, t, lc) {
   const img = techImage(t);
-  el.innerHTML = `${img}${techFactsLines(t)}`
-    + (t.description ? `<div class="rt">${linkDesc(t.description, lc)}</div>` : "")
-    + buildKilderList(t.kilder, "Kilder");
+  // data-sekt: detaljnivået i presentasjonsvisningen (v5.24), inert ellers.
+  el.innerHTML = sekt("bilde", img) + sekt("fakta", techFactsLines(t))
+    + sekt("beskrivelse", t.description ? `<div class="rt">${linkDesc(t.description, lc)}</div>` : "")
+    + sekt("kilder", buildKilderList(t.kilder, "Kilder"));
   wireLinks(el, lc);
 }

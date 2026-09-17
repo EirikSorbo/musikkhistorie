@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.23";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.24";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -191,7 +191,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.23");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.24");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -230,10 +230,11 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 
   const css = les("css/styles.css");
-  assert.match(css, /\.retur-info\[hidden\]\s*\{\s*display:\s*none/,
-    "returbanneret må kunne skjules selv om .retur-info setter display");
-  assert.match(css, /\.add-grid \.retur-kommentar\[hidden\]\s*\{\s*display:\s*none/,
-    "kommentarfeltet i skjemaet må kunne skjules");
+  // v5.24 (audit v5.19 funn 27): spesialreglene per element er erstattet av
+  // ÉN global regel som slår enhver forfatter-display — den må aldri fjernes,
+  // ellers står returbanneret synlig for alle igjen (fella fra v5.13).
+  assert.match(css, /^\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}/m,
+    "den globale [hidden]-regelen må finnes, ellers vinner display-regler over hidden");
 
   const html = les("student.html");
   const iBy = html.indexOf('id="in-by"');

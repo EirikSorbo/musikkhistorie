@@ -42,6 +42,13 @@
 
 * { box-sizing: border-box; }
 
+/* [hidden] skal ALLTID vinne (v5.24, lukker audit v5.19 funn 27): en
+   forfatterstil med display slår ellers nettleserens egen [hidden]-regel, og
+   den fella har truffet fire ganger (returbanneret v5.13, kodefeltet,
+   kommentarfeltet, kategori-etiketten i tech-skjemaet). Én global regel gjør
+   alle hidden-brytere trygge — også framtidige. */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -1041,15 +1048,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .card.is-pending { border-left: 3px solid #f59e0b; opacity: 0.92; }
 .card.is-returned { border-left: 3px solid #8b5cf6; opacity: 0.92; }
 
-/* ----- Returflyt («send tilbake») ----- */
-/* [hidden] må vinne over display:flex under. En forfatterstil med display slår
-   nettleserens egen [hidden]-regel uansett spesifisitet, så returbanneret på
-   studentsiden sto synlig for ALLE fra v5.13, med kommentarfeltet øverst i et
-   skjema der det ikke var noen retur å svare på. */
-.retur-info[hidden] { display: none; }
-/* Kommentarfeltet nederst i artistskjemaet: høyere spesifisitet enn
-   skjemaets egne label-regler, av samme grunn. */
-.add-grid .retur-kommentar[hidden] { display: none; }
+/* ----- Returflyt («send tilbake») -----
+   [hidden]-skjulingen dekkes av den globale regelen øverst (v5.24). */
 .retur-kommentar textarea { width: 100%; }
 .retur-info {
   display: flex;
@@ -1086,9 +1086,6 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   flex: 0 1 320px;
   min-width: 0;
 }
-/* MÅ stå: en forfatterstil med display slår nettleserens egen [hidden]-regel
-   uansett spesifisitet, så uten denne sto feltet synlig hele tiden. */
-.retur-kode-felt[hidden] { display: none; }
 .retur-kode-rad input {
   flex: 1;
   min-width: 0;
@@ -1300,10 +1297,9 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .modal-head .modal-close,
 .modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
 .modal-head .modal-close { margin-right: 4px; }
-/* «Kopier lenke» (v5.22). display-regelen slår nettleserens [hidden], så
-   vernet under er obligatorisk (samme felle som .retur-info i v5.15). */
+/* «Kopier lenke» (v5.22). [hidden]-skjulingen dekkes av den globale regelen
+   øverst (v5.24). */
 .modal-head .modal-lenke { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; }
-.modal-head .modal-lenke[hidden] { display: none; }
 .modal-head .modal-lenke svg { display: block; }
 .modal-foot-right { display: flex; justify-content: flex-end; margin-top: 20px; }
 
@@ -2563,7 +2559,6 @@ button.vk-cell:focus-visible {
   border-radius: 10px; padding: 8px 12px; font-size: 0.85rem; color: var(--text);
   box-shadow: 0 2px 8px rgba(0,0,0,0.08); pointer-events: auto;
 }
-.sh-focus-panel[hidden] { display: none; }
 .sh-fp-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
 .sh-fp-meta { color: var(--muted); font-size: 0.8rem; }
 .sh-loose-list { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; max-height: 40vh; overflow-y: auto; margin-top: 4px; }
@@ -2695,3 +2690,71 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
   display: inline-block; width: 44px; height: 9px; border-radius: 2px;
   background: linear-gradient(to right, var(--muted) 45%, transparent);
 }
+
+/* ============================================================================
+   PRESENTASJONSVISNING (v5.24) — appen som tavle i timen.
+   body.presentasjon settes av js/presentasjon.js; html.pres-stor er
+   tekstskalaen (nesten alt er rem-basert, så rot-størrelsen holder).
+   ========================================================================= */
+
+/* Seksjonsmerkene (data-sekt) skal aldri endre layout: wrapperen er en
+   ikke-boks. Skjules den (hidden), vinner den globale [hidden]-regelen. */
+.sekt { display: contents; }
+
+html.pres-stor { font-size: 19px; }
+
+/* Interaksjon som ikke hører hjemme på et lerret: forslags-, stemme- og
+   returinnganger. Navigasjon (søk, chips, knapperader som åpner kort) står. */
+body.presentasjon #retur-section,
+body.presentasjon a[href^="student.html"],
+body.presentasjon #detail-propose,
+body.presentasjon #sj-foot,
+body.presentasjon #td-foot,
+body.presentasjon #dv-society-propose,
+body.presentasjon #dv-tech-propose,
+body.presentasjon #btn-tech-new,
+body.presentasjon [data-action="voteUp"] { display: none !important; }
+
+/* Verktøylinja nede til høyre. z-index over modalene (de starter på 100 og
+   teller oppover per åpning — 99999 er utenfor rekkevidde i praksis). */
+#pres-bar {
+  position: fixed; right: 14px; bottom: 14px; z-index: 99999;
+  display: flex; gap: 6px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 6px 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+.pres-knapp {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 32px; height: 32px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--text);
+  font: inherit; font-size: 0.9rem; cursor: pointer;
+}
+.pres-knapp:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.pres-knapp.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pres-nivaa { display: inline-flex; gap: 4px; padding-right: 4px; border-right: 1px solid var(--line); }
+.pres-avslutt { font-size: 0.85rem; }
+
+/* Tannhjul-panelet: over verktøylinja, venstrestilt tekst. */
+#pres-panel {
+  position: absolute; right: 0; bottom: calc(100% + 10px);
+  width: min(360px, calc(100vw - 40px)); max-height: 62vh; overflow: auto;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 14px; padding: 14px; text-align: left;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16);
+}
+.pres-panel-hode {
+  margin: 0 0 8px; font-size: 0.75rem; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.pres-valg { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.9rem; cursor: pointer; }
+.pres-valg input { margin-top: 3px; flex: none; }
+.pres-skille { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
+.pres-qa { color: var(--muted); }
+
+/* Innebygd YouTube-spiller. */
+.modal-yt-boks { width: min(960px, 92vw); }
+.yt-ramme { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
+.yt-ramme iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.yt-reserve { margin: 10px 0 0; font-size: 0.85rem; }

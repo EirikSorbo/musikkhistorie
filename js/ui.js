@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.23";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.23";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.23";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.23";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.23";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.24";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.24";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.24";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.24";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.24";
 import {
   escapeHtml,
   linkDesc,
@@ -31,16 +31,17 @@ import {
   formatInfoText,
   factsLines,
   artistStripHtml,
+  sekt,
   PRIO_ICONS,
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.23";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.23";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.23";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.23";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.23";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.23";
+} from "./ui-helpers.js?v=5.24";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.24";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.24";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.24";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.24";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.24";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -117,19 +118,21 @@ export function renderArtistDetail(el, artist, lc) {
   // bytter fokus. Delt hjelper (samme blokk brukes på spotlight-/dagens-kort).
   const relatedHtml = relatedArtistsHtml(a, lc);
 
+  // data-sekt-merkene styrer detaljnivået i presentasjonsvisningen (v5.24)
+  // og er inerte ellers — se js/presentasjon-modell.js.
   el.innerHTML = `
-    ${artistImage(a, true)}
-    ${factsLines(a)}
-    <div class="meta" style="margin-bottom:12px">
+    ${sekt("bilde", artistImage(a, true))}
+    ${sekt("fakta", factsLines(a))}
+    ${sekt("tags", `<div class="meta" style="margin-bottom:12px">
       ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
       ${genreTags(a)}
-    </div>
-    ${artistStripHtml(a)}
-    ${a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : ""}
-    ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-    ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
-    ${kilderHtml(a.kilder)}
-    ${relatedHtml}
+    </div>`)}
+    ${sekt("stripe", artistStripHtml(a))}
+    ${sekt("beskrivelse", a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : "")}
+    ${sekt("verk", worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : "")}
+    ${sekt("lytte", examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : "")}
+    ${sekt("kilder", kilderHtml(a.kilder))}
+    ${sekt("beslektede", relatedHtml)}
   `;
   wireLinks(el, lc);
   wireRelated(el, lc);

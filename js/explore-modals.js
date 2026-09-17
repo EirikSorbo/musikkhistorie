@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.23";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.23";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.24";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.24";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -125,13 +125,13 @@ export const MODAL_HTML = `
     <h3 class="dv-decade" id="dv-decade"></h3>
     <div class="info-section" id="dv-society-section">
       <h4 class="info-label">Samfunnsutvikling</h4>
-      <div id="dv-society" class="info-text"></div>
+      <div id="dv-society" class="info-text" data-sekt="tekst"></div>
       <button class="btn ghost small" id="dv-society-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div class="info-section" id="dv-tech-section">
       <h4 class="info-label">Teknologiutvikling</h4>
-      <div id="dv-tech-timeline"></div>
-      <div id="dv-tech" class="info-text"></div>
+      <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
+      <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
       <button class="btn ghost small" id="dv-tech-propose" style="display:none;margin-left:6px">Foreslå endring</button>
     </div>
     <div id="dv-kilder"></div>
@@ -400,8 +400,8 @@ ${TECH_DETAIL_MODAL_HTML}
          metasjangeren, samme rad som i varmekartet. Her lå først den
          håndskrevne «Sjangertre-løype»-linjen i teksten, så en generert
          tidslinje over startårene. -->
-    <div id="hist-tre"></div>
-    <div id="hist-body" class="story-body"></div>
+    <div id="hist-tre" data-sekt="striper"></div>
+    <div id="hist-body" data-sekt="tekst" class="story-body"></div>
   </div>
 </div>
 `;

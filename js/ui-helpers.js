@@ -9,12 +9,12 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.23";
-import { wireAllLinks } from "./linkify.js?v=5.23";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.23";
-import { GENDERS } from "./limits.js?v=5.23";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.23";
-export { artistStripHtml } from "./artist-strip.js?v=5.23";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.24";
+import { wireAllLinks } from "./linkify.js?v=5.24";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.24";
+import { GENDERS } from "./limits.js?v=5.24";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.24";
+export { artistStripHtml } from "./artist-strip.js?v=5.24";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -356,6 +356,12 @@ export function musicExampleLabel(m) {
 // Samme inline-format som «Sentrale verk»: understreket lenke + årstall i
 // parentes utenfor lenka, komma-separert. Callerne setter «Lytteeksempler:»
 // i fet skrift foran (jf. keyWorksText / .works-avsnittet).
+// Seksjonsmerke for presentasjonsvisningen (v5.24): wrapper med
+// display:contents (se CSS .sekt), så merkingen aldri endrer layouten.
+// Tom seksjon gir tom streng — da finnes det ingenting å vise eller skjule.
+// ID-ene er kontrakten mot js/presentasjon-modell.js (låst av en test).
+export const sekt = (navn, html) => (html ? `<div class="sekt" data-sekt="${navn}">${html}</div>` : "");
+
 export function musicExamplesHtml(a) {
   const items = (a.musicExamples || []).filter((m) => safeUrl(m.url));
   if (!items.length) return "";
