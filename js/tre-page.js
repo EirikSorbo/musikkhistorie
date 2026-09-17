@@ -14,12 +14,12 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.21";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.21";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.21";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.21";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.21";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.21";
+import { initExplore } from "./explore.js?v=5.22";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.22";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.22";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.22";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.22";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.22";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -36,7 +36,9 @@ export function initTrePage({ render }) {
     if (!title || !body) return;
     title.textContent = a.name;
     renderArtistDetail(body, a, buildLinkCtx());
-    modalOpen(document.getElementById("modal-artist-detail"));
+    const modal = document.getElementById("modal-artist-detail");
+    modal.dataset.vis = `artist:${a.id}`;   // «Kopier lenke» (v5.22) → forsiden
+    modalOpen(modal);
   }
 
   // initExplore injiserer MODAL_HTML (inkludert de fire delte fragmentene),

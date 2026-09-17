@@ -4,8 +4,8 @@
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=5.21";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=5.21";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=5.22";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=5.22";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
@@ -48,7 +48,9 @@ function fillTechDetail(t) {
 
 export function openTechDetail(t) {
   fillTechDetail(t);
-  modalOpen(document.getElementById("modal-tech-detail"));
+  const modal = document.getElementById("modal-tech-detail");
+  modal.dataset.vis = `tech:${t.id}`;   // «Kopier lenke» (v5.22)
+  modalOpen(modal);
 }
 
 // Kalles når teknologi-dataene endrer seg (lærer lagrer i redigerings-popupen).

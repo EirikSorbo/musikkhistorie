@@ -48,6 +48,11 @@ export function modalOpen(el) {
   // et element inne i modalen som re-renderingen straks fjerner, og den
   // opprinnelige utløseren utenfor mister fokusrestaureringen.
   if (!el.classList.contains("open")) el._restoreFocus = document.activeElement;
+  // «Kopier lenke» (v5.22) vises bare når backdropen bærer et mål: åpnerne
+  // setter data-vis for dynamiske mål (artist, tiår, …) rett før modalOpen,
+  // markupen for de statiske (varmekart, sidene, …).
+  const lenkeKnapp = el.querySelector(".modal-head .modal-lenke");
+  if (lenkeKnapp) lenkeKnapp.hidden = !el.dataset.vis;
   el.classList.add("open");
   (focusables(el)[0] || dialog)?.focus();
 }
@@ -113,7 +118,37 @@ export function setupModal(idOrEl, onClose) {
   m.querySelector(".modal-close")?.addEventListener("click", close);
 }
 
-// Konverter eksisterende ✕-knapp til ←-tilbakeknapp og injiser ny ✕ for "lukk alle".
+// «Kopier lenke» (v5.22): dyplenke til modalens gjeldende innhold, lest fra
+// backdropens data-vis. Kvitteringen skjer i selve knappen (lenke → hake);
+// timeren flipper bare ikonet tilbake, så den er ufarlig om modalen lukkes.
+const LENKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+const HAKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+async function kopierVisLenke(knapp) {
+  const verdi = knapp.closest(".modal-backdrop")?.dataset.vis;
+  if (!verdi) return;
+  // Lenken peker alltid på forsiden — det er den som har ?vis=-ruteren, og
+  // fra lærersiden/tre-siden ligger index.html i samme mappe.
+  const url = new URL("index.html", window.location.href);
+  url.searchParams.set("vis", verdi);
+  try {
+    await navigator.clipboard.writeText(url.href);
+    knapp.innerHTML = HAKE_SVG;
+    knapp.title = "Lenke kopiert";
+    clearTimeout(knapp._kvittering);
+    knapp._kvittering = setTimeout(() => {
+      knapp.innerHTML = LENKE_SVG;
+      knapp.title = "Kopier lenke";
+    }, 1400);
+  } catch (e) {
+    // Utklippstavla kan være sperret (styrte profiler, eldre nettlesere):
+    // vis lenken, så den kan kopieres for hånd.
+    window.prompt("Kopier lenken:", url.href);
+  }
+}
+
+// Konverter eksisterende ✕-knapp til ←-tilbakeknapp og injiser ny ✕ for "lukk alle",
+// pluss «Kopier lenke»-knappen foran dem.
 // Idempotent (hopper over modaler som allerede har .modal-close-all), så den kan
 // kjøres på nytt etter at flere modaler er injisert dynamisk (se explore.js).
 export function initModalHeaders() {
@@ -131,6 +166,15 @@ export function initModalHeaders() {
     closeAll.setAttribute("aria-label", "Lukk alle");
     closeAll.addEventListener("click", modalCloseAll);
     closeBtn.parentNode.insertBefore(closeAll, closeBtn.nextSibling);
+    const lenke = document.createElement("button");
+    lenke.type = "button";
+    lenke.className = "modal-lenke btn ghost small";
+    lenke.title = "Kopier lenke";
+    lenke.setAttribute("aria-label", "Kopier lenke");
+    lenke.hidden = true;   // modalOpen slår den på når backdropen har data-vis
+    lenke.innerHTML = LENKE_SVG;
+    lenke.addEventListener("click", () => kopierVisLenke(lenke));
+    closeBtn.parentNode.insertBefore(lenke, closeBtn);
   });
 }
 if (IS_BROWSER) {

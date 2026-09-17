@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.21";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.21";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.21";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.21";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.21";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.22";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.22";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.22";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.22";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.22";
 import {
   escapeHtml,
   linkDesc,
@@ -35,12 +35,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.21";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.21";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.21";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.21";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.21";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.21";
+} from "./ui-helpers.js?v=5.22";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.22";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.22";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.22";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.22";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.22";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -477,6 +477,10 @@ function showGenreLevelInfo(label, level, opts = {}) {
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");
   if (!modal || !mTitle || !mBody) return false;
+
+  // «Kopier lenke» (v5.22): sub-nivået er lenkbart (samme rute som søket);
+  // meta-nivået har ingen egen lenketype, så knappen skjules der.
+  modal.dataset.vis = level === "sub" ? `undersjanger:${label}` : "";
 
   const resolved = resolveDesc(genreDescs, label, level);
   // Alle skjemafeltene med i currentValues (samme grunn som i showSjangerInfo):

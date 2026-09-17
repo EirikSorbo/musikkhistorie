@@ -10,19 +10,16 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml, showSubsjangerInfo } from "./ui.js?v=5.21";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.21";
-import { showEdgeInfo } from "./genealogy.js?v=5.21";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.21";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.22";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.22";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.22";
+import { getState } from "./explore-context.js?v=5.22";
+import { apneMaal } from "./explore-apne.js?v=5.22";
+import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.22";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
 const PER_GRUPPE = 6;
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.21";
-import { openTechDetail } from "./explore-tech.js?v=5.21";
-import { openDecade } from "./explore-decade.js?v=5.21";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide } from "./explore-innhold.js?v=5.21";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.21";
 
 // Indeksen koster rundt 20 ms å bygge for hele pensumet (643 poster), og det
 // er unødvendig å gjøre for hvert tastetrykk. Den bygges derfor når søket
@@ -113,7 +110,20 @@ export function wireSok() {
       const rad = e.target.closest("[data-sok-i]");
       if (!rad) return;
       const t = visteTreff[Number(rad.dataset.sokI)];
-      if (t) apneTreff(t.apne);
+      if (t) apneMaal(t.apne);
+    });
+  }
+
+  // Hurtigtast (v5.22): «/» eller Ctrl/Cmd+K åpner søket fra hvor som helst
+  // på sidene som laster utforsk-laget (forsiden, lærersiden, slektstresiden
+  // — modal-sok injiseres av initExplore på alle tre). Vaktene er rene
+  // funksjoner i vis-lenke.js. Datasett-vakten gjør koblingen idempotent.
+  if (!document.body.dataset.sokHurtigtast) {
+    document.body.dataset.sokHurtigtast = "1";
+    document.addEventListener("keydown", (e) => {
+      if (!erSokHurtigtast(e, erSkrivefelt(document.activeElement))) return;
+      e.preventDefault();
+      openSok();
     });
   }
 }
@@ -169,39 +179,6 @@ function renderSok() {
   }).join("");
 }
 
-// Ruteren: ETT sted som kjenner inngangen til hver innholdstype. Kortene åpnes
-// OPPÅ søket, så ← fører tilbake til treffisten.
-function apneTreff(apne) {
-  if (!apne) return;
-  const s = getState();
-  switch (apne.hva) {
-    case "artist": {
-      const a = (s.artists || []).find((x) => x.id === apne.id);
-      if (a && opts.onArtistClick) opts.onArtistClick(a);
-      return;
-    }
-    case "sjanger": return onMainGenreClick(apne.id);
-    case "undersjanger": {
-      showSubsjangerInfo(apne.id, sjangerOpts());
-      return;
-    }
-    case "historie": return openHistorier(apne.id);
-    case "tech": {
-      const t = (s.techItems || []).find((x) => x.id === apne.id);
-      if (t) openTechDetail(t);
-      return;
-    }
-    case "tiår": return openDecade(apne.id, apne.modus);
-    case "side":
-      if (apne.id === "rotter") return openRotter();
-      if (apne.id === "omHistorie") return openOmHistorie();
-      return openAppGuide();
-    case "instrument": return openInstrumenter(apne.id);
-    case "kobling": {
-      const [fra, til] = String(apne.id).split("__");
-      showEdgeInfo(fra, til, sjangerOpts());
-      return;
-    }
-    case "podkast": return openPodkaster();
-  }
-}
+// Ruteren som kjente inngangen til hver innholdstype lå her fram til v5.22.
+// Nå bor den i explore-apne.js (apneMaal), delt med ?vis=-lenkene, så søket
+// og lenkene aldri kan åpne samme mål ulikt.

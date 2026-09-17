@@ -1300,6 +1300,11 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .modal-head .modal-close,
 .modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
 .modal-head .modal-close { margin-right: 4px; }
+/* «Kopier lenke» (v5.22). display-regelen slår nettleserens [hidden], så
+   vernet under er obligatorisk (samme felle som .retur-info i v5.15). */
+.modal-head .modal-lenke { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; }
+.modal-head .modal-lenke[hidden] { display: none; }
+.modal-head .modal-lenke svg { display: block; }
 .modal-foot-right { display: flex; justify-content: flex-end; margin-top: 20px; }
 
 .info-section { margin-bottom: 18px; }

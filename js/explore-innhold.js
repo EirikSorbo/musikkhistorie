@@ -6,16 +6,16 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.21";
-import { isVisible } from "./limits.js?v=5.21";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.21";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.21";
-import { renderRichText } from "./rich-text.js?v=5.21";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.21";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.21";
-import { wireLinks } from "./ui-helpers.js?v=5.21";
-import { renderSjangerhimmel } from "./constellation.js?v=5.21";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.21";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.22";
+import { isVisible } from "./limits.js?v=5.22";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.22";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.22";
+import { renderRichText } from "./rich-text.js?v=5.22";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.22";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.22";
+import { wireLinks } from "./ui-helpers.js?v=5.22";
+import { renderSjangerhimmel } from "./constellation.js?v=5.22";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.22";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -99,6 +99,10 @@ let currentStoryGenre = null;
 
 function renderHistorie(genre) {
   currentStoryGenre = genre;
+  // «Kopier lenke» (v5.22): følger metasjangeren som faktisk vises, også når
+  // man bytter historie med chipsene mens modalen står åpen.
+  const histModal = document.getElementById("modal-historier");
+  if (histModal) histModal.dataset.vis = genre ? `historie:${genre}` : "historie";
   const modal = document.getElementById("modal-historier");
   modal.querySelectorAll(".hist-chip").forEach((b) =>
     b.classList.toggle("active", b.dataset.story === genre));

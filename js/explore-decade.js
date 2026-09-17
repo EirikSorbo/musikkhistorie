@@ -4,10 +4,10 @@
 //  Tiårsvisningen med klikkbar tidslinje-stripe. Flyttet ut av explore.js
 //  (v3.55, runde 2). contextMode/currentDecade er modul-tilstand her.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList } from "./ui.js?v=5.21";
-import { DECADES } from "./limits.js?v=5.21";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.21";
-import { opts, getState } from "./explore-context.js?v=5.21";
+import { modalOpen, renderDecadeRibbon, renderDecadeSections, buildKilderList } from "./ui.js?v=5.22";
+import { DECADES } from "./limits.js?v=5.22";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.22";
+import { opts, getState } from "./explore-context.js?v=5.22";
 
 let contextMode = "society";
 // Sist viste tiår i Samfunn/Teknologi-visningen — huskes innen økten så
@@ -31,7 +31,11 @@ export function openDecade(decadeId, mode = "society") {
 
 function openDecadeView(decadeId) {
   renderDecadeView(decadeId);
-  modalOpen(document.getElementById("modal-decade-view"));
+  const modal = document.getElementById("modal-decade-view");
+  // «Kopier lenke» (v5.22): modusen (samfunn/teknologi) hører med, ellers
+  // åpner lenken tiåret i feil fane.
+  modal.dataset.vis = `tiår:${decadeId}:${contextMode}`;
+  modalOpen(modal);
 }
 
 function renderDecadeView(decadeId) {

@@ -7,15 +7,15 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.21";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.21";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.22";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.22";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
 
 export const MODAL_HTML = `
 <!-- Teknologi -->
-<div class="modal-backdrop" id="modal-teknologi">
+<div class="modal-backdrop" id="modal-teknologi" data-vis="teknologi">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Teknologiske innovasjoner</h2>
@@ -71,7 +71,7 @@ export const MODAL_HTML = `
 <!-- Podkastene: eget vindu (v5.07), åpnet fra «Hør podkastene» øverst i
      Instrumenter-kortet. Lå tidligere som fane nummer to der inne — med
      knappen på plass var fanen bare et ekstra lag rundt den samme lista. -->
-<div class="modal-backdrop" id="modal-podkaster">
+<div class="modal-backdrop" id="modal-podkaster" data-vis="podkaster">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Podkaster</h2>
@@ -143,7 +143,7 @@ export const MODAL_HTML = `
 </div>
 
 <!-- Varmekart: metasjanger × tiår -->
-<div class="modal-backdrop" id="modal-varmekart">
+<div class="modal-backdrop" id="modal-varmekart" data-vis="varmekart">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Tyngdepunkt gjennom tiårene</h2>
@@ -159,7 +159,7 @@ export const MODAL_HTML = `
      (activeFrom/activeTo i genreDescriptions) og sjangrene kommer fra
      slektstreet, så figuren følger endringer uten at noe må vedlikeholdes.
      Tegnes av js/explore-sjangerperioder.js. -->
-<div class="modal-backdrop" id="modal-sjangerperioder">
+<div class="modal-backdrop" id="modal-sjangerperioder" data-vis="sjangerperioder">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Sjangerperioder</h2>
@@ -185,7 +185,7 @@ export const MODAL_HTML = `
 
 <!-- Sjangerhimmel: konstellasjonskart — artister som satellitter rundt
      sjangrene sine; bro-artister spennes ut mellom klyngene (constellation.js) -->
-<div class="modal-backdrop" id="modal-sjangerhimmel">
+<div class="modal-backdrop" id="modal-sjangerhimmel" data-vis="himmel">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Sjangerhimmelen</h2>
@@ -197,7 +197,7 @@ export const MODAL_HTML = `
 </div>
 
 <!-- Tidslinje: når var artistene aktive, gruppert per sjanger -->
-<div class="modal-backdrop" id="modal-tidslinje">
+<div class="modal-backdrop" id="modal-tidslinje" data-vis="tidslinje">
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Tidslinje: når var artistene aktive?</h2>
@@ -262,7 +262,7 @@ ${TECH_DETAIL_MODAL_HTML}
      dette er bare én ekstra dør inn, for den som tenker «vis meg helheten»
      i stedet for «vis meg artister». Gjenbruker dash-kort-utseendet så
      modalen leses som et mini-dashbord. -->
-<div class="modal-backdrop" id="modal-store-bildet">
+<div class="modal-backdrop" id="modal-store-bildet" data-vis="store-bildet">
   <div class="modal">
     <div class="modal-head">
       <h2>Det store bildet</h2>
@@ -327,7 +327,7 @@ ${TECH_DETAIL_MODAL_HTML}
      og hovedkilde. Innholdet er en AVLEDNING av dataene og bygges på nytt ved
      hver åpning (explore-referanser.js) — ingen tekst å redigere, og derfor
      heller ingen Rediger-knapp. -->
-<div class="modal-backdrop" id="modal-referanser">
+<div class="modal-backdrop" id="modal-referanser" data-vis="referanser">
   <div class="modal">
     <div class="modal-head">
       <h2>Referanser</h2>
@@ -341,7 +341,7 @@ ${TECH_DETAIL_MODAL_HTML}
      Firestore (content/appGuide, markdown-light) og redigeres via samme
      Rediger-knapp som Om historie/Røtter — ingen hardkodet tekst i koden.
      Åpnes som siste kort i «Det store bildet». -->
-<div class="modal-backdrop" id="modal-app-guide">
+<div class="modal-backdrop" id="modal-app-guide" data-vis="side:guide">
   <div class="modal">
     <div class="modal-head">
       <h2>Slik bruker du appen</h2>
@@ -356,7 +356,7 @@ ${TECH_DETAIL_MODAL_HTML}
      Firestore (content/omHistorie og content/rotter, markdown-light) og
      rendres ved hver åpning — ingen hardkodet tekst i koden. Foten er
      navigasjon (kode), ikke innhold. -->
-<div class="modal-backdrop" id="modal-om-historie">
+<div class="modal-backdrop" id="modal-om-historie" data-vis="side:omHistorie">
   <div class="modal">
     <div class="modal-head">
       <h2>Om historie</h2>
@@ -367,7 +367,7 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
-<div class="modal-backdrop" id="modal-rotter">
+<div class="modal-backdrop" id="modal-rotter" data-vis="side:rotter">
   <div class="modal">
     <div class="modal-head">
       <h2>Røtter før 1910</h2>

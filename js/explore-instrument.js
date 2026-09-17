@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.21";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.21";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.21";
-import { pageFor } from "./story-format.js?v=5.21";
-import { renderRichText } from "./rich-text.js?v=5.21";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.21";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.21";
-import { openTechDetail } from "./explore-tech.js?v=5.21";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.22";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.22";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.22";
+import { pageFor } from "./story-format.js?v=5.22";
+import { renderRichText } from "./rich-text.js?v=5.22";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.22";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.22";
+import { openTechDetail } from "./explore-tech.js?v=5.22";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -104,6 +104,9 @@ function timelineHtml(group, items) {
 
 function renderGroup(group, tvunget = false) {
   currentGroup = group;
+  // «Kopier lenke» (v5.22): følger gruppen som vises, også ved fanebytte.
+  const instrModal = document.getElementById("modal-instrumenter");
+  if (instrModal) instrModal.dataset.vis = `instrument:${group}`;
   const body = document.getElementById("instr-body");
   if (!body) return;
 

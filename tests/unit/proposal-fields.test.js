@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.21";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.22";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -191,7 +191,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.21");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.22");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");

@@ -1,16 +1,17 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.21";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.21";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.21";
-import { onGenreModelChanged } from "./genre-model.js?v=5.21";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.21";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.21";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.21";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.21";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.21";
-import { initExplore } from "./explore.js?v=5.21";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.21";
-import { currentEntityValues } from "./entity-values.js?v=5.21";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.21";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.22";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.22";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.22";
+import { onGenreModelChanged } from "./genre-model.js?v=5.22";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.22";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.22";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.22";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.22";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.22";
+import { initExplore } from "./explore.js?v=5.22";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.22";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.22";
+import { currentEntityValues } from "./entity-values.js?v=5.22";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.22";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -96,7 +97,9 @@ function openDetail(artist) {
       currentValues: artist,
     });
   }
-  modalOpen(document.getElementById("modal-detail"));
+  const detailModal = document.getElementById("modal-detail");
+  detailModal.dataset.vis = `artist:${artist.id}`;   // «Kopier lenke» (v5.22)
+  modalOpen(detailModal);
 }
 
 function setupProposeButtons() {
@@ -655,9 +658,10 @@ function init() {
       // så en åpen fane må tegnes på nytt når artistene lander. Uten dette blir
       // tallet stående med cachens verdi mens lista viser den ferske.
       explore?.renderInstrumenter?.();
-      // Utenom throttlingen: deep-linken skal åpnes straks data finnes (no-op
-      // når det ikke venter noen).
+      // Utenom throttlingen: deep-linkene skal åpnes straks data finnes
+      // (no-op når det ikke venter noen). provVisMaal er ?vis=-ruteren.
       applyPendingDeepLink();
+      provVisMaal();
     },
     // genreDescsChanged: et åpent sjangerkort skal vise en fersk beskrivelse
     // med én gang — beskrivelsene bor i sin egen samling, så content-snapshotet
@@ -665,6 +669,7 @@ function init() {
     onGenreDescs: () => {
       if (isArtistModalOpen()) renderFilterResults();
       explore?.genreDescsChanged?.();
+      provVisMaal();
     },
     // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
     // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
@@ -674,7 +679,9 @@ function init() {
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
     // tegnes på nytt her også.
-    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); },
+    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); },
+    // Tiårstekstene: en ?vis=tiår-lenke venter på at de har landet.
+    onDecades: () => provVisMaal(),
     // En åpen Podkaster-fane skal vise nye episoder uten å lukkes/åpnes.
     onPodcasts: () => explore?.renderInstrumenter?.(),
   });
@@ -685,6 +692,8 @@ function init() {
   onGenreModelChanged(() => refreshFilterControls());
 
   applyIncomingFilter();
+  // ?vis=-lenkene (v5.22): generisk dyp lenke til alt søket kan åpne.
+  lesVisFraUrl();
 }
 
 // Rollevelger — kjører først når klassepassordet er godtatt (js/gate.js), så
