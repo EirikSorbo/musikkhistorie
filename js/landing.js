@@ -1,17 +1,17 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.22";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.22";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.22";
-import { onGenreModelChanged } from "./genre-model.js?v=5.22";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.22";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.22";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.22";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.22";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.22";
-import { initExplore } from "./explore.js?v=5.22";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.22";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.22";
-import { currentEntityValues } from "./entity-values.js?v=5.22";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.22";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.23";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.23";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.23";
+import { onGenreModelChanged } from "./genre-model.js?v=5.23";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.23";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.23";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.23";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.23";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.23";
+import { initExplore } from "./explore.js?v=5.23";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.23";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.23";
+import { currentEntityValues } from "./entity-values.js?v=5.23";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.23";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

@@ -124,6 +124,26 @@ export function setupModal(idOrEl, onClose) {
 const LENKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 const HAKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
+// Modernt API først; execCommand som reserve. Verifisert nødvendig i praksis:
+// innebygde/administrerte nettlesere kan nekte Clipboard-API-et («Write
+// permission denied») selv med ekte klikk, og skolemaskiner har ofte samme
+// sperre. execCommand krever bare brukerbevegelsen, som klikket er.
+function kopierTilUtklipp(tekst) {
+  return navigator.clipboard.writeText(tekst).catch(() => new Promise((resolve, reject) => {
+    const ta = document.createElement("textarea");
+    ta.value = tekst;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.append(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+    if (ok) resolve(); else reject(new Error("utklippstavle sperret"));
+  }));
+}
+
 async function kopierVisLenke(knapp) {
   const verdi = knapp.closest(".modal-backdrop")?.dataset.vis;
   if (!verdi) return;
@@ -132,7 +152,8 @@ async function kopierVisLenke(knapp) {
   const url = new URL("index.html", window.location.href);
   url.searchParams.set("vis", verdi);
   try {
-    await navigator.clipboard.writeText(url.href);
+    await kopierTilUtklipp(url.href);
+    knapp.focus();   // execCommand-reserven flytter fokus via textarea-en
     knapp.innerHTML = HAKE_SVG;
     knapp.title = "Lenke kopiert";
     clearTimeout(knapp._kvittering);
