@@ -11,21 +11,21 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.28";
-import { showSubsjangerInfo } from "./ui.js?v=5.28";
-import { showEdgeInfo } from "./genealogy.js?v=5.28";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.28";
-import { openDecade } from "./explore-decade.js?v=5.28";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.28";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.28";
-import { openVarmekart } from "./explore-varmekart.js?v=5.28";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.28";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.28";
-import { openReferanser } from "./explore-referanser.js?v=5.28";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.28";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.28";
-import { ytWatchUrl, ytMaal } from "./presentasjon-modell.js?v=5.28";
-import { apneYtSpiller } from "./yt-spiller.js?v=5.28";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.29";
+import { showSubsjangerInfo } from "./ui.js?v=5.29";
+import { showEdgeInfo } from "./genealogy.js?v=5.29";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.29";
+import { openDecade } from "./explore-decade.js?v=5.29";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.29";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.29";
+import { openVarmekart } from "./explore-varmekart.js?v=5.29";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.29";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.29";
+import { openReferanser } from "./explore-referanser.js?v=5.29";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.29";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.29";
+import { ytWatchUrl, ytMaal } from "./presentasjon-modell.js?v=5.29";
+import { apneYtSpiller } from "./yt-spiller.js?v=5.29";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -62,8 +62,10 @@ export function apneMaal(apne) {
     case "tiår": return openDecade(apne.id, apne.modus);
     // Et lytteeksempel (v5.28): spill i den innebygde spilleren. Tittelen
     // slås opp i artistenes egne eksempler når de har landet — best effort.
+    // Fjerde ledd er starttidspunktet i sekunder (v5.29).
     case "yt": {
-      apneYtSpiller(ytWatchUrl(apne.id, apne.modus), ytTittel(apne.id, s));
+      const start = Number(apne.ekstra) || null;
+      apneYtSpiller(ytWatchUrl(apne.id, apne.modus, start), ytTittel(apne.id, s), { start });
       return;
     }
     case "side":

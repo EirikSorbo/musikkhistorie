@@ -33,27 +33,37 @@ export const VIS_TYPER = new Set([
 
 // «artist:abc123» → { hva: "artist", id: "abc123" }. Ukjent type → null, så
 // en gammel eller håndskrevet lenke aldri kaster — den ignoreres stille.
+//
+// Fjerde ledd («ekstra», v5.29) bærer starttidspunktet på et lytteeksempel:
+// «yt:<video>:<liste>:<sekunder>», og «yt:<video>::<sekunder>» når det ikke
+// er noen spilleliste. Tomt ledd leses som fravær, så begge formene er
+// bakoverkompatible med lenker laget før v5.29.
 export function parseVisVerdi(verdi) {
   if (typeof verdi !== "string" || !verdi) return null;
-  const [hva, id, modus] = verdi.split(":");
+  const [hva, id, modus, ekstra] = verdi.split(":");
   if (!VIS_TYPER.has(hva)) return null;
   const ut = { hva };
   if (id) ut.id = id;
   if (modus) ut.modus = modus;
+  if (ekstra) ut.ekstra = ekstra;
   return ut;
 }
 
 // Motsatt vei — brukes av «Kopier lenke». Returnerer null i stedet for en
 // verdi som ikke kan parses tilbake (ukjent type, kolon i navnet, eller
-// modus uten id, som ville lest modusen som id).
-export function byggVisVerdi({ hva, id, modus } = {}) {
+// modus/ekstra uten id, som ville blitt lest som id).
+export function byggVisVerdi({ hva, id, modus, ekstra } = {}) {
   if (!VIS_TYPER.has(hva)) return null;
   const deler = [hva];
   if (id != null && id !== "") deler.push(String(id));
-  if (modus != null && modus !== "") {
+  const harModus = modus != null && modus !== "";
+  const harEkstra = ekstra != null && ekstra !== "";
+  if (harModus || harEkstra) {
     if (deler.length === 1) return null;
-    deler.push(String(modus));
+    // Tom plassholder når bare ekstra er satt, så leddene ikke forskyves.
+    deler.push(harModus ? String(modus) : "");
   }
+  if (harEkstra) deler.push(String(ekstra));
   if (deler.some((d) => d.includes(":"))) return null;
   return deler.join(":");
 }

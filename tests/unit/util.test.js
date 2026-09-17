@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.28";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.29";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -148,7 +148,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js?v=5.28");
+    = await import("../../js/util.js?v=5.29");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);

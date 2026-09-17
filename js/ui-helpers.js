@@ -9,12 +9,12 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.28";
-import { wireAllLinks } from "./linkify.js?v=5.28";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.28";
-import { GENDERS } from "./limits.js?v=5.28";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.28";
-export { artistStripHtml } from "./artist-strip.js?v=5.28";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.29";
+import { wireAllLinks } from "./linkify.js?v=5.29";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.29";
+import { GENDERS } from "./limits.js?v=5.29";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.29";
+export { artistStripHtml } from "./artist-strip.js?v=5.29";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -541,12 +541,17 @@ function factsHtml(rows) {
   // Tredje element gjør verdien klikkbar: { attr } settes som data-attributt med
   // verdien selv, og kalleren kobler lytteren (delegert i explore.js). Attributt-
   // navnet kommer fra koden, aldri fra data.
+  // data-fakta (v5.29): presentasjonsvisningen styrer ENKELTLINJER, ikke bare
+  // hele faktablokka — levetid fra nivå 1, årstallene først på nivå 3, og
+  // kategori/instrument aldri. Nøkkelen er etiketten i kleinform, satt av
+  // koden (aldri av data), og er inert utenfor presentasjonsmodus.
   return `<div class="facts">${fylte.map(([l, v, lenke]) => {
     const tekst = escapeHtml(String(v));
     const verdi = lenke
       ? `<button type="button" class="facts-link" ${lenke.attr}="${tekst}">${tekst}</button>`
       : tekst;
-    return `<p><strong>${escapeHtml(l)}:</strong> ${verdi}</p>`;
+    const nokkel = String(l).toLowerCase().replace(/\s+/g, "-");
+    return `<p data-fakta="${escapeHtml(nokkel)}"><strong>${escapeHtml(l)}:</strong> ${verdi}</p>`;
   }).join("")}</div>`;
 }
 

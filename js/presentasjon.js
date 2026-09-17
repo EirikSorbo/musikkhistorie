@@ -24,14 +24,14 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.28";
-import { FLATER, NIVAA_SEKT, NIVAA_NAVN, erSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.28";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.28";
-import { modalClose } from "./ui-modal.js?v=5.28";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.28";
-import { escapeHtml } from "./util.js?v=5.28";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.28";
-import { getState } from "./explore-context.js?v=5.28";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.29";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.29";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.29";
+import { modalClose } from "./ui-modal.js?v=5.29";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.29";
+import { escapeHtml } from "./util.js?v=5.29";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.29";
+import { getState } from "./explore-context.js?v=5.29";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -99,6 +99,11 @@ function brukNivaaPaa(flate, modal) {
   modal.querySelectorAll("[data-sekt]").forEach((el) => {
     el.hidden = !erSynlig(flate, el.dataset.sekt, nivaa, unntak);
   });
+  // Enkeltlinjer i faktablokka (v5.29): levetid fra nivå 1, årstallene og
+  // resten fra nivå 3, kategori/instrument aldri.
+  modal.querySelectorAll("[data-fakta]").forEach((el) => {
+    el.hidden = !faktaSynlig(flate, el.dataset.fakta, nivaa);
+  });
 }
 
 function brukNivaa() {
@@ -108,6 +113,8 @@ function brukNivaa() {
       if (m) brukNivaaPaa(flate, m);
     }
   }
+  // Nivået på body: CSS kan da gi bildet hovedfokus på nivå 1 (v5.29).
+  document.body.dataset.presNivaa = String(nivaa);
   document.querySelectorAll("#pres-bar [data-nivaa]").forEach((b) =>
     b.classList.toggle("active", Number(b.dataset.nivaa) === nivaa));
 }
@@ -296,10 +303,25 @@ function byggBar() {
   });
 }
 
+// Tekststørrelse i tre trinn (v5.29): normal → stor → størst, og rundt igjen.
+// Nesten alt i CSS-en er rem-basert, så rot-størrelsen flytter hele visningen.
+const SKALA_NAVN = ["A", "A+", "A++"];
+
+function brukSkala(trinn) {
+  const rot = document.documentElement;
+  rot.classList.toggle("pres-stor", trinn === 1);
+  rot.classList.toggle("pres-storst", trinn === 2);
+  const knapp = document.getElementById("pres-skala");
+  if (knapp) {
+    knapp.textContent = SKALA_NAVN[trinn];
+    knapp.title = ["Normal tekst", "Stor tekst", "Størst tekst"][trinn];
+  }
+}
+
 function vekslSkala() {
-  const stor = !document.documentElement.classList.contains("pres-stor");
-  document.documentElement.classList.toggle("pres-stor", stor);
-  skriv(LAGRING.stor, stor ? "1" : "");
+  const trinn = (Number(les(LAGRING.stor)) + 1) % 3;
+  skriv(LAGRING.stor, String(trinn));
+  brukSkala(trinn);
 }
 
 function vekslFullskjerm() {
@@ -381,7 +403,8 @@ export function initPresentasjon() {
 
   nivaa = Math.min(3, Math.max(1, Number(les(LAGRING.nivaa)) || 2));
   try { unntak = JSON.parse(les(LAGRING.unntak) || "{}") || {}; } catch (e) { unntak = {}; }
-  if (les(LAGRING.stor) === "1") document.documentElement.classList.add("pres-stor");
+  // «1» er den gamle på/av-verdien fra v5.24 og leses som trinn 1.
+  const skalaTrinn = Math.min(2, Math.max(0, Number(les(LAGRING.stor)) || 0));
 
   // Kjøreplanen (fase 4): id og posisjon fra sessionStorage — erPresentasjon
   // har alt skrevet URL-parametrene dit, og et sidebytte bærer dem videre.
@@ -389,6 +412,7 @@ export function initPresentasjon() {
   stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
 
   byggBar();
+  brukSkala(skalaTrinn);   // etter byggBar: knappen skal vise trinnet
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;

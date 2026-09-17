@@ -18,13 +18,12 @@
 export const FLATER = {
   artist: [
     { id: "bilde", navn: "Bilde" },
-    { id: "fakta", navn: "Fakta (år, plateselskap …)" },
-    { id: "tags", navn: "Sjangermerker" },
+    { id: "fakta", navn: "Fakta (levetid, plateselskap …)" },
+    { id: "tags", navn: "Instrument og sjanger" },
     { id: "stripe", navn: "Innflytelseslinje" },
     { id: "beskrivelse", navn: "Beskrivelse" },
     { id: "verk", navn: "Sentrale verk" },
     { id: "lytte", navn: "Lytteeksempler" },
-    { id: "kilder", navn: "Kilder" },
     { id: "beslektede", navn: "Beslektede artister" },
   ],
   sjanger: [
@@ -33,13 +32,11 @@ export const FLATER = {
     { id: "beskrivelse", navn: "Beskrivelse" },
     { id: "lytt", navn: "Hør etter" },
     { id: "relasjoner", navn: "Slektskap (vokste ut av …)" },
-    { id: "kilder", navn: "Kilder" },
   ],
   tech: [
     { id: "bilde", navn: "Bilde" },
-    { id: "fakta", navn: "Fakta (år, kategori …)" },
+    { id: "fakta", navn: "Fakta (årstall)" },
     { id: "beskrivelse", navn: "Beskrivelse" },
-    { id: "kilder", navn: "Kilder" },
   ],
   tiår: [
     { id: "tekst", navn: "Teksten" },
@@ -51,12 +48,21 @@ export const FLATER = {
   ],
 };
 
+// Seksjoner som ALDRI vises på lerretet, uansett nivå og unntak (v5.29):
+// kildene hører hjemme i appen, ikke i en forelesning. De står derfor heller
+// ikke i FLATER, så tannhjul-panelet viser ingen død avkryssing.
+export const ALDRI_I_VISNING = new Set(["kilder"]);
+
 // Hva nivå 1 (Overskrift) og 2 (Kjerne) viser. Nivå 3 (Alt) er alle
 // seksjonene, så det trenger ingen liste.
 export const NIVAA_SEKT = {
+  // Artistkortet (brukerens oppsett 2026-09-17): nivå 1 er bildet i fokus,
+  // levetiden og innflytelseslinja — den ERSTATTER årstallslinja, som først
+  // kommer på nivå 3 (se FAKTA_MIN). Nivå 2 legger til instrument/sjanger og
+  // lytteeksempler; beskrivelsen kommer på nivå 3.
   artist: {
-    1: ["bilde", "fakta"],
-    2: ["bilde", "fakta", "tags", "stripe", "beskrivelse"],
+    1: ["bilde", "fakta", "stripe"],
+    2: ["bilde", "fakta", "stripe", "tags", "lytte"],
   },
   sjanger: {
     1: ["stripe", "era"],
@@ -66,8 +72,9 @@ export const NIVAA_SEKT = {
     1: ["bilde", "fakta"],
     2: ["bilde", "fakta", "beskrivelse"],
   },
+  // Tiårstekstene ER poengene man snakker til, så de står fra nivå 1.
   tiår: {
-    1: ["tidslinje"],
+    1: ["tekst", "tidslinje"],
     2: ["tekst", "tidslinje"],
   },
   historie: {
@@ -80,17 +87,35 @@ export const NIVAA_NAVN = { 1: "Overskrift", 2: "Kjerne", 3: "Alt" };
 
 // Skal en seksjon vises? `unntak` er et objekt {"flate.sekt": true/false}
 // satt i tannhjul-panelet — det overstyrer nivået begge veier («nivå 2, men
-// uten kilder» eller «nivå 1, men med beskrivelse»). En flate modellen ikke
+// uten verk» eller «nivå 1, men med beskrivelse»). En flate modellen ikke
 // kjenner viser alltid alt; en ukjent seksjon på en kjent flate følger
 // nivå 3-regelen (vises bare på Alt) — konservativt, så en ny seksjon aldri
 // lekker inn på Overskrift-nivået ved en glipp.
 export function erSynlig(flate, sekt, nivaa, unntak) {
+  if (ALDRI_I_VISNING.has(sekt)) return false;
   const u = unntak ? unntak[`${flate}.${sekt}`] : undefined;
   if (u === true) return true;
   if (u === false) return false;
   if (!(flate in NIVAA_SEKT)) return true;
   if (Number(nivaa) >= 3) return true;
   return (NIVAA_SEKT[flate][nivaa] || []).includes(sekt);
+}
+
+// Enkeltlinjer i faktablokka (data-fakta på hver linje) styres finere enn
+// seksjonen de ligger i: tallet er LAVESTE nivå linja vises på, og null
+// betyr aldri. Linjer som ikke står her, følger seksjonen sin.
+export const FAKTA_MIN = {
+  // Levetid fra nivå 1; innflytelsesårene erstattes av stripa til nivå 3.
+  artist: { levetid: 1, innflytelse: 3, plateselskap: 3, virkested: 3, kjønn: 3 },
+  // Kategori og instrument er navigasjon i appen, ikke noe å vise fram.
+  tech: { kategori: null, instrument: null },
+};
+
+export function faktaSynlig(flate, nokkel, nivaa) {
+  const regler = FAKTA_MIN[flate];
+  if (!regler || !(nokkel in regler)) return true;
+  const min = regler[nokkel];
+  return min !== null && Number(nivaa) >= min;
 }
 
 // ----------------------------------------------------------------------------
@@ -101,32 +126,35 @@ const YT_HOSTS = new Set(["youtube.com", "www.youtube.com", "m.youtube.com", "mu
 const ID_OK = /^[A-Za-z0-9_-]{6,20}$/;
 const LIST_OK = /^[A-Za-z0-9_-]{10,60}$/;
 
-// { video, list } for en YouTube-lenke som KAN bygges inn, ellers null.
+// { video, list, start } for en YouTube-lenke som KAN bygges inn, ellers null.
 // Søkelenker (results?search_query=…, slik slektstreets spor er) har ingen
 // video-ID og gir null — de skal åpne i ny fane som før.
+// `start` er sekunder fra en t=/start=-parameter (v5.29): en lærer som limer
+// inn «…&t=1m30s» i et lytteeksempel får starttidspunktet med på kjøpet.
 export function ytMaal(url) {
   let u;
   try { u = new URL(String(url)); } catch (e) { return null; }
   if (u.protocol !== "https:" && u.protocol !== "http:") return null;
   const host = u.hostname.toLowerCase();
   const sti = u.pathname;
+  const start = lesStart(u);
 
   if (host === "youtu.be") {
     const id = sti.slice(1).split("/")[0];
-    return ID_OK.test(id) ? { video: id, list: lesList(u) } : null;
+    return ID_OK.test(id) ? { video: id, list: lesList(u), start } : null;
   }
   if (!YT_HOSTS.has(host)) return null;
 
   if (sti === "/watch") {
     const id = u.searchParams.get("v") || "";
-    if (ID_OK.test(id)) return { video: id, list: lesList(u) };
+    if (ID_OK.test(id)) return { video: id, list: lesList(u), start };
     return null;
   }
   const m = sti.match(/^\/(shorts|embed|live)\/([A-Za-z0-9_-]{6,20})/);
-  if (m && m[2] !== "videoseries") return { video: m[2], list: lesList(u) };
+  if (m && m[2] !== "videoseries") return { video: m[2], list: lesList(u), start };
   if (sti === "/playlist") {
     const list = lesList(u);
-    return list ? { video: null, list } : null;
+    return list ? { video: null, list, start } : null;
   }
   return null;
 }
@@ -134,6 +162,38 @@ export function ytMaal(url) {
 function lesList(u) {
   const list = u.searchParams.get("list") || "";
   return LIST_OK.test(list) ? list : null;
+}
+
+function lesStart(u) {
+  return parseTid(u.searchParams.get("t") || u.searchParams.get("start") || "");
+}
+
+// «1:23» → 83, «83» → 83, «1m30s» → 90 (YouTubes egen t-form), «1:02:03» →
+// 3723. Ugyldig eller tomt → null. Negative og absurde verdier avvises, så
+// et tullverdi-felt aldri havner i en lenke.
+export function parseTid(tekst) {
+  const t = String(tekst ?? "").trim().toLowerCase();
+  if (!t) return null;
+  let sek = null;
+  if (/^\d+$/.test(t)) sek = Number(t);
+  else if (/^(\d+:)?\d{1,2}:\d{1,2}$/.test(t)) {
+    sek = t.split(":").reduce((sum, d) => sum * 60 + Number(d), 0);
+  } else {
+    const m = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+    if (!m || (!m[1] && !m[2] && !m[3])) return null;
+    sek = Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3] || 0);
+  }
+  if (!Number.isFinite(sek) || sek < 0 || sek > 86400) return null;
+  return Math.round(sek);
+}
+
+// 83 → «1:23», 3723 → «1:02:03». null/0 → tom streng (0 er «fra start»).
+export function formatTid(sek) {
+  const s = Math.max(0, Math.round(Number(sek) || 0));
+  if (!s) return "";
+  const t = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  const to = (n) => String(n).padStart(2, "0");
+  return t ? `${t}:${to(m)}:${to(r)}` : `${m}:${to(r)}`;
 }
 
 // ----------------------------------------------------------------------------
@@ -190,20 +250,27 @@ export function klampStopp(i, antall) {
 }
 
 // Vanlig YouTube-adresse fra et yt-måls deler — motstykket til ytMaal. Brukt
-// av «Åpne på YouTube»-reserven og av kjøreplan-stopp («yt:<id>[:<liste>]»).
-export function ytWatchUrl(video, list) {
+// av «Åpne på YouTube»-reserven og av kjøreplan-stopp
+// («yt:<id>[:<liste>][:<sekunder>]»).
+export function ytWatchUrl(video, list, start) {
   const u = new URL(video ? "https://www.youtube.com/watch" : "https://www.youtube.com/playlist");
   if (video) u.searchParams.set("v", video);
   if (list) u.searchParams.set("list", list);
+  if (start) u.searchParams.set("t", String(start));
   return u.href;
 }
 
 // Embed-URL for spilleren (privacy-varianten uten sporingscookies før
 // avspilling). autoplay er trygt: spilleren åpnes alltid av et klikk.
-export function ytEmbedUrl(url) {
+// `start` (sekunder) overstyrer et eventuelt tidspunkt i selve lenka, og
+// `jsapi` slår på styre-API-et spilleren bruker til å lese av tiden.
+export function ytEmbedUrl(url, { start = null, jsapi = false } = {}) {
   const maal = ytMaal(url);
   if (!maal) return null;
   const p = new URLSearchParams({ autoplay: "1", rel: "0" });
+  const fra = start != null ? start : maal.start;
+  if (fra) p.set("start", String(fra));
+  if (jsapi) p.set("enablejsapi", "1");
   if (maal.video) {
     if (maal.list) p.set("list", maal.list);
     return `https://www.youtube-nocookie.com/embed/${maal.video}?${p}`;
