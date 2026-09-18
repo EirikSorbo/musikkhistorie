@@ -14,16 +14,16 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.36";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.36";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.36";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.36";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.36";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.36";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.36";
-import { initPlanMeny } from "./plan-meny.js?v=5.36";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.36";
-import { provVisMaal } from "./explore-apne.js?v=5.36";
+import { initExplore } from "./explore.js?v=5.37";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.37";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.37";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.37";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.37";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.37";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.37";
+import { initPlanMeny } from "./plan-meny.js?v=5.37";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.37";
+import { provVisMaal } from "./explore-apne.js?v=5.37";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:

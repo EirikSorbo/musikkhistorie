@@ -24,15 +24,17 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.36";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt } from "./presentasjon-modell.js?v=5.36";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.36";
-import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.36";
-import { GENEALOGY } from "./genre-model.js?v=5.36";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.36";
-import { escapeHtml } from "./util.js?v=5.36";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.36";
-import { getState } from "./explore-context.js?v=5.36";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.37";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn } from "./presentasjon-modell.js?v=5.37";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.37";
+import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.37";
+import { GENEALOGY } from "./genre-model.js?v=5.37";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.37";
+import { escapeHtml } from "./util.js?v=5.37";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.37";
+import { getState } from "./explore-context.js?v=5.37";
+import { onAuthChange } from "./store.js?v=5.37";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.37";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -220,14 +222,7 @@ function gaTilStopp(i) {
   if (!plan || !plan.stopp.length) return;
   const p = planPosisjon(i, plan.stopp.length);
   stoppIdx = p.pos;
-  skriv(LAGRING.stopp, String(stoppIdx));
-  try {
-    const u = new URL(window.location.href);
-    u.searchParams.set("presentasjon", planId);
-    u.searchParams.set("stopp", String(stoppIdx));
-    u.searchParams.delete("vis");   // et gammelt dyplenke-mål skal ikke gjenåpnes ved reload
-    window.history.replaceState(null, "", u);
-  } catch (e) {}
+  lagrePosisjon();
 
   // Stoppets definisjon gjelder: unntak satt i farten lever bare fram til
   // neste stoppbytte. Oversiktskortene har ingen egen definisjon.
@@ -241,6 +236,95 @@ function gaTilStopp(i) {
   if (p.oversikt) visOversikt();
   else apneVisNaarKlart(parseVisVerdi(stopp.vis));
   oppdaterTeller();
+  oppdaterLeggTil();
+}
+
+// Posisjonen i sessionStorage (hoppet til tre.html) og i URL-en (omlasting).
+function lagrePosisjon() {
+  skriv(LAGRING.stopp, String(stoppIdx));
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.set("presentasjon", planId);
+    u.searchParams.set("stopp", String(stoppIdx));
+    u.searchParams.delete("vis");   // et gammelt dyplenke-mål skal ikke gjenåpnes ved reload
+    window.history.replaceState(null, "", u);
+  } catch (e) {}
+}
+
+// ----------------------------------------------------------------------------
+//  «Legg til her» (v5.37, brukerkrav 2026-09-18): en innskytelse midt i
+//  fremvisningen, søkt opp som avstikker, legges inn i kjøreplanen RETT ETTER
+//  der man står, med ett klikk i verktøylinja. Kortet som ligger øverst er
+//  det som legges til, med detaljnivået som vises, og det nye stoppet blir
+//  posisjonen: → fortsetter til det som var neste stopp, ← går tilbake.
+//  Bare for lærerøkter (samme sjekk som lenkemenyen); reglene lar uansett
+//  bare læreren skrive content/presentasjoner.
+// ----------------------------------------------------------------------------
+
+let erLaerer = false;
+let lagrer = false;
+
+// Målet til det øverste åpne kortet, eller null. Søket og oversiktskortet
+// har ingen data-vis: står søket øverst, er man ikke ferdig med å velge.
+function toppMaal() {
+  const apne = [...document.querySelectorAll(".modal-backdrop.open")]
+    .sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
+  return apne[apne.length - 1]?.dataset.vis || null;
+}
+
+function naavaerendeStoppVis() {
+  if (!plan) return null;
+  const p = planPosisjon(stoppIdx, plan.stopp.length);
+  return p.oversikt ? null : plan.stopp[p.stopp]?.vis || null;
+}
+
+function oppdaterLeggTil() {
+  const knapp = document.getElementById("pres-leggtil");
+  if (!knapp) return;
+  knapp.hidden = !(erLaerer && plan);
+  if (knapp.hidden || lagrer) return;
+  const vis = toppMaal();
+  const alleredeHer = !!vis && vis === naavaerendeStoppVis();
+  knapp.disabled = !vis || alleredeHer;
+  knapp.title = !vis ? "Legg til i kjøreplanen her: åpne først kortet du vil ha med"
+    : alleredeHer ? "Kortet er allerede dette stoppet"
+    : "Legg kortet til i kjøreplanen, rett etter der du står";
+}
+
+async function leggTilHer() {
+  const vis = toppMaal();
+  if (!plan || !vis || lagrer || vis === naavaerendeStoppVis()) return;
+  const knapp = document.getElementById("pres-leggtil");
+  const indeks = innsettingsIndeks(stoppIdx, plan.stopp.length);
+  const stopp = { vis, nivaa };
+  const forrige = plan;
+  lagrer = true;
+  if (knapp) knapp.disabled = true;
+  // Lokalt med en gang: → skal kjenne det nye stoppet før serveren svarer
+  // (Firestore bekrefter først når nettet har svart).
+  plan = medStoppSattInn({ [planId]: plan }, planId, indeks, stopp)[planId];
+  stoppIdx = indeks + 1;
+  lagrePosisjon();
+  oppdaterTeller();
+  try {
+    plan = await settInnStopp(planId, indeks, stopp);
+    if (knapp) { knapp.innerHTML = IKON.hake; knapp.title = `Lagt til som stopp ${indeks + 1}`; }
+    setTimeout(() => {
+      if (knapp) knapp.innerHTML = IKON.pluss;
+      lagrer = false;
+      oppdaterLeggTil();
+    }, 1500);
+  } catch (e) {
+    // Tilbake til planen uten stoppet. Har man bladd videre imens, flyttes
+    // posisjonen ett hakk tilbake, så den fortsatt peker på samme stopp.
+    plan = forrige;
+    if (stoppIdx > indeks) stoppIdx -= 1;
+    lagrePosisjon();
+    oppdaterTeller();
+    lagrer = false;
+    oppdaterLeggTil();
+    alert(`Fikk ikke lagt til stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -318,6 +402,7 @@ export function presPlanTikk() {
   const planer = normaliserPlaner(s.content?.presentasjoner?.planer);
   if (planer[planId]) {
     plan = planer[planId];
+    oppdaterLeggTil();
     if (!plan.stopp.length) {
       const teller = document.getElementById("pres-teller");
       if (teller) teller.textContent = "tom plan";
@@ -353,6 +438,8 @@ function wirePlanTaster() {
 // ----------------------------------------------------------------------------
 
 const IKON = {
+  pluss: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  hake: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
   full: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>',
   tannhjul: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>',
 };
@@ -365,6 +452,7 @@ function byggBar() {
       <button type="button" class="pres-knapp" id="pres-forrige" title="Forrige stopp (PageUp / ←)" aria-label="Forrige stopp">‹</button>
       <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet">…</button>
       <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / →)" aria-label="Neste stopp">›</button>
+      <button type="button" class="pres-knapp pres-leggtil" id="pres-leggtil" hidden aria-label="Legg til i kjøreplanen her">${IKON.pluss}</button>
     </span>
     <span class="pres-nivaa" role="group" aria-label="Detaljnivå">
       ${[1, 2, 3].map((n) => `<button type="button" class="pres-knapp" data-nivaa="${n}" title="${NIVAA_NAVN[n]} (tast ${n})">${n}</button>`).join("")}
@@ -383,6 +471,7 @@ function byggBar() {
     if (e.target.closest("#pres-neste")) return gaTilStopp(stoppIdx + 1);
     // Telleren selv er «Til stoppet»: veien tilbake etter en avstikker.
     if (e.target.closest("#pres-teller")) return gaTilStopp(stoppIdx);
+    if (e.target.closest("#pres-leggtil")) return leggTilHer();
     if (e.target.closest("#pres-skala")) return vekslSkala();
     if (e.target.closest("#pres-full")) return vekslFullskjerm();
     if (e.target.closest("#pres-tannhjul")) return vekslPanel();
@@ -507,6 +596,15 @@ export function initPresentasjon() {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;
     wirePlanTaster();
+    // «Legg til her»: knappen følger lærerøkta og det øverste kortet. Kort
+    // åpnes, lukkes, heves (z-index) og bytter mål (data-vis) uten noen
+    // felles hendelse, så en vakt på backdropenes attributter gjør jobben.
+    onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); });
+    if ("MutationObserver" in window) {
+      new MutationObserver((endringer) => {
+        if (endringer.some((m) => m.target.classList?.contains("modal-backdrop"))) oppdaterLeggTil();
+      }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "style", "data-vis"] });
+    }
   }
   if (qaPaa()) settQA(true); else oppdaterHubKort();
   observerModaler();

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER } from "../../js/presentasjon-modell.js?v=5.36";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn } from "../../js/presentasjon-modell.js?v=5.37";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -333,4 +333,53 @@ test("lerretet: hvit bakgrunn uten uskarphet, brede kort, verktøylinja utenfor 
     "kortene skal gå over hele bredden, med vektløse unntak");
   assert.match(css, /#pres-bar \{[^}]*font-size: 15px;/, "verktøylinja skal ikke vokse med tekstskalaen");
   assert.match(css, /html\.pres-modus \{ font-size: clamp\(/);
+});
+
+// --- «Legg til her» (v5.37) ---------------------------------------------------
+// Brukerkrav 2026-09-18: en avstikker midt i fremvisningen legges inn i
+// kjøreplanen der man står.
+
+test("innsettingsIndeks: rett etter gjeldende stopp, først fra oversikten, sist fra oppsummeringen", () => {
+  // Plan med 4 stopp: posisjon 0 = oversikt, 1..4 = stoppene, 5 = oppsummering.
+  assert.equal(innsettingsIndeks(0, 4), 0, "fra oversikten: først i planen");
+  assert.equal(innsettingsIndeks(1, 4), 1, "etter stopp 1 (indeks 0)");
+  assert.equal(innsettingsIndeks(3, 4), 3, "etter stopp 3");
+  assert.equal(innsettingsIndeks(4, 4), 4, "etter siste stopp: sist");
+  assert.equal(innsettingsIndeks(5, 4), 4, "fra oppsummeringen: sist");
+  assert.equal(innsettingsIndeks(99, 4), 4);
+  assert.equal(innsettingsIndeks(0, 0), 0, "tom plan: blir første stopp");
+  // Det nye stoppet står alltid på posisjon indeks + 1.
+  const i = innsettingsIndeks(2, 4);
+  assert.equal(planPosisjon(i + 1, 5).stopp, i);
+});
+
+test("medStoppSattInn: setter inn på plass, rører ikke inndata, kaster for ukjent plan", () => {
+  const planer = {
+    p1: { tittel: "Uke 39", laget: "", stopp: [{ vis: "artist:a" }, { vis: "artist:b" }] },
+    p2: { tittel: "Annen", laget: "", stopp: [{ vis: "tiår:1950" }] },
+  };
+  const kopi = JSON.parse(JSON.stringify(planer));
+  const ut = medStoppSattInn(planer, "p1", 1, { vis: "yt:abcdefghijk", nivaa: 2 });
+  assert.deepEqual(ut.p1.stopp.map((x) => x.vis), ["artist:a", "yt:abcdefghijk", "artist:b"]);
+  assert.equal(ut.p1.stopp[1].nivaa, 2, "detaljnivået følger med");
+  assert.deepEqual(planer, kopi, "inndata er urørt");
+  assert.equal(ut.p2, planer.p2, "de andre planene står som de var");
+  assert.equal(ut.p1.tittel, "Uke 39");
+  assert.deepEqual(medStoppSattInn(planer, "p1", 99, { vis: "x" }).p1.stopp.at(-1), { vis: "x" }, "klemmes til slutten");
+  assert.deepEqual(medStoppSattInn(planer, "p1", -3, { vis: "x" }).p1.stopp[0], { vis: "x" }, "klemmes til starten");
+  assert.throws(() => medStoppSattInn(planer, "borte", 0, { vis: "x" }), /finnes ikke lenger/);
+});
+
+test("«Legg til her»: knappen kun for lærerøkter, lagring på ferske planer, lokal kopi først", () => {
+  const spiller = kilde("presentasjon.js");
+  assert.match(spiller, /knapp\.hidden = !\(erLaerer && plan\);/, "skjult uten lærerøkt og plan");
+  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); \}\);/);
+  assert.match(spiller, /const indeks = innsettingsIndeks\(stoppIdx, plan\.stopp\.length\);/);
+  assert.match(spiller, /const stopp = \{ vis, nivaa \};/, "stoppet lagres med detaljnivået som vises");
+  assert.match(spiller, /plan = await settInnStopp\(planId, indeks, stopp\);/);
+  assert.match(spiller, /stoppIdx = indeks \+ 1;/, "det nye stoppet blir posisjonen");
+  const meny = kilde("plan-meny.js");
+  assert.match(meny, /const planer = medStoppSattInn\(planerNaa\(\), planId, indeks, stopp\);/,
+    "lagringen bygger på de ferskeste planene i state, ikke avspillerens kopi");
+  assert.match(meny, /erLaerer = erLaererBruker\(user\);/, "menyen og knappen deler lærersjekken");
 });

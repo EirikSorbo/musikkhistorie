@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.36";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.37";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -429,4 +429,32 @@ export function planOversikt(stopp, oppslag = {}) {
         .map(({ sort: _s, ...rest }) => rest),
     }))
     .filter((k) => k.punkter.length);
+}
+
+// ----------------------------------------------------------------------------
+//  «Legg til her» (v5.37, brukerkrav 2026-09-18): en innskytelse midt i
+//  fremvisningen, søkt opp som avstikker, settes inn i kjøreplanen der man
+//  står. Kjernen er ren og testbar; lagringen bor i plan-meny.js og knappen
+//  i verktøylinja (presentasjon.js).
+// ----------------------------------------------------------------------------
+
+// Plassen i planens stoppliste et nytt stopp skal inn på, sett fra posisjon
+// `pos`: rett etter gjeldende stopp, først i planen fra oversikten, og sist
+// fra oppsummeringen. Den nye posisjonen i avspillingen blir indeks + 1.
+export function innsettingsIndeks(pos, antall) {
+  const n = Math.max(0, Math.trunc(Number(antall) || 0));
+  return Math.min(planPosisjon(pos, n).pos, n);
+}
+
+// Planene med `stopp` satt inn i planen `planId` på plass `indeks` (klemmes
+// til lista). Nye objekter, inndata røres ikke, så avspillerens egen kopi og
+// state-snapshotet aldri endres i det stille. Kaster når planen er borte.
+export function medStoppSattInn(planer, planId, indeks, stopp) {
+  const plan = planer?.[planId];
+  if (!plan) throw new Error("Kjøreplanen finnes ikke lenger.");
+  const i = Math.min(Math.max(0, Math.trunc(Number(indeks) || 0)), plan.stopp.length);
+  return {
+    ...planer,
+    [planId]: { ...plan, stopp: [...plan.stopp.slice(0, i), stopp, ...plan.stopp.slice(i)] },
+  };
 }

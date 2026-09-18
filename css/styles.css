@@ -2880,6 +2880,10 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 }
 .pres-knapp:hover { border-color: var(--line-strong); background: var(--surface-2); }
 .pres-knapp.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* «Legg til her» (v5.37) er deaktivert til et kort som kan bli stopp ligger
+   øverst. Svak, men synlig: knappen skal ikke hoppe ut og inn av linja. */
+.pres-knapp:disabled { opacity: 0.35; cursor: default; }
+.pres-knapp:disabled:hover { border-color: var(--line); background: var(--surface); }
 .pres-nivaa { display: inline-flex; gap: 4px; padding-right: 4px; border-right: 1px solid var(--line); }
 .pres-avslutt { font-size: 0.85em; }
 

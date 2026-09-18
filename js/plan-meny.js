@@ -15,15 +15,31 @@
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePresentasjoner } from "./store.js?v=5.36";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.36";
-import { getState } from "./explore-context.js?v=5.36";
-import { normaliserPlaner, nyPlanId } from "./presentasjon-modell.js?v=5.36";
-import { setLenkeMenyProvider } from "./ui-modal.js?v=5.36";
-import { escapeHtml } from "./util.js?v=5.36";
+import { onAuthChange, savePresentasjoner } from "./store.js?v=5.37";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.37";
+import { getState } from "./explore-context.js?v=5.37";
+import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.37";
+import { setLenkeMenyProvider } from "./ui-modal.js?v=5.37";
+import { escapeHtml } from "./util.js?v=5.37";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen
+
+// Er Firebase-brukeren en lærerkonto? Delt med presentasjonens «Legg til
+// her»-knapp (v5.37), så menyen og knappen aldri kan være uenige.
+export function erLaererBruker(user) {
+  return !!user && !user.isAnonymous && TEACHER_EMAILS.includes(user.email);
+}
+
+// Setter inn et stopp på en gitt plass i en plan og lagrer («Legg til her»,
+// v5.37). Samme regel som leggTil under: skrivingen bygger på de FERSKESTE
+// planene i state, ikke på avspillerens kopi, så endringer gjort i en annen
+// fane ikke overskrives. Returnerer planen slik den ble lagret.
+export async function settInnStopp(planId, indeks, stopp) {
+  const planer = medStoppSattInn(planerNaa(), planId, indeks, stopp);
+  await savePresentasjoner(planer);
+  return planer[planId];
+}
 
 function lukkMeny() {
   meny?.remove();
@@ -90,7 +106,7 @@ async function leggTil(planId, vis) {
 
 export function initPlanMeny() {
   onAuthChange((user) => {
-    erLaerer = !!user && !user.isAnonymous && TEACHER_EMAILS.includes(user.email);
+    erLaerer = erLaererBruker(user);
     if (!erLaerer) lukkMeny();
   });
   setLenkeMenyProvider(visMeny);
