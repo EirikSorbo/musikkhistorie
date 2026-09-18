@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.34";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/util.js?v=5.35";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -144,6 +144,12 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
   // meldingen ble byttet tilbake til en generisk regel-forklaring.
   assert.match(src, /"resource-exhausted":\s*\n?\s*"[^"]*lesekvote/i,
     "kvotefeilen må forklares som kvote, ikke regler");
+  // Instruksen om omlasting (v5.35, audit-funn 35): SDK-en fjerner en lytter
+  // for godt etter en feil, så en åpen fane kommer seg aldri av seg selv.
+  for (const kode of ["resource-exhausted", "unavailable"]) {
+    assert.match(src, new RegExp(`"?${kode}"?:\\s*\\n?\\s*"[^"]*last siden på nytt`, "i"),
+      `${kode}-teksten må be om omlasting`);
+  }
   assert.doesNotMatch(src, /banner\.textContent = `Kunne ikke laste data fra databasen \(\$\{/,
     "teksten skal ikke lenger være hardkodet til én årsak");
 });
@@ -152,7 +158,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js?v=5.34");
+    = await import("../../js/util.js?v=5.35");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);
@@ -169,7 +175,7 @@ test("genererReturKode: lengde, alfabet og normalisering", async () => {
 // husregelen. Meldingen for treg innsending er nå ÉN delt konstant — lås at
 // den er tankestrek-fri og faktisk brukes alle tre stedene.
 test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
-  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.34");
+  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.35");
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
   assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
@@ -186,7 +192,7 @@ test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
 // opp returer (tre serverlesinger per last) var utestet. Stubber localStorage
 // — også den kastende varianten (styrte skoleprofiler).
 test("merkHarSendtInn/harSendtInn: normalvei og kastende localStorage", async () => {
-  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.34");
+  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.35");
   const lager = new Map();
   globalThis.localStorage = {
     setItem: (k, v) => lager.set(k, String(v)),
@@ -205,4 +211,21 @@ test("merkHarSendtInn/harSendtInn: normalvei og kastende localStorage", async ()
   } finally {
     delete globalThis.localStorage;
   }
+});
+
+// Ferskhetssjekken før «Utfør» i sjangereditoren (v5.35, audit-funn 23): et
+// snapshot fra serveren kan ha en annen nøkkelrekkefølge enn den appen skrev,
+// og rå JSON.stringify meldte da «Dataene endret seg» om to like planer.
+test("kanoniskJson: nøkkelrekkefølgen spiller ingen rolle, innholdet gjør", () => {
+  const a = { id: "rnb", l: "R&B", p: ["blues"], meta: { fam: "red", order: 1 } };
+  const b = { meta: { order: 1, fam: "red" }, p: ["blues"], l: "R&B", id: "rnb" };
+  assert.equal(kanoniskJson(a), kanoniskJson(b), "samme innhold, ulik rekkefølge");
+  assert.equal(kanoniskJson([a]), kanoniskJson([b]), "også inni lister");
+  // Lister er ORDNET: rekkefølgen der er innhold (foreldre, tiår …).
+  assert.notEqual(kanoniskJson({ p: ["a", "b"] }), kanoniskJson({ p: ["b", "a"] }));
+  assert.notEqual(kanoniskJson({ l: "R&B" }), kanoniskJson({ l: "Rhythm & blues" }));
+  // Som JSON.stringify: toJSON først (Date → ISO), null og tall uendret.
+  const d = new Date("2026-09-18T12:00:00Z");
+  assert.equal(kanoniskJson({ t: d }), JSON.stringify({ t: d.toISOString() }));
+  assert.equal(kanoniskJson({ x: null, n: 3 }), '{"n":3,"x":null}');
 });

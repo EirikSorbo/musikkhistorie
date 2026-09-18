@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.34";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.34";
-import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.34";
-import { ARTIST_FIELDS, RETUR_FELTER, emptyValueFor } from "./artist-schema.js?v=5.34";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.34";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.34";
-import { mergeHeatRows } from "./import-format.js?v=5.34";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.34";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.34";
+import { firebaseConfig } from "./firebase-config.js?v=5.35";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.35";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.35";
+import { RETUR_FELTER } from "./artist-schema.js?v=5.35";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.35";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.35";
+import { mergeHeatRows } from "./import-format.js?v=5.35";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.35";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.35";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -453,8 +453,13 @@ export async function runMigrationPlan(ops) {
 // operasjonene i editoren — de som ikke flytter en identitet: ny sjanger, ny
 // forelder, ny rad, ny farge, endret fullt navn.
 export async function saveGenealogyTree(tree) {
-  return setDoc(doc(db, "content", "genealogy"),
-    { ...tree, updatedAt: new Date().toISOString() });
+  // Stempelet returneres (v5.35, audit-funn 22): navnebytte-grenene i
+  // teacher-genres bruker det til å avgjøre om content-snapshotet har tatt
+  // igjen akkurat DENNE lagringen, eller om planen må bygges fra det lokale
+  // treet.
+  const updatedAt = new Date().toISOString();
+  await setDoc(doc(db, "content", "genealogy"), { ...tree, updatedAt });
+  return updatedAt;
 }
 
 // Skriver mange dokumenter til én samling i batch (merge-set), i stedet for
@@ -718,7 +723,11 @@ export async function sendTilbake(type, id, feedback) {
 // (stemmer, prioritet, lærerens retur-felter) — reglene avviser det uansett.
 export async function resubmitArtist(id, data, kode, studentComment) {
   await ensureAuth().catch(() => {});
-  merkHarSendtInn();   // ny innsending med kode fra annen enhet: auto-oppslag der også
+  // INGEN merkHarSendtInn her (audit-funn 24): på enheten som sendte inn står
+  // flagget fra før, og på en fremmed enhet (kode-oppslag) er dokumentets
+  // ownerUid en annen uid — flagget ville bare gitt tre bortkastede lesinger
+  // ved hver eneste sidelast, uten at auto-oppslaget noensinne kan treffe.
+  // Koden er uansett veien inn dit. Samme gjelder resubmitTech/PendingEdit.
   // KUN feltene skjemaet sendte (v5.31, audit-funn 4): å skrive alle
   // skjemafeltene tømte stille recordLabel, som studentskjemaet ikke har.
   const felter = resubmitArtistFields(data);
@@ -734,7 +743,6 @@ export async function resubmitArtist(id, data, kode, studentComment) {
 // Student: ny innsending av et returnert KORTforslag (tech).
 export async function resubmitTech(id, data, kode, studentComment) {
   await ensureAuth().catch(() => {});
-  merkHarSendtInn();
   return updateDoc(doc(db, "tech", id), {
     ...data,
     proposedBy: data.proposedBy || "Anonym",
@@ -747,7 +755,6 @@ export async function resubmitTech(id, data, kode, studentComment) {
 // Student: ny innsending av et returnert ENDRINGSforslag.
 export async function resubmitPendingEdit(id, proposedFields, proposedBy, kode, studentComment) {
   await ensureAuth().catch(() => {});
-  merkHarSendtInn();
   return updateDoc(doc(db, "pendingEdits", id), {
     proposedFields: proposedFields || {},
     proposedBy: proposedBy || "Anonym",
@@ -760,8 +767,10 @@ export async function resubmitPendingEdit(id, proposedFields, proposedBy, kode, 
 // Tre målrettede spørringer (likhetsfiltre trenger ingen sammensatt indeks).
 // Merket med type, så kalleren vet hvilken flyt som skal gjenåpnes.
 async function returSporring(felt, verdi) {
-  const ut = [];
-  for (const [type, samling] of Object.entries(RETUR_SAMLING)) {
+  // Parallelt (audit-funn 25): spørringene er uavhengige av hverandre, og
+  // serielt betalte hvert oppslag tre nettverksrundturer etter hverandre, et
+  // halvt til ett sekund ren venting på skolenett. Lesekostnaden er den samme.
+  const biter = await Promise.all(Object.entries(RETUR_SAMLING).map(async ([type, samling]) => {
     const snap = await getDocs(query(
       collection(db, samling),
       where(felt, "==", verdi),
@@ -771,9 +780,9 @@ async function returSporring(felt, verdi) {
     // («innovasjon»/«hendelse»), og det må ikke få overskrive retur-typen
     // herfra — den styrer hvilken editor «Rett og send inn på nytt» åpner
     // (audit v5.19, funn 2).
-    snap.docs.forEach((d) => ut.push({ ...d.data(), type, id: d.id }));
-  }
-  return ut;
+    return snap.docs.map((d) => ({ ...d.data(), type, id: d.id }));
+  }));
+  return biter.flat();
 }
 
 // Studentens egne returer — samme nettleser som sendte inn. Kalles KUN når

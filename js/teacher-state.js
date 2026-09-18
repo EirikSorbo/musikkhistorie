@@ -14,12 +14,12 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=5.34";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.34";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.34";
-import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=5.34";
-import { sharedStateDefaults } from "./shared-data.js?v=5.34";
-import { $ } from "./shared.js?v=5.34";
+} from "./store.js?v=5.35";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.35";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.35";
+import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=5.35";
+import { sharedStateDefaults } from "./shared-data.js?v=5.35";
+import { $ } from "./shared.js?v=5.35";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -29,6 +29,7 @@ export const state = {
   // tom state mens slettingen går mot serveren.
   ...sharedStateDefaults(),
   teacherChecks: { genres: [], subgenres: [] },
+  teacherChecksLoaded: false,
   pendingEdits: [],
   // showRemoved starter AV (brukervalg): lærerlista skal åpne på pensumet slik
   // det faktisk står, ikke med de skjulte blandet inn. «Vis skjulte» slår dem
@@ -97,7 +98,24 @@ export function setContentCheck(category, id, on) {
 //  Modaler
 // ----------------------------------------------------------------------------
 
+// Én lukketimer per modal (v5.35, audit-funn 21): «Lagret ✓» lukker editoren
+// etter et øyeblikk. Timerne ble aldri husket, så lagret læreren ett kort og
+// åpnet NESTE i samme modal innen 800 ms, lukket den gamle timeren den nye
+// editoren midt i utfyllingen. openAdminModal og hver nye lukkEtter rydder
+// modalens forrige timer. `handling` er det som skjer når tiden er ute
+// (standard: lukk modalen; tiårsmodalen bytter i stedet tilbake til visning).
+const lukkeTimere = new Map();
+export function avbrytLukkEtter(id) {
+  clearTimeout(lukkeTimere.get(id));
+  lukkeTimere.delete(id);
+}
+export function lukkEtter(id, ms, handling = () => closeAdminModal(id)) {
+  avbrytLukkEtter(id);
+  lukkeTimere.set(id, setTimeout(() => { lukkeTimere.delete(id); handling(); }, ms));
+}
+
 export function openAdminModal(id) {
+  avbrytLukkEtter(id);
   modalOpen(document.getElementById(id));
 }
 

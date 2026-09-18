@@ -4,17 +4,17 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=5.34";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=5.34";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=5.34";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.34";
-import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=5.34";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=5.34";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.34";
-import { debounce } from "./util.js?v=5.34";
-import { $ } from "./shared.js?v=5.34";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.34";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.34";
+import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=5.35";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=5.35";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=5.35";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.35";
+import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=5.35";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=5.35";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.35";
+import { debounce } from "./util.js?v=5.35";
+import { $ } from "./shared.js?v=5.35";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.35";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.35";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore
@@ -145,6 +145,24 @@ export function setupFilters() {
 //  Rediger artist
 // ----------------------------------------------------------------------------
 
+// Fyller en select og setter en lagret verdi, med vern for verdier utenfor
+// vokabularet (audit-funn 19; metasjangeren fikk grepet i v5.11, kjønn og
+// instrument manglet det): en verdi som ikke finnes som <option> (instrument
+// etter et navnebytte i INSTRUMENTS, kjønn lagret som etikett i en gammel
+// import) ga tom select, og et «Lagre» uten å røre feltet TØMTE feltet
+// stille. Verdien beholdes i stedet, merket som ukjent.
+function settSelectMedVern(sel, vokabular, verdi, placeholder, ukjentTekst = "finnes ikke i vokabularet") {
+  fillSelect(sel, vokabular, { placeholder });
+  const lagret = verdi || "";
+  if (lagret && !vokabular.some((v) => (typeof v === "object" ? v.value : v) === lagret)) {
+    const o = document.createElement("option");
+    o.value = lagret;
+    o.textContent = `${lagret} (${ukjentTekst})`;
+    sel.appendChild(o);
+  }
+  sel.value = lagret;
+}
+
 export function openEditModal(artistId) {
   const a = state.artists.find((x) => x.id === artistId);
   if (!a) return;
@@ -163,23 +181,10 @@ export function openEditModal(artistId) {
   $("#ed-image-url").value = a.imageUrl || "";
   $("#ed-image-credit").value = a.imageCredit || "";
 
-  fillSelect($("#ed-gender"), GENDERS, { placeholder: "Velg kjønn …" });
-  $("#ed-gender").value = a.gender || "";
-  fillSelect($("#ed-metaGenre"), GENEALOGY_META_GENRES, { placeholder: "Velg metasjanger …" });
-  // En lagret verdi som ikke lenger står i treet (etter et navnebytte) finnes
-  // ikke som <option>, så tilordningen under ga tom select — og et «Lagre»
-  // uten å røre feltet TØMTE metasjangeren stille. Samme grep som
-  // sjangervelgeren: behold verdien, men merk at den er ukjent.
-  const lagretMeta = a.metaGenre || "";
-  if (lagretMeta && !GENEALOGY_META_GENRES.includes(lagretMeta)) {
-    const o = document.createElement("option");
-    o.value = lagretMeta;
-    o.textContent = `${lagretMeta} (finnes ikke i treet)`;
-    $("#ed-metaGenre").appendChild(o);
-  }
-  $("#ed-metaGenre").value = lagretMeta;
-  fillSelect($("#ed-instrument"), INSTRUMENTS, { placeholder: "Ingen / ukjent" });
-  $("#ed-instrument").value = a.instrument || "";
+  settSelectMedVern($("#ed-gender"), GENDERS, a.gender, "Velg kjønn …");
+  settSelectMedVern($("#ed-metaGenre"), GENEALOGY_META_GENRES, a.metaGenre,
+    "Velg metasjanger …", "finnes ikke i treet");
+  settSelectMedVern($("#ed-instrument"), INSTRUMENTS, a.instrument, "Ingen / ukjent");
   // Sjangervelgeren: vokabularet FØRST, så artistens egne sjangre — da vet
   // velgeren hvilke brikker som ikke lenger finnes i treet, og kan merke dem
   // i stedet for å droppe dem stille.
@@ -270,7 +275,7 @@ export function setupEditForm() {
       await updateArtistFields(id, fields);
       msg.textContent = "Lagret ✓";
       msg.className = "form-msg ok";
-      setTimeout(() => closeAdminModal("modal-edit"), 1000);
+      lukkEtter("modal-edit", 1000);
     } catch (err) {
       msg.textContent = "Feil: " + err.message;
       msg.className = "form-msg error";

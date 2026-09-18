@@ -202,7 +202,7 @@ Nøkkel = tiåret som string. Verdi:
 | `tech` | | Samme som over, for teknologi. |
 | `kilder` | | Felles kilder for tiåret (samfunn + teknologi). |
 
-Tomt felt = ikke vises. «Les mer»-knappen er kun synlig hvis tilhørende `…More`-felt har innhold.
+Tomt felt = ikke vises.
 
 ---
 

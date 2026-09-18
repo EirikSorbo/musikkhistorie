@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { diffFields } from "../../js/ui-edit.js?v=5.34";
+import { diffFields, renderEditDiff } from "../../js/ui-edit.js?v=5.35";
 
 test("diffFields: kun endrede felter tas med", () => {
   const current = { name: "X", birthYear: 1930, mainGenre: ["Blues"] };
@@ -26,4 +26,18 @@ test("diffFields: objekt-arrays (verk) sammenlignes dypt", () => {
     diffFields(cur, { keyWorks: [{ title: "A", year: 1951 }] }),
     { keyWorks: [{ title: "A", year: 1951 }] }
   );
+});
+
+// Diff-cellene for objektrader (v5.34, audit-funn 14): etikett + url alene
+// skjulte endringer i sjanger, årstall, lytteanvisning, forfatter og kategori.
+// Diffen viste to identiske kolonner, og læreren godkjente i blinde.
+test("renderEditDiff: endret sjanger på et lytteeksempel synes i begge kolonnene", () => {
+  const html = renderEditDiff("artist",
+    { musicExamples: [{ title: "Hoochie Coochie Man", url: "https://ex.com/h", genre: "Blues" }] },
+    { musicExamples: [{ title: "Hoochie Coochie Man", url: "https://ex.com/h", genre: "Chicago blues" }] });
+  const celle = (klasse) => html.match(new RegExp(`<td class="${klasse}">([\\s\\S]*?)</td>`))?.[1] || "";
+  assert.notEqual(celle("diff-current"), celle("diff-proposed"), "kolonnene må kunne skilles");
+  assert.match(celle("diff-current"), /Blues/);
+  assert.match(celle("diff-proposed"), /Chicago blues/);
+  assert.match(celle("diff-proposed"), /https:\/\/ex\.com\/h/, "lenken står fortsatt i klartekst");
 });

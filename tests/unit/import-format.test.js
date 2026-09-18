@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { flattenGenreDescriptions, validateArtistsForImport, mergeHeatRows } from "../../js/import-format.js?v=5.34";
+import { flattenGenreDescriptions, validateArtistsForImport, mergeHeatRows } from "../../js/import-format.js?v=5.35";
 
 // Varmekartet er ETT dokument. Importen skrev det tidligere rått over, så en
 // fil med bare den nye sjangerens rad slettet alle de andre. Disse testene
@@ -98,6 +98,19 @@ test("name som mangler eller er tall avvises med radnummer", () => {
   assert.equal(res.ok, false);
   assert.deepEqual(res.errors.map((e) => e.row), [2, 3, 4]);
   assert.match(res.errors[0].problems.join(" "), /name/);
+});
+
+// Normaliseringen (buildArtistDoc) kaster en enkeltstreng i disse feltene, så
+// et validator-OK betydde tomme kilder/verk bak en grønn kvittering
+// (v5.35, audit-funn 29). Nå er strengen en ærlig valideringsfeil.
+test("streng i keyWorks/musicExamples/kilder avvises, liste godtas", () => {
+  for (const key of ["keyWorks", "musicExamples", "kilder"]) {
+    const res = validateArtistsForImport([{ name: "A", [key]: "Kind of Blue, Round Midnight" }]);
+    assert.equal(res.ok, false, `${key} som streng skal feile`);
+    assert.match(res.errors[0].problems.join(" "), new RegExp(`«${key}» må være en liste`));
+  }
+  const ok = validateArtistsForImport([{ name: "A", kilder: [{ text: "SNL" }], keyWorks: [], musicExamples: [] }]);
+  assert.equal(ok.ok, true);
 });
 
 test("nestet liste i mainGenre/subGenre avvises (Firestore-hostil)", () => {

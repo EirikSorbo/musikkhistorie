@@ -5,11 +5,11 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=5.34";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=5.34";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=5.34";
-import { currentEntityValues } from "./entity-values.js?v=5.34";
-import { erTilModerasjon } from "./limits.js?v=5.34";
+import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=5.35";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=5.35";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=5.35";
+import { currentEntityValues } from "./entity-values.js?v=5.35";
+import { erTilModerasjon } from "./limits.js?v=5.35";
 
 // Dagens verdier bor i den delte modulen (studentens retur-editor leser de
 // samme): her bindes bare lærersidens state.
@@ -85,11 +85,15 @@ function openDiffModal(editId) {
   activeEditId = editId;
 
   // entityName er FRITT satt av innsenderen, mens entityId er det som faktisk
-  // skrives til. Var de ulike, kunne et forslag stå som «Bebop» i køen og
-  // skrive til Blues. Vis begge når de spriker.
-  const visning = edit.entityName && edit.entityName !== edit.entityId
+  // skrives til. For de NAVNEBASERTE typene (subgenre, instrument, decade-*)
+  // er ID-en et lesbart navn: spriker de, kunne et forslag stå som «Bebop» i
+  // køen og skrive til Blues, så begge vises. Artist- og tech-forslag bærer en
+  // tilfeldig Firestore-ID som ALLTID er ulik navnet (audit-funn 28): der var
+  // «(skriver til: 7Kd2xQ…)» bare støy på hvert eneste forslag.
+  const navnebasert = ["subgenre", "instrument", "decade-society", "decade-tech"].includes(edit.entityType);
+  const visning = navnebasert && edit.entityName && edit.entityName !== edit.entityId
     ? `${edit.entityName} (skriver til: ${edit.entityId})`
-    : (edit.entityId || edit.entityName || "");
+    : (edit.entityName || edit.entityId || "");
   document.getElementById("diff-title").textContent =
     `${entityTypeLabel(edit.entityType)}: ${visning}`;
   let meta = `Foreslått av ${edit.proposedBy || "Anonym"}. Klikk ✓ på radene du vil godta, ✕ på de du vil avvise. Velg «Lagre valgte endringer» til slutt.`;

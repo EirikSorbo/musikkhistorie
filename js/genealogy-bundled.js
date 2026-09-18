@@ -18,11 +18,11 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=5.34";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.34";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=5.34";
-import { attachCamera } from "./gx-camera.js?v=5.34";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=5.34";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=5.35";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.35";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=5.35";
+import { attachCamera } from "./gx-camera.js?v=5.35";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=5.35";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)
@@ -422,7 +422,10 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
       ev.stopPropagation();
       openNode(n.id);
     });
-    g.addEventListener("focus", () => light(n.id));
+    // Kun ved TASTATURfokus (audit-funn 34): et museklikk gir også fokus, og
+    // modalClose flytter fokus TILBAKE hit når kortet lukkes — treet ble da
+    // stående dimmet rundt sjangeren uten at pekeren var i nærheten.
+    g.addEventListener("focus", () => { if (g.matches(":focus-visible")) light(n.id); });
     g.addEventListener("blur", () => { if (!selectedId) clearLight(); });
     g.addEventListener("click", (ev) => {
       if (camera.isMoved()) return;

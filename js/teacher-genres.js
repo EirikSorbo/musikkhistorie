@@ -25,18 +25,18 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=5.34";
-import { escapeHtml } from "./util.js?v=5.34";
-import { modalOpen, modalClose } from "./ui.js?v=5.34";
-import { state } from "./teacher-state.js?v=5.34";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=5.34";
-import { validateTree } from "./genre-validate.js?v=5.34";
+import { $ } from "./shared.js?v=5.35";
+import { escapeHtml, kanoniskJson } from "./util.js?v=5.35";
+import { modalOpen, modalClose } from "./ui.js?v=5.35";
+import { state } from "./teacher-state.js?v=5.35";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=5.35";
+import { validateTree } from "./genre-validate.js?v=5.35";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup, heatOrphanKeys,
   planEdgeCleanup, edgeOrphanKeys,
-} from "./genre-migrate.js?v=5.34";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=5.34";
+} from "./genre-migrate.js?v=5.35";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=5.35";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -369,8 +369,9 @@ async function lagre() {
   // guardTeacherAction FANGER feilen og returnerer normalt. Sto tre-lagringen,
   // kjørte navnebytte-planen likevel — og den flytter identiteter (beskrivelser,
   // varmekart, tagger) til et navn treet aldri fikk. Her må vi vite om det gikk.
+  let stempel;
   try {
-    await saveGenealogyTree(nyttTre);
+    stempel = await saveGenealogyTree(nyttTre);
   } catch (err) {
     console.error("Kunne ikke lagre sjangertreet:", err);
     msg.textContent = "Treet ble ikke lagret (" + (err?.message || err) + "). Ingenting er endret. Prøv igjen.";
@@ -381,7 +382,14 @@ async function lagre() {
   if (navnEndret) {
     const bygg = () => {
       const s = migrasjonsState();
-      s.tree = state.content?.genealogy || nyttTre;
+      // Snapshotet brukes først når det beviselig har tatt igjen lagringen
+      // over (audit-funn 22): med død content-lytter (typisk tømt lesekvote)
+      // sto state.content på versjonen FØR lagringen, ferskhetssjekken i
+      // utforPlan bygde planen fra det foreldede treet, og «Utfør» skrev de
+      // trygge endringene (tiår, farge …) stille tilbake. ISO-strenger
+      // sammenlignes leksikografisk, som her er kronologisk.
+      const snap = state.content?.genealogy;
+      s.tree = (snap?.updatedAt || "") >= stempel ? snap : nyttTre;
       return planGenreRename(s, gammel.l, felt.l);
     };
     const s = migrasjonsState();
@@ -459,7 +467,11 @@ async function utforPlan() {
     // updatedAt settes til «nå» hver gang en plan bygges, så en rå
     // JSON-sammenligning var ULIK ved hvert eneste kall — advarselen kom alltid,
     // og læreren lærte å klikke forbi den. Strip tidsstemplene før sammenligning.
-    const utenTid = (ops) => JSON.stringify((ops || []).map((o) => {
+    // Kanonisk form (audit-funn 23): et snapshot fra serveren kan ha en annen
+    // nøkkelrekkefølge enn den appen skrev (46 av 53 noder i den lokale
+    // REST-kopien har det), og rå JSON.stringify meldte da «endret» om to
+    // semantisk like planer.
+    const utenTid = (ops) => kanoniskJson((ops || []).map((o) => {
       if (!o?.data || typeof o.data !== "object") return o;
       const { updatedAt: _t, ...resten } = o.data;
       return { ...o, data: resten };
@@ -580,6 +592,14 @@ async function lagreMeta() {
 
   const metaer = metaerIKolonne(t);
   const gammel = redigererMeta ? metaer.find((x) => x.name === redigererMeta) : null;
+  // Omdøpt eller slettet i en annen fane mens editoren sto åpen (audit-funn
+  // 20): uten vakten ble duplikatsjekken og navnEndret tomme, og byggMetaTre
+  // la inn en NY, tom metasjanger ved siden av den omdøpte. Fargeendringen
+  // havnet på spøkelset, og validateTree fant 0 feil. Samme vakt som lagre().
+  if (redigererMeta && !gammel) {
+    msg.textContent = "Metasjangeren finnes ikke lenger (endret eller slettet i en annen fane?). Lukk og åpne editoren på nytt.";
+    return;
+  }
   if (metaer.some((x) => x !== gammel && x.name.toLowerCase() === navn.toLowerCase())) {
     msg.textContent = `«${navn}» finnes allerede som metasjanger.`;
     return;
@@ -593,8 +613,9 @@ async function lagreMeta() {
 
   // Samme grunn som i lagre(): en svelget feil her ville latt navnebytte-planen
   // flytte identiteter til et navn treet aldri fikk.
+  let stempel;
   try {
-    await saveGenealogyTree(nyttTre);
+    stempel = await saveGenealogyTree(nyttTre);
   } catch (err) {
     console.error("Kunne ikke lagre sjangertreet:", err);
     msg.textContent = "Treet ble ikke lagret (" + (err?.message || err) + "). Ingenting er endret. Prøv igjen.";
@@ -604,7 +625,9 @@ async function lagreMeta() {
   if (navnEndret) {
     const bygg = () => {
       const s = migrasjonsState();
-      s.tree = state.content?.genealogy || nyttTre;
+      // Samme ferskhetsvalg som i lagre() (audit-funn 22).
+      const snap = state.content?.genealogy;
+      s.tree = (snap?.updatedAt || "") >= stempel ? snap : nyttTre;
       return planMetaRename(s, gammel.name, navn);
     };
     const s = migrasjonsState();

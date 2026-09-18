@@ -36,8 +36,8 @@ import {
   subscribeContent,
   subscribeDecades,
   subscribePodcasts,
-} from "./store.js?v=5.34";
-import { applyGenealogyDoc } from "./genre-model.js?v=5.34";
+} from "./store.js?v=5.35";
+import { applyGenealogyDoc } from "./genre-model.js?v=5.35";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan
@@ -62,6 +62,13 @@ export function sharedStateDefaults() {
     contentLoaded: false,
     decadeDescs: {},
     podcasts: [],
+    // Resten av lastet-flaggene (v5.35, audit-funn 26): lærerens eksport leser
+    // ALLE samlingene rett fra state, og vakten foran den må kunne se at hver
+    // enkelt har landet, ikke bare artister og content.
+    edgeDescsLoaded: false,
+    techLoaded: false,
+    decadesLoaded: false,
+    podcastsLoaded: false,
   };
 }
 
@@ -92,6 +99,7 @@ export function subscribeSharedData(state, hooks = {}) {
 
   subscribeEdgeDescs((map) => {
     state.edgeDescs = map;
+    state.edgeDescsLoaded = true;
     onEdgeDescs?.(map);
   });
 
@@ -100,6 +108,7 @@ export function subscribeSharedData(state, hooks = {}) {
     // lærerkort mangler status-felt og teller som aktive). En nektliste mot
     // «pending» ville lekket enhver NY status — «returnert» (v5.13) inkludert.
     state.techItems = keepPendingTech ? items : items.filter((t) => (t.status || "active") === "active");
+    state.techLoaded = true;
     onTech?.(state.techItems);
   });
 
@@ -115,11 +124,13 @@ export function subscribeSharedData(state, hooks = {}) {
 
   subscribeDecades((d) => {
     state.decadeDescs = d || {};
+    state.decadesLoaded = true;
     onDecades?.(state.decadeDescs);
   });
 
   subscribePodcasts((pods) => {
     state.podcasts = pods || [];
+    state.podcastsLoaded = true;
     onPodcasts?.(state.podcasts);
   });
 }

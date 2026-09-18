@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.34";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.34";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.34";
-import { pageFor } from "./story-format.js?v=5.34";
-import { renderRichText } from "./rich-text.js?v=5.34";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.34";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.34";
-import { openTechDetail } from "./explore-tech.js?v=5.34";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.35";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.35";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.35";
+import { pageFor } from "./story-format.js?v=5.35";
+import { renderRichText } from "./rich-text.js?v=5.35";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.35";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.35";
+import { openTechDetail } from "./explore-tech.js?v=5.35";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -117,7 +117,9 @@ function renderGroup(group, tvunget = false) {
   const signatur = JSON.stringify([
     group,
     artistsInInstrumentGroup(s0.artists, group).length,
-    instrumentInnovations(s0.techItems, group).map((t) => [t.id, t.name, t.adoptedYear]),
+    // adoptedLabel og korttype (v5.35, audit-funn 33): tidslinja viser begge,
+    // så en rettet «Tatt i bruk»-tekst eller et typebytte ble stående gammel.
+    instrumentInnovations(s0.techItems, group).map((t) => [t.id, t.name, t.adoptedYear, t.adoptedLabel, t.type]),
     s0.content?.[instrumentPageId(group)] || null,
     !!s0.contentLoaded,
   ]);
@@ -197,19 +199,25 @@ function renderGroup(group, tvunget = false) {
   // to handlingene skal ikke se ut som fire like valg på rad.
   // Artistene hentes på GRUPPE, ikke på instrumentnavn — se
   // artistsInInstrumentGroup (en «Soloinstrument»-artist heter «Trompet»).
+  //
+  // Listene hentes FERSKT ved klikk (v5.35, audit-funn 33): signaturvakten
+  // over demper omtegning når antallet er likt, så lister fanget ved tegning
+  // kunne vise en gammel beskrivelse etter at læreren godkjente en rettelse,
+  // og prefylle «Foreslå endring» med den. Tallet i etiketten er trygt: det
+  // står i signaturen.
   const artister = artistsInInstrumentGroup(s.artists, group);
   knapper.push({
     side: "venstre",
     tekst: `Alle artister (${artister.length})`,
     gjør: () => openArtistListModal(
-      `Artister: ${group}`, artister, opts.onArtistClick,
+      `Artister: ${group}`, artistsInInstrumentGroup(getState().artists, group), opts.onArtistClick,
       `Ingen artister er lagt inn på ${group} ennå.`
     ),
   });
   knapper.push({
     side: "venstre",
     tekst: `Alle nyvinninger (${items.length})`,
-    gjør: () => openTechListModal(group, items),
+    gjør: () => openTechListModal(group, instrumentInnovations(getState().techItems, group)),
   });
 
   if (opts.onTechEdit) {
@@ -270,10 +278,10 @@ function openTechListModal(group, items) {
   modalOpen(modal);
 }
 
-function renderUtvikling() {
+function renderUtvikling(tvunget = false) {
   renderPodkastInngang();
   renderChips();
-  renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0]);
+  renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0], tvunget);
 }
 
 // Tegner de åpne visningene på nytt når kort/episoder/innhold/artister endres.
@@ -298,7 +306,10 @@ export function openInstrumenter(group) {
   const modal = document.getElementById("modal-instrumenter");
   if (!modal) return;
   if (group && INSTRUMENT_TIMELINE_GROUPS.includes(group)) currentGroup = group;
-  renderUtvikling();
+  // Tvunget (audit-funn 33): signaturvakten skal bare dempe snapshot-
+  // omtegning mens kortet står åpent. sisteSignatur nullstilles aldri, så uten
+  // dette ga lukk og åpne samme gamle tegning.
+  renderUtvikling(true);
   modalOpen(modal);
 }
 

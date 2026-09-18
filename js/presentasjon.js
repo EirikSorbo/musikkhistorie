@@ -24,14 +24,14 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.34";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.34";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.34";
-import { modalClose } from "./ui-modal.js?v=5.34";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.34";
-import { escapeHtml } from "./util.js?v=5.34";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.34";
-import { getState } from "./explore-context.js?v=5.34";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.35";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.35";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.35";
+import { modalClose } from "./ui-modal.js?v=5.35";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.35";
+import { escapeHtml } from "./util.js?v=5.35";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.35";
+import { getState } from "./explore-context.js?v=5.35";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).

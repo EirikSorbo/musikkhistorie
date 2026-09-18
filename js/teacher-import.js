@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.34";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.35";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -19,14 +19,14 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=5.34";
-import { escapeHtml } from "./ui.js?v=5.34";
-import { $ } from "./shared.js?v=5.34";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.34";
-import { validateTree } from "./genre-validate.js?v=5.34";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.34";
-import { INSTRUMENTS } from "./limits.js?v=5.34";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.34";
+} from "./store.js?v=5.35";
+import { escapeHtml } from "./ui.js?v=5.35";
+import { $ } from "./shared.js?v=5.35";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.35";
+import { validateTree } from "./genre-validate.js?v=5.35";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.35";
+import { INSTRUMENTS } from "./limits.js?v=5.35";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.35";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -65,10 +65,8 @@ export function setupDataButtons() {
   importInput.addEventListener("change", (e) => handleImportFile(e.target.files[0]));
 
   $("#btn-nuke").addEventListener("click", async () => {
-    if (!state.artistsLoaded) {
-      alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du sletter. Ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
-      return;
-    }
+    // Backupen under må være komplett FØR slettingen går mot serveren.
+    if (!kanEksportere()) return;
     if (!confirm("Er du HELT sikker? Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.")) return;
     // Samme sikkerhetsnett som «Erstatt alle»: full backup lastes ned FØR
     // slettingen, og læreren må aktivt skrive SLETT for å bekrefte.
@@ -148,7 +146,11 @@ function buildExportData() {
   const edgeDescriptions = {};
   Object.entries(state.edgeDescs || {})
     .map(([id, s]) => { const { id: _omit, ...rest } = s; return [id, rest]; })
-    .filter(([, rest]) => rest.description)
+    // Tekst ELLER kilder (audit-funn 30): #es-save lagrer { description,
+    // kilder } uten å kreve tekst, så en kobling kan ha kildeliste alene.
+    // Et rent description-filter lot slike rader falle ut av eksporten, mens
+    // rydde-advarselen lovet at «ta en eksport først» reddet dem.
+    .filter(([, rest]) => rest.description || (rest.kilder || []).length)
     .sort(([aId], [bId]) => aId.localeCompare(bId, "no"))
     .forEach(([id, rest]) => { edgeDescriptions[id] = rest; });
 
@@ -214,14 +216,40 @@ function downloadJson(data, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-function handleExport() {
-  // Uten denne kunne læreren laste ned en «backup» som manglet alt som ikke
-  // hadde rukket å lande — og en amputert backup er verre enn ingen, fordi den
-  // ser komplett ut. buildExportData leser rett fra state.
-  if (!state.artistsLoaded || !state.contentLoaded) {
-    alert("Dataene laster fortsatt. Vent noen sekunder og prøv igjen, ellers blir sikkerhetskopien ufullstendig.");
-    return;
+// Vakten foran ALLE eksporter, også de automatiske sikkerhetskopiene før
+// «Slett alt» og «Erstatt alle» (v5.35, audit-funn 26). buildExportData leser
+// åtte samlinger rett fra state, og en amputert backup er verre enn ingen,
+// fordi den ser komplett ut. Vakten dekket bare artister og content: landet de
+// først, eller feilet en av de andre lytterne, ble fila stille ufullstendig.
+//
+// I tillegg: på en maskin uten nett hever SDK-en et TOMT snapshot fra cachen,
+// og lastet-flaggene settes på første snapshot uansett innhold. Det kan ikke
+// skilles fra ekte data uten metadata-lyttere (includeMetadataChanges ville
+// gitt ekstra omtegninger på alle flater), så en nesten tom eksport må
+// bekreftes av læreren i stedet.
+function kanEksportere() {
+  const mangler = [
+    ["artistene", state.artistsLoaded],
+    ["innholdet", state.contentLoaded],
+    ["sjangerbeskrivelsene", state.genreDescsLoaded],
+    ["koblingsbeskrivelsene", state.edgeDescsLoaded],
+    ["innovasjonskortene", state.techLoaded],
+    ["tiårene", state.decadesLoaded],
+    ["podkastene", state.podcastsLoaded],
+    ["avkryssingene", state.teacherChecksLoaded],
+  ].filter(([, lastet]) => !lastet).map(([navn]) => navn);
+  if (mangler.length) {
+    alert(`Dataene er ikke ferdig lastet (${mangler.join(", ")}). Vent noen sekunder og prøv igjen, ellers blir sikkerhetskopien ufullstendig. Står det en feilmelding øverst på siden, må siden lastes på nytt først.`);
+    return false;
   }
+  if (!state.artists.length || !state.content?.genealogy?.nodes?.length) {
+    return confirm("Sikkerhetskopien ser nesten tom ut (ingen artister eller intet sjangertre). Det skjer typisk når nettleseren er uten nett og bare har en tom lokal kopi. Vil du fortsette likevel?");
+  }
+  return true;
+}
+
+function handleExport() {
+  if (!kanEksportere()) return;
   downloadJson(buildExportData(), `musikkhistorie-${dateStamp()}.json`);
 }
 
@@ -412,9 +440,12 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
   }
 
   // Koblingsbeskrivelser: nøkkelen ER dokument-ID-en («fra__til»); kun
-  // oppføringer med tekst skrives (tomme ville bare skapt spøkelsesdokumenter).
+  // oppføringer med innhold skrives (tomme ville bare skapt spøkelses-
+  // dokumenter). Tekst ELLER kilder, samme predikat som eksporten
+  // (audit-funn 30) — ellers kunne ikke en kilder-bare rad gjenopprettes fra
+  // backupen den nettopp ble reddet til.
   const edgeEntries = Object.entries(edgeDescriptions || {})
-    .filter(([, data]) => data && data.description)
+    .filter(([, data]) => data && (data.description || (data.kilder || []).length))
     .map(([id, data]) => ({ id, data }));
 
   // Batchet skriving (saveDocsBulk) i stedet for dokument-for-dokument.
@@ -593,12 +624,9 @@ async function importTechItems(techArray) {
 // ekstra sikkerhetsnett dersom skrivingen skulle feile midtveis.
 // Returnerer true hvis erstatningen ble gjennomført, false hvis avbrutt/feilet.
 async function handleReplace(data) {
-  // Vent på artist-snapshotet: uten det bygges backupen fra en tom state mens
-  // deleteAllArtists sletter det som faktisk ligger på serveren.
-  if (!state.artistsLoaded) {
-    alert("Artistdataene er ikke ferdig lastet ennå. Vent til lista vises før du erstatter. Ellers blir sikkerhetskopien tom mens slettingen går mot serveren.");
-    return false;
-  }
+  // Vent på snapshotene: uten dem bygges backupen fra en tom (eller halv)
+  // state mens deleteAllArtists sletter det som faktisk ligger på serveren.
+  if (!kanEksportere()) return false;
   const toAdd = data
     .filter((a) => a.name)
     .map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }));

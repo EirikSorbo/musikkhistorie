@@ -1166,6 +1166,10 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
     transform: none;
     flex: 0 0 100%;
     justify-content: center;
+    /* Etter ←/✕ i flex-rekkefølgen (audit-funn 38): DOM-en har baren mellom
+       tittel og knapper, og uten order presset flex-basis:100% knappene ned
+       på en tredje rad, nede i hvert sitt hjørne. */
+    order: 1;
   }
 }
 #t-prio-bar { flex: 0 0 100%; justify-content: center; }

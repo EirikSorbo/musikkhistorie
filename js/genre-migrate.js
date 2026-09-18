@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.34";
+import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.35";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -260,8 +260,18 @@ export function planGenreRename(state, fra, til) {
     ops.push(op("doc.merge", "config", "teacherChecks", { genres: liste },
       "Avkryssingen følger med"));
   }
-  if (ref.sjekketSub) {
-    const liste = (state.teacherChecks.subgenres || []).map((g) => (lik(g, fra) ? nyttNavn : g));
+  // KUN når noden mangler metasjanger (audit-funn 32): har den metasjanger,
+  // er navnet isMainGenre og utenfor undersjanger-universet, så innslaget i
+  // «subgenres» kan bare tilhøre en FRI tagg med samme navn — og den blir med
+  // vilje stående på det gamle navnet (advarselen over). Flytting gjorde den
+  // frie taggen usjekket, mens det nye navnet ikke traff noe.
+  if (ref.sjekketSub && !ref.node?.g) {
+    const gamle = state.teacherChecks.subgenres || [];
+    // Finnes det frie tagger med samme navn, står det GAMLE navnet fortsatt i
+    // universet etter byttet: behold det, og legg det nye til ved siden av.
+    const liste = ref.friUndersjanger.length
+      ? (gamle.some((g) => lik(g, nyttNavn)) ? gamle : [...gamle, nyttNavn])
+      : gamle.map((g) => (lik(g, fra) ? nyttNavn : g));
     ops.push(op("doc.merge", "config", "teacherChecks", { subgenres: liste },
       "Avkryssingen på undersjanger-nivå følger med"));
   }

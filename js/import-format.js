@@ -104,7 +104,11 @@ export function validateArtistsForImport(list) {
       }
       for (const key of ["keyWorks", "musicExamples", "kilder"]) {
         const v = a[key];
-        if (v != null && typeof v !== "string" && !Array.isArray(v)) {
+        // En enkeltstreng er en FEIL, ikke et unntak (audit-funn 29):
+        // normaliseringen kaster den (buildArtistDoc gir []), så et validator-
+        // OK hadde betydd tomme kilder/verk bak en grønn kvittering. mainGenre
+        // fikk koersjon (cleanGenres) i v5.10; her sies det heller ifra.
+        if (v != null && !Array.isArray(v)) {
           problems.push(`«${key}» må være en liste.`);
         }
       }

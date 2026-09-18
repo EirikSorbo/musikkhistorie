@@ -2,8 +2,8 @@
 //  DELTE HJELPERE — brukes av alle sider
 // ============================================================================
 
-import { firebaseConfig } from "./firebase-config.js?v=5.34";
-import { VERSION } from "./version.js?v=5.34";
+import { firebaseConfig } from "./firebase-config.js?v=5.35";
+import { VERSION } from "./version.js?v=5.35";
 
 export const CONFIGURED = !String(firebaseConfig.apiKey).startsWith("DIN_");
 
@@ -33,12 +33,16 @@ export function showSetupBanner(extra = "") {
 // pekte på feil årsak, og en regelpublisering ville ikke hjulpet.
 const FEILTEKST = {
   // Firestores gratiskvote (50 000 lesinger) nullstilles ved midnatt Pacific.
+  // «Last siden på nytt» er en del av instruksen (audit-funn 35): SDK-en
+  // fjerner en lytter FOR GODT etter en feil, og appen abonnerer ikke på nytt
+  // (med vilje: en auto-retry ville tært videre på kvoten). En åpen fane
+  // kommer seg altså aldri av seg selv, uansett hvor lenge den venter.
   "resource-exhausted":
-    "Databasen har brukt opp dagens lesekvote. Appen virker igjen når kvoten nullstilles (ved midnatt Pacific-tid, altså rundt klokka 09 norsk tid). Ingenting er tapt.",
+    "Databasen har brukt opp dagens lesekvote. Last siden på nytt etter at kvoten er nullstilt (ved midnatt Pacific-tid, altså rundt klokka 09 norsk tid). Ingenting er tapt.",
   "permission-denied":
     "Firestore-reglene tillater ikke lesing uten innlogging. Publiser oppdaterte regler i Firebase Console.",
   unavailable:
-    "Får ikke kontakt med databasen. Sjekk nettforbindelsen, og prøv igjen om litt.",
+    "Får ikke kontakt med databasen. Sjekk nettforbindelsen, og last siden på nytt om litt.",
   "failed-precondition":
     "Databasen mangler en indeks eller er i en tilstand appen ikke forventet. Se konsollen for detaljer.",
   unauthenticated:

@@ -6,16 +6,16 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.34";
-import { isVisible } from "./limits.js?v=5.34";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.34";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.34";
-import { renderRichText } from "./rich-text.js?v=5.34";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.34";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.34";
-import { wireLinks } from "./ui-helpers.js?v=5.34";
-import { renderSjangerhimmel } from "./constellation.js?v=5.34";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.34";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.35";
+import { isVisible } from "./limits.js?v=5.35";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.35";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.35";
+import { renderRichText } from "./rich-text.js?v=5.35";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.35";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.35";
+import { wireLinks } from "./ui-helpers.js?v=5.35";
+import { renderSjangerhimmel } from "./constellation.js?v=5.35";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.35";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -133,8 +133,11 @@ function renderHistorie(genre) {
     const heat = getState().content?.varmekart?.heat || null;
     // Uten varmedata ville hele blokka stått som tretten grå felter per rad.
     // Da sier vi det heller med ord, som varmekartet og sjangerkortet gjør.
+    // Samme predikat som varmekartet (audit-funn 31): et TOMT kart ({} er
+    // truthy, mulig etter migrering eller import) skal også gi ordene.
+    const hasData = !!heat && Object.keys(heat).length > 0;
     tre.innerHTML = !familie.length ? ""
-      : heat ? heatBlockHtml(heatAxisRowHtml() + heatRowsHtml(familie, {
+      : hasData ? heatBlockHtml(heatAxisRowHtml() + heatRowsHtml(familie, {
           heat, meta: genre,
           colorFor: (sj) => MAIN_GENRE_INFO[sj]?.color || META_GENRE_COLOR[genre] || FAMILIES.gray?.stroke,
         }), "hist-heat")

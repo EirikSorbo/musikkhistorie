@@ -169,10 +169,28 @@ export function normaliserReturKode(inp) {
   return String(inp || "").toUpperCase().replace(/[\s-]+/g, "");
 }
 
+// Nøkkelsortert JSON (v5.35, audit-funn 23): to semantisk like verdier gir
+// samme streng uansett nøkkelrekkefølge. For ferskhetssjekker som sammenligner
+// data som kan ha rundet serveren: Firestore lover ingen bestemt rekkefølge
+// tilbake. toJSON respekteres først, som i JSON.stringify (Date → ISO-streng).
+export function kanoniskJson(v) {
+  const sorter = (x) => {
+    if (x && typeof x.toJSON === "function") return sorter(x.toJSON());
+    if (Array.isArray(x)) return x.map(sorter);
+    if (x && typeof x === "object") {
+      return Object.fromEntries(Object.keys(x).sort().map((k) => [k, sorter(x[k])]));
+    }
+    return x;
+  };
+  return JSON.stringify(sorter(v));
+}
+
 // «Har denne nettleseren sendt inn noe?» — vokter forsidens retur-oppslag
 // (fetchMineReturer koster tre lesinger; uten flagget hadde ALLE sidelastene
-// betalt dem). Settes av datalaget ved enhver innsending, også ny innsending
-// med kode fra en annen enhet, så returer dukker opp automatisk der etterpå.
+// betalt dem). Settes av datalaget ved førstegangs-innsendinger, IKKE av
+// resubmit* (audit-funn 24): en ny innsending med kode på en fremmed enhet
+// får aldri dokumentets ownerUid, så auto-oppslaget der kan per definisjon
+// ikke treffe — flagget ville bare kostet tre lesinger per sidelast.
 // localStorage kan kaste (blokkerte nettsteddata) — flagget feiler da stille
 // mot false, og kodeoppslaget virker fortsatt.
 const INNSENDT_FLAGG = "pensumHarSendtInn";
