@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn } from "../../js/presentasjon-modell.js?v=5.37";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.38";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -329,7 +329,7 @@ test("lerretet: hvit bakgrunn uten uskarphet, brede kort, verktøylinja utenfor 
   const lerret = css.match(/body\.presentasjon \.modal-backdrop \{[^}]*\}/)?.[0] || "";
   assert.match(lerret, /background: var\(--bg\);/);
   assert.match(lerret, /backdrop-filter: none;/);
-  assert.match(css, /body\.presentasjon \.modal-backdrop:where\(:not\(#modal-sok\)\) > \.modal:where\(:not\(\.modal-narrow, \.modal-valg\)\) \{[^}]*max-width: none;/,
+  assert.match(css, /body\.presentasjon \.modal-backdrop:where\(:not\(#modal-sok\)\) > \.modal:where\(:not\(\.modal-narrow, \.modal-valg, \.modal-hjelp\)\) \{[^}]*max-width: none;/,
     "kortene skal gå over hele bredden, med vektløse unntak");
   assert.match(css, /#pres-bar \{[^}]*font-size: 15px;/, "verktøylinja skal ikke vokse med tekstskalaen");
   assert.match(css, /html\.pres-modus \{ font-size: clamp\(/);
@@ -382,4 +382,94 @@ test("«Legg til her»: knappen kun for lærerøkter, lagring på ferske planer,
   assert.match(meny, /const planer = medStoppSattInn\(planerNaa\(\), planId, indeks, stopp\);/,
     "lagringen bygger på de ferskeste planene i state, ikke avspillerens kopi");
   assert.match(meny, /erLaerer = erLaererBruker\(user\);/, "menyen og knappen deler lærersjekken");
+});
+
+// --- Hurtigtastene (v5.38, brukerens utvalg 2026-09-18) -----------------------
+
+const tast = (key, ekstra = {}) => ({ key, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, repeat: false, ...ekstra });
+
+test("presTast: kjøreplan-tastene virker bare når en plan spilles", () => {
+  const medPlan = { plan: true };
+  assert.equal(presTast(tast("Home"), medPlan), "oversikt");
+  assert.equal(presTast(tast("End"), medPlan), "oppsummering");
+  assert.equal(presTast(tast("t"), medPlan), "tilStoppet");
+  assert.equal(presTast(tast("T"), medPlan), "tilStoppet");
+  assert.equal(presTast(tast("+"), medPlan), "leggTil");
+  assert.equal(presTast(tast("ArrowRight"), medPlan), "neste");
+  assert.equal(presTast(tast("ArrowLeft"), medPlan), "forrige");
+  for (const k of ["Home", "End", "t", "+", "ArrowRight", "PageDown"]) {
+    assert.equal(presTast(tast(k), { plan: false }), null, `${k} uten plan`);
+  }
+});
+
+test("presTast: visningstastene virker i all presentasjon", () => {
+  assert.equal(presTast(tast("f")), "fullskjerm");
+  assert.equal(presTast(tast("F")), "fullskjerm");
+  assert.equal(presTast(tast("a")), "skala");
+  assert.equal(presTast(tast("b")), "svart");
+  assert.equal(presTast(tast(".")), "svart", "klikkernes svart-skjerm-knapp");
+  assert.equal(presTast(tast("?", { shiftKey: true })), "hjelp", "? krever Shift på de fleste tastatur");
+  assert.equal(presTast(tast("2")), "nivaa2");
+  assert.equal(presTast(tast("x")), null);
+});
+
+test("presTast: aldri i skrivefelt eller med modifikator, unntatt klikkernes PageUp/PageDown", () => {
+  const felt = { plan: true, iSkrivefelt: true };
+  for (const k of ["f", "a", "b", "?", "t", "+", "Home", "End", "ArrowRight", "1"]) {
+    assert.equal(presTast(tast(k), felt), null, `${k} i skrivefelt`);
+  }
+  assert.equal(presTast(tast("PageDown"), felt), "neste");
+  assert.equal(presTast(tast("PageUp"), felt), "forrige");
+  for (const mod of ["ctrlKey", "metaKey", "altKey"]) {
+    assert.equal(presTast(tast("f", { [mod]: true }), { plan: true }), null, `${mod}+F tilhører nettleseren`);
+    assert.equal(presTast(tast("PageDown", { [mod]: true }), { plan: true }), null);
+  }
+});
+
+test("presTast: av/på-tastene reagerer ikke på auto-gjentak, blaingen gjør det", () => {
+  const holdt = (k) => presTast(tast(k, { repeat: true }), { plan: true });
+  for (const k of ["f", "a", "b", ".", "?", "t", "+"]) assert.equal(holdt(k), null, k);
+  assert.equal(holdt("ArrowRight"), "neste");
+  assert.equal(holdt("2"), "nivaa2");
+});
+
+test("samleTast: + legger til, Ctrl/Cmd+Z angrer, aldri i skrivefelt", () => {
+  assert.equal(samleTast(tast("+")), "leggTil");
+  assert.equal(samleTast(tast("z", { ctrlKey: true })), "angre");
+  assert.equal(samleTast(tast("Z", { metaKey: true })), "angre");
+  assert.equal(samleTast(tast("z", { ctrlKey: true, shiftKey: true })), null, "Ctrl+Shift+Z er «gjør om»");
+  assert.equal(samleTast(tast("z")), null);
+  assert.equal(samleTast(tast("+", { repeat: true })), null);
+  assert.equal(samleTast(tast("+"), { iSkrivefelt: true }), null);
+  assert.equal(samleTast(tast("z", { ctrlKey: true }), { iSkrivefelt: true }), null, "feltets egen angre");
+});
+
+test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
+  // Søket og Esc bor andre steder (vis-lenke og modalene); resten skal
+  // presTast kjenne, ellers lover oversikten noe som ikke virker.
+  const andreSteder = new Set(["/", "Ctrl/Cmd+K", "Esc"]);
+  const navn = { "→": "ArrowRight", "←": "ArrowLeft" };
+  for (const g of PRES_TASTER) {
+    for (const r of g.rader) {
+      for (const t of r.taster) {
+        if (andreSteder.has(t)) continue;
+        assert.ok(presTast(tast(navn[t] || t), { plan: true }), `«${t}» (${r.hva}) mangler i presTast`);
+      }
+    }
+  }
+  assert.ok(PRES_TASTER.find((g) => g.gruppe === "Kjøreplan").plan, "kjøreplan-gruppa vises bare med plan");
+});
+
+test("tastene er koblet: én felles lytter, svart skjerm i capture, samleøkt etter presentasjonen, Ctrl/Cmd+S i editoren", () => {
+  const spiller = kilde("presentasjon.js");
+  assert.match(spiller, /const h = presTast\(e, \{ plan: !!plan, iSkrivefelt: erSkrivefelt\(document\.activeElement\) \}\);/);
+  assert.match(spiller, /case "oppsummering": return gaTilStopp\(plan\.stopp\.length \+ 1\);/);
+  assert.doesNotMatch(spiller, /function wirePlanTaster/, "den gamle pil-lytteren er erstattet");
+  assert.match(spiller, /e\.stopPropagation\(\);\n\s*vekslSvart\(\);\n\s*\}, true\);/, "Esc skal hente bildet, ikke lukke kortet bak");
+  assert.match(spiller, /if \(!erLaerer \|\| !plan \|\| !vis/, "tasten + har samme lærervakt som knappen");
+  const samle = kilde("plan-innsamling.js");
+  assert.match(samle, /window\.addEventListener\("keydown", \(e\) => \{\n\s*if \(!økt \|\| e\.defaultPrevented\) return;/,
+    "samleøkta lytter på window og viker for en kjøreplan i samme fane");
+  const editor = kilde("teacher-presentasjoner.js");
+  assert.match(editor, /if \(!kladd \|\| !m\.classList\.contains\("open"\)\) return;\n\s*e\.preventDefault\(\);\n\s*lagre\(\);/);
 });

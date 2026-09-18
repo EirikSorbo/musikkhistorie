@@ -22,13 +22,13 @@
 //  startes fra lærersidens editor.
 // ============================================================================
 
-import { savePresentasjoner } from "./store.js?v=5.37";
-import { getState } from "./explore-context.js?v=5.37";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=5.37";
-import { setModalApnetProvider } from "./ui-modal.js?v=5.37";
-import { escapeHtml } from "./util.js?v=5.37";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.37";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.37";
+import { savePresentasjoner } from "./store.js?v=5.38";
+import { getState } from "./explore-context.js?v=5.38";
+import { normaliserPlaner, samleTast } from "./presentasjon-modell.js?v=5.38";
+import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.38";
+import { escapeHtml } from "./util.js?v=5.38";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.38";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.38";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -175,7 +175,7 @@ function visBar() {
     <span class="samle-navn">${økt.modus === "opptak" ? "Tar opp til" : "Plukker til"}
       «${escapeHtml(økt.tittel)}»</span>
     <span id="samle-status" class="muted"></span>
-    <button type="button" class="pres-knapp" id="samle-angre" title="Fjern siste stopp">Angre</button>
+    <button type="button" class="pres-knapp" id="samle-angre" title="Fjern siste stopp (Ctrl/Cmd+Z)">Angre</button>
     <button type="button" class="pres-knapp" id="samle-ferdig">Ferdig</button>`;
   document.body.appendChild(bar);
   bar.addEventListener("click", (e) => {
@@ -197,7 +197,7 @@ function monterPlussKnapper() {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "plan-pluss btn ghost small";
-    b.title = `Legg til i «${økt.tittel}»`;
+    b.title = `Legg til i «${økt.tittel}» (+)`;
     b.setAttribute("aria-label", "Legg til i kjøreplanen");
     b.hidden = true;   // modalOpen slår den på når backdropen har data-vis
     b.innerHTML = PLUSS_SVG;
@@ -205,9 +205,7 @@ function monterPlussKnapper() {
       const vis = b.closest(".modal-backdrop")?.dataset.vis;
       if (!vis) return;
       leggTil(vis, "plukk");
-      b.innerHTML = HAKE_SVG;
-      clearTimeout(b._kvittering);
-      b._kvittering = setTimeout(() => { b.innerHTML = PLUSS_SVG; }, 1200);
+      kvitter(b);
     });
     head.insertBefore(b, head.querySelector(".modal-lenke"));
   });
@@ -216,6 +214,14 @@ function monterPlussKnapper() {
     const b = m.querySelector(".plan-pluss");
     if (b) b.hidden = !m.dataset.vis;
   });
+}
+
+// Haken i plussknappen etter et tillegg, fra klikket og fra +-tasten.
+function kvitter(b) {
+  if (!b) return;
+  b.innerHTML = HAKE_SVG;
+  clearTimeout(b._kvittering);
+  b._kvittering = setTimeout(() => { b.innerHTML = PLUSS_SVG; }, 1200);
 }
 
 function fjernPlussKnapper() {
@@ -271,6 +277,26 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
   // Lytteeksempler (v5.28): spilleren fanger YouTube-lenker også under en
   // samleøkt, så eksemplene kan plukkes og tas opp som stopp.
   registrerYtIntercept(() => !!økt);
+
+  // Hurtigtastene (v5.38): + legger kortet øverst til (som plussknappen),
+  // Ctrl/Cmd+Z angrer siste stopp. Lytteren står på window, altså ETTER
+  // sidenes egne på document: spilles en kjøreplan i samme fane, får den +
+  // først og markerer tastetrykket brukt (defaultPrevented).
+  window.addEventListener("keydown", (e) => {
+    if (!økt || e.defaultPrevented) return;
+    const h = samleTast(e, { iSkrivefelt: erSkrivefelt(document.activeElement) });
+    if (h === "angre") { e.preventDefault(); angreSiste(); return; }
+    if (h !== "leggTil") return;
+    const modal = topOpenModal();
+    const vis = modal?.dataset.vis;
+    if (!vis) return;
+    e.preventDefault();
+    // Allerede siste stopp: i opptak ble kortet tatt opp da det åpnet, og
+    // et bevisst dobbeltstopp lages fortsatt med plussknappen.
+    if (økt.stopp[økt.stopp.length - 1]?.vis === vis) return;
+    leggTil(vis, "plukk");
+    kvitter(modal.querySelector(".plan-pluss"));
+  });
 
   const planId = les(LAGRING.plan);
   const modus = les(LAGRING.modus);

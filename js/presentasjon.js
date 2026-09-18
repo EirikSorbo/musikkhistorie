@@ -24,17 +24,17 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.37";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn } from "./presentasjon-modell.js?v=5.37";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.37";
-import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.37";
-import { GENEALOGY } from "./genre-model.js?v=5.37";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.37";
-import { escapeHtml } from "./util.js?v=5.37";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.37";
-import { getState } from "./explore-context.js?v=5.37";
-import { onAuthChange } from "./store.js?v=5.37";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.37";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.38";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.38";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.38";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.38";
+import { GENEALOGY } from "./genre-model.js?v=5.38";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.38";
+import { escapeHtml } from "./util.js?v=5.38";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.38";
+import { getState } from "./explore-context.js?v=5.38";
+import { onAuthChange } from "./store.js?v=5.38";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.38";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -267,9 +267,7 @@ let lagrer = false;
 // Målet til det øverste åpne kortet, eller null. Søket og oversiktskortet
 // har ingen data-vis: står søket øverst, er man ikke ferdig med å velge.
 function toppMaal() {
-  const apne = [...document.querySelectorAll(".modal-backdrop.open")]
-    .sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
-  return apne[apne.length - 1]?.dataset.vis || null;
+  return topOpenModal()?.dataset.vis || null;
 }
 
 function naavaerendeStoppVis() {
@@ -286,14 +284,14 @@ function oppdaterLeggTil() {
   const vis = toppMaal();
   const alleredeHer = !!vis && vis === naavaerendeStoppVis();
   knapp.disabled = !vis || alleredeHer;
-  knapp.title = !vis ? "Legg til i kjøreplanen her: åpne først kortet du vil ha med"
+  knapp.title = !vis ? "Legg til i kjøreplanen her (+): åpne først kortet du vil ha med"
     : alleredeHer ? "Kortet er allerede dette stoppet"
-    : "Legg kortet til i kjøreplanen, rett etter der du står";
+    : "Legg kortet til i kjøreplanen, rett etter der du står (+)";
 }
 
 async function leggTilHer() {
   const vis = toppMaal();
-  if (!plan || !vis || lagrer || vis === naavaerendeStoppVis()) return;
+  if (!erLaerer || !plan || !vis || lagrer || vis === naavaerendeStoppVis()) return;
   const knapp = document.getElementById("pres-leggtil");
   const indeks = innsettingsIndeks(stoppIdx, plan.stopp.length);
   const stopp = { vis, nivaa };
@@ -419,18 +417,89 @@ export function presPlanTikk() {
   }
 }
 
-function wirePlanTaster() {
+// ----------------------------------------------------------------------------
+//  Hurtigtastene (v5.38). Kartet er presTast i modellen (testet); her
+//  utføres handlingene. PageUp/PageDown er presentasjonsklikkernes taster og
+//  tas alltid, pilene og bokstavene bare utenfor skrivefelt.
+// ----------------------------------------------------------------------------
+
+function wireTaster() {
   document.addEventListener("keydown", (e) => {
-    if (!plan) return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    // PageUp/PageDown er presentasjonsfjernkontrollenes taster og tas alltid;
-    // pilene bare utenfor skrivefelt (tekstmarkøren trenger dem der).
-    const fram = e.key === "PageDown" || (e.key === "ArrowRight" && !erSkrivefelt(document.activeElement));
-    const tilbake = e.key === "PageUp" || (e.key === "ArrowLeft" && !erSkrivefelt(document.activeElement));
-    if (!fram && !tilbake) return;
+    if (erSvart()) return;   // den svarte skjermen har sin egen lytter (capture)
+    const h = presTast(e, { plan: !!plan, iSkrivefelt: erSkrivefelt(document.activeElement) });
+    if (!h) return;
     e.preventDefault();
-    gaTilStopp(stoppIdx + (fram ? 1 : -1));
+    switch (h) {
+      case "neste": return gaTilStopp(stoppIdx + 1);
+      case "forrige": return gaTilStopp(stoppIdx - 1);
+      case "oversikt": return gaTilStopp(0);
+      case "oppsummering": return gaTilStopp(plan.stopp.length + 1);
+      case "tilStoppet": return gaTilStopp(stoppIdx);
+      case "leggTil": return leggTilHer();
+      case "fullskjerm": return vekslFullskjerm();
+      case "skala": return vekslSkala();
+      case "svart": return vekslSvart();
+      case "hjelp": return vekslHjelp();
+      default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
+    }
   });
+  // Mens skjermen er svart, henter tastene bildet tilbake i stedet for å
+  // gjøre sin vanlige jobb: første trykk på → skal vise lerretet igjen, ikke
+  // hoppe et stopp, og Esc skal ikke lukke kortet som ligger bak. Capture-
+  // fasen stopper tastetrykket før sidenes egne Esc-lyttere ser det.
+  document.addEventListener("keydown", (e) => {
+    if (!erSvart() || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!["b", "B", ".", "Escape", "ArrowRight", "ArrowLeft", "PageDown", "PageUp", " "].includes(e.key)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    vekslSvart();
+  }, true);
+}
+
+// Svart skjerm (B eller «.»): en svart flate over hele lerretet, også over
+// verktøylinja, mens klassen diskuterer. Et klikk tar også bildet tilbake.
+function erSvart() { return !!document.getElementById("pres-svart"); }
+
+function vekslSvart() {
+  const flate = document.getElementById("pres-svart");
+  if (flate) { flate.remove(); return; }
+  const ny = document.createElement("div");
+  ny.id = "pres-svart";
+  ny.title = "Svart skjerm: trykk B, Esc eller klikk for å komme tilbake";
+  ny.addEventListener("click", () => ny.remove());
+  document.body.appendChild(ny);
+}
+
+// Oversikten over tastene (?). Kjøreplan-gruppa bare når en plan spilles,
+// «Legg til her» bare i lærerøkter, slik tastene faktisk virker.
+function vekslHjelp() {
+  let m = document.getElementById("modal-pres-taster");
+  if (m?.classList.contains("open")) { modalClose(m); return; }
+  if (!m) {
+    m = document.createElement("div");
+    m.className = "modal-backdrop";
+    m.id = "modal-pres-taster";
+    m.innerHTML = `
+      <div class="modal modal-hjelp">
+        <div class="modal-head">
+          <h2>Hurtigtaster</h2>
+          <button type="button" class="modal-close btn ghost small">✕</button>
+        </div>
+        <div class="pres-taster" id="pres-taster-liste"></div>
+      </div>`;
+    document.body.appendChild(m);
+    setupModal(m);
+    initModalHeaders();
+  }
+  m.querySelector("#pres-taster-liste").innerHTML = PRES_TASTER
+    .filter((g) => !g.plan || plan)
+    .map((g) => `
+      <h3>${escapeHtml(g.gruppe)}</h3>
+      <dl>${g.rader.filter((r) => !r.laerer || erLaerer).map((r) => `
+        <dt>${r.taster.map((t) => `<kbd>${escapeHtml(t)}</kbd>`).join(" ")}</dt>
+        <dd>${escapeHtml(r.hva)}</dd>`).join("")}
+      </dl>`).join("");
+  modalOpen(m);
 }
 
 // ----------------------------------------------------------------------------
@@ -450,15 +519,15 @@ function byggBar() {
   bar.innerHTML = `
     <span class="pres-plan" id="pres-plan" hidden role="group" aria-label="Kjøreplan">
       <button type="button" class="pres-knapp" id="pres-forrige" title="Forrige stopp (PageUp / ←)" aria-label="Forrige stopp">‹</button>
-      <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet">…</button>
+      <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet (T)">…</button>
       <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / →)" aria-label="Neste stopp">›</button>
       <button type="button" class="pres-knapp pres-leggtil" id="pres-leggtil" hidden aria-label="Legg til i kjøreplanen her">${IKON.pluss}</button>
     </span>
     <span class="pres-nivaa" role="group" aria-label="Detaljnivå">
       ${[1, 2, 3].map((n) => `<button type="button" class="pres-knapp" data-nivaa="${n}" title="${NIVAA_NAVN[n]} (tast ${n})">${n}</button>`).join("")}
     </span>
-    <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst">A</button>
-    <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm">${IKON.full}</button>
+    <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst (A)">A</button>
+    <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (F)">${IKON.full}</button>
     <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger" aria-label="Innstillinger">${IKON.tannhjul}</button>
     <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt">Avslutt</button>
     <div id="pres-panel" hidden></div>`;
@@ -490,7 +559,7 @@ function brukSkala(trinn) {
   const knapp = document.getElementById("pres-skala");
   if (knapp) {
     knapp.textContent = SKALA_NAVN[trinn];
-    knapp.title = ["Normal tekst", "Stor tekst", "Størst tekst"][trinn];
+    knapp.title = `${["Normal tekst", "Stor tekst", "Størst tekst"][trinn]} (A)`;
   }
 }
 
@@ -549,7 +618,8 @@ function tegnPanel(panel) {
       <hr class="pres-skille">`
     : `<p class="pres-panel-hode">Åpne et kort for å velge seksjoner.</p>`}
     <label class="pres-valg pres-qa"><input type="checkbox" id="pres-qa" ${qaPaa() ? "checked" : ""}>
-      Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort)</label>`;
+      Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort)</label>
+    <p class="pres-panel-tips">Trykk <kbd>?</kbd> for hurtigtastene.</p>`;
 
   panel.querySelectorAll("[data-sekt-valg]").forEach((cb) => {
     cb.addEventListener("change", () => {
@@ -595,7 +665,6 @@ export function initPresentasjon() {
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;
-    wirePlanTaster();
     // «Legg til her»: knappen følger lærerøkta og det øverste kortet. Kort
     // åpnes, lukkes, heves (z-index) og bytter mål (data-vis) uten noen
     // felles hendelse, så en vakt på backdropenes attributter gjør jobben.
@@ -616,13 +685,7 @@ export function initPresentasjon() {
   // tar sidenes content-hooks det når snapshotet lander.
   presPlanTikk();
 
-  // Tastene 1/2/3 bytter nivå — men aldri når fokus står i et skrivefelt
-  // (søkefeltet bruker sifre i helt vanlig forstand).
-  document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (!["1", "2", "3"].includes(e.key)) return;
-    if (erSkrivefelt(document.activeElement)) return;
-    e.preventDefault();
-    settNivaa(e.key);
-  });
+  // Hurtigtastene (v5.38): nivå, blaing, svart skjerm, oversikten over
+  // tastene og resten. Aldri i skrivefelt, unntatt klikkernes PageUp/Down.
+  wireTaster();
 }

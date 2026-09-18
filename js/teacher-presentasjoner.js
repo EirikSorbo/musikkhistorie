@@ -13,14 +13,14 @@
 //  podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.37";
-import { escapeHtml } from "./ui.js?v=5.37";
-import { savePresentasjoner } from "./store.js?v=5.37";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.37";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.37";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.37";
-import { askChoice } from "./ui-modal.js?v=5.37";
-import { startInnsamling } from "./plan-innsamling.js?v=5.37";
+import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.38";
+import { escapeHtml } from "./ui.js?v=5.38";
+import { savePresentasjoner } from "./store.js?v=5.38";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.38";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.38";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.38";
+import { askChoice } from "./ui-modal.js?v=5.38";
+import { startInnsamling } from "./plan-innsamling.js?v=5.38";
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -326,5 +326,16 @@ export function setupPresentasjonAdmin() {
   // Enter i lim-inn-feltet = «Legg til stopp» (raskere flyt med mange lenker).
   document.getElementById("pres-adm-lenke")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); if (kladd) leggTilStopp(); }
+  });
+
+  // Ctrl/Cmd+S lagrer kladden (v5.38), også med markøren i tittelfeltet: det
+  // er lagre-tastens vanlige betydning, og nettleserens «Lagre side» er aldri
+  // det læreren mener her. Bare mens editoren står åpen med en kladd.
+  document.addEventListener("keydown", (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    if (String(e.key || "").toLowerCase() !== "s") return;
+    if (!kladd || !m.classList.contains("open")) return;
+    e.preventDefault();
+    lagre();
   });
 }

@@ -2805,7 +2805,7 @@ body.presentasjon .modal-backdrop {
 }
 /* :where() holder unntakene uten vekt (0,3,1): med :not(#modal-sok) direkte
    fikk regelen ID-vekt og slo ut videospillerens egen bredde under. */
-body.presentasjon .modal-backdrop:where(:not(#modal-sok)) > .modal:where(:not(.modal-narrow, .modal-valg)) {
+body.presentasjon .modal-backdrop:where(:not(#modal-sok)) > .modal:where(:not(.modal-narrow, .modal-valg, .modal-hjelp)) {
   max-width: none;
   width: 100%;
   max-height: 100%;
@@ -2858,6 +2858,32 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 }
 .pres-ov-punkt:hover { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
 .pres-ov-detalj { color: var(--muted); font-size: 0.95rem; }
+
+/* Svart skjerm (v5.38, tasten B eller «.»): over ALT, også verktøylinja,
+   så lerretet er helt mørkt mens klassen diskuterer. Pekeren skjules. */
+#pres-svart { position: fixed; inset: 0; z-index: 100000; background: #000; cursor: none; }
+
+/* Hurtigtast-oversikten (v5.38, tasten ?): en smal dialog midt på lerretet,
+   ikke et bredt kort. Tastene som tastetegn i to kolonner. */
+.modal.modal-hjelp { max-width: 34rem; }
+.pres-taster h3 {
+  margin: 1.1rem 0 0.45rem; font-size: 0.8rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.pres-taster h3:first-child { margin-top: 0; }
+.pres-taster dl {
+  display: grid; grid-template-columns: max-content 1fr;
+  gap: 0.45rem 1.2rem; margin: 0; align-items: baseline;
+}
+.pres-taster dt { margin: 0; white-space: nowrap; }
+.pres-taster dd { margin: 0; }
+.pres-taster kbd, .pres-panel-tips kbd {
+  display: inline-block; min-width: 1.6em; padding: 0.05em 0.45em;
+  border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 6px;
+  background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: 0.85em; text-align: center; line-height: 1.5;
+}
+.pres-panel-tips { margin: 10px 0 0; font-size: 0.85em; color: var(--muted); }
 
 /* Verktøylinja nede til høyre. z-index over modalene (de starter på 100 og
    teller oppover per åpning — 99999 er utenfor rekkevidde i praksis). */

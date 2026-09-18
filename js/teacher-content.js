@@ -5,24 +5,24 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.37";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.37";
-import { resolveMainDesc } from "./genealogy.js?v=5.37";
-import { dropboxDirectUrl } from "./util.js?v=5.37";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.37";
-import { storyFor, pageFor } from "./story-format.js?v=5.37";
-import { renderRichText } from "./rich-text.js?v=5.37";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=5.37";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.37";
-import { resolveDesc } from "./genre-descriptions.js?v=5.37";
-import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=5.37";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=5.37";
-import { heatRow, getHeatData } from "./heat-strip.js?v=5.37";
+import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.38";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.38";
+import { resolveMainDesc } from "./genealogy.js?v=5.38";
+import { dropboxDirectUrl } from "./util.js?v=5.38";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.38";
+import { storyFor, pageFor } from "./story-format.js?v=5.38";
+import { renderRichText } from "./rich-text.js?v=5.38";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=5.38";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.38";
+import { resolveDesc } from "./genre-descriptions.js?v=5.38";
+import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=5.38";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=5.38";
+import { heatRow, getHeatData } from "./heat-strip.js?v=5.38";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=5.37";
-import { $ } from "./shared.js?v=5.37";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.37";
+import { wireAllLinks } from "./linkify.js?v=5.38";
+import { $ } from "./shared.js?v=5.38";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.38";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

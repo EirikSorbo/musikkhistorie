@@ -13,7 +13,7 @@ import {
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=5.37";
+} from "../../js/limits.js?v=5.38";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 

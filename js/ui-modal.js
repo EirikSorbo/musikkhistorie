@@ -22,7 +22,10 @@ function focusables(backdrop) {
     .filter((el) => el.offsetParent !== null);
 }
 
-function topOpenModal() {
+// Øverste åpne modal (høyest z-index), eller null. Eksportert (v5.38) for
+// presentasjonens «Legg til her» og samleøktas +-tast: begge trenger målet
+// til kortet som ligger øverst.
+export function topOpenModal() {
   const open = [...document.querySelectorAll(".modal-backdrop.open")];
   if (!open.length) return null;
   open.sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));

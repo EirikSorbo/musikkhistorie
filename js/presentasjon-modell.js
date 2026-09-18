@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.37";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.38";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -458,3 +458,74 @@ export function medStoppSattInn(planer, planId, indeks, stopp) {
     [planId]: { ...plan, stopp: [...plan.stopp.slice(0, i), stopp, ...plan.stopp.slice(i)] },
   };
 }
+
+// ----------------------------------------------------------------------------
+//  Hurtigtaster (v5.38, brukerens utvalg 2026-09-18). Tastekartet er rene
+//  funksjoner, så testene kan låse det: tastetrykk + situasjon inn,
+//  handlingens navn ut (eller null). Vaktene bor HER, så ingen tast kan
+//  slippe gjennom mens læreren skriver i et felt eller holder en
+//  modifikator (Ctrl/Cmd/Alt tilhører nettleseren og operativsystemet).
+// ----------------------------------------------------------------------------
+
+// Visningsmodus. `plan`: en kjøreplan spilles; `iSkrivefelt`: fokus står i
+// et felt der tastene er tekst.
+export function presTast(e, { plan = false, iSkrivefelt = false } = {}) {
+  if (!e || e.ctrlKey || e.metaKey || e.altKey) return null;
+  const k = String(e.key || "");
+  // Presentasjonsklikkernes blataster tas alltid, også fra et skrivefelt.
+  if (plan && k === "PageDown") return "neste";
+  if (plan && k === "PageUp") return "forrige";
+  if (iSkrivefelt) return null;
+  if (plan) {
+    if (k === "ArrowRight") return "neste";
+    if (k === "ArrowLeft") return "forrige";
+    if (k === "Home") return "oversikt";
+    if (k === "End") return "oppsummering";
+  }
+  if (k === "1" || k === "2" || k === "3") return `nivaa${k}`;
+  // Av/på-tastene skal ikke blinke fram og tilbake når de holdes inne.
+  if (e.repeat) return null;
+  if (plan && (k === "t" || k === "T")) return "tilStoppet";
+  if (plan && k === "+") return "leggTil";
+  if (k === "f" || k === "F") return "fullskjerm";
+  if (k === "a" || k === "A") return "skala";
+  // «.» er det mange presentasjonsklikkere sender fra svart-skjerm-knappen.
+  if (k === "b" || k === "B" || k === ".") return "svart";
+  if (k === "?") return "hjelp";
+  return null;
+}
+
+// Samleøkta (planleggingsmodus): + legger kortet øverst til, Ctrl/Cmd+Z
+// angrer siste stopp. Utenfor skrivefelt: der er begge tekstens egne.
+export function samleTast(e, { iSkrivefelt = false } = {}) {
+  if (!e || e.altKey || iSkrivefelt) return null;
+  const k = String(e.key || "");
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === "z" || k === "Z")) return "angre";
+  if (e.ctrlKey || e.metaKey || e.repeat) return null;
+  if (k === "+") return "leggTil";
+  return null;
+}
+
+// Oversikten tasten ? viser i visningsmodus. `plan`: gruppa vises bare når
+// en kjøreplan spilles; `laerer`: raden vises bare i lærerøkter.
+export const PRES_TASTER = [
+  { gruppe: "Kjøreplan", plan: true, rader: [
+    { taster: ["→", "PageDown"], hva: "Neste stopp" },
+    { taster: ["←", "PageUp"], hva: "Forrige stopp" },
+    { taster: ["Home"], hva: "Til oversikten" },
+    { taster: ["End"], hva: "Til oppsummeringen" },
+    { taster: ["T"], hva: "Tilbake til stoppet etter en avstikker" },
+    { taster: ["+"], hva: "Legg kortet du viser inn i kjøreplanen her", laerer: true },
+  ] },
+  { gruppe: "Visning", rader: [
+    { taster: ["1", "2", "3"], hva: "Detaljnivå" },
+    { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
+    { taster: ["F"], hva: "Fullskjerm av og på" },
+    { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
+  ] },
+  { gruppe: "Ellers", rader: [
+    { taster: ["/", "Ctrl/Cmd+K"], hva: "Søk" },
+    { taster: ["Esc"], hva: "Lukk øverste kort" },
+    { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
+  ] },
+];
