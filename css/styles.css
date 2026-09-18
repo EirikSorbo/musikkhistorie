@@ -2019,8 +2019,11 @@ body.is-teacher #gate { display: none; }
   .nav { gap: 2px; margin-left: auto; }
   .nav-icon { width: 34px; height: 34px; }
   .version-tag { display: none; }
-  .wrap { padding: 0 14px; }
-  main { padding: 20px 0 50px; }
+  /* padding-inline/-block, IKKE korthendene: samme felle som desktop hadde
+     (audit-funn 26/17) — «padding: 0 14px» nullet main-luften, siden .wrap
+     (0,1,0) slår main (0,0,1) på <main class="wrap">. */
+  .wrap { padding-inline: 14px; }
+  main { padding-block: 20px 50px; }
   /* Slektstre-hodet: «Åpne musicmap.info» får sin egen rad på telefon (ellers
      blir rada for bred). Overskrift + Tilbake/Lukk blir på rad 1. */
   .gx-page-head { flex-wrap: wrap; }

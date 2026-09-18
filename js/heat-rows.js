@@ -16,10 +16,10 @@
 //  bindingen er null når denne fila evalueres.
 // ============================================================================
 
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=5.33";
-import { DECADES } from "./limits.js?v=5.33";
-import { opts, getState, onMainGenreClick } from "./explore-context.js?v=5.33";
-import { heatRow, heatStripHtml, heatAxisHtml } from "./heat-strip.js?v=5.33";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=5.34";
+import { DECADES } from "./limits.js?v=5.34";
+import { opts, getState, onMainGenreClick } from "./explore-context.js?v=5.34";
+import { heatRow, heatStripHtml, heatAxisHtml } from "./heat-strip.js?v=5.34";
 
 // Sporene (etikett + stripe) settes i CSS på .vk-row/.vk-axisrow, ikke her:
 // historiene trenger en smalere etikettkolonne enn varmekartet, og en
@@ -102,7 +102,8 @@ export function wireHeatRows(root) {
 // Nivåvelgeren (lærer): «Blues · 1950-tallet» med knappene 0–5 + «Ingen
 // data». Lagring skjer via opts.onHeatEdit(sjanger, nyRad) — hele raden
 // sendes, så datalaget slipper å kjenne tiårsindeksen. Snapshotet oppdaterer
-// state.content → contentChanged() → flaten re-rendres bak velgeren.
+// state.content → contentChanged() → begge flatene (varmekartet OG en åpen
+// sjangerhistorie, v5.34) re-rendres bak velgeren.
 export function openHeatEdit(genre, idx) {
   const modal = document.getElementById("modal-vk-edit");
   if (!modal) return;

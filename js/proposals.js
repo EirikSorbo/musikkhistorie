@@ -8,16 +8,16 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.33";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.33";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.33";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.33";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.33";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.33";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.33";
-import { setupFormatBars } from "./format-bar.js?v=5.33";
-import { TREG_SENDING_MELDING } from "./util.js?v=5.33";
-import { wireCharCount } from "./ui-helpers.js?v=5.33";
+import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.34";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.34";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.34";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.34";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.34";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.34";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.34";
+import { setupFormatBars } from "./format-bar.js?v=5.34";
+import { TREG_SENDING_MELDING } from "./util.js?v=5.34";
+import { wireCharCount } from "./ui-helpers.js?v=5.34";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -292,6 +292,15 @@ function lukkEtterKvittering(modal) {
 }
 function avbrytLukking() { clearTimeout(lukkeTimer); lukkeTimer = null; }
 
+// Åpningsteller (v5.34, audit-funn 16): fortsettelsen etter en TREG innsending
+// («fullføres av seg selv») må vite om studenten i mellomtiden har lukket
+// skjemaet og åpnet et nytt. Er telleren endret når skrivingen omsider er
+// ferdig, får den gamle fortsettelsen ikke røre delt UI (#prop-msg, knappen),
+// og slett ikke lukke det NYE skjemaet med falsk kvittering. Selve skrivingen
+// fullføres uansett, og retur-merket (meldReturSendt) settes fortsatt: det
+// gjelder data, ikke skjermbildet.
+let apneGen = 0;
+
 // Firestore-SDK-en køer en skriving og prøver på nytt i det uendelige når
 // nettet er borte — løftet avvises ALDRI. Knappen sto derfor i «Sender …» til
 // siden ble lastet på nytt, og studenten sendte inn på nytt «for sikkerhets
@@ -430,6 +439,7 @@ export function openProposalEditor(config) {
   document.getElementById("prop-by").value = retur?.proposedBy || "";
 
   avbrytLukking();
+  const gen = ++apneGen;
   visReturBanner(retur);
   // Ved retur redigerer studenten VIDERE på sitt eget forslag: skjemaet fylles
   // med forslaget lagt oppå dagens verdier. Diffen regnes fortsatt mot dagens
@@ -511,10 +521,12 @@ export function openProposalEditor(config) {
             level: config.level,
           });
       await medTidsvarsel(skriv, () => {
+        if (gen !== apneGen) return;
         msg.textContent = TREG_SENDING_MELDING;
         msg.className = "form-msg warn";
       });
       if (retur) meldReturSendt(retur.id);
+      if (gen !== apneGen) return;
       msg.textContent = retur ? "Sendt inn på nytt. Læreren ser den i køen sin." : "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";
       submit.textContent = retur ? "Sendt inn på nytt ✓" : "Forslag sendt ✓";
@@ -522,6 +534,7 @@ export function openProposalEditor(config) {
       submit.classList.add("sent");
       lukkEtterKvittering(modal);
     } catch (e) {
+      if (gen !== apneGen) return;
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
       submit.disabled = false;
@@ -555,6 +568,7 @@ export function openNewTechProposal(preset = null, retur = null) {
   document.getElementById("prop-by").value = retur?.proposedBy || "";
 
   avbrytLukking();
+  const gen = ++apneGen;
   visReturBanner(retur);
   const form = document.getElementById("prop-form");
   form.innerHTML = specs
@@ -611,10 +625,12 @@ export function openNewTechProposal(preset = null, retur = null) {
         ? resubmitTech(retur.id, { ...data, proposedBy: forslagsstiller }, retur.returKode, lesReturKommentar())
         : addTechProposal({ ...data, proposedBy: forslagsstiller });
       await medTidsvarsel(skriv, () => {
+        if (gen !== apneGen) return;
         msg.textContent = TREG_SENDING_MELDING;
         msg.className = "form-msg warn";
       });
       if (retur) meldReturSendt(retur.id);
+      if (gen !== apneGen) return;
       msg.textContent = retur ? "Sendt inn på nytt. Læreren ser den i køen sin." : "Takk! Forslaget er sendt til lærer.";
       msg.className = "form-msg ok";
       submit.textContent = retur ? "Sendt inn på nytt ✓" : "Forslag sendt ✓";
@@ -622,6 +638,7 @@ export function openNewTechProposal(preset = null, retur = null) {
       submit.classList.add("sent");
       lukkEtterKvittering(modal);
     } catch (e) {
+      if (gen !== apneGen) return;
       msg.textContent = "Kunne ikke sende forslag: " + (e?.message || e);
       msg.className = "form-msg error";
       submit.disabled = false;

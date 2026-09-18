@@ -5,9 +5,9 @@
 //  ui.js, så teacher.js og proposals.js importerer dem derfra som før.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=5.33";
-import { ARTIST_LABELS } from "./artist-schema.js?v=5.33";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.33";
+import { escapeHtml } from "./util.js?v=5.34";
+import { ARTIST_LABELS } from "./artist-schema.js?v=5.34";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.34";
 
 const FIELD_LABELS = {
   artist: ARTIST_LABELS,
@@ -93,8 +93,18 @@ function formatDiffValue(v) {
       // godkjente, og buildKilderList lagde en <a href> av den nye URL-en.
       // Lenken er den farlige endringen, så den skal alltid stå i klartekst.
       return v.map((it) => {
-        const etikett = it.title || it.label || it.text || it.name || JSON.stringify(it);
-        return escapeHtml(it.url ? `${etikett} (${it.url})` : etikett);
+        // ALLE ikke-tomme felter i klartekst (v5.34, audit-funn 14): etikett
+        // + url alene skjulte endringer i sjanger, årstall, lytteanvisning,
+        // forfatter og kategori — diffen viste to identiske kolonner, og
+        // læreren godkjente (eller avviste) i blinde. Feltnavn-sortert, så
+        // Gjeldende og Foreslått alltid kan sammenlignes ledd for ledd.
+        const etikett = it.title || it.label || it.text || it.name || "";
+        const rest = Object.entries(it)
+          .filter(([k, val]) => !["title", "label", "text", "name"].includes(k)
+            && val != null && String(val).trim() !== "")
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([, val]) => String(val));
+        return escapeHtml([etikett || JSON.stringify(it), ...rest].join(" · "));
       }).join(", ");
     }
     return v.map((x) => escapeHtml(String(x))).join(", ");

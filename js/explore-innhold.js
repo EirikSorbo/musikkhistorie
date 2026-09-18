@@ -6,16 +6,16 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.33";
-import { isVisible } from "./limits.js?v=5.33";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.33";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.33";
-import { renderRichText } from "./rich-text.js?v=5.33";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.33";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.33";
-import { wireLinks } from "./ui-helpers.js?v=5.33";
-import { renderSjangerhimmel } from "./constellation.js?v=5.33";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.33";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.34";
+import { isVisible } from "./limits.js?v=5.34";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.34";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.34";
+import { renderRichText } from "./rich-text.js?v=5.34";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.34";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.34";
+import { wireLinks } from "./ui-helpers.js?v=5.34";
+import { renderSjangerhimmel } from "./constellation.js?v=5.34";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.34";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -98,6 +98,14 @@ export function renderRotterChips() {
 // så lærer-lagring slår gjennom umiddelbart. Artist-/sjangernavn i teksten
 // lenkes og åpner kortene OPPÅ historien.
 let currentStoryGenre = null;
+
+// Snapshot-omtegning av en ÅPEN historie (v5.34, audit-funn 8): varmestriper
+// og tekst skal følge lærerens celleklikk og lagring — og en historie åpnet
+// før treet landet, skal fylles når det kommer. Kalles fra contentChanged/
+// genreDescsChanged (explore-context) bak isOpen-sjekken der.
+export function refreshHistorie() {
+  if (currentStoryGenre != null) renderHistorie(currentStoryGenre);
+}
 
 function renderHistorie(genre) {
   currentStoryGenre = genre;

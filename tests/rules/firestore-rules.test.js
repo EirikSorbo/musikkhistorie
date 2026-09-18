@@ -97,6 +97,36 @@ test("student kan IKKE smugle ukjente felter eller oppblåse dokumentet", async 
   await assertSucceeds(teacherDb().collection("artists").add({ ...studentArtist, description: "x".repeat(5001) }));
 });
 
+// Typevaktene (v5.34, audit-funn 9 + 10): i regelspråket har både map og liste
+// en size() (antall nøkler/elementer), så takene alene kunne omgås ved å sende
+// et strengfelt som map med ÉN nøkkel som bærer ~1 MB. Årstallene og createdAt
+// sto dessuten i hvitelistene uten tak i det hele tatt. Positive kontroller er
+// testene over og under: appens egne skriveformer går fortsatt gjennom.
+test("typevakter: map/liste/streng i feil felt avvises i alle tre samlingene", async () => {
+  const stor = "x".repeat(9000);
+  // Strengfelt som map eller liste: size() ville gitt 1.
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, description: { a: stor } }));
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, geography: [stor] }));
+  // Listefelt som map.
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, keyWorks: { a: stor } }));
+  // Årstall som streng (funn 10): feltet hadde ikke engang et tak.
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, birthYear: stor }));
+  await assertFails(anonDb().collection("artists").add({ ...studentArtist, createdAt: stor }));
+  await assertFails(anonDb().collection("tech").add({ name: "Mikrofon", status: "pending", inventedYear: stor }));
+  await assertFails(anonDb().collection("tech").add({ name: "Mikrofon", status: "pending", createdAt: stor }));
+  await assertFails(anonDb().collection("tech").add({ name: "Mikrofon", status: "pending", description: { a: stor } }));
+  // Samme hull i forslagsflaten (capOk/capListOk/pfTallOk).
+  await assertFails(anonDb().collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", proposedFields: { description: { a: stor } }, proposedBy: "Anonym",
+  }));
+  await assertFails(anonDb().collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", proposedFields: { kilder: { a: stor } }, proposedBy: "Anonym",
+  }));
+  await assertFails(anonDb().collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", proposedFields: { birthYear: stor }, proposedBy: "Anonym",
+  }));
+});
+
 test("stemme: kan legge til og fjerne EGEN uid", async () => {
   await seedArtist("a1", { votedUpBy: ["c_gammel"] });
   const ref = anonDb("anon-1").collection("artists").doc("a1");

@@ -1,20 +1,20 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.33";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.33";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.33";
-import { onGenreModelChanged } from "./genre-model.js?v=5.33";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.33";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.33";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.33";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.33";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.33";
-import { initExplore } from "./explore.js?v=5.33";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.33";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.33";
-import { initPlanMeny } from "./plan-meny.js?v=5.33";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.33";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.33";
-import { currentEntityValues } from "./entity-values.js?v=5.33";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.33";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.34";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.34";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.34";
+import { onGenreModelChanged } from "./genre-model.js?v=5.34";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.34";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.34";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.34";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.34";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.34";
+import { initExplore } from "./explore.js?v=5.34";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.34";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.34";
+import { initPlanMeny } from "./plan-meny.js?v=5.34";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.34";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.34";
+import { currentEntityValues } from "./entity-values.js?v=5.34";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.34";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -552,12 +552,20 @@ function setupReturPanel() {
     if (!skjema.hidden) input.focus();
   });
 
+  // In-flight-sperre (v5.34, audit-funn 11): hvert oppslag koster tre
+  // serverlesinger, og uten sperren ga dobbeltklikk (eller holdt Enter, med
+  // 25-30 auto-repeterte hendelser i sekundet) like mange kall. Samme mønster
+  // som guardedVote lenger opp i fila.
+  let henterRetur = false;
   const hent = async () => {
+    if (henterRetur) return;
     if (!normaliserReturKode(input.value)) {
       msg.textContent = "Skriv inn koden du fikk av læreren.";
       msg.className = "form-msg warn";
       return;
     }
+    henterRetur = true;
+    $("#btn-retur-hent").disabled = true;
     msg.textContent = "Henter …";
     msg.className = "form-msg";
     try {
@@ -575,10 +583,14 @@ function setupReturPanel() {
     } catch (err) {
       msg.textContent = "Kunne ikke hente: " + (err?.message || err);
       msg.className = "form-msg error";
+    } finally {
+      henterRetur = false;
+      $("#btn-retur-hent").disabled = false;
     }
   };
   $("#btn-retur-hent").addEventListener("click", hent);
   input.addEventListener("keydown", (e) => {
+    if (e.repeat) return;   // holdt Enter skal ikke bli en kaskade av oppslag
     if (e.key === "Enter") { e.preventDefault(); hent(); }
   });
 

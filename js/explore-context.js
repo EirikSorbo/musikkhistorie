@@ -8,17 +8,17 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.33";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.33";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.33";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.33";
-import { openTechDetail } from "./explore-tech.js?v=5.33";
-import { renderPage, renderRotterChips } from "./explore-innhold.js?v=5.33";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.33";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=5.33";
-import { renderReferanser } from "./explore-referanser.js?v=5.33";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.33";
-import { setHeatData } from "./heat-strip.js?v=5.33";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.34";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.34";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.34";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.34";
+import { openTechDetail } from "./explore-tech.js?v=5.34";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.34";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.34";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=5.34";
+import { renderReferanser } from "./explore-referanser.js?v=5.34";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.34";
+import { setHeatData } from "./heat-strip.js?v=5.34";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -117,6 +117,9 @@ export function genreDescsChanged() {
   // Sjangerperioder (v5.20) leser årstallene fra beskrivelsene: står figuren
   // åpen, skal en rettet periode synes med én gang.
   if (document.getElementById("modal-sjangerperioder")?.classList.contains("open")) renderSjangerperioderBody();
+  // Selve historieteksten bor i genreDescriptions (story-feltet) — en åpen
+  // historie skal vise lærerens lagring med én gang (audit-funn 8).
+  if (document.getElementById("modal-historier")?.classList.contains("open")) refreshHistorie();
 }
 
 // Kalles av sidene når content-snapshotet endres (import, redigering,
@@ -146,6 +149,11 @@ export function contentChanged() {
   }
   if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
   if (isOpen("modal-varmekart")) renderVarmekartBody();
+  // Historien (v5.34, audit-funn 8): varmestripene over fortellingen leser
+  // samme heat-data som varmekartet, og lærerens celleklikk skal synes der
+  // også — kortet var den eneste innholdsvisningen uten snapshot-gren, så
+  // stripa og nivåvelgeren motsa hverandre etter lagring.
+  if (isOpen("modal-historier")) refreshHistorie();
   // Sjangerperioder: treet kommer via content, og en figur som sto og ventet på
   // det skal enten tegnes eller si at treet mangler. Tegner bare om ved endring.
   if (isOpen("modal-sjangerperioder")) renderSjangerperioderBody();

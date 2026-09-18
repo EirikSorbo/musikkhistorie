@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.33";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.34";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -127,8 +127,9 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
   for (const felt of ["adoptedLabel", "imageCredit"]) {
     const iSkjema = proposals.match(new RegExp(`key: "${felt}"[^}]*max: (\\d+)`));
     assert.ok(iSkjema, `${felt} mangler max i forslagsskjemaet`);
-    const iRegel = rules.match(new RegExp(`get\\("${felt}", ""\\).size\\(\\) <= (\\d+)`));
-    assert.ok(iRegel, `${felt} mangler tak i firestore.rules`);
+    // v5.34 (audit-funn 9): taket bor i strOk-vakten, som også låser typen.
+    const iRegel = rules.match(new RegExp(`strOk\\("${felt}", (\\d+)\\)`));
+    assert.ok(iRegel, `${felt} mangler strOk-tak i firestore.rules`);
     // Endringsforslag på EKSISTERENDE kort går via pendingEdits og capOk
     // (audit-funn 39c) — skjemaet må være strengest av BEGGE veiene.
     const iCap = rules.match(new RegExp(`capOk\\("${felt}", (\\d+)\\)`));
@@ -142,6 +143,23 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
     assert.match(teacher, new RegExp(`id="${id}"[^>]*maxlength="\\d+"`),
       `teacher.html: ${id} mangler maxlength`);
   }
+});
+
+// Falsk kvittering (v5.34, audit-funn 16): en TREG innsending («fullføres av
+// seg selv») må ikke lukke et NYTT skjema studenten rakk å åpne i mellomtiden.
+// Vaktene er rene DOM-fortsettelser og kan ikke enhetstestes — lås kildeformen:
+// begge åpningene bumper telleren, og hver fortsettelse (tidsvarsel, suksess,
+// feil) i begge flytene sjekker den.
+test("proposals.js: åpningsteller vokter alle innsendings-fortsettelser", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/proposals.js", import.meta.url), "utf8");
+  assert.equal((src.match(/const gen = \+\+apneGen;/g) || []).length, 2,
+    "begge åpningene skal bumpe apneGen");
+  assert.equal((src.match(/if \(gen !== apneGen\) return;/g) || []).length, 6,
+    "tre fortsettelser per flyt (tidsvarsel, suksess, catch) skal sjekke telleren");
+  // Retur-merket gjelder DATA (skrivingen fullførte) og skal settes FØR vakten.
+  assert.equal((src.match(/meldReturSendt\(retur\.id\);\n\s*if \(gen !== apneGen\) return;/g) || []).length, 2,
+    "meldReturSendt skal stå før teller-vakten i begge flytene");
 });
 
 // Returflyten (v5.13) henger på fire ting som ikke kan enhetstestes (DOM,
@@ -174,7 +192,7 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
     assert.ok(b.includes('"ownerUid"'), `${samling}: ownerUid må være tillatt ved create`);
   }
   // Artists-create-hvitelisten må dekke HELE skjemaet — parse den faktiske lista.
-  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.33");
+  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.34");
   const lister = [...rules.matchAll(/hasOnly\(\[([\s\S]*?)\]\)/g)]
     .map((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]));
   const artistCreate = lister.find((l) => l.includes("votedUpBy") && l.includes("addedYear"));
@@ -221,7 +239,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.33");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.34");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -288,7 +306,7 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
 // Audit v5.19 funn 40: de seks returfeltnavnene sto håndskrevet tre steder.
 // Nå er RETUR_FELTER (artist-schema.js) én kilde — lås at alle tre bruker den.
 test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", async () => {
-  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.33");
+  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.34");
   assert.deepEqual(RETUR_FELTER, ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]);
   for (const f of RETUR_FELTER) assert.ok(ARTIST_EXPORT_FIELDS.includes(f), `eksporten mangler ${f}`);
   assert.ok(ARTIST_EXPORT_FIELDS.includes("ownerUid"));

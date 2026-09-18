@@ -12,16 +12,16 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.33";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.33";
-import { renderRichText } from "./rich-text.js?v=5.33";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.33";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.33";
-import { modalOpen } from "./ui-modal.js?v=5.33";
-import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.33";
-import { wireProposeFoot } from "./ui-edit.js?v=5.33";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.33";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.33";
+import { wireAllLinks } from "./linkify.js?v=5.34";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.34";
+import { renderRichText } from "./rich-text.js?v=5.34";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.34";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.34";
+import { modalOpen } from "./ui-modal.js?v=5.34";
+import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.34";
+import { wireProposeFoot } from "./ui-edit.js?v=5.34";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.34";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.34";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -139,15 +139,19 @@ export function refreshSjangerInfo(freshOpts) {
   if (!openSjanger) return false;
   if (freshOpts) openSjanger.opts = freshOpts;
   const modal = (openSjanger.opts.root || document).querySelector("#modal-sjanger");
-  // Ligger det modaler OPPÅ sjangerkortet (artistliste, spilleliste …), skal en
-  // omtegning ikke heve kortet over dem. showSjangerInfo kaller modalOpen, som
-  // gir ny z-index — samme grunn som refreshTechDetail tegner uten å åpne.
-  if (modal && !modal.classList.contains("open")) return false;
+  // Omtegning skal aldri HEVE kortet: ligger det modaler oppå (artistliste,
+  // spilleliste …), ville modalOpen gitt kortet ny z-index og flyttet fokus.
+  // Derfor reopen: false — showSjangerInfo tegner da uten å åpne når kortet
+  // alt står åpent (v5.34, audit-funn 13: linja som lå her før var logisk
+  // identisk med sjekken under og fanget ingenting).
   if (!modal?.classList.contains("open")) return false;
-  return showSjangerInfo(openSjanger.label, openSjanger.opts);
+  return showSjangerInfo(openSjanger.label, openSjanger.opts, { reopen: false });
 }
 
-export function showSjangerInfo(label, opts = {}) {
+// `reopen: false` (kun fra refreshSjangerInfo over) tegner uten å heve en
+// allerede åpen modal. Egen parameter, IKKE i opts: opts lagres i openSjanger
+// og ville smittet alle senere omtegninger.
+export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
@@ -223,7 +227,9 @@ export function showSjangerInfo(label, opts = {}) {
     activeTo: resolved.activeTo ?? null,
     era: resolved.era || "",
   }, "main");
-  modalOpen(modal);
+  // Brukerstartede åpninger hever kortet som før; en snapshot-omtegning av et
+  // åpent kort (reopen: false) lar z-index og fokus stå (audit-funn 13).
+  if (reopen || !modal.classList.contains("open")) modalOpen(modal);
   return true;
 }
 
