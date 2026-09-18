@@ -5,7 +5,7 @@
   "description": "Pensumforslag – Populærmusikkhistorie. Ren HTML/JS, ingen byggesteg; package.json brukes kun til tester.",
   "scripts": {
     "test": "node --test tests/unit/*.test.js",
-    "test:rules": "firebase emulators:exec --only firestore \"node --test tests/rules/*.test.js\""
+    "test:rules": "firebase emulators:exec --project demo-pensum --only firestore \"node --test tests/rules/*.test.js\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
