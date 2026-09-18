@@ -6,16 +6,16 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.31";
-import { isVisible } from "./limits.js?v=5.31";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.31";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.31";
-import { renderRichText } from "./rich-text.js?v=5.31";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.31";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.31";
-import { wireLinks } from "./ui-helpers.js?v=5.31";
-import { renderSjangerhimmel } from "./constellation.js?v=5.31";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.31";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.32";
+import { isVisible } from "./limits.js?v=5.32";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.32";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.32";
+import { renderRichText } from "./rich-text.js?v=5.32";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.32";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.32";
+import { wireLinks } from "./ui-helpers.js?v=5.32";
+import { renderSjangerhimmel } from "./constellation.js?v=5.32";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.32";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -43,7 +43,9 @@ export function renderPage(pageId, bodyElId, extraElId) {
   if (!body) return;
   const s = getState();
   const page = pageFor(pageId, s.content);
-  if (page) {
+  // Skillet går på TEKSTEN, ikke dokumentet (v5.32, audit-funn 7): et
+  // dokument med bare kilder (mulig via import) skal fortsatt vise hullet.
+  if (page?.body?.trim()) {
     const lc = buildLinkCtx();
     body.innerHTML = renderRichText(page.body, lc);
     wireLinks(body, lc);

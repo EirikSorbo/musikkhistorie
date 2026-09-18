@@ -152,6 +152,12 @@ export function dropboxDirectUrl(url) {
 export const RETUR_KODE_ALFABET = "ABCDEFGHJKMNPQRSTWXYZ23456789";
 export const RETUR_KODE_LENGDE = 5;
 
+// Delt melding for treg innsending (student.js + begge forslagsflytene i
+// proposals.js). ÉN kilde, så de tre kopiene aldri glir fra hverandre —
+// og uten tankestrek (husregel for appens tekster, audit v5.19 funn 3).
+export const TREG_SENDING_MELDING =
+  "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake. Ikke send inn på nytt.";
+
 export function genererReturKode() {
   const tilfeldig = new Uint32Array(RETUR_KODE_LENGDE);
   crypto.getRandomValues(tilfeldig);

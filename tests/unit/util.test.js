@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.31";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.32";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -148,7 +148,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js?v=5.31");
+    = await import("../../js/util.js?v=5.32");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);
@@ -159,4 +159,20 @@ test("genererReturKode: lengde, alfabet og normalisering", async () => {
   }
   assert.equal(normaliserReturKode("  x7 k-2p "), "X7K2P");
   assert.equal(normaliserReturKode(null), "");
+});
+
+// Audit v5.19 funn 3: fire nye app-tekster hadde tankestrek, i strid med
+// husregelen. Meldingen for treg innsending er nå ÉN delt konstant — lås at
+// den er tankestrek-fri og faktisk brukes alle tre stedene.
+test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
+  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.32");
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+  assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
+  assert.ok(TREG_SENDING_MELDING.includes("Ikke send inn på nytt"));
+  assert.ok(les("student.js").includes("TREG_SENDING_MELDING"));
+  assert.equal((les("proposals.js").match(/TREG_SENDING_MELDING;/g) || []).length, 2,
+    "begge forslagsflytene bruker konstanten");
+  // Slettevarselet i migreringen (fjerde stedet) er skrevet om uten strek.
+  assert.ok(!les("genre-migrate.js").includes("ANGRES —"));
 });

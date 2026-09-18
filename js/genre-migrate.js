@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.31";
+import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.32";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -694,7 +694,7 @@ export function planEdgeCleanup(state) {
     ops.push(op("doc.delete", "edgeDescriptions", k, null,
       `${navn[fra] || fra} → ${navn[til] || til} (${d.length} tegn, ${(edgeDescs[k]?.kilder || []).length} kilder)`));
   }
-  advarsler.push(`Koblingene finnes ikke i treet lenger, så tekstene vises ikke noe sted i appen. De bærer likevel ekte tekst du har skrevet. SLETTINGEN KAN IKKE ANGRES — ta en eksport først hvis du vil beholde dem. Vil du heller ha tekstene tilbake, legg koblingen inn i treet igjen i stedet for å slette her.`);
+  advarsler.push(`Koblingene finnes ikke i treet lenger, så tekstene vises ikke noe sted i appen. De bærer likevel ekte tekst du har skrevet. SLETTINGEN KAN IKKE ANGRES. Ta en eksport først hvis du vil beholde dem. Vil du heller ha tekstene tilbake, legg koblingen inn i treet igjen i stedet for å slette her.`);
   return { ops, feil: [], advarsler, blokkeringer: [] };
 }
 

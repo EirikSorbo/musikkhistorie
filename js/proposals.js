@@ -8,15 +8,16 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.31";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.31";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.31";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.31";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.31";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.31";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.31";
-import { setupFormatBars } from "./format-bar.js?v=5.31";
-import { wireCharCount } from "./ui-helpers.js?v=5.31";
+import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.32";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.32";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.32";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.32";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.32";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.32";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.32";
+import { setupFormatBars } from "./format-bar.js?v=5.32";
+import { TREG_SENDING_MELDING } from "./util.js?v=5.32";
+import { wireCharCount } from "./ui-helpers.js?v=5.32";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -510,7 +511,7 @@ export function openProposalEditor(config) {
             level: config.level,
           });
       await medTidsvarsel(skriv, () => {
-        msg.textContent = "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.";
+        msg.textContent = TREG_SENDING_MELDING;
         msg.className = "form-msg warn";
       });
       if (retur) meldReturSendt(retur.id);
@@ -610,7 +611,7 @@ export function openNewTechProposal(preset = null, retur = null) {
         ? resubmitTech(retur.id, { ...data, proposedBy: forslagsstiller }, retur.returKode, lesReturKommentar())
         : addTechProposal({ ...data, proposedBy: forslagsstiller });
       await medTidsvarsel(skriv, () => {
-        msg.textContent = "Sendingen tar lengre tid enn vanlig. Den fullføres av seg selv når nettet er tilbake — ikke send inn på nytt.";
+        msg.textContent = TREG_SENDING_MELDING;
         msg.className = "form-msg warn";
       });
       if (retur) meldReturSendt(retur.id);

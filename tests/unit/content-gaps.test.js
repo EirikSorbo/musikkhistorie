@@ -4,8 +4,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=5.31";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=5.31";
+import { contentGaps } from "../../js/ui-dashboard.js?v=5.32";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=5.32";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
@@ -104,4 +104,14 @@ test("contentGaps: total er summen av alle bøtter", () => {
     + g.edgeDesc.length + g.noImage.length + g.noDesc.length + g.noMusic.length + g.noSources.length
     + g.noExGenre.length + g.badInstrument.length;
   assert.equal(g.total, sum);
+});
+
+// Audit v5.19 funn 7: etter at sider med bare kilder ble gyldige dokumenter
+// (gammelt funn 8), betyr «dokumentet finnes» ikke lenger «teksten finnes».
+// Oversikten skal telle tekstløse sider som hull, ikke grønnmerke dem.
+test("side med kilder men uten tekst teller som hull", async () => {
+  const { contentGaps } = await import("../../js/ui-dashboard.js?v=5.32");
+  const content = { rotter: { body: "", kilder: [{ text: "SNL" }] }, omHistorie: { body: "Tekst." } };
+  const g = contentGaps({ artists: [], genreDescs: {}, content, contentLoaded: true });
+  assert.deepEqual(g.pages, ["rotter"], "kilder alene er ikke innhold");
 });

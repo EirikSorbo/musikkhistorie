@@ -8,17 +8,17 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.31";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.31";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.31";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.31";
-import { openTechDetail } from "./explore-tech.js?v=5.31";
-import { renderPage, renderRotterChips } from "./explore-innhold.js?v=5.31";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.31";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=5.31";
-import { renderReferanser } from "./explore-referanser.js?v=5.31";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.31";
-import { setHeatData } from "./heat-strip.js?v=5.31";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.32";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.32";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.32";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.32";
+import { openTechDetail } from "./explore-tech.js?v=5.32";
+import { renderPage, renderRotterChips } from "./explore-innhold.js?v=5.32";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.32";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=5.32";
+import { renderReferanser } from "./explore-referanser.js?v=5.32";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.32";
+import { setHeatData } from "./heat-strip.js?v=5.32";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }

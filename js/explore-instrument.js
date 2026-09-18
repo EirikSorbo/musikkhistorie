@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.31";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.31";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.31";
-import { pageFor } from "./story-format.js?v=5.31";
-import { renderRichText } from "./rich-text.js?v=5.31";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.31";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.31";
-import { openTechDetail } from "./explore-tech.js?v=5.31";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=5.32";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=5.32";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=5.32";
+import { pageFor } from "./story-format.js?v=5.32";
+import { renderRichText } from "./rich-text.js?v=5.32";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=5.32";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=5.32";
+import { openTechDetail } from "./explore-tech.js?v=5.32";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -148,20 +148,26 @@ function renderGroup(group, tvunget = false) {
 
   // Sammendraget: teksten bor i Firestore, INGEN reservetekst i koden — mangler
   // den, sies det tydelig ifra (samme regel som resten av innholdet i appen).
+  // Skillet går på TEKSTEN, ikke dokumentet (v5.32, audit-funn 7): siden
+  // gammelt funn 8 ble rettet kan dokumentet finnes med bare kilder (et
+  // godkjent kildeforslag), og da skal hintet fortsatt stå — med kildelista
+  // under, så de aldri ser bortkastet ut.
   const sum = body.querySelector(".instr-sum-body");
   const lc = buildLinkCtx();
-  if (page) {
+  const harTekst = !!page?.body?.trim();
+  if (harTekst) {
     // Kildene står under teksten, i samme form som på sjangerkortene.
     sum.innerHTML = renderRichText(page.body, lc) + buildKilderList(page.kilder, "Kilder");
     wireLinks(sum, lc);
   } else {
     // Teksten peker på HVEM som skriver den, ikke bare at den mangler —
     // «podkast» er en lenke til podkastfanen, der gruppene ligger.
-    sum.innerHTML = s.contentLoaded
+    sum.innerHTML = (s.contentLoaded
       ? `<p class="instr-sum-hint">Teksten skrives av gruppen som lager ` +
         `<button type="button" class="sh-linkbtn" id="instr-til-podkast">podkast</button>` +
         ` om instrumentets utvikling.</p>`
-      : `<p class="gx-missing">Laster innhold …</p>`;
+      : `<p class="gx-missing">Laster innhold …</p>`)
+      + (page ? buildKilderList(page.kilder, "Kilder") : "");
     sum.querySelector("#instr-til-podkast")?.addEventListener("click", () => openPodkaster());
   }
 
