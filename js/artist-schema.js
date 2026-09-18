@@ -53,6 +53,13 @@ export const ARTIST_COMPARE_FIELDS = ARTIST_FIELDS
   .map((f) => f.key)
   .filter((k) => k !== "name");
 
+// Returflytens felter (v5.13) — ÉN kilde (v5.33, audit-funn 40): eksporten
+// under, buildArtistDoc (artist-normalize.js) og ryddReturfelter (store.js)
+// bruker alle denne lista, så en skrivefeil ett sted ikke lenger kan miste
+// et felt stille i backup eller opprydding. ownerUid står UTENFOR: den er
+// gjenfinnings-identiteten (hvem sin nettleser) og ryddes aldri.
+export const RETUR_FELTER = ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"];
+
 // Felter som tas med i JSON-eksport, i tillegg til skjemafeltene:
 // forslagsstiller + lærer-metadata + status (så skjulte ikke gjenoppstår
 // som aktive ved re-import) + votedUpBy/addedYear, så en eksport→import er
@@ -63,5 +70,5 @@ export const ARTIST_EXPORT_FIELDS = [
   "votedUpBy", "addedYear",
   // Returflyten (v5.13): uten disse ville en backup tatt mens et forslag var
   // «hos studenten» mistet både tilbakemeldingen og koden ved gjenoppretting.
-  "ownerUid", "teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt",
+  "ownerUid", ...RETUR_FELTER,
 ];

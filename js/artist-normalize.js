@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=5.32";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.32";
+import { safeUrl } from "./util.js?v=5.33";
+import { ARTIST_FIELDS, RETUR_FELTER, emptyValueFor } from "./artist-schema.js?v=5.33";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett
@@ -114,7 +114,7 @@ export function buildArtistDoc(data) {
   // Returflytens felter følger KUN med når de finnes (lærer-import av backup).
   // En studentinnsending sender dem aldri, og reglene ville avvist dem der.
   const retur = {};
-  for (const f of ["ownerUid", "teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]) {
+  for (const f of ["ownerUid", ...RETUR_FELTER]) {
     if (data[f] != null && data[f] !== "") retur[f] = data[f];
   }
   return {

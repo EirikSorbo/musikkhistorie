@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.32";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.33";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -67,8 +67,10 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
   const proposals = les("proposals.js");
   assert.match(proposals, /function lesForslagsstiller\(\)/,
     "proposals.js mangler den delte navnevakten");
-  assert.equal((proposals.match(/lesForslagsstiller\(\);/g) || []).length, 2,
-    "begge forslagsflytene må kalle vakten — endring OG nytt kort");
+  // Hele vaktPARET (audit-funn 39b): kalltelling alene besto selv om
+  // «if (!forslagsstiller) return;» ble fjernet — og da var navnet valgfritt.
+  assert.equal((proposals.match(/const forslagsstiller = lesForslagsstiller\(\);\s*\n\s*if \(!forslagsstiller\) return;/g) || []).length, 2,
+    "begge forslagsflytene må kalle vakten OG avbryte uten navn");
   assert.doesNotMatch(proposals, /prop-by"\)\.value\.trim\(\) \|\| "Anonym"/,
     "proposals.js skal ikke lenger falle tilbake på «Anonym» ved innsending");
 
@@ -100,8 +102,12 @@ test("currentEntityValues dekker alle foreslåbare felter", async () => {
     const mangler = PROPOSABLE_KEYS[type].filter((k) => !felter.includes(k));
     assert.deepEqual(mangler, [],
       `testens egen liste for ${type} er utdatert mot PROPOSABLE_KEYS`);
+    // KUN denne typens gren (audit-funn 39d): et fila-vidt søk fant feltet i
+    // NABOgrenene, så en fjernet linje i én gren slapp gjennom.
+    const gren = src.split(/case "/).find((del) => del.startsWith(`${type}"`));
+    assert.ok(gren, `fant ingen case-gren for ${type} i entity-values.js`);
     for (const f of felter) {
-      assert.ok(src.includes(`${f}:`),
+      assert.ok(gren.includes(`${f}:`),
         `entity-values.js mangler «${f}» i Gjeldende-kolonnen for ${type}`);
     }
   }
@@ -123,8 +129,13 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
     assert.ok(iSkjema, `${felt} mangler max i forslagsskjemaet`);
     const iRegel = rules.match(new RegExp(`get\\("${felt}", ""\\).size\\(\\) <= (\\d+)`));
     assert.ok(iRegel, `${felt} mangler tak i firestore.rules`);
-    assert.ok(Number(iSkjema[1]) <= Number(iRegel[1]),
-      `${felt}: skjemaet (${iSkjema[1]}) må være strengere enn regelen (${iRegel[1]})`);
+    // Endringsforslag på EKSISTERENDE kort går via pendingEdits og capOk
+    // (audit-funn 39c) — skjemaet må være strengest av BEGGE veiene.
+    const iCap = rules.match(new RegExp(`capOk\\("${felt}", (\\d+)\\)`));
+    assert.ok(iCap, `${felt} mangler capOk-tak for pendingEdits i firestore.rules`);
+    const strengeste = Math.min(Number(iRegel[1]), Number(iCap[1]));
+    assert.ok(Number(iSkjema[1]) <= strengeste,
+      `${felt}: skjemaet (${iSkjema[1]}) må være strengere enn begge regeltakene (${strengeste})`);
   }
   // Lærerens eget skjema skriver til samme regel.
   for (const id of ["tech-adopted-label", "tech-image-credit"]) {
@@ -149,9 +160,28 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
   const rules = les("firestore.rules");
   assert.equal((rules.match(/function erReturInnsending\(\)/g) || []).length, 3,
     "alle tre samlingene trenger retur-grenen");
-  assert.equal((rules.match(/innsendtKode/g) || []).length >= 6, true,
-    "kodebeviset må stå i alle grenene");
-  assert.ok(rules.includes('"ownerUid"'), "ownerUid må være tillatt ved create");
+  // PER SAMLING (audit-funn 39a): fila-vide tellinger besto selv om én
+  // samling mistet både kodebeviset og ownerUid i create-lista.
+  const blokk = (navn) => {
+    const start = rules.indexOf(`match /${navn}/`);
+    const neste = rules.slice(start + 1).search(/match \/(artists|tech|pendingEdits)\//);
+    return neste === -1 ? rules.slice(start) : rules.slice(start, start + 1 + neste);
+  };
+  for (const samling of ["artists", "tech", "pendingEdits"]) {
+    const b = blokk(samling);
+    assert.ok((b.match(/innsendtKode/g) || []).length >= 2,
+      `${samling}: kodebeviset må stå i retur-grenen`);
+    assert.ok(b.includes('"ownerUid"'), `${samling}: ownerUid må være tillatt ved create`);
+  }
+  // Artists-create-hvitelisten må dekke HELE skjemaet — parse den faktiske lista.
+  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.33");
+  const lister = [...rules.matchAll(/hasOnly\(\[([\s\S]*?)\]\)/g)]
+    .map((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]));
+  const artistCreate = lister.find((l) => l.includes("votedUpBy") && l.includes("addedYear"));
+  assert.ok(artistCreate, "fant ikke artists-create-hvitelisten");
+  for (const f of ARTIST_FIELDS.map((x) => x.key)) {
+    assert.ok(artistCreate.includes(f), `artists-create-lista mangler skjemafeltet «${f}»`);
+  }
 
   // Alle tre innsendingsstiene stempler eier-uid.
   const store = les("js/store.js");
@@ -191,7 +221,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.32");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.33");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -252,4 +282,20 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
     "læreren må nå siden fra «Innhold som mangler»");
   assert.match(dash, /return onEditPage\?\.\(id\)/, "ukjente sider skal gå til editoren");
   assert.match(les("js/teacher-artists.js"), /onEditPage:\s*\(id\)\s*=>\s*openPageEditor\(id\)/);
+});
+
+
+// Audit v5.19 funn 40: de seks returfeltnavnene sto håndskrevet tre steder.
+// Nå er RETUR_FELTER (artist-schema.js) én kilde — lås at alle tre bruker den.
+test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", async () => {
+  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.33");
+  assert.deepEqual(RETUR_FELTER, ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]);
+  for (const f of RETUR_FELTER) assert.ok(ARTIST_EXPORT_FIELDS.includes(f), `eksporten mangler ${f}`);
+  assert.ok(ARTIST_EXPORT_FIELDS.includes("ownerUid"));
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+  assert.match(les("store.js"), /RETUR_FELTER\.map\(\(f\) => \[f, deleteField\(\)\]\)/,
+    "ryddReturfelter skal bygges av lista, ikke stave navnene");
+  assert.match(les("artist-normalize.js"), /\["ownerUid", \.\.\.RETUR_FELTER\]/,
+    "buildArtistDoc skal bygges av lista");
 });

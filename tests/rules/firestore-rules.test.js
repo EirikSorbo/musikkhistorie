@@ -32,6 +32,8 @@ const studentArtist = {
   imageUrl: "", imageCredit: "",
   proposedBy: "Student", status: "pending", removedBy: null,
   teacherChecked: false, priority: 0, votedUpBy: [], addedYear: 2026,
+  // Avsenderens anonyme uid (v5.13) — reglene krever egen eller tom.
+  ownerUid: "anon-1",
 };
 
 before(async () => {
@@ -211,5 +213,150 @@ test("pendingEdits: ukjent proposedFields-nøkkel og oppblåste felter avvises",
   await assertFails(db.collection("pendingEdits").add({
     entityType: "artist", entityId: "a1", proposedBy: "Anonym",
     proposedFields: { imageUrl: "https://ex.com/" + "x".repeat(2000) },
+  }));
+});
+
+
+// ============================================================================
+//  RETURFLYTEN (v5.13) — audit v5.19 funn 12: reglene fikk en helt ny anonym
+//  skrivevei (kode som bevis), uten en eneste test. Disse låser den, med de
+//  faktiske skriveformene fra store.js (resubmitArtist/Tech/PendingEdit).
+// ============================================================================
+
+const RETUR = { status: "returnert", returKode: "AB2CD", teacherFeedback: "Utdyp kildene.", ownerUid: "anon-1" };
+
+// Nøyaktig det resubmitArtist skriver (v5.31: KUN feltene studentskjemaet
+// har — recordLabel er lærerens felt og sendes ikke).
+function artistResubmit(kode) {
+  const {
+    recordLabel, proposedBy, status, removedBy, teacherChecked, priority,
+    votedUpBy, addedYear, ownerUid, ...skjema
+  } = studentArtist;
+  return { ...skjema, proposedBy: "Student", status: "pending", innsendtKode: kode, studentComment: "Rettet." };
+}
+
+async function seedTech(id, extra = {}) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().collection("tech").doc(id).set({
+      name: "Mikrofon", type: "innovasjon", category: "Opptak og avspilling",
+      instrument: "", decade: "1930", description: "Kort.", kilder: [],
+      imageUrl: "", imageCredit: "", proposedBy: "Student", status: "pending",
+      ...extra,
+    });
+  });
+}
+
+async function seedPendingEdit(id, extra = {}) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().collection("pendingEdits").doc(id).set({
+      entityType: "artist", entityId: "a1", entityName: "Robert Johnson",
+      proposedFields: { description: "Gammel tekst" }, proposedBy: "Anonym",
+      ...extra,
+    });
+  });
+}
+
+test("retur (artist): riktig kode fra en ANNEN enhet gir ny innsending", async () => {
+  await seedArtist("r1", RETUR);
+  // anon-99 er en annen uid enn ownerUid — koden er beviset, ikke uid-en.
+  await assertSucceeds(anonDb("anon-99").collection("artists").doc("r1").update(artistResubmit("AB2CD")));
+});
+
+test("retur (artist): feil, tom eller manglende kode avvises — også for eieren", async () => {
+  await seedArtist("r2", RETUR);
+  const ref = (uid) => anonDb(uid).collection("artists").doc("r2");
+  await assertFails(ref("anon-1").update(artistResubmit("FEIL1")));
+  await assertFails(ref("anon-1").update(artistResubmit("")));
+  const utenKode = artistResubmit("AB2CD");
+  delete utenKode.innsendtKode;
+  await assertFails(ref("anon-1").update(utenKode));
+  await assertFails(unauthDb().collection("artists").doc("r2").update(artistResubmit("AB2CD")));
+});
+
+test("retur (artist): bare fra «returnert», bare til «pending» — en brukt kode er død", async () => {
+  // Status alt tilbake til pending (koden er brukt): ny innsending avvises.
+  await seedArtist("r3", { ...RETUR, status: "pending" });
+  await assertFails(anonDb("anon-1").collection("artists").doc("r3").update(artistResubmit("AB2CD")));
+  // Og målstatusen kan aldri være noe annet enn pending.
+  await seedArtist("r4", RETUR);
+  await assertFails(anonDb("anon-1").collection("artists").doc("r4")
+    .update({ ...artistResubmit("AB2CD"), status: "active" }));
+});
+
+test("retur (artist): lærerens felter, stemmer, privilegier og ownerUid er urørlige", async () => {
+  await seedArtist("r5", RETUR);
+  const ref = anonDb("anon-1").collection("artists").doc("r5");
+  for (const smuglet of [
+    { returKode: "NY123" },
+    { teacherFeedback: "" },
+    { votedUpBy: ["anon-1"] },
+    { priority: 3 },
+    { teacherChecked: true },
+    { ownerUid: "anon-99" },
+  ]) {
+    await assertFails(ref.update({ ...artistResubmit("AB2CD"), ...smuglet }));
+  }
+});
+
+test("retur (artist): innholdskrav og tegntak gjelder også ny innsending", async () => {
+  await seedArtist("r6", RETUR);
+  const ref = anonDb("anon-1").collection("artists").doc("r6");
+  await assertFails(ref.update({ ...artistResubmit("AB2CD"), description: "x".repeat(5001) }));
+  await assertFails(ref.update({ ...artistResubmit("AB2CD"), name: "" }));
+});
+
+test("retur (artist): create kan ikke plante retur-feltene, og ownerUid må være egen", async () => {
+  const db = anonDb("anon-1");
+  await assertFails(db.collection("artists").add({ ...studentArtist, returKode: "AB2CD" }));
+  await assertFails(db.collection("artists").add({ ...studentArtist, status: "returnert" }));
+  await assertFails(db.collection("artists").add({ ...studentArtist, ownerUid: "anon-99" }));
+  await assertSucceeds(db.collection("artists").add({ ...studentArtist, ownerUid: "" }));
+});
+
+test("retur: «send tilbake» er en lærerhandling i alle tre samlingene", async () => {
+  await seedArtist("r7");
+  await seedTech("t7", { status: "pending" });
+  await seedPendingEdit("p7");
+  const retur = { status: "returnert", returKode: "XY9ZW", teacherFeedback: "Utdyp." };
+  await assertFails(anonDb("anon-1").collection("artists").doc("r7").update(retur));
+  await assertFails(anonDb("anon-1").collection("tech").doc("t7").update(retur));
+  await assertFails(anonDb("anon-1").collection("pendingEdits").doc("p7").update(retur));
+  await assertSucceeds(teacherDb().collection("artists").doc("r7").update(retur));
+  await assertSucceeds(teacherDb().collection("tech").doc("t7").update(retur));
+  await assertSucceeds(teacherDb().collection("pendingEdits").doc("p7").update(retur));
+});
+
+test("retur (tech): resubmitTech-formen går gjennom, feil kode og fremmede felter ikke", async () => {
+  await seedTech("t1", RETUR);
+  const nyInnsending = {
+    name: "Kondensatormikrofonen", type: "innovasjon", category: "Opptak og avspilling",
+    instrument: "", decade: "1930", description: "Utdypet tekst.", kilder: [{ text: "SNL" }],
+    imageUrl: "", imageCredit: "",
+    proposedBy: "Student", status: "pending", innsendtKode: "AB2CD", studentComment: "Rettet.",
+  };
+  await assertSucceeds(anonDb("anon-99").collection("tech").doc("t1").update(nyInnsending));
+  await seedTech("t2", RETUR);
+  await assertFails(anonDb("anon-1").collection("tech").doc("t2").update({ ...nyInnsending, innsendtKode: "FEIL1" }));
+  await assertFails(anonDb("anon-1").collection("tech").doc("t2").update({ ...nyInnsending, returKode: "NY123" }));
+  await assertFails(anonDb("anon-1").collection("tech").doc("t2").update({ ...nyInnsending, description: "x".repeat(5001) }));
+});
+
+test("retur (pendingEdits): til «open», aldri «returnert» ved create, koden er beviset", async () => {
+  await seedPendingEdit("p1", { ...RETUR, returKode: "CD3EF" });
+  const nyInnsending = {
+    proposedFields: { description: "Ny og bedre tekst" },
+    proposedBy: "Anonym", status: "open", innsendtKode: "CD3EF", studentComment: "Fikset.",
+  };
+  await assertSucceeds(anonDb("anon-99").collection("pendingEdits").doc("p1").update(nyInnsending));
+  await seedPendingEdit("p2", { ...RETUR, returKode: "CD3EF" });
+  const ref = anonDb("anon-1").collection("pendingEdits").doc("p2");
+  await assertFails(ref.update({ ...nyInnsending, innsendtKode: "FEIL1" }));
+  await assertFails(ref.update({ ...nyInnsending, status: "pending" }));
+  await assertFails(ref.update({ ...nyInnsending, proposedFields: { description: "x".repeat(5001) } }));
+  // Create kan ikke plante status «returnert» (ville forfalsket returSporring):
+  // status står ikke i create-hvitelisten i det hele tatt.
+  await assertFails(anonDb("anon-1").collection("pendingEdits").add({
+    entityType: "artist", entityId: "a1", proposedFields: { description: "x" },
+    proposedBy: "Anonym", status: "returnert",
   }));
 });

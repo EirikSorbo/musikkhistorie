@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.32";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl } from "../../js/util.js?v=5.33";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -139,7 +139,11 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
     assert.ok(src.includes(`"${kode}"`) || src.includes(`${kode}:`),
       `mangler egen tekst for ${kode}`);
   }
-  assert.match(src, /lesekvote/i, "kvotefeilen må forklares som kvote, ikke regler");
+  // Match selve VERDIEN for resource-exhausted (audit-funn 39e): en kommentar
+  // i fila nevner også «lesekvoten», så et fila-vidt søk besto selv om
+  // meldingen ble byttet tilbake til en generisk regel-forklaring.
+  assert.match(src, /"resource-exhausted":\s*\n?\s*"[^"]*lesekvote/i,
+    "kvotefeilen må forklares som kvote, ikke regler");
   assert.doesNotMatch(src, /banner\.textContent = `Kunne ikke laste data fra databasen \(\$\{/,
     "teksten skal ikke lenger være hardkodet til én årsak");
 });
@@ -148,7 +152,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js?v=5.32");
+    = await import("../../js/util.js?v=5.33");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);
@@ -165,7 +169,7 @@ test("genererReturKode: lengde, alfabet og normalisering", async () => {
 // husregelen. Meldingen for treg innsending er nå ÉN delt konstant — lås at
 // den er tankestrek-fri og faktisk brukes alle tre stedene.
 test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
-  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.32");
+  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.33");
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
   assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
@@ -175,4 +179,30 @@ test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
     "begge forslagsflytene bruker konstanten");
   // Slettevarselet i migreringen (fjerde stedet) er skrevet om uten strek.
   assert.ok(!les("genre-migrate.js").includes("ANGRES —"));
+});
+
+
+// Audit v5.19 funn 40: flagget som avgjør om forsiden i det hele tatt slår
+// opp returer (tre serverlesinger per last) var utestet. Stubber localStorage
+// — også den kastende varianten (styrte skoleprofiler).
+test("merkHarSendtInn/harSendtInn: normalvei og kastende localStorage", async () => {
+  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.33");
+  const lager = new Map();
+  globalThis.localStorage = {
+    setItem: (k, v) => lager.set(k, String(v)),
+    getItem: (k) => (lager.has(k) ? lager.get(k) : null),
+  };
+  try {
+    assert.equal(harSendtInn(), false, "ingen innsending → ingen oppslag");
+    merkHarSendtInn();
+    assert.equal(harSendtInn(), true, "flagget slår på auto-oppslaget");
+    globalThis.localStorage = {
+      setItem() { throw new Error("blokkert"); },
+      getItem() { throw new Error("blokkert"); },
+    };
+    assert.doesNotThrow(() => merkHarSendtInn(), "et kast skal aldri velte innsendingen");
+    assert.equal(harSendtInn(), false, "kastende lagring leses som «ikke sendt inn»");
+  } finally {
+    delete globalThis.localStorage;
+  }
 });
