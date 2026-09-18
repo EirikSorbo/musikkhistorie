@@ -20,7 +20,7 @@ import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup, planHeatCleanup,
-} from "../../js/genre-migrate.js?v=5.30";
+} from "../../js/genre-migrate.js?v=5.31";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -563,7 +563,7 @@ test("uten tre eller varmekart planlegges ingenting", () => {
 // metasjanger», og rot-noder (g === null) FINNES i treet — knappen sto derfor
 // og tilbød seg å slette ekte, kuratert varmedata. Slettingen er uopprettelig.
 test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async () => {
-  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.30");
+  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.31");
   const noder = [
     { id: "reggae", l: "Reggae", f: "Reggae", g: null },   // rot-node, ekte
     { id: "bebop", l: "Bebop", f: "Bebop", g: "Jazz" },
@@ -575,7 +575,7 @@ test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async (
 });
 
 test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => {
-  return import("../../js/genre-migrate.js?v=5.30").then(({ heatOrphanKeys }) => {
+  return import("../../js/genre-migrate.js?v=5.31").then(({ heatOrphanKeys }) => {
     const noder = [{ id: "x", l: "Kort", f: "Langt fullnavn", g: "Jazz" }];
     assert.deepEqual(heatOrphanKeys(noder, { Kort: [1] }), []);
     assert.deepEqual(heatOrphanKeys(noder, { "Langt fullnavn": [1] }), []);
@@ -589,8 +589,13 @@ test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => 
 // musicExamples[].genre er foreslåbare fra v5.00). Godkjenning skriver dem
 // RÅTT tilbake, så et forslag som lå i køen under et navnebytte kunne
 // gjeninnføre det gamle navnet — og etter en sletting gjeninnføre sjangeren.
-test("artistForslagOmskriving: navnebytte treffer alle fire flatene", async () => {
-  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.30");
+//
+// v5.31 (audit-funn 5): TRE-planene rører KUN mainGenre og lytteeksemplenes
+// genre. metaGenre hører til metasjanger-planene, og frie subGenre-tagger
+// står med vilje — seks tre-noder deler navn med en metasjanger, og den
+// gamle omskrivingen dro metasjangeren med seg (og TØMTE den ved sletting).
+test("artistForslagOmskriving: navnebytte treffer mainGenre og lytteeksempler, ALDRI metaGenre/subGenre", async () => {
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.31");
   const e = { proposedFields: {
     mainGenre: ["Bebop", "Cool jazz"], subGenre: ["Cool jazz"], metaGenre: "Cool jazz",
     musicExamples: [{ label: "So What", genre: "Cool jazz" }, { label: "X", genre: "Bebop" }],
@@ -598,19 +603,19 @@ test("artistForslagOmskriving: navnebytte treffer alle fire flatene", async () =
   } };
   const ut = artistForslagOmskriving(e, "Cool jazz", "Cool-jazz");
   assert.deepEqual(ut.mainGenre, ["Bebop", "Cool-jazz"]);
-  assert.deepEqual(ut.subGenre, ["Cool-jazz"]);
-  assert.equal(ut.metaGenre, "Cool-jazz");
+  assert.equal("subGenre" in ut, false, "fri undersjanger-tagg står med vilje (funn 5)");
+  assert.equal("metaGenre" in ut, false, "metasjangeren hører til metasjanger-planene (funn 5)");
   assert.equal(ut.musicExamples[0].genre, "Cool-jazz");
   assert.equal(ut.musicExamples[1].genre, "Bebop", "andre sjangre skal stå urørt");
   assert.equal("description" in ut, false, "urørte felter skal ikke skrives");
 });
 
 test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async () => {
-  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.30");
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.31");
   const e = { proposedFields: { mainGenre: ["Bebop", "Reggae"], metaGenre: "Reggae" } };
   const ut = artistForslagOmskriving(e, "Reggae", null);
   assert.deepEqual(ut.mainGenre, ["Bebop"]);
-  assert.equal(ut.metaGenre, "");
+  assert.equal("metaGenre" in ut, false, "sletting av tre-noden tømmer ikke metasjangeren (funn 5)");
   assert.deepEqual(artistForslagOmskriving(e, "Finnes ikke", "X"), {},
     "et forslag uten etiketten skal ikke gi noen skriving");
 });
@@ -618,7 +623,7 @@ test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async ()
 // Doc-ID-en i edgeDescriptions er «forelderid__barnid». Fjernes en forelder,
 // blir dokumentet liggende uten at noe rydder det. 11 slike lå live.
 test("edgeOrphanKeys: motreaksjon teller som kant, rester fanges", async () => {
-  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.30");
+  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.31");
   const noder = [
     { id: "a", l: "A", p: [], rx: [] },
     { id: "b", l: "B", p: ["a"], rx: [] },
@@ -629,4 +634,70 @@ test("edgeOrphanKeys: motreaksjon teller som kant, rester fanges", async () => {
     ["a__z", "x__b"]
   );
   assert.deepEqual(edgeOrphanKeys(null, null), []);
+});
+
+
+// Audit v5.19 funn 6: metasjanger-planene så aldri forslagskøen, så et
+// navnebytte etterlot det døde navnet i forslag (godkjenning skrev det
+// tilbake), og en tom metasjanger kunne slettes mens et forslag i køen var
+// klart til å gjeninnføre den.
+test("planMetaRename: artistforslag med metasjangeren tagges om (kun metaGenre)", async () => {
+  const { planMetaRename } = await import("../../js/genre-migrate.js?v=5.31");
+  const state = {
+    tree: { nodes: [], metaGenres: [{ name: "Klubbmusikk" }] },
+    genreDescs: {}, artists: [], teacherChecks: {},
+    pendingEdits: [
+      { id: "e1", entityType: "artist", entityName: "DJ Test",
+        proposedFields: { metaGenre: "Klubbmusikk", mainGenre: ["Klubbmusikk"] } },
+      { id: "e2", entityType: "artist", proposedFields: { metaGenre: "Jazz" } },
+      { id: "e3", entityType: "subgenre", proposedFields: { description: "x" } },
+    ],
+  };
+  const plan = planMetaRename(state, "Klubbmusikk", "Elektronisk dansemusikk");
+  assert.deepEqual(plan.feil, []);
+  const forslagOps = plan.ops.filter((o) => o.coll === "pendingEdits");
+  assert.equal(forslagOps.length, 1, "bare forslaget med metasjangeren røres");
+  assert.equal(forslagOps[0].id, "e1");
+  assert.equal(forslagOps[0].data.proposedFields.metaGenre, "Elektronisk dansemusikk");
+  // mainGenre-taggen med samme navn er et ANNET vokabular og står urørt.
+  assert.deepEqual(forslagOps[0].data.proposedFields.mainGenre, ["Klubbmusikk"]);
+});
+
+test("planMetaDelete: blokkeres av artistforslag som foreslår metasjangeren", async () => {
+  const { planMetaDelete } = await import("../../js/genre-migrate.js?v=5.31");
+  const state = {
+    tree: { nodes: [], metaGenres: [{ name: "Klubbmusikk" }] },
+    genreDescs: {}, artists: [], teacherChecks: {},
+    pendingEdits: [
+      { id: "e1", entityType: "artist", entityName: "DJ Test",
+        proposedFields: { metaGenre: "Klubbmusikk" } },
+    ],
+  };
+  const plan = planMetaDelete(state, "Klubbmusikk");
+  assert.equal(plan.ops.length, 0);
+  assert.equal(plan.blokkeringer.length, 1);
+  assert.match(plan.blokkeringer[0].hva, /artistforslag/);
+  // Uten forslaget går slettingen gjennom.
+  const uten = planMetaDelete({ ...state, pendingEdits: [] }, "Klubbmusikk");
+  assert.deepEqual(uten.blokkeringer, []);
+  assert.ok(uten.ops.length > 0);
+});
+
+test("planGenreRename: fri undersjanger-tagg i forslag gir advarsel, ingen skriving", async () => {
+  const { planGenreRename } = await import("../../js/genre-migrate.js?v=5.31");
+  // Minimal state med en gyldig node å døpe om.
+  const state = {
+    tree: { nodes: [{ id: "disco", l: "Disco", f: "Disco", g: "Klubbmusikk", p: [] }], metaGenres: [{ name: "Klubbmusikk" }] },
+    genreDescs: {}, artists: [], teacherChecks: {},
+    pendingEdits: [
+      { id: "e1", entityType: "artist", entityName: "Chic",
+        proposedFields: { subGenre: ["Disco"] } },
+    ],
+  };
+  const plan = planGenreRename(state, "Disco", "Disco & boogie");
+  assert.deepEqual(plan.feil, []);
+  assert.ok(plan.advarsler.some((a) => /fri undersjanger-tagg/.test(a)),
+    "planen skal si fra om den frie taggen i køen");
+  assert.equal(plan.ops.filter((o) => o.coll === "pendingEdits").length, 0,
+    "den frie taggen skal ikke skrives om");
 });

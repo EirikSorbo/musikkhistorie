@@ -5,8 +5,8 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=5.30";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.30";
+import { safeUrl } from "./util.js?v=5.31";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.31";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett
@@ -87,6 +87,21 @@ export function normalizeArtist(a) {
 // + systemfeltene. Delt av addArtist og addArtistsBulk (store.js), som legger
 // på createdAt: serverTimestamp() selv — holdt utenfor her, så modulen forblir
 // avhengighetsfri og enhetstestbar.
+// Ny innsending av et returnert forslag (returflyten): bygg KUN feltene
+// skjemaet faktisk sendte. resubmitArtist skrev fram til v5.30 alle
+// skjemafeltene, og tømte dermed stille felter studentskjemaet ikke har —
+// recordLabel var det eneste i dag, satt av læreren via «Rediger» (audit
+// v5.19 funn 4). `in`-sjekken gjør skrivingen immun mot at de to skjemaene
+// driver fra hverandre igjen.
+export function resubmitArtistFields(data) {
+  const n = normalizeArtist(data);
+  const felter = {};
+  for (const f of ARTIST_FIELDS) {
+    if (f.key in (data || {})) felter[f.key] = n[f.key] ?? emptyValueFor(f.type);
+  }
+  return felter;
+}
+
 export function buildArtistDoc(data) {
   const n = normalizeArtist(data);
   const docData = {};

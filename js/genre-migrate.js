@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.30";
+import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.31";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -117,6 +117,13 @@ export function findReferences(state, label) {
 // byttes til `til` (til = null betyr STRYK, brukt ved sletting). Returnerer kun
 // feltene som faktisk endres, så doc.merge ikke rører noe annet i forslaget.
 export function artistForslagOmskriving(e, fra, til) {
+  // KUN feltene sjangerplanene faktisk flytter på artistene: mainGenre og
+  // lytteeksemplenes genre (v5.31, audit v5.19 funn 5). metaGenre hører til
+  // metasjanger-planene — planMetaRename skriver den selv (funn 6) — og frie
+  // subGenre-tagger står med vilje, i forslag som på artistene: planene
+  // varsler om dem i stedet (forslagMedFriSub under). Fram til v5.30 skrev
+  // denne om alle fire flatene, så et navnebytte på tre-noden «Rock» dro med
+  // seg metasjangeren «Rock» i forslagskøen, og sletting TØMTE den.
   const f = e?.proposedFields || {};
   const ut = {};
   const bytt = (v) => {
@@ -126,17 +133,25 @@ export function artistForslagOmskriving(e, fra, til) {
       : liste.filter((g) => !lik(g, fra));
     return JSON.stringify(ny) === JSON.stringify(liste) ? null : ny;
   };
-  for (const nokkel of ["mainGenre", "subGenre"]) {
-    if (!(nokkel in f)) continue;
-    const ny = bytt(f[nokkel]);
-    if (ny) ut[nokkel] = ny;
+  if ("mainGenre" in f) {
+    const ny = bytt(f.mainGenre);
+    if (ny) ut.mainGenre = ny;
   }
-  if ("metaGenre" in f && lik(f.metaGenre, fra)) ut.metaGenre = til || "";
   if (Array.isArray(f.musicExamples) && f.musicExamples.some((m) => lik(m?.genre, fra))) {
     ut.musicExamples = f.musicExamples.map((m) =>
       lik(m?.genre, fra) ? { ...m, genre: til || "" } : m);
   }
   return ut;
+}
+
+// Artistforslag som bærer navnet som FRI subGenre-tagg. Planene rører dem
+// aldri (samme regel som artistenes egne frie tagger), men skal si det høyt —
+// advarselen «taggen står igjen med vilje» var ellers usann for køen.
+export function forslagMedFriSub(state, navn) {
+  return (state?.pendingEdits || []).filter((e) =>
+    e.entityType === "artist" &&
+    Array.isArray(e.proposedFields?.subGenre) &&
+    e.proposedFields.subGenre.some((g) => lik(g, navn)));
 }
 
 // ----------------------------------------------------------------------------
@@ -267,6 +282,10 @@ export function planGenreRename(state, fra, til) {
         `Artistforslag «${e.entityName || e.entityId}» får det nye navnet`));
     }
   }
+  const friSub = forslagMedFriSub(state, fra);
+  if (friSub.length) {
+    advarsler.push(`${friSub.length} artistforslag i køen har «${fra}» som fri undersjanger-tagg. Den står igjen med vilje, som på artistene.`);
+  }
 
   return { ops, feil, advarsler };
 }
@@ -341,6 +360,19 @@ export function planMetaRename(state, fra, til) {
     ops.push(op("doc.merge", "artists", a.id, { metaGenre: nyttNavn }, `Artist: ${a.name}`));
   }
   if (artister.length) advarsler.push(`${artister.length} artist(er) blir tagget om.`);
+
+  // Artistforslag i køen med den gamle metasjangeren (v5.31, audit-funn 6):
+  // uten dette skrev en godkjenning ETTER planen det døde navnet tilbake, og
+  // artisten falt ut av metasjangerfilteret og tellingene. KUN metaGenre
+  // røres — en mainGenre-tagg med samme navn er et annet vokabular (funn 5).
+  for (const e of state?.pendingEdits || []) {
+    if (e.entityType !== "artist") continue;
+    const f = e.proposedFields || {};
+    if (!("metaGenre" in f) || !lik(f.metaGenre, fra)) continue;
+    ops.push(op("doc.merge", "pendingEdits", e.id,
+      { proposedFields: { ...f, metaGenre: nyttNavn } },
+      `Artistforslag «${e.entityName || e.entityId}» får den nye metasjangeren`));
+  }
 
   const sjekket = (state?.teacherChecks?.metaGenres || []);
   if (sjekket.some((m) => lik(m, fra))) {
@@ -450,6 +482,10 @@ export function planGenreDelete(state, label) {
         `Sjangeren strykes fra artistforslaget «${e.entityName || e.entityId}»`));
     }
   }
+  const friSubSlett = forslagMedFriSub(state, label);
+  if (friSubSlett.length) {
+    advarsler.push(`${friSubSlett.length} artistforslag i køen har «${label}» som fri undersjanger-tagg. Den står igjen med vilje, som på artistene.`);
+  }
 
   return { ops, feil, advarsler, blokkeringer: [] };
 }
@@ -495,6 +531,17 @@ export function planMetaDelete(state, navn) {
       hva: `${artister.length} artist(er) er tagget med «${meta.name}»`,
       losning: "Tagg dem om til en annen metasjanger først.",
       detaljer: artister.slice(0, 12).map((a) => a.name),
+    });
+  }
+  // Forslag i køen kan gjeninnføre en slettet metasjanger ved godkjenning
+  // (v5.31, audit-funn 6) — samme blokkeringsprinsipp som for artistene.
+  const forslagMedMeta = (state?.pendingEdits || []).filter((e) =>
+    e.entityType === "artist" && lik(e.proposedFields?.metaGenre, meta.name));
+  if (forslagMedMeta.length) {
+    blokkeringer.push({
+      hva: `${forslagMedMeta.length} artistforslag i køen foreslår metasjangeren «${meta.name}»`,
+      losning: "Behandle forslagene først — en godkjenning etterpå ville gjeninnført den slettede metasjangeren.",
+      detaljer: forslagMedMeta.slice(0, 12).map((e) => e.entityName || e.entityId),
     });
   }
   if (blokkeringer.length) return { ops: [], feil, advarsler, blokkeringer };

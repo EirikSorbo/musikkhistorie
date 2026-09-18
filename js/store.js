@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.30";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.30";
-import { normalizeArtist, buildArtistDoc } from "./artist-normalize.js?v=5.30";
-import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.30";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.30";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.30";
-import { mergeHeatRows } from "./import-format.js?v=5.30";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.30";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.30";
+import { firebaseConfig } from "./firebase-config.js?v=5.31";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.31";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.31";
+import { ARTIST_FIELDS, emptyValueFor } from "./artist-schema.js?v=5.31";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.31";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.31";
+import { mergeHeatRows } from "./import-format.js?v=5.31";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.31";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.31";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -649,6 +649,17 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
     if (allowed.includes(k) && k in (data.proposedFields || {})) toApply[k] = data.proposedFields[k];
   }
 
+  // Sjangervakt (v5.31, audit-funn 5/6): metasjangeren er et LUKKET vokabular
+  // fra treet, og en godkjenning skal aldri kunne skrive inn en som ikke
+  // finnes — typisk et forslag skrevet FØR et navnebytte eller en sletting,
+  // godkjent etterpå. mainGenre valideres bevisst IKKE strengt: frie
+  // undersjanger-tagger ligger i samme felt og er lovlige (jf. rapportens
+  // forkastede funn om sub-nivået).
+  if (data.entityType === "artist" && toApply.metaGenre
+      && !GENEALOGY_META_GENRES.includes(toApply.metaGenre)) {
+    throw new Error(`Forslaget peker på metasjangeren «${toApply.metaGenre}», som ikke finnes i treet (lenger). Rett metasjangeren i forslaget, eller avvis det.`);
+  }
+
   // Sjangerbeskrivelser er nivådelte ({ meta/main/sub: { description, … } });
   // et flatt description-felt leses ikke av appen. Pakk derfor inn i riktig nivå.
   if (data.entityType === "subgenre" && Object.keys(toApply).length) {
@@ -711,9 +722,9 @@ export async function sendTilbake(type, id, feedback) {
 export async function resubmitArtist(id, data, kode, studentComment) {
   await ensureAuth().catch(() => {});
   merkHarSendtInn();   // ny innsending med kode fra annen enhet: auto-oppslag der også
-  const n = normalizeArtist(data);
-  const felter = {};
-  for (const f of ARTIST_FIELDS) felter[f.key] = n[f.key] ?? emptyValueFor(f.type);
+  // KUN feltene skjemaet sendte (v5.31, audit-funn 4): å skrive alle
+  // skjemafeltene tømte stille recordLabel, som studentskjemaet ikke har.
+  const felter = resubmitArtistFields(data);
   return updateDoc(doc(db, "artists", id), {
     ...felter,
     proposedBy: data.proposedBy || "Anonym",
