@@ -24,14 +24,15 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.35";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, klampStopp } from "./presentasjon-modell.js?v=5.35";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.35";
-import { modalClose } from "./ui-modal.js?v=5.35";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.35";
-import { escapeHtml } from "./util.js?v=5.35";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.35";
-import { getState } from "./explore-context.js?v=5.35";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.36";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt } from "./presentasjon-modell.js?v=5.36";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.36";
+import { modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.36";
+import { GENEALOGY } from "./genre-model.js?v=5.36";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.36";
+import { escapeHtml } from "./util.js?v=5.36";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.36";
+import { getState } from "./explore-context.js?v=5.36";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -63,8 +64,10 @@ let aktiv = null;
 // Kan kalles fra hvor som helst (explore.js spør før hub-kortene fjernes),
 // uavhengig av om initPresentasjon har kjørt. ?presentasjon alene slår på
 // modusen; ?presentasjon=<planId> starter i tillegg en kjøreplan (fase 4),
-// med ?stopp=<n> (1-basert) som posisjon — slik overlever både hoppet til
-// tre.html (sessionStorage) og en omlasting (URL-en) hele tilstanden.
+// med ?stopp=<k> som posisjon (0 = oversiktskortet, 1..n = stoppene; se
+// planPosisjon) — slik overlever både hoppet til tre.html (sessionStorage)
+// og en omlasting (URL-en) hele tilstanden. Uten ?stopp starter planen på
+// oversiktskortet.
 export function erPresentasjon() {
   if (aktiv !== null) return aktiv;
   let param = null;
@@ -75,8 +78,8 @@ export function erPresentasjon() {
     if (param && param !== "1") {
       skriv(LAGRING.plan, param);
       let s = 0;
-      try { s = Number(new URLSearchParams(window.location.search).get("stopp")) - 1; } catch (e) {}
-      skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? s : 0));
+      try { s = Number(new URLSearchParams(window.location.search).get("stopp")); } catch (e) {}
+      skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? Math.trunc(s) : 0));
     }
   }
   return aktiv;
@@ -200,47 +203,117 @@ function oppdaterHubKort() {
 
 let planId = null;
 let plan = null;      // normalisert plan, satt når content har landet
+// Posisjonen i avspillingen, ikke i planen: 0 = oversiktskortet, 1..n =
+// planens stopp, n+1 = oppsummeringen (v5.36, se planPosisjon).
 let stoppIdx = 0;
 
 function oppdaterTeller() {
   const teller = document.getElementById("pres-teller");
   if (!teller) return;
-  if (!plan) { teller.textContent = "…"; return; }
-  teller.textContent = `${stoppIdx + 1}/${plan.stopp.length}`;
+  teller.textContent = plan ? tellerTekst(stoppIdx, plan.stopp.length) : "…";
 }
 
-// Gå til et stopp: lukk det som står åpent, sett stoppets nivå og unntak, og
-// åpne målet når dataene dets er klare. Kalles også som «Til stoppet» etter
-// en avstikker (samme indeks på nytt).
+// Gå til en posisjon: lukk det som står åpent, sett stoppets nivå og unntak,
+// og åpne målet når dataene dets er klare (eller oversiktskortet, først og
+// sist). Kalles også som «Til stoppet» etter en avstikker (samme posisjon).
 function gaTilStopp(i) {
   if (!plan || !plan.stopp.length) return;
-  stoppIdx = klampStopp(i, plan.stopp.length);
+  const p = planPosisjon(i, plan.stopp.length);
+  stoppIdx = p.pos;
   skriv(LAGRING.stopp, String(stoppIdx));
   try {
     const u = new URL(window.location.href);
     u.searchParams.set("presentasjon", planId);
-    u.searchParams.set("stopp", String(stoppIdx + 1));
+    u.searchParams.set("stopp", String(stoppIdx));
     u.searchParams.delete("vis");   // et gammelt dyplenke-mål skal ikke gjenåpnes ved reload
     window.history.replaceState(null, "", u);
   } catch (e) {}
 
-  const stopp = plan.stopp[stoppIdx];
-  if (stopp.nivaa) nivaa = stopp.nivaa;
   // Stoppets definisjon gjelder: unntak satt i farten lever bare fram til
-  // neste stoppbytte.
-  unntak = stopp.unntak ? { ...stopp.unntak } : {};
+  // neste stoppbytte. Oversiktskortene har ingen egen definisjon.
+  const stopp = p.oversikt ? null : plan.stopp[p.stopp];
+  if (stopp?.nivaa) nivaa = stopp.nivaa;
+  unntak = stopp?.unntak ? { ...stopp.unntak } : {};
   lagreTilstand();
   brukNivaa();
 
   document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
-  apneVisNaarKlart(parseVisVerdi(stopp.vis));
+  if (p.oversikt) visOversikt();
+  else apneVisNaarKlart(parseVisVerdi(stopp.vis));
   oppdaterTeller();
 }
 
-// Kalles fra sidenes content-hooks. No-op til planId finnes og content har
-// landet; åpner så startstoppet ÉN gang.
+// ----------------------------------------------------------------------------
+//  Oversiktskortet (v5.36): første og siste posisjon i hver kjøreplan
+//  (brukerkrav 2026-09-18). Innholdet er gruppert etter kategori, ikke i
+//  planens rekkefølge (planOversikt), og hvert punkt hopper til stoppet sitt.
+//  Modalen bygges første gang den trengs, så den virker på begge sidene.
+// ----------------------------------------------------------------------------
+
+function oversiktModal() {
+  let m = document.getElementById("modal-pres-oversikt");
+  if (m) return m;
+  m = document.createElement("div");
+  m.className = "modal-backdrop";
+  m.id = "modal-pres-oversikt";
+  m.innerHTML = `
+    <div class="modal pres-oversikt">
+      <div class="modal-head">
+        <h2 id="pres-ov-tittel"></h2>
+        <button type="button" class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="pres-ov-merke" id="pres-ov-merke"></p>
+      <div class="pres-ov-grid" id="pres-ov-grid"></div>
+    </div>`;
+  document.body.appendChild(m);
+  setupModal(m);
+  initModalHeaders();   // idempotent: ← og ✕ som på alle de andre kortene
+  m.addEventListener("click", (e) => {
+    const punkt = e.target.closest("[data-ov-stopp]");
+    if (punkt) gaTilStopp(Number(punkt.dataset.ovStopp) + 1);
+  });
+  return m;
+}
+
+function tegnOversikt() {
+  const m = document.getElementById("modal-pres-oversikt");
+  if (!m || !plan) return;
+  const s = getState();
+  const grupper = planOversikt(plan.stopp, {
+    artister: s.artists,
+    tech: s.techItems,
+    nodeNavn: (id) => GENEALOGY.find((n) => n.id === id)?.l,
+  });
+  const slutt = planPosisjon(stoppIdx, plan.stopp.length).oversikt === "slutt";
+  m.querySelector("#pres-ov-tittel").textContent = plan.tittel;
+  m.querySelector("#pres-ov-merke").textContent =
+    `${slutt ? "Oppsummering" : "Oversikt"} · ${plan.stopp.length} stopp`;
+  m.querySelector("#pres-ov-grid").innerHTML = grupper.map((k) => `
+    <section class="pres-ov-kat">
+      <h3>${escapeHtml(k.navn)}</h3>
+      <ul>${k.punkter.map((p) => `
+        <li><button type="button" class="pres-ov-punkt" data-ov-stopp="${p.stopp}">${escapeHtml(p.tekst)}</button>${
+          p.detalj ? ` <span class="pres-ov-detalj">${escapeHtml(p.detalj)}</span>` : ""}</li>`).join("")}
+      </ul>
+    </section>`).join("");
+}
+
+function visOversikt() {
+  const m = oversiktModal();
+  tegnOversikt();
+  modalOpen(m);
+}
+
+// Kalles fra sidenes snapshot-hooks. No-op til planId finnes og content har
+// landet; åpner så startposisjonen ÉN gang. Deretter tegnes et åpent
+// oversiktskort på nytt, fordi navnene i det kommer fra artist- og tech-
+// lista, som kan lande etter planen.
 export function presPlanTikk() {
-  if (!planId || plan) return;
+  if (plan) {
+    if (document.getElementById("modal-pres-oversikt")?.classList.contains("open")) tegnOversikt();
+    return;
+  }
+  if (!planId) return;
   const s = getState();
   const planer = normaliserPlaner(s.content?.presentasjoner?.planer);
   if (planer[planId]) {
@@ -414,6 +487,9 @@ function tegnPanel(panel) {
 export function initPresentasjon() {
   if (!erPresentasjon()) return;
   document.body.classList.add("presentasjon");
+  // Rot-skalaen (v5.36): i presentasjon følger tekststørrelsen skjermbredden,
+  // så kortene over hele lerretet ikke står med bitteliten tekst (CSS).
+  document.documentElement.classList.add("pres-modus");
 
   nivaa = Math.min(3, Math.max(1, Number(les(LAGRING.nivaa)) || 2));
   try { unntak = JSON.parse(les(LAGRING.unntak) || "{}") || {}; } catch (e) { unntak = {}; }

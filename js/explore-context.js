@@ -8,17 +8,17 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.35";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.35";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.35";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.35";
-import { openTechDetail } from "./explore-tech.js?v=5.35";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.35";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.35";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=5.35";
-import { renderReferanser } from "./explore-referanser.js?v=5.35";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.35";
-import { setHeatData } from "./heat-strip.js?v=5.35";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.36";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.36";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.36";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.36";
+import { openTechDetail } from "./explore-tech.js?v=5.36";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.36";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.36";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=5.36";
+import { renderReferanser } from "./explore-referanser.js?v=5.36";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.36";
+import { setHeatData } from "./heat-strip.js?v=5.36";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }

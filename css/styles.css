@@ -2708,8 +2708,14 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
    ikke-boks. Skjules den (hidden), vinner den globale [hidden]-regelen. */
 .sekt { display: contents; }
 
-html.pres-stor { font-size: 20px; }
-html.pres-storst { font-size: 24px; }
+/* Tekstskalaen følger skjermbredden i presentasjon (v5.36): kortene går over
+   nesten hele lerretet, og en fast rot på 16 px ga bitteliten tekst på en
+   1920 px projektor. Små skjermer beholder dagens trinn (A+ minst 20 px,
+   A++ minst 24 px); store skjermer får tekst som kan leses fra bakerste rad.
+   html.pres-modus settes av presentasjon.js. */
+html.pres-modus { font-size: clamp(16px, 1.2vw, 26px); }
+html.pres-modus.pres-stor { font-size: clamp(20px, 1.45vw, 32px); }
+html.pres-modus.pres-storst { font-size: clamp(24px, 1.75vw, 38px); }
 
 /* Bildet i hovedfokus (v5.29): i presentasjon står det sentrert over teksten
    i stedet for å flyte til høyre, og på nivå 1 fyller det lerretet — da er
@@ -2720,11 +2726,14 @@ body.presentasjon #modal-artist-detail .artist-image {
 }
 body.presentasjon #modal-detail .artist-image img,
 body.presentasjon #modal-artist-detail .artist-image img {
-  width: auto; max-width: 100%; max-height: 34vh; margin: 0 auto;
+  width: auto; max-width: 100%; max-height: 48vh; margin: 0 auto;
 }
+/* Høydene er målt mot lerreter på 1920×1080 og 1280×800 med verktøylinja
+   nederst: nivå 1 får plass til portrett, levetid og innflytelseslinje uten
+   rulling også på den minste. */
 body.presentasjon[data-pres-nivaa="1"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="1"] #modal-artist-detail .artist-image img {
-  max-height: 56vh;
+  max-height: 58vh;
 }
 /* Fotokrediteringen tas ut av lerretet (v5.30) — den står fortsatt i appen,
    der studentene ser den. Levetiden flyttes hit i stedet (presentasjon.js),
@@ -2745,7 +2754,7 @@ body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image img {
-  max-height: 42vh;
+  max-height: 60vh;
 }
 body.presentasjon[data-pres-nivaa="2"] #modal-detail .meta,
 body.presentasjon[data-pres-nivaa="3"] #modal-detail .meta,
@@ -2783,9 +2792,79 @@ body.presentasjon #dv-tech-propose,
 body.presentasjon #btn-tech-new,
 body.presentasjon [data-action="voteUp"] { display: none !important; }
 
+/* Et rolig, hvitt lerret (v5.36, brukerkrav): siden skimtet uklart bak
+   kortene og forstyrret. Kortet blir selve lysbildet, nesten hele bredden og
+   uten skygge; bunnpaddingen holder plass til verktøylinja, så den aldri
+   dekker innhold. Små dialoger (valg, innstillinger) og søket beholder sin
+   vanlige bredde, midt på det hvite. Et kort åpnet oppå et annet dekker det
+   helt, og ← viser det igjen. */
+body.presentasjon .modal-backdrop {
+  background: var(--bg);
+  backdrop-filter: none;
+  padding: 18px 18px 72px;
+}
+/* :where() holder unntakene uten vekt (0,3,1): med :not(#modal-sok) direkte
+   fikk regelen ID-vekt og slo ut videospillerens egen bredde under. */
+body.presentasjon .modal-backdrop:where(:not(#modal-sok)) > .modal:where(:not(.modal-narrow, .modal-valg)) {
+  max-width: none;
+  width: 100%;
+  max-height: 100%;
+  box-shadow: none;
+  padding: 1.4rem 2.4rem 2rem;
+}
+body.presentasjon .modal-head h2 { font-size: 1.5rem; }
+/* Brødteksten beholder en lesbar linjelengde på det brede kortet. Brukeren:
+   kortene kan dekke bredden «selv om innholdet ikke gjør det». Tidslinjer,
+   varmekart og andre visualiseringer fyller fortsatt hele bredden. */
+body.presentasjon .modal :is(p, .rt) { max-width: 80ch; }
+/* Videoen så stor som lerretet tillater: bredden begrenses av høyden (16:9).
+   310 px = lerretets polstring og verktøylinjas plass (90), kortets egen
+   polstring (≈80), tittellinja (≈56), tidsraden (≈52) og reservelenka (≈30). */
+body.presentasjon .modal-backdrop > .modal.modal-yt-boks {
+  width: min(100%, calc((100vh - 310px) * 16 / 9));
+}
+/* Innovasjonskortets bilde er et lite miniatyrbilde i margen i appen. På
+   lerretet vokser det, og renderTechDetail ber da om en bredere thumbnail. */
+body.presentasjon #modal-tech-detail .artist-image {
+  width: auto; max-width: 45%; margin: 0 0 16px 24px;
+}
+body.presentasjon #modal-tech-detail .artist-image img {
+  width: auto; max-width: 100%; max-height: 56vh;
+}
+
+/* Oversiktskortet først og sist i kjøreplanen (v5.36): planens innhold
+   gruppert etter kategori. Hvert punkt hopper til stoppet sitt. Kortet er
+   åpningsbildet i timen, så tittel og punkter er større enn på de andre. */
+body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
+.pres-ov-merke {
+  margin: -0.6rem 0 1.4rem; color: var(--muted);
+  font-size: 0.85rem; letter-spacing: 0.04em;
+}
+.pres-ov-grid {
+  display: grid; gap: 1.6rem 2.4rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+.pres-ov-kat h3 {
+  margin: 0 0 0.6rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--line);
+  font-size: 0.9rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.pres-ov-kat ul { list-style: none; margin: 0; padding: 0; }
+.pres-ov-kat li { margin: 0.35rem 0; line-height: 1.35; }
+.pres-ov-punkt {
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; font-size: 1.2rem; color: var(--text);
+  text-align: left; cursor: pointer;
+}
+.pres-ov-punkt:hover { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
+.pres-ov-detalj { color: var(--muted); font-size: 0.95rem; }
+
 /* Verktøylinja nede til høyre. z-index over modalene (de starter på 100 og
    teller oppover per åpning — 99999 er utenfor rekkevidde i praksis). */
 #pres-bar {
+  /* Fast størrelse (v5.36): verktøy, ikke innhold. Rot-skalaen følger
+     skjermbredden i presentasjon, og linja skal ikke vokse med den. */
+  font-size: 15px;
   position: fixed; right: 14px; bottom: 14px; z-index: 99999;
   display: flex; gap: 6px; align-items: center;
   background: var(--surface); border: 1px solid var(--line-strong);
@@ -2797,12 +2876,12 @@ body.presentasjon [data-action="voteUp"] { display: none !important; }
   min-width: 32px; height: 32px; padding: 0 9px;
   border: 1px solid var(--line); border-radius: 999px;
   background: var(--surface); color: var(--text);
-  font: inherit; font-size: 0.9rem; cursor: pointer;
+  font: inherit; font-size: 0.9em; cursor: pointer;
 }
 .pres-knapp:hover { border-color: var(--line-strong); background: var(--surface-2); }
 .pres-knapp.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .pres-nivaa { display: inline-flex; gap: 4px; padding-right: 4px; border-right: 1px solid var(--line); }
-.pres-avslutt { font-size: 0.85rem; }
+.pres-avslutt { font-size: 0.85em; }
 
 /* Tannhjul-panelet: over verktøylinja, venstrestilt tekst. */
 #pres-panel {
@@ -2813,10 +2892,10 @@ body.presentasjon [data-action="voteUp"] { display: none !important; }
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16);
 }
 .pres-panel-hode {
-  margin: 0 0 8px; font-size: 0.75rem; font-weight: 600;
+  margin: 0 0 8px; font-size: 0.75em; font-weight: 600;
   color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
 }
-.pres-valg { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.9rem; cursor: pointer; }
+.pres-valg { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.9em; cursor: pointer; }
 .pres-valg input { margin-top: 3px; flex: none; }
 .pres-skille { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 .pres-qa { color: var(--muted); }
@@ -2845,7 +2924,8 @@ body.presentasjon [data-action="voteUp"] { display: none !important; }
 .pres-adm-leggtil { display: flex; gap: 8px; margin-top: 12px; }
 .pres-adm-leggtil input { flex: 1; }
 .pres-plan { display: inline-flex; gap: 4px; align-items: center; padding-right: 4px; border-right: 1px solid var(--line); }
-.pres-teller-knapp { font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+.pres-teller-knapp { font-variant-numeric: tabular-nums; font-size: 0.82em; }
+.pres-adm-hint { font-size: 0.85rem; margin: 10px 0 0; }
 
 /* «Legg til i kjøreplan»-menyen på lenkeknappen (v5.26, kun lærer-innlogging).
    Ankres i .modal-head (position:relative) og legger seg under tittellinja. */

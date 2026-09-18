@@ -11,30 +11,27 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.35";
-import { showSubsjangerInfo } from "./ui.js?v=5.35";
-import { showEdgeInfo } from "./genealogy.js?v=5.35";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.35";
-import { openDecade } from "./explore-decade.js?v=5.35";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.35";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.35";
-import { openVarmekart } from "./explore-varmekart.js?v=5.35";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.35";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.35";
-import { openReferanser } from "./explore-referanser.js?v=5.35";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.35";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.35";
-import { ytWatchUrl, ytMaal } from "./presentasjon-modell.js?v=5.35";
-import { apneYtSpiller } from "./yt-spiller.js?v=5.35";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.36";
+import { showSubsjangerInfo } from "./ui.js?v=5.36";
+import { showEdgeInfo } from "./genealogy.js?v=5.36";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.36";
+import { openDecade } from "./explore-decade.js?v=5.36";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.36";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.36";
+import { openVarmekart } from "./explore-varmekart.js?v=5.36";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.36";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.36";
+import { openReferanser } from "./explore-referanser.js?v=5.36";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.36";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.36";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.36";
+import { apneYtSpiller } from "./yt-spiller.js?v=5.36";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
+// Oppslaget er delt med kjøreplan-editoren og oversiktskortet.
 function ytTittel(videoId, s) {
-  for (const a of s.artists || []) {
-    const m = (a.musicExamples || []).find((x) => ytMaal(x.url || "")?.video === videoId);
-    if (m) return `${m.label || "Lytteeksempel"} (${a.name})`;
-  }
-  return "Lytteeksempel";
+  return lytteeksempelNavn(videoId, s.artists) || "Lytteeksempel";
 }
 
 // Åpner ett mål: { hva, id?, modus? }. Kortene åpnes OPPÅ det som alt står
@@ -101,15 +98,14 @@ function klarFor(apne, s) {
       if ((s.artists || []).some((x) => x.id === apne.id)) return "klar";
       return s.artistsLoaded ? "finnes-ikke" : "vent";
     case "tech":
-      // tech har ingen egen lastet-markør; artistene lander i praksis i samme
-      // åndedrag, så de er en ærlig stedfortreder for «nettet er oppe».
+      // techLoaded (v5.35) skiller «ikke landet ennå» fra «kortet er slettet».
       if ((s.techItems || []).some((x) => x.id === apne.id)) return "klar";
-      return s.artistsLoaded && (s.techItems || []).length ? "finnes-ikke" : "vent";
+      return s.techLoaded ? "finnes-ikke" : "vent";
     case "sjanger": case "kobling": case "slektstre": case "himmel": case "tidslinje":
       return isGenreModelReady() ? "klar" : "vent";
     case "undersjanger": case "historie":
-      // Historie-modalen tegnes ikke om ved senere snapshot (kjent hull,
-      // audit v5.19 funn 8) — derfor åpnes den først når alt er på plass.
+      // Teksten bor i genreDescriptions og familien i treet: vent på begge,
+      // så kortet ikke åpnes med «mangler»-tekst som straks byttes ut.
       return s.genreDescsLoaded && isGenreModelReady() ? "klar" : "vent";
     case "tiår":
       return Object.keys(s.decadeDescs || {}).length ? "klar" : "vent";

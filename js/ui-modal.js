@@ -245,7 +245,8 @@ export function askChoice({ title, text = "", buttons = [], dismissValue = null 
     const backdrop = document.createElement("div");
     backdrop.className = "modal-backdrop";
     const dialog = document.createElement("div");
-    dialog.className = "modal";
+    // modal-valg: presentasjonens brede kort (v5.36) gjelder ikke små dialoger.
+    dialog.className = "modal modal-valg";
     backdrop.append(dialog);
 
     const head = document.createElement("div");

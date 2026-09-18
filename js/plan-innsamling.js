@@ -22,13 +22,13 @@
 //  startes fra lærersidens editor.
 // ============================================================================
 
-import { savePresentasjoner } from "./store.js?v=5.35";
-import { getState } from "./explore-context.js?v=5.35";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=5.35";
-import { setModalApnetProvider } from "./ui-modal.js?v=5.35";
-import { escapeHtml } from "./util.js?v=5.35";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.35";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.35";
+import { savePresentasjoner } from "./store.js?v=5.36";
+import { getState } from "./explore-context.js?v=5.36";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=5.36";
+import { setModalApnetProvider } from "./ui-modal.js?v=5.36";
+import { escapeHtml } from "./util.js?v=5.36";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.36";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.36";
 
 const LAGRING = {
   plan: "pensumSamlePlan",

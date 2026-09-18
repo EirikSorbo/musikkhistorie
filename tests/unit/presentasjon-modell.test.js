@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId } from "../../js/presentasjon-modell.js?v=5.35";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER } from "../../js/presentasjon-modell.js?v=5.36";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -227,4 +227,110 @@ test("ytEmbedUrl: nocookie-domenet, autoplay, og videoseries for lister", () => 
     ytEmbedUrl("https://www.youtube.com/playlist?list=PLabc123456789"),
     "https://www.youtube-nocookie.com/embed/videoseries?autoplay=1&rel=0&list=PLabc123456789");
   assert.equal(ytEmbedUrl("https://www.youtube.com/results?search_query=x"), null);
+});
+
+// --- Oversiktskortet (v5.36) --------------------------------------------------
+// Brukerkrav 2026-09-18: hver kjøreplan åpner og slutter med et kort som viser
+// innholdet gruppert etter kategori, ikke i planens rekkefølge.
+
+test("planPosisjon: oversikt først, stoppene, oppsummering sist, ingen rundgang", () => {
+  assert.deepEqual(planPosisjon(0, 3), { pos: 0, oversikt: "start" });
+  assert.deepEqual(planPosisjon(1, 3), { pos: 1, stopp: 0 });
+  assert.deepEqual(planPosisjon(3, 3), { pos: 3, stopp: 2 });
+  assert.deepEqual(planPosisjon(4, 3), { pos: 4, oversikt: "slutt" });
+  assert.deepEqual(planPosisjon(99, 3), { pos: 4, oversikt: "slutt" }, "ett trykk for mye blir stående");
+  assert.deepEqual(planPosisjon(-5, 3), { pos: 0, oversikt: "start" });
+  // «stopp=1» i en lenke fra før v5.36 peker fortsatt på første stopp.
+  assert.equal(planPosisjon(1, 3).stopp, 0);
+});
+
+test("tellerTekst: ord på oversiktskortene, n/antall på stoppene", () => {
+  assert.equal(tellerTekst(0, 12), "Oversikt");
+  assert.equal(tellerTekst(1, 12), "1/12");
+  assert.equal(tellerTekst(12, 12), "12/12");
+  assert.equal(tellerTekst(13, 12), "Oppsummering");
+});
+
+const artister = [
+  { id: "a1", name: "Elvis Presley", musicExamples: [{ label: "Hound Dog", url: "https://www.youtube.com/watch?v=abcdefghijk" }] },
+  { id: "a2", name: "Chuck Berry" },
+  { id: "a3", name: "Aretha Franklin" },
+];
+const tech = [{ id: "t1", name: "Elektrisk gitar" }];
+const vis = (...v) => v.map((x) => ({ vis: x }));
+
+test("lytteeksempelNavn: tittel og artist, eller null når videoen er ukjent", () => {
+  assert.equal(lytteeksempelNavn("abcdefghijk", artister), "Hound Dog (Elvis Presley)");
+  assert.equal(lytteeksempelNavn("zzzzzzzzzzz", artister), null);
+  assert.equal(lytteeksempelNavn("", artister), null);
+  assert.equal(lytteeksempelNavn("abcdefghijk", undefined), null);
+});
+
+test("planOversikt: grupperer etter kategori i fast rekkefølge, ikke etter planen", () => {
+  const g = planOversikt(vis("tiår:1960:tech", "artist:a2", "tech:t1", "yt:abcdefghijk", "sjanger:Rock", "instrument:Gitar", "varmekart"), { artister, tech });
+  assert.deepEqual(g.map((k) => k.id), ["artister", "lytteeksempler", "sjangre", "tiaar", "teknologi", "instrumenter", "oversikter"]);
+  assert.deepEqual(OVERSIKT_KATEGORIER.map((k) => k.id), g.map((k) => k.id), "alle kategoriene er i bruk her");
+  assert.equal(g.find((k) => k.id === "teknologi").punkter[0].tekst, "Elektrisk gitar");
+  assert.equal(g.find((k) => k.id === "oversikter").punkter[0].tekst, "Varmekartet");
+});
+
+test("planOversikt: alfabetisk innenfor kategorien, tiårene i tidsrekkefølge", () => {
+  const g = planOversikt(vis("artist:a2", "artist:a1", "artist:a3", "tiår:1970", "tiår:1950:tech", "tiår:1950"), { artister });
+  assert.deepEqual(g[0].punkter.map((p) => p.tekst), ["Aretha Franklin", "Chuck Berry", "Elvis Presley"]);
+  const tiaar = g.find((k) => k.id === "tiaar").punkter;
+  assert.deepEqual(tiaar.map((p) => `${p.tekst} ${p.detalj}`),
+    ["1950-tallet samfunn", "1950-tallet teknologi", "1970-tallet samfunn"]);
+  assert.ok(tiaar.every((p) => !("sort" in p)), "sorteringsnøkkelen lekker ikke ut");
+});
+
+test("planOversikt: hvert mål én gang, og punktet peker på FØRSTE forekomst", () => {
+  const g = planOversikt(vis("artist:a1", "tiår:1950", "artist:a1", "tiår:1950:society", "yt:abcdefghijk::45", "yt:abcdefghijk::130"), { artister });
+  assert.deepEqual(g[0].punkter, [{ tekst: "Elvis Presley", detalj: "", stopp: 0 }]);
+  assert.equal(g.find((k) => k.id === "tiaar").punkter.length, 1, "uten modus og «society» er samme visning");
+  // Samme video fra to ulike tidspunkt er to lyttemomenter.
+  assert.deepEqual(g.find((k) => k.id === "lytteeksempler").punkter.map((p) => p.detalj), ["fra 0:45", "fra 2:10"]);
+});
+
+test("planOversikt: slettede mål og ugyldige stopp utelates, tom plan gir ingen kategorier", () => {
+  const g = planOversikt(vis("artist:borte", "tech:borte", "ukjent:x", "artist:a3"), { artister, tech });
+  assert.deepEqual(g.map((k) => k.id), ["artister"]);
+  assert.deepEqual(g[0].punkter, [{ tekst: "Aretha Franklin", detalj: "", stopp: 3 }]);
+  assert.deepEqual(planOversikt([], { artister }), []);
+  assert.deepEqual(planOversikt(undefined), []);
+});
+
+test("planOversikt: kobling med nodenavn, historie og visninger får lesbare navn", () => {
+  const nodeNavn = (id) => ({ blues: "Blues", rnb: "R&B" })[id];
+  const g = planOversikt(vis("kobling:blues__rnb", "historie:Rock", "historie", "side:rotter", "teknologi", "himmel"), { nodeNavn });
+  const tekster = (id) => g.find((k) => k.id === id).punkter.map((p) => p.tekst);
+  assert.deepEqual(tekster("sjangre"), ["Blues → R&B", "Historien om Rock"]);
+  assert.deepEqual(tekster("oversikter"), ["Røtter før 1910", "Sjangerhimmelen", "Sjangerhistoriene"]);
+  assert.deepEqual(tekster("teknologi"), ["Teknologioversikten"]);
+});
+
+// Avspilleren og lerretet bor i DOM/CSS: lås kildeformen.
+test("avspilleren bruker de virtuelle posisjonene, og planene starter på oversikten", () => {
+  const spiller = kilde("presentasjon.js");
+  assert.match(spiller, /const p = planPosisjon\(i, plan\.stopp\.length\);/);
+  assert.match(spiller, /if \(p\.oversikt\) visOversikt\(\);/);
+  assert.match(spiller, /teller\.textContent = plan \? tellerTekst\(stoppIdx, plan\.stopp\.length\) : "…";/);
+  assert.doesNotMatch(kilde("teacher-presentasjoner.js"), /presentasjon=\$\{[^}]*\}&stopp=1/,
+    "startlenka skal ikke hoppe over oversiktskortet");
+  // Navnene i oversikten kommer fra listene, som kan lande etter planen.
+  for (const side of ["landing.js", "tre-page.js"]) {
+    const src = kilde(side);
+    assert.match(src, /onArtists: \(\) => \{[\s\S]*?presPlanTikk\(\);[\s\S]*?\},/, `${side}: onArtists`);
+    assert.match(src, /onTech: \(\) => \{[^}]*presPlanTikk\(\);/, `${side}: onTech`);
+  }
+});
+
+test("lerretet: hvit bakgrunn uten uskarphet, brede kort, verktøylinja utenfor skalaen", () => {
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  const lerret = css.match(/body\.presentasjon \.modal-backdrop \{[^}]*\}/)?.[0] || "";
+  assert.match(lerret, /background: var\(--bg\);/);
+  assert.match(lerret, /backdrop-filter: none;/);
+  assert.match(css, /body\.presentasjon \.modal-backdrop:where\(:not\(#modal-sok\)\) > \.modal:where\(:not\(\.modal-narrow, \.modal-valg\)\) \{[^}]*max-width: none;/,
+    "kortene skal gå over hele bredden, med vektløse unntak");
+  assert.match(css, /#pres-bar \{[^}]*font-size: 15px;/, "verktøylinja skal ikke vokse med tekstskalaen");
+  assert.match(css, /html\.pres-modus \{ font-size: clamp\(/);
 });

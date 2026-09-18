@@ -13,14 +13,14 @@
 //  podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.35";
-import { escapeHtml } from "./ui.js?v=5.35";
-import { savePresentasjoner } from "./store.js?v=5.35";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.35";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, ytMaal } from "./presentasjon-modell.js?v=5.35";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.35";
-import { askChoice } from "./ui-modal.js?v=5.35";
-import { startInnsamling } from "./plan-innsamling.js?v=5.35";
+import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.36";
+import { escapeHtml } from "./ui.js?v=5.36";
+import { savePresentasjoner } from "./store.js?v=5.36";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.36";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.36";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.36";
+import { askChoice } from "./ui-modal.js?v=5.36";
+import { startInnsamling } from "./plan-innsamling.js?v=5.36";
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -59,11 +59,8 @@ function stoppEtikett(stopp) {
       return { tekst: `${navn}: ${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})` };
     // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
     case "yt": {
-      for (const a of state.artists || []) {
-        const eks = (a.musicExamples || []).find((x) => ytMaal(x.url || "")?.video === m.id);
-        if (eks) return { tekst: `${navn}: ${eks.label || "(uten navn)"} (${a.name})` };
-      }
-      return { tekst: `${navn} (YouTube)` };
+      const tittel = lytteeksempelNavn(m.id, state.artists);
+      return { tekst: tittel ? `${navn}: ${tittel}` : `${navn} (YouTube)` };
     }
     default:
       return { tekst: m.id ? `${navn}: ${m.id}` : navn };
@@ -267,7 +264,8 @@ export function setupPresentasjonAdmin() {
     const spill = hit("[data-pres-spill]");
     if (spill) {
       // Egen fane: presentasjonen skal på lerretet, lærersiden skal bestå.
-      window.open(`index.html?presentasjon=${encodeURIComponent(spill.dataset.presSpill)}&stopp=1`, "_blank");
+      // Uten ?stopp starter planen på oversiktskortet (v5.36).
+      window.open(`index.html?presentasjon=${encodeURIComponent(spill.dataset.presSpill)}`, "_blank");
       return;
     }
     const slett = hit("[data-pres-slett]");

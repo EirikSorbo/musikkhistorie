@@ -12,6 +12,8 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
+import { parseVisVerdi } from "./vis-lenke.js?v=5.36";
+
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
 // tidslinje, sider …) viser alltid alt.
@@ -277,4 +279,154 @@ export function ytEmbedUrl(url, { start = null, jsapi = false } = {}) {
   }
   p.set("list", maal.list);
   return `https://www.youtube-nocookie.com/embed/videoseries?${p}`;
+}
+
+// ----------------------------------------------------------------------------
+//  Lytteeksempler: tittelen på et yt-mål slås opp blant artistenes egne
+//  eksempler. Delt av spilleren (explore-apne), editoren og oversiktskortet,
+//  som hver hadde sin egen kopi av løkka.
+// ----------------------------------------------------------------------------
+
+// «Hound Dog (Elvis Presley)», eller null når videoen ikke er noens
+// lytteeksempel (kalleren velger reserven selv).
+export function lytteeksempelNavn(videoId, artister) {
+  if (!videoId) return null;
+  for (const a of artister || []) {
+    const eks = (a?.musicExamples || []).find((x) => ytMaal(x?.url || "")?.video === videoId);
+    if (eks) return `${eks.label || "Lytteeksempel"} (${a.name})`;
+  }
+  return null;
+}
+
+// ----------------------------------------------------------------------------
+//  Oversiktskortet (v5.36): hver kjøreplan åpner og slutter med et kort som
+//  viser hva planen inneholder, gruppert etter kategori (brukerkrav: ikke i
+//  planens rekkefølge). Kortene er VIRTUELLE: de lagres ikke i planen, men
+//  legges på av avspilleren. Posisjonene er derfor 0 = oversikt, 1..n =
+//  planens stopp og n+1 = oppsummering, og ?stopp=<k> i URL-en betyr det
+//  samme. (Fram til v5.35 var ?stopp 1-basert over stoppene alene, så
+//  «stopp=1» peker fortsatt på første stopp.)
+// ----------------------------------------------------------------------------
+
+// Hvor i avspillingen posisjon `i` er, for en plan med `antall` stopp.
+// Posisjonen klemmes i [0, antall+1], samme «ingen rundgang»-regel som før.
+export function planPosisjon(i, antall) {
+  const n = Math.max(0, Math.trunc(Number(antall) || 0));
+  const pos = klampStopp(i, n + 2);
+  if (pos === 0) return { pos, oversikt: "start" };
+  if (pos === n + 1) return { pos, oversikt: "slutt" };
+  return { pos, stopp: pos - 1 };
+}
+
+// Teksten på telleren i verktøylinja.
+export function tellerTekst(i, antall) {
+  const p = planPosisjon(i, antall);
+  if (p.oversikt === "start") return "Oversikt";
+  if (p.oversikt === "slutt") return "Oppsummering";
+  return `${p.stopp + 1}/${antall}`;
+}
+
+export const OVERSIKT_KATEGORIER = [
+  { id: "artister", navn: "Artister" },
+  { id: "lytteeksempler", navn: "Lytteeksempler" },
+  { id: "sjangre", navn: "Sjangre" },
+  { id: "tiaar", navn: "Tiår" },
+  { id: "teknologi", navn: "Teknologi" },
+  { id: "instrumenter", navn: "Instrumenter" },
+  { id: "oversikter", navn: "Oversikter" },
+];
+
+const VISNING_NAVN = {
+  tidslinje: "Tidslinjen", sjangerperioder: "Sjangerperiodene",
+  himmel: "Sjangerhimmelen", referanser: "Referansene",
+  "store-bildet": "Det store bildet", slektstre: "Slektstreet",
+  podkaster: "Podkastene",
+};
+const SIDE_NAVN = { omHistorie: "Om historie", rotter: "Røtter før 1910" };
+
+// Ett stopp som punkt på oversikten: kategori, tekst, og eventuelt en detalj
+// (tidspunkt, samfunn/teknologi) og en egen sorteringsnøkkel. null = utelat:
+// en slettet artist eller et slettet kort skal ikke stå som «(ukjent)» på
+// lerretet (stoppet selv droppes også stille av avspilleren). Før listene
+// har landet, mangler punktet bare til snapshotet tegner kortet på nytt.
+function oversiktPunkt(m, oppslag) {
+  switch (m.hva) {
+    case "artist": {
+      const a = (oppslag.artister || []).find((x) => x.id === m.id);
+      return a ? { kat: "artister", tekst: a.name } : null;
+    }
+    case "yt": {
+      const fra = formatTid(Number(m.ekstra) || 0);
+      return {
+        kat: "lytteeksempler",
+        tekst: lytteeksempelNavn(m.id, oppslag.artister) || "Lytteeksempel",
+        detalj: fra ? `fra ${fra}` : "",
+      };
+    }
+    case "sjanger": case "undersjanger":
+      return { kat: "sjangre", tekst: m.id || "(uten navn)" };
+    case "historie":
+      return m.id ? { kat: "sjangre", tekst: `Historien om ${m.id}` }
+        : { kat: "oversikter", tekst: "Sjangerhistoriene" };
+    case "kobling": {
+      const [fra, til] = String(m.id || "").split("__");
+      const navn = (id) => oppslag.nodeNavn?.(id) || id || "?";
+      return { kat: "sjangre", tekst: `${navn(fra)} → ${navn(til)}` };
+    }
+    case "tiår": {
+      const tech = m.modus === "tech";
+      const aar = Number(m.id);
+      return {
+        kat: "tiaar", tekst: `${m.id}-tallet`, detalj: tech ? "teknologi" : "samfunn",
+        // Tiårene i tidsrekkefølge, samfunn før teknologi innenfor samme tiår.
+        sort: (Number.isFinite(aar) ? aar : 9999) * 2 + (tech ? 1 : 0),
+      };
+    }
+    case "tech": {
+      const t = (oppslag.tech || []).find((x) => x.id === m.id);
+      return t ? { kat: "teknologi", tekst: t.name } : null;
+    }
+    case "teknologi":
+      return { kat: "teknologi", tekst: m.id ? `Teknologi: ${m.id}` : "Teknologioversikten" };
+    case "instrument":
+      return { kat: "instrumenter", tekst: m.id || "Instrumentene" };
+    case "varmekart":
+      return { kat: "oversikter", tekst: m.id ? `Varmekartet: ${m.id}` : "Varmekartet" };
+    case "side":
+      return { kat: "oversikter", tekst: SIDE_NAVN[m.id] || "Slik bruker du appen" };
+    default:
+      return { kat: "oversikter", tekst: VISNING_NAVN[m.hva] || m.hva };
+  }
+}
+
+// Planens stopp gruppert for oversiktskortet. `oppslag` gir navnene:
+// { artister, tech, nodeNavn(id) }. Hvert mål står én gang (samme kort i
+// samme modus to ganger i planen er ett punkt), og `stopp` er indeksen til
+// FØRSTE forekomst i planen, så et klikk kan hoppe dit. Innenfor en kategori
+// sorteres alfabetisk (tiårene i tidsrekkefølge). Tomme kategorier utelates.
+export function planOversikt(stopp, oppslag = {}) {
+  const grupper = new Map(OVERSIKT_KATEGORIER.map((k) => [k.id, []]));
+  const sett = new Set();
+  (Array.isArray(stopp) ? stopp : []).forEach((s, i) => {
+    const m = parseVisVerdi(s?.vis);
+    if (!m) return;
+    // Tiårets samfunnsvisning har to skrivemåter (uten modus og «society»).
+    const modus = m.hva === "tiår" ? (m.modus === "tech" ? "tech" : "") : (m.modus || "");
+    const nokkel = [m.hva, m.id || "", modus, m.ekstra || ""].join(":");
+    if (sett.has(nokkel)) return;
+    const p = oversiktPunkt(m, oppslag);
+    if (!p) return;
+    sett.add(nokkel);
+    grupper.get(p.kat).push({ tekst: p.tekst, detalj: p.detalj || "", stopp: i, sort: p.sort });
+  });
+  return OVERSIKT_KATEGORIER
+    .map((k) => ({
+      ...k,
+      punkter: grupper.get(k.id)
+        .sort((a, b) => (a.sort != null && b.sort != null
+          ? a.sort - b.sort
+          : a.tekst.localeCompare(b.tekst, "nb")))
+        .map(({ sort: _s, ...rest }) => rest),
+    }))
+    .filter((k) => k.punkter.length);
 }
