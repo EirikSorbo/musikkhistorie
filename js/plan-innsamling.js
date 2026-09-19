@@ -9,7 +9,7 @@
 //               du trykker Ferdig (påfølgende duplikater hoppes over). For
 //               timen: studentene kan spille av samme sekvens hjemme.
 //
-//  Økta startes fra Kjøreplaner-editoren (teacher-presentasjoner.js), bæres
+//  Økta startes fra Visning-vinduet (visning.js, bak presentasjonsikonet), bæres
 //  av sessionStorage over alle sidene (samme mønster som presentasjons-
 //  modusen), og vises som en linje nede til VENSTRE (presentasjonslinja bor
 //  til høyre): plan, modus, stopptall, Angre siste og Ferdig.
@@ -22,13 +22,13 @@
 //  startes fra lærersidens editor.
 // ============================================================================
 
-import { savePresentasjoner } from "./store.js?v=5.40";
-import { getState } from "./explore-context.js?v=5.40";
-import { normaliserPlaner, samleTast } from "./presentasjon-modell.js?v=5.40";
-import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.40";
-import { escapeHtml } from "./util.js?v=5.40";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.40";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.40";
+import { savePresentasjoner } from "./store.js?v=5.41";
+import { getState } from "./explore-context.js?v=5.41";
+import { normaliserPlaner, samleTast } from "./presentasjon-modell.js?v=5.41";
+import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.41";
+import { escapeHtml } from "./util.js?v=5.41";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.41";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.41";
 
 const LAGRING = {
   plan: "pensumSamlePlan",

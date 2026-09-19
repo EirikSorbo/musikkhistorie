@@ -1,26 +1,39 @@
 // ============================================================================
-//  LÆRER — KJØREPLANER for presentasjonsvisningen (v5.25)
+//  VISNING — vinduet bak presentasjonsikonet (v5.41)
 // ----------------------------------------------------------------------------
-//  Editoren for content/presentasjoner: hver kjøreplan er en rekke stopp, og
-//  hvert stopp er en ?vis=-verdi (samme som «Kopier lenke»-knappen lager).
-//  Arbeidsflyten er nettopp den: finn fram i appen, kopier lenka, lim den inn
-//  her som et stopp. Avspillingen bor i js/presentasjon.js.
+//  Brukerkrav 2026-09-19: ikonet i toppmenyen er inngangen til ALT som har
+//  med visning å gjøre. Vinduet samler:
+//    • Fri visning: presentasjonsmodus uten kjøreplan.
+//    • Kjøreplanene, hver med Spill av, og i lærerøkter Samle, Rediger og
+//      Slett, pluss Ny kjøreplan og Ny + samle.
+//    • Editoren for én plan. Den lå på lærersidens Oversikt fra v5.25 til
+//      v5.40 (teacher-presentasjoner.js, nå flyttet hit).
+//    • Avslutt visning, når presentasjonsmodusen er på.
+//  Lastes av forsiden, slektstresiden og lærersiden, og bygger markupen
+//  selv. Skjemasiden (student.html) laster ikke utforsk-laget; der er ikonet
+//  bare lenka index.html?visning=1, som åpner vinduet på forsiden.
 //
-//  Redigering skjer på en KLADD (dyp kopi) som først skrives ved Lagre —
-//  setDoc uten merge, hele dokumentet (sletting av en plan krever det, se
-//  savePresentasjoner). To faner som redigerer samtidig overskriver
-//  hverandre; med én lærerkonto er det en akseptert enkelhet (samme som
-//  podkast-admin).
+//  Hvert stopp er en ?vis=-verdi (samme som «Kopier lenke»-knappen lager),
+//  og avspillingen bor i js/presentasjon.js. Redigering skjer på en KLADD
+//  (dyp kopi) som først skrives ved Lagre — setDoc uten merge, hele
+//  dokumentet (sletting av en plan krever det, se savePresentasjoner). To
+//  faner som redigerer samtidig overskriver hverandre; med én lærerkonto er
+//  det en akseptert enkelhet (samme som podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.40";
-import { escapeHtml } from "./ui.js?v=5.40";
-import { savePresentasjoner } from "./store.js?v=5.40";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.40";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.40";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.40";
-import { askChoice } from "./ui-modal.js?v=5.40";
-import { startInnsamling } from "./plan-innsamling.js?v=5.40";
+import { getState } from "./explore-context.js?v=5.41";
+import { escapeHtml } from "./util.js?v=5.41";
+import { onAuthChange, savePresentasjoner } from "./store.js?v=5.41";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.41";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.41";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.41";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.41";
+import { startInnsamling } from "./plan-innsamling.js?v=5.41";
+import { erLaererBruker } from "./plan-meny.js?v=5.41";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.41";
+
+const MODAL_ID = "modal-visning";
+let erLaerer = false;
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -43,11 +56,11 @@ function stoppEtikett(stopp) {
   const navn = TYPE_NAVN[m.hva] || m.hva;
   switch (m.hva) {
     case "artist": {
-      const a = (state.artists || []).find((x) => x.id === m.id);
+      const a = (getState().artists || []).find((x) => x.id === m.id);
       return a ? { tekst: `${navn}: ${a.name}` } : { tekst: `${navn}: ${m.id}`, feil: "finnes ikke lenger" };
     }
     case "tech": {
-      const t = (state.techItems || []).find((x) => x.id === m.id);
+      const t = (getState().techItems || []).find((x) => x.id === m.id);
       return t ? { tekst: `${navn}: ${t.name}` } : { tekst: `${navn}: ${m.id}`, feil: "finnes ikke lenger" };
     }
     case "sjanger":
@@ -59,7 +72,7 @@ function stoppEtikett(stopp) {
       return { tekst: `${navn}: ${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})` };
     // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
     case "yt": {
-      const tittel = lytteeksempelNavn(m.id, state.artists);
+      const tittel = lytteeksempelNavn(m.id, getState().artists);
       return { tekst: tittel ? `${navn}: ${tittel}` : `${navn} (YouTube)` };
     }
     default:
@@ -88,7 +101,28 @@ function msg(tekst, ok = true) {
 }
 
 function planerNaa() {
-  return normaliserPlaner(state.content?.presentasjoner?.planer);
+  return normaliserPlaner(getState().content?.presentasjoner?.planer);
+}
+
+// Lagring med tydelig svar: true når skrivingen gikk, false (med beskjed)
+// når den feilet. Lærersidens guardTeacherAction svelget feilen, og Lagre
+// meldte da «lagret» også når ingenting var lagret.
+async function vakt(lovnad) {
+  try {
+    await lovnad;
+    return true;
+  } catch (e) {
+    console.error("Kjøreplanen ble ikke lagret:", e);
+    msg(`Ble ikke lagret (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`, false);
+    return false;
+  }
+}
+
+// Visningen starter i egen fane fra lærersiden (den er arbeidsbenken og skal
+// bestå), ellers i samme fane.
+function gaaTilVisning(url) {
+  if (/teacher\.html$/.test(window.location.pathname)) window.open(url, "_blank");
+  else window.location.href = url;
 }
 
 // ----------------------------------------------------------------------------
@@ -98,30 +132,43 @@ function planerNaa() {
 function renderListe() {
   const el = document.getElementById("pres-adm-liste");
   if (!el) return;
+  const s = getState();
   const planer = Object.entries(planerNaa())
     .sort(([, a], [, b]) => a.tittel.localeCompare(b.tittel, "no"));
+  const aktiv = aktivPlanId();
+  const tomTekst = !s.contentLoaded ? "Laster kjøreplanene …"
+    : erLaerer ? "Ingen kjøreplaner ennå. Lag den første under."
+    : "Ingen kjøreplaner ennå.";
   el.innerHTML = `
     ${planer.length ? planer.map(([id, p]) => `
-      <div class="pres-adm-rad">
+      <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
-          <span class="muted">${p.stopp.length} stopp</span></span>
+          <span class="muted">${p.stopp.length} stopp${id === aktiv ? " · spilles nå" : ""}</span></span>
         <span class="pres-adm-knapper">
-          <button type="button" class="btn ghost small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
+          <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
+          ${erLaerer ? `
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Legg til stopp mens du blar, eller ta opp alt du åpner">Samle</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
-          <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>
+          <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
       </div>`).join("")
-    : `<p class="muted">Ingen kjøreplaner ennå. Lag den første, så blir den tilgjengelig fra presentasjonsikonet.</p>`}
+    : `<p class="muted">${tomTekst}</p>`}
+    ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
       <button type="button" class="btn primary small" id="pres-adm-ny">Ny kjøreplan</button>
       <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og fyll den mens du blar eller tar opp">Ny + samle …</button>
-    </div>`;
+    </div>
+    <p class="muted vis-tips">Raskest å bygge en plan: finn fram i appen og trykk lenkeknappen i kortets tittellinje. Menyen «Legg til som stopp i» legger kortet rett inn.</p>`
+    : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
+  // Står visningen alt på, kan den avsluttes herfra.
+  const paa = document.getElementById("vis-paa");
+  if (paa) paa.hidden = !erPresentasjon();
 }
 
 function renderKladd() {
   const boks = document.getElementById("pres-adm-rediger");
-  const liste = document.getElementById("pres-adm-liste");
+  // Hele startdelen (fri visning og lista) viker for editoren.
+  const liste = document.getElementById("vis-start");
   if (!boks) return;
   boks.hidden = !kladd;
   if (liste) liste.hidden = !!kladd;
@@ -165,7 +212,7 @@ async function lagre() {
     laget: planer[kladd.id]?.laget || new Date().toISOString(),
     stopp: kladd.stopp,
   };
-  await guardTeacherAction(savePresentasjoner(planer));
+  if (!(await vakt(savePresentasjoner(planer)))) return;   // kladden beholdes
   kladd = null;
   renderListe();
   renderKladd();
@@ -205,28 +252,108 @@ async function velgModusOgStart(planId, tittelForNy) {
   });
   if (!modus) return;
   startInnsamling(planId || nyPlanId(), modus, navn);
-  closeAdminModal("modal-presentasjoner");
+  const m = document.getElementById(MODAL_ID);
+  if (m) modalClose(m);
 }
 
-export function openPresentasjonAdmin() {
+// ----------------------------------------------------------------------------
+//  Vinduet
+// ----------------------------------------------------------------------------
+
+function byggModal() {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+<div class="modal-backdrop" id="${MODAL_ID}">
+  <div class="modal modal-wide modal-verktoy">
+    <div class="modal-head">
+      <h2>Visning</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="vis-start">
+      <div class="vis-paa" id="vis-paa" hidden>
+        <span>Visningen er på.</span>
+        <button type="button" class="btn ghost small" id="vis-avslutt">Avslutt visning</button>
+      </div>
+      <div class="vis-fri">
+        <button type="button" class="btn primary" id="vis-fri">Fri visning</button>
+        <span class="muted">Vis det du finner underveis, uten kjøreplan. Søk med <kbd>/</kbd> eller Ctrl/Cmd+K.</span>
+      </div>
+      <h3 class="vis-hode">Kjøreplaner</h3>
+      <div id="pres-adm-liste"></div>
+    </div>
+    <div id="pres-adm-rediger" hidden>
+      <div class="add-grid" style="grid-template-columns:1fr">
+        <label>Tittel *
+          <input type="text" id="pres-adm-tittel" maxlength="80" placeholder="F.eks. Uke 39: Blues og gospel" />
+        </label>
+      </div>
+      <div id="pres-adm-stopp" style="margin-top:10px"></div>
+      <p class="muted pres-adm-hint">Et oversiktskort over innholdet, gruppert etter artister, lytteeksempler, sjangre, tiår og så videre, legges automatisk først og sist i avspillingen.</p>
+      <div class="pres-adm-leggtil">
+        <input type="text" id="pres-adm-lenke" placeholder="Lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
+        <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
+      </div>
+      <div class="add-actions" style="margin-top:14px">
+        <button type="button" id="pres-adm-lagre" class="btn primary" title="Lagre (Ctrl/Cmd+S)">Lagre kjøreplanen</button>
+        <button type="button" id="pres-adm-avbryt" class="btn ghost">Avbryt</button>
+      </div>
+    </div>
+    <span id="pres-adm-msg" class="form-msg ok"></span>
+  </div>
+</div>`;
+  const m = wrap.firstElementChild;
+  document.body.appendChild(m);
+  setupModal(m);
+  initModalHeaders();
+  koblVindu(m);
+  return m;
+}
+
+// Åpner vinduet med lista (aldri midt i en gammel kladd).
+export function apneVisning() {
+  const m = document.getElementById(MODAL_ID) || byggModal();
   kladd = null;
   renderListe();
   renderKladd();
   msg("");
-  openAdminModal("modal-presentasjoner");
+  modalOpen(m);
 }
 
-// Lista holdes fersk når snapshotet lander MENS modalen står åpen — men aldri
-// midt i en redigering (kladden er lærerens, og skal ikke rykkes vekk).
-export function renderPresentasjonAdmin() {
-  const m = document.getElementById("modal-presentasjoner");
+// Kalles fra sidenes snapshot-hooks: lista holdes fersk når content lander
+// MENS vinduet står åpent — men aldri midt i en redigering (kladden er
+// lærerens, og skal ikke rykkes vekk).
+export function visningTikk() {
+  const m = document.getElementById(MODAL_ID);
   if (!m?.classList.contains("open") || kladd) return;
   renderListe();
 }
 
-export function setupPresentasjonAdmin() {
-  const m = document.getElementById("modal-presentasjoner");
-  if (!m) return;
+// Oppstart på hver side: ikonet åpner vinduet i stedet for å følge lenka, og
+// ?visning=1 (fra skjemasiden, eller et bokmerke) åpner det ved lasting.
+export function initVisning() {
+  document.querySelectorAll("[data-visning]").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      apneVisning();
+    });
+  });
+  onAuthChange((user) => {
+    erLaerer = erLaererBruker(user);
+    visningTikk();
+  });
+  let vis = null;
+  try { vis = new URLSearchParams(window.location.search).get("visning"); } catch (e) {}
+  if (vis !== null) {
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("visning");
+      window.history.replaceState(null, "", u);
+    } catch (e) {}
+    apneVisning();
+  }
+}
+
+function koblVindu(m) {
 
   // Ulagrede endringer skal ikke forsvinne på en bortkommen Escape.
   m._beforeClose = () => {
@@ -238,6 +365,9 @@ export function setupPresentasjonAdmin() {
 
   m.addEventListener("click", async (e) => {
     const hit = (sel) => e.target.closest(sel);
+
+    if (hit("#vis-fri")) return gaaTilVisning("index.html?presentasjon=1");
+    if (hit("#vis-avslutt")) return avsluttPresentasjon();
 
     if (hit("#pres-adm-ny")) {
       kladd = { id: nyPlanId(), tittel: "", stopp: [] };
@@ -263,9 +393,8 @@ export function setupPresentasjonAdmin() {
     }
     const spill = hit("[data-pres-spill]");
     if (spill) {
-      // Egen fane: presentasjonen skal på lerretet, lærersiden skal bestå.
       // Uten ?stopp starter planen på oversiktskortet (v5.36).
-      window.open(`index.html?presentasjon=${encodeURIComponent(spill.dataset.presSpill)}`, "_blank");
+      gaaTilVisning(`index.html?presentasjon=${encodeURIComponent(spill.dataset.presSpill)}`);
       return;
     }
     const slett = hit("[data-pres-slett]");
@@ -275,7 +404,7 @@ export function setupPresentasjonAdmin() {
       if (!p || !window.confirm(`Slette kjøreplanen «${p.tittel}»? Dette kan ikke angres.`)) return;
       const planer = planerNaa();
       delete planer[id];
-      await guardTeacherAction(savePresentasjoner(planer));
+      if (!(await vakt(savePresentasjoner(planer)))) return;
       renderListe();
       msg("Kjøreplanen er slettet.");
       return;
@@ -324,7 +453,7 @@ export function setupPresentasjonAdmin() {
   });
 
   // Enter i lim-inn-feltet = «Legg til stopp» (raskere flyt med mange lenker).
-  document.getElementById("pres-adm-lenke")?.addEventListener("keydown", (e) => {
+  m.querySelector("#pres-adm-lenke")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); if (kladd) leggTilStopp(); }
   });
 

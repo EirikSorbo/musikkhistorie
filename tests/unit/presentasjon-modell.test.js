@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.40";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.40";
+import { metaRader } from "../../js/ui-helpers.js?v=5.41";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.41";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -321,7 +321,7 @@ test("avspilleren bruker de virtuelle posisjonene, og planene starter på oversi
   assert.match(spiller, /const p = planPosisjon\(i, plan\.stopp\.length\);/);
   assert.match(spiller, /if \(p\.oversikt\) visOversikt\(\);/);
   assert.match(spiller, /teller\.textContent = plan \? tellerTekst\(stoppIdx, plan\.stopp\.length\) : "…";/);
-  assert.doesNotMatch(kilde("teacher-presentasjoner.js"), /presentasjon=\$\{[^}]*\}&stopp=1/,
+  assert.doesNotMatch(kilde("visning.js"), /presentasjon=\$\{[^}]*\}&stopp=1/,
     "startlenka skal ikke hoppe over oversiktskortet");
   // Navnene i oversikten kommer fra listene, som kan lande etter planen.
   for (const side of ["landing.js", "tre-page.js"]) {
@@ -336,7 +336,7 @@ test("lerretet: hvit bakgrunn uten uskarphet, brede kort, verktøylinja utenfor 
   const lerret = css.match(/body\.presentasjon \.modal-backdrop \{[^}]*\}/)?.[0] || "";
   assert.match(lerret, /background: var\(--bg\);/);
   assert.match(lerret, /backdrop-filter: none;/);
-  assert.match(css, /body\.presentasjon \.modal-backdrop:where\(:not\(#modal-sok\)\) > \.modal:where\(:not\(\.modal-narrow, \.modal-valg, \.modal-hjelp\)\) \{[^}]*max-width: none;/,
+  assert.match(css, /body\.presentasjon \.modal-backdrop:where\(:not\(#modal-sok\)\) > \.modal:where\(:not\(\.modal-narrow, \.modal-valg, \.modal-hjelp, \.modal-verktoy\)\) \{[^}]*max-width: none;/,
     "kortene skal gå over hele bredden, med vektløse unntak");
   assert.match(css, /#pres-bar \{[^}]*font-size: 15px;/, "verktøylinja skal ikke vokse med tekstskalaen");
   assert.match(css, /html\.pres-modus \{ font-size: clamp\(/);
@@ -477,7 +477,7 @@ test("tastene er koblet: én felles lytter, svart skjerm i capture, samleøkt et
   const samle = kilde("plan-innsamling.js");
   assert.match(samle, /window\.addEventListener\("keydown", \(e\) => \{\n\s*if \(!økt \|\| e\.defaultPrevented\) return;/,
     "samleøkta lytter på window og viker for en kjøreplan i samme fane");
-  const editor = kilde("teacher-presentasjoner.js");
+  const editor = kilde("visning.js");
   assert.match(editor, /if \(!kladd \|\| !m\.classList\.contains\("open"\)\) return;\n\s*e\.preventDefault\(\);\n\s*lagre\(\);/);
 });
 
@@ -550,4 +550,46 @@ test("lerretet bygges før nivået settes, og ryddes etterpå", () => {
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
   assert.match(css, /body\.presentasjon \.pres-artist-spalter \{\n\s*display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 42%\);/);
   assert.doesNotMatch(css, /float: right; width: 42%; max-width: 42%;/, "flytebildet fra v5.30 er erstattet av spaltene");
+});
+
+// --- Visning-vinduet bak presentasjonsikonet (v5.41) --------------------------
+// Brukerkrav 2026-09-19: alt som har med visning å gjøre, under ikonet.
+
+test("ikonet er én lenke på alle fire sidene, og åpner vinduet der modulen finnes", () => {
+  const html = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+  for (const side of ["index.html", "tre.html", "teacher.html", "student.html"]) {
+    assert.match(html(side), /<a href="index\.html\?visning=1" class="nav-icon" data-visning title="Visning" aria-label="Visning">/, side);
+    assert.doesNotMatch(html(side), /href="index\.html\?presentasjon=1"/, `${side}: den gamle lenka`);
+  }
+  for (const f of ["landing.js", "tre-page.js", "teacher.js"]) {
+    assert.match(kilde(f), /initVisning\(\);/, `${f} kobler ikonet`);
+    assert.match(kilde(f), /visningTikk\(\);/, `${f} holder lista fersk`);
+  }
+  const vis = kilde("visning.js");
+  assert.match(vis, /document\.querySelectorAll\("\[data-visning\]"\)\.forEach/);
+  assert.match(vis, /get\("visning"\)/, "?visning=1 åpner vinduet ved lasting (fra skjemasiden)");
+});
+
+test("kjøreplanene er flyttet fra lærerens Oversikt inn i vinduet", () => {
+  const laerer = readFileSync(new URL("../../teacher.html", import.meta.url), "utf8");
+  assert.doesNotMatch(laerer, /btn-t-kjoreplaner/, "kortet i Oversikt er borte");
+  assert.doesNotMatch(laerer, /id="modal-presentasjoner"/, "den gamle editoren er borte");
+  const vis = kilde("visning.js");
+  for (const del of ['id="vis-fri"', 'id="vis-avslutt"', 'id="pres-adm-liste"', 'id="pres-adm-rediger"', 'class="modal modal-wide modal-verktoy"']) {
+    assert.ok(vis.includes(del), `vinduet mangler ${del}`);
+  }
+  // Redigeringsknappene bare i lærerøkter; Spill av for alle.
+  assert.match(vis, /\$\{erLaerer \? `\n\s*<button type="button" class="btn ghost small" data-pres-samle/);
+  assert.match(vis, /erLaerer = erLaererBruker\(user\);/);
+  // Ærlig lagring: kladden beholdes når skrivingen feiler.
+  assert.match(vis, /if \(!\(await vakt\(savePresentasjoner\(planer\)\)\)\) return;   \/\/ kladden beholdes/);
+  assert.doesNotMatch(vis, /guardTeacherAction\(/, "lærersidens guard svelget feilen");
+  assert.doesNotMatch(vis, /from "\.\/teacher-state\.js/, "modulen skal virke utenfor lærersiden");
+});
+
+test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
+  const spiller = kilde("presentasjon.js");
+  assert.match(spiller, /\} else \{\n(\s*\/\/[^\n]*\n)*\s*for \(const k of \[LAGRING\.plan, LAGRING\.stopp\]\) \{ try \{ sessionStorage\.removeItem\(k\); \} catch \(e\) \{\} \}/);
+  assert.match(spiller, /export function aktivPlanId\(\)/);
+  assert.match(spiller, /export function avsluttPresentasjon\(\)/);
 });

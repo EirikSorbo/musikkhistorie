@@ -24,18 +24,18 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.40";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.40";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.40";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.40";
-import { GENEALOGY } from "./genre-model.js?v=5.40";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.40";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.40";
-import { escapeHtml } from "./util.js?v=5.40";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.40";
-import { getState } from "./explore-context.js?v=5.40";
-import { onAuthChange } from "./store.js?v=5.40";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.40";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.41";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.41";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.41";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.41";
+import { GENEALOGY } from "./genre-model.js?v=5.41";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.41";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.41";
+import { escapeHtml } from "./util.js?v=5.41";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.41";
+import { getState } from "./explore-context.js?v=5.41";
+import { onAuthChange } from "./store.js?v=5.41";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.41";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -83,9 +83,20 @@ export function erPresentasjon() {
       let s = 0;
       try { s = Number(new URLSearchParams(window.location.search).get("stopp")); } catch (e) {}
       skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? Math.trunc(s) : 0));
+    } else {
+      // Fri visning (?presentasjon eller =1) er uten kjøreplan (v5.41): en
+      // plan fra tidligere i økta lå ellers igjen i sessionStorage og ble
+      // spilt videre.
+      for (const k of [LAGRING.plan, LAGRING.stopp]) { try { sessionStorage.removeItem(k); } catch (e) {} }
     }
   }
   return aktiv;
+}
+
+// Kjøreplanen som spilles nå, eller null (fri visning / modusen av). For
+// «spilles nå»-merket i Visning-vinduet (js/visning.js).
+export function aktivPlanId() {
+  return erPresentasjon() ? les(LAGRING.plan) || null : null;
 }
 
 let nivaa = 2;
@@ -538,7 +549,7 @@ function byggBar() {
     if (e.target.closest("#pres-skala")) return vekslSkala();
     if (e.target.closest("#pres-full")) return vekslFullskjerm();
     if (e.target.closest("#pres-tannhjul")) return vekslPanel();
-    if (e.target.closest("#pres-avslutt")) return avslutt();
+    if (e.target.closest("#pres-avslutt")) return avsluttPresentasjon();
   });
 }
 
@@ -568,7 +579,8 @@ function vekslFullskjerm() {
   else document.documentElement.requestFullscreen?.().catch(() => {});
 }
 
-function avslutt() {
+// Avslutt-knappen i verktøylinja og «Avslutt visning» i Visning-vinduet.
+export function avsluttPresentasjon() {
   for (const k of Object.values(LAGRING)) { try { sessionStorage.removeItem(k); } catch (e) {} }
   // Full sidelast: nullstiller også flaggmutasjonene fra QA-bryteren.
   window.location.href = "index.html";

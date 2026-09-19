@@ -2851,7 +2851,7 @@ body.presentasjon .modal-backdrop {
 }
 /* :where() holder unntakene uten vekt (0,3,1): med :not(#modal-sok) direkte
    fikk regelen ID-vekt og slo ut videospillerens egen bredde under. */
-body.presentasjon .modal-backdrop:where(:not(#modal-sok)) > .modal:where(:not(.modal-narrow, .modal-valg, .modal-hjelp)) {
+body.presentasjon .modal-backdrop:where(:not(#modal-sok)) > .modal:where(:not(.modal-narrow, .modal-valg, .modal-hjelp, .modal-verktoy)) {
   max-width: none;
   width: 100%;
   max-height: 100%;
@@ -3030,6 +3030,28 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 .pres-plan { display: inline-flex; gap: 4px; align-items: center; padding-right: 4px; border-right: 1px solid var(--line); }
 .pres-teller-knapp { font-variant-numeric: tabular-nums; font-size: 0.82em; }
 .pres-adm-hint { font-size: 0.85rem; margin: 10px 0 0; }
+
+/* Visning-vinduet bak presentasjonsikonet (v5.41, js/visning.js). Et
+   verktøy, ikke et lysbilde: modal-verktoy holder det i vanlig bredde også
+   i visningsmodus (unntaket i lerretsregelen over). */
+.vis-paa {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2);
+}
+.vis-fri { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.vis-fri .muted { font-size: 0.88rem; }
+.vis-fri kbd {
+  display: inline-block; min-width: 1.4em; padding: 0 0.35em;
+  border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px;
+  background: var(--surface-2); font: inherit; font-size: 0.85em; text-align: center;
+}
+.vis-hode {
+  margin: 4px 0 2px; font-size: 0.78rem; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.vis-aktiv-plan .pres-adm-navn strong { color: var(--accent-2); }
+.vis-tips { font-size: 0.85rem; margin: 12px 0 0; }
 
 /* «Legg til i kjøreplan»-menyen på lenkeknappen (v5.26, kun lærer-innlogging).
    Ankres i .modal-head (position:relative) og legger seg under tittellinja. */
