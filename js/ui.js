@@ -10,11 +10,11 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.38";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.38";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.38";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.38";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.38";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.39";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.39";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.39";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.39";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.39";
 import {
   escapeHtml,
   linkDesc,
@@ -22,6 +22,7 @@ import {
   buildKilderList,
   kilderHtml,
   genreTags,
+  metaRader,
   musicExampleLabel,
   musicExamplesHtml,
   relatedArtistsHtml,
@@ -36,12 +37,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.38";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.38";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.38";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.38";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.38";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.38";
+} from "./ui-helpers.js?v=5.39";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.39";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.39";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.39";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.39";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.39";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -123,10 +124,7 @@ export function renderArtistDetail(el, artist, lc) {
   el.innerHTML = `
     ${sekt("bilde", artistImage(a, true))}
     ${sekt("fakta", factsLines(a))}
-    ${sekt("tags", `<div class="meta" style="margin-bottom:12px">
-      ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
-      ${genreTags(a)}
-    </div>`)}
+    ${sekt("tags", `<div class="meta" style="margin-bottom:12px">${metaRader(a)}</div>`)}
     ${sekt("stripe", artistStripHtml(a))}
     ${sekt("beskrivelse", a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : "")}
     ${sekt("verk", worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : "")}

@@ -9,12 +9,12 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.38";
-import { wireAllLinks } from "./linkify.js?v=5.38";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.38";
-import { GENDERS } from "./limits.js?v=5.38";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.38";
-export { artistStripHtml } from "./artist-strip.js?v=5.38";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.39";
+import { wireAllLinks } from "./linkify.js?v=5.39";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.39";
+import { GENDERS } from "./limits.js?v=5.39";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.39";
+export { artistStripHtml } from "./artist-strip.js?v=5.39";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -160,6 +160,26 @@ export function genreTags(a, { withInstrument = false, withSub = true, extraClas
     ...under.map((s) => `<button class="tag tag-under${cls}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
     withInstrument && a.instrument ? `<button class="tag tag-instrument${cls}" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
   ].filter(Boolean).join("");
+}
+
+// Instrument og sjangre som merkede rader (v5.39, brukerkrav 2026-09-19):
+// på lerretet i presentasjonen står det «Instrument: Vokal», og «Sjanger:
+// Blues» på neste linje. Utenfor presentasjonen er radene og etikettene
+// usynlige skall (CSS: .meta-rad er display:contents, etikett og komma
+// display:none), så knappene står som bobler akkurat som før. Knappene er
+// genreTags' egne, så klikkene går til samme mål som ellers i appen.
+export function metaRader(a) {
+  const liste = (v) => (Array.isArray(v) ? v : []);
+  const rad = (entall, flertall, knapper) => knapper.length
+    ? `<span class="meta-rad"><span class="meta-etikett">${knapper.length > 1 ? flertall : entall}:</span> ` +
+      `${knapper.join(`<span class="meta-skille">, </span>`)}</span>`
+    : "";
+  return [
+    rad("Instrument", "Instrumenter", a?.instrument
+      ? [genreTags({ instrument: a.instrument }, { withInstrument: true, withSub: false })] : []),
+    rad("Sjanger", "Sjangre", liste(a?.mainGenre).map((s) => genreTags({ mainGenre: [s] }, { withSub: false }))),
+    rad("Undersjanger", "Undersjangre", liste(a?.subGenre).map((s) => genreTags({ subGenre: [s] }))),
+  ].join("");
 }
 
 // Podkast-episodekort — ett enkelt kort. Begge listene (podkastfanen i

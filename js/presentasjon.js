@@ -24,17 +24,17 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.38";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.38";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.38";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.38";
-import { GENEALOGY } from "./genre-model.js?v=5.38";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.38";
-import { escapeHtml } from "./util.js?v=5.38";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.38";
-import { getState } from "./explore-context.js?v=5.38";
-import { onAuthChange } from "./store.js?v=5.38";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.38";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.39";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.39";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.39";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.39";
+import { GENEALOGY } from "./genre-model.js?v=5.39";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.39";
+import { escapeHtml } from "./util.js?v=5.39";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.39";
+import { getState } from "./explore-context.js?v=5.39";
+import { onAuthChange } from "./store.js?v=5.39";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.39";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).

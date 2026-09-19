@@ -23,9 +23,9 @@
 //  spilleren når minst én av dem er sann. Da dobbeltåpner ingenting.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.38";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.38";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.38";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.39";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.39";
+import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.39";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres.
@@ -40,6 +40,7 @@ function ytModal() {
   <div class="modal modal-yt-boks">
     <div class="modal-head">
       <h2 id="yt-tittel">Avspilling</h2>
+      <button type="button" class="btn ghost small yt-kino-knapp" id="yt-kino-knapp" hidden></button>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div class="yt-ramme" id="yt-ramme"></div>
@@ -67,10 +68,58 @@ function ytModal() {
     return true;
   };
   wireTidrad(m);
+  m.querySelector("#yt-kino-knapp").addEventListener("click", () =>
+    settKino(m, !m.classList.contains("yt-kino")));
+  // Går brukeren ut av fullskjerm selv (Esc), er den ikke lenger vår å forlate.
+  document.addEventListener("fullscreenchange", () => {
+    if (document.fullscreenElement !== m) egenFullskjerm = false;
+  });
   return m;
 }
 
+// ----------------------------------------------------------------------------
+//  Fullskjerm som standard i presentasjonen (v5.39, brukerkrav 2026-09-19).
+//  Kinovisning: videoen fyller lerretet på svart bakgrunn, og tittellinja
+//  vises bare når pekeren står øverst (CSS, .yt-kino). Er ikke siden alt i
+//  fullskjerm (F), bes nettleseren om ekte fullskjerm for spilleren. Det
+//  krever et tastetrykk eller klikk rett før (brukeraktivering); uten det,
+//  for eksempel ved omlasting på et lytteeksempel-stopp, fyller videoen
+//  vinduet i stedet. Knappen i tittellinja veksler til kortet og tilbake, så
+//  fullskjerm er standard, ikke tvang. Fullskjermen spilleren selv ba om,
+//  forlates når den lukkes (neste stopp, ←, Esc), så lerretet blir som før.
+// ----------------------------------------------------------------------------
+
+const IKON_STORRE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+const IKON_MINDRE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>';
+
+let egenFullskjerm = false;
+
+const erPresentasjon = () => document.body.classList.contains("presentasjon");
+
+function settKino(m, paa) {
+  m.classList.toggle("yt-kino", paa);
+  if (paa && !document.fullscreenElement && m.requestFullscreen) {
+    m.requestFullscreen().then(() => { egenFullskjerm = true; }).catch(() => {});
+  } else if (!paa) {
+    forlatEgenFullskjerm(m);
+  }
+  const knapp = m.querySelector("#yt-kino-knapp");
+  if (knapp) {
+    knapp.hidden = !erPresentasjon();
+    knapp.innerHTML = paa ? IKON_MINDRE : IKON_STORRE;
+    knapp.title = paa ? "Vis som kort" : "Fyll skjermen";
+    knapp.setAttribute("aria-label", knapp.title);
+  }
+}
+
+function forlatEgenFullskjerm(m) {
+  if (egenFullskjerm && document.fullscreenElement === m) document.exitFullscreen?.().catch(() => {});
+  egenFullskjerm = false;
+}
+
 function lukkSpiller() {
+  const m = document.getElementById("modal-yt");
+  if (m) forlatEgenFullskjerm(m);
   try { spiller?.destroy?.(); } catch (e) {}
   spiller = null;
   spillerKlar = false;
@@ -202,6 +251,11 @@ export function apneYtSpiller(url, tittel, { start = null } = {}) {
   lastIframe();
   oppdaterMaal();
   modalOpen(m);
+  // Kinovisning som standard i presentasjonen, kortet ellers. Fokus på selve
+  // dialogen, så tittellinja (synlig ved :focus-within) ikke står fremme fra
+  // start, og piltastene fortsatt når presentasjonen.
+  settKino(m, erPresentasjon());
+  if (erPresentasjon()) m.querySelector(".modal")?.focus();
   return true;
 }
 

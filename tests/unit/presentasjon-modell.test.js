@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.38";
+import { metaRader } from "../../js/ui-helpers.js?v=5.39";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.39";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -20,7 +21,7 @@ test("kilder vises ALDRI i visning, uansett nivå eller unntak", () => {
   }
 });
 
-test("artistnivåene: bilde + levetid + innflytelseslinje, så tags og lytte", () => {
+test("artistnivåene: bilde + levetid + innflytelseslinje + lytteeksempler, så tags", () => {
   const synlig = (sekt, n) => erSynlig("artist", sekt, n);
   // Nivå 1: bildet i fokus, levetiden og stripa — ikke årstallslinja.
   assert.equal(synlig("bilde", 1), true);
@@ -30,10 +31,12 @@ test("artistnivåene: bilde + levetid + innflytelseslinje, så tags og lytte", (
   assert.equal(faktaSynlig("artist", "innflytelse", 2), false);
   assert.equal(faktaSynlig("artist", "innflytelse", 3), true);
   assert.equal(faktaSynlig("artist", "plateselskap", 2), false);
-  // Nivå 2: + instrument/sjanger og lytteeksempler.
+  // Lytteeksemplene står fra nivå 1 (brukerkrav 2026-09-19).
+  assert.equal(synlig("lytte", 1), true);
+  assert.equal(synlig("lytte", 2), true);
+  // Nivå 2: + instrument/sjanger.
   assert.equal(synlig("tags", 1), false);
   assert.equal(synlig("tags", 2), true);
-  assert.equal(synlig("lytte", 2), true);
   assert.equal(synlig("beskrivelse", 2), false, "beskrivelsen hører til nivå 3");
   // Nivå 3: alt annet.
   for (const { id } of FLATER.artist) assert.equal(synlig(id, 3), true, id);
@@ -472,4 +475,46 @@ test("tastene er koblet: én felles lytter, svart skjerm i capture, samleøkt et
     "samleøkta lytter på window og viker for en kjøreplan i samme fane");
   const editor = kilde("teacher-presentasjoner.js");
   assert.match(editor, /if \(!kladd \|\| !m\.classList\.contains\("open"\)\) return;\n\s*e\.preventDefault\(\);\n\s*lagre\(\);/);
+});
+
+// --- Brukerens finpuss 2026-09-19 (v5.39) -------------------------------------
+
+test("metaRader: «Instrument: …» og «Sjanger: …» som egne rader, med samme knapper som før", () => {
+  const html = metaRader({ instrument: "Vokal", mainGenre: ["Blues"], subGenre: [] });
+  assert.match(html, /<span class="meta-etikett">Instrument:<\/span> <button class="tag tag-instrument" data-instrument="Vokal">Vokal<\/button>/);
+  assert.match(html, /<span class="meta-etikett">Sjanger:<\/span> <button class="tag tag-sjanger" data-sjanger="Blues">Blues<\/button>/);
+  assert.equal((html.match(/class="meta-rad"/g) || []).length, 2, "tom undersjanger-liste gir ingen rad");
+  assert.ok(html.indexOf("Instrument:") < html.indexOf("Sjanger:"), "instrumentet først, som før");
+  // Flertall og komma mellom flere verdier; undersjangre på egen rad.
+  const flere = metaRader({ mainGenre: ["Blues", "Rock"], subGenre: ["Delta blues", "Chicago blues"] });
+  assert.match(flere, /Sjangre:<\/span> <button[^>]*>Blues<\/button><span class="meta-skille">, <\/span><button[^>]*>Rock<\/button>/);
+  assert.match(flere, /Undersjangre:<\/span>/);
+  assert.doesNotMatch(flere, /Instrument/, "uten instrument ingen instrumentrad");
+  // Escaping og tomme artister.
+  assert.match(metaRader({ mainGenre: ['R&B "x"'] }), /data-sjanger="R&amp;B &quot;x&quot;"/);
+  assert.equal(metaRader({}), "");
+  assert.equal(metaRader(null), "");
+});
+
+test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort side om side, kino for lytteeksempler", () => {
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  // Utenfor presentasjonen skal studentenes bobler se ut som før.
+  assert.match(css, /\.meta-rad \{ display: contents; \}/);
+  assert.match(css, /\.meta-etikett, \.meta-skille \{ display: none; \}/);
+  assert.match(kilde("ui.js"), /sekt\("tags", `<div class="meta" style="margin-bottom:12px">\$\{metaRader\(a\)\}<\/div>`\)/);
+  // Årstallsraden følger skriften: fast px-høyde lot tallene falle ned i sporet.
+  const akse = css.match(/\.ai-axis \{[^}]*\}/)?.[0] || "";
+  assert.match(akse, /height: 1\.3em;/);
+  assert.doesNotMatch(akse, /height: \d+px/);
+  assert.match(css, /\.ai-track \{[^}]*height: 0\.75rem;/);
+  // «Rediger pensumet»: kortene side om side, ikke én kolonne.
+  assert.match(css, /\.dash-grid--smale \{ grid-template-columns: repeat\(auto-fill, minmax\(150px, 240px\)\);/);
+  assert.match(readFileSync(new URL("../../teacher.html", import.meta.url), "utf8"), /class="dash-grid dash-grid--smale"/);
+  // Lytteeksempler i kinovisning som standard i presentasjonen; egen
+  // fullskjerm bare når siden ikke alt er i fullskjerm, og den forlates ved lukking.
+  const spiller = kilde("yt-spiller.js");
+  assert.match(spiller, /settKino\(m, erPresentasjon\(\)\);/);
+  assert.match(spiller, /if \(paa && !document\.fullscreenElement && m\.requestFullscreen\)/);
+  assert.match(spiller, /function lukkSpiller\(\) \{\n\s*const m = document\.getElementById\("modal-yt"\);\n\s*if \(m\) forlatEgenFullskjerm\(m\);/);
+  assert.match(css, /body\.presentasjon #modal-yt\.yt-kino > \.modal\.modal-yt-boks \{[^}]*max-width: none;/);
 });

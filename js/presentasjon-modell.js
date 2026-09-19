@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.38";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.39";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -60,10 +60,11 @@ export const ALDRI_I_VISNING = new Set(["kilder"]);
 export const NIVAA_SEKT = {
   // Artistkortet (brukerens oppsett 2026-09-17): nivå 1 er bildet i fokus,
   // levetiden og innflytelseslinja — den ERSTATTER årstallslinja, som først
-  // kommer på nivå 3 (se FAKTA_MIN). Nivå 2 legger til instrument/sjanger og
-  // lytteeksempler; beskrivelsen kommer på nivå 3.
+  // kommer på nivå 3 (se FAKTA_MIN). Lytteeksemplene står fra nivå 1
+  // (brukerkrav 2026-09-19: musikken er poenget på alle nivåer). Nivå 2
+  // legger til instrument/sjanger; beskrivelsen kommer på nivå 3.
   artist: {
-    1: ["bilde", "fakta", "stripe"],
+    1: ["bilde", "fakta", "stripe", "lytte"],
     2: ["bilde", "fakta", "stripe", "tags", "lytte"],
   },
   sjanger: {

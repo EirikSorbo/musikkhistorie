@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.38";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.39";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -192,7 +192,7 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
     assert.ok(b.includes('"ownerUid"'), `${samling}: ownerUid må være tillatt ved create`);
   }
   // Artists-create-hvitelisten må dekke HELE skjemaet — parse den faktiske lista.
-  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.38");
+  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.39");
   const lister = [...rules.matchAll(/hasOnly\(\[([\s\S]*?)\]\)/g)]
     .map((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]));
   const artistCreate = lister.find((l) => l.includes("votedUpBy") && l.includes("addedYear"));
@@ -239,7 +239,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.38");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.39");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -306,7 +306,7 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
 // Audit v5.19 funn 40: de seks returfeltnavnene sto håndskrevet tre steder.
 // Nå er RETUR_FELTER (artist-schema.js) én kilde — lås at alle tre bruker den.
 test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", async () => {
-  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.38");
+  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.39");
   assert.deepEqual(RETUR_FELTER, ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]);
   for (const f of RETUR_FELTER) assert.ok(ARTIST_EXPORT_FIELDS.includes(f), `eksporten mangler ${f}`);
   assert.ok(ARTIST_EXPORT_FIELDS.includes("ownerUid"));
