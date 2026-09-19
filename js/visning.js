@@ -21,16 +21,16 @@
 //  det en akseptert enkelhet (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.41";
-import { escapeHtml } from "./util.js?v=5.41";
-import { onAuthChange, savePresentasjoner } from "./store.js?v=5.41";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.41";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.41";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.41";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.41";
-import { startInnsamling } from "./plan-innsamling.js?v=5.41";
-import { erLaererBruker } from "./plan-meny.js?v=5.41";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.41";
+import { getState } from "./explore-context.js?v=5.42";
+import { escapeHtml } from "./util.js?v=5.42";
+import { onAuthChange, savePresentasjoner } from "./store.js?v=5.42";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.42";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.42";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.42";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.42";
+import { startInnsamling } from "./plan-innsamling.js?v=5.42";
+import { erLaererBruker } from "./plan-meny.js?v=5.42";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.42";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;

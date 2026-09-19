@@ -86,14 +86,6 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
   justify-content: space-between;
   padding: 15px 22px;
 }
-.brand h1 {
-  margin: 0;
-  font-size: 1.45rem;
-  background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
 
 /* ----- Oppsett-banner ----- */
 .banner {
@@ -1951,6 +1943,9 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    =========================================================================== */
 
 /* Merke som lenke */
+/* Bare logoen står synlig øverst til venstre (brukerkrav 2026-09-19):
+   tittelen «Populærmusikkhistorie - Del 1» er skjult for øyet (.sr-only),
+   men står igjen som sidens h1 og som logolenkas navn for skjermlesere. */
 a.brand { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
 .brand-icon { height: 36px; width: auto; }
 
@@ -2018,7 +2013,6 @@ body.is-teacher #gate { display: none; }
     padding: 12px 16px;
     gap: 6px;
   }
-  .brand h1 { font-size: 1.05rem; }
   /* Når topbaren brytes til to rader (brand på rad 1, nav på rad 2) venstre-
      stiller space-between den ene nav-en. margin-left:auto skyver ikonene til
      høyre, likt som på desktop. */
@@ -2247,7 +2241,6 @@ body.is-teacher #gate { display: none; }
 
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {
-  .brand h1 { font-size: 0.95rem; }
   .nav-icon { width: 32px; height: 32px; }
   .panel { padding: 14px 12px; }
   .modal { padding: 16px 14px; }

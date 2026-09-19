@@ -21,10 +21,10 @@
 //  så ui-helpers.js kan importere den uten import-sykel.
 // ============================================================================
 
-import { DECADES } from "./limits.js?v=5.41";
-import { resolveSpan } from "./timeline-lanes.js?v=5.41";
-import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=5.41";
-import { escapeHtml } from "./util.js?v=5.41";
+import { DECADES } from "./limits.js?v=5.42";
+import { resolveSpan } from "./timeline-lanes.js?v=5.42";
+import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=5.42";
+import { escapeHtml } from "./util.js?v=5.42";
 
 const Y0 = DECADES[0];                          // aksens første år (1900)
 const Y1 = DECADES[DECADES.length - 1] + 10;    // aksens siste år (2030)
