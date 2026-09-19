@@ -24,17 +24,18 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.39";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.39";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.39";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.39";
-import { GENEALOGY } from "./genre-model.js?v=5.39";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.39";
-import { escapeHtml } from "./util.js?v=5.39";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.39";
-import { getState } from "./explore-context.js?v=5.39";
-import { onAuthChange } from "./store.js?v=5.39";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.39";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.40";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.40";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.40";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.40";
+import { GENEALOGY } from "./genre-model.js?v=5.40";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.40";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.40";
+import { escapeHtml } from "./util.js?v=5.40";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.40";
+import { getState } from "./explore-context.js?v=5.40";
+import { onAuthChange } from "./store.js?v=5.40";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.40";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -101,28 +102,21 @@ function lagreTilstand() {
 // ----------------------------------------------------------------------------
 
 function brukNivaaPaa(flate, modal) {
+  // Artistkortets spalter (v5.40, js/pres-artist.js) bygges FØR nivået
+  // settes: skillelinja må finnes når synligheten dens regnes ut under.
+  if (flate === "artist") ordneArtistLerret(modal);
   modal.querySelectorAll("[data-sekt]").forEach((el) => {
     el.hidden = !erSynlig(flate, el.dataset.sekt, nivaa, unntak);
   });
-  // Enkeltlinjer i faktablokka (v5.29): levetid fra nivå 1, årstallene og
-  // resten fra nivå 3, kategori/instrument aldri.
+  // Enkeltlinjer i faktablokka (v5.29): på artistkortet bare levetiden (fra
+  // nivå 1, under bildet), kategori/instrument aldri på innovasjonskortet.
   modal.querySelectorAll("[data-fakta]").forEach((el) => {
     el.hidden = !faktaSynlig(flate, el.dataset.fakta, nivaa);
   });
-  if (flate === "artist") flyttLevetid(modal);
-}
-
-// Levetiden hører til under portrettet på lerretet (v5.30), der
-// fotokrediteringen ellers står — den er skjult i visning (CSS). Flyttingen
-// gjøres i DOM-en fordi linja bor i faktablokka, langt fra figuren, og
-// gjentas ved hver omtegning: renderArtistDetail bygger kroppen på nytt.
-// Uten bilde blir linja stående der den er.
-function flyttLevetid(modal) {
-  const figur = modal.querySelector(".artist-image");
-  const levetid = modal.querySelector('[data-fakta="levetid"]');
-  if (!figur || !levetid || figur.contains(levetid)) return;
-  levetid.classList.add("pres-levetid");
-  figur.appendChild(levetid);
+  if (flate === "artist") {
+    flyttLevetid(modal);
+    ryddArtistLerret(modal);
+  }
 }
 
 function brukNivaa() {

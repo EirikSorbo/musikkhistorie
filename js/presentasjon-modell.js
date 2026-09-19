@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.39";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.40";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -108,8 +108,10 @@ export function erSynlig(flate, sekt, nivaa, unntak) {
 // seksjonen de ligger i: tallet er LAVESTE nivå linja vises på, og null
 // betyr aldri. Linjer som ikke står her, følger seksjonen sin.
 export const FAKTA_MIN = {
-  // Levetid fra nivå 1; innflytelsesårene erstattes av stripa til nivå 3.
-  artist: { levetid: 1, innflytelse: 3, plateselskap: 3, virkested: 3, kjønn: 3 },
+  // Bare levetiden på lerretet, fra nivå 1 (under bildet). Innflytelsesårene
+  // står som stripe, og plateselskap og virkested hører til appen, ikke
+  // fremvisningen (brukerkrav 2026-09-19: heller ikke på nivå 3).
+  artist: { levetid: 1, innflytelse: null, plateselskap: null, virkested: null, kjønn: null },
   // Kategori og instrument er navigasjon i appen, ikke noe å vise fram.
   tech: { kategori: null, instrument: null },
 };
@@ -530,3 +532,18 @@ export const PRES_TASTER = [
     { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
   ] },
 ];
+
+
+// ----------------------------------------------------------------------------
+//  Artistkortets lerret (v5.40, brukerens oppsett 2026-09-19): hvor hver
+//  seksjon står når kortet vises. «topp» = innflytelseslinja over hele
+//  bredden; «hoyre» = bildet (med levetiden under) og de beslektede
+//  artistene under det; «venstre» = resten, i rekkefølge. Ukjente (nye)
+//  seksjoner havner i tekstspalta, der de gjør minst skade. DOM-flyttingen
+//  bor i js/pres-artist.js.
+// ----------------------------------------------------------------------------
+export function artistPlassering(sekt) {
+  if (sekt === "stripe") return "topp";
+  if (sekt === "bilde" || sekt === "beslektede") return "hoyre";
+  return "venstre";
+}

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.39";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.39";
+import { metaRader } from "../../js/ui-helpers.js?v=5.40";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.40";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -27,10 +27,14 @@ test("artistnivåene: bilde + levetid + innflytelseslinje + lytteeksempler, så 
   assert.equal(synlig("bilde", 1), true);
   assert.equal(synlig("stripe", 1), true);
   assert.equal(faktaSynlig("artist", "levetid", 1), true);
-  assert.equal(faktaSynlig("artist", "innflytelse", 1), false, "stripa erstatter årene");
-  assert.equal(faktaSynlig("artist", "innflytelse", 2), false);
-  assert.equal(faktaSynlig("artist", "innflytelse", 3), true);
-  assert.equal(faktaSynlig("artist", "plateselskap", 2), false);
+  // Bare levetiden av faktalinjene på lerretet (brukerkrav 2026-09-19: heller
+  // ikke innflytelse, plateselskap og virkested på nivå 3).
+  for (const n of [1, 2, 3]) {
+    for (const linje of ["innflytelse", "plateselskap", "virkested"]) {
+      assert.equal(faktaSynlig("artist", linje, n), false, `${linje} på nivå ${n}`);
+    }
+    assert.equal(faktaSynlig("artist", "levetid", n), true);
+  }
   // Lytteeksemplene står fra nivå 1 (brukerkrav 2026-09-19).
   assert.equal(synlig("lytte", 1), true);
   assert.equal(synlig("lytte", 2), true);
@@ -517,4 +521,33 @@ test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort si
   assert.match(spiller, /if \(paa && !document\.fullscreenElement && m\.requestFullscreen\)/);
   assert.match(spiller, /function lukkSpiller\(\) \{\n\s*const m = document\.getElementById\("modal-yt"\);\n\s*if \(m\) forlatEgenFullskjerm\(m\);/);
   assert.match(css, /body\.presentasjon #modal-yt\.yt-kino > \.modal\.modal-yt-boks \{[^}]*max-width: none;/);
+});
+
+// --- Artistkortets lerret (v5.40, brukerens oppsett 2026-09-19) ----------------
+
+test("artistPlassering: tidslinja øverst, bilde og beslektede til høyre, resten til venstre", () => {
+  assert.equal(artistPlassering("stripe"), "topp", "innflytelseslinja over bildet");
+  assert.equal(artistPlassering("bilde"), "hoyre");
+  assert.equal(artistPlassering("beslektede"), "hoyre", "beslektede artister under bildet");
+  for (const id of ["fakta", "tags", "beskrivelse", "verk", "lytte", "kilder"]) {
+    assert.equal(artistPlassering(id), "venstre", id);
+  }
+  assert.equal(artistPlassering("noe-nytt"), "venstre", "ukjente seksjoner i tekstspalta");
+  // Alle artistkortets seksjoner har en plass.
+  for (const { id } of FLATER.artist) assert.ok(["topp", "hoyre", "venstre"].includes(artistPlassering(id)));
+});
+
+test("lerretet bygges før nivået settes, og ryddes etterpå", () => {
+  const spiller = kilde("presentasjon.js");
+  const kroppen = spiller.slice(spiller.indexOf("function brukNivaaPaa("), spiller.indexOf("function brukNivaa()"));
+  assert.ok(kroppen.indexOf("ordneArtistLerret(modal)") < kroppen.indexOf('querySelectorAll("[data-sekt]")'),
+    "skillelinja må finnes før synligheten regnes ut");
+  assert.ok(kroppen.indexOf("ryddArtistLerret(modal)") > kroppen.indexOf('querySelectorAll("[data-fakta]")'));
+  const modul = kilde("pres-artist.js");
+  assert.match(modul, /if \(!modal \|\| modal\.querySelector\("\.pres-artist"\)\) return;/, "idempotent mot observatøren");
+  assert.match(modul, /if \(s\.dataset\.sekt === "tags"\) venstre\.appendChild\(lag\("hr", "pres-linje"\)\);/);
+  assert.doesNotMatch(modul, /from "\.\/(store|ui|explore-context)\.js/, "modulen skal kunne lastes uten Firebase");
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.presentasjon \.pres-artist-spalter \{\n\s*display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 42%\);/);
+  assert.doesNotMatch(css, /float: right; width: 42%; max-width: 42%;/, "flytebildet fra v5.30 er erstattet av spaltene");
 });

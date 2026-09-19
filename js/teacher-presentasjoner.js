@@ -13,14 +13,14 @@
 //  podkast-admin).
 // ============================================================================
 
-import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.39";
-import { escapeHtml } from "./ui.js?v=5.39";
-import { savePresentasjoner } from "./store.js?v=5.39";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.39";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.39";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.39";
-import { askChoice } from "./ui-modal.js?v=5.39";
-import { startInnsamling } from "./plan-innsamling.js?v=5.39";
+import { state, guardTeacherAction, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.40";
+import { escapeHtml } from "./ui.js?v=5.40";
+import { savePresentasjoner } from "./store.js?v=5.40";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.40";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.40";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.40";
+import { askChoice } from "./ui-modal.js?v=5.40";
+import { startInnsamling } from "./plan-innsamling.js?v=5.40";
 
 const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",

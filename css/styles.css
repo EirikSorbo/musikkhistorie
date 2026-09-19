@@ -2756,19 +2756,40 @@ body.presentasjon .artist-image .image-credit { display: none; }
 body.presentasjon .artist-image .pres-levetid {
   margin: 10px 0 0; text-align: center; font-size: 0.95rem;
 }
-/* Nivå 2 og 3: bildet til høyre, så instrument og sjanger får plass som en
-   liste ved siden av. Nivå 1 beholder det store, sentrerte portrettet. */
-body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image,
-body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image,
-body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image,
-body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image {
-  float: right; width: 42%; max-width: 42%; margin: 0 0 16px 22px;
+/* Artistkortets spalter (v5.40, brukerens oppsett 2026-09-19; bygges av
+   js/pres-artist.js): innflytelseslinja øverst over hele bredden, så tekst
+   til venstre og bildet til høyre, med levetiden og de beslektede
+   artistene under bildet. Nivå 1 er én spalte: portrettet først, sentrert,
+   og lytteeksemplene under. Erstatter flytebildet fra v5.30. */
+body.presentasjon .pres-artist-spalter {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
+  gap: 0 2.4rem; align-items: start;
 }
+body.presentasjon .pres-artist-hoyre {
+  display: flex; flex-direction: column; align-items: center; gap: 1.2rem;
+}
+/* align-items: center, ikke grunnregelens start: den krympet spalta rundt
+   bildet og la portrettet til venstre. */
+body.presentasjon[data-pres-nivaa="1"] .pres-artist-spalter { display: flex; flex-direction: column; align-items: center; }
+body.presentasjon[data-pres-nivaa="1"] .pres-artist-hoyre { order: -1; }
+/* Skillelinja under instrument og sjanger (nivå 2 og 3). */
+.pres-linje { border: 0; border-top: 1px solid var(--line-strong); margin: 1rem 0 1.2rem; }
+/* De beslektede artistene under bildet: midtstilt i spalta, uten appens
+   egen skillestrek over (bildet står der). */
+body.presentasjon .pres-artist-hoyre .related {
+  width: 100%; margin: 0; padding: 0; border: 0; text-align: center;
+}
+body.presentasjon .pres-artist-hoyre .related-list { justify-content: center; }
+body.presentasjon .pres-artist-hoyre .related-chip { font-size: 0.95rem; }
 body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image img,
-body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image img,
-body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img,
-body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image img {
+body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img {
   max-height: 60vh;
+}
+/* Nivå 3 har de beslektede artistene under bildet i samme spalte: litt
+   lavere bilde, så alt får plass uten rulling på et 1280×800-lerret. */
+body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image img,
+body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image img {
+  max-height: 48vh;
 }
 body.presentasjon[data-pres-nivaa="2"] #modal-detail .meta,
 body.presentasjon[data-pres-nivaa="3"] #modal-detail .meta,
