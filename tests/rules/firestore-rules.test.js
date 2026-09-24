@@ -17,6 +17,12 @@ import {
   assertSucceeds,
   assertFails,
 } from "@firebase/rules-unit-testing";
+// Klienten skriver createdAt som serverTimestamp() (store.js). Kontekstene fra
+// rules-unit-testing er compat-instanser, så sentinelen hentes derfra.
+import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
+
+const serverTs = () => firebase.firestore.FieldValue.serverTimestamp();
 
 let env;
 
@@ -389,4 +395,179 @@ test("retur (pendingEdits): til «open», aldri «returnert» ved create, koden 
     entityType: "artist", entityId: "a1", proposedFields: { description: "x" },
     proposedBy: "Anonym", status: "returnert",
   }));
+});
+
+
+// ============================================================================
+//  AUDIT v5.42, funn 25 og 43–47: typevaktene per kallplass, klientens eksakte
+//  nyttelaster, returvaktene i ALLE tre samlingene, tak og ownerUid.
+//  NB: skrevet uten at emulatoren har kjørt (Java mangler). Første kjøring kan
+//  gi røde tester; les dem som funn, ikke som støy.
+// ============================================================================
+
+// Nøyaktig det addTechProposal (store.js) skriver for et skjema fylt ut
+// slik proposals.js leser det: tall eller null i årstallene, kilder som
+// { text, url }, tomme strenger for tomme tekstfelt.
+function klientTech(extra = {}) {
+  return {
+    type: "innovasjon", name: "Kondensatormikrofonen", category: "Opptak og avspilling",
+    instrument: "", decade: "1930", inventedYear: 1916, adoptedYear: null,
+    adoptedLabel: "tidlig 1930-tall", description: "Kort.", kilder: [{ text: "SNL", url: "" }],
+    imageUrl: "", imageCredit: "", proposedBy: "Ola",
+    status: "pending", ownerUid: "anon-1", createdAt: serverTs(),
+    ...extra,
+  };
+}
+
+// Nøyaktig det addPendingEdit skriver.
+function klientForslag(extra = {}) {
+  return {
+    entityType: "artist", entityId: "a1", entityName: "Robert Johnson",
+    proposedFields: { description: "Ny tekst" }, proposedBy: "Ola",
+    ownerUid: "anon-1", createdAt: serverTs(),
+    ...extra,
+  };
+}
+
+test("funn 43: klientens eksakte skriveformer går gjennom i alle tre samlingene", async () => {
+  const db = anonDb("anon-1");
+  await assertSucceeds(db.collection("artists").add({ ...studentArtist, createdAt: serverTs() }));
+  await assertSucceeds(db.collection("tech").add(klientTech()));
+  await assertSucceeds(db.collection("pendingEdits").add(klientForslag()));
+  await assertSucceeds(db.collection("pendingEdits").add(klientForslag({
+    entityType: "subgenre", entityId: "Blues", entityName: "Blues", level: "main",
+    proposedFields: { description: "x", era: "1920-tallet", activeFrom: 1920, activeTo: null },
+  })));
+});
+
+test("funn 43: hver typevakt holder på hver kallplass (map, liste eller streng i feil felt)", async () => {
+  const stor = "x".repeat(9000);
+  const db = anonDb("anon-1");
+  const artistStreng = ["description", "imageUrl", "proposedBy", "geography", "recordLabel", "instrument", "gender", "imageCredit"];
+  const artistListe = ["mainGenre", "subGenre", "keyWorks", "musicExamples", "kilder"];
+  const artistTall = ["birthYear", "deathYear", "influenceEnd", "addedYear"];
+  for (const f of artistStreng) {
+    await assertFails(db.collection("artists").add({ ...studentArtist, [f]: { a: stor } }));
+    await assertFails(db.collection("artists").add({ ...studentArtist, [f]: [stor] }));
+  }
+  for (const f of artistListe) {
+    await assertFails(db.collection("artists").add({ ...studentArtist, [f]: { a: stor } }));
+  }
+  for (const f of artistTall) {
+    await assertFails(db.collection("artists").add({ ...studentArtist, [f]: "1950" }));
+  }
+  const techStreng = ["description", "imageUrl", "proposedBy", "type", "category", "instrument", "decade", "adoptedLabel", "imageCredit"];
+  for (const f of techStreng) {
+    await assertFails(db.collection("tech").add(klientTech({ [f]: { a: stor } })));
+  }
+  await assertFails(db.collection("tech").add(klientTech({ kilder: { a: stor } })));
+  await assertFails(db.collection("tech").add(klientTech({ kilder: Array.from({ length: 21 }, () => ({ text: "k" })) })));
+  for (const f of ["inventedYear", "adoptedYear"]) {
+    await assertFails(db.collection("tech").add(klientTech({ [f]: "1950" })));
+  }
+  // pendingEdits: proposedFields per hjelper.
+  for (const f of ["description", "body", "society", "tech", "name", "imageUrl"]) {
+    await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: { a: stor } } })));
+  }
+  for (const f of ["mainGenre", "subGenre", "keyWorks", "musicExamples", "kilder"]) {
+    await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: { a: stor } } })));
+  }
+  for (const f of ["birthYear", "deathYear", "influenceStart", "influenceEnd", "inventedYear", "adoptedYear", "activeFrom", "activeTo"]) {
+    await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: "1950" } })));
+  }
+  // Selve forslagsdokumentet.
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: "x" })));
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ level: "story" })));
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ entityId: 5 })));
+});
+
+test("funn 25: pendingEdits har typevakt på createdAt, entityName og proposedBy", async () => {
+  const stor = "x".repeat(9000);
+  const db = anonDb("anon-1");
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ createdAt: stor })));
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ entityName: { a: stor } })));
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedBy: { a: stor } })));
+  await seedPendingEdit("pe25", { ...RETUR, returKode: "CD3EF" });
+  await assertFails(anonDb("anon-1").collection("pendingEdits").doc("pe25").update({
+    proposedFields: { description: "x" }, proposedBy: { a: stor }, status: "open", innsendtKode: "CD3EF",
+  }));
+});
+
+test("funn 46: tech-create har hviteliste og ownerUid-vakt; pendingEdits-create har ownerUid-vakt", async () => {
+  const db = anonDb("anon-1");
+  await assertFails(db.collection("tech").add(klientTech({ hackerField: "x" })));
+  await assertFails(db.collection("tech").add(klientTech({ returKode: "AB2CD" })));
+  await assertFails(db.collection("tech").add(klientTech({ teacherFeedback: "x" })));
+  await assertFails(db.collection("tech").add(klientTech({ ownerUid: "anon-99" })));
+  await assertFails(db.collection("pendingEdits").add(klientForslag({ ownerUid: "anon-99" })));
+  await assertSucceeds(db.collection("tech").add(klientTech({ ownerUid: "" })));
+});
+
+test("funn 47: et nytt forslag kan ikke starte med stemmer", async () => {
+  await assertFails(anonDb("anon-1").collection("artists").add({ ...studentArtist, votedUpBy: ["x1", "x2"] }));
+});
+
+// Returtestene for artists (brukt kode, målstatus, urørlige felter) kjørt for
+// tech og pendingEdits, som har egne kopier av erReturInnsending (funn 44).
+function techResubmit(kode, extra = {}) {
+  const { status, ownerUid, createdAt, ...skjema } = klientTech();
+  return { ...skjema, proposedBy: "Ola", status: "pending", innsendtKode: kode, studentComment: "Rettet.", ...extra };
+}
+function forslagResubmit(kode, extra = {}) {
+  return { proposedFields: { description: "Bedre" }, proposedBy: "Ola", status: "open", innsendtKode: kode, studentComment: "Fikset.", ...extra };
+}
+
+test("funn 44: tech-retur bare fra «returnert», bare til «pending», og urørlige felter", async () => {
+  await seedTech("t44a", { ...RETUR, status: "pending" });   // koden er brukt
+  await assertFails(anonDb("anon-1").collection("tech").doc("t44a").update(techResubmit("AB2CD")));
+  await seedTech("t44b", RETUR);
+  const ref = anonDb("anon-1").collection("tech").doc("t44b");
+  await assertFails(ref.update(techResubmit("AB2CD", { status: "active" })));
+  for (const smuglet of [{ returKode: "NY123" }, { teacherFeedback: "" }, { ownerUid: "anon-99" }, { priority: 3 }]) {
+    await assertFails(ref.update(techResubmit("AB2CD", smuglet)));
+  }
+  await assertFails(unauthDb().collection("tech").doc("t44b").update(techResubmit("AB2CD")));
+  await assertSucceeds(ref.update(techResubmit("AB2CD")));
+});
+
+test("funn 44: forslagsretur bare fra «returnert», bare til «open», identiteten er urørlig", async () => {
+  await seedPendingEdit("p44a", { ...RETUR, returKode: "CD3EF", status: "open" });   // koden er brukt
+  await assertFails(anonDb("anon-1").collection("pendingEdits").doc("p44a").update(forslagResubmit("CD3EF")));
+  await seedPendingEdit("p44b", { ...RETUR, returKode: "CD3EF" });
+  const ref = anonDb("anon-1").collection("pendingEdits").doc("p44b");
+  for (const smuglet of [
+    { entityId: "a2" }, { entityType: "tech" }, { entityName: "x" }, { level: "sub" },
+    { returKode: "NY123" }, { teacherFeedback: "" }, { ownerUid: "anon-99" },
+  ]) {
+    await assertFails(ref.update(forslagResubmit("CD3EF", smuglet)));
+  }
+  await assertFails(unauthDb().collection("pendingEdits").doc("p44b").update(forslagResubmit("CD3EF")));
+  await assertSucceeds(ref.update(forslagResubmit("CD3EF")));
+});
+
+test("funn 45 + 25: studentComment har tak og typevakt, og en retur uten kode kan ikke overtas", async () => {
+  const stor = "x".repeat(9000);
+  await seedArtist("r45", RETUR);
+  await seedTech("t45", RETUR);
+  await seedPendingEdit("p45", { ...RETUR });
+  const a = anonDb("anon-1").collection("artists").doc("r45");
+  const t = anonDb("anon-1").collection("tech").doc("t45");
+  const p = anonDb("anon-1").collection("pendingEdits").doc("p45");
+  for (const kommentar of ["x".repeat(1001), { a: stor }]) {
+    await assertFails(a.update({ ...artistResubmit("AB2CD"), studentComment: kommentar }));
+    await assertFails(t.update(techResubmit("AB2CD", { studentComment: kommentar })));
+    await assertFails(p.update(forslagResubmit("AB2CD", { studentComment: kommentar })));
+  }
+  // «returnert» uten returKode (mulig etter en lærerimport): uten vakta
+  // returKode != "" ville en manglende innsendtKode gitt "" == "".
+  const { returKode, ...utenKode } = RETUR;
+  await seedArtist("r45b", utenKode);
+  await seedTech("t45b", utenKode);
+  await seedPendingEdit("p45b", utenKode);
+  const { innsendtKode: _a, ...artistUtenKode } = artistResubmit("");
+  await assertFails(anonDb("anon-1").collection("artists").doc("r45b").update(artistUtenKode));
+  const { innsendtKode: _t, ...techUtenKode } = techResubmit("");
+  await assertFails(anonDb("anon-1").collection("tech").doc("t45b").update(techUtenKode));
+  const { innsendtKode: _p, ...forslagUtenKode } = forslagResubmit("");
+  await assertFails(anonDb("anon-1").collection("pendingEdits").doc("p45b").update(forslagUtenKode));
 });

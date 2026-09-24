@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.45";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.46";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -20,15 +20,15 @@ import {
   updatePodcast,
   setTeacherChecks,
   savePlan,
-} from "./store.js?v=5.45";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=5.45";
-import { escapeHtml } from "./ui.js?v=5.45";
-import { $ } from "./shared.js?v=5.45";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.45";
-import { validateTree } from "./genre-validate.js?v=5.45";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.45";
-import { INSTRUMENTS } from "./limits.js?v=5.45";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.45";
+} from "./store.js?v=5.46";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=5.46";
+import { escapeHtml } from "./ui.js?v=5.46";
+import { $ } from "./shared.js?v=5.46";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.46";
+import { validateTree } from "./genre-validate.js?v=5.46";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.46";
+import { INSTRUMENTS } from "./limits.js?v=5.46";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.46";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;

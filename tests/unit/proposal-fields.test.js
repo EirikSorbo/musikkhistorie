@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.45";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.46";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -124,15 +124,25 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
   const teacher = les("teacher.html");
   const rules = les("firestore.rules");
 
+  // Taket leses fra RIKTIG blokk (audit v5.42 funn 49): skjemaet er for et
+  // innovasjonskort, men første treff på strOk("imageCredit") i hele fila er
+  // artistregelen, så et senket tak i tech-regelen slapp gjennom.
+  const regelBlokk = (navn) => {
+    const start = rules.indexOf(`match /${navn}/`);
+    const neste = rules.slice(start + 1).search(/match \/(artists|tech|pendingEdits)\//);
+    return neste === -1 ? rules.slice(start) : rules.slice(start, start + 1 + neste);
+  };
+  const techRegel = regelBlokk("tech");
+  const forslagRegel = regelBlokk("pendingEdits");
   for (const felt of ["adoptedLabel", "imageCredit"]) {
     const iSkjema = proposals.match(new RegExp(`key: "${felt}"[^}]*max: (\\d+)`));
     assert.ok(iSkjema, `${felt} mangler max i forslagsskjemaet`);
     // v5.34 (audit-funn 9): taket bor i strOk-vakten, som også låser typen.
-    const iRegel = rules.match(new RegExp(`strOk\\("${felt}", (\\d+)\\)`));
-    assert.ok(iRegel, `${felt} mangler strOk-tak i firestore.rules`);
+    const iRegel = techRegel.match(new RegExp(`strOk\\("${felt}", (\\d+)\\)`));
+    assert.ok(iRegel, `${felt} mangler strOk-tak i tech-regelen`);
     // Endringsforslag på EKSISTERENDE kort går via pendingEdits og capOk
     // (audit-funn 39c) — skjemaet må være strengest av BEGGE veiene.
-    const iCap = rules.match(new RegExp(`capOk\\("${felt}", (\\d+)\\)`));
+    const iCap = forslagRegel.match(new RegExp(`capOk\\("${felt}", (\\d+)\\)`));
     assert.ok(iCap, `${felt} mangler capOk-tak for pendingEdits i firestore.rules`);
     const strengeste = Math.min(Number(iRegel[1]), Number(iCap[1]));
     assert.ok(Number(iSkjema[1]) <= strengeste,
@@ -192,7 +202,7 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
     assert.ok(b.includes('"ownerUid"'), `${samling}: ownerUid må være tillatt ved create`);
   }
   // Artists-create-hvitelisten må dekke HELE skjemaet — parse den faktiske lista.
-  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.45");
+  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.46");
   const lister = [...rules.matchAll(/hasOnly\(\[([\s\S]*?)\]\)/g)]
     .map((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]));
   const artistCreate = lister.find((l) => l.includes("votedUpBy") && l.includes("addedYear"));
@@ -239,7 +249,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.45");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.46");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -306,7 +316,7 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
 // Audit v5.19 funn 40: de seks returfeltnavnene sto håndskrevet tre steder.
 // Nå er RETUR_FELTER (artist-schema.js) én kilde — lås at alle tre bruker den.
 test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", async () => {
-  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.45");
+  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.46");
   assert.deepEqual(RETUR_FELTER, ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]);
   for (const f of RETUR_FELTER) assert.ok(ARTIST_EXPORT_FIELDS.includes(f), `eksporten mangler ${f}`);
   assert.ok(ARTIST_EXPORT_FIELDS.includes("ownerUid"));
@@ -316,4 +326,37 @@ test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", as
     "ryddReturfelter skal bygges av lista, ikke stave navnene");
   assert.match(les("artist-normalize.js"), /\["ownerUid", \.\.\.RETUR_FELTER\]/,
     "buildArtistDoc skal bygges av lista");
+});
+
+
+// Audit v5.42 funn 48: de tre listene for foreslåbare felt må holdes i synk,
+// og regelsida var ikke testet. Fjernes et felt fra pf().keys().hasOnly, får
+// hver student som foreslår det, permission-denied når reglene publiseres;
+// mangler det i PROPOSABLE_KEYS, filtrerer approvePendingEdit det stille bort.
+test("funn 48: pendingEdits-reglene, PROPOSABLE_KEYS og FIELD_SPECS har de samme feltene", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+  const rules = les("firestore.rules");
+  const forslag = rules.slice(rules.indexOf("match /pendingEdits/"));
+  const liste = forslag.match(/pf\(\)\.keys\(\)\.hasOnly\(\[([^\]]+)\]\)/);
+  assert.ok(liste, "fant ikke pf().keys().hasOnly i pendingEdits-blokka");
+  const iRegel = new Set([...liste[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]));
+  const union = new Set(Object.values(PROPOSABLE_KEYS).flat());
+  assert.deepEqual([...iRegel].sort(), [...union].sort(), "hasOnly-lista = unionen av PROPOSABLE_KEYS");
+  // Hver nøkkel har en typevakt (capOk, capListOk eller pfTallOk).
+  const vaktet = new Set([...forslag.matchAll(/\b(?:capOk|capListOk|pfTallOk)\("([^"]+)"/g)].map((m) => m[1]));
+  for (const k of iRegel) assert.ok(vaktet.has(k), `${k} mangler typevakt i pendingEdits`);
+
+  // FIELD_SPECS (skjemaet) har nøyaktig de foreslåbare feltene for hver type.
+  const proposals = les("js/proposals.js");
+  const specs = proposals.slice(proposals.indexOf("FIELD_SPECS = {"));
+  for (const type of ["tech", "subgenre", "instrument", "decade-society", "decade-tech"]) {
+    const navn = type.includes("-") ? `"${type}"` : type;
+    const start = specs.indexOf(`\n  ${navn}: [`);
+    assert.ok(start >= 0, `FIELD_SPECS mangler ${type}`);
+    const blokk = specs.slice(start, specs.indexOf("\n  ],", start));
+    const nokler = [...blokk.matchAll(/\{ key: "([^"]+)"/g)].map((m) => m[1]);
+    if (/KILDE_FELT/.test(blokk)) nokler.push("kilder");
+    assert.deepEqual([...new Set(nokler)].sort(), [...PROPOSABLE_KEYS[type]].sort(), `FIELD_SPECS.${type} = PROPOSABLE_KEYS.${type}`);
+  }
 });

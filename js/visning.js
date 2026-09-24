@@ -22,16 +22,16 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.45";
-import { escapeHtml } from "./util.js?v=5.45";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.45";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.45";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.45";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.45";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.45";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.45";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.45";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.45";
+import { getState } from "./explore-context.js?v=5.46";
+import { escapeHtml } from "./util.js?v=5.46";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.46";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.46";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.46";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.46";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.46";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.46";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.46";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.46";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;

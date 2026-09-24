@@ -117,6 +117,9 @@ service cloud.firestore {
           resource.data.get("returKode", "") != "" &&
           request.resource.data.get("innsendtKode", "") == resource.data.get("returKode", "") &&
           request.resource.data.status == "pending" &&
+          // Typevakt foran taket (audit v5.42 funn 25): som map ville
+          // size() gitt 1, og kommentaren kunne båret ~1 MB.
+          request.resource.data.get("studentComment", "") is string &&
           request.resource.data.get("studentComment", "").size() <= 1000 &&
           request.resource.data.get("innsendtKode", "").size() <= 12;
       }
@@ -125,8 +128,11 @@ service cloud.firestore {
 
       // Studenter (anonymt innlogget) kan sende inn forslag; de opprettes
       // alltid som "pending", uten stemmer og uten lærer-privilegier. Kun
-      // kjente felter tillates (hasOnly), og de store tekst-/listefeltene har
-      // størrelsestak — så ingen kan blåse opp dokumentene og tære på kvoten.
+      // kjente felter tillates (hasOnly), og tekst-/listefeltene har typevakt
+      // og størrelsestak. NB: taket på en liste teller elementer, ikke hvor
+      // store de er, så et dokument kan fortsatt gjøres stort innenfor
+      // Firestores grense på 1 MB. Det egentlige vernet mot misbruk utenfor
+      // appen er App Check (audit v5.42 funn 25 og forslag 13).
       // Lærer kan opprette uten feltrestriksjoner (import).
       allow create: if isTeacher() || (
         request.auth != null &&
@@ -251,6 +257,9 @@ service cloud.firestore {
           resource.data.get("returKode", "") != "" &&
           request.resource.data.get("innsendtKode", "") == resource.data.get("returKode", "") &&
           request.resource.data.status == "pending" &&
+          // Typevakt foran taket (audit v5.42 funn 25): som map ville
+          // size() gitt 1, og kommentaren kunne båret ~1 MB.
+          request.resource.data.get("studentComment", "") is string &&
           request.resource.data.get("studentComment", "").size() <= 1000 &&
           request.resource.data.get("innsendtKode", "").size() <= 12;
       }
@@ -372,6 +381,7 @@ service cloud.firestore {
           resource.data.get("returKode", "") != "" &&
           request.resource.data.get("innsendtKode", "") == resource.data.get("returKode", "") &&
           request.resource.data.get("status", "") == "open" &&
+          request.resource.data.get("studentComment", "") is string &&
           request.resource.data.get("studentComment", "").size() <= 1000 &&
           request.resource.data.get("innsendtKode", "").size() <= 12;
       }
@@ -392,7 +402,14 @@ service cloud.firestore {
         // vilkårlige/lange level-strenger. Klienten (approvePendingEdit) godtar
         // dessuten kun main/sub; her tillates også meta som gyldig nivåverdi.
         request.resource.data.get("level", "main") in ["meta", "main", "sub"] &&
+        // Typevakter som artists og tech fikk i v5.34 (audit v5.42 funn 25):
+        // createdAt er serverTimestamp() fra klienten, og entityName og
+        // proposedBy er strenger. Uten dem kunne en streng i createdAt eller et
+        // map i entityName/proposedBy bære ~1 MB forbi takene.
+        request.resource.data.get("createdAt", request.time) is timestamp &&
+        request.resource.data.get("entityName", "") is string &&
         request.resource.data.get("entityName", "").size() <= 200 &&
+        request.resource.data.get("proposedBy", "") is string &&
         request.resource.data.get("proposedBy", "").size() <= 100
       );
       // Retur-innsending: forslags-feltene byttes ut, proposedBy og kommentar
@@ -403,6 +420,7 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           "proposedFields", "proposedBy", "status", "innsendtKode", "studentComment"
         ]) &&
+        request.resource.data.get("proposedBy", "") is string &&
         request.resource.data.get("proposedBy", "").size() <= 100 &&
         forslagOk()
       );
