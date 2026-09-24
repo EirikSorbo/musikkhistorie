@@ -23,9 +23,9 @@
 //  spilleren når minst én av dem er sann. Da dobbeltåpner ingenting.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.47";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.47";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.47";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.48";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.48";
+import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.48";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres.
@@ -71,9 +71,20 @@ function ytModal() {
   m.querySelector("#yt-kino-knapp").addEventListener("click", () =>
     settKino(m, !m.classList.contains("yt-kino")));
   // Går brukeren ut av fullskjerm selv (Esc), er den ikke lenger vår å forlate.
+  // (YouTubes egen fullskjermknapp legger iframen oppå vår; den teller ikke
+  // som å forlate.)
   document.addEventListener("fullscreenchange", () => {
-    if (document.fullscreenElement !== m) egenFullskjerm = false;
+    if (!document.fullscreenElement) egenFullskjerm = false;
   });
+  // Et klikk i videoen (pause, eller start når autoplay ble blokkert) flytter
+  // fokus inn i YouTubes iframe, og da nådde verken klikkeren eller
+  // hurtigtastene presentasjonen lenger (audit v5.42 funn 10). Klikket har
+  // nådd YouTube når window mister fokus; da hentes fokus tilbake.
+  window.addEventListener("blur", () => setTimeout(() => {
+    if (erPresentasjon() && m.classList.contains("open") && document.activeElement?.id === "yt-iframe") {
+      m.querySelector(".modal")?.focus();
+    }
+  }, 0));
   return m;
 }
 
@@ -92,14 +103,26 @@ function ytModal() {
 const IKON_STORRE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 const IKON_MINDRE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>';
 
+// Fullskjermen spilleren selv ba om. Den bes om for HELE siden
+// (documentElement), ikke for spillermodalen (audit v5.42 funn 11 og 21):
+// med modalen som fullskjermelement tegnes bare den, så svart skjerm,
+// tastoversikten og søket ble usynlige oppå videoen, og en lukket modal
+// kunne bli stående som fullskjermelement. Kino-CSS-en fyller vinduet likt.
 let egenFullskjerm = false;
 
 const erPresentasjon = () => document.body.classList.contains("presentasjon");
+const erKino = (m) => m.classList.contains("open") && m.classList.contains("yt-kino");
 
 function settKino(m, paa) {
   m.classList.toggle("yt-kino", paa);
-  if (paa && !document.fullscreenElement && m.requestFullscreen) {
-    m.requestFullscreen().then(() => { egenFullskjerm = true; }).catch(() => {});
+  const side = document.documentElement;
+  if (paa && !document.fullscreenElement && side.requestFullscreen) {
+    side.requestFullscreen().then(() => {
+      egenFullskjerm = true;
+      // Blada læreren forbi før nettleseren svarte, skal fullskjermen ikke
+      // bli stående med spilleren lukket.
+      if (!erKino(m)) forlatEgenFullskjerm(m);
+    }).catch(() => {});
   } else if (!paa) {
     forlatEgenFullskjerm(m);
   }
@@ -112,9 +135,15 @@ function settKino(m, paa) {
   }
 }
 
+// Utgangen venter ett tikk: er neste stopp også et lytteeksempel, åpnes
+// spilleren i kino igjen i samme tikk, og fullskjermen blir stående i
+// stedet for å falle ut ved annenhver video.
 function forlatEgenFullskjerm(m) {
-  if (egenFullskjerm && document.fullscreenElement === m) document.exitFullscreen?.().catch(() => {});
-  egenFullskjerm = false;
+  setTimeout(() => {
+    if (!egenFullskjerm || erKino(m)) return;
+    egenFullskjerm = false;
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  }, 0);
 }
 
 function lukkSpiller() {
@@ -230,10 +259,35 @@ async function bindSpiller() {
           spillerKlar = true;
           if (knapp) knapp.hidden = false;
         },
+        // Innbygging avslått av rettighetshaveren (101/150), fjernet eller
+        // privat video (100) eller mangel på oppgitt avsender (153): gå ut
+        // av kino, så «Åpne på YouTube» synes, og gi lenka fokus, så Enter
+        // fra klikkeren åpner videoen (audit v5.42 funn 36).
+        onError: (e) => {
+          if (![100, 101, 150, 153].includes(e?.data)) return;
+          const m = document.getElementById("modal-yt");
+          if (!m) return;
+          settKino(m, false);
+          m.querySelector("#yt-ekstern")?.focus();
+        },
       },
     });
   } catch (e) {
     spiller = null;
+  }
+}
+
+// Spill av eller pause (mellomrom/K i presentasjonen, funn 10), så læreren
+// ikke må klikke i videoen. false når spilleren ikke er klar (API-et
+// blokkert eller ikke lastet).
+export function veksleYtAvspilling() {
+  if (!spillerKlar || !spiller?.getPlayerState) return false;
+  try {
+    if (spiller.getPlayerState() === 1) spiller.pauseVideo();   // 1 = spiller
+    else spiller.playVideo();
+    return true;
+  } catch (e) {
+    return false;
   }
 }
 

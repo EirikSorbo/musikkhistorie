@@ -14,17 +14,17 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.47";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.47";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.47";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.47";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.47";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.47";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.47";
-import { initPlanMeny } from "./plan-meny.js?v=5.47";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.47";
-import { initVisning, visningTikk } from "./visning.js?v=5.47";
-import { provVisMaal } from "./explore-apne.js?v=5.47";
+import { initExplore } from "./explore.js?v=5.48";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.48";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.48";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.48";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.48";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.48";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.48";
+import { initPlanMeny } from "./plan-meny.js?v=5.48";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.48";
+import { initVisning, visningTikk } from "./visning.js?v=5.48";
+import { provVisMaal } from "./explore-apne.js?v=5.48";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -160,12 +160,12 @@ export function initTrePage({ render }) {
         visningTikk();
       },
       // Sjangerkort kan stå åpne også her — fersk beskrivelse med én gang.
-      onGenreDescs: () => { explore.genreDescsChanged?.(); provVisMaal(); },
+      onGenreDescs: () => { explore.genreDescsChanged?.(); provVisMaal(); visningTikk(); },
       // Artistene teller på «Alle artister (n)» i Instrumenter-kortet.
       // presPlanTikk: kjøreplanens oversiktskort viser artist- og kortnavn.
-      onArtists: () => { explore.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); },
+      onArtists: () => { explore.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
       onDecades: () => provVisMaal(),
-      onTech: () => { explore.renderInstrumenter?.(); explore.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); },
+      onTech: () => { explore.renderInstrumenter?.(); explore.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
       onEdgeDescs: () => provVisMaal(),
       onPodcasts: () => explore.renderInstrumenter?.(),
     });

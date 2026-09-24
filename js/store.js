@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.47";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.47";
-import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.47";
-import { RETUR_FELTER } from "./artist-schema.js?v=5.47";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.47";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.47";
-import { mergeHeatRows } from "./import-format.js?v=5.47";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.47";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.47";
+import { firebaseConfig } from "./firebase-config.js?v=5.48";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.48";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.48";
+import { RETUR_FELTER } from "./artist-schema.js?v=5.48";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.48";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.48";
+import { mergeHeatRows } from "./import-format.js?v=5.48";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.48";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.48";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -797,7 +797,10 @@ async function returSporring(felt, verdi) {
     // («innovasjon»/«hendelse»), og det må ikke få overskrive retur-typen
     // herfra — den styrer hvilken editor «Rett og send inn på nytt» åpner
     // (audit v5.19, funn 2).
-    return snap.docs.map((d) => ({ ...d.data(), type, id: d.id }));
+    // Kortets egen type følger med som kortType (audit v5.42 funn 19): uten
+    // den ble en returnert «Viktig hendelse» sendt inn på nytt som
+    // «Teknologisk innovasjon», fordi skjemaet ikke kjente «tech».
+    return snap.docs.map((d) => ({ ...d.data(), kortType: d.data().type ?? null, type, id: d.id }));
   }));
   return biter.flat();
 }

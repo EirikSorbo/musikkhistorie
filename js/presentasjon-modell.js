@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.47";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.48";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -545,7 +545,9 @@ export function samleVentende(sendt, merke) {
 
 // Visningsmodus. `plan`: en kjøreplan spilles; `iSkrivefelt`: fokus står i
 // et felt der tastene er tekst.
-export function presTast(e, { plan = false, iSkrivefelt = false } = {}) {
+// `video`: lytteeksempelet ligger øverst (mellomrom og K spiller og pauser,
+// så læreren ikke må klikke i videoen; audit v5.42 funn 10).
+export function presTast(e, { plan = false, iSkrivefelt = false, video = false } = {}) {
   if (!e || e.ctrlKey || e.metaKey || e.altKey) return null;
   const k = String(e.key || "");
   // Presentasjonsklikkernes blataster tas alltid, også fra et skrivefelt.
@@ -568,6 +570,7 @@ export function presTast(e, { plan = false, iSkrivefelt = false } = {}) {
   // «.» er det mange presentasjonsklikkere sender fra svart-skjerm-knappen.
   if (k === "b" || k === "B" || k === ".") return "svart";
   if (k === "?") return "hjelp";
+  if (video && (k === " " || k === "k" || k === "K")) return "spill";
   return null;
 }
 
@@ -600,6 +603,7 @@ export const PRES_TASTER = [
     { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
     { taster: ["F"], hva: "Fullskjerm av og på" },
     { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
+    { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
   { gruppe: "Ellers", rader: [
     { taster: ["/", "Ctrl/Cmd+K"], hva: "Søk" },

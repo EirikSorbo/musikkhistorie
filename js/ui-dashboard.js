@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=5.47";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.47";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.47";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.47";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.47";
+} from "./limits.js?v=5.48";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.48";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.48";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.48";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.48";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -375,7 +375,7 @@ export function renderDashboard(el, {
       ${[3, 2, 1, -1].map((p) => `
       <button type="button" class="ov-kpi ov-kpi-half ov-click prio-${p}" data-ov-prio="${p}"
         aria-label="${escapeHtml(PRIO_LABELS[p])}: ${prioLists[p].length} artister"
-        title="${escapeHtml(PRIO_LABELS[p])} — vis artistene">
+        title="${escapeHtml(PRIO_LABELS[p])}: vis artistene">
         <span class="ov-prio-i">${PRIO_ICONS[p]}</span>
         <span class="ov-kpi-n">${prioLists[p].length}</span>
       </button>`).join("")}

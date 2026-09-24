@@ -4,8 +4,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=5.47";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=5.47";
+import { contentGaps } from "../../js/ui-dashboard.js?v=5.48";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=5.48";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
@@ -110,7 +110,7 @@ test("contentGaps: total er summen av alle bøtter", () => {
 // (gammelt funn 8), betyr «dokumentet finnes» ikke lenger «teksten finnes».
 // Oversikten skal telle tekstløse sider som hull, ikke grønnmerke dem.
 test("side med kilder men uten tekst teller som hull", async () => {
-  const { contentGaps } = await import("../../js/ui-dashboard.js?v=5.47");
+  const { contentGaps } = await import("../../js/ui-dashboard.js?v=5.48");
   const content = { rotter: { body: "", kilder: [{ text: "SNL" }] }, omHistorie: { body: "Tekst." } };
   const g = contentGaps({ artists: [], genreDescs: {}, content, contentLoaded: true });
   assert.deepEqual(g.pages, ["rotter"], "kilder alene er ikke innhold");

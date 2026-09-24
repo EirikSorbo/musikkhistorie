@@ -1,0 +1,47 @@
+# Testene ved hver push (audit v5.42, forslag 2). To jobber:
+#   enhet  - npm test + import- og referansesjekkene (samme som pre-push-kroken)
+#   regler - regeltestene mot Firestore-emulatoren. De trenger Java, som ikke
+#            finnes på lærerens maskin; her installeres det for hver kjøring.
+#            Prosjektet er demo-pensum, så emulatoren trenger ingen innlogging
+#            og rører aldri den ekte databasen.
+# GitHub Pages publiserer uavhengig av dette: en rød test stopper ikke
+# utrullingen, den sier bare fra (rødt kryss ved commiten og e-post).
+name: Tester
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  enhet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node tools/check-imports.js
+      - run: node tools/find-stale-refs.js
+
+  regler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run test:rules

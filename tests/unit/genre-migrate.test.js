@@ -20,7 +20,7 @@ import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, BATCH_MAX, byggMetaTre, planTreeCleanup, planHeatCleanup,
-} from "../../js/genre-migrate.js?v=5.47";
+} from "../../js/genre-migrate.js?v=5.48";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {
@@ -563,7 +563,7 @@ test("uten tre eller varmekart planlegges ingenting", () => {
 // metasjanger», og rot-noder (g === null) FINNES i treet — knappen sto derfor
 // og tilbød seg å slette ekte, kuratert varmedata. Slettingen er uopprettelig.
 test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async () => {
-  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.47");
+  const { heatOrphanKeys } = await import("../../js/genre-migrate.js?v=5.48");
   const noder = [
     { id: "reggae", l: "Reggae", f: "Reggae", g: null },   // rot-node, ekte
     { id: "bebop", l: "Bebop", f: "Bebop", g: "Jazz" },
@@ -575,7 +575,7 @@ test("heatOrphanKeys: rot-noder uten metasjanger er IKKE foreldreløse", async (
 });
 
 test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => {
-  return import("../../js/genre-migrate.js?v=5.47").then(({ heatOrphanKeys }) => {
+  return import("../../js/genre-migrate.js?v=5.48").then(({ heatOrphanKeys }) => {
     const noder = [{ id: "x", l: "Kort", f: "Langt fullnavn", g: "Jazz" }];
     assert.deepEqual(heatOrphanKeys(noder, { Kort: [1] }), []);
     assert.deepEqual(heatOrphanKeys(noder, { "Langt fullnavn": [1] }), []);
@@ -595,7 +595,7 @@ test("heatOrphanKeys: matcher både etikett og fullnavn, og tåler tomt", () => 
 // står med vilje — seks tre-noder deler navn med en metasjanger, og den
 // gamle omskrivingen dro metasjangeren med seg (og TØMTE den ved sletting).
 test("artistForslagOmskriving: navnebytte treffer mainGenre og lytteeksempler, ALDRI metaGenre/subGenre", async () => {
-  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.47");
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.48");
   const e = { proposedFields: {
     mainGenre: ["Bebop", "Cool jazz"], subGenre: ["Cool jazz"], metaGenre: "Cool jazz",
     musicExamples: [{ label: "So What", genre: "Cool jazz" }, { label: "X", genre: "Bebop" }],
@@ -611,7 +611,7 @@ test("artistForslagOmskriving: navnebytte treffer mainGenre og lytteeksempler, A
 });
 
 test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async () => {
-  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.47");
+  const { artistForslagOmskriving } = await import("../../js/genre-migrate.js?v=5.48");
   const e = { proposedFields: { mainGenre: ["Bebop", "Reggae"], metaGenre: "Reggae" } };
   const ut = artistForslagOmskriving(e, "Reggae", null);
   assert.deepEqual(ut.mainGenre, ["Bebop"]);
@@ -623,7 +623,7 @@ test("artistForslagOmskriving: sletting stryker, og uberørt gir tomt", async ()
 // Doc-ID-en i edgeDescriptions er «forelderid__barnid». Fjernes en forelder,
 // blir dokumentet liggende uten at noe rydder det. 11 slike lå live.
 test("edgeOrphanKeys: motreaksjon teller som kant, rester fanges", async () => {
-  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.47");
+  const { edgeOrphanKeys } = await import("../../js/genre-migrate.js?v=5.48");
   const noder = [
     { id: "a", l: "A", p: [], rx: [] },
     { id: "b", l: "B", p: ["a"], rx: [] },
@@ -642,7 +642,7 @@ test("edgeOrphanKeys: motreaksjon teller som kant, rester fanges", async () => {
 // tilbake), og en tom metasjanger kunne slettes mens et forslag i køen var
 // klart til å gjeninnføre den.
 test("planMetaRename: artistforslag med metasjangeren tagges om (kun metaGenre)", async () => {
-  const { planMetaRename } = await import("../../js/genre-migrate.js?v=5.47");
+  const { planMetaRename } = await import("../../js/genre-migrate.js?v=5.48");
   const state = {
     tree: { nodes: [], metaGenres: [{ name: "Klubbmusikk" }] },
     genreDescs: {}, artists: [], teacherChecks: {},
@@ -664,7 +664,7 @@ test("planMetaRename: artistforslag med metasjangeren tagges om (kun metaGenre)"
 });
 
 test("planMetaDelete: blokkeres av artistforslag som foreslår metasjangeren", async () => {
-  const { planMetaDelete } = await import("../../js/genre-migrate.js?v=5.47");
+  const { planMetaDelete } = await import("../../js/genre-migrate.js?v=5.48");
   const state = {
     tree: { nodes: [], metaGenres: [{ name: "Klubbmusikk" }] },
     genreDescs: {}, artists: [], teacherChecks: {},
@@ -684,7 +684,7 @@ test("planMetaDelete: blokkeres av artistforslag som foreslår metasjangeren", a
 });
 
 test("planGenreRename: fri undersjanger-tagg i forslag gir advarsel, ingen skriving", async () => {
-  const { planGenreRename } = await import("../../js/genre-migrate.js?v=5.47");
+  const { planGenreRename } = await import("../../js/genre-migrate.js?v=5.48");
   // Minimal state med en gyldig node å døpe om.
   const state = {
     tree: { nodes: [{ id: "disco", l: "Disco", f: "Disco", g: "Klubbmusikk", p: [] }], metaGenres: [{ name: "Klubbmusikk" }] },

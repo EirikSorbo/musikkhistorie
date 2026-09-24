@@ -24,7 +24,7 @@
 //  nettopp derfor v4.38 beholdt id-ene da tre sjangre skiftet navn.
 // ============================================================================
 
-import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.47";
+import { STORY_ORDER, STORY_SKJULT } from "./story-format.js?v=5.48";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -550,7 +550,7 @@ export function planMetaDelete(state, navn) {
   if (forslagMedMeta.length) {
     blokkeringer.push({
       hva: `${forslagMedMeta.length} artistforslag i køen foreslår metasjangeren «${meta.name}»`,
-      losning: "Behandle forslagene først — en godkjenning etterpå ville gjeninnført den slettede metasjangeren.",
+      losning: "Behandle forslagene først. Blir ett av dem godkjent etterpå, kommer den slettede metasjangeren tilbake.",
       detaljer: forslagMedMeta.slice(0, 12).map((e) => e.entityName || e.entityId),
     });
   }

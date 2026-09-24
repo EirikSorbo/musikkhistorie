@@ -8,16 +8,16 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.47";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.47";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.47";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.47";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.47";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.47";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.47";
-import { setupFormatBars } from "./format-bar.js?v=5.47";
-import { TREG_SENDING_MELDING } from "./util.js?v=5.47";
-import { wireCharCount } from "./ui-helpers.js?v=5.47";
+import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.48";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.48";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.48";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.48";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.48";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.48";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.48";
+import { setupFormatBars } from "./format-bar.js?v=5.48";
+import { TREG_SENDING_MELDING } from "./util.js?v=5.48";
+import { wireCharCount } from "./ui-helpers.js?v=5.48";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -400,7 +400,8 @@ function meldReturSendt(id) {
 // returnert innsending, prefylt med studentens eget forslag. Artist-returer
 // rutes IKKE hit — de har eget skjema (student.html?retur=<id>).
 export function openReturInnsending(retur, currentValues) {
-  if (retur.type === "tech") return openNewTechProposal(retur, retur);
+  // Skjemaet forhåndsvelges med KORTETS type, ikke rutingtypen «tech».
+  if (retur.type === "tech") return openNewTechProposal({ ...retur, type: retur.kortType }, retur);
   if (retur.type === "edit") {
     return openProposalEditor({
       entityType: retur.entityType,

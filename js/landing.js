@@ -1,21 +1,21 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.47";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.47";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.47";
-import { onGenreModelChanged } from "./genre-model.js?v=5.47";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.47";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.47";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.47";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.47";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.47";
-import { initExplore } from "./explore.js?v=5.47";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.47";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.47";
-import { initPlanMeny } from "./plan-meny.js?v=5.47";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.47";
-import { initVisning, visningTikk } from "./visning.js?v=5.47";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.47";
-import { currentEntityValues } from "./entity-values.js?v=5.47";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.47";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.48";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.48";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.48";
+import { onGenreModelChanged } from "./genre-model.js?v=5.48";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.48";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.48";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.48";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.48";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.48";
+import { initExplore } from "./explore.js?v=5.48";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.48";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.48";
+import { initPlanMeny } from "./plan-meny.js?v=5.48";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.48";
+import { initVisning, visningTikk } from "./visning.js?v=5.48";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.48";
+import { currentEntityValues } from "./entity-values.js?v=5.48";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.48";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -690,6 +690,8 @@ function init() {
       provVisMaal();
       // Kjøreplanens oversiktskort viser artistnavn (v5.36): tegn det på nytt.
       presPlanTikk();
+      // En åpen kjøreplan-kladd med «laster …»-stopp (audit v5.42 funn 8).
+      visningTikk();
     },
     // genreDescsChanged: et åpent sjangerkort skal vise en fersk beskrivelse
     // med én gang — beskrivelsene bor i sin egen samling, så content-snapshotet
@@ -698,6 +700,7 @@ function init() {
       if (isArtistModalOpen()) renderFilterResults();
       explore?.genreDescsChanged?.();
       provVisMaal();
+      visningTikk();
     },
     // Tech-lenkene i artistkortene bygges av linkifiseringen — render på nytt
     // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
@@ -706,7 +709,7 @@ function init() {
     // refreshTeknologi + provVisMaal (audit v5.42 funn 18): en åpen
     // teknologiliste og en ventende ?vis=tech/teknologi/tiår:…:tech-lenke skal
     // følge tech-snapshotet, ikke vente på at noe annet lander.
-    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); explore?.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); },
+    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); explore?.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
     // En ventende ?vis=kobling-lenke venter på koblingstekstene.
     onEdgeDescs: () => provVisMaal(),
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.

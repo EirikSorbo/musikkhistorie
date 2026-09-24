@@ -2,6 +2,7 @@
 //  REGELTESTER — kjøres mot Firestore-emulatoren
 // ----------------------------------------------------------------------------
 //  Kjør:  npm run test:rules   (krever `npm install` og Java for emulatoren)
+//  Kjøres også av GitHub Actions ved hver push (.github/workflows/tester.yml).
 //  Verifiserer at firestore.rules matcher appens faktiske skrivinger — det er
 //  denne typen test som fanger drift mellom regelfila og datamodellen.
 //
@@ -49,7 +50,9 @@ const studentArtist = {
 
 before(async () => {
   env = await initializeTestEnvironment({
-    projectId: "pensum-rules-test",
+    // Samme demo-prosjekt som `firebase emulators:exec --project demo-pensum`
+    // (package.json): et annet navn ga bare advarsler, men forvirrende logg.
+    projectId: "demo-pensum",
     firestore: { rules: readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8") },
   });
 });

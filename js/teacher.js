@@ -14,15 +14,15 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=5.47";
-import { subscribeSharedData } from "./shared-data.js?v=5.47";
-import { onGenreModelChanged } from "./genre-model.js?v=5.47";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.47";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.47";
-import { initExplore } from "./explore.js?v=5.47";
+} from "./store.js?v=5.48";
+import { subscribeSharedData } from "./shared-data.js?v=5.48";
+import { onGenreModelChanged } from "./genre-model.js?v=5.48";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.48";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.48";
+import { initExplore } from "./explore.js?v=5.48";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=5.47";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=5.47";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=5.48";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=5.48";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -41,15 +41,15 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=5.47";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=5.47";
-import { initVisning, visningTikk } from "./visning.js?v=5.47";
-import { initPlanMeny } from "./plan-meny.js?v=5.47";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.47";
-import { renderDesk } from "./teacher-desk.js?v=5.47";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=5.47";
-import { setupFormatBars } from "./format-bar.js?v=5.47";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=5.47";
+} from "./teacher-content.js?v=5.48";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=5.48";
+import { initVisning, visningTikk } from "./visning.js?v=5.48";
+import { initPlanMeny } from "./plan-meny.js?v=5.48";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.48";
+import { renderDesk } from "./teacher-desk.js?v=5.48";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=5.48";
+import { setupFormatBars } from "./format-bar.js?v=5.48";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=5.48";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -252,10 +252,12 @@ function startAppInner() {
       refreshDesk();
       // «Alle artister (n)» i Instrumenter-kortet telles av artistene.
       ctx.explore?.renderInstrumenter?.();
+      // En åpen kjøreplan-kladd med «laster …»-stopp (audit v5.42 funn 8).
+      visningTikk();
     },
     // genreDescsChanged: et åpent sjangerkort viser fersk beskrivelse med én
     // gang (beskrivelsene bor i egen samling — content-snapshotet dekker dem ikke).
-    onGenreDescs: () => { refreshDesk(); ctx.explore?.genreDescsChanged?.(); },
+    onGenreDescs: () => { refreshDesk(); ctx.explore?.genreDescsChanged?.(); visningTikk(); },
     onContent: () => {
       // Åpne innholdsvisninger (sider/varmekart/instrumentsammendrag)
       // re-rendres så import/redigering slår gjennom umiddelbart.
@@ -278,6 +280,7 @@ function startAppInner() {
       ctx.explore?.refreshTeknologi?.();
       ctx.explore?.renderInstrumenter?.();
       refreshDesk();
+      visningTikk();
     },
   });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; state.teacherChecksLoaded = true; refreshDesk(); });

@@ -13,7 +13,7 @@ import {
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js?v=5.47";
+} from "../../js/limits.js?v=5.48";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 
@@ -42,10 +42,13 @@ test("moderasjonspredikatet er delt: skrivebord, kø, liste og auto-av", () => {
 // Audit v5.19, funn 2: returSporring må spre dokumentet FØRST — ellers vinner
 // tech-dokumentets eget «type»-felt («innovasjon») over retur-typen, og «Rett
 // og send inn på nytt» blir en død knapp for returnerte innovasjonskort.
-test("returSporring: retur-typen overskriver dokumentets eget type-felt", () => {
+// Audit v5.42, funn 19: kortets EGEN type må likevel følge med (kortType),
+// og skjemaet forhåndsvelges med den.
+test("returSporring: retur-typen ruter, kortets egen type forhåndsvelger skjemaet", () => {
   const store = kilde("store.js");
-  assert.match(store, /\{ \.\.\.d\.data\(\), type, id: d\.id \}/,
-    "spredningen av d.data() må stå først i returSporring");
+  assert.match(store, /\{ \.\.\.d\.data\(\), kortType: d\.data\(\)\.type \?\? null, type, id: d\.id \}/,
+    "spredningen av d.data() må stå først i returSporring, og kortType bære kortets type");
+  assert.match(kilde("proposals.js"), /if \(retur\.type === "tech"\) return openNewTechProposal\(\{ \.\.\.retur, type: retur\.kortType \}, retur\);/);
   assert.doesNotMatch(store, /\{ type, id: d\.id, \.\.\.d\.data\(\) \}/,
     "den gamle rekkefølgen (type før spredningen) må ikke komme tilbake");
 });

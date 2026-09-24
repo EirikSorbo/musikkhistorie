@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js?v=5.47";
+import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js?v=5.48";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 

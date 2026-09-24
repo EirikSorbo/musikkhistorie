@@ -22,16 +22,17 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.47";
-import { escapeHtml } from "./util.js?v=5.47";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.47";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.47";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.47";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.47";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.47";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.47";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.47";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.47";
+import { getState } from "./explore-context.js?v=5.48";
+import { escapeHtml } from "./util.js?v=5.48";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.48";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.48";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.48";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.48";
+import { INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=5.48";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.48";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.48";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.48";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.48";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -50,25 +51,53 @@ let kladd = null;   // { id, tittel, stopp } — settes ved Ny/Rediger, null i l
 
 // Menneskelig etikett for et stopp, med «finnes ikke lenger»-varsel når målet
 // er borte (slettet artist, omdøpt sjanger — navnebytte-fella fra planen).
-// Bare dokument- og navnebaserte mål kan sjekkes; visningene finnes alltid.
+// Alle navnebaserte mål sjekkes mot det åpneren faktisk slår opp i (audit
+// v5.42 funn 8: røttene og Reggae ble meldt døde selv om de virket, mens et
+// omdøpt varmekart, en undersjanger og en kobling aldri ble meldt). Mens
+// artistene eller kortene laster, står det «laster …», ikke et falskt varsel.
+// Alt leses ved kall: treet og vokabularet er live bindings.
+const DOD = "finnes ikke lenger";
+
 function stoppEtikett(stopp) {
   const m = parseVisVerdi(stopp.vis);
   if (!m) return { tekst: stopp.vis, feil: "ugyldig lenke" };
   const navn = TYPE_NAVN[m.hva] || m.hva;
+  const s = getState();
   switch (m.hva) {
     case "artist": {
-      const a = (getState().artists || []).find((x) => x.id === m.id);
-      return a ? { tekst: `${navn}: ${a.name}` } : { tekst: `${navn}: ${m.id}`, feil: "finnes ikke lenger" };
+      const a = (s.artists || []).find((x) => x.id === m.id);
+      if (a) return { tekst: `${navn}: ${a.name}` };
+      return s.artistsLoaded ? { tekst: `${navn}: ${m.id}`, feil: DOD } : { tekst: `${navn}: laster …`, laster: true };
     }
     case "tech": {
-      const t = (getState().techItems || []).find((x) => x.id === m.id);
-      return t ? { tekst: `${navn}: ${t.name}` } : { tekst: `${navn}: ${m.id}`, feil: "finnes ikke lenger" };
+      const t = (s.techItems || []).find((x) => x.id === m.id);
+      if (t) return { tekst: `${navn}: ${t.name}` };
+      return s.techLoaded ? { tekst: `${navn}: ${m.id}`, feil: DOD } : { tekst: `${navn}: laster …`, laster: true };
     }
+    // Sjangerkortet åpnes for ALLE noder i treet (også røttene), ikke bare
+    // for dem med metasjanger.
     case "sjanger":
-      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_MAIN_GENRES.includes(m.id) ? "" : "finnes ikke lenger" };
+      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY.some((n) => n.l === m.id || n.f === m.id) ? "" : DOD };
     case "historie":
       if (!m.id) return { tekst: `${navn}: oversikten` };
-      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : "finnes ikke lenger" };
+      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : DOD };
+    case "varmekart":
+      if (!m.id) return { tekst: navn };
+      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : DOD };
+    case "undersjanger": {
+      if (!s.artistsLoaded || !s.genreDescsLoaded) return { tekst: `${navn}: ${m.id}`, laster: true };
+      const kjent = !!s.genreDescs?.[m.id]?.sub
+        || (s.artists || []).some((a) => (a.subGenre || []).includes(m.id));
+      return { tekst: `${navn}: ${m.id}`, feil: kjent ? "" : DOD };
+    }
+    case "kobling": {
+      const [fra, til] = String(m.id || "").split("__");
+      const nodeNavn = (id) => GENEALOGY.find((n) => n.id === id)?.l || id;
+      return { tekst: `${navn}: ${nodeNavn(fra)} til ${nodeNavn(til)}`, feil: edgeExists(m.id) ? "" : DOD };
+    }
+    case "instrument":
+      if (!m.id) return { tekst: navn };
+      return { tekst: `${navn}: ${m.id}`, feil: INSTRUMENT_TIMELINE_GROUPS.includes(m.id) ? "" : DOD };
     case "tiår":
       return { tekst: `${navn}: ${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})` };
     // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
@@ -216,6 +245,9 @@ function renderListe() {
   if (paa) paa.hidden = !erPresentasjon();
 }
 
+// Står det «laster …» på et stopp, tegnes kladden på nytt når dataene lander.
+let kladdVenter = false;
+
 function renderKladd() {
   const boks = document.getElementById("pres-adm-rediger");
   // Hele startdelen (fri visning og lista) viker for editoren.
@@ -229,8 +261,10 @@ function renderKladd() {
   if (tittel && tittel.value !== kladd.tittel) tittel.value = kladd.tittel;
 
   const el = document.getElementById("pres-adm-stopp");
+  kladdVenter = false;
   el.innerHTML = kladd.stopp.length ? kladd.stopp.map((s, i) => {
-    const { tekst, feil } = stoppEtikett(s);
+    const { tekst, feil, laster } = stoppEtikett(s);
+    if (laster) kladdVenter = true;
     return `
     <div class="pres-adm-rad">
       <span class="pres-adm-navn">${i + 1}. ${escapeHtml(tekst)}
@@ -380,7 +414,10 @@ export function apneVisning() {
 // lærerens, og skal ikke rykkes vekk).
 export function visningTikk() {
   const m = document.getElementById(MODAL_ID);
-  if (!m?.classList.contains("open") || kladd) return;
+  if (!m?.classList.contains("open")) return;
+  // En åpen kladd tegnes bare på nytt når den venter på data (etiketter som
+  // sier «laster …»); ellers skal ingenting rykke i lærerens redigering.
+  if (kladd) { if (kladdVenter) renderKladd(); return; }
   renderListe();
 }
 
@@ -536,6 +573,13 @@ function koblVindu(m) {
     const n = Number(sel.value);
     if (n >= 1 && n <= 3) kladd.stopp[i].nivaa = n;
     else delete kladd.stopp[i].nivaa;
+  });
+
+  // Tittelen følger feltet: renderKladd (etter «Legg til stopp», ↑, ↓, ✕)
+  // skrev ellers den gamle tittelen tilbake over det læreren hadde skrevet
+  // (audit v5.42 funn 13).
+  m.querySelector("#pres-adm-tittel")?.addEventListener("input", (e) => {
+    if (kladd) kladd.tittel = e.target.value;
   });
 
   // Enter i lim-inn-feltet = «Legg til stopp» (raskere flyt med mange lenker).

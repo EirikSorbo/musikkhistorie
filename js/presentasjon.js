@@ -24,18 +24,18 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.47";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.47";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.47";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.47";
-import { GENEALOGY } from "./genre-model.js?v=5.47";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.47";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.47";
-import { escapeHtml } from "./util.js?v=5.47";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.47";
-import { getState } from "./explore-context.js?v=5.47";
-import { onAuthChange } from "./store.js?v=5.47";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.47";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.48";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.48";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.48";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.48";
+import { GENEALOGY } from "./genre-model.js?v=5.48";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.48";
+import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.48";
+import { escapeHtml } from "./util.js?v=5.48";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.48";
+import { getState } from "./explore-context.js?v=5.48";
+import { onAuthChange } from "./store.js?v=5.48";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.48";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -79,10 +79,17 @@ export function erPresentasjon() {
   if (param !== null) {
     skriv(LAGRING.aktiv, "1");
     if (param && param !== "1") {
+      // Tilbake til en side i SAMME kjøreplan (nettleserens tilbake, «←
+      // Tilbake» fra slektstreet): posisjonen i sessionStorage er den
+      // ferskeste, for læreren kan ha bladd videre på den andre sida. Adressen
+      // bærer posisjonen fra da sida ble forlatt (audit v5.42 funn 12).
+      const tilbakeISammePlan = erTilbakeNavigering() && les(LAGRING.plan) === param;
       skriv(LAGRING.plan, param);
-      let s = 0;
-      try { s = Number(new URLSearchParams(window.location.search).get("stopp")); } catch (e) {}
-      skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? Math.trunc(s) : 0));
+      if (!tilbakeISammePlan) {
+        let s = 0;
+        try { s = Number(new URLSearchParams(window.location.search).get("stopp")); } catch (e) {}
+        skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? Math.trunc(s) : 0));
+      }
     } else {
       // Fri visning (?presentasjon eller =1) er uten kjøreplan (v5.41): en
       // plan fra tidligere i økta lå ellers igjen i sessionStorage og ble
@@ -226,6 +233,18 @@ function oppdaterTeller() {
 function gaTilStopp(i) {
   if (!plan || !plan.stopp.length) return;
   const p = planPosisjon(i, plan.stopp.length);
+
+  // Lyd som spiller i et åpent kort (en podkastepisode) stoppes før byttet:
+  // podkastkortets «stopp eller fortsett?»-vakt avviste ellers lukkingen, og
+  // spørsmålet havnet skjult under neste stopp mens lyden gikk videre
+  // (audit v5.42 funn 7). YouTube-spilleren river iframen selv.
+  document.querySelectorAll(".modal-backdrop.open audio").forEach((a) => { try { a.pause(); } catch (e) {} });
+  document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+  // Nektet et kort likevel å lukkes (et spørsmål eller en ulagret kladd,
+  // som kjøreplan-editoren), avbrytes byttet: posisjonen står, og kortet
+  // med spørsmålet blir liggende øverst.
+  if (document.querySelector(".modal-backdrop.open")) return;
+
   stoppIdx = p.pos;
   lagrePosisjon();
 
@@ -237,11 +256,22 @@ function gaTilStopp(i) {
   lagreTilstand();
   brukNivaa();
 
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+  // Tilbake fra slektstresiden (nettleserens tilbake eller «← Tilbake») til
+  // et slektstre-stopp: sida skal ikke hoppe rett tilbake dit igjen, for da
+  // ble tilbake-knappen en løkke (funn 12). Neste → går videre som vanlig.
+  const tilbakeTilTreet = hoppOverSlektstre && stopp?.vis === "slektstre";
+  hoppOverSlektstre = false;
   if (p.oversikt) visOversikt();
-  else apneVisNaarKlart(parseVisVerdi(stopp.vis));
+  else if (!tilbakeTilTreet) apneVisNaarKlart(parseVisVerdi(stopp.vis));
   oppdaterTeller();
   oppdaterLeggTil();
+}
+
+// Satt når sida er nådd med nettleserens tilbake/fram (se over).
+let hoppOverSlektstre = false;
+
+function erTilbakeNavigering() {
+  try { return performance.getEntriesByType("navigation")[0]?.type === "back_forward"; } catch (e) { return false; }
 }
 
 // Posisjonen i sessionStorage (hoppet til tre.html) og i URL-en (omlasting).
@@ -431,7 +461,11 @@ export function presPlanTikk() {
 function wireTaster() {
   document.addEventListener("keydown", (e) => {
     if (erSvart()) return;   // den svarte skjermen har sin egen lytter (capture)
-    const h = presTast(e, { plan: !!plan, iSkrivefelt: erSkrivefelt(document.activeElement) });
+    const h = presTast(e, {
+      plan: !!plan,
+      iSkrivefelt: erSkrivefelt(document.activeElement),
+      video: topOpenModal()?.id === "modal-yt",
+    });
     if (!h) return;
     e.preventDefault();
     switch (h) {
@@ -445,6 +479,7 @@ function wireTaster() {
       case "skala": return vekslSkala();
       case "svart": return vekslSvart();
       case "hjelp": return vekslHjelp();
+      case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
     }
   });
@@ -665,6 +700,15 @@ export function initPresentasjon() {
   // har alt skrevet URL-parametrene dit, og et sidebytte bærer dem videre.
   planId = les(LAGRING.plan) || null;
   stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
+  hoppOverSlektstre = erTilbakeNavigering();
+  // Tilbake fra nettleserens hurtigbuffer (bfcache): stoppet i minnet er det
+  // sida ble forlatt på, men læreren kan ha bladd videre på slektstresiden.
+  window.addEventListener("pageshow", (e) => {
+    if (!e.persisted || !planId) return;
+    stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
+    hoppOverSlektstre = true;
+    if (plan) gaTilStopp(stoppIdx);
+  });
 
   byggBar();
   brukSkala(skalaTrinn);   // etter byggBar: knappen skal vise trinnet

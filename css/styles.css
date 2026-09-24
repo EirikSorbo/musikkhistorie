@@ -2868,6 +2868,11 @@ body.presentasjon .modal-backdrop > .modal.modal-yt-boks {
    hører til planleggingen og er ute av bildet. Knappen i tittellinja går
    tilbake til kortet (yt-spiller.js). */
 body.presentasjon #modal-yt.yt-kino { background: #000; padding: 0; }
+/* Verktøylinja og samlelinja ligger ellers over YouTubes kontroller nederst
+   i videoen (audit v5.42 funn 35). De kommer fram når pekeren eller fokus
+   står på dem. */
+body.presentasjon:has(#modal-yt.yt-kino.open) :is(#pres-bar, #samle-bar) { opacity: 0; transition: opacity 0.2s; }
+body.presentasjon:has(#modal-yt.yt-kino.open) :is(#pres-bar, #samle-bar):is(:hover, :focus-within) { opacity: 1; }
 body.presentasjon #modal-yt.yt-kino > .modal.modal-yt-boks {
   position: relative; display: flex; align-items: center; justify-content: center;
   width: 100%; max-width: none; height: 100%; max-height: 100%;
@@ -2954,6 +2959,12 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 
 /* Verktøylinja nede til høyre. z-index over modalene (de starter på 100 og
    teller oppover per åpning — 99999 er utenfor rekkevidde i praksis). */
+/* Kilder vises aldri på lerretet (brukerregel v5.29). Seksjonsmerket
+   data-sekt="kilder" dekker artistkortet, men tiårsvisningen, undersjanger-,
+   koblings- og instrumentkortet har kildelister uten merke (audit v5.42 funn
+   9). buildKilderList er eneste kilde til klassen. */
+body.presentasjon .kilder { display: none !important; }
+
 #pres-bar {
   /* Fast størrelse (v5.36): verktøy, ikke innhold. Rot-skalaen følger
      skjermbredden i presentasjon, og linja skal ikke vokse med den. */

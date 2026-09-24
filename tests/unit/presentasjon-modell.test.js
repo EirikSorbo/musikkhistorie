@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.47";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.47";
+import { metaRader } from "../../js/ui-helpers.js?v=5.48";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.48";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -186,12 +186,21 @@ test("erSynlig: ukjent flate viser alt, ukjent seksjon bare på Alt", () => {
 // Kontrakten mot renderne: hver seksjons-ID modellen lover, må finnes som
 // data-sekt i koden som tegner flaten — ellers er tannhjul-panelet en løgn.
 test("data-sekt-merkingen dekker modellens seksjoner", () => {
+  // Tiår og historie leses fra SIN modal i markupen, ikke hele fila: begge
+  // har data-sekt="tekst", så et fjernet merke på historien slapp gjennom
+  // (audit v5.42 funn 9).
+  const modaler = kilde("explore-modals.js");
+  const modal = (id) => {
+    const start = modaler.indexOf(`id="${id}"`);
+    const slutt = modaler.indexOf('class="modal-backdrop"', start + 1);
+    return modaler.slice(start, slutt === -1 ? undefined : slutt);
+  };
   const hvor = {
     artist: kilde("ui.js"),
     sjanger: kilde("genealogy.js"),
     tech: kilde("ui-tech.js"),
-    tiår: kilde("explore-modals.js"),
-    historie: kilde("explore-modals.js"),
+    tiår: modal("modal-decade-view"),
+    historie: modal("modal-historier"),
   };
   for (const [flate, seksjoner] of Object.entries(FLATER)) {
     for (const { id } of seksjoner) {
@@ -201,6 +210,13 @@ test("data-sekt-merkingen dekker modellens seksjoner", () => {
       assert.ok(ok, `${flate}.${id} mangler data-sekt-merke i renderen`);
     }
   }
+});
+
+test("kilder vises aldri på lerretet, heller ikke kildelister uten seksjonsmerke", () => {
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.presentasjon \.kilder \{ display: none !important; \}/);
+  // Klassen kommer bare fra buildKilderList, så regelen dekker alle flatene.
+  assert.match(kilde("util.js"), /return `<div class="kilder"><strong>/);
 });
 
 test("ytMaal: vanlige lenkeformer gir video-ID", () => {
@@ -440,6 +456,16 @@ test("presTast: av/på-tastene reagerer ikke på auto-gjentak, blaingen gjør de
   assert.equal(holdt("2"), "nivaa2");
 });
 
+test("presTast: mellomrom og K spiller og pauser, men bare når lytteeksempelet ligger øverst (funn 10)", () => {
+  assert.equal(presTast(tast(" "), { video: true }), "spill");
+  assert.equal(presTast(tast("k"), { video: true }), "spill");
+  assert.equal(presTast(tast("K"), { video: true, plan: true }), "spill");
+  assert.equal(presTast(tast(" ")), null, "uten video: mellomrom ruller siden som før");
+  assert.equal(presTast(tast("k")), null);
+  assert.equal(presTast(tast(" "), { video: true, iSkrivefelt: true }), null, "aldri i skrivefelt");
+  assert.equal(presTast(tast(" ", { repeat: true }), { video: true }), null, "en holdt tast veksler ikke fram og tilbake");
+});
+
 test("samleTast: + legger til, Ctrl/Cmd+Z angrer, aldri i skrivefelt", () => {
   assert.equal(samleTast(tast("+")), "leggTil");
   assert.equal(samleTast(tast("z", { ctrlKey: true })), "angre");
@@ -457,12 +483,12 @@ test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
   // Søket og Esc bor andre steder (vis-lenke og modalene); resten skal
   // presTast kjenne, ellers lover oversikten noe som ikke virker.
   const andreSteder = new Set(["/", "Ctrl/Cmd+K", "Esc"]);
-  const navn = { "→": "ArrowRight", "←": "ArrowLeft" };
+  const navn = { "→": "ArrowRight", "←": "ArrowLeft", "Mellomrom": " " };
   for (const g of PRES_TASTER) {
     for (const r of g.rader) {
       for (const t of r.taster) {
         if (andreSteder.has(t)) continue;
-        assert.ok(presTast(tast(navn[t] || t), { plan: true }), `«${t}» (${r.hva}) mangler i presTast`);
+        assert.ok(presTast(tast(navn[t] || t), { plan: true, video: true }), `«${t}» (${r.hva}) mangler i presTast`);
       }
     }
   }
@@ -471,7 +497,8 @@ test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
 
 test("tastene er koblet: én felles lytter, svart skjerm i capture, samleøkt etter presentasjonen, Ctrl/Cmd+S i editoren", () => {
   const spiller = kilde("presentasjon.js");
-  assert.match(spiller, /const h = presTast\(e, \{ plan: !!plan, iSkrivefelt: erSkrivefelt\(document\.activeElement\) \}\);/);
+  assert.match(spiller, /const h = presTast\(e, \{\n\s*plan: !!plan,\n\s*iSkrivefelt: erSkrivefelt\(document\.activeElement\),\n\s*video: topOpenModal\(\)\?\.id === "modal-yt",\n\s*\}\);/);
+  assert.match(spiller, /case "spill": return veksleYtAvspilling\(\);/);
   assert.match(spiller, /case "oppsummering": return gaTilStopp\(plan\.stopp\.length \+ 1\);/);
   assert.doesNotMatch(spiller, /function wirePlanTaster/, "den gamle pil-lytteren er erstattet");
   assert.match(spiller, /e\.stopPropagation\(\);\n\s*vekslSvart\(\);\n\s*\}, true\);/, "Esc skal hente bildet, ikke lukke kortet bak");
@@ -520,7 +547,12 @@ test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort si
   // fullskjerm bare når siden ikke alt er i fullskjerm, og den forlates ved lukking.
   const spiller = kilde("yt-spiller.js");
   assert.match(spiller, /settKino\(m, erPresentasjon\(\)\);/);
-  assert.match(spiller, /if \(paa && !document\.fullscreenElement && m\.requestFullscreen\)/);
+  // Fullskjerm for HELE siden, ikke modalen (audit v5.42 funn 11 og 21), og
+  // utgangen venter ett tikk, så neste lytteeksempel beholder den.
+  assert.match(spiller, /const side = document\.documentElement;\n\s*if \(paa && !document\.fullscreenElement && side\.requestFullscreen\)/);
+  assert.match(spiller, /if \(!egenFullskjerm \|\| erKino\(m\)\) return;/);
+  assert.match(spiller, /onError: \(e\) => \{\n\s*if \(!\[100, 101, 150, 153\]\.includes\(e\?\.data\)\) return;/, "funn 36");
+  assert.match(spiller, /document\.activeElement\?\.id === "yt-iframe"/, "funn 10: fokus tilbake fra iframen");
   assert.match(spiller, /function lukkSpiller\(\) \{\n\s*const m = document\.getElementById\("modal-yt"\);\n\s*if \(m\) forlatEgenFullskjerm\(m\);/);
   assert.match(css, /body\.presentasjon #modal-yt\.yt-kino > \.modal\.modal-yt-boks \{[^}]*max-width: none;/);
 });
