@@ -235,8 +235,9 @@ service cloud.firestore {
           strOk("description", 5000) &&
           strOk("imageUrl", 2000) &&
           strOk("proposedBy", 100) &&
-          // Kilder er en liste med korte strenger — hindrer at feltet brukes til
-          // å dytte inn vilkårlig store data via et «forslag».
+          // Kilder er en liste; taket teller elementer, ikke hvor store de er,
+          // så dette stopper mange kilder, ikke én stor. Det egentlige vernet
+          // mot misbruk utenfor appen er App Check (audit v5.42 funn 25).
           listOk("kilder", 20) &&
           // Samme tak som pendingEdits bruker for de samme feltene. Uten dem var
           // ti av femten felter ubegrensede strenger her, mens forslags-flyten
@@ -321,8 +322,11 @@ service cloud.firestore {
       }
       // Validering av selve forslags-feltene, DELT av create og retur-
       // innsendingen: hadde de hver sin kopi, ville de drevet fra hverandre.
-      // Størrelsestak per felt (samme vern som artists/tech-create), så ingen
-      // kan fylle samlingen med ~1 MB-dokumenter: korte strenger med rause
+      // Typevakt og størrelsestak per felt (samme vern som artists/tech-
+      // create). Listetakene teller elementer, ikke størrelsen på dem, så et
+      // dokument kan fortsatt nå grensen på 1 MB; det egentlige vernet mot
+      // misbruk utenfor appen er App Check (audit v5.42 funn 25). Takene:
+      // korte strenger med rause
       // tak, URL som artist-create (2000), beskrivelse 5000, langtekstene
       // (instrumentsammendrag/tiårstekst) 20 000. Lister begrenses i ANTALL —
       // regler kan ikke validere hvert element, så innholdet i kilder-rader

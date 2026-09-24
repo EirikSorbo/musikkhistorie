@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.46";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js?v=5.47";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -132,8 +132,9 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
     const neste = rules.slice(start + 1).search(/match \/(artists|tech|pendingEdits)\//);
     return neste === -1 ? rules.slice(start) : rules.slice(start, start + 1 + neste);
   };
-  const techRegel = regelBlokk("tech");
-  const forslagRegel = regelBlokk("pendingEdits");
+  // Kommentarer skrelles bort: et utkommentert kall er ikke en vakt.
+  const techRegel = regelBlokk("tech").replace(/\/\/.*$/gm, "");
+  const forslagRegel = regelBlokk("pendingEdits").replace(/\/\/.*$/gm, "");
   for (const felt of ["adoptedLabel", "imageCredit"]) {
     const iSkjema = proposals.match(new RegExp(`key: "${felt}"[^}]*max: (\\d+)`));
     assert.ok(iSkjema, `${felt} mangler max i forslagsskjemaet`);
@@ -199,10 +200,15 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
     const b = blokk(samling);
     assert.ok((b.match(/innsendtKode/g) || []).length >= 2,
       `${samling}: kodebeviset må stå i retur-grenen`);
-    assert.ok(b.includes('"ownerUid"'), `${samling}: ownerUid må være tillatt ved create`);
+    // Selve create-hvitelisten, ikke hvor som helst i blokka (audit v5.42
+    // funn 46: get("ownerUid", "") i vakta oppfylte den gamle sjekken selv
+    // om nøkkelen var borte fra lista).
+    const create = b.replace(/\/\/.*$/gm, "").match(/allow create:[\s\S]*?keys\(\)\.hasOnly\(\[([\s\S]*?)\]\)/);
+    assert.ok(create, `${samling}: fant ikke create-hvitelisten`);
+    assert.ok(create[1].includes('"ownerUid"'), `${samling}: ownerUid må stå i create-hvitelisten`);
   }
   // Artists-create-hvitelisten må dekke HELE skjemaet — parse den faktiske lista.
-  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.46");
+  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js?v=5.47");
   const lister = [...rules.matchAll(/hasOnly\(\[([\s\S]*?)\]\)/g)]
     .map((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]));
   const artistCreate = lister.find((l) => l.includes("votedUpBy") && l.includes("addedYear"));
@@ -249,7 +255,7 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.46");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js?v=5.47");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
   const markup = les("js/explore-modals.js");
@@ -316,7 +322,7 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
 // Audit v5.19 funn 40: de seks returfeltnavnene sto håndskrevet tre steder.
 // Nå er RETUR_FELTER (artist-schema.js) én kilde — lås at alle tre bruker den.
 test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", async () => {
-  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.46");
+  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js?v=5.47");
   assert.deepEqual(RETUR_FELTER, ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]);
   for (const f of RETUR_FELTER) assert.ok(ARTIST_EXPORT_FIELDS.includes(f), `eksporten mangler ${f}`);
   assert.ok(ARTIST_EXPORT_FIELDS.includes("ownerUid"));
@@ -336,7 +342,8 @@ test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", as
 test("funn 48: pendingEdits-reglene, PROPOSABLE_KEYS og FIELD_SPECS har de samme feltene", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const rules = les("firestore.rules");
+  // Kommentarer skrelles bort først: et utkommentert capOk er ingen vakt.
+  const rules = les("firestore.rules").replace(/\/\/.*$/gm, "");
   const forslag = rules.slice(rules.indexOf("match /pendingEdits/"));
   const liste = forslag.match(/pf\(\)\.keys\(\)\.hasOnly\(\[([^\]]+)\]\)/);
   assert.ok(liste, "fant ikke pf().keys().hasOnly i pendingEdits-blokka");

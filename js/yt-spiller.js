@@ -23,9 +23,9 @@
 //  spilleren når minst én av dem er sann. Da dobbeltåpner ingenting.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.46";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.46";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.46";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.47";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.47";
+import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.47";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres.

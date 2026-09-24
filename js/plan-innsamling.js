@@ -28,15 +28,15 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.46";
-import { getState } from "./explore-context.js?v=5.46";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.46";
-import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.46";
-import { escapeHtml } from "./util.js?v=5.46";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.46";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.46";
-import { aktivPlanId } from "./presentasjon.js?v=5.46";
-import { erLaererBruker } from "./plan-meny.js?v=5.46";
+import { savePlan, onAuthChange } from "./store.js?v=5.47";
+import { getState } from "./explore-context.js?v=5.47";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.47";
+import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.47";
+import { escapeHtml } from "./util.js?v=5.47";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.47";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.47";
+import { aktivPlanId } from "./presentasjon.js?v=5.47";
+import { erLaererBruker } from "./plan-meny.js?v=5.47";
 
 const LAGRING = {
   plan: "pensumSamlePlan",

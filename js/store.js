@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.46";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.46";
-import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.46";
-import { RETUR_FELTER } from "./artist-schema.js?v=5.46";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.46";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.46";
-import { mergeHeatRows } from "./import-format.js?v=5.46";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.46";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.46";
+import { firebaseConfig } from "./firebase-config.js?v=5.47";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.47";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.47";
+import { RETUR_FELTER } from "./artist-schema.js?v=5.47";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.47";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.47";
+import { mergeHeatRows } from "./import-format.js?v=5.47";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.47";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.47";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -558,6 +558,13 @@ const presentasjonerRef = () => doc(db, "content", "presentasjoner");
 export async function savePlan(id, plan) {
   return setDoc(presentasjonerRef(),
     { planer: { [id]: plan }, updatedAt: new Date().toISOString() }, { merge: true });
+}
+
+// Flere planer i ÉN skriving (importen): én lesing per tilkoblet klient i
+// stedet for én per plan, og alt-eller-ingenting.
+export async function savePlaner(planer) {
+  return setDoc(presentasjonerRef(),
+    { planer, updatedAt: new Date().toISOString() }, { merge: true });
 }
 
 export async function deletePlan(id) {

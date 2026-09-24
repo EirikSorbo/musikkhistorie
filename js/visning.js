@@ -22,16 +22,16 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.46";
-import { escapeHtml } from "./util.js?v=5.46";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.46";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.46";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.46";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.46";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.46";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.46";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.46";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.46";
+import { getState } from "./explore-context.js?v=5.47";
+import { escapeHtml } from "./util.js?v=5.47";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.47";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.47";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.47";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.47";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.47";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.47";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.47";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.47";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -454,7 +454,11 @@ function koblVindu(m) {
     // nivåene og unntakene, som ny plan. Planene gjenbrukes fra år til år.
     const dupliser = hit("[data-pres-dupliser]");
     if (dupliser) {
-      const p = planerNaa()[dupliser.dataset.presDupliser];
+      const id = dupliser.dataset.presDupliser;
+      // Samles planen, avsluttes økta først, så kopien har med alt (som
+      // Rediger): stopp som ennå ikke er sendt, ligger ikke i planen i state.
+      if (aktivSamleokt()?.planId === id) await medFrist(avsluttInnsamling(), 4000);
+      const p = planerNaa()[id];
       if (!p) return;
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       const tittel = `Kopi av ${p.tittel}`.slice(0, 80);

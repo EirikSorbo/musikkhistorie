@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.46";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.47";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -19,16 +19,16 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-  savePlan,
-} from "./store.js?v=5.46";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=5.46";
-import { escapeHtml } from "./ui.js?v=5.46";
-import { $ } from "./shared.js?v=5.46";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.46";
-import { validateTree } from "./genre-validate.js?v=5.46";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.46";
-import { INSTRUMENTS } from "./limits.js?v=5.46";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.46";
+  savePlaner,
+} from "./store.js?v=5.47";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=5.47";
+import { escapeHtml } from "./ui.js?v=5.47";
+import { $ } from "./shared.js?v=5.47";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.47";
+import { validateTree } from "./genre-validate.js?v=5.47";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.47";
+import { INSTRUMENTS } from "./limits.js?v=5.47";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.47";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -568,7 +568,7 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
     } catch (e) { console.error("Referanse-import feilet:", e); failed.push("de frittstående referansene"); }
   }
 
-  // Kjøreplanene FLETTES plan for plan (savePlan skriver én plan om gangen):
+  // Kjøreplanene FLETTES plan for plan (merge på planer.<id>, i én skriving):
   // planer som ikke står i fila, blir liggende. Læreren ser først hvilke
   // som legges til og hvilke som erstattes, så en plan hun har slettet etter
   // eksporten, ikke kommer tilbake uten at hun vet det.
@@ -586,7 +586,9 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       const vis = linjer.slice(0, 15).join("\n") + (linjer.length > 15 ? `\n… og ${linjer.length - 15} til` : "");
       if (window.confirm(`Kjøreplaner i fila:\n\n${vis}\n\nPlaner som ikke står i fila, blir liggende. Importere disse kjøreplanene?`)) {
         try {
-          for (const [id, p] of [...nye, ...erstattes]) await savePlan(id, p);
+          // Én skriving for alle (kontrollrunden for v5.45): hver skriving i
+          // content-samlingen koster én lesing per tilkoblet klient.
+          await savePlaner(Object.fromEntries([...nye, ...erstattes]));
           done.push(`${nye.length + erstattes.length} kjøreplan(er)`);
         } catch (e) { console.error("Kjøreplan-import feilet:", e); failed.push("kjøreplanene"); }
       } else {

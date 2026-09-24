@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js?v=5.46";
+import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js?v=5.47";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 
@@ -21,7 +21,9 @@ test("funn 5: kjøreplanene er med i eksporten og slipper gjennom importens hvit
   // Importen fletter plan for plan, etter at læreren har sett lista.
   assert.match(imp, /async function importExtras\(\{[^}]*presentasjoner \}\)/);
   assert.match(imp, /if \(window\.confirm\(`Kjøreplaner i fila:/);
-  assert.match(imp, /for \(const \[id, p\] of \[\.\.\.nye, \.\.\.erstattes\]\) await savePlan\(id, p\);/);
+  // Én skriving for alle planene (kontrollrunden for v5.45).
+  assert.match(imp, /await savePlaner\(Object\.fromEntries\(\[\.\.\.nye, \.\.\.erstattes\]\)\);/);
+  assert.match(kilde("store.js"), /export async function savePlaner\(planer\) \{\n\s*return setDoc\(presentasjonerRef\(\),\n\s*\{ planer, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}\);/);
 });
 
 test("forslag 1: «Dupliser» lager en ny plan med kopi av stoppene", () => {
@@ -29,6 +31,9 @@ test("forslag 1: «Dupliser» lager en ny plan med kopi av stoppene", () => {
   assert.match(vis, /data-pres-dupliser="\$\{escapeHtml\(id\)\}"/);
   assert.match(vis, /const kopi = \{ tittel, laget: new Date\(\)\.toISOString\(\), stopp: p\.stopp\.map\(\(x\) => \(\{ \.\.\.x \}\)\) \};/);
   assert.match(vis, /if \(!\(await vakt\(savePlan\(nyPlanId\(\), kopi\)\)\)\) return;/);
+  // Samles planen, avsluttes økta først, så kopien har med alt.
+  const dup = vis.slice(vis.indexOf('hit("[data-pres-dupliser]")'));
+  assert.match(dup, /if \(aktivSamleokt\(\)\?\.planId === id\) await medFrist\(avsluttInnsamling\(\), 4000\);\n\s*const p = planerNaa\(\)\[id\];/);
 });
 
 test("funn 15: varmekartet tar bare en kjent metasjanger, aldri klikkhendelsen", () => {

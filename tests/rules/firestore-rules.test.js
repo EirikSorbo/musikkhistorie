@@ -24,6 +24,11 @@ import "firebase/compat/firestore";
 
 const serverTs = () => firebase.firestore.FieldValue.serverTimestamp();
 
+// Regelteksten uten kommentarer, for testene som henter feltlister fra den.
+const REGLER = readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8").replace(/\/\/.*$/gm, "");
+const FORSLAG_REGLER = REGLER.slice(REGLER.indexOf("match /pendingEdits/"));
+const FORSLAG_STRENGER = [...FORSLAG_REGLER.matchAll(/\bcapOk\("([^"]+)"/g)].map((m) => m[1]);
+
 let env;
 
 // Samme form som store.js buildArtistDoc skriver for en student.
@@ -450,8 +455,10 @@ test("funn 43: hver typevakt holder på hver kallplass (map, liste eller streng 
     await assertFails(db.collection("artists").add({ ...studentArtist, [f]: { a: stor } }));
     await assertFails(db.collection("artists").add({ ...studentArtist, [f]: [stor] }));
   }
+  const artistListeTak = { mainGenre: 20, subGenre: 20, keyWorks: 50, musicExamples: 50, kilder: 50 };
   for (const f of artistListe) {
     await assertFails(db.collection("artists").add({ ...studentArtist, [f]: { a: stor } }));
+    await assertFails(db.collection("artists").add({ ...studentArtist, [f]: Array.from({ length: artistListeTak[f] + 1 }, () => "x") }));
   }
   for (const f of artistTall) {
     await assertFails(db.collection("artists").add({ ...studentArtist, [f]: "1950" }));
@@ -459,6 +466,7 @@ test("funn 43: hver typevakt holder på hver kallplass (map, liste eller streng 
   const techStreng = ["description", "imageUrl", "proposedBy", "type", "category", "instrument", "decade", "adoptedLabel", "imageCredit"];
   for (const f of techStreng) {
     await assertFails(db.collection("tech").add(klientTech({ [f]: { a: stor } })));
+    await assertFails(db.collection("tech").add(klientTech({ [f]: [stor] })));
   }
   await assertFails(db.collection("tech").add(klientTech({ kilder: { a: stor } })));
   await assertFails(db.collection("tech").add(klientTech({ kilder: Array.from({ length: 21 }, () => ({ text: "k" })) })));
@@ -466,11 +474,15 @@ test("funn 43: hver typevakt holder på hver kallplass (map, liste eller streng 
     await assertFails(db.collection("tech").add(klientTech({ [f]: "1950" })));
   }
   // pendingEdits: proposedFields per hjelper.
-  for (const f of ["description", "body", "society", "tech", "name", "imageUrl"]) {
+  // ALLE capOk-feltene, hentet fra reglene (kontrollrunden for v5.46).
+  assert.ok(FORSLAG_STRENGER.length >= 17, `fant bare ${FORSLAG_STRENGER.length} capOk-felt i pendingEdits`);
+  for (const f of FORSLAG_STRENGER) {
     await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: { a: stor } } })));
+    await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: [stor] } })));
   }
   for (const f of ["mainGenre", "subGenre", "keyWorks", "musicExamples", "kilder"]) {
     await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: { a: stor } } })));
+    await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: Array.from({ length: 51 }, () => "x") } })));
   }
   for (const f of ["birthYear", "deathYear", "influenceStart", "influenceEnd", "inventedYear", "adoptedYear", "activeFrom", "activeTo"]) {
     await assertFails(db.collection("pendingEdits").add(klientForslag({ proposedFields: { [f]: "1950" } })));
