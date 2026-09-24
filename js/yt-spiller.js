@@ -23,9 +23,9 @@
 //  spilleren når minst én av dem er sann. Da dobbeltåpner ingenting.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.48";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.48";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.48";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.49";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.49";
+import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.49";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres.
@@ -283,7 +283,9 @@ async function bindSpiller() {
 export function veksleYtAvspilling() {
   if (!spillerKlar || !spiller?.getPlayerState) return false;
   try {
-    if (spiller.getPlayerState() === 1) spiller.pauseVideo();   // 1 = spiller
+    // 1 = spiller, 3 = bufrer (hører til avspillingen: da skal lyden stoppe).
+    const tilstand = spiller.getPlayerState();
+    if (tilstand === 1 || tilstand === 3) spiller.pauseVideo();
     else spiller.playVideo();
     return true;
   } catch (e) {

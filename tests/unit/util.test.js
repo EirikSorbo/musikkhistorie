@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/util.js?v=5.48";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/util.js?v=5.49";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -158,7 +158,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js?v=5.48");
+    = await import("../../js/util.js?v=5.49");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);
@@ -175,7 +175,7 @@ test("genererReturKode: lengde, alfabet og normalisering", async () => {
 // husregelen. Meldingen for treg innsending er nå ÉN delt konstant — lås at
 // den er tankestrek-fri og faktisk brukes alle tre stedene.
 test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
-  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.48");
+  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.49");
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
   assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
@@ -193,7 +193,7 @@ test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
 // opp returer (tre serverlesinger per last) var utestet. Stubber localStorage
 // — også den kastende varianten (styrte skoleprofiler).
 test("merkHarSendtInn/harSendtInn: normalvei og kastende localStorage", async () => {
-  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.48");
+  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.49");
   const lager = new Map();
   globalThis.localStorage = {
     setItem: (k, v) => lager.set(k, String(v)),
@@ -234,20 +234,31 @@ test("kanoniskJson: nøkkelrekkefølgen spiller ingen rolle, innholdet gjør", (
 
 // Husregel: ingen tankestrek (« — ») i appens tekster. Testen over sjekket én
 // gammel streng, så en ny strek slapp gjennom (audit v5.42 funn 22). Denne
-// leser ALLE strengliteraler i js/ (kommentarer skrelt bort) og krever at
-// ingen inneholder « — ». En enslig «—» som plassholder for «ingen» teller
-// ikke som tankestrek i en setning.
-test("ingen strengliteral i js/ har tankestrek med mellomrom (« — »)", async () => {
+// leser HELE koden i js/ med kommentarene skrelt bort (JS-kommentarer og
+// HTML-kommentarer i markupen), så også maler over flere linjer er med
+// (kontrollrunden for v5.48: et skann av enkeltlinjede strenger så ikke
+// markupen). Utenfor kommentarer finnes « — » bare i tekst. En enslig «—»
+// som plassholder for «ingen» teller ikke som tankestrek i en setning.
+function tankestreker(kode) {
+  return kode
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n").map((l) => l.replace(/(^|[^:"`'\\])\/\/.*$/, "$1")).join("\n")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .split("\n").filter((l) => l.includes(" — ")).map((l) => l.trim().slice(0, 80));
+}
+
+test("tankestrek-skannet ser tekst i flerlinjede maler, men ikke kommentarer", () => {
+  const eksempel = "const html = `\n  <p>Vis det du finner underveis — uten plan.</p>\n`;\n// en kommentar — fri\n/* også — fri */\nconst x = `<!-- markup-kommentar — fri -->`;";
+  assert.equal(tankestreker(eksempel).length, 1);
+  assert.match(tankestreker(eksempel)[0], /Vis det du finner underveis/);
+});
+
+test("ingen tekst i js/ har tankestrek med mellomrom (« — »)", async () => {
   const fs = await import("node:fs");
   const mappe = new URL("../../js/", import.meta.url);
   const funn = [];
   for (const f of fs.readdirSync(mappe).filter((x) => x.endsWith(".js"))) {
-    const kode = fs.readFileSync(new URL(f, mappe), "utf8")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .split("\n").map((l) => l.replace(/(^|[^:"`'\\])\/\/.*$/, "$1")).join("\n");
-    const re = /(["`'])((?:\\.|(?!\1)[^\\\n])*)\1/g;
-    let m;
-    while ((m = re.exec(kode))) if (m[2].includes(" — ")) funn.push(`${f}: ${m[2].slice(0, 60)}`);
+    for (const linje of tankestreker(fs.readFileSync(new URL(f, mappe), "utf8"))) funn.push(`${f}: ${linje}`);
   }
   assert.deepEqual(funn, []);
 });

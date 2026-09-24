@@ -24,18 +24,18 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.48";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.48";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.48";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.48";
-import { GENEALOGY } from "./genre-model.js?v=5.48";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.48";
-import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.48";
-import { escapeHtml } from "./util.js?v=5.48";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.48";
-import { getState } from "./explore-context.js?v=5.48";
-import { onAuthChange } from "./store.js?v=5.48";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.48";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.49";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.49";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.49";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.49";
+import { GENEALOGY } from "./genre-model.js?v=5.49";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.49";
+import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.49";
+import { escapeHtml } from "./util.js?v=5.49";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.49";
+import { getState } from "./explore-context.js?v=5.49";
+import { onAuthChange } from "./store.js?v=5.49";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.49";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -239,11 +239,15 @@ function gaTilStopp(i) {
   // spørsmålet havnet skjult under neste stopp mens lyden gikk videre
   // (audit v5.42 funn 7). YouTube-spilleren river iframen selv.
   document.querySelectorAll(".modal-backdrop.open audio").forEach((a) => { try { a.pause(); } catch (e) {} });
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
-  // Nektet et kort likevel å lukkes (et spørsmål eller en ulagret kladd,
-  // som kjøreplan-editoren), avbrytes byttet: posisjonen står, og kortet
-  // med spørsmålet blir liggende øverst.
-  if (document.querySelector(".modal-backdrop.open")) return;
+  // Ovenfra og ned. Nekter et kort å lukkes (en ulagret kladd i kjøreplan-
+  // editoren), avbrytes byttet: posisjonen står, og kortene under blir
+  // liggende urørt (i dokumentrekkefølge ble et lytteeksempel under
+  // editoren revet før vetoet; kontrollrunden for v5.48).
+  // (Taket på 50 er et vern mot et kort som åpner et nytt ved lukking.)
+  for (let top = topOpenModal(), n = 0; top && n < 50; top = topOpenModal(), n++) {
+    modalClose(top);
+    if (top.classList.contains("open")) return;
+  }
 
   stoppIdx = p.pos;
   lagrePosisjon();
@@ -705,6 +709,15 @@ export function initPresentasjon() {
   // sida ble forlatt på, men læreren kan ha bladd videre på slektstresiden.
   window.addEventListener("pageshow", (e) => {
     if (!e.persisted || !planId) return;
+    // Bare når sessionStorage gjelder SAMME plan: etter fri visning eller en
+    // annen plan i mellomtiden er det sidas egen plan og posisjon som gjelder,
+    // og de skrives tilbake.
+    if (les(LAGRING.plan) !== planId) {
+      skriv(LAGRING.aktiv, "1");
+      skriv(LAGRING.plan, planId);
+      lagrePosisjon();
+      return;
+    }
     stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
     hoppOverSlektstre = true;
     if (plan) gaTilStopp(stoppIdx);

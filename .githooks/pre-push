@@ -20,34 +20,9 @@ npm test --silent >/dev/null 2>&1 || { echo "pre-push: npm test feiler. Kjør np
 node tools/check-imports.js >/dev/null || { echo "pre-push: check-imports feiler. Kjør node tools/check-imports.js."; exit 1; }
 node tools/find-stale-refs.js >/dev/null || { echo "pre-push: stale referanser. Kjør node tools/find-stale-refs.js."; exit 1; }
 
-# Referanser UTEN ?v= i det som skipes (js/*.js og *.html): usynlige for både
-# bump.sh og konsistenssjekken under, og verre enn stale cache (dobbel modul).
-mangler=$(grep -naE 'from "\./[^"?]+\.js"' js/*.js || true)
-mangler2=$(grep -naE '(src|href)="(js|css)/[^"?]+\.(js|css)"' ./*.html || true)
-if [ -n "$mangler$mangler2" ]; then
-  echo "pre-push: lokale referanser uten ?v= (cache-busting mangler):"
-  printf '%s\n%s\n' "$mangler" "$mangler2" | grep -av '^$' | head -20
-  echo "Legg på ?v= (bump.sh tar dem med videre)."
-  exit 1
-fi
-
-# NB: konsistenssjekken under leser ARBEIDSTREET (bevisst enkelhet). Har du en
-# uncommitted VERSION-endring når du pusher eldre commits, kan den nekte feil
-# vei — men den feiler alltid LUKKET med beskjed om å kjøre ./bump.sh.
-# «|| true»: uten den ville set -e drept skriptet før feilmeldingen under.
-VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"' || true)
-[ -n "$VER" ] || { echo "pre-push: fant ikke VERSION i js/version.js"; exit 1; }
-
-# -a: tving tekst-tolkning. Hooken kjører i C-locale der BSD-grep ellers kan
-# feilklassifisere UTF-8-filer (›, ◆ osv.) som binære og skjule treffene.
-bad=$(grep -raHoE '\?v=[0-9][0-9.]*' js/*.js ./*.html tests/*/*.js | grep -av "?v=$VER" || true)
-if [ -n "$bad" ]; then
-  echo "pre-push: cache-busting er i utakt med js/version.js (v$VER):"
-  echo "$bad" | head -20
-  echo
-  echo "Kjør ./bump.sh og commit på nytt."
-  exit 1
-fi
+# Cache-busting: ?v= på alle lokale referanser, og i takt med js/version.js.
+# Delt med CI (tools/check-versjon.sh), så kroken og GitHub sjekker det samme.
+bash tools/check-versjon.sh >/dev/null || { bash tools/check-versjon.sh; exit 1; }
 
 # Glemt versjonsbump: hvis CSS/JS endres i det som pushes, MÅ js/version.js også
 # være endret — ellers får studenter med cachet fil gammel kode mot nytt innhold.

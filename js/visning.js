@@ -22,17 +22,17 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.48";
-import { escapeHtml } from "./util.js?v=5.48";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.48";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.48";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.48";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.48";
-import { INSTRUMENT_TIMELINE_GROUPS } from "./limits.js?v=5.48";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.48";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.48";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.48";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.48";
+import { getState } from "./explore-context.js?v=5.49";
+import { escapeHtml } from "./util.js?v=5.49";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.49";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.49";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.49";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.49";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.49";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.49";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.49";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.49";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.49";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -70,7 +70,9 @@ function stoppEtikett(stopp) {
       return s.artistsLoaded ? { tekst: `${navn}: ${m.id}`, feil: DOD } : { tekst: `${navn}: laster …`, laster: true };
     }
     case "tech": {
-      const t = (s.techItems || []).find((x) => x.id === m.id);
+      // Bare aktive kort: avspilleren på forsiden ser ikke ventende eller
+      // returnerte kort (lærersidens state har dem med).
+      const t = (s.techItems || []).find((x) => x.id === m.id && (x.status || "active") === "active");
       if (t) return { tekst: `${navn}: ${t.name}` };
       return s.techLoaded ? { tekst: `${navn}: ${m.id}`, feil: DOD } : { tekst: `${navn}: laster …`, laster: true };
     }
@@ -86,8 +88,11 @@ function stoppEtikett(stopp) {
       return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : DOD };
     case "undersjanger": {
       if (!s.artistsLoaded || !s.genreDescsLoaded) return { tekst: `${navn}: ${m.id}`, laster: true };
+      // Som kortet: bare synlige artister, og uten hensyn til store og små
+      // bokstaver.
+      const lik = (x) => String(x).toLowerCase() === String(m.id).toLowerCase();
       const kjent = !!s.genreDescs?.[m.id]?.sub
-        || (s.artists || []).some((a) => (a.subGenre || []).includes(m.id));
+        || (s.artists || []).some((a) => isVisible(a) && (a.subGenre || []).some(lik));
       return { tekst: `${navn}: ${m.id}`, feil: kjent ? "" : DOD };
     }
     case "kobling": {
@@ -103,6 +108,7 @@ function stoppEtikett(stopp) {
     // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
     case "yt": {
       const tittel = lytteeksempelNavn(m.id, getState().artists);
+      if (!tittel && !s.artistsLoaded) return { tekst: `${navn}: laster …`, laster: true };
       return { tekst: tittel ? `${navn}: ${tittel}` : `${navn} (YouTube)` };
     }
     default:

@@ -6,16 +6,16 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.48";
-import { isVisible } from "./limits.js?v=5.48";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.48";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.48";
-import { renderRichText } from "./rich-text.js?v=5.48";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.48";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.48";
-import { wireLinks } from "./ui-helpers.js?v=5.48";
-import { renderSjangerhimmel } from "./constellation.js?v=5.48";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.48";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.49";
+import { isVisible } from "./limits.js?v=5.49";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.49";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.49";
+import { renderRichText } from "./rich-text.js?v=5.49";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.49";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.49";
+import { wireLinks } from "./ui-helpers.js?v=5.49";
+import { renderSjangerhimmel } from "./constellation.js?v=5.49";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.49";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.

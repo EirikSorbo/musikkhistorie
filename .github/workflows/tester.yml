@@ -1,5 +1,6 @@
 # Testene ved hver push (audit v5.42, forslag 2). To jobber:
-#   enhet  - npm test + import- og referansesjekkene (samme som pre-push-kroken)
+#   enhet  - npm test + import-, referanse- og ?v=-sjekkene (som pre-push-kroken;
+#            bare «glemt versjonsbump», som trenger push-området, står i kroken)
 #   regler - regeltestene mot Firestore-emulatoren. De trenger Java, som ikke
 #            finnes på lærerens maskin; her installeres det for hver kjøring.
 #            Prosjektet er demo-pensum, så emulatoren trenger ingen innlogging
@@ -30,6 +31,7 @@ jobs:
       - run: npm test
       - run: node tools/check-imports.js
       - run: node tools/find-stale-refs.js
+      - run: bash tools/check-versjon.sh
 
   regler:
     runs-on: ubuntu-latest

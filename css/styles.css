@@ -2869,9 +2869,11 @@ body.presentasjon .modal-backdrop > .modal.modal-yt-boks {
    tilbake til kortet (yt-spiller.js). */
 body.presentasjon #modal-yt.yt-kino { background: #000; padding: 0; }
 /* Verktøylinja og samlelinja ligger ellers over YouTubes kontroller nederst
-   i videoen (audit v5.42 funn 35). De kommer fram når pekeren eller fokus
-   står på dem. */
-body.presentasjon:has(#modal-yt.yt-kino.open) :is(#pres-bar, #samle-bar) { opacity: 0; transition: opacity 0.2s; }
+   i videoen (audit v5.42 funn 35). I kino løftes de over kontrollstripa
+   (ca. 48 px), så YouTubes knapper kan brukes, og de dempes til pekeren
+   eller fokus står på dem. Aldri helt usynlige: en usynlig linje tok
+   klikkene (kontrollrunden for v5.48). */
+body.presentasjon:has(#modal-yt.yt-kino.open) :is(#pres-bar, #samle-bar) { bottom: 64px; opacity: 0.35; transition: opacity 0.2s; }
 body.presentasjon:has(#modal-yt.yt-kino.open) :is(#pres-bar, #samle-bar):is(:hover, :focus-within) { opacity: 1; }
 body.presentasjon #modal-yt.yt-kino > .modal.modal-yt-boks {
   position: relative; display: flex; align-items: center; justify-content: center;
