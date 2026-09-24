@@ -28,15 +28,15 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.43";
-import { getState } from "./explore-context.js?v=5.43";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.43";
-import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.43";
-import { escapeHtml } from "./util.js?v=5.43";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.43";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.43";
-import { aktivPlanId } from "./presentasjon.js?v=5.43";
-import { erLaererBruker } from "./plan-meny.js?v=5.43";
+import { savePlan, onAuthChange } from "./store.js?v=5.44";
+import { getState } from "./explore-context.js?v=5.44";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.44";
+import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.44";
+import { escapeHtml } from "./util.js?v=5.44";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.44";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.44";
+import { aktivPlanId } from "./presentasjon.js?v=5.44";
+import { erLaererBruker } from "./plan-meny.js?v=5.44";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -105,11 +105,13 @@ function sisteVis(ø) {
   return op?.t === "legg" ? op.vis : op?.t === "erstatt" ? op.til : null;
 }
 
-// Har økta noe planen ikke viser? Før planene har landet regnes alt som er
-// sendt, som usikkert.
+// Har økta noe som må sendes? Nye handlinger, eller skrivinger som ikke kom
+// fram (avvist, eller tapt med forrige side). En skriving gitt fra DENNE sida
+// ligger alt i Firestores kø, selv om planen ikke viser den ennå. Før planene
+// har landet regnes alt fra forrige side som usikkert.
 function harUsendt(ø) {
   if (ø.nye.length) return true;
-  return lastet() ? ventende(ø).length > 0 : ø.sendt.length > 0;
+  return lastet() ? ventende(ø).some((b) => !b.live) : ø.sendt.length > 0;
 }
 
 const nyØktId = () => "s" + Array.from({ length: 10 }, () => Math.floor(Math.random() * 36).toString(36)).join("");
@@ -209,24 +211,29 @@ function lagreNaa(ø = økt) {
 }
 
 // Én skriving (eller ingen): den ferske planen med alt planen ikke viser
-// lagt oppå. Det som var sendt uten å komme fram (avvist, eller tapt med
-// forrige side), er med på nytt, én gang, fordi merket i planen sier hva
-// den inneholder. Uten nett ligger skrivingen i Firestores varige kø; en
-// ny skriving venter ikke på kvitteringen (kontrollrunden for v5.43: Ferdig
-// uten nett la før de siste stoppene bare i minnet).
+// lagt oppå, i rekkefølge. Hver skriving inneholder altså alle tidligere
+// skrivinger, og merket (n) sier hvilke planen har: det som ikke kom fram
+// (avvist, eller tapt med forrige side), er med på nytt. Uten nett ligger
+// skrivingen i Firestores varige kø, og en ny skriving venter ikke på
+// kvitteringen (Ferdig uten nett la før de siste stoppene bare i minnet).
+// Hver bøtte har bare SINE nye handlinger og slås aldri sammen med andre
+// (kontrollrunde 3: en bøtte med en annen bøttes handlinger kunne legge dem
+// inn på nytt etter at merket hadde passert dem).
 function skrivEnGang(ø) {
-  if (ø.forkastet || !lastet()) return null;   // samleTikk sender når planene har landet
+  if (ø.forkastet || !lastet() || ø.venterEier) return null;   // samleTikk sender når planene har landet
   ø.forsøkt = true;
   const fersk = ferskPlan(ø);
   const vent = ventende(ø, fersk);
   if (fersk) ø.planFantes = true;
   else if (ø.planFantes && !vent.length) { planSlettet(ø); return null; }
-  const ops = [...vent.flatMap((b) => b.ops), ...ø.nye];
-  if (!ops.length) return null;
+  // Ingenting nytt: det som ligger i Firestores kø fra denne sida, sendes
+  // ikke én gang til (visibilitychange og pagehide kommer rett etter
+  // hverandre ved hvert sidebytte).
+  if (!ø.nye.length && !vent.some((b) => !b.live)) return null;
   const n = Math.max(ø.n, samleMerke(fersk, ø.øktId)) + 1;
   ø.n = n;
-  const stopp = brukSamleOps(fersk?.stopp || [], ops);
-  ø.sendt = [...ø.sendt.filter((b) => !vent.includes(b)), { n, ops, live: true }];
+  const stopp = brukSamleOps(fersk?.stopp || [], [...vent.flatMap((b) => b.ops), ...ø.nye]);
+  ø.sendt = [...ø.sendt, { n, ops: ø.nye, live: true }];
   ø.nye = [];
   lagreLokalt(ø);
   const lovnad = savePlan(ø.planId, {
@@ -448,6 +455,7 @@ export function startInnsamling(planId, modus, tittel) {
   if (økt) avsluttInnsamling();
   økt = nyØkt(planId, modus, tittel);
   økt.synket = true;   // startet her: ingenting ligger igjen fra en annen side
+  åpneKanal();
   sisteInnslag = null;
   skriv(LAGRING.plan, planId);
   skriv(LAGRING.modus, modus);
@@ -484,6 +492,18 @@ export function avsluttInnsamling({ lagre = true } = {}) {
     lagreEtterslep();
   }
   return lagreNaa(ø);
+}
+
+// Slett i Visning-vinduet: ingenting skal sendes til planen etterpå, verken
+// fra økta som pågår eller fra avsluttede økter som ikke er kommet fram (de
+// ville ellers laget planen på nytt med bare sine stopp; kontrollrunde 3).
+export function forkastSamlinger(planId) {
+  if (økt?.planId === planId) avsluttInnsamling({ lagre: false });
+  for (const e of [...etterslep]) {
+    if (e.planId !== planId) continue;
+    e.forkastet = true;
+    ryddEtterslep(e);
+  }
 }
 
 // Økta som pågår i denne fanen, eller null. For Visning-vinduet: «samles nå»
@@ -525,6 +545,54 @@ function lesOvertakelse() {
   const modus = q.get(OVERTA.modus);
   if (!/^[A-Za-z0-9_-]{1,80}$/.test(planId) || (modus !== "plukk" && modus !== "opptak")) return null;
   return { planId, modus, tittel: String(q.get(OVERTA.tittel) || "(uten tittel)").slice(0, 80) };
+}
+
+// ----------------------------------------------------------------------------
+//  Én fane per økt. «Dupliser fane» og Ctrl-klikk kopierer sessionStorage, og
+//  kopien fikk samme økt med de samme usendte handlingene, så begge fanene
+//  sendte dem (kontrollrunde 3). En gjenopptatt økt spør derfor de andre
+//  fanene om noen har den. Svarer en, er denne fanen en kopi: den fortsetter
+//  å samle til samme plan, men som en ny økt uten den andres handlinger.
+//  Vanlige sidebytter svarer ingen på (den gamle sida er borte).
+// ----------------------------------------------------------------------------
+
+const EIER_FRIST_MS = 400;
+let kanal = null;
+
+function åpneKanal() {
+  if (kanal || typeof BroadcastChannel === "undefined") return;
+  try { kanal = new BroadcastChannel("pensum-samle"); } catch (e) { return; }
+  kanal.onmessage = (e) => {
+    const m = e.data || {};
+    if (!økt) return;
+    if (m.spør === økt.øktId && !økt.venterEier) kanal.postMessage({ eier: m.spør });
+    if (m.eier === økt.øktId && økt.venterEier) erKopi(økt);
+  };
+}
+
+function erKopi(ø) {
+  ø.venterEier = false;
+  ø.øktId = nyØktId();
+  ø.n = 0;
+  ø.sendt = [];
+  ø.nye = ø.nye.slice(ø.nyeVedStart || 0);   // bare det DENNE fanen har gjort
+  ø.fraForrige = false;
+  lagreLokalt(ø);
+  oppdaterBar();
+}
+
+function sjekkEier(ø) {
+  åpneKanal();
+  if (!kanal) return;
+  ø.venterEier = true;
+  ø.nyeVedStart = ø.nye.length;
+  kanal.postMessage({ spør: ø.øktId });
+  setTimeout(() => {
+    if (!ø.venterEier) return;
+    ø.venterEier = false;
+    // Ingen andre har økta: det forrige side lot ligge, sendes nå.
+    if (ø === økt && ø.synket && ø.fraForrige && harUsendt(ø)) lagreNaa(ø);
+  }, EIER_FRIST_MS);
 }
 
 // Kalles fra sidenes oppstart. Gjenopptar en økt fra sessionStorage (den
@@ -576,7 +644,18 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") sendVedAvgang();
   });
-  window.addEventListener("pagehide", sendVedAvgang);
+  window.addEventListener("pagehide", () => {
+    sendVedAvgang();
+    // En side på vei ut skal ikke svare at den eier økta.
+    kanal?.close();
+    kanal = null;
+  });
+  // Tilbake fra nettleserens hurtigbuffer (bfcache): økta i minnet kan være
+  // eldre enn den i sessionStorage, som sida etterpå har ført videre. En
+  // ny lasting gjenoppretter den riktige.
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted && (økt || les(LAGRING.plan))) window.location.reload();
+  });
 
   etterslep = lesEtterslep();
 
@@ -605,6 +684,8 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
   const lokalt = lesLokalt();
   if (lokalt) Object.assign(økt, lokalt);
   else lagreLokalt(økt);
+  if (lokalt) sjekkEier(økt);
+  else åpneKanal();
   // Noe fra forrige side som kanskje ikke kom fram? Da sendes det ved første
   // snapshot her. (Nye stopp på denne sida, som ankomsten til slektstreet,
   // venter på fristen som vanlig.)

@@ -15,12 +15,12 @@
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePlan } from "./store.js?v=5.43";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.43";
-import { getState } from "./explore-context.js?v=5.43";
-import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.43";
-import { setLenkeMenyProvider } from "./ui-modal.js?v=5.43";
-import { escapeHtml } from "./util.js?v=5.43";
+import { onAuthChange, savePlan } from "./store.js?v=5.44";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.44";
+import { getState } from "./explore-context.js?v=5.44";
+import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.44";
+import { setLenkeMenyProvider } from "./ui-modal.js?v=5.44";
+import { escapeHtml } from "./util.js?v=5.44";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen

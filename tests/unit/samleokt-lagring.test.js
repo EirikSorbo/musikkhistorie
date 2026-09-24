@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.43";
+import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.44";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 const S = (...vis) => vis.map((v) => ({ vis: v }));
@@ -85,8 +85,12 @@ test("funn 1 og 2: samleøkta skriver ikke per kort, og aldri en kø av gamle ko
   assert.match(samle, /const SAMLE_LAGRE_MS = 120_000;/);
   assert.match(samle, /document\.visibilityState === "hidden"/, "sendes når fanen skjules");
   // Den ferske planen med det den ikke viser lagt oppå, stemplet med merket.
-  assert.match(samle, /const ops = \[\.\.\.vent\.flatMap\(\(b\) => b\.ops\), \.\.\.ø\.nye\];/);
-  assert.match(samle, /const stopp = brukSamleOps\(fersk\?\.stopp \|\| \[\], ops\);/);
+  assert.match(samle, /const stopp = brukSamleOps\(fersk\?\.stopp \|\| \[\], \[\.\.\.vent\.flatMap\(\(b\) => b\.ops\), \.\.\.ø\.nye\]\);/);
+  // Hver bøtte har bare sine egne handlinger (kontrollrunde 3), og det som alt
+  // er i Firestores kø fra denne sida, sendes ikke én gang til.
+  assert.match(samle, /ø\.sendt = \[\.\.\.ø\.sendt, \{ n, ops: ø\.nye, live: true \}\];/);
+  assert.match(samle, /if \(!ø\.nye\.length && !vent\.some\(\(b\) => !b\.live\)\) return null;/);
+  assert.match(samle, /return lastet\(\) \? ventende\(ø\)\.some\(\(b\) => !b\.live\) : ø\.sendt\.length > 0;/);
   assert.match(samle, /samle: \{ \[ø\.øktId\]: n \},/);
   assert.match(samle, /ø\.sendt = ø\.sendt\.filter\(\(b\) => b\.n > n\);/, "kvitteringer i rekkefølge");
   // Skrivere utenfor økta sender aldri merket (det kunne senke det).
@@ -128,8 +132,8 @@ test("funn 3: Rediger og Slett på planen som samles avslutter økta først", ()
   const vis = kilde("visning.js");
   assert.match(vis, /if \(aktivSamleokt\(\)\?\.planId === id\) \{\n\s*await medFrist\(avsluttInnsamling\(\), 4000\);/,
     "Rediger: det samlede sendes før kladden lages");
-  assert.match(vis, /if \(aktivSamleokt\(\)\?\.planId === id\) avsluttInnsamling\(\{ lagre: false \}\);/,
-    "Slett: ingenting sendes, ellers lages planen på nytt");
+  assert.match(vis, /forkastSamlinger\(id\);\n\s*if \(!\(await vakt\(deletePlan\(id\)\)\)\) return;/,
+    "Slett: ingenting sendes, heller ikke fra avsluttede økter, ellers lages planen på nytt");
   assert.match(vis, /\$\{id === samles \? " · samles nå" : ""\}/);
 });
 
@@ -152,4 +156,15 @@ test("kontrollrunden: overlevering til ny fane bare for lærer, og lista følger
   assert.match(samle, /modus !== "plukk" && modus !== "opptak"\)\) return null;/);
   assert.equal((samle.match(/meldEndring\(\);/g) || []).length, 2, "start og slutt");
   assert.match(kilde("visning.js"), /vedSamleEndring\(\(\) => visningTikk\(\)\);/);
+});
+
+test("kontrollrunde 3: én fane per økt, og tilbake fra bfcache lastes sida på nytt", () => {
+  const samle = kilde("plan-innsamling.js");
+  assert.match(samle, /new BroadcastChannel\("pensum-samle"\)/);
+  assert.match(samle, /if \(m\.eier === økt\.øktId && økt\.venterEier\) erKopi\(økt\);/);
+  assert.match(samle, /ø\.øktId = nyØktId\(\);\n\s*ø\.n = 0;\n\s*ø\.sendt = \[\];\n\s*ø\.nye = ø\.nye\.slice\(ø\.nyeVedStart \|\| 0\);/,
+    "en kopi sender ikke den andre fanens handlinger");
+  assert.match(samle, /if \(ø\.forkastet \|\| !lastet\(\) \|\| ø\.venterEier\) return null;/, "ingen skriving før eierskapet er avklart");
+  assert.match(samle, /if \(e\.persisted && \(økt \|\| les\(LAGRING\.plan\)\)\) window\.location\.reload\(\);/);
+  assert.match(samle, /export function forkastSamlinger\(planId\)/);
 });

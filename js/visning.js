@@ -22,16 +22,16 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.43";
-import { escapeHtml } from "./util.js?v=5.43";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.43";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.43";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.43";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.43";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.43";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring } from "./plan-innsamling.js?v=5.43";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.43";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.43";
+import { getState } from "./explore-context.js?v=5.44";
+import { escapeHtml } from "./util.js?v=5.44";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.44";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.44";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.44";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.44";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.44";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.44";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.44";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.44";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -469,9 +469,9 @@ function koblVindu(m) {
       const p = planerNaa()[id];
       if (!p || !window.confirm(`Slette kjøreplanen «${p.tittel}»? Dette kan ikke angres.`)) return;
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
-      // En samleøkt på planen avsluttes uten å sende noe: ellers ville neste
-      // lagring laget planen på nytt.
-      if (aktivSamleokt()?.planId === id) avsluttInnsamling({ lagre: false });
+      // Samleøkter på planen (også avsluttede som ikke er kommet fram)
+      // forkastes: ellers ville neste lagring laget planen på nytt.
+      forkastSamlinger(id);
       if (!(await vakt(deletePlan(id)))) return;
       renderListe();
       msg("Kjøreplanen er slettet.");
