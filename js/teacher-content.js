@@ -5,24 +5,24 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.49";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.49";
-import { resolveMainDesc } from "./genealogy.js?v=5.49";
-import { dropboxDirectUrl } from "./util.js?v=5.49";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.49";
-import { storyFor, pageFor } from "./story-format.js?v=5.49";
-import { renderRichText } from "./rich-text.js?v=5.49";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=5.49";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.49";
-import { resolveDesc } from "./genre-descriptions.js?v=5.49";
-import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS } from "./ui-helpers.js?v=5.49";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=5.49";
-import { heatRow, getHeatData } from "./heat-strip.js?v=5.49";
+import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=5.50";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=5.50";
+import { resolveMainDesc } from "./genealogy.js?v=5.50";
+import { dropboxDirectUrl } from "./util.js?v=5.50";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=5.50";
+import { storyFor, pageFor } from "./story-format.js?v=5.50";
+import { renderRichText } from "./rich-text.js?v=5.50";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=5.50";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=5.50";
+import { resolveDesc } from "./genre-descriptions.js?v=5.50";
+import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=5.50";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=5.50";
+import { heatRow, getHeatData } from "./heat-strip.js?v=5.50";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=5.49";
-import { $ } from "./shared.js?v=5.49";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.49";
+import { wireAllLinks } from "./linkify.js?v=5.50";
+import { $ } from "./shared.js?v=5.50";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=5.50";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -156,6 +156,12 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
       $("#ss-era").value = resolved.era || "";
       $("#ss-epoke-hint").textContent = epokeHint(subgenreId);
     }
+  }
+  // Oppsummeringspunktene (v5.50) gjelder bare tre-sjangrene, som epoken.
+  const punktWrap = $("#ss-punkter-wrap");
+  if (punktWrap) {
+    punktWrap.hidden = level !== "main";
+    if (level === "main") fyllPunktfelt($("#ss-punkter"), resolved.punkter);
   }
   // Lytteforslagene er én per linje i tekstfeltet, en liste i data.
   const lyttWrap = $("#ss-lytt-wrap");
@@ -324,6 +330,7 @@ export function setupSubgenreSingleSave() {
       data.activeTo = to;
       data.era = $("#ss-era").value.trim();
       data.lytt = $("#ss-lytt").value.split("\n").map((x) => x.trim()).filter(Boolean);
+      data.punkter = lesPunktfelt($("#ss-punkter"));
     }
     try {
       await saveGenreDescLevel(subgenreId, level, data);
@@ -500,6 +507,7 @@ function fillTechForm(t, preset = null) {
   fillSelect(document.getElementById("tech-decade"), DECADE_OPTIONS, { placeholder: "Velg tiår …" });
   document.getElementById("tech-decade").value = t ? t.decade || "" : "";
   document.getElementById("tech-desc").value = t ? t.description || "" : "";
+  fyllPunktfelt(document.getElementById("tech-punkter"), t?.punkter);
   document.getElementById("tech-image-url").value = t ? t.imageUrl || "" : "";
   document.getElementById("tech-image-credit").value = t ? t.imageCredit || "" : "";
   document.getElementById("tech-msg").textContent = "";
@@ -546,6 +554,10 @@ export function setupTechAdmin() {
       imageCredit: document.getElementById("tech-image-credit").value.trim(),
     };
     const editId = document.getElementById("tech-save").dataset.editId;
+    // Tom liste skrives bare ved endring (da fjerner den punktene); et nytt
+    // kort uten punkter får ikke feltet i det hele tatt.
+    const punkter = lesPunktfelt(document.getElementById("tech-punkter"));
+    if (editId || punkter.length) data.punkter = punkter;
     try {
       if (editId) await updateTech(editId, data);
       else await addTech(data);

@@ -24,18 +24,18 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.49";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.49";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.49";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.49";
-import { GENEALOGY } from "./genre-model.js?v=5.49";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.49";
-import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.49";
-import { escapeHtml } from "./util.js?v=5.49";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.49";
-import { getState } from "./explore-context.js?v=5.49";
-import { onAuthChange } from "./store.js?v=5.49";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.49";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.50";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.50";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.50";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.50";
+import { GENEALOGY } from "./genre-model.js?v=5.50";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.50";
+import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.50";
+import { escapeHtml } from "./util.js?v=5.50";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.50";
+import { getState } from "./explore-context.js?v=5.50";
+import { onAuthChange } from "./store.js?v=5.50";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.50";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -123,8 +123,11 @@ function brukNivaaPaa(flate, modal) {
   // Artistkortets spalter (v5.40, js/pres-artist.js) bygges FØR nivået
   // settes: skillelinja må finnes når synligheten dens regnes ut under.
   if (flate === "artist") ordneArtistLerret(modal);
+  // Oppsummeringspunktene (v5.50) erstatter beskrivelsen på nivå 2, men bare
+  // når kortet faktisk har punkter (seksjonen tegnes bare da).
+  const harPunkter = !!modal.querySelector('[data-sekt="punkter"]');
   modal.querySelectorAll("[data-sekt]").forEach((el) => {
-    el.hidden = !erSynlig(flate, el.dataset.sekt, nivaa, unntak);
+    el.hidden = !erSynlig(flate, el.dataset.sekt, nivaa, unntak, { harPunkter });
   });
   // Enkeltlinjer i faktablokka (v5.29): på artistkortet bare levetiden (fra
   // nivå 1, under bildet), kategori/instrument aldri på innovasjonskortet.
@@ -651,6 +654,7 @@ function vekslPanel() {
 function tegnPanel(panel) {
   const flate = aktivFlate();
   const seksjoner = flate ? FLATER[flate] : null;
+  const harPunkter = !!topOpenModal()?.querySelector('[data-sekt="punkter"]');
   const flateNavn = { artist: "artistkortet", sjanger: "sjangerkortet", tech: "innovasjonskortet", "tiår": "tiårsvisningen", historie: "historien" };
 
   panel.innerHTML = `
@@ -658,7 +662,7 @@ function tegnPanel(panel) {
       <p class="pres-panel-hode">Seksjoner på ${flateNavn[flate]}</p>
       ${seksjoner.map(({ id, navn }) => `
         <label class="pres-valg"><input type="checkbox" data-sekt-valg="${id}"
-          ${erSynlig(flate, id, nivaa, unntak) ? "checked" : ""}> ${escapeHtml(navn)}</label>`).join("")}
+          ${erSynlig(flate, id, nivaa, unntak, { harPunkter }) ? "checked" : ""}> ${escapeHtml(navn)}</label>`).join("")}
       <button type="button" class="btn ghost small" id="pres-nullstill">Nullstill unntak</button>
       <hr class="pres-skille">`
     : `<p class="pres-panel-hode">Åpne et kort for å velge seksjoner.</p>`}

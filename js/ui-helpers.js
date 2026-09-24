@@ -9,12 +9,13 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.49";
-import { wireAllLinks } from "./linkify.js?v=5.49";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.49";
-import { GENDERS } from "./limits.js?v=5.49";
-import { askChoice, modalClose } from "./ui-modal.js?v=5.49";
-export { artistStripHtml } from "./artist-strip.js?v=5.49";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=5.50";
+import { wireAllLinks } from "./linkify.js?v=5.50";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.50";
+import { GENDERS } from "./limits.js?v=5.50";
+import { askChoice, modalClose } from "./ui-modal.js?v=5.50";
+import { lesPunkter, punkterTilTekst, punktVarsel } from "./punkter.js?v=5.50";
+export { artistStripHtml } from "./artist-strip.js?v=5.50";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -291,6 +292,33 @@ export function wireCharCount(ta, max, tellerEl = null) {
     ta.addEventListener("input", tegn);
   }
   tegn();
+}
+
+// Oppsummeringspunktene i lærerens editorer (v5.50): fyll feltet fra lista og
+// la varselet under det (.punkt-varsel i samme .punktfelt) følge det læreren
+// skriver. Lytteren kobles én gang per felt, som wireCharCount over; varselet
+// tegnes uansett på nytt ved hver åpning.
+export function fyllPunktfelt(ta, liste) {
+  if (!ta) return;
+  ta.value = punkterTilTekst(liste);
+  const varsel = ta.closest(".punktfelt")?.querySelector(".punkt-varsel");
+  if (!varsel) return;
+  const oppdater = () => {
+    const v = punktVarsel(ta.value);
+    varsel.textContent = v || "";
+    varsel.hidden = !v;
+  };
+  if (!ta.dataset.punktWired) {
+    ta.dataset.punktWired = "1";
+    ta.addEventListener("input", oppdater);
+  }
+  oppdater();
+}
+
+// Lista som lagres: én linje per punkt, vasket (js/punkter.js). Et tomt felt
+// gir tom liste, så læreren kan fjerne punktene ved å tømme feltet.
+export function lesPunktfelt(ta) {
+  return lesPunkter(ta?.value);
 }
 
 // Episoden som spiller akkurat nå i `el`, eller null. Pauset OG ferdigspilt

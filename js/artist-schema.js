@@ -35,9 +35,19 @@ export const ARTIST_FIELDS = [
   { key: "imageCredit",    label: "Bildekreditering", type: "text", full: true },
 ];
 
+// Lærerfelter UTENFOR skjemaet: de følger med i eksport, import og fletting,
+// men står ikke i ARTIST_FIELDS, som styrer hva studentene kan foreslå
+// (PROPOSABLE_KEYS.artist) og hva buildArtistDoc alltid skriver. Da trenger
+// Firestore-reglene ingen endring.
+//   punkter  oppsummeringspunktene (v5.50, js/punkter.js): bare læreren
+//            skriver dem (brukervalg 2026-09-24)
+export const ARTIST_LAERERFELT = [
+  { key: "punkter", label: "Oppsummering i punkter", type: "complex" },
+];
+
 // { key: label } — brukt av diff-tabell og merge-dialog.
 export const ARTIST_LABELS = Object.fromEntries(
-  ARTIST_FIELDS.map((f) => [f.key, f.label])
+  [...ARTIST_FIELDS, ...ARTIST_LAERERFELT].map((f) => [f.key, f.label])
 );
 
 // Tom-verdi per felttype (brukt når addArtist bygger Firestore-dokumentet).
@@ -49,7 +59,9 @@ export function emptyValueFor(type) {
 
 // Felter som kan sammenlignes/flettes ved import (alt unntatt navn — navnet
 // er selve matchenøkkelen).
-export const ARTIST_COMPARE_FIELDS = ARTIST_FIELDS
+// Lærerfeltene er med, så en importfil kan fylle inn punktene på artister
+// som alt finnes.
+export const ARTIST_COMPARE_FIELDS = [...ARTIST_FIELDS, ...ARTIST_LAERERFELT]
   .map((f) => f.key)
   .filter((k) => k !== "name");
 
@@ -66,6 +78,7 @@ export const RETUR_FELTER = ["teacherFeedback", "returKode", "studentComment", "
 // tapsfri: studentstemmer og opprettelsesår overlever en backup/restore.
 export const ARTIST_EXPORT_FIELDS = [
   ...ARTIST_FIELDS.map((f) => f.key),
+  ...ARTIST_LAERERFELT.map((f) => f.key),
   "proposedBy", "priority", "teacherChecked", "status",
   "votedUpBy", "addedYear",
   // Returflyten (v5.13): uten disse ville en backup tatt mens et forslag var

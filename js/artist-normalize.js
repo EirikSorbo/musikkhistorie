@@ -5,8 +5,9 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=5.49";
-import { ARTIST_FIELDS, RETUR_FELTER, emptyValueFor } from "./artist-schema.js?v=5.49";
+import { safeUrl } from "./util.js?v=5.50";
+import { ARTIST_FIELDS, RETUR_FELTER, emptyValueFor } from "./artist-schema.js?v=5.50";
+import { normaliserPunkter } from "./punkter.js?v=5.50";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett
@@ -80,6 +81,9 @@ export function normalizeArtist(a) {
   out.imageUrl = safeUrl(out.imageUrl);
   out.imageCredit = out.imageCredit || "";
 
+  // Oppsummeringspunktene (v5.50): en ren liste med korte tekster.
+  if ("punkter" in out) out.punkter = normaliserPunkter(out.punkter);
+
   return out;
 }
 
@@ -117,6 +121,10 @@ export function buildArtistDoc(data) {
   for (const f of ["ownerUid", ...RETUR_FELTER]) {
     if (data[f] != null && data[f] !== "") retur[f] = data[f];
   }
+  // Oppsummeringspunktene følger KUN med når de finnes (lærer-import). En
+  // studentinnsending har dem aldri, og create-hvitelisten i reglene kjenner
+  // dem ikke: skrev vi alltid feltet, ville hver studentinnsending blitt avvist.
+  if (n.punkter?.length) retur.punkter = n.punkter;
   return {
     ...docData,
     ...retur,

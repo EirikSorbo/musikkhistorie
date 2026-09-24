@@ -712,6 +712,7 @@ textarea { resize: vertical; }
 .form-msg.error { color: var(--danger); }
 .form-msg.ok { color: var(--ok); }
 .form-msg.warn { color: var(--warn); }
+.punkt-varsel { color: var(--warn); }
 
 /* ----- Listehode + filtre ----- */
 .list-head {
@@ -2856,6 +2857,15 @@ body.presentasjon .modal-head h2 { font-size: 1.5rem; }
    kortene kan dekke bredden «selv om innholdet ikke gjør det». Tidslinjer,
    varmekart og andre visualiseringer fyller fortsatt hele bredden. */
 body.presentasjon .modal :is(p, .rt) { max-width: 80ch; }
+/* Oppsummeringspunktene (v5.50): nivå 2 i presentasjonen, i stedet for
+   beskrivelsen. Litt større enn brødteksten, med luft mellom punktene, så de
+   leses fra bakerste rad. Skjult utenfor presentasjonen inntil videre
+   (js/feature-flags.js, PUNKTER_BARE_I_PRESENTASJON). */
+.punkter { margin: 0 0 12px; padding-left: 1.3em; }
+.punkter li { margin: 0.3em 0; }
+body.presentasjon .modal .punkter { max-width: 70ch; font-size: 1.15em; line-height: 1.45; }
+body.presentasjon .modal .punkter li { margin: 0.45em 0; }
+html.skjul-punkter body:not(.presentasjon) [data-sekt="punkter"] { display: none !important; }
 /* Videoen så stor som lerretet tillater: bredden begrenses av høyden (16:9).
    310 px = lerretets polstring og verktøylinjas plass (90), kortets egen
    polstring (≈80), tittellinja (≈56), tidsraden (≈52) og reservelenka (≈30). */

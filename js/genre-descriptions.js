@@ -11,6 +11,8 @@
 //  sjanger), sub (fri undersjanger).
 // ============================================================================
 
+import { normaliserPunkter } from "./punkter.js?v=5.50";
+
 const LVL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 
 // Tydelig melding når ingen beskrivelse er lagt inn på gjeldende nivå. Vises i
@@ -29,7 +31,7 @@ function yr(v) {
   return Number.isInteger(v) && v >= AAR_MIN && v <= AAR_MAKS ? v : null;
 }
 
-const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, activeToUgyldig: false, usikre: [], era: "", lytt: [] };
+const TOM = { description: "", kilder: [], activeFrom: null, activeTo: null, activeToUgyldig: false, usikre: [], era: "", lytt: [], punkter: [] };
 
 function fromOverride(o, level) {
   if (!o) return null;
@@ -46,7 +48,8 @@ function fromOverride(o, level) {
   // Spirituals) har bare dem. Uten dem i testen ville epoken og lytteforslagene
   // for nettopp de nodene vært usynlige rett etter migreringen.
   const har = !!lvl.description || yr(lvl.activeFrom) !== null
-    || !!String(lvl.era || "").trim() || (Array.isArray(lvl.lytt) && lvl.lytt.length > 0);
+    || !!String(lvl.era || "").trim() || (Array.isArray(lvl.lytt) && lvl.lytt.length > 0)
+    || normaliserPunkter(lvl.punkter).length > 0;
   if (!har) return null;
   return {
     description: lvl.description || "",
@@ -66,6 +69,9 @@ function fromOverride(o, level) {
     // artistenes musicExamples: DE er knyttet til et artistkort og driver
     // spillelistene, disse hører til sjangeren som sådan.
     lytt: Array.isArray(lvl.lytt) ? lvl.lytt.filter((x) => String(x || "").trim()) : [],
+    // Oppsummeringspunktene (v5.50): bare main-nivået har dem i dag (sjanger-
+    // kortet), men oppslaget er likt for alle nivåer.
+    punkter: normaliserPunkter(lvl.punkter),
   };
 }
 

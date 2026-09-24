@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.49";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.49";
+import { metaRader } from "../../js/ui-helpers.js?v=5.50";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.50";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -42,8 +42,8 @@ test("artistnivåene: bilde + levetid + innflytelseslinje + lytteeksempler, så 
   assert.equal(synlig("tags", 1), false);
   assert.equal(synlig("tags", 2), true);
   assert.equal(synlig("beskrivelse", 2), false, "beskrivelsen hører til nivå 3");
-  // Nivå 3: alt annet.
-  for (const { id } of FLATER.artist) assert.equal(synlig(id, 3), true, id);
+  // Nivå 3: alt annet, unntatt oppsummeringspunktene (de hører til nivå 2).
+  for (const { id } of FLATER.artist) assert.equal(synlig(id, 3), id !== "punkter", id);
 });
 
 test("tiårstekstene står fra nivå 1, tech skjuler kategori og instrument", () => {
@@ -156,9 +156,12 @@ test("nivålistene bruker bare seksjoner flaten faktisk har", () => {
   }
 });
 
-test("erSynlig: nivåene er kumulative og nivå 3 viser alt", () => {
+test("erSynlig: nivåene er kumulative og nivå 3 viser alt (unntatt oppsummeringspunktene)", () => {
   for (const [flate, seksjoner] of Object.entries(FLATER)) {
     for (const { id } of seksjoner) {
+      // Punktene er det ene bevisste unntaket (brukervalg 2026-09-24): nivå 3
+      // viser hele beskrivelsen UTEN punktene. Se testen under.
+      if (id === "punkter") continue;
       assert.equal(erSynlig(flate, id, 3), true, `${flate}.${id} må vises på Alt`);
       // Kumulativt: alt nivå 1 viser, viser også nivå 2.
       if (erSynlig(flate, id, 1)) {
@@ -168,6 +171,31 @@ test("erSynlig: nivåene er kumulative og nivå 3 viser alt", () => {
   }
   assert.equal(erSynlig("artist", "verk", 1), false);
   assert.equal(erSynlig("sjanger", "beskrivelse", 2), true);
+});
+
+test("oppsummeringspunktene (v5.50): bare nivå 2, der de erstatter beskrivelsen", () => {
+  for (const flate of ["artist", "sjanger", "tech"]) {
+    assert.ok(FLATER[flate].some((s) => s.id === "punkter"), `${flate} har punkt-seksjonen i tannhjulpanelet`);
+    for (const harPunkter of [true, false]) {
+      assert.equal(erSynlig(flate, "punkter", 1, {}, { harPunkter }), false, `${flate}: ikke på nivå 1`);
+      assert.equal(erSynlig(flate, "punkter", 2, {}, { harPunkter }), true, `${flate}: på nivå 2`);
+      assert.equal(erSynlig(flate, "punkter", 3, {}, { harPunkter }), false, `${flate}: ikke på nivå 3`);
+      assert.equal(erSynlig(flate, "beskrivelse", 3, {}, { harPunkter }), true, `${flate}: hele beskrivelsen på nivå 3`);
+    }
+  }
+  // Nivå 2: punktene erstatter beskrivelsen der den stod før (sjanger, tech)...
+  for (const flate of ["sjanger", "tech"]) {
+    assert.equal(erSynlig(flate, "beskrivelse", 2, {}, { harPunkter: true }), false, `${flate}: punktene i stedet`);
+    assert.equal(erSynlig(flate, "beskrivelse", 2, {}, { harPunkter: false }), true, `${flate}: uten punkter står beskrivelsen som før`);
+  }
+  // ...og artistkortet har aldri hatt beskrivelsen på nivå 2.
+  assert.equal(erSynlig("artist", "beskrivelse", 2, {}, { harPunkter: false }), false);
+  // Unntak i tannhjulpanelet overstyrer, begge veier.
+  assert.equal(erSynlig("sjanger", "punkter", 3, { "sjanger.punkter": true }), true);
+  assert.equal(erSynlig("sjanger", "beskrivelse", 2, { "sjanger.beskrivelse": true }, { harPunkter: true }), true);
+  assert.equal(erSynlig("tech", "punkter", 2, { "tech.punkter": false }, { harPunkter: true }), false);
+  // Andre flater bryr seg ikke.
+  assert.equal(erSynlig("tiår", "tekst", 2, {}, { harPunkter: true }), true);
 });
 
 test("erSynlig: unntak overstyrer nivået begge veier", () => {

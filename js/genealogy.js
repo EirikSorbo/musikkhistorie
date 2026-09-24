@@ -12,16 +12,17 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.49";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.49";
-import { renderRichText } from "./rich-text.js?v=5.49";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.49";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.49";
-import { modalOpen } from "./ui-modal.js?v=5.49";
-import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.49";
-import { wireProposeFoot } from "./ui-edit.js?v=5.49";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.49";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.49";
+import { wireAllLinks } from "./linkify.js?v=5.50";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.50";
+import { renderRichText } from "./rich-text.js?v=5.50";
+import { punkterHtml } from "./punkter.js?v=5.50";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.50";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.50";
+import { modalOpen } from "./ui-modal.js?v=5.50";
+import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.50";
+import { wireProposeFoot } from "./ui-edit.js?v=5.50";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.50";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.50";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -188,6 +189,7 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   mBody.innerHTML = `
     ${sekt("stripe", heatStripBlock(n))}
     ${sekt("era", `<p class="gx-era">${escapeHtml(eraLine(resolved))}</p>`)}
+    ${sekt("punkter", punkterHtml(resolved.punkter, lc))}
     ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
     ${sekt("lytt", (onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : "")}
     ${sekt("relasjoner", `

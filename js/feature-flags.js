@@ -24,6 +24,17 @@
 //    horEtter              «Hør etter»-lista på tre-sjangrene (js/genealogy.js)
 // ============================================================================
 
+// Oppsummeringspunktene (v5.50, js/punkter.js) vises bare i presentasjonen,
+// på nivå 2, til innholdet er gjennomgått (brukervalg 2026-09-24). Gjelder
+// ALLE utenfor presentasjonen, også lærersiden: læreren ser punktene i
+// presentasjonen og i editorene. Sett til false for å vise dem på kortene i
+// vanlig visning også. Virker via klassen «skjul-punkter» på <html>
+// (css/styles.css), så ingen renderer trenger å vite om det.
+export const PUNKTER_BARE_I_PRESENTASJON = true;
+if (typeof document !== "undefined") {
+  document.documentElement.classList.toggle("skjul-punkter", PUNKTER_BARE_I_PRESENTASJON);
+}
+
 export const SKJUL_I_STUDENTVISNING = {
   viktighetsgrad:       true,
   koblingsbeskrivelser: true,

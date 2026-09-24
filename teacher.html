@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.49" />
-  <script src="js/gate.js?v=5.49"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.50" />
+  <script src="js/gate.js?v=5.50"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -335,6 +335,15 @@
         <label class="full">Begrunnelse / hvorfor relevant
           <textarea id="ed-desc" rows="7" data-format></textarea>
         </label>
+        <!-- Oppsummeringspunktene (v5.50, js/punkter.js): bare læreren skriver
+             dem, og de vises foreløpig bare i presentasjonen på nivå 2. -->
+        <div class="full punktfelt">
+          <label>Oppsummering i punkter
+            <textarea id="ed-punkter" rows="5" data-format="inline" placeholder="Ett punkt per linje, helst 3–5"></textarea>
+          </label>
+          <p class="hint">Ett punkt per linje. Vises foreløpig bare i presentasjonen: nivå 2 viser punktene, nivå 3 hele beskrivelsen.</p>
+          <p class="hint punkt-varsel" hidden></p>
+        </div>
         <div class="full">
           <span class="field-label">Sentrale verk</span>
           <div id="ed-work-rows"></div>
@@ -428,6 +437,15 @@
         <label>Beskrivelse
           <textarea id="ss-desc" rows="10" data-format="full" placeholder="Beskriv sjangeren …"></textarea>
         </label>
+        <!-- Oppsummeringspunktene (v5.50, js/punkter.js): kun tre-sjangre (main-
+             nivå), som epoken under. Vises foreløpig bare i presentasjonen. -->
+        <div id="ss-punkter-wrap" class="punktfelt" hidden>
+          <label>Oppsummering i punkter
+            <textarea id="ss-punkter" rows="5" data-format="inline" placeholder="Ett punkt per linje, helst 3–5"></textarea>
+          </label>
+          <p class="hint">Ett punkt per linje. Vises foreløpig bare i presentasjonen: nivå 2 viser punktene i stedet for beskrivelsen, nivå 3 hele beskrivelsen.</p>
+          <p class="hint punkt-varsel" hidden></p>
+        </div>
         <!-- Epoke: kun for tre-sjangre (main-nivå). Frie undersjangre har ingen
              node i treet og dermed ingen epoke å måle mot varmekartet.
              Fritekst-epoken lå på treets node fram til v4.64. Den hører hjemme
@@ -602,6 +620,15 @@
         <label class="full">Beskrivelse
           <textarea id="tech-desc" rows="4" data-format></textarea>
         </label>
+        <!-- Oppsummeringspunktene (v5.50, js/punkter.js): bare læreren skriver
+             dem, og de vises foreløpig bare i presentasjonen på nivå 2. -->
+        <div class="full punktfelt">
+          <label>Oppsummering i punkter
+            <textarea id="tech-punkter" rows="5" data-format="inline" placeholder="Ett punkt per linje, helst 3–5"></textarea>
+          </label>
+          <p class="hint">Ett punkt per linje. Vises foreløpig bare i presentasjonen: nivå 2 viser punktene, nivå 3 hele beskrivelsen.</p>
+          <p class="hint punkt-varsel" hidden></p>
+        </div>
         <div class="full">
           <span class="field-label">Kilder</span>
           <div id="tech-source-rows"></div>
@@ -717,7 +744,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=5.49"></script>
-  <script type="module" src="js/teacher.js?v=5.49"></script>
+  <script src="js/load-guard.js?v=5.50"></script>
+  <script type="module" src="js/teacher.js?v=5.50"></script>
 </body>
 </html>

@@ -102,6 +102,10 @@ export function validateArtistsForImport(list) {
           problems.push(`«${key}» må være tekst eller en enkel liste av tekster (ingen nestede lister/objekter).`);
         }
       }
+      // Oppsummeringspunktene (v5.50): en liste med tekster.
+      if (a.punkter != null && !isFlatPrimitiveList(a.punkter)) {
+        problems.push("«punkter» må være en liste med tekster (ett punkt per element).");
+      }
       for (const key of ["keyWorks", "musicExamples", "kilder"]) {
         const v = a[key];
         // En enkeltstreng er en FEIL, ikke et unntak (audit-funn 29):

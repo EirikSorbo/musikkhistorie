@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.49";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.50";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -23,6 +23,7 @@ export const FLATER = {
     { id: "fakta", navn: "Fakta (levetid, plateselskap …)" },
     { id: "tags", navn: "Instrument og sjanger" },
     { id: "stripe", navn: "Innflytelseslinje" },
+    { id: "punkter", navn: "Oppsummering i punkter" },
     { id: "beskrivelse", navn: "Beskrivelse" },
     { id: "verk", navn: "Sentrale verk" },
     { id: "lytte", navn: "Lytteeksempler" },
@@ -31,6 +32,7 @@ export const FLATER = {
   sjanger: [
     { id: "stripe", navn: "Varmestripe" },
     { id: "era", navn: "Epoke" },
+    { id: "punkter", navn: "Oppsummering i punkter" },
     { id: "beskrivelse", navn: "Beskrivelse" },
     { id: "lytt", navn: "Hør etter" },
     { id: "relasjoner", navn: "Slektskap (vokste ut av …)" },
@@ -38,6 +40,7 @@ export const FLATER = {
   tech: [
     { id: "bilde", navn: "Bilde" },
     { id: "fakta", navn: "Fakta (årstall)" },
+    { id: "punkter", navn: "Oppsummering i punkter" },
     { id: "beskrivelse", navn: "Beskrivelse" },
   ],
   tiår: [
@@ -63,17 +66,19 @@ export const NIVAA_SEKT = {
   // kommer på nivå 3 (se FAKTA_MIN). Lytteeksemplene står fra nivå 1
   // (brukerkrav 2026-09-19: musikken er poenget på alle nivåer). Nivå 2
   // legger til instrument/sjanger; beskrivelsen kommer på nivå 3.
+  // Oppsummeringspunktene (v5.50) står på nivå 2 og gjelder bare der; se
+  // PUNKT_FLATER under erSynlig for hvordan de erstatter beskrivelsen.
   artist: {
     1: ["bilde", "fakta", "stripe", "lytte"],
-    2: ["bilde", "fakta", "stripe", "tags", "lytte"],
+    2: ["bilde", "fakta", "stripe", "tags", "punkter", "lytte"],
   },
   sjanger: {
     1: ["stripe", "era"],
-    2: ["stripe", "era", "beskrivelse", "relasjoner"],
+    2: ["stripe", "era", "punkter", "beskrivelse", "relasjoner"],
   },
   tech: {
     1: ["bilde", "fakta"],
-    2: ["bilde", "fakta", "beskrivelse"],
+    2: ["bilde", "fakta", "punkter", "beskrivelse"],
   },
   // Tiårstekstene ER poengene man snakker til, så de står fra nivå 1.
   tiår: {
@@ -94,13 +99,26 @@ export const NIVAA_NAVN = { 1: "Overskrift", 2: "Kjerne", 3: "Alt" };
 // kjenner viser alltid alt; en ukjent seksjon på en kjent flate følger
 // nivå 3-regelen (vises bare på Alt) — konservativt, så en ny seksjon aldri
 // lekker inn på Overskrift-nivået ved en glipp.
-export function erSynlig(flate, sekt, nivaa, unntak) {
+//
+// Oppsummeringspunktene (v5.50, brukervalg 2026-09-24) på artist-, sjanger- og
+// teknologikortet: bare på nivå 2, der de ERSTATTER beskrivelsen; nivå 3 viser
+// hele beskrivelsen uten punktene. `harPunkter` sier om kortet faktisk har
+// punkter: mangler de, viser nivå 2 beskrivelsen som før (sjanger og tech),
+// så ingenting forsvinner før innholdet er skrevet. Unntak overstyrer også her.
+export const PUNKT_FLATER = new Set(["artist", "sjanger", "tech"]);
+
+export function erSynlig(flate, sekt, nivaa, unntak, { harPunkter = false } = {}) {
   if (ALDRI_I_VISNING.has(sekt)) return false;
   const u = unntak ? unntak[`${flate}.${sekt}`] : undefined;
   if (u === true) return true;
   if (u === false) return false;
   if (!(flate in NIVAA_SEKT)) return true;
-  if (Number(nivaa) >= 3) return true;
+  const n = Number(nivaa);
+  if (PUNKT_FLATER.has(flate)) {
+    if (sekt === "punkter") return n === 2;
+    if (sekt === "beskrivelse" && n === 2 && harPunkter) return false;
+  }
+  if (n >= 3) return true;
   return (NIVAA_SEKT[flate][nivaa] || []).includes(sekt);
 }
 

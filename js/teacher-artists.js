@@ -4,17 +4,17 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=5.49";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=5.49";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=5.49";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.49";
-import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=5.49";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=5.49";
-import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=5.49";
-import { debounce } from "./util.js?v=5.49";
-import { $ } from "./shared.js?v=5.49";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.49";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.49";
+import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=5.50";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=5.50";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=5.50";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.50";
+import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=5.50";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=5.50";
+import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=5.50";
+import { debounce } from "./util.js?v=5.50";
+import { $ } from "./shared.js?v=5.50";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.50";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.50";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore
@@ -183,6 +183,7 @@ export function openEditModal(artistId) {
   $("#ed-recordLabel").value = a.recordLabel || "";
   $("#ed-subGenre").value = (a.subGenre || []).join(", ");
   $("#ed-desc").value = a.description || "";
+  fyllPunktfelt($("#ed-punkter"), a.punkter);
   $("#ed-by").value = a.proposedBy || "";
   $("#ed-image-url").value = a.imageUrl || "";
   $("#ed-image-credit").value = a.imageCredit || "";
@@ -253,6 +254,7 @@ export function setupEditForm() {
       recordLabel:   $("#ed-recordLabel").value.trim(),
       geography:     $("#ed-geo").value.trim(),
       description:   $("#ed-desc").value.trim(),
+      punkter:       lesPunktfelt($("#ed-punkter")),
       keyWorks:      collectEditWorks(),
       musicExamples: collectEditMusicExamples(),
       kilder:        collectEditSources(),

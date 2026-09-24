@@ -4,8 +4,9 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.49";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=5.49";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=5.50";
+import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=5.50";
+import { punkterHtml } from "./punkter.js?v=5.50";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin). `bredde` er
 // thumbnail-bredden: detaljkortet på lerretet (presentasjon, v5.36) viser
@@ -92,6 +93,7 @@ export function renderTechDetail(el, t, lc) {
   const img = techImage(t, globalThis.document?.body?.classList.contains("presentasjon") ? 960 : 480);
   // data-sekt: detaljnivået i presentasjonsvisningen (v5.24), inert ellers.
   el.innerHTML = sekt("bilde", img) + sekt("fakta", techFactsLines(t))
+    + sekt("punkter", punkterHtml(t.punkter, lc))
     + sekt("beskrivelse", t.description ? `<div class="rt">${linkDesc(t.description, lc)}</div>` : "")
     + sekt("kilder", buildKilderList(t.kilder, "Kilder"));
   wireLinks(el, lc);
