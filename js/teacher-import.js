@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.50";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.51";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -20,15 +20,15 @@ import {
   updatePodcast,
   setTeacherChecks,
   savePlaner,
-} from "./store.js?v=5.50";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=5.50";
-import { escapeHtml } from "./ui.js?v=5.50";
-import { $ } from "./shared.js?v=5.50";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.50";
-import { validateTree } from "./genre-validate.js?v=5.50";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.50";
-import { INSTRUMENTS } from "./limits.js?v=5.50";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.50";
+} from "./store.js?v=5.51";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=5.51";
+import { escapeHtml } from "./ui.js?v=5.51";
+import { $ } from "./shared.js?v=5.51";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.51";
+import { validateTree } from "./genre-validate.js?v=5.51";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.51";
+import { INSTRUMENTS } from "./limits.js?v=5.51";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc, erDelpost } from "./import-format.js?v=5.51";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -683,6 +683,15 @@ async function handleReplace(data) {
     alert("Filen inneholder ingen gyldige artister. «Erstatt alle» er avbrutt for å unngå å tømme databasen.");
     return false;
   }
+  // En delfil (bare noen felt per artist, f.eks. oppsummeringspunkter) ville
+  // erstattet hele basen med nesten tomme kort (v5.51).
+  const delposter = toAdd.filter(erDelpost);
+  if (delposter.length) {
+    alert(`${delposter.length} av ${toAdd.length} artister i fila mangler både metasjanger og beskrivelse, ` +
+      "så fila er en delfil (bare noen felt per artist).\n\n«Erstatt alle» er avbrutt: det ville slettet resten " +
+      "av feltene på alle artistene. Bruk «Flett» for å legge feltene inn i artistene som finnes.");
+    return false;
+  }
   if (!confirm(
     `Dette sletter alle ${state.artists.length} eksisterende artister ` +
     `(inkludert stemmer og ventende forslag) og erstatter dem med ${toAdd.length} fra filen.\n\n` +
@@ -714,6 +723,7 @@ async function handleMergeFile(data) {
   mergeState.queue      = [];
   mergeState.newArtists = [];
   mergeState.index      = 0;
+  const uteliggere = [];
 
   for (const imp of data) {
     if (!imp.name) continue;
@@ -723,7 +733,13 @@ async function handleMergeFile(data) {
     const existing = state.artists.find(
       (a) => a.name.trim().toLowerCase() === imp.name.trim().toLowerCase()
     );
-    if (!existing) { mergeState.newArtists.push(imp); continue; }
+    if (!existing) {
+      // En delpost uten treff blir IKKE en ny artist (v5.51): navnet er
+      // trolig stavet ulikt, og kortet ville bare hatt feltene fra fila.
+      if (erDelpost(imp)) uteliggere.push(imp.name);
+      else mergeState.newArtists.push(imp);
+      continue;
+    }
 
     const autoFill = {};
     const conflicts = [];
@@ -742,6 +758,12 @@ async function handleMergeFile(data) {
     if (Object.keys(autoFill).length || conflicts.length) {
       mergeState.queue.push({ existing, imported: imp, conflicts, resolved: { ...autoFill } });
     }
+  }
+
+  if (uteliggere.length) {
+    alert(`${uteliggere.length} navn i fila finnes ikke blant artistene og har for lite innhold til å bli nye artister. ` +
+      `De hoppes over:\n\n${uteliggere.slice(0, 20).join(", ")}${uteliggere.length > 20 ? " …" : ""}` +
+      "\n\nSjekk stavemåten i fila. Resten importeres som vanlig.");
   }
 
   const hasConflicts = mergeState.queue.some(item => item.conflicts.length > 0);

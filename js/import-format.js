@@ -127,6 +127,17 @@ export function validateArtistsForImport(list) {
   return { ok: errors.length === 0, errors };
 }
 
+// En DELPOST (v5.51) er en artistrad som bare bærer noen felt, f.eks. en fil
+// med navn + oppsummeringspunkter. Den er gyldig for «Flett» mot en artist som
+// finnes, men farlig ellers: «Erstatt alle» ville erstattet hele basen med
+// artister uten metasjanger og beskrivelse, og et navn uten treff ville blitt
+// en ny, nesten tom artist. Et ekte artistkort har alltid minst én av delene
+// (skjemaet krever metasjanger), så mangel på begge er et sikkert kjennetegn.
+export function erDelpost(a) {
+  const tom = (v) => v == null || (typeof v === "string" && !v.trim());
+  return !!a && typeof a === "object" && tom(a.metaGenre) && tom(a.description);
+}
+
 // ---------------------------------------------------------------------------
 //  IMPORTFILENS FORM
 // ---------------------------------------------------------------------------

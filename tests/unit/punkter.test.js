@@ -2,12 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/punkter.js?v=5.50";
-import { normalizeArtist, buildArtistDoc } from "../../js/artist-normalize.js?v=5.50";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=5.50";
-import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/artist-schema.js?v=5.50";
-import { resolveDesc } from "../../js/genre-descriptions.js?v=5.50";
-import { validateArtistsForImport } from "../../js/import-format.js?v=5.50";
+import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/punkter.js?v=5.51";
+import { normalizeArtist, buildArtistDoc } from "../../js/artist-normalize.js?v=5.51";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=5.51";
+import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/artist-schema.js?v=5.51";
+import { resolveDesc } from "../../js/genre-descriptions.js?v=5.51";
+import { validateArtistsForImport } from "../../js/import-format.js?v=5.51";
 
 // Oppsummeringspunktene (v5.50): 3–5 punkter per beskrivelse på artist-,
 // sjanger- (main) og teknologikortet. Bare læreren skriver dem.
@@ -134,4 +134,18 @@ test("undersjanger- og koblingskortet har ingen nivåmerker: alt vises fra nivå
     const k = kropp(fil, start);
     assert.equal(/sekt\(|data-sekt/.test(k), false, `${start} skal ikke ha data-sekt`);
   }
+});
+
+test("delposter (v5.51): navn + punkter er en delpost, et ekte kort er det ikke", async () => {
+  const { erDelpost } = await import("../../js/import-format.js?v=5.51");
+  assert.equal(erDelpost({ name: "X", punkter: ["a", "b", "c"] }), true);
+  assert.equal(erDelpost({ name: "X", metaGenre: "", description: "  " }), true);
+  assert.equal(erDelpost({ name: "X", metaGenre: "Jazz" }), false);
+  assert.equal(erDelpost({ name: "X", description: "Tekst" }), false);
+  assert.equal(erDelpost(null), false);
+  // Importen: «Erstatt alle» stopper på delposter, «Flett» lager aldri nye
+  // artister av dem.
+  const imp = les("js/teacher-import.js");
+  assert.match(imp, /const delposter = toAdd\.filter\(erDelpost\);\n  if \(delposter\.length\) \{[^]*?return false;/);
+  assert.match(imp, /if \(erDelpost\(imp\)\) uteliggere\.push\(imp\.name\);\n      else mergeState\.newArtists\.push\(imp\);/);
 });

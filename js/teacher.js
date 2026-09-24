@@ -14,15 +14,15 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=5.50";
-import { subscribeSharedData } from "./shared-data.js?v=5.50";
-import { onGenreModelChanged } from "./genre-model.js?v=5.50";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.50";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.50";
-import { initExplore } from "./explore.js?v=5.50";
+} from "./store.js?v=5.51";
+import { subscribeSharedData } from "./shared-data.js?v=5.51";
+import { onGenreModelChanged } from "./genre-model.js?v=5.51";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.51";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.51";
+import { initExplore } from "./explore.js?v=5.51";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=5.50";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=5.50";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=5.51";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=5.51";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -41,15 +41,15 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=5.50";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=5.50";
-import { initVisning, visningTikk } from "./visning.js?v=5.50";
-import { initPlanMeny } from "./plan-meny.js?v=5.50";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.50";
-import { renderDesk } from "./teacher-desk.js?v=5.50";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=5.50";
-import { setupFormatBars } from "./format-bar.js?v=5.50";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=5.50";
+} from "./teacher-content.js?v=5.51";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=5.51";
+import { initVisning, visningTikk } from "./visning.js?v=5.51";
+import { initPlanMeny } from "./plan-meny.js?v=5.51";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.51";
+import { renderDesk } from "./teacher-desk.js?v=5.51";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=5.51";
+import { setupFormatBars } from "./format-bar.js?v=5.51";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=5.51";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
