@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.42";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.42";
-import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.42";
-import { RETUR_FELTER } from "./artist-schema.js?v=5.42";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.42";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.42";
-import { mergeHeatRows } from "./import-format.js?v=5.42";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.42";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.42";
+import { firebaseConfig } from "./firebase-config.js?v=5.43";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.43";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.43";
+import { RETUR_FELTER } from "./artist-schema.js?v=5.43";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.43";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.43";
+import { mergeHeatRows } from "./import-format.js?v=5.43";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.43";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.43";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -547,12 +547,22 @@ export async function deletePage(pageId) {
 }
 
 // Kjøreplanene for presentasjonsvisningen (v5.25) — ETT dokument, som
-// varmekartet. setDoc UTEN merge er bevisst: dokumentet eies helt av
-// editoren, og sletting av en plan krever at hele planer-feltet skrives
-// (fletting kan aldri fjerne nøkler).
-export async function savePresentasjoner(planer) {
-  return setDoc(doc(db, "content", "presentasjoner"),
-    { planer, updatedAt: new Date().toISOString() });
+// varmekartet. Siden v5.43 skrives ÉN plan om gangen: merge på planer.<id>
+// (setDoc med merge fletter maps per nøkkel og erstatter stopp-lista inne i
+// planen), og sletting med deleteField på samme nøkkel. Før ble hele
+// planer-feltet skrevet fra skriverens kopi, og en tom eller utdatert kopi
+// (content ikke landet ennå, en annen fane) slettet alle de andre planene
+// (audit v5.42, funn 4).
+const presentasjonerRef = () => doc(db, "content", "presentasjoner");
+
+export async function savePlan(id, plan) {
+  return setDoc(presentasjonerRef(),
+    { planer: { [id]: plan }, updatedAt: new Date().toISOString() }, { merge: true });
+}
+
+export async function deletePlan(id) {
+  return setDoc(presentasjonerRef(),
+    { planer: { [id]: deleteField() }, updatedAt: new Date().toISOString() }, { merge: true });
 }
 
 // Frittstående referanser: kilder som ikke hører til noe kort (en bok læreren

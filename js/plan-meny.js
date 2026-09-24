@@ -15,12 +15,12 @@
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePresentasjoner } from "./store.js?v=5.42";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.42";
-import { getState } from "./explore-context.js?v=5.42";
-import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.42";
-import { setLenkeMenyProvider } from "./ui-modal.js?v=5.42";
-import { escapeHtml } from "./util.js?v=5.42";
+import { onAuthChange, savePlan } from "./store.js?v=5.43";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.43";
+import { getState } from "./explore-context.js?v=5.43";
+import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.43";
+import { setLenkeMenyProvider } from "./ui-modal.js?v=5.43";
+import { escapeHtml } from "./util.js?v=5.43";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen
@@ -34,11 +34,26 @@ export function erLaererBruker(user) {
 // Setter inn et stopp på en gitt plass i en plan og lagrer («Legg til her»,
 // v5.37). Samme regel som leggTil under: skrivingen bygger på de FERSKESTE
 // planene i state, ikke på avspillerens kopi, så endringer gjort i en annen
-// fane ikke overskrives. Returnerer planen slik den ble lagret.
+// fane ikke overskrives. Bare denne planen skrives (v5.43). Returnerer
+// planen slik den ble lagret.
 export async function settInnStopp(planId, indeks, stopp) {
+  if (!planeneLastet()) throw new Error("kjøreplanene er ikke lastet ennå");
   const planer = medStoppSattInn(planerNaa(), planId, indeks, stopp);
-  await savePresentasjoner(planer);
+  await savePlan(planId, uttenMerke(planer[planId]));
   return planer[planId];
+}
+
+// Det en skriving utenfor samleøkta sender: aldri øktenes merker (plan.samle).
+// Et merke lest fra en utdatert state ville ellers senket merket, og økta
+// ville sendt handlinger planen alt har, på nytt (se brukSamleOps).
+function uttenMerke(plan) {
+  return { tittel: plan.tittel, laget: plan.laget, stopp: plan.stopp };
+}
+
+// Har planene landet? Før det er speilingen tom, og ingenting skal bygges på
+// den (audit v5.42, funn 4).
+export function planeneLastet() {
+  return !!getState().contentLoaded;
 }
 
 function lukkMeny() {
@@ -62,6 +77,11 @@ function visMeny(knapp) {
 
   meny = document.createElement("div");
   meny.className = "lenke-meny";
+  if (!planeneLastet()) {
+    meny.innerHTML = `<p class="lenke-meny-hode">Kjøreplanene lastes …</p>`;
+    head.appendChild(meny);
+    return;
+  }
   meny.innerHTML = `
     <p class="lenke-meny-hode">Legg til som stopp i</p>
     ${planer.map(([id, p]) => `
@@ -81,6 +101,7 @@ async function leggTil(planId, vis) {
   // Ferske planer ved hvert klikk, så to tillegg på rad ikke overskriver
   // hverandre — snapshotet har normalt landet mellom dem, og skrivingen
   // under bygger uansett på det NYESTE vi har.
+  if (!planeneLastet()) { lukkMeny(); return; }
   const planer = planerNaa();
   if (!planId) {
     const tittel = window.prompt("Navn på den nye kjøreplanen:", "");
@@ -93,7 +114,7 @@ async function leggTil(planId, vis) {
   plan.stopp.push({ vis });
 
   try {
-    await savePresentasjoner(planer);
+    await savePlan(planId, uttenMerke(plan));
     if (meny) {
       meny.innerHTML = `<p class="lenke-meny-hode lenke-meny-ok">Lagt til i «${escapeHtml(plan.tittel)}» (${plan.stopp.length} stopp)</p>`;
       setTimeout(lukkMeny, 1400);

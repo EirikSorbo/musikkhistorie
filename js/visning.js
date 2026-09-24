@@ -15,22 +15,23 @@
 //
 //  Hvert stopp er en ?vis=-verdi (samme som «Kopier lenke»-knappen lager),
 //  og avspillingen bor i js/presentasjon.js. Redigering skjer på en KLADD
-//  (dyp kopi) som først skrives ved Lagre — setDoc uten merge, hele
-//  dokumentet (sletting av en plan krever det, se savePresentasjoner). To
-//  faner som redigerer samtidig overskriver hverandre; med én lærerkonto er
-//  det en akseptert enkelhet (samme som podkast-admin).
+//  (dyp kopi) som først skrives ved Lagre. Hver lagring og sletting rører
+//  bare sin egen plan (savePlan/deletePlan, v5.43), og ingenting skrives før
+//  planene har landet. To faner som redigerer SAMME plan samtidig
+//  overskriver hverandre; med én lærerkonto er det en akseptert enkelhet
+//  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.42";
-import { escapeHtml } from "./util.js?v=5.42";
-import { onAuthChange, savePresentasjoner } from "./store.js?v=5.42";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.42";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.42";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.42";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.42";
-import { startInnsamling } from "./plan-innsamling.js?v=5.42";
-import { erLaererBruker } from "./plan-meny.js?v=5.42";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.42";
+import { getState } from "./explore-context.js?v=5.43";
+import { escapeHtml } from "./util.js?v=5.43";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.43";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.43";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.43";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.43";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.43";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring } from "./plan-innsamling.js?v=5.43";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.43";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.43";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -104,6 +105,8 @@ function planerNaa() {
   return normaliserPlaner(getState().content?.presentasjoner?.planer);
 }
 
+const IKKE_LASTET = "Kjøreplanene er ikke lastet ennå. Vent litt og prøv igjen.";
+
 // Lagring med tydelig svar: true når skrivingen gikk, false (med beskjed)
 // når den feilet. Lærersidens guardTeacherAction svelget feilen, og Lagre
 // meldte da «lagret» også når ingenting var lagret.
@@ -119,10 +122,55 @@ async function vakt(lovnad) {
 }
 
 // Visningen starter i egen fane fra lærersiden (den er arbeidsbenken og skal
-// bestå), ellers i samme fane.
-function gaaTilVisning(url) {
-  if (/teacher\.html$/.test(window.location.pathname)) window.open(url, "_blank");
-  else window.location.href = url;
+// bestå), ellers i samme fane. `spiller`: en kjøreplan skal spilles. Da skal
+// ingen samleøkt stå på, for hvert stopp avspilleren åpnet, ble tatt opp i
+// planen på nytt (audit v5.42, funn 6). Fri visning er derimot det opptaket
+// er laget for (ta opp timen mens du viser), så der fortsetter økta.
+//   • Egen fane: åpnes MENS klikket fortsatt gjelder (nettlesere stopper
+//     vinduer som åpnes etter en venting). noopener: uten den kopierer
+//     nettleseren sessionStorage, og økta ville kjørt i to faner. Økta
+//     avsluttes og sendes i fanen som blir stående; i fri visning fortsetter
+//     den i den nye fanen via URL-en (medOvertakelse).
+//   • Samme fane: økta følger med over sidebyttet; før en kjøreplan spilles,
+//     spør vinduet og sender det samlede først.
+function gaaTilVisning(url, { spiller = false } = {}) {
+  const ø = aktivSamleokt();
+  if (/teacher\.html$/.test(window.location.pathname)) {
+    window.open(ø && !spiller ? medOvertakelse(url) : url, "_blank", "noopener");
+    if (ø) {
+      avsluttInnsamling();
+      msg(spiller
+        ? `Samleøkta på «${ø.tittel}» er avsluttet, og stoppene lagres.`
+        : `Samleøkta på «${ø.tittel}» fortsetter i visningsfanen.`);
+    }
+    return;
+  }
+  if (!spiller) { window.location.href = url; return; }
+  return forlatSamleokt().then((videre) => { if (videre) window.location.href = url; });
+}
+
+// Venter på et løfte, men aldri lenger enn `ms`: uten nett blir en Firestore-
+// skriving liggende i kø (lokalt lagret) og løftet svarer først når nettet
+// er tilbake.
+const medFrist = (lovnad, ms) => Promise.race([lovnad, new Promise((r) => setTimeout(r, ms))]);
+
+// Spør, avslutt og send det som er samlet, før visningen tar over fanen.
+// true = gå videre.
+async function forlatSamleokt() {
+  const ø = aktivSamleokt();
+  if (!ø) return true;
+  const videre = await askChoice({
+    title: "Samleøkta står på",
+    text: `Du samler stopp i «${ø.tittel}». Mens en kjøreplan spilles, tas ingenting opp, så økta avsluttes først. Stoppene du har samlet, blir lagret.`,
+    buttons: [
+      { label: "Avslutt samleøkta og start", value: true, className: "primary" },
+      { label: "Avbryt", value: false },
+    ],
+    dismissValue: false,
+  });
+  if (!videre) return false;
+  await medFrist(avsluttInnsamling(), 4000);
+  return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -136,6 +184,8 @@ function renderListe() {
   const planer = Object.entries(planerNaa())
     .sort(([, a], [, b]) => a.tittel.localeCompare(b.tittel, "no"));
   const aktiv = aktivPlanId();
+  const samles = aktivSamleokt()?.planId;
+  const lastet = !!s.contentLoaded;
   const tomTekst = !s.contentLoaded ? "Laster kjøreplanene …"
     : erLaerer ? "Ingen kjøreplaner ennå. Lag den første under."
     : "Ingen kjøreplaner ennå.";
@@ -143,7 +193,7 @@ function renderListe() {
     ${planer.length ? planer.map(([id, p]) => `
       <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
-          <span class="muted">${p.stopp.length} stopp${id === aktiv ? " · spilles nå" : ""}</span></span>
+          <span class="muted">${p.stopp.length} stopp${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}</span></span>
         <span class="pres-adm-knapper">
           <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
           ${erLaerer ? `
@@ -155,8 +205,8 @@ function renderListe() {
     : `<p class="muted">${tomTekst}</p>`}
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
-      <button type="button" class="btn primary small" id="pres-adm-ny">Ny kjøreplan</button>
-      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og fyll den mens du blar eller tar opp">Ny + samle …</button>
+      <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
+      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og fyll den mens du blar eller tar opp" ${lastet ? "" : "disabled"}>Ny + samle …</button>
     </div>
     <p class="muted vis-tips">Raskest å bygge en plan: finn fram i appen og trykk lenkeknappen i kortets tittellinje. Menyen «Legg til som stopp i» legger kortet rett inn.</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
@@ -206,13 +256,13 @@ async function lagre() {
   const tittel = document.getElementById("pres-adm-tittel")?.value.trim();
   if (!tittel) { msg("Kjøreplanen trenger en tittel.", false); return; }
   if (!kladd.stopp.length) { msg("Legg til minst ett stopp før du lagrer.", false); return; }
-  const planer = planerNaa();
-  planer[kladd.id] = {
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }   // kladden beholdes
+  const plan = {
     tittel,
-    laget: planer[kladd.id]?.laget || new Date().toISOString(),
+    laget: planerNaa()[kladd.id]?.laget || new Date().toISOString(),
     stopp: kladd.stopp,
   };
-  if (!(await vakt(savePresentasjoner(planer)))) return;   // kladden beholdes
+  if (!(await vakt(savePlan(kladd.id, plan)))) return;   // kladden beholdes
   kladd = null;
   renderListe();
   renderKladd();
@@ -239,13 +289,18 @@ function leggTilStopp() {
 async function velgModusOgStart(planId, tittelForNy) {
   const navn = planId ? planerNaa()[planId]?.tittel : tittelForNy;
   if (!navn) return;
+  // Mens en kjøreplan spilles, tar opptaket ingenting opp (funn 6), så valget
+  // tilbys ikke da.
+  const spilles = !!aktivPlanId();
   const modus = await askChoice({
     title: `Samle stopp i «${navn}»`,
     text: "Plukk: en plussknapp i kortenes tittellinje legger til det du velger. "
-      + "Ta opp: alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre.",
+      + (spilles
+        ? "Opptak virker ikke mens en kjøreplan spilles. Avslutt visningen eller bruk fri visning for å ta opp."
+        : "Ta opp: alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre."),
     buttons: [
       { label: "Plukk mens jeg blar", value: "plukk", className: "primary" },
-      { label: "Ta opp alt jeg åpner", value: "opptak" },
+      ...(spilles ? [] : [{ label: "Ta opp alt jeg åpner", value: "opptak" }]),
       { label: "Avbryt", value: null },
     ],
     dismissValue: null,
@@ -341,6 +396,8 @@ export function initVisning() {
     erLaerer = erLaererBruker(user);
     visningTikk();
   });
+  // «samles nå» følger økta: Ferdig i linja kan trykkes mens vinduet står åpent.
+  vedSamleEndring(() => visningTikk());
   let vis = null;
   try { vis = new URLSearchParams(window.location.search).get("visning"); } catch (e) {}
   if (vis !== null) {
@@ -370,6 +427,7 @@ function koblVindu(m) {
     if (hit("#vis-avslutt")) return avsluttPresentasjon();
 
     if (hit("#pres-adm-ny")) {
+      if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       kladd = { id: nyPlanId(), tittel: "", stopp: [] };
       renderKladd();
       document.getElementById("pres-adm-tittel")?.focus();
@@ -378,6 +436,13 @@ function koblVindu(m) {
     const rediger = hit("[data-pres-rediger]");
     if (rediger) {
       const id = rediger.dataset.presRediger;
+      // Samles planen, avsluttes økta først (og det samlede sendes), så
+      // kladden har med alt, og økta ikke skriver over redigeringen etterpå
+      // (funn 3).
+      if (aktivSamleokt()?.planId === id) {
+        await medFrist(avsluttInnsamling(), 4000);
+        msg("Samleøkta er avsluttet, så planen kan redigeres.");
+      }
       const p = planerNaa()[id];
       if (!p) return;
       kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })) };
@@ -387,6 +452,7 @@ function koblVindu(m) {
     const samle = hit("[data-pres-samle]");
     if (samle) return velgModusOgStart(samle.dataset.presSamle);
     if (hit("#pres-adm-ny-samle")) {
+      if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       const tittel = window.prompt("Navn på den nye kjøreplanen:", "");
       if (tittel && tittel.trim()) velgModusOgStart(null, tittel.trim());
       return;
@@ -394,7 +460,7 @@ function koblVindu(m) {
     const spill = hit("[data-pres-spill]");
     if (spill) {
       // Uten ?stopp starter planen på oversiktskortet (v5.36).
-      gaaTilVisning(`index.html?presentasjon=${encodeURIComponent(spill.dataset.presSpill)}`);
+      gaaTilVisning(`index.html?presentasjon=${encodeURIComponent(spill.dataset.presSpill)}`, { spiller: true });
       return;
     }
     const slett = hit("[data-pres-slett]");
@@ -402,9 +468,11 @@ function koblVindu(m) {
       const id = slett.dataset.presSlett;
       const p = planerNaa()[id];
       if (!p || !window.confirm(`Slette kjøreplanen «${p.tittel}»? Dette kan ikke angres.`)) return;
-      const planer = planerNaa();
-      delete planer[id];
-      if (!(await vakt(savePresentasjoner(planer)))) return;
+      if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+      // En samleøkt på planen avsluttes uten å sende noe: ellers ville neste
+      // lagring laget planen på nytt.
+      if (aktivSamleokt()?.planId === id) avsluttInnsamling({ lagre: false });
+      if (!(await vakt(deletePlan(id)))) return;
       renderListe();
       msg("Kjøreplanen er slettet.");
       return;

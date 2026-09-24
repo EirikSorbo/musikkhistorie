@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.42";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.43";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -228,6 +228,11 @@ function normaliserStopp(raa) {
   return ut;
 }
 
+// En hel stoppliste, vasket stopp for stopp.
+function normaliserStoppliste(raa) {
+  return (Array.isArray(raa) ? raa : []).map(normaliserStopp).filter(Boolean);
+}
+
 // Vasker hele planer-feltet fra Firestore. Dokumentet er offentlig lesbart og
 // skrives av editoren, men avspilleren skal aldri knekke på et håndredigert
 // eller halvgammelt dokument: ødelagte planer og stopp droppes stille.
@@ -236,12 +241,17 @@ export function normaliserPlaner(raa) {
   if (!raa || typeof raa !== "object") return ut;
   for (const [id, plan] of Object.entries(raa)) {
     if (!plan || typeof plan !== "object") continue;
-    const stopp = (Array.isArray(plan.stopp) ? plan.stopp : []).map(normaliserStopp).filter(Boolean);
+    const stopp = normaliserStoppliste(plan.stopp);
     ut[id] = {
       tittel: typeof plan.tittel === "string" && plan.tittel.trim() ? plan.tittel.trim() : "(uten tittel)",
       laget: typeof plan.laget === "string" ? plan.laget : "",
       stopp,
     };
+    // Samleøktenes merker (v5.43): { <øktId>: løpenummer }, se brukSamleOps.
+    if (plan.samle && typeof plan.samle === "object" && !Array.isArray(plan.samle)) {
+      const merker = Object.fromEntries(Object.entries(plan.samle).filter(([, n]) => Number.isInteger(n) && n > 0));
+      if (Object.keys(merker).length) ut[id].samle = merker;
+    }
   }
   return ut;
 }
@@ -460,6 +470,69 @@ export function medStoppSattInn(planer, planId, indeks, stopp) {
     ...planer,
     [planId]: { ...plan, stopp: [...plan.stopp.slice(0, i), stopp, ...plan.stopp.slice(i)] },
   };
+}
+
+// ----------------------------------------------------------------------------
+//  Samleøktas lagring (v5.43, audit v5.42 funn 1 og 3). Økta skriver ikke for
+//  hvert kort, og den skriver aldri en egen kopi av planen. Den husker bare
+//  sine HANDLINGER som planen ennå ikke viser:
+//    { t: "legg", vis }          nytt stopp sist
+//    { t: "erstatt", fra, til }  siste stopp med målet `fra` blir `til`
+//                                (erstatningsregelen: åpning, så valg)
+//    { t: "fjern", vis }         siste stopp med målet `vis` fjernes (Angre)
+//  Hver skriving er den FERSKE planen i state med handlingene lagt oppå, så
+//  redigeringer og tillegg gjort andre steder står. Skrivingen stempler
+//  planen med øktas merke (plan.samle[øktId] = løpenummer). Firestores lokale
+//  visning er alltid «serveren + det som er i kø», så merket i state sier
+//  nøyaktig hvilke av øktas skrivinger planen inneholder: også på en ny side
+//  (skrivinger som forsvant med forrige side) og etter at en avvist skriving
+//  er rullet tilbake. Det den ikke inneholder, sendes på nytt.
+// ----------------------------------------------------------------------------
+
+function sisteMed(liste, vis) {
+  for (let i = liste.length - 1; i >= 0; i--) if (liste[i].vis === vis) return i;
+  return -1;
+}
+
+// Handlingene lagt oppå en stoppliste. Ny liste; inndata røres ikke. En
+// handling som peker på et stopp som ikke finnes lenger (fjernet i editoren
+// imens), gjør det nærmeste: erstatt legger til, fjern gjør ingenting.
+export function brukSamleOps(stopp, ops) {
+  const ut = (stopp || []).map((s) => ({ ...s }));
+  for (const op of ops || []) {
+    if (op.t === "legg") ut.push({ vis: op.vis });
+    else if (op.t === "erstatt") {
+      const i = sisteMed(ut, op.fra);
+      if (i >= 0) ut[i] = { vis: op.til };
+      else ut.push({ vis: op.til });
+    } else if (op.t === "fjern") {
+      const i = sisteMed(ut, op.vis);
+      if (i >= 0) ut.splice(i, 1);
+    }
+  }
+  return ut;
+}
+
+// Vasker handlinger lest tilbake fra sessionStorage.
+export function normaliserSamleOps(raa) {
+  const ok = (v) => typeof v === "string" && v.length > 0;
+  return (Array.isArray(raa) ? raa : []).filter((op) => op && (
+    (op.t === "legg" && ok(op.vis)) || (op.t === "fjern" && ok(op.vis))
+    || (op.t === "erstatt" && ok(op.fra) && ok(op.til))
+  )).map((op) => (op.t === "erstatt" ? { t: op.t, fra: op.fra, til: op.til } : { t: op.t, vis: op.vis }));
+}
+
+// Hvor langt planen har kommet med øktas skrivinger (løpenummeret i merket),
+// 0 når planen ikke har økta i merket (eller ikke finnes).
+export function samleMerke(plan, øktId) {
+  const n = plan?.samle?.[øktId];
+  return Number.isInteger(n) && n > 0 ? n : 0;
+}
+
+// Skrivingene planen ikke viser, eldste først: ikke speilet ennå, avvist og
+// rullet tilbake, eller tapt med forrige side.
+export function samleVentende(sendt, merke) {
+  return (sendt || []).filter((b) => b.n > merke);
 }
 
 // ----------------------------------------------------------------------------

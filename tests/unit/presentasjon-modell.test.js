@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.42";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.42";
+import { metaRader } from "../../js/ui-helpers.js?v=5.43";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.43";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -582,7 +582,7 @@ test("kjøreplanene er flyttet fra lærerens Oversikt inn i vinduet", () => {
   assert.match(vis, /\$\{erLaerer \? `\n\s*<button type="button" class="btn ghost small" data-pres-samle/);
   assert.match(vis, /erLaerer = erLaererBruker\(user\);/);
   // Ærlig lagring: kladden beholdes når skrivingen feiler.
-  assert.match(vis, /if \(!\(await vakt\(savePresentasjoner\(planer\)\)\)\) return;   \/\/ kladden beholdes/);
+  assert.match(vis, /if \(!\(await vakt\(savePlan\(kladd\.id, plan\)\)\)\) return;   \/\/ kladden beholdes/);
   assert.doesNotMatch(vis, /guardTeacherAction\(/, "lærersidens guard svelget feilen");
   assert.doesNotMatch(vis, /from "\.\/teacher-state\.js/, "modulen skal virke utenfor lærersiden");
 });
