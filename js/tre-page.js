@@ -14,17 +14,17 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.44";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.44";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.44";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.44";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.44";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.44";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.44";
-import { initPlanMeny } from "./plan-meny.js?v=5.44";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.44";
-import { initVisning, visningTikk } from "./visning.js?v=5.44";
-import { provVisMaal } from "./explore-apne.js?v=5.44";
+import { initExplore } from "./explore.js?v=5.45";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.45";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.45";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.45";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.45";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.45";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.45";
+import { initPlanMeny } from "./plan-meny.js?v=5.45";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.45";
+import { initVisning, visningTikk } from "./visning.js?v=5.45";
+import { provVisMaal } from "./explore-apne.js?v=5.45";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -165,7 +165,8 @@ export function initTrePage({ render }) {
       // presPlanTikk: kjøreplanens oversiktskort viser artist- og kortnavn.
       onArtists: () => { explore.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); },
       onDecades: () => provVisMaal(),
-      onTech: () => { explore.renderInstrumenter?.(); presPlanTikk(); },
+      onTech: () => { explore.renderInstrumenter?.(); explore.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); },
+      onEdgeDescs: () => provVisMaal(),
       onPodcasts: () => explore.renderInstrumenter?.(),
     });
   });

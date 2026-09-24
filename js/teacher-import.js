@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.44";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=5.45";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -19,14 +19,16 @@ import {
   addPodcast,
   updatePodcast,
   setTeacherChecks,
-} from "./store.js?v=5.44";
-import { escapeHtml } from "./ui.js?v=5.44";
-import { $ } from "./shared.js?v=5.44";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.44";
-import { validateTree } from "./genre-validate.js?v=5.44";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.44";
-import { INSTRUMENTS } from "./limits.js?v=5.44";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.44";
+  savePlan,
+} from "./store.js?v=5.45";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=5.45";
+import { escapeHtml } from "./ui.js?v=5.45";
+import { $ } from "./shared.js?v=5.45";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=5.45";
+import { validateTree } from "./genre-validate.js?v=5.45";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=5.45";
+import { INSTRUMENTS } from "./limits.js?v=5.45";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc } from "./import-format.js?v=5.45";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -192,11 +194,26 @@ function buildExportData() {
   };
   if (varmekart) out.varmekart = varmekart;
   if (referanser) out.referanser = referanser;
+  // Kjøreplanene (content/presentasjoner, v5.25): egen toppnøkkel, som
+  // referansene. Dokumentet har verken body eller kilder og falt ut av
+  // pages-filteret, så planene var aldri med i en sikkerhetskopi, heller ikke
+  // i den før «Slett alt» (audit v5.42 funn 5). Samleøktenes merker (samle)
+  // er øktenes egen bokføring og tas ikke med.
+  const planer = eksportPlaner(state.content?.presentasjoner?.planer);
+  if (Object.keys(planer).length) {
+    out.presentasjoner = { planer, updatedAt: state.content.presentasjoner.updatedAt || null };
+  }
   // Sjangertreet (content/genealogy). Uten det er en backup ikke lenger
   // komplett: fra v4.49 er treets STRUKTUR data, ikke kode, og en gjenoppretting
   // uten det ville gitt en app helt uten sjangervokabular.
   if (state.content?.genealogy?.nodes?.length) out.genealogy = state.content.genealogy;
   return out;
+}
+
+// Planene slik de eksporteres og sammenlignes: tittel, laget og stopp.
+function eksportPlaner(raa) {
+  return Object.fromEntries(Object.entries(normaliserPlaner(raa))
+    .map(([id, p]) => [id, { tittel: p.tittel, laget: p.laget, stopp: p.stopp }]));
 }
 
 function dateStamp() {
@@ -313,6 +330,8 @@ function importParts(data) {
   if (pageCount) parts.push(`${pageCount} innholdsside(r)`);
   if (data.varmekart?.heat) parts.push(`varmekart (${Object.keys(data.varmekart.heat).length} sjangre)`);
   if (Array.isArray(data.referanser?.kilder) && data.referanser.kilder.length) parts.push(`${data.referanser.kilder.length} frittstående referanser`);
+  const planAntall = Object.keys(normaliserPlaner(data.presentasjoner?.planer)).length;
+  if (planAntall) parts.push(`${planAntall} kjøreplan(er) (legges til eller erstatter planen med samme id, du får se lista først)`);
   if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
   if (Array.isArray(data.genealogy?.nodes) && data.genealogy.nodes.length) {
     parts.push(`sjangertreet (${data.genealogy.nodes.length} sjangre)`);
@@ -480,7 +499,7 @@ export function flettSjekker(gjeldende, fraFil) {
   return ut;
 }
 
-async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks, genealogy }) {
+async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks, genealogy, presentasjoner }) {
   const done = [];
   const failed = [];
 
@@ -547,6 +566,33 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       await saveReferanser(referanser.kilder);
       done.push(`${referanser.kilder.length} frittstående referanse(r)`);
     } catch (e) { console.error("Referanse-import feilet:", e); failed.push("de frittstående referansene"); }
+  }
+
+  // Kjøreplanene FLETTES plan for plan (savePlan skriver én plan om gangen):
+  // planer som ikke står i fila, blir liggende. Læreren ser først hvilke
+  // som legges til og hvilke som erstattes, så en plan hun har slettet etter
+  // eksporten, ikke kommer tilbake uten at hun vet det.
+  if (presentasjoner && typeof presentasjoner.planer === "object") {
+    const fraFil = eksportPlaner(presentasjoner.planer);
+    const naa = eksportPlaner(state.content?.presentasjoner?.planer);
+    const nye = Object.entries(fraFil).filter(([id]) => !naa[id]);
+    const erstattes = Object.entries(fraFil)
+      .filter(([id, p]) => naa[id] && JSON.stringify(naa[id]) !== JSON.stringify(p));
+    if (nye.length || erstattes.length) {
+      const linjer = [
+        ...nye.map(([, p]) => `Ny: «${p.tittel}» (${p.stopp.length} stopp)`),
+        ...erstattes.map(([, p]) => `Erstatter: «${p.tittel}» (${p.stopp.length} stopp)`),
+      ];
+      const vis = linjer.slice(0, 15).join("\n") + (linjer.length > 15 ? `\n… og ${linjer.length - 15} til` : "");
+      if (window.confirm(`Kjøreplaner i fila:\n\n${vis}\n\nPlaner som ikke står i fila, blir liggende. Importere disse kjøreplanene?`)) {
+        try {
+          for (const [id, p] of [...nye, ...erstattes]) await savePlan(id, p);
+          done.push(`${nye.length + erstattes.length} kjøreplan(er)`);
+        } catch (e) { console.error("Kjøreplan-import feilet:", e); failed.push("kjøreplanene"); }
+      } else {
+        done.push("kjøreplanene hoppet over");
+      }
+    }
   }
 
   if (Array.isArray(podcasts) && podcasts.length) {

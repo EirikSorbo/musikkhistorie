@@ -5,21 +5,21 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=5.44";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.44";
-import { MODAL_HTML } from "./explore-modals.js?v=5.44";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=5.44";
-import { openVarmekart } from "./explore-varmekart.js?v=5.44";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.44";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=5.44";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList } from "./explore-tech.js?v=5.44";
-import { openDecadeList } from "./explore-decade.js?v=5.44";
-import { openReferanser } from "./explore-referanser.js?v=5.44";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=5.44";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=5.44";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=5.44";
-import { openSok, wireSok } from "./explore-search.js?v=5.44";
-import { erPresentasjon } from "./presentasjon.js?v=5.44";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=5.45";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.45";
+import { MODAL_HTML } from "./explore-modals.js?v=5.45";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=5.45";
+import { openVarmekart } from "./explore-varmekart.js?v=5.45";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.45";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=5.45";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=5.45";
+import { openDecadeList } from "./explore-decade.js?v=5.45";
+import { openReferanser } from "./explore-referanser.js?v=5.45";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=5.45";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=5.45";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=5.45";
+import { openSok, wireSok } from "./explore-search.js?v=5.45";
+import { erPresentasjon } from "./presentasjon.js?v=5.45";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -110,7 +110,7 @@ function wireModals() {
     slExtra.querySelector("#btn-undersjangere").addEventListener("click", openUndersjangre);
     const treBtn = slExtra.querySelector("#btn-slektstre");
     if (treBtn) treBtn.addEventListener("click", () => opts.onSlektstre());
-    slExtra.querySelector("#btn-varmekart").addEventListener("click", openVarmekart);
+    slExtra.querySelector("#btn-varmekart").addEventListener("click", () => openVarmekart());
     slExtra.querySelector("#btn-tidslinje").addEventListener("click", () => openTidslinje());
   }
 
@@ -149,7 +149,7 @@ function wireModals() {
     // i griden og gitt et hull.
     if (sbTre && opts.onSlektstre) sbTre.addEventListener("click", () => opts.onSlektstre());
     else sbTre?.remove();
-    paaKort("sb-varmekart", openVarmekart);
+    paaKort("sb-varmekart", () => openVarmekart());
     paaKort("sb-sjangerperioder", openSjangerperioder);
     paaKort("sb-himmel", openSjangerhimmel);
     paaKort("sb-referanser", openReferanser);
@@ -227,6 +227,7 @@ export function initExplore(options) {
     openTeknologi,
     openTechDetail,
     refreshTechDetail,
+    refreshTeknologi,
     buildLinkCtx,
     showArtistsForSjanger,
     onMainGenreClick,

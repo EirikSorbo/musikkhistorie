@@ -28,15 +28,15 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.44";
-import { getState } from "./explore-context.js?v=5.44";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.44";
-import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.44";
-import { escapeHtml } from "./util.js?v=5.44";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.44";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.44";
-import { aktivPlanId } from "./presentasjon.js?v=5.44";
-import { erLaererBruker } from "./plan-meny.js?v=5.44";
+import { savePlan, onAuthChange } from "./store.js?v=5.45";
+import { getState } from "./explore-context.js?v=5.45";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.45";
+import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.45";
+import { escapeHtml } from "./util.js?v=5.45";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.45";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.45";
+import { aktivPlanId } from "./presentasjon.js?v=5.45";
+import { erLaererBruker } from "./plan-meny.js?v=5.45";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -121,7 +121,7 @@ const nyØktId = () => "s" + Array.from({ length: 10 }, () => Math.floor(Math.ra
 // ----------------------------------------------------------------------------
 
 const tilLager = (ø) => ({
-  planId: ø.planId, tittel: ø.tittel, øktId: ø.øktId, n: ø.n, nye: ø.nye,
+  planId: ø.planId, tittel: ø.tittel, øktId: ø.øktId, n: ø.n, nye: ø.nye, egne: ø.egne || [],
   sendt: ø.sendt.map(({ n, ops }) => ({ n, ops })), planFantes: ø.planFantes, varslet: !!ø.varslet,
 });
 
@@ -150,6 +150,7 @@ function fraLager(j) {
     øktId: j.øktId,
     n: Math.max(Number.isInteger(j.n) ? j.n : 0, ...sendt.map((b) => b.n)),
     nye: normaliserSamleOps(j.nye),
+    egne: (Array.isArray(j.egne) ? j.egne : []).filter((v) => typeof v === "string" && v),
     sendt,
     planFantes: !!j.planFantes,
     varslet: !!j.varslet,
@@ -307,24 +308,26 @@ function leggTil(vis, kilde) {
     const op = økt.nye[økt.nye.length - 1];
     if (op?.t === "legg" && op.vis === sisteInnslag.vis) op.vis = vis;   // ikke sendt ennå
     else økt.nye.push({ t: "erstatt", fra: sisteInnslag.vis, til: vis });
+    const i = økt.egne.lastIndexOf(sisteInnslag.vis);
+    if (i >= 0) økt.egne[i] = vis;
   } else {
     økt.nye.push({ t: "legg", vis });
+    økt.egne.push(vis);
   }
   sisteInnslag = { vis, hva, kilde };
   endret(økt);
 }
 
-// Angre fjerner siste stopp. Er det et tillegg som ikke er sendt, glemmes det
-// bare (ingen skriving).
+// Angre fjerner det siste stoppet DENNE økta la til, aldri et stopp planen
+// hadde fra før (audit v5.42 funn 27: to Cmd+Z av vane i en ferdig plan
+// fjernet forberedte stopp). Er tillegget ikke sendt, glemmes det bare
+// (ingen skriving). Uten noe å angre er knappen av.
 function angreSiste() {
-  if (!økt) return;
+  if (!økt || !økt.egne.length) return;
+  const vis = økt.egne.pop();
   const op = økt.nye[økt.nye.length - 1];
-  if (op?.t === "legg") økt.nye.pop();
-  else {
-    const siste = sisteVis(økt);
-    if (!siste) return;
-    økt.nye.push({ t: "fjern", vis: siste });
-  }
+  if (op?.t === "legg" && op.vis === vis) økt.nye.pop();
+  else økt.nye.push({ t: "fjern", vis });
   sisteInnslag = null;   // det angrede skal ikke kunne «erstattes» av et valg
   endret(økt);
 }
@@ -376,6 +379,8 @@ function oppdaterBar() {
     : økt.nye.length ? ", lagres snart"
     : økt.sendt.some((b) => b.live) ? ", lagrer …" : "";
   status.textContent = `${plan.length} stopp${tillegg}`;
+  const angre = document.getElementById("samle-angre");
+  if (angre) angre.disabled = !økt.egne.length;
 }
 
 function visBar() {
@@ -445,7 +450,7 @@ function fjernPlussKnapper() {
 // ----------------------------------------------------------------------------
 
 function nyØkt(planId, modus, tittel) {
-  return { planId, modus, tittel, øktId: nyØktId(), n: 0, nye: [], sendt: [], planFantes: false };
+  return { planId, modus, tittel, øktId: nyØktId(), n: 0, nye: [], egne: [], sendt: [], planFantes: false };
 }
 
 // Kalles fra Visning-vinduet, som alltid sender en planId (for en NY plan
@@ -576,6 +581,7 @@ function erKopi(ø) {
   ø.n = 0;
   ø.sendt = [];
   ø.nye = ø.nye.slice(ø.nyeVedStart || 0);   // bare det DENNE fanen har gjort
+  ø.egne = ø.egne.slice(ø.egneVedStart || 0);
   ø.fraForrige = false;
   lagreLokalt(ø);
   oppdaterBar();
@@ -586,6 +592,7 @@ function sjekkEier(ø) {
   if (!kanal) return;
   ø.venterEier = true;
   ø.nyeVedStart = ø.nye.length;
+  ø.egneVedStart = ø.egne.length;
   kanal.postMessage({ spør: ø.øktId });
   setTimeout(() => {
     if (!ø.venterEier) return;

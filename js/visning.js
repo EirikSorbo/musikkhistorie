@@ -22,16 +22,16 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.44";
-import { escapeHtml } from "./util.js?v=5.44";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.44";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.44";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.44";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.44";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.44";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.44";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.44";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.44";
+import { getState } from "./explore-context.js?v=5.45";
+import { escapeHtml } from "./util.js?v=5.45";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.45";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.45";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.45";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.45";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.45";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.45";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.45";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.45";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -199,6 +199,7 @@ function renderListe() {
           ${erLaerer ? `
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Legg til stopp mens du blar, eller ta opp alt du åpner">Samle</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
+          <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
       </div>`).join("")
@@ -447,6 +448,19 @@ function koblVindu(m) {
       if (!p) return;
       kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })) };
       renderKladd();
+      return;
+    }
+    // Dupliser (v5.44, forslag 1 i audit v5.42): en kopi med alle stoppene,
+    // nivåene og unntakene, som ny plan. Planene gjenbrukes fra år til år.
+    const dupliser = hit("[data-pres-dupliser]");
+    if (dupliser) {
+      const p = planerNaa()[dupliser.dataset.presDupliser];
+      if (!p) return;
+      if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+      const tittel = `Kopi av ${p.tittel}`.slice(0, 80);
+      const kopi = { tittel, laget: new Date().toISOString(), stopp: p.stopp.map((x) => ({ ...x })) };
+      if (!(await vakt(savePlan(nyPlanId(), kopi)))) return;
+      msg(`Kjøreplanen er kopiert som «${tittel}».`);
       return;
     }
     const samle = hit("[data-pres-samle]");

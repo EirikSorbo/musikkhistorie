@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.44";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.44";
+import { metaRader } from "../../js/ui-helpers.js?v=5.45";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.45";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -447,6 +447,8 @@ test("samleTast: + legger til, Ctrl/Cmd+Z angrer, aldri i skrivefelt", () => {
   assert.equal(samleTast(tast("z", { ctrlKey: true, shiftKey: true })), null, "Ctrl+Shift+Z er «gjør om»");
   assert.equal(samleTast(tast("z")), null);
   assert.equal(samleTast(tast("+", { repeat: true })), null);
+  assert.equal(samleTast(tast("z", { ctrlKey: true, repeat: true })), null, "en holdt Cmd/Ctrl+Z angrer bare én gang (audit v5.42 funn 27)");
+  assert.equal(samleTast(tast("Z", { metaKey: true, repeat: true })), null);
   assert.equal(samleTast(tast("+"), { iSkrivefelt: true }), null);
   assert.equal(samleTast(tast("z", { ctrlKey: true }), { iSkrivefelt: true }), null, "feltets egen angre");
 });

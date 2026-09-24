@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.44";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.45";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -574,10 +574,12 @@ export function presTast(e, { plan = false, iSkrivefelt = false } = {}) {
 // Samleøkta (planleggingsmodus): + legger kortet øverst til, Ctrl/Cmd+Z
 // angrer siste stopp. Utenfor skrivefelt: der er begge tekstens egne.
 export function samleTast(e, { iSkrivefelt = false } = {}) {
-  if (!e || e.altKey || iSkrivefelt) return null;
+  // Ingen gjentakelse, heller ikke for Angre: en holdt Cmd+Z fjernet 10–30
+  // stopp på et halvt sekund (audit v5.42 funn 27).
+  if (!e || e.altKey || iSkrivefelt || e.repeat) return null;
   const k = String(e.key || "");
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === "z" || k === "Z")) return "angre";
-  if (e.ctrlKey || e.metaKey || e.repeat) return null;
+  if (e.ctrlKey || e.metaKey) return null;
   if (k === "+") return "leggTil";
   return null;
 }

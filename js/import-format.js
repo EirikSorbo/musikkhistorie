@@ -128,7 +128,7 @@ export function validateArtistsForImport(list) {
 // ---------------------------------------------------------------------------
 
 // Innholdsdeler en importfil kan bære utover artistene.
-export const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts", "referanser", "genealogy"];
+export const CONTENT_KEYS = ["decades", "genreDescriptions", "edgeDescriptions", "tech", "pages", "varmekart", "podcasts", "referanser", "genealogy", "presentasjoner"];
 
 // Et tiårsdokument er samfunn, teknologi og kilder — ikke noe mer. Feltene
 // plukkes ut ETT FOR ETT, både på vei ut i en eksport og på vei inn fra en fil:
@@ -190,5 +190,7 @@ export function normalizeImportFile(raw) {
     podcasts: raw.podcasts || [],
     teacherChecks: raw.teacherChecks || null,
     genealogy: raw.genealogy || null,
+    // Kjøreplanene (v5.44, audit v5.42 funn 5).
+    presentasjoner: raw.presentasjoner || null,
   };
 }

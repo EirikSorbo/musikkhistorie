@@ -4,17 +4,17 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=5.44";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=5.44";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=5.44";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.44";
-import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=5.44";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=5.44";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.44";
-import { debounce } from "./util.js?v=5.44";
-import { $ } from "./shared.js?v=5.44";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.44";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.44";
+import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=5.45";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=5.45";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=5.45";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.45";
+import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=5.45";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn } from "./ui-helpers.js?v=5.45";
+import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=5.45";
+import { debounce } from "./util.js?v=5.45";
+import { $ } from "./shared.js?v=5.45";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.45";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.45";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore
@@ -50,6 +50,12 @@ export function openDetail(artist) {
     guardTeacherAction(updateArtistFields(artist.id, { teacherChecked: next }));
     setCheckBtn(checkBtn, next);
   };
+  // «Kopier lenke», kjøreplan-menyen, plussknappen og opptaket (v5.22–v5.27)
+  // krever et mål på kortet, som på forsiden (audit v5.42 funn 17). Bare for
+  // artister studentene ser: et ventende forslag skal ikke bli en lenke eller
+  // et stopp. Fjernes ellers, så kortet ikke arver forrige artists mål.
+  if (isVisible(artist)) modal.dataset.vis = `artist:${artist.id}`;
+  else delete modal.dataset.vis;
   modalOpen(modal);
 }
 

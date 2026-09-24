@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=5.44";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.44";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=5.44";
-import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=5.44";
+import { escapeHtml, modalOpen } from "./ui.js?v=5.45";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.45";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=5.45";
+import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=5.45";
 // Aksen, radene og lærerens nivåvelger er delt med sjangerhistoriene (v5.16).
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.44";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.45";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -146,8 +146,13 @@ export function renderVarmekartBody() {
 export function openVarmekart(meta) {
   const modal = document.getElementById("modal-varmekart");
   if (!modal) return;
-  vkOpenMeta = meta || null;   // frisk åpning uten meta: første gruppe åpen
-  modal.dataset.vis = meta ? `varmekart:${meta}` : "varmekart";
+  // Bare en kjent metasjanger (lest ved kall: META_GENRE_ORDER er en live
+  // binding). Kalt direkte som klikklytter fikk funksjonen klikkhendelsen,
+  // og målet ble «varmekart:[object PointerEvent]» med alle grupper lukket
+  // (audit v5.42 funn 15).
+  const m = typeof meta === "string" && META_GENRE_ORDER.includes(meta) ? meta : null;
+  vkOpenMeta = m;   // frisk åpning uten meta: første gruppe åpen
+  modal.dataset.vis = m ? `varmekart:${m}` : "varmekart";
   renderVarmekartBody();
   modalOpen(modal);
 }

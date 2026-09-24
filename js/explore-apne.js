@@ -11,21 +11,21 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.44";
-import { showSubsjangerInfo } from "./ui.js?v=5.44";
-import { showEdgeInfo } from "./genealogy.js?v=5.44";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.44";
-import { openDecade } from "./explore-decade.js?v=5.44";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.44";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.44";
-import { openVarmekart } from "./explore-varmekart.js?v=5.44";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.44";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.44";
-import { openReferanser } from "./explore-referanser.js?v=5.44";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.44";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.44";
-import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.44";
-import { apneYtSpiller } from "./yt-spiller.js?v=5.44";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.45";
+import { showSubsjangerInfo } from "./ui.js?v=5.45";
+import { showEdgeInfo } from "./genealogy.js?v=5.45";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.45";
+import { openDecade } from "./explore-decade.js?v=5.45";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.45";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.45";
+import { openVarmekart } from "./explore-varmekart.js?v=5.45";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.45";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.45";
+import { openReferanser } from "./explore-referanser.js?v=5.45";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.45";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.45";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.45";
+import { apneYtSpiller } from "./yt-spiller.js?v=5.45";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -101,14 +101,24 @@ function klarFor(apne, s) {
       // techLoaded (v5.35) skiller «ikke landet ennå» fra «kortet er slettet».
       if ((s.techItems || []).some((x) => x.id === apne.id)) return "klar";
       return s.techLoaded ? "finnes-ikke" : "vent";
-    case "sjanger": case "kobling": case "slektstre": case "himmel": case "tidslinje":
+    case "sjanger": case "slektstre":
       return isGenreModelReady() ? "klar" : "vent";
+    // Koblingskortet viser koblingsteksten (egen samling) og sjangrene i
+    // begge ender; tidslinja og himmelen tegnes av artistene. Uten å vente på
+    // dem åpnet en delt lenke et tomt kort som ble stående (audit v5.42 funn 18).
+    case "kobling":
+      return isGenreModelReady() && s.edgeDescsLoaded && s.genreDescsLoaded ? "klar" : "vent";
+    case "himmel": case "tidslinje":
+      return isGenreModelReady() && s.artistsLoaded ? "klar" : "vent";
     case "undersjanger": case "historie":
       // Teksten bor i genreDescriptions og familien i treet: vent på begge,
       // så kortet ikke åpnes med «mangler»-tekst som straks byttes ut.
       return s.genreDescsLoaded && isGenreModelReady() ? "klar" : "vent";
     case "tiår":
-      return Object.keys(s.decadeDescs || {}).length ? "klar" : "vent";
+      // Teknologifanen tegner innovasjonskortene i tiåret: vent på dem også.
+      return Object.keys(s.decadeDescs || {}).length && (apne.modus !== "tech" || s.techLoaded) ? "klar" : "vent";
+    case "teknologi":
+      return s.techLoaded ? "klar" : "vent";
     case "side": case "sjangerperioder": case "referanser": case "store-bildet":
       return s.contentLoaded ? "klar" : "vent";
     case "varmekart":
@@ -117,7 +127,7 @@ function klarFor(apne, s) {
     case "instrument":
       return s.contentLoaded && s.artistsLoaded ? "klar" : "vent";
     default:
-      return "klar";   // podkaster, teknologi: modalene håndterer tomt selv
+      return "klar";   // podkaster: modalen tegnes på nytt når episodene lander
   }
 }
 

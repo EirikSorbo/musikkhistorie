@@ -4,8 +4,8 @@
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=5.44";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=5.44";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=5.45";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=5.45";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
@@ -80,4 +80,19 @@ export function renderTeknologiList(category) {
   if (!el) return;
   const s = getState();
   renderTechList(el, s.techItems, category || "", buildLinkCtx());
+  // Valgt kategori hører med i lenka og i et stopp (audit v5.42 funn 16);
+  // apneMaal forstår «teknologi:<kategori>».
+  const modal = document.getElementById("modal-teknologi");
+  const vis = category ? `teknologi:${category}` : "teknologi";
+  if (modal && modal.dataset.vis !== vis) modal.dataset.vis = vis;
+}
+
+// En åpen teknologiliste tegnes på nytt når kortene lander eller endres: den
+// ble før bare tegnet ved åpning og fanebytte, og en tidlig åpning (også en
+// ?vis=teknologi-lenke) ble stående med «ingen teknologier» (funn 18).
+export function refreshTeknologi() {
+  const modal = document.getElementById("modal-teknologi");
+  if (!modal?.classList.contains("open")) return;
+  const aktiv = modal.querySelector(".tech-tab.active");
+  renderTeknologiList(aktiv?.dataset.techCat || "");
 }

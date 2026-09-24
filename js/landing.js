@@ -1,21 +1,21 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.44";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.44";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.44";
-import { onGenreModelChanged } from "./genre-model.js?v=5.44";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.44";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.44";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.44";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.44";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.44";
-import { initExplore } from "./explore.js?v=5.44";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.44";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.44";
-import { initPlanMeny } from "./plan-meny.js?v=5.44";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.44";
-import { initVisning, visningTikk } from "./visning.js?v=5.44";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.44";
-import { currentEntityValues } from "./entity-values.js?v=5.44";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.44";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.45";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.45";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.45";
+import { onGenreModelChanged } from "./genre-model.js?v=5.45";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.45";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.45";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.45";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.45";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.45";
+import { initExplore } from "./explore.js?v=5.45";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.45";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.45";
+import { initPlanMeny } from "./plan-meny.js?v=5.45";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.45";
+import { initVisning, visningTikk } from "./visning.js?v=5.45";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.45";
+import { currentEntityValues } from "./entity-values.js?v=5.45";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.45";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -703,7 +703,12 @@ function init() {
     // når tech-lista kommer/endres, ellers mangler lenkene ved førstegangslasting.
     // renderInstrumenter: en åpen Instrumenter-fane bygges av tech-kortene og
     // skal følge med (no-op når seksjonen er lukket).
-    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); presPlanTikk(); },
+    // refreshTeknologi + provVisMaal (audit v5.42 funn 18): en åpen
+    // teknologiliste og en ventende ?vis=tech/teknologi/tiår:…:tech-lenke skal
+    // følge tech-snapshotet, ikke vente på at noe annet lander.
+    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); explore?.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); },
+    // En ventende ?vis=kobling-lenke venter på koblingstekstene.
+    onEdgeDescs: () => provVisMaal(),
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
     // tegnes på nytt her også.

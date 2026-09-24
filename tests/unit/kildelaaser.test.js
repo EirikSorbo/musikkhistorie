@@ -31,7 +31,11 @@ test("funn 8: en åpen sjangerhistorie tegnes på nytt av begge snapshotene", ()
     "refreshHistorie må importeres (uten importen: ReferenceError i hvert snapshot)");
   assert.equal(antall(ctx, /\bmodal-historier"\)[^;\n]*\) refreshHistorie\(\);/g), 2,
     "både contentChanged og genreDescsChanged skal kalle den bak isOpen-sjekken");
-  assert.match(les("js/explore-innhold.js"), /export function refreshHistorie\(\) \{\n\s*if \(currentStoryGenre != null\) renderHistorie\(currentStoryGenre\);/);
+  const inn = les("js/explore-innhold.js");
+  assert.match(inn, /export function refreshHistorie\(\) \{\n\s*if \(currentStoryGenre != null\) renderHistorie\(currentStoryGenre, \{ fraSnapshot: true \}\);/);
+  // Audit v5.42 funn 14: bare ved endring, og aldri til toppen ved omtegning.
+  assert.match(inn, /if \(fraSnapshot && sig === historieSignatur\) return;/);
+  assert.match(inn, /if \(box && !fraSnapshot\) box\.scrollTop = 0;/);
 });
 
 test("funn 11: kodeoppslaget har in-flight-sperre og ignorerer auto-repeat", () => {
