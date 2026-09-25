@@ -22,22 +22,22 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.56";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.56";
-import { onAuthChange } from "./store.js?v=5.56";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.56";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.56";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, SIDER_I_HEFTET, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.56";
-import { lesUtvalg, lagreUtvalg, leggTil, fjern, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.56";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.56";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.56";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.56";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.56";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.56";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.56";
-import { DECADES, INSTRUMENT_TITLE } from "./limits.js?v=5.56";
-import { askChoice } from "./ui-modal.js?v=5.56";
-import { onGenreModelChanged } from "./genre-model.js?v=5.56";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.57";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.57";
+import { onAuthChange } from "./store.js?v=5.57";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.57";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.57";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, SIDER_I_HEFTET, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.57";
+import { lesUtvalg, lagreUtvalg, leggTil, fjern, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.57";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.57";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.57";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.57";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.57";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.57";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.57";
+import { DECADES, INSTRUMENT_TITLE } from "./limits.js?v=5.57";
+import { askChoice } from "./ui-modal.js?v=5.57";
+import { onGenreModelChanged } from "./genre-model.js?v=5.57";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -712,6 +712,22 @@ function koble() {
 }
 
 function init() {
+  // MIDLERTIDIG (js/feature-flags.js, utskrift): skjult for studentrollen
+  // inntil videre. Siden abonnerer da ikke på noe (null lesinger), og sier
+  // hvorfor den er tom i stedet for å vise et halvt panel.
+  if (SKJUL_I_STUDENTVISNING.utskrift && document.body.classList.contains("role-student")) {
+    const panel = $("utskrift-panel");
+    if (panel) panel.hidden = true;
+    const hefte = $("hefte");
+    if (hefte) {
+      hefte.innerHTML = `<div class="hefte-tom">
+        <h2>Utskriften er ikke åpnet ennå</h2>
+        <p>Læreren slår på utskriften når innholdet er klart. Alt annet i appen virker som før.</p>
+        <p><a class="btn ghost small" href="index.html">Til startsiden</a></p>
+      </div>`;
+    }
+    return;
+  }
   initUtskriftValg();
   koble();
   document.addEventListener(UTSKRIFT_HENDELSE, planleggTegning);

@@ -18,7 +18,7 @@
 //  js/utskrift-modell.js, som er DOM-fri og testet.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg } from "./utskrift-modell.js?v=5.56";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg } from "./utskrift-modell.js?v=5.57";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";

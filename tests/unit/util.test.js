@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/util.js?v=5.56";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/util.js?v=5.57";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -158,7 +158,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js?v=5.56");
+    = await import("../../js/util.js?v=5.57");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);
@@ -175,7 +175,7 @@ test("genererReturKode: lengde, alfabet og normalisering", async () => {
 // husregelen. Meldingen for treg innsending er nå ÉN delt konstant — lås at
 // den er tankestrek-fri og faktisk brukes alle tre stedene.
 test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
-  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.56");
+  const { TREG_SENDING_MELDING } = await import("../../js/util.js?v=5.57");
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
   assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
@@ -193,7 +193,7 @@ test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
 // opp returer (tre serverlesinger per last) var utestet. Stubber localStorage
 // — også den kastende varianten (styrte skoleprofiler).
 test("merkHarSendtInn/harSendtInn: normalvei og kastende localStorage", async () => {
-  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.56");
+  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js?v=5.57");
   const lager = new Map();
   globalThis.localStorage = {
     setItem: (k, v) => lager.set(k, String(v)),

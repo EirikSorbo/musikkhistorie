@@ -3128,6 +3128,9 @@ body.samler-plukk .kort-pluss:hover { background: var(--accent-2); color: #fff; 
    kortene i utvalget. «Ta med i utskriften»-knappen står i kortenes
    tittellinje, foran samleøktas plussknapp og lenkeknappen. */
 body.role-student .nav .nav-icon.nav-utskrift { display: inline-flex; }
+/* MIDLERTIDIG (js/feature-flags.js, utskrift): hele funksjonen er skjult for
+   studentrollen inntil videre. Læreren (ingen role-student) ser alt. */
+html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-med, #btn-utskrift-liste, [data-pres-utskrift]) { display: none !important; }
 .nav-icon.nav-utskrift { position: relative; }
 .nav-merke {
   position: absolute; top: 1px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px;

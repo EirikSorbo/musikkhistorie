@@ -25,16 +25,16 @@
 //  de skjulte hubsidene). Læreren får alt.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.56";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist } from "./limits.js?v=5.56";
-import { resolveSpan } from "./timeline-lanes.js?v=5.56";
-import { GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.56";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.56";
-import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.56";
-import { heatRow } from "./heat-strip.js?v=5.56";
-import { ytMaal } from "./presentasjon-modell.js?v=5.56";
-import { normaliserPunkter } from "./punkter.js?v=5.56";
-import { safeUrl } from "./util.js?v=5.56";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.57";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist } from "./limits.js?v=5.57";
+import { resolveSpan } from "./timeline-lanes.js?v=5.57";
+import { GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.57";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.57";
+import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.57";
+import { heatRow } from "./heat-strip.js?v=5.57";
+import { ytMaal } from "./presentasjon-modell.js?v=5.57";
+import { normaliserPunkter } from "./punkter.js?v=5.57";
+import { safeUrl } from "./util.js?v=5.57";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten

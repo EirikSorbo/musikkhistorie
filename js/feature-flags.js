@@ -22,6 +22,14 @@
 //                          huben, men bare til de tre visualiseringene. Hvilke
 //                          kort de ser inne i den, styres av SKJUL_I_HUBEN.
 //    horEtter              «Hør etter»-lista på tre-sjangrene (js/genealogy.js)
+//    utskrift              hele utskriftsfunksjonen for STUDENTROLLEN
+//                          (body.role-student): skriverikonet i toppmenyen,
+//                          «Ta med»-knappen i kortene, «Til utskrift» i Finn
+//                          artister og Visning-vinduet, og selve utskrift.html
+//                          (css/styles.css via html.skjul-utskrift, og
+//                          js/utskrift.js). Lærerrollen ser alt. Brukervalg
+//                          2026-09-25: skjult inntil videre, rett etter at
+//                          funksjonen kom i v5.56.
 // ============================================================================
 
 // Oppsummeringspunktene (v5.50, js/punkter.js) vises bare i presentasjonen,
@@ -41,7 +49,13 @@ export const SKJUL_I_STUDENTVISNING = {
   metasjangerhistorier: true,
   storeBildet:          false,
   horEtter:             true,
+  utskrift:             true,
 };
+// Utskrift-flagget virker via en klasse på <html> (css/styles.css), som
+// punktene over: da trenger ingen av de fire sidene å vite om det.
+if (typeof document !== "undefined") {
+  document.documentElement.classList.toggle("skjul-utskrift", SKJUL_I_STUDENTVISNING.utskrift);
+}
 
 // Kortene INNE i «Det store bildet» (js/explore.js). Huben ble åpnet for
 // studentene 2026-09-10, men brukeren ville bare slippe til de tre
