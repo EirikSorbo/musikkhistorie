@@ -9,8 +9,8 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE,
-} from "../../js/utskrift-modell.js?v=5.61";
-import { isVisible } from "../../js/limits.js?v=5.61";
+} from "../../js/utskrift-modell.js?v=5.62";
+import { isVisible } from "../../js/limits.js?v=5.62";
 
 const NAA = 2026;
 
@@ -19,7 +19,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.61rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.62rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -185,13 +185,13 @@ test("sjangerkortet: epoke, varmestripe, slektskap og kilder fra data", () => {
   const eb = m.familier[0].sjangre[0];
   assert.equal(eb.era, "ca. 1945–1969. fra midten av 1940-tallet");
   assert.deepEqual(eb.relasjoner.fra, ["Blues"]);
-  assert.deepEqual(eb.lytt, [], "«Hør etter» er skjult for studenter");
+  assert.equal("lytt" in eb, false, "«Hør etter» er ikke med i heftet (brukervalg 2026-09-25)");
   assert.deepEqual(blues.punkter, [], "punktene er skjult utenfor presentasjonen");
 });
 
-test("læreren får «Hør etter», punktene og historien; studenten får «skjult» i mangler", () => {
+test("læreren får punktene og historien, men heller ikke «Hør etter»; studenten får «skjult» i mangler", () => {
   const l = settSammen(["sjanger:Electric blues", "sjanger:Blues", "historie:Blues", "side:rotter"], DATA, LAERER);
-  assert.deepEqual(l.familier[0].sjangre[0].lytt, ["Muddy Waters: Rollin' Stone"]);
+  assert.equal("lytt" in l.familier[0].sjangre[0], false);
   assert.deepEqual(l.familier[0].hodeKort.punkter, ["Blåtoner", "AAB-strofe", "Tolv takter"]);
   assert.equal(l.familier[0].historie.body, "Historien om bluesen.", "løype-linja strippes som i appen");
   assert.equal(l.sider.length, 1);

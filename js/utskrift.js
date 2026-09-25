@@ -22,23 +22,23 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.61";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.61";
-import { onAuthChange } from "./store.js?v=5.61";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.61";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.61";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.61";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.61";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.61";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.61";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.61";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.61";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.61";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.61";
-import { artistStripHtml } from "./artist-strip.js?v=5.61";
-import { DECADES, isVisible } from "./limits.js?v=5.61";
-import { askChoice } from "./ui-modal.js?v=5.61";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.61";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.62";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.62";
+import { onAuthChange } from "./store.js?v=5.62";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.62";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.62";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.62";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.62";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.62";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.62";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.62";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.62";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.62";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.62";
+import { artistStripHtml } from "./artist-strip.js?v=5.62";
+import { DECADES, isVisible } from "./limits.js?v=5.62";
+import { askChoice } from "./ui-modal.js?v=5.62";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.62";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -356,10 +356,7 @@ function sjangerKroppHtml(k, d, kompakt, medNr) {
   const beskrivelse = d["sjanger.beskrivelse"]
     ? (k.beskrivelse ? rt(k.beskrivelse) : mangler("Beskrivelsen er ikke skrevet ennå."))
     : "";
-  const hor = k.lytt.length
-    ? `<div class="h-hor-etter"><strong>Hør etter</strong><ul>${k.lytt.map((x) => `<li>${h(x)}</li>`).join("")}</ul></div>`
-    : "";
-  return `${d["sjanger.punkter"] ? punkterHtml(k.punkter) : ""}${beskrivelse}${hor}
+  return `${d["sjanger.punkter"] ? punkterHtml(k.punkter) : ""}${beskrivelse}
     ${k.artister.map((a) => artistKortHtml(a, d, kompakt, medNr)).join("")}`;
 }
 
@@ -419,25 +416,16 @@ function tidslinjeHtml(t) {
   </div>`;
 }
 
+// Forsiden (brukervalg 2026-09-25): bare tittelblokka. Merket øverst og
+// «Slik er heftet bygd opp» er tatt bort.
 function forsideHtml(t, farge) {
-  const tips = [];
-  tips.push(modell.form.rekkefolge === "valgt"
-    ? "Kortene står i den rekkefølgen de ble valgt, slik kjøreplanen er lagt opp."
-    : "Sjangrene står i den rekkefølgen de oppsto. Artistene står under sjangeren sin, i kronologisk rekkefølge etter når innflytelsen begynte.");
-  if (modell.bakteppe.length || modell.innovasjoner.length || modell.instrumenter.length) {
-    tips.push("Tiårene, innovasjonene og instrumentene står som et eget bakteppe etter sjangrene.");
-  }
-  if (modell.lytteliste.length) tips.push("Lytteeksemplene har et nummer i teksten. Lenkene står samlet i lyttelista bakerst.");
-  tips.push("Tekstene er hentet fra appen den dagen heftet ble laget, og kan være oppdatert siden.");
   return `<section class="h-forside">
-    <div class="h-merke"><img src="img/header-icon.png" alt=""><span>historieappen.no · Populærmusikkhistorie</span></div>
     <div class="h-tittelblokk" style="--farge:${h(farge)}">
       <p class="h-overlinje">Pensumutdrag · MUR114</p>
       <h1 class="h-tittel">${h(t)}</h1>
       <p class="h-under">Populærmusikkhistorie</p>
       <p class="h-meta">Laget <strong>${h(datoTekst())}</strong><br>Utvalg: <strong>${h(tellingerTekst(modell.tellinger))}</strong></p>
     </div>
-    <div class="h-lesetips"><h3>Slik er heftet bygd opp</h3><ol>${tips.map((x) => `<li>${h(x)}</li>`).join("")}</ol></div>
   </section>`;
 }
 
@@ -524,8 +512,9 @@ function lyttelisteHtml() {
   </section>`;
 }
 
+// Kolofonen (brukervalg 2026-09-25): bare denne ene setningen.
 function kolofonHtml() {
-  return `<footer class="h-kolofon">Laget med utskriftsfunksjonen i historieappen.no, ${h(datoTekst())}. Tekstene er lærerens pensumtekster slik de sto i appen den dagen; kildene til hvert kort står i appen. Bildene er fra Wikimedia Commons og Wikipedia, med kreditering under hvert bilde.${erLaerer ? "" : " Bare innhold som er synlig for studenter, er tatt med."}</footer>`;
+  return `<footer class="h-kolofon">Laget med utskriftsfunksjonen i historieappen.no, ${h(datoTekst())}.</footer>`;
 }
 
 // Løpende topptekst og sidetall via @page-marginbokser. Virker i Firefox og

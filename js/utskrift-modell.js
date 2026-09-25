@@ -21,8 +21,9 @@
 //  beholdes (form.rekkefolge = "valgt").
 //
 //  Feature-flaggene gjelder her som i appen: det studentene ikke ser på
-//  skjermen, kommer heller ikke på papir (historier, punkter, «Hør etter»,
-//  de skjulte hubsidene). Læreren får alt.
+//  skjermen, kommer heller ikke på papir (historier, punkter, de skjulte
+//  hubsidene). Læreren får alt, unntatt «Hør etter», som ikke er med for
+//  noen (innholdet er ikke ferdig).
 //
 //  UTVIDELSEN (v5.58, brukerbestilling 2026-09-25): utvalget er det studenten
 //  har VALGT pluss det valget DRAR MED SEG, minus det studenten har huket
@@ -42,16 +43,16 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.61";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.61";
-import { resolveSpan } from "./timeline-lanes.js?v=5.61";
-import { GENEALOGY, GENEALOGY_META_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.61";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.61";
-import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.61";
-import { heatRow } from "./heat-strip.js?v=5.61";
-import { ytMaal } from "./presentasjon-modell.js?v=5.61";
-import { normaliserPunkter } from "./punkter.js?v=5.61";
-import { safeUrl } from "./util.js?v=5.61";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.62";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.62";
+import { resolveSpan } from "./timeline-lanes.js?v=5.62";
+import { GENEALOGY, GENEALOGY_META_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.62";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.62";
+import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.62";
+import { heatRow } from "./heat-strip.js?v=5.62";
+import { ytMaal } from "./presentasjon-modell.js?v=5.62";
+import { normaliserPunkter } from "./punkter.js?v=5.62";
+import { safeUrl } from "./util.js?v=5.62";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten
@@ -412,7 +413,6 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   const heat = content?.varmekart?.heat || null;
   const punkterOk = !punkterSkjult;
   const historierOk = erLaerer || !skjul.metasjangerhistorier;
-  const horEtterOk = erLaerer || !skjul.horEtter;
   const sideOk = (id) => erLaerer || !skjulHub[HUB_KORT_FOR_SIDE[id]];
   const valgtRekke = f.rekkefolge === "valgt";
   const byId = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
@@ -469,7 +469,8 @@ export function settSammen(utvalg, data = {}, valg = {}) {
       },
       punkter: punkterOk ? r.punkter : [],
       beskrivelse: r.description || "",
-      lytt: horEtterOk ? r.lytt : [],
+      // «Hør etter»-lista på sjangerkortet er BEVISST ikke med i heftet
+      // (brukervalg 2026-09-25): innholdet er ikke ferdig.
       artister: [],
       sort: [fra ?? radAar(n), GENEALOGY.indexOf(n)],
     };

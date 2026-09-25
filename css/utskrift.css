@@ -93,17 +93,11 @@
 
 /* Forside */
 .h-forside { min-height: 240mm; display: flex; flex-direction: column; }
-.h-merke { display: flex; align-items: center; gap: 3mm; font-size: 8.5pt; color: var(--h-demp); }
-.h-merke img { width: 9mm; height: 9mm; border-radius: 2mm; }
-.h-tittelblokk { margin-top: 60mm; border-left: 1.6mm solid var(--farge, #16a34a); padding-left: 7mm; }
+.h-tittelblokk { margin-top: 70mm; border-left: 1.6mm solid var(--farge, #16a34a); padding-left: 7mm; }
 .h-tittel { font-size: 30pt; line-height: 1.08; margin-bottom: 4mm; }
 .h-under { font-size: 14pt; color: var(--h-demp); font-family: "Space Grotesk", "Inter", sans-serif; }
 .h-meta { margin-top: 12mm; font-size: 9.5pt; color: var(--h-demp); }
 .h-meta strong { color: var(--h-tekst); font-weight: 600; }
-.h-lesetips { margin-top: auto; background: var(--h-flate); border-radius: 3mm; padding: 5mm 6mm; font-size: 9.5pt; }
-.h-lesetips h3 { font-size: 10pt; margin-bottom: 2mm; }
-.h-lesetips ol { margin: 0; padding-left: 5mm; }
-.h-lesetips li { margin-bottom: 1.2mm; }
 
 /* Innhold og tidslinje */
 .h-innhold h1 { font-size: 20pt; margin-bottom: 5mm; }
@@ -141,8 +135,6 @@
 .h-stripe-akse span:nth-child(even) { visibility: hidden; }
 .h-rel { font-size: 9.5pt; margin-bottom: 1mm; }
 .h-rel strong { font-weight: 600; color: var(--h-demp); }
-.h-hor-etter { margin: 3mm 0; font-size: 9.5pt; }
-.h-hor-etter ul { margin: 1mm 0 0; padding-left: 4.5mm; }
 .h-historie { margin: 4mm 0 8mm; }
 .h-historie h2 { font-size: 15pt; margin-bottom: 3mm; }
 .h-lose { margin-top: 8mm; }
@@ -213,7 +205,7 @@
   .h-forside, .h-innhold { break-after: page; page-break-after: always; min-height: 0; }
   .h-forside { min-height: 240mm; }
   .h-familie, .h-nyside { break-before: page; page-break-before: always; }
-  .h-kort, .h-familie-hode, .h-seksjon-hode, .h-sjanger-hode, .h-ordliste, .h-tidslinje, .h-lesetips { break-inside: avoid; page-break-inside: avoid; }
+  .h-kort, .h-familie-hode, .h-seksjon-hode, .h-sjanger-hode, .h-ordliste, .h-tidslinje { break-inside: avoid; page-break-inside: avoid; }
   .hefte h1, .hefte h2, .hefte h3 { break-after: avoid; page-break-after: avoid; }
   .h-bilde img { max-height: 44mm; }
   .h-kolofon { break-inside: avoid; }

@@ -2,12 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/punkter.js?v=5.61";
-import { normalizeArtist, buildArtistDoc } from "../../js/artist-normalize.js?v=5.61";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=5.61";
-import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/artist-schema.js?v=5.61";
-import { resolveDesc } from "../../js/genre-descriptions.js?v=5.61";
-import { validateArtistsForImport } from "../../js/import-format.js?v=5.61";
+import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/punkter.js?v=5.62";
+import { normalizeArtist, buildArtistDoc } from "../../js/artist-normalize.js?v=5.62";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=5.62";
+import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/artist-schema.js?v=5.62";
+import { resolveDesc } from "../../js/genre-descriptions.js?v=5.62";
+import { validateArtistsForImport } from "../../js/import-format.js?v=5.62";
 
 // Oppsummeringspunktene (v5.50): 3–5 punkter per beskrivelse på artist-,
 // sjanger- (main) og teknologikortet. Bare læreren skriver dem.
@@ -137,7 +137,7 @@ test("undersjanger- og koblingskortet har ingen nivåmerker: alt vises fra nivå
 });
 
 test("delposter (v5.51): navn + punkter er en delpost, et ekte kort er det ikke", async () => {
-  const { erDelpost } = await import("../../js/import-format.js?v=5.61");
+  const { erDelpost } = await import("../../js/import-format.js?v=5.62");
   assert.equal(erDelpost({ name: "X", punkter: ["a", "b", "c"] }), true);
   assert.equal(erDelpost({ name: "X", metaGenre: "", description: "  " }), true);
   assert.equal(erDelpost({ name: "X", metaGenre: "Jazz" }), false);
