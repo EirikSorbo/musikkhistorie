@@ -28,15 +28,15 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.52";
-import { getState } from "./explore-context.js?v=5.52";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.52";
-import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.52";
-import { escapeHtml } from "./util.js?v=5.52";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.52";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.52";
-import { aktivPlanId } from "./presentasjon.js?v=5.52";
-import { erLaererBruker } from "./plan-meny.js?v=5.52";
+import { savePlan, onAuthChange } from "./store.js?v=5.53";
+import { getState } from "./explore-context.js?v=5.53";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.53";
+import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.53";
+import { escapeHtml } from "./util.js?v=5.53";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.53";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.53";
+import { aktivPlanId } from "./presentasjon.js?v=5.53";
+import { erLaererBruker } from "./plan-meny.js?v=5.53";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -384,6 +384,9 @@ function oppdaterBar() {
 }
 
 function visBar() {
+  // Kortenes og radenes plussknapp i artistlistene (ui.js, kortPlussHtml)
+  // vises bare i plukk-modus.
+  if (økt) document.body.classList.toggle("samler-plukk", økt.modus === "plukk");
   if (!økt || document.getElementById("samle-bar")) return;
   const bar = document.createElement("div");
   bar.id = "samle-bar";
@@ -481,6 +484,7 @@ export function avsluttInnsamling({ lagre = true } = {}) {
   økt = null;
   sisteInnslag = null;
   document.getElementById("samle-bar")?.remove();
+  document.body.classList.remove("samler-plukk");
   fjernPlussKnapper();
   stoppVisObservator();
   if (!ø) return Promise.resolve();
@@ -619,6 +623,18 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
       const b = modal?.querySelector(".plan-pluss");
       if (b) b.hidden = !vis;
     }
+  });
+  // Plussknappen på kortene og radene i artistlistene (v5.53): ett delegert
+  // klikk for alle lister, også de som tegnes etter at økta startet.
+  // stopPropagation: raden og kortet skal ikke i tillegg åpne kortet.
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest?.(".kort-pluss");
+    if (!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!økt || økt.modus !== "plukk" || !b.dataset.vis) return;
+    leggTil(b.dataset.vis, "plukk");
+    kvitter(b);
   });
   // Lytteeksempler (v5.28): spilleren fanger YouTube-lenker også under en
   // samleøkt, så eksemplene kan plukkes og tas opp som stopp.

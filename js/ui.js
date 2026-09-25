@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.52";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.52";
-import { punkterHtml } from "./punkter.js?v=5.52";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.52";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.52";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.52";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.53";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.53";
+import { punkterHtml } from "./punkter.js?v=5.53";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.53";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.53";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.53";
 import {
   escapeHtml,
   linkDesc,
@@ -38,12 +38,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.52";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.52";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.52";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.52";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.52";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.52";
+} from "./ui-helpers.js?v=5.53";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.53";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.53";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.53";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.53";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.53";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -80,6 +80,17 @@ export function buildMainGenreList(artists) {
 // ----------------------------------------------------------------------------
 
 // Kompakt klikkbar liste når filtre er aktive
+// Samleøktas plussknapp på kortene og radene i artistlistene (v5.53,
+// brukerkrav 2026-09-25): i plukk-modus legges en artist til rett fra lista,
+// uten å åpne kortet først. Knappen er skjult med CSS til plan-innsamling.js
+// setter body.samler-plukk, og klikket fanges der (delegert på document), så
+// listene vet ingenting om økta. Bare artister studentene ser kan bli et stopp.
+const KORT_PLUSS_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+export function kortPlussHtml(a) {
+  if (!a || !isVisible(a)) return "";
+  return `<button type="button" class="kort-pluss" data-vis="artist:${escapeHtml(a.id)}" title="Legg til i kjøreplanen" aria-label="Legg ${escapeHtml(a.name)} til i kjøreplanen">${KORT_PLUSS_SVG}</button>`;
+}
+
 export function renderResultList(el, artists, onSelect) {
   el.className = "result-list";
   if (!artists.length) {
@@ -97,6 +108,7 @@ export function renderResultList(el, artists, onSelect) {
       <span class="result-meta">
         ${tags}
       </span>
+      ${kortPlussHtml(a)}
       <span class="result-arrow">›</span>
     </div>`;
   }).join("");
@@ -416,7 +428,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
       <header class="card-head">
         ${artistImage(a)}
         <div>
-          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}</h3>
+          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}${kortPlussHtml(a)}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${prioTag}
@@ -549,6 +561,7 @@ function buildArtistListRows(list) {
         ${tags}
         ${years ? `<span class="result-work">${years}</span>` : ""}
       </span>
+      ${kortPlussHtml(a)}
     </div>`;
   }).join("");
 }

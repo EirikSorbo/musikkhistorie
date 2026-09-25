@@ -3108,3 +3108,14 @@ body.presentasjon .kilder { display: none !important; }
 .samle-navn { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .modal-head .plan-pluss { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; color: var(--accent-2); }
 .modal-head .plan-pluss svg { display: block; }
+/* Plussknappen på artistkortene og -radene i listene (v5.53): bare i plukk-modus. */
+.kort-pluss { display: none; }
+body.samler-plukk .kort-pluss {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 28px; height: 28px; margin-left: 8px; padding: 0; vertical-align: middle;
+  border-radius: 50%; border: 1px solid var(--accent-2); background: var(--surface);
+  color: var(--accent-2); cursor: pointer;
+}
+body.samler-plukk .kort-pluss:hover { background: var(--accent-2); color: #fff; }
+.kort-pluss svg { display: block; }
+.result-row .kort-pluss { margin-left: auto; }

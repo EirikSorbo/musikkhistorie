@@ -27,3 +27,17 @@ for (const fil of ["js/teacher.js", "js/landing.js", "js/tre-page.js"]) {
 test("explore-context: getState kaster ikke før initExplore", () => {
   assert.match(les("js/explore-context.js"), /export function getState\(\) \{ return opts \? opts\.getState\(\) : \{\}; \}/);
 });
+
+// v5.53: plussknappen på artistkortene og -radene i listene (plukk-modus).
+test("artistlistene har plussknapp i plukk-modus, koblet via body.samler-plukk", () => {
+  const ui = les("js/ui.js");
+  assert.match(ui, /export function kortPlussHtml\(a\) \{\n  if \(!a \|\| !isVisible\(a\)\) return "";/);
+  assert.ok((ui.match(/\$\{kortPlussHtml\(a\)\}/g) || []).length >= 3, "kort, resultatrad og artistliste-rad");
+  const pi = les("js/plan-innsamling.js");
+  assert.match(pi, /document\.body\.classList\.toggle\("samler-plukk", økt\.modus === "plukk"\)/);
+  assert.match(pi, /document\.body\.classList\.remove\("samler-plukk"\)/);
+  assert.match(pi, /closest\?\.\("\.kort-pluss"\)[^]*?leggTil\(b\.dataset\.vis, "plukk"\)/);
+  const css = les("css/styles.css");
+  assert.match(css, /\.kort-pluss \{ display: none; \}/);
+  assert.match(css, /body\.samler-plukk \.kort-pluss \{/);
+});

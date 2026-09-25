@@ -8,18 +8,18 @@ import {
   fetchArtist,
   resubmitArtist,
   subscribeContent,
-} from "./store.js?v=5.52";
-import { loadArtists } from "./artist-cache.js?v=5.52";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.52";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.52";
-import { fillSelect, escapeHtml } from "./ui.js?v=5.52";
-import { TREG_SENDING_MELDING } from "./util.js?v=5.52";
-import { renderRichText } from "./rich-text.js?v=5.52";
-import { pageFor } from "./story-format.js?v=5.52";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.52";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.52";
-import { setupFormatBars } from "./format-bar.js?v=5.52";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.52";
+} from "./store.js?v=5.53";
+import { loadArtists } from "./artist-cache.js?v=5.53";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=5.53";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=5.53";
+import { fillSelect, escapeHtml } from "./ui.js?v=5.53";
+import { TREG_SENDING_MELDING } from "./util.js?v=5.53";
+import { renderRichText } from "./rich-text.js?v=5.53";
+import { pageFor } from "./story-format.js?v=5.53";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.53";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=5.53";
+import { setupFormatBars } from "./format-bar.js?v=5.53";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.53";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
