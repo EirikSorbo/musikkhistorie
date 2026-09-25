@@ -41,3 +41,15 @@ test("artistlistene har plussknapp i plukk-modus, koblet via body.samler-plukk",
   assert.match(css, /\.kort-pluss \{ display: none; \}/);
   assert.match(css, /body\.samler-plukk \.kort-pluss \{/);
 });
+
+// v5.55 (brukerkrav 2026-09-25): ingenting øverst til venstre under visning.
+test("visningen blanker fanen og går i fullskjerm ved første handling, men respekterer et nei", () => {
+  const p = les("js/presentasjon.js");
+  assert.match(p, /document\.title = "\\u2800";/, "blank tittel som ikke trimmes bort");
+  assert.match(p, /link\[rel~="icon"\][^]*?l\.href = TOMT_IKON/, "tomt fane-ikon");
+  const init = p.slice(p.indexOf("export function initPresentasjon"));
+  assert.match(init, /blankFaneOgVindu\(\);\n  fullskjermVedForsteHandling\(\);/);
+  assert.match(p, /if \(!les\(LAGRING\.fullNei\)\) slaaPaaFullskjerm\(\);/, "læreren som har gått ut, får være i fred");
+  assert.match(p, /e\.key === "Escape"/, "Esc teller ikke som første handling");
+  assert.match(p, /fullNei: "pensumPresFullNei"/, "nullstilles med resten av LAGRING ved avslutning");
+});
