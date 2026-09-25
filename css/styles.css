@@ -3140,3 +3140,6 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
 .modal-head .utskrift-ta-med { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; color: var(--muted); }
 .modal-head .utskrift-ta-med.er-med { color: var(--accent-2); border-color: var(--accent-2); }
 .modal-head .utskrift-ta-med svg { display: block; }
+/* Pil-mot-skriveren som egen ikonknapp (Finn artister, kjøreplanene). */
+.btn.utskrift-ikonknapp { display: inline-flex; align-items: center; justify-content: center; padding: 5px 9px; min-width: 34px; }
+.btn.utskrift-ikonknapp svg { display: block; }

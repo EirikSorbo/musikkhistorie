@@ -18,11 +18,11 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
-} from "./limits.js?v=5.65";
-import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.65";
-import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.65";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.65";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.65";
+} from "./limits.js?v=5.66";
+import { escapeHtml, GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js?v=5.66";
+import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "./genre-model.js?v=5.66";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.66";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.66";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",

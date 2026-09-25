@@ -1,23 +1,23 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.65";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.65";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.65";
-import { onGenreModelChanged } from "./genre-model.js?v=5.65";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.65";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.65";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.65";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.65";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.65";
-import { initExplore } from "./explore.js?v=5.65";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.65";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.65";
-import { initPlanMeny } from "./plan-meny.js?v=5.65";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.65";
-import { initVisning, visningTikk } from "./visning.js?v=5.65";
-import { initUtskriftValg, leggTil as leggTilUtskrift } from "./utskrift-utvalg.js?v=5.65";
-import { askChoice } from "./ui-modal.js?v=5.65";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.65";
-import { currentEntityValues } from "./entity-values.js?v=5.65";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.65";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.66";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.66";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.66";
+import { onGenreModelChanged } from "./genre-model.js?v=5.66";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.66";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.66";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.66";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.66";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.66";
+import { initExplore } from "./explore.js?v=5.66";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.66";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.66";
+import { initPlanMeny } from "./plan-meny.js?v=5.66";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.66";
+import { initVisning, visningTikk } from "./visning.js?v=5.66";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=5.66";
+import { askChoice } from "./ui-modal.js?v=5.66";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.66";
+import { currentEntityValues } from "./entity-values.js?v=5.66";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.66";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -628,9 +628,12 @@ function init() {
   initVisning();
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
   initUtskriftValg({ hentData: () => state });
-  // «Til utskrift» i Finn artister: alle artistene i lista slik den står
-  // filtrert nå. Uten filter er det hele pensumet, så da spørres det først.
-  document.getElementById("btn-utskrift-liste")?.addEventListener("click", async () => {
+  // Pil-mot-skriveren i Finn artister (v5.66): alle artistene i lista slik
+  // den står filtrert nå. Uten filter er det hele pensumet, så da spørres det
+  // først. Ikonet er det delte, så det ser likt ut som i kortene.
+  const utskriftListe = document.getElementById("btn-utskrift-liste");
+  if (utskriftListe) utskriftListe.innerHTML = TIL_UTSKRIFT_SVG;
+  utskriftListe?.addEventListener("click", async () => {
     const pool = filterArtists(state.artists.filter(isVisible), state.filters);
     if (!pool.length) return;
     if (!hasFilters() && pool.length > 20) {
@@ -643,10 +646,12 @@ function init() {
       if (!ok) return;
     }
     const lagt = leggTilUtskrift(pool.map((a) => `artist:${a.id}`));
-    const b = document.getElementById("btn-utskrift-liste");
-    if (!b) return;
-    b.textContent = lagt ? `${lagt} lagt til` : "Alt er med fra før";
-    setTimeout(() => { b.textContent = "Til utskrift"; }, 1600);
+    const b = utskriftListe;
+    const tittel = b.title;
+    b.innerHTML = UTSKRIFT_HAKE_SVG;
+    b.title = lagt ? `${lagt} lagt til` : "Alt er med fra før";
+    clearTimeout(b._kvittering);
+    b._kvittering = setTimeout(() => { b.innerHTML = TIL_UTSKRIFT_SVG; b.title = tittel; }, 1600);
   });
 
   if (!CONFIGURED) {

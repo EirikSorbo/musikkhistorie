@@ -22,18 +22,18 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.65";
-import { escapeHtml } from "./util.js?v=5.65";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.65";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.65";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.65";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.65";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.65";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.65";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.65";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.65";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.65";
-import { settFraPlan, antall as antallIUtskrift } from "./utskrift-utvalg.js?v=5.65";
+import { getState } from "./explore-context.js?v=5.66";
+import { escapeHtml } from "./util.js?v=5.66";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.66";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.66";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.66";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.66";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.66";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.66";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.66";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.66";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.66";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.66";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -232,7 +232,7 @@ function renderListe() {
           <span class="muted">${p.stopp.length} stopp${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}</span></span>
         <span class="pres-adm-knapper">
           <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
-          <button type="button" class="btn ghost small" data-pres-utskrift="${escapeHtml(id)}" title="Lag et hefte av kjøreplanen (utskrift eller PDF)">Til utskrift</button>
+          <button type="button" class="btn ghost small utskrift-ikonknapp" data-pres-utskrift="${escapeHtml(id)}" title="Kjøreplanen til utskriften (PDF)" aria-label="Kjøreplanen til utskriften">${TIL_UTSKRIFT_SVG}</button>
           ${erLaerer ? `
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Legg til stopp mens du blar, eller ta opp alt du åpner">Samle</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
