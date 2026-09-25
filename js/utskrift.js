@@ -22,23 +22,23 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.63";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.63";
-import { onAuthChange } from "./store.js?v=5.63";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.63";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.63";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.63";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.63";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.63";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.63";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.63";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.63";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.63";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.63";
-import { artistStripHtml } from "./artist-strip.js?v=5.63";
-import { DECADES, isVisible } from "./limits.js?v=5.63";
-import { askChoice } from "./ui-modal.js?v=5.63";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.63";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.64";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.64";
+import { onAuthChange } from "./store.js?v=5.64";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.64";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.64";
+import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.64";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.64";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.64";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.64";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.64";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.64";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.64";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.64";
+import { artistStripHtml } from "./artist-strip.js?v=5.64";
+import { DECADES, isVisible } from "./limits.js?v=5.64";
+import { askChoice } from "./ui-modal.js?v=5.64";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.64";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -763,6 +763,23 @@ function koble() {
     if (!b || b.disabled) return;
     leggTil(b.dataset.legg);
     tegnSok();
+  });
+
+  // Hele pensumet (v5.64): alt legges til det som alt står der; tittelen
+  // settes bare når feltet er tomt.
+  $("utskrift-alt")?.addEventListener("click", async () => {
+    if (!klar()) return;
+    const alt = heltPensum(state);
+    const ok = await askChoice({
+      title: "Hele pensumet i utskriften?",
+      text: "Dette legger til alle metasjangrene med sjangrene og artistene deres, røttene i treet, innovasjonskortene og instrumentsammendragene. Heftet blir langt, og du kan huke bort det du ikke vil ha med.",
+      buttons: [{ label: "Legg til alt", value: true, className: "primary" }, { label: "Avbryt", value: false }],
+      dismissValue: false,
+    });
+    if (!ok) return;
+    leggTil(alt);
+    const u = lesUtvalg();
+    if (!u.tittel) { u.tittel = "Hele pensumet"; lagreUtvalg(u); }
   });
 }
 

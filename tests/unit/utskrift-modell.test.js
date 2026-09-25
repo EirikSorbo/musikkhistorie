@@ -7,10 +7,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
-  settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv,
-  DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE,
-} from "../../js/utskrift-modell.js?v=5.63";
-import { isVisible } from "../../js/limits.js?v=5.63";
+  settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, heltPensum,
+  DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE, ROTTER,
+} from "../../js/utskrift-modell.js?v=5.64";
+import { isVisible } from "../../js/limits.js?v=5.64";
+import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=5.64";
 
 const NAA = 2026;
 
@@ -19,7 +20,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.63rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.64rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -427,6 +428,32 @@ test("settSammen: en artist som følger med en metasjanger, men ikke har valgt s
   const blues = m.familier[0];
   assert.deepEqual(blues.sjangre, []);
   assert.deepEqual(blues.loseArtister.map((a) => a.navn), ["Muddy Waters"], "Muddy følger metasjangeren selv om sjangeren hans er huket bort");
+});
+
+test("heltPensum: metasjangrene i pensumet, røttene, aktive innovasjoner og skrevne instrumentsider", () => {
+  const alt = heltPensum(DATA);
+  const metaer = alt.filter((v) => v.startsWith("metasjanger:")).map((v) => v.slice(12));
+  assert.ok(metaer.includes("Blues") && metaer.includes("Jazz"), "pensummetasjangrene er med");
+  assert.equal(metaer.includes("Pop"), false, "Pop og Rock er utenfor pensumet (STORY_SKJULT)");
+  assert.equal(metaer.includes("Rock"), false);
+  assert.equal(metaer[0], "Blues", "den kuraterte rekkefølgen");
+  for (const m of metaer) assert.ok(GENEALOGY_META_GENRES.includes(m), m);
+  for (const n of GENEALOGY_ROOT_GENRES) assert.ok(alt.includes(`sjanger:${n.l}`), `roten ${n.l}`);
+  assert.deepEqual(alt.filter((v) => v.startsWith("tech:")), ["tech:elgitar", "tech:ror", "tech:transistor", "tech:hendelse"], "ventende kort er ikke med");
+  assert.deepEqual(alt.filter((v) => v.startsWith("instrument:")), ["instrument:Gitar"], "bare sammendrag som er skrevet");
+  // Alt lar seg sette sammen uten mangler.
+  const m = settSammen(alt, DATA, STUDENT);
+  assert.deepEqual(m.mangler, []);
+  assert.equal(m.familier[0].navn, ROTTER, "røttene først");
+});
+
+test("en rot i treet kan skrives ut som sjangerkort, i familien Røtter", () => {
+  const rot = GENEALOGY_ROOT_GENRES[0];
+  const m = settSammen([`sjanger:${rot.l}`], DATA, STUDENT);
+  assert.deepEqual(m.mangler, []);
+  assert.equal(m.familier.length, 1);
+  assert.equal(m.familier[0].navn, ROTTER);
+  assert.equal(m.familier[0].sjangre[0].navn, rot.f || rot.l);
 });
 
 // ---------------------------------------------------------------------------

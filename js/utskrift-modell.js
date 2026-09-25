@@ -43,16 +43,16 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.63";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.63";
-import { resolveSpan } from "./timeline-lanes.js?v=5.63";
-import { GENEALOGY, GENEALOGY_META_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.63";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.63";
-import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.63";
-import { heatRow } from "./heat-strip.js?v=5.63";
-import { ytMaal } from "./presentasjon-modell.js?v=5.63";
-import { normaliserPunkter } from "./punkter.js?v=5.63";
-import { safeUrl } from "./util.js?v=5.63";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.64";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.64";
+import { resolveSpan } from "./timeline-lanes.js?v=5.64";
+import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor } from "./genre-model.js?v=5.64";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.64";
+import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.64";
+import { heatRow } from "./heat-strip.js?v=5.64";
+import { ytMaal } from "./presentasjon-modell.js?v=5.64";
+import { normaliserPunkter } from "./punkter.js?v=5.64";
+import { safeUrl } from "./util.js?v=5.64";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten
@@ -272,6 +272,14 @@ function radAar(n) {
 const kreditt = (raa) => String(raa || "").replace(/^Foto:\s*/i, "").trim();
 const heltall = (v) => (Number.isInteger(v) ? v : null);
 
+// Tre-noden et navn peker på, label eller fullt navn, OGSÅ røttene (g = null).
+// Navigasjonsoppslaget i genre-model.js hopper over røttene med vilje, men i
+// heftet er Work songs og Ragtime kort som alle andre.
+function finnNode(navn) {
+  const s = String(navn || "").toLowerCase();
+  return GENEALOGY.find((n) => n.l.toLowerCase() === s || n.f.toLowerCase() === s) || null;
+}
+
 // Den kuraterte rekkefølgen for familiene: røttene, så historienes
 // rekkefølge, så resten av treets metasjangre. Leses ved kall (live
 // bindings), aldri ved import.
@@ -299,8 +307,31 @@ function familieForUndersjanger(navn, artists) {
   }
   const beste = [...telling.entries()].sort((x, y) => y[1] - x[1])[0];
   if (beste) return beste[0];
-  const n = findTreeGenreNode(navn);
+  const n = finnNode(navn);
   return n?.g || UNDERSJANGRE_LOSE;
+}
+
+// ---------------------------------------------------------------------------
+//  Hele pensumet (v5.64)
+// ---------------------------------------------------------------------------
+
+// Utvalget som gir hele pensumet i ett hefte: metasjangrene i pensumet (den
+// kuraterte rekkefølgen, uten STORY_SKJULT: Pop og Rock er utenfor MUR114),
+// som drar inn sjangrene, artistene og tiårene; røttene i treet; alle aktive
+// innovasjonskort; og instrumentsammendragene som er skrevet. Historiene og
+// innholdssidene holdes utenfor (de er lærerstoff og skjult for studenter).
+export function heltPensum(data = {}) {
+  const ut = [];
+  const kjente = GENEALOGY_META_GENRES;
+  for (const m of [...STORY_ORDER, ...META_GENRE_ORDER]) {
+    if (kjente.includes(m) && !STORY_SKJULT.includes(m)) ut.push(`${META_PREFIKS}${m}`);
+  }
+  for (const n of GENEALOGY_ROOT_GENRES) ut.push(`sjanger:${n.l}`);
+  for (const t of data.techItems || []) if (t && (t.status || "active") === "active" && t.id) ut.push(`tech:${t.id}`);
+  for (const g of INSTRUMENT_TIMELINE_GROUPS) {
+    if (pageFor(instrumentPageId(g), data.content || {})?.body?.trim()) ut.push(`instrument:${g}`);
+  }
+  return normaliserUtvalg(ut);
 }
 
 // ---------------------------------------------------------------------------
@@ -319,7 +350,7 @@ export function barnAv(vis, artists) {
     for (const n of GENEALOGY) if (n.g === m.id) ut.push(`sjanger:${n.l}`);
     for (const a of artists || []) if (a.metaGenre === m.id) ut.push(`artist:${a.id}`);
   } else if (m?.hva === "sjanger") {
-    const n = findTreeGenreNode(m.id);
+    const n = finnNode(m.id);
     if (!n) return ut;
     const navn = new Set([n.l.toLowerCase(), n.f.toLowerCase()]);
     for (const a of artists || []) {
@@ -366,7 +397,7 @@ export function utvidUtvalg(valg, fravalg, artists, naa = new Date().getFullYear
     for (const [vis] of kilde) {
       const m = parseUtskriftVis(vis);
       if (m?.hva !== "sjanger" || bort.has(vis)) continue;
-      const n = findTreeGenreNode(m.id);
+      const n = finnNode(m.id);
       if (!n) continue;
       const r = resolveDescAny(genreDescs, [n.l, n.f], "main");
       if (!Number.isInteger(r.activeFrom)) continue;
@@ -507,7 +538,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
         break;
       }
       case "sjanger": {
-        const n = findTreeGenreNode(m.id);
+        const n = finnNode(m.id);
         if (n) sjangerKort.push(lagSjangerKort(n, vis)); else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
