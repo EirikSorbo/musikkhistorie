@@ -1,8 +1,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=5.60";
-import { rebuild } from "../../js/genre-model.js?v=5.60";
+import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=5.61";
+import { rebuild } from "../../js/genre-model.js?v=5.61";
 import { SEED_DOC } from "../helpers/seed-model.js";
 
 test("storyFor: null når ingen tekst er lagret (ingen fallback)", () => {

@@ -22,23 +22,23 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.60";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.60";
-import { onAuthChange } from "./store.js?v=5.60";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.60";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.60";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.60";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.60";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.60";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.60";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.60";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.60";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.60";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.60";
-import { artistStripHtml } from "./artist-strip.js?v=5.60";
-import { DECADES, isVisible } from "./limits.js?v=5.60";
-import { askChoice } from "./ui-modal.js?v=5.60";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.60";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.61";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.61";
+import { onAuthChange } from "./store.js?v=5.61";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.61";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.61";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.61";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.61";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.61";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.61";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.61";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.61";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.61";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.61";
+import { artistStripHtml } from "./artist-strip.js?v=5.61";
+import { DECADES, isVisible } from "./limits.js?v=5.61";
+import { askChoice } from "./ui-modal.js?v=5.61";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.61";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -278,10 +278,10 @@ function bildeHtml(bilde, hoyde = "") {
     `${bilde.kreditt ? `<figcaption>Foto: ${h(bilde.kreditt)}</figcaption>` : ""}</figure>`;
 }
 
+// Uten lytteeksempler står det ingenting (brukervalg 2026-09-25): et kort
+// uten lenker skal ikke ha en linje som sier det.
 function lyttHtml(liste, medNr) {
-  if (!liste.length) {
-    return `<div class="h-lytt h-lytt-tom">${NOTE_SVG}<span>Kortet har ingen lytteeksempler ennå. Søk på artist og tittel fra «Sentrale verk».</span></div>`;
-  }
+  if (!liste.length) return "";
   const eks = liste.map((l) => `«${h(l.label)}»${h(musicExampleLabel(l))}${medNr && l.nr ? `<span class="h-nr">${l.nr}</span>` : ""}`);
   return `<div class="h-lytt">${NOTE_SVG}<span><strong>Lytt</strong> ${eks.join(" · ")}</span></div>`;
 }
@@ -298,12 +298,20 @@ function virketidHtml(k) {
   });
 }
 
+// Faktalinja (brukervalg 2026-09-25): «Tangenter. Sjanger: R&B · Rock'n'roll.
+// Undersjanger: New Orleans R&B.» Virkested, plateselskap og innflytelses-
+// årene står ikke her; innflytelsen leses av tidslinja for virketid.
+function faktaHtml(k) {
+  const setninger = [];
+  if (k.fakta.instrument) setninger.push(`<b>${h(k.fakta.instrument)}</b>.`);
+  const sjangre = k.fakta.sjangre.filter(Boolean);
+  if (sjangre.length) setninger.push(`<span class="h-etikett">Sjanger:</span> ${sjangre.map(h).join(" · ")}.`);
+  const under = k.fakta.undersjangre.filter(Boolean);
+  if (under.length) setninger.push(`<span class="h-etikett">Undersjanger:</span> ${under.map(h).join(" · ")}.`);
+  return setninger.length ? `<p class="h-fakta">${setninger.join(" ")}</p>` : "";
+}
+
 function artistKortHtml(k, d, kompakt, medNr) {
-  const fakta = [];
-  if (k.fakta.instrument) fakta.push(`<b>${h(k.fakta.instrument)}</b>`);
-  for (const x of [k.fakta.virkested, k.fakta.plateselskap]) if (x) fakta.push(h(x));
-  if (k.fakta.innflytelse) fakta.push(`Innflytelse ${h(k.fakta.innflytelse)}`);
-  for (const x of [...k.fakta.sjangre, ...k.fakta.undersjangre]) if (x) fakta.push(h(x));
   const bilde = !kompakt && d["artist.bilde"] ? bildeHtml(k.bilde) : "";
   const beskrivelse = d["artist.beskrivelse"]
     ? (k.beskrivelse ? rt(k.beskrivelse) : mangler("Beskrivelsen er ikke skrevet ennå."))
@@ -313,7 +321,7 @@ function artistKortHtml(k, d, kompakt, medNr) {
     : "";
   return `<article class="h-kort h-artist">
     <h3 class="h-kort-navn">${h(k.navn)}${k.levetid ? ` <span class="h-aar">${h(k.levetid)}</span>` : ""}</h3>
-    ${d["artist.fakta"] && fakta.length ? `<p class="h-fakta">${fakta.join(" · ")}</p>` : ""}
+    ${d["artist.fakta"] ? faktaHtml(k) : ""}
     ${d["artist.virketid"] ? virketidHtml(k) : ""}
     <div class="h-kort-kropp${bilde ? "" : " uten-bilde"}">
       <div class="h-kort-tekst">

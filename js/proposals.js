@@ -8,16 +8,16 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.60";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.60";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.60";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.60";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.60";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.60";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.60";
-import { setupFormatBars } from "./format-bar.js?v=5.60";
-import { TREG_SENDING_MELDING } from "./util.js?v=5.60";
-import { wireCharCount } from "./ui-helpers.js?v=5.60";
+import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.61";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.61";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.61";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.61";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.61";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.61";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.61";
+import { setupFormatBars } from "./format-bar.js?v=5.61";
+import { TREG_SENDING_MELDING } from "./util.js?v=5.61";
+import { wireCharCount } from "./ui-helpers.js?v=5.61";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville

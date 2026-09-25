@@ -24,18 +24,18 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.60";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.60";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.60";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.60";
-import { GENEALOGY } from "./genre-model.js?v=5.60";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.60";
-import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.60";
-import { escapeHtml } from "./util.js?v=5.60";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.60";
-import { getState } from "./explore-context.js?v=5.60";
-import { onAuthChange } from "./store.js?v=5.60";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.60";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.61";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.61";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.61";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.61";
+import { GENEALOGY } from "./genre-model.js?v=5.61";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.61";
+import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.61";
+import { escapeHtml } from "./util.js?v=5.61";
+import { apneVisNaarKlart } from "./explore-apne.js?v=5.61";
+import { getState } from "./explore-context.js?v=5.61";
+import { onAuthChange } from "./store.js?v=5.61";
+import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.61";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
