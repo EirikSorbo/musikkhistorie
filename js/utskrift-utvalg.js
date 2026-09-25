@@ -24,8 +24,8 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.66";
-import { isVisible } from "./limits.js?v=5.66";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.67";
+import { isVisible } from "./limits.js?v=5.67";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -164,11 +164,12 @@ export function oppdaterMerker() {
 //  «Ta med i utskriften» i kortenes tittellinje
 // ----------------------------------------------------------------------------
 
-// ÉN måte å sende til PDF på i hele appen (brukervalg 2026-09-25, v5.66):
-// en liten pil som peker mot skriveren, som er skriverikonet i toppmenyen.
-// Brukes i kortenes tittellinje (her), i Finn artister (landing.js) og ved
-// kjøreplanene (visning.js). Haken er kvitteringen «lagt til» / «er med».
-export const TIL_UTSKRIFT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h6"/><path d="M5.5 9l3 3-3 3"/><path d="M13 8V4h8v4"/><path d="M13 16h-1.5a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H21"/><path d="M13 13h8v7h-8z"/></svg>';
+// ÉN måte å sende til PDF på i hele appen (brukervalg 2026-09-25, v5.67):
+// det samme skriverikonet som i toppmenyen, uten pil (pilen ble et hakk på
+// 16 piksler, v5.66). Brukes i kortenes tittellinje (her), i Finn artister
+// (landing.js) og ved kjøreplanene (visning.js). Haken er kvitteringen
+// «lagt til» / «er med», hjelpeteksten sier hva knappen gjør.
+export const TIL_UTSKRIFT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>';
 export const UTSKRIFT_HAKE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
 function knappTilstand(b, k) {
