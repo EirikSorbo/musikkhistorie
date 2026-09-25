@@ -1,21 +1,23 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.55";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.55";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.55";
-import { onGenreModelChanged } from "./genre-model.js?v=5.55";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.55";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.55";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.55";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.55";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.55";
-import { initExplore } from "./explore.js?v=5.55";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.55";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.55";
-import { initPlanMeny } from "./plan-meny.js?v=5.55";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.55";
-import { initVisning, visningTikk } from "./visning.js?v=5.55";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.55";
-import { currentEntityValues } from "./entity-values.js?v=5.55";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.55";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.56";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.56";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.56";
+import { onGenreModelChanged } from "./genre-model.js?v=5.56";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.56";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.56";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.56";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.56";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.56";
+import { initExplore } from "./explore.js?v=5.56";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.56";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.56";
+import { initPlanMeny } from "./plan-meny.js?v=5.56";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.56";
+import { initVisning, visningTikk } from "./visning.js?v=5.56";
+import { initUtskriftValg, leggTil as leggTilUtskrift } from "./utskrift-utvalg.js?v=5.56";
+import { askChoice } from "./ui-modal.js?v=5.56";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.56";
+import { currentEntityValues } from "./entity-values.js?v=5.56";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.56";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -624,6 +626,28 @@ function init() {
   initPlanInnsamling();
   // Presentasjonsikonet åpner Visning-vinduet (v5.41), også via ?visning=1.
   initVisning();
+  // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
+  initUtskriftValg();
+  // «Til utskrift» i Finn artister: alle artistene i lista slik den står
+  // filtrert nå. Uten filter er det hele pensumet, så da spørres det først.
+  document.getElementById("btn-utskrift-liste")?.addEventListener("click", async () => {
+    const pool = filterArtists(state.artists.filter(isVisible), state.filters);
+    if (!pool.length) return;
+    if (!hasFilters() && pool.length > 20) {
+      const ok = await askChoice({
+        title: "Hele lista til utskriften?",
+        text: `Ingen filter er valgt, så dette legger alle ${pool.length} artistene i utskriften.`,
+        buttons: [{ label: "Legg til alle", value: true, className: "primary" }, { label: "Avbryt", value: false }],
+        dismissValue: false,
+      });
+      if (!ok) return;
+    }
+    const lagt = leggTilUtskrift(pool.map((a) => `artist:${a.id}`));
+    const b = document.getElementById("btn-utskrift-liste");
+    if (!b) return;
+    b.textContent = lagt ? `${lagt} lagt til` : "Alt er med fra før";
+    setTimeout(() => { b.textContent = "Til utskrift"; }, 1600);
+  });
 
   if (!CONFIGURED) {
     refreshFilterControls();

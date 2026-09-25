@@ -28,6 +28,10 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 - **Endringsforslag**: studenter kan foreslå endringer på eksisterende artist-,
   teknologi-, sjanger- og tiårskort; læreren godkjenner/avviser felt for felt.
 - **Stem frem**: studenter markerer forslag som «svært relevant».
+- **Utskrift**: studentene velger kort (artister, sjangre, tiår, innovasjoner …)
+  med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan, og får
+  et hefte i A4 med tidslinje, lytteliste og kilder, som nettleseren lagrer
+  som PDF. Utvalget bor i nettleseren og kan deles som lenke.
 - **Sanntid**: alle ser endringer umiddelbart (Firebase Firestore).
 - **Lærermodus** (Google-innlogging): Skrivebord med arbeidsflyt-innboks og
   sjekk-fremdrift per innholdskategori, Oversikt over pensumets form og hull,
@@ -40,14 +44,16 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 
 ## Arkitektur
 
-Fire sider med felles datalag. Rene HTML/JS ES-moduler uten byggesteg.
+Fem sider med felles datalag. Rene HTML/JS ES-moduler uten byggesteg.
 
 ```
 index.html            Forside: Det store bildet, Finn artister, dagens artist
 student.html          Studentside: foreslå artist
 teacher.html          Lærerside (Google-innlogging): Skrivebord, Oversikt, admin
 tre.html              Slektstre-siden (bundlede bånd)
+utskrift.html         Utskrift: studentens eget hefte av valgte kort (PDF via nettleseren)
 css/styles.css        Styling (lyst, moderne tema)
+css/utskrift.css      Heftet på skjerm og papir (@page, sidebrytinger)
 js/
   firebase-config.js  Firebase-nøkler + lærer-e-poster  ← DU FYLLER INN
   shared.js           Delte hjelpere (oppsett-sjekk, banner, $)
@@ -89,6 +95,11 @@ js/
                       sjanger, innhold, instrument
   proposals.js        Endringsforslag-editoren (student)
   landing.js / student.js / tre.js / tre-page.js   Side-logikk
+  utskrift.js         Utskriftssiden: panelet, søk for å legge til, heftet
+  utskrift-modell.js  Heftets struktur (ren, testet): utvalg, rekkefølge, lytteliste,
+                      kilder, tittelforslag
+  utskrift-utvalg.js  Utvalget i localStorage, «Ta med»-knappen i kortene og merket
+                      på skriverikonet
   teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler,
                       inkl. teacher-genres.js: sjangertre-editoren)
 tests/                Enhetstester (node --test) + regeltester (emulator)

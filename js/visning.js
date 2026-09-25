@@ -22,17 +22,18 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.55";
-import { escapeHtml } from "./util.js?v=5.55";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.55";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.55";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.55";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.55";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.55";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.55";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.55";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.55";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.55";
+import { getState } from "./explore-context.js?v=5.56";
+import { escapeHtml } from "./util.js?v=5.56";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.56";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.56";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.56";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.56";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.56";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.56";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.56";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.56";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.56";
+import { settFraPlan, antall as antallIUtskrift } from "./utskrift-utvalg.js?v=5.56";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -231,6 +232,7 @@ function renderListe() {
           <span class="muted">${p.stopp.length} stopp${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}</span></span>
         <span class="pres-adm-knapper">
           <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
+          <button type="button" class="btn ghost small" data-pres-utskrift="${escapeHtml(id)}" title="Lag et hefte av kjøreplanen (utskrift eller PDF)">Til utskrift</button>
           ${erLaerer ? `
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Legg til stopp mens du blar, eller ta opp alt du åpner">Samle</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
@@ -516,6 +518,34 @@ function koblVindu(m) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       const tittel = window.prompt("Navn på den nye kjøreplanen:", "");
       if (tittel && tittel.trim()) velgModusOgStart(null, tittel.trim());
+      return;
+    }
+    // Kjøreplanen som hefte (v5.56): stoppene blir utvalget på utskrift.html,
+    // i planens rekkefølge og med planens tittel. Står det noe i utskriften
+    // fra før, velger man om planen erstatter eller legges til.
+    const utskrift = hit("[data-pres-utskrift]");
+    if (utskrift) {
+      const id = utskrift.dataset.presUtskrift;
+      const p = planerNaa()[id];
+      if (!p) return;
+      let erstatt = true;
+      const fraFor = antallIUtskrift();
+      if (fraFor) {
+        const valg = await askChoice({
+          title: "Kjøreplanen til utskriften",
+          text: `Du har ${fraFor} kort i utskriften fra før.`,
+          buttons: [
+            { label: "Erstatt med kjøreplanen", value: "erstatt", className: "primary" },
+            { label: "Legg til", value: "legg" },
+            { label: "Avbryt", value: "avbryt" },
+          ],
+          dismissValue: "avbryt",
+        });
+        if (valg === "avbryt") return;
+        erstatt = valg === "erstatt";
+      }
+      settFraPlan(p, getState().artists, id, { erstatt });
+      window.location.href = "utskrift.html";
       return;
     }
     const spill = hit("[data-pres-spill]");

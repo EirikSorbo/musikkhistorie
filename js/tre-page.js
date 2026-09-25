@@ -14,17 +14,18 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.55";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.55";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.55";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.55";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.55";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.55";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.55";
-import { initPlanMeny } from "./plan-meny.js?v=5.55";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.55";
-import { initVisning, visningTikk } from "./visning.js?v=5.55";
-import { provVisMaal } from "./explore-apne.js?v=5.55";
+import { initExplore } from "./explore.js?v=5.56";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.56";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.56";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.56";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.56";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.56";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.56";
+import { initPlanMeny } from "./plan-meny.js?v=5.56";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.56";
+import { initVisning, visningTikk } from "./visning.js?v=5.56";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=5.56";
+import { provVisMaal } from "./explore-apne.js?v=5.56";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -64,6 +65,8 @@ export function initTrePage({ render }) {
   // Treet er en side, ikke en modal: et opptak logger ankomsten her selv.
   initPlanInnsamling({ erTreSide: true });
   initVisning();
+  // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
+  initUtskriftValg();
 
   // Rendereren får sidens FELLES sjangerOpts. Den bygger ikke lenger sin egen,
   // så node-klikk i kartet og sjanger-chip på et artistkort åpner identisk kort.

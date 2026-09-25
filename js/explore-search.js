@@ -10,12 +10,12 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml } from "./ui.js?v=5.55";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.55";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.55";
-import { getState } from "./explore-context.js?v=5.55";
-import { apneMaal } from "./explore-apne.js?v=5.55";
-import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.55";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.56";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.56";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.56";
+import { getState } from "./explore-context.js?v=5.56";
+import { apneMaal } from "./explore-apne.js?v=5.56";
+import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.56";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
