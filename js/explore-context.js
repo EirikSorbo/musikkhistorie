@@ -8,22 +8,28 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.51";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.51";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.51";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.51";
-import { openTechDetail } from "./explore-tech.js?v=5.51";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.51";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.51";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=5.51";
-import { renderReferanser } from "./explore-referanser.js?v=5.51";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.51";
-import { setHeatData } from "./heat-strip.js?v=5.51";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.52";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.52";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.52";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.52";
+import { openTechDetail } from "./explore-tech.js?v=5.52";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.52";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.52";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=5.52";
+import { renderReferanser } from "./explore-referanser.js?v=5.52";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.52";
+import { setHeatData } from "./heat-strip.js?v=5.52";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
 
-export function getState() { return opts.getState(); }
+// Før initExplore (opts === null) gir oppslaget et tomt state i stedet for å
+// kaste (v5.52): en samleøkt som gjenopprettes ved sidelasting tegnet linja
+// sin før lærersiden hadde kalt initExplore, og hele oppstarten døde med
+// «Cannot read properties of null (reading 'getState')». Tomt state betyr
+// «ikke lastet ennå» for alle leserne (contentLoaded er falsy), og neste
+// snapshot tegner på nytt med ekte data.
+export function getState() { return opts ? opts.getState() : {}; }
 
 // Injiserer den delte lærer-knapperaden (Sjekk | Rediger · Slett) i en «extra»-
 // beholder i en detaljmodal. Gjør ingenting for studenter (opts.onCheck
