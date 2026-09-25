@@ -24,8 +24,8 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg } from "./utskrift-modell.js?v=5.58";
-import { isVisible } from "./limits.js?v=5.58";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.59";
+import { isVisible } from "./limits.js?v=5.59";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -57,10 +57,12 @@ export function antall() { return lesUtvalg().valg.length; }
 // valgte postene som «med» (skjemasiden har ingen kort å åpne uansett).
 let hentData = null;
 
+const synligeArtister = () => ((hentData?.() || {}).artists || []).filter(isVisible);
+
 // Det utvalget drar med seg akkurat nå: Map vis → opphav (se utvidUtvalg).
 function avledet(u) {
   const s = hentData?.() || {};
-  return utvidUtvalg(u.valg, u.fravalg, (s.artists || []).filter(isVisible), new Date().getFullYear(), s.genreDescs || {}).kilde;
+  return utvidUtvalg(u.valg, u.fravalg, synligeArtister(), new Date().getFullYear(), s.genreDescs || {}).kilde;
 }
 
 // Står kortet i heftet: valgt, eller dratt med av et valg og ikke huket bort.
@@ -73,14 +75,16 @@ export function harMed(vis) {
   return avledet(u).has(k);
 }
 
-// Legger til ett eller flere mål. Et bortvalg oppheves av et nytt valg.
-// Returnerer hvor mange som var nye.
+// Legger til ett eller flere mål. Et nytt valg opphever bortvalget av posten
+// og av det den drar med seg (barnAv). Returnerer hvor mange som var nye.
 export function leggTil(vis) {
-  const liste = Array.isArray(vis) ? vis : [vis];
+  const liste = normaliserUtvalg(Array.isArray(vis) ? vis : [vis]);
   const u = lesUtvalg();
   const nye = normaliserUtvalg([...u.valg, ...liste]);
   const lagt = nye.length - u.valg.length;
-  const fravalg = u.fravalg.filter((v) => !nye.includes(v));
+  const artister = synligeArtister();
+  const opphev = new Set(liste.flatMap((v) => [v, ...barnAv(v, artister)]));
+  const fravalg = u.fravalg.filter((v) => !opphev.has(v));
   if (lagt || fravalg.length !== u.fravalg.length) {
     u.valg = nye;
     u.fravalg = fravalg;
@@ -89,20 +93,22 @@ export function leggTil(vis) {
   return lagt;
 }
 
-// Avkryssingen i utskriftspanelet. Av: posten tas ut av valget OG huskes som
-// bortvalgt, så den ikke kommer tilbake via metasjangeren eller sjangeren
-// sin. På: bortvalget oppheves; `eksplisitt` (metasjangerraden, som aldri
-// utledes) legger posten inn i valget.
+// Avkryssingen i utskriftspanelet (v5.59). Av: posten og alt den drar med
+// seg (barnAv: sjangrene og artistene til en metasjanger, artistene til en
+// sjanger) huskes som bortvalgt. Posten blir stående i valget, så den og
+// barna står igjen i lista som avhukede alternativer. På: bortvalget
+// oppheves for posten og barna; `eksplisitt` (metasjangerraden, som aldri
+// utledes) legger posten inn i valget om den ikke alt står der.
 export function huk(vis, paa, { eksplisitt = false } = {}) {
   const k = kanoniskVis(vis);
   if (!k) return;
   const u = lesUtvalg();
+  const berort = new Set([k, ...barnAv(k, synligeArtister())]);
   if (paa) {
-    u.fravalg = u.fravalg.filter((v) => v !== k);
+    u.fravalg = u.fravalg.filter((v) => !berort.has(v));
     if (eksplisitt && !u.valg.includes(k)) u.valg = [...u.valg, k];
   } else {
-    u.valg = u.valg.filter((v) => v !== k);
-    if (!u.fravalg.includes(k)) u.fravalg = [...u.fravalg, k];
+    u.fravalg = normaliserUtvalg([...u.fravalg, ...berort]);
   }
   lagreUtvalg(u);
 }
@@ -115,9 +121,9 @@ export function fjern(vis) {
   lagreUtvalg(u);
 }
 
-// Ta med eller ta ut. Returnerer true når målet ble lagt til. Et kort som
-// følger med en metasjanger, tas ut som bortvalg (huk av), ikke ved å fjerne
-// et valg det ikke har.
+// Ta med eller ta ut («Ta med i utskriften» i kortenes tittellinje).
+// Returnerer true når målet ble lagt til. Ut = bortvalg (huk av), som i
+// panelet, så kortet står igjen i lista der.
 export function veksle(vis) {
   if (harMed(vis)) { huk(vis, false); return false; }
   leggTil(vis);

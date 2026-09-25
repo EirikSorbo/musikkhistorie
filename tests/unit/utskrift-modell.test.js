@@ -7,10 +7,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
-  settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg,
+  settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE,
-} from "../../js/utskrift-modell.js?v=5.58";
-import { isVisible } from "../../js/limits.js?v=5.58";
+} from "../../js/utskrift-modell.js?v=5.59";
+import { isVisible } from "../../js/limits.js?v=5.59";
 
 const NAA = 2026;
 
@@ -19,7 +19,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.58rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.59rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -126,7 +126,7 @@ test("normaliserLagret tåler alt og gir standardverdier", () => {
   assert.equal(u.plan, null);
   const v = normaliserLagret({ valg: ["artist:a", "x"], fravalg: ["artist:a", "artist:b", "tull"], tittel: "  En   tittel ", deler: { "artist.bilde": false, ukjent: true }, form: { kompakt: true, rekkefolge: "valgt" }, plan: { id: "p1", tittel: "Time 3" } });
   assert.deepEqual(v.valg, ["artist:a"]);
-  assert.deepEqual(v.fravalg, ["artist:b"], "et bortvalg kan ikke også være et valg");
+  assert.deepEqual(v.fravalg, ["artist:a", "artist:b"], "et valg kan stå avhuket i lista (v5.59)");
   assert.equal(v.tittel, "En tittel");
   assert.equal(v.deler["artist.bilde"], false);
   assert.equal(v.deler.ukjent, undefined);
@@ -179,7 +179,7 @@ test("sjangerkortet: epoke, varmestripe, slektskap og kilder fra data", () => {
   assert.deepEqual(blues.stripe.verdier, [2, 4, 4, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2]);
   assert.ok(blues.relasjoner.fra.length > 0, "vokste ut av røttene");
   assert.ok(blues.relasjoner.til.includes("Electric blues"));
-  assert.deepEqual(blues.kilder, [{ text: "Store norske leksikon.", url: "https://snl.no/blues", forfatter: "", year: null }]);
+  assert.equal("kilder" in blues, false, "kildene står ikke i heftet (v5.59)");
   const eb = m.familier[0].sjangre[0];
   assert.equal(eb.era, "ca. 1945–1969. fra midten av 1940-tallet");
   assert.deepEqual(eb.relasjoner.fra, ["Blues"]);
@@ -225,15 +225,14 @@ test("lyttelista nummereres i heftets rekkefølge, og numrene står på kortene"
   assert.equal(uten.familier[0].loseArtister[0].lytte[0].nr, 0);
 });
 
-test("kildene samles per kort i heftets rekkefølge, vasket for duplikater og strenger", () => {
+test("kildene er ikke med i heftet (brukervalg 2026-09-25): ingen kilde-del, ingen kilde-felt", () => {
   const m = settSammen(["artist:muddy", "artist:robert", "sjanger:Blues", "tiår:1920", "tech:elgitar", "instrument:Gitar"], DATA, STUDENT);
-  // Sjangeren Blues drar med Bessie Smith (v5.58); Delta blues er Robert
-  // Johnsons tagg, og ordlista har kilder også.
-  assert.deepEqual(m.kilder.map((g) => g.kort), ["Blues", "Bessie Smith", "Robert Johnson", "Muddy Waters", "Delta blues", "1920-tallet", "Elektrisk gitar", "Gitarens utvikling"]);
-  assert.equal(m.kilder[2].kilder.length, 1, "duplikatet på Robert Johnson er borte");
-  assert.deepEqual(m.kilder[3].kilder, [{ text: "Encyclopædia Britannica.", url: "", forfatter: "", year: null }], "streng tolkes som kildetekst");
-  const uten = settSammen(["artist:muddy"], DATA, { ...STUDENT, deler: { "bak.kilder": false } });
-  assert.deepEqual(uten.kilder, []);
+  assert.equal("kilder" in m, false);
+  assert.equal(DELER.flatMap((g) => g.valg).some((v) => v.id === "bak.kilder"), false);
+  assert.equal("kilder" in m.familier[0].hodeKort.artister[0], false);
+  assert.equal("kilder" in m.bakteppe[0], false);
+  assert.equal("kilder" in m.innovasjoner[0], false);
+  assert.equal("kilder" in m.instrumenter[0], false);
 });
 
 test("bakteppet: tiårene i tidsrekkefølge, utledet av artistene, med artistene i utvalget og innovasjonene i tiåret", () => {
@@ -333,15 +332,32 @@ test("utvidUtvalg: en sjanger drar inn artistene sine, også når den selv fulgt
   assert.equal(jazz.get("artist:miles"), "sjanger");
 });
 
-test("utvidUtvalg: et bortvalg stopper utledningen videre", () => {
-  // Avhuket sjanger: ingen artister fra den, ingen tiår.
-  const a = utvidUtvalg(["sjanger:Electric blues"], ["sjanger:Electric blues"], SYNLIGE, NAA, GENRE_DESCS);
-  assert.equal(a.kilde.has("artist:muddy"), false);
-  assert.equal(a.grunnlag, null);
+test("utvidUtvalg: et bortvalg tar ikke posten ut av lista, bare tiårene følger det som er huket på", () => {
+  // Avhuket sjanger: artistene står fortsatt i lista (avhuket av huk() i
+  // utvalg-modulen), og tiårene følger dem som er huket på.
+  const a = utvidUtvalg(["sjanger:Electric blues"], ["sjanger:Electric blues", "artist:muddy"], SYNLIGE, NAA, GENRE_DESCS);
+  assert.equal(a.kilde.get("artist:muddy"), "sjanger", "kandidat, så den kan hukes på igjen");
+  assert.equal(a.grunnlag, null, "ingen artister eller sjangre huket på: ingen tiår");
+  assert.deepEqual([...a.kilde.keys()].filter((v) => v.startsWith("tiår:")), []);
   // Avhuket artist: tiårene hans forsvinner, de andre står.
   const b = utvidUtvalg(["metasjanger:Blues"], ["artist:muddy"], SYNLIGE, NAA, GENRE_DESCS);
-  assert.equal(b.kilde.has("artist:muddy"), true, "kandidaten står (som bortvalgt) så den kan hukes på igjen");
+  assert.equal(b.kilde.has("artist:muddy"), true);
   assert.deepEqual([...b.kilde.keys()].filter((v) => v.startsWith("tiår:")), ["tiår:1920", "tiår:1930"]);
+  // Avhuket metasjanger: alt under står fortsatt i lista.
+  const c = utvidUtvalg(["metasjanger:Blues"], ["metasjanger:Blues"], SYNLIGE, NAA, GENRE_DESCS);
+  assert.equal(c.kilde.has("sjanger:Electric blues"), true);
+  assert.equal(c.kilde.has("artist:bessie"), true);
+});
+
+test("barnAv: det en avkryssing tar med seg", () => {
+  const meta = barnAv("metasjanger:Blues", SYNLIGE);
+  for (const v of ["sjanger:Blues", "sjanger:Electric blues", "sjanger:Blues rock", "artist:bessie", "artist:robert", "artist:muddy"]) assert.ok(meta.includes(v), v);
+  assert.equal(meta.includes("artist:miles"), false);
+  assert.deepEqual(barnAv("sjanger:Electric blues", SYNLIGE), ["artist:muddy"]);
+  assert.deepEqual(barnAv("sjanger:Blues", SYNLIGE), ["artist:bessie", "artist:robert"]);
+  assert.deepEqual(barnAv("artist:bessie", SYNLIGE), []);
+  assert.deepEqual(barnAv("tiår:1950", SYNLIGE), []);
+  assert.deepEqual(barnAv("sjanger:Finnes ikke", SYNLIGE), []);
 });
 
 test("utvidUtvalg: uten artister i utvalget kommer tiårene fra sjangrenes perioder", () => {
@@ -381,8 +397,19 @@ test("settSammen: en valgt metasjanger uten noe under seg står i treet, ikke i 
   assert.equal(m.tre.familier.length, 1);
   assert.equal(m.tre.familier[0].valgt, true);
   assert.equal(m.tre.familier[0].sjangre.every((k) => !k.med), true);
-  assert.equal(m.tom, false);
+  assert.equal(m.tom, true, "ingenting huket på = tomt hefte, selv om lista har poster");
   assert.equal(foreslaaTittel(m), "Pensumutdrag", "ingenting i heftet gir standardtittelen");
+});
+
+test("settSammen: en avhuket metasjanger står i treet som valgt, men ikke med", () => {
+  const m = settSammen({ valg: ["metasjanger:Blues"], fravalg: ["metasjanger:Blues", "sjanger:Blues", "sjanger:Electric blues", "sjanger:Blues rock", "artist:bessie", "artist:robert", "artist:muddy"] }, DATA, STUDENT);
+  const F = m.tre.familier[0];
+  assert.equal(F.valgt, true);
+  assert.equal(F.med, false);
+  assert.equal(F.sjangre.length, 3, "alt under står igjen som alternativer");
+  assert.equal(m.tom, true);
+  const paa = settSammen({ valg: ["metasjanger:Blues"], fravalg: [] }, DATA, STUDENT);
+  assert.equal(paa.tre.familier[0].med, true);
 });
 
 test("settSammen: en ukjent metasjanger havner i mangler, og et valgt tiår står som valgt i treet", () => {

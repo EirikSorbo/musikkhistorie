@@ -15,7 +15,7 @@
 //  presentasjon-modell.js (testet).
 // ============================================================================
 
-import { artistPlassering } from "./presentasjon-modell.js?v=5.58";
+import { artistPlassering } from "./presentasjon-modell.js?v=5.59";
 
 // Bygger spaltene. Idempotent: står oppsettet alt, gjøres ingenting — modalens
 // observatør kaller oss igjen etter våre egne flyttinger.

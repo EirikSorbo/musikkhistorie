@@ -22,22 +22,22 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.58";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.58";
-import { onAuthChange } from "./store.js?v=5.58";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.58";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.58";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.58";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.58";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.58";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.58";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.58";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.58";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.58";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.58";
-import { DECADES, isVisible } from "./limits.js?v=5.58";
-import { askChoice } from "./ui-modal.js?v=5.58";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.58";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.59";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.59";
+import { onAuthChange } from "./store.js?v=5.59";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.59";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.59";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.59";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.59";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.59";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.59";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.59";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.59";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.59";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.59";
+import { DECADES, isVisible } from "./limits.js?v=5.59";
+import { askChoice } from "./ui-modal.js?v=5.59";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.59";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -99,8 +99,8 @@ function hukRad(x, klasse, hint, stille = false) {
 function treHtml(tre) {
   const familier = tre.familier.map((F) => {
     const hode = F.kanVelges
-      ? `<label class="ut-fam-navn"><input type="checkbox" data-huk="${h(F.vis)}" data-eksplisitt="1"${F.valgt ? " checked" : ""}> ` +
-        `<b>${h(F.navn)}</b> <span class="muted">${F.valgt ? "hele metasjangeren" : "metasjanger"}</span></label>`
+      ? `<label class="ut-fam-navn${F.valgt && !F.med ? " ut-av" : ""}"><input type="checkbox" data-huk="${h(F.vis)}" data-eksplisitt="1"${F.med ? " checked" : ""}> ` +
+        `<b class="ut-navn">${h(F.navn)}</b> <span class="muted">${F.valgt ? "hele metasjangeren" : "metasjanger"}</span></label>`
       : `<span class="ut-fam-navn"><b>${h(F.navn)}</b></span>`;
     const sjangre = F.sjangre.map((k) =>
       `<li class="ut-sj${k.med ? "" : " ut-av"}"><label><input type="checkbox" data-huk="${h(k.vis)}"${k.med ? " checked" : ""}> ` +
@@ -177,11 +177,10 @@ function tegnPanel(u) {
   const rf = $("utskrift-rekkefolge");
   if (rf && rf.value !== u.form.rekkefolge) rf.value = u.form.rekkefolge;
 
-  const av = modell.tom || !klar();
   const knapp = (id, off) => { const b = $(id); if (b) b.disabled = off; };
-  knapp("utskrift-skriv-ut", av);
-  knapp("utskrift-lenke", modell.tom);
-  knapp("utskrift-toem", modell.tom);
+  knapp("utskrift-skriv-ut", modell.tom || !klar());
+  knapp("utskrift-lenke", u.valg.length === 0);
+  knapp("utskrift-toem", u.valg.length === 0);
 }
 
 // --- Søk for å legge til -----------------------------------------------------
@@ -402,7 +401,6 @@ function forsideHtml(t, farge) {
     tips.push("Tiårene, innovasjonene og instrumentene står som et eget bakteppe etter sjangrene.");
   }
   if (modell.lytteliste.length) tips.push("Lytteeksemplene har et nummer i teksten. Lenkene står samlet i lyttelista bakerst.");
-  if (modell.kilder.length) tips.push("Kildene til hvert kort står bakerst, i samme rekkefølge som heftet.");
   tips.push("Tekstene er hentet fra appen den dagen heftet ble laget, og kan være oppdatert siden.");
   return `<section class="h-forside">
     <div class="h-merke"><img src="img/header-icon.png" alt=""><span>historieappen.no · Populærmusikkhistorie</span></div>
@@ -431,7 +429,6 @@ function innholdHtml() {
   if (modell.instrumenter.length) punkter.push({ navn: "Instrumenter", linjer: [kortListe(modell.instrumenter.map((i) => i.tittel))] });
   for (const s of modell.sider) punkter.push({ navn: s.tittel, linjer: [] });
   if (modell.lytteliste.length) punkter.push({ navn: "Lytteliste", linjer: [] });
-  if (modell.kilder.length) punkter.push({ navn: "Kilder", linjer: [] });
   return `<section class="h-innhold">
     <h1>Innhold</h1>
     <ul class="h-toc">${punkter.map((p) => `<li><span class="h-toc-navn">${h(p.navn)}</span>${p.linjer.map((l) => `<span class="h-toc-under">${h(l)}</span>`).join("")}</li>`).join("")}</ul>
@@ -500,21 +497,8 @@ function lyttelisteHtml() {
   </section>`;
 }
 
-function kildeHtml(k) {
-  const detaljer = [k.forfatter, k.year].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
-  return `<p>${h(k.text || kortUrl(k.url))}${detaljer ? ` <span class="h-kilde-detalj">(${h(detaljer)})</span>` : ""}${k.url ? `<span class="h-url">${h(kortUrl(k.url))}</span>` : ""}</p>`;
-}
-
-function kilderHtml() {
-  if (!modell.kilder.length) return "";
-  return `<section class="h-seksjon h-kilder">${seksjonHode("Bakerst", "Kilder")}
-    <p class="h-ingress">Kildene slik de står på hvert kort i appen, i heftets rekkefølge.</p>
-    <div class="h-liste-2sp">${modell.kilder.map((g) => `<div class="h-kilde-gruppe"><h4>${h(g.kort)}</h4>${g.kilder.map(kildeHtml).join("")}</div>`).join("")}</div>
-  </section>`;
-}
-
 function kolofonHtml() {
-  return `<footer class="h-kolofon">Laget med utskriftsfunksjonen i historieappen.no, ${h(datoTekst())}. Tekstene er lærerens pensumtekster slik de sto i appen den dagen. Bildene er fra Wikimedia Commons og Wikipedia, med kreditering under hvert bilde.${erLaerer ? "" : " Bare innhold som er synlig for studenter, er tatt med."}</footer>`;
+  return `<footer class="h-kolofon">Laget med utskriftsfunksjonen i historieappen.no, ${h(datoTekst())}. Tekstene er lærerens pensumtekster slik de sto i appen den dagen; kildene til hvert kort står i appen. Bildene er fra Wikimedia Commons og Wikipedia, med kreditering under hvert bilde.${erLaerer ? "" : " Bare innhold som er synlig for studenter, er tatt med."}</footer>`;
 }
 
 // Løpende topptekst og sidetall via @page-marginbokser. Virker i Firefox og
@@ -568,7 +552,9 @@ function tegnHefte(u) {
   if (modell.tom) {
     el.innerHTML = `<div class="hefte-tom">
       <h2>Heftet er tomt</h2>
-      <p>Legg til det du vil ha med. Søk i panelet over, eller åpne et kort i appen og trykk skriverikonet i tittellinja. Alt du velger, samles her, i den rekkefølgen pensumet er bygd opp.</p>
+      <p>${u.valg.length
+        ? "Alt i utvalget er huket bort. Huk på det du vil ha med, eller søk etter mer i panelet over."
+        : "Legg til det du vil ha med. Søk i panelet over, eller åpne et kort i appen og trykk skriverikonet i tittellinja. Alt du velger, samles her, i den rekkefølgen pensumet er bygd opp."}</p>
       <p><a class="btn ghost small" href="index.html">Til startsiden</a></p>
     </div>`;
     document.title = "Utskrift – Pensumforslag";
@@ -588,7 +574,6 @@ function tegnHefte(u) {
     instrumenterHtml(),
     siderHtml(),
     lyttelisteHtml(),
-    kilderHtml(),
     kolofonHtml(),
   ].join("");
   settSidestil(t);

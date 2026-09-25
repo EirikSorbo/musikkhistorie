@@ -49,7 +49,7 @@
 .ut-fam > ul, .ut-sj > ul, .ut-lose > ul { padding-left: 20px; }
 .utskrift-liste label { display: flex; align-items: baseline; gap: 6px; font-size: 0.88rem; padding: 2px 0; cursor: pointer; line-height: 1.35; }
 .utskrift-liste input[type="checkbox"] { flex: none; margin: 0; position: relative; top: 2px; accent-color: var(--accent-2); }
-.ut-av > label .ut-navn { color: var(--muted-2); text-decoration: line-through; }
+.ut-av > label .ut-navn, label.ut-av .ut-navn { color: var(--muted-2); text-decoration: line-through; }
 .ut-mangler > label .ut-navn { color: var(--muted-2); }
 .ut-rad { display: flex; flex-wrap: wrap; gap: 0 12px; }
 .ut-rad li { min-width: 110px; }
@@ -188,16 +188,12 @@
 .h-instrument { margin-top: 6mm; }
 .h-instrument h2 { font-size: 15pt; margin-bottom: 2.5mm; }
 
-/* Lytteliste og kilder: flyter etter forrige seksjon, med luft over. */
-.h-lytteliste, .h-kilder { margin-top: 12mm; }
+/* Lyttelista flyter etter forrige seksjon, med luft over. */
+.h-lytteliste { margin-top: 12mm; }
 .h-liste-2sp { columns: 2; column-gap: 8mm; font-size: 9.5pt; }
 .h-lytte-rad { break-inside: avoid; margin-bottom: 2.6mm; display: flex; gap: 2mm; }
 .h-lytte-rad .h-nr { margin: 0.6mm 0 0; flex: none; }
 .h-url { display: block; font-size: 7.5pt; color: var(--h-demp2); word-break: break-all; }
-.h-kilde-gruppe { break-inside: avoid; margin-bottom: 3mm; font-size: 9pt; }
-.h-kilde-gruppe h4 { font-size: 9pt; margin-bottom: 0.6mm; }
-.h-kilde-gruppe p { margin: 0 0 0.8mm; }
-.h-kilde-detalj { color: var(--h-demp); }
 .h-kolofon { margin-top: 10mm; padding-top: 3mm; border-top: 0.4pt solid var(--h-linje); font-size: 8pt; color: var(--h-demp); }
 
 /* --- Papiret -------------------------------------------------------------- */
