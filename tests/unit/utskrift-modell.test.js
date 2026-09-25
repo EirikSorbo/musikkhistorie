@@ -9,8 +9,8 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE,
-} from "../../js/utskrift-modell.js?v=5.59";
-import { isVisible } from "../../js/limits.js?v=5.59";
+} from "../../js/utskrift-modell.js?v=5.60";
+import { isVisible } from "../../js/limits.js?v=5.60";
 
 const NAA = 2026;
 
@@ -19,7 +19,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.59rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.60rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -139,10 +139,12 @@ test("tittelen klippes til TITTEL_MAKS tegn", () => {
   assert.equal(normaliserTittel(null), "");
 });
 
-test("DELER-listen har unike id-er med gruppe-prefiks", () => {
+test("DELER-listen har unike id-er med gruppe-prefiks; artistkortet har virketid, ikke bilde", () => {
   const ider = DELER.flatMap((g) => g.valg.map((v) => v.id));
   assert.equal(new Set(ider).size, ider.length);
   for (const id of ider) assert.match(id, /^(artist|sjanger|tech|tiaar|foran|bak)\.[a-z]+$/);
+  assert.ok(ider.includes("artist.virketid"), "tidslinja for virketid er et avhukbart valg (v5.60)");
+  assert.ok(ider.includes("artist.bilde"), "bildet er fortsatt et valg");
 });
 
 // ---------------------------------------------------------------------------
@@ -283,12 +285,13 @@ test("skjulte og ventende artister og slettede kort havner i mangler, ikke i hef
   assert.equal(m.tom, false, "utvalget er ikke tomt, det mangler bare innhold");
 });
 
-test("artistkortet: levetid, innflytelse, verk etter år, bilde med kreditering uten «Foto:»", () => {
+test("artistkortet: levetid, innflytelse, verk etter år, spennet til virketidslinja, bilde med kreditering uten «Foto:»", () => {
   const m = settSammen(["artist:bessie"], DATA, STUDENT);
   const k = m.familier[0].loseArtister[0];
   assert.equal(k.levetid, "1894–1937");
   assert.equal(k.fakta.innflytelse, "ca. 1923–1933");
   assert.deepEqual(k.verk.map((w) => w.tittel), ["Downhearted Blues", "St. Louis Blues"]);
+  assert.deepEqual(k.span, { start: 1923, end: 1933, open: false }, "virketidslinja tegnes av spennet");
   assert.deepEqual(k.bilde, { url: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", kreditt: "Wikimedia" });
   assert.deepEqual(k.tiaar, [1920, 1930]);
 });

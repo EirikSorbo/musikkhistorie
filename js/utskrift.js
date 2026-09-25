@@ -22,22 +22,23 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.59";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.59";
-import { onAuthChange } from "./store.js?v=5.59";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.59";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.59";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.59";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.59";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.59";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.59";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.59";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.59";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.59";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.59";
-import { DECADES, isVisible } from "./limits.js?v=5.59";
-import { askChoice } from "./ui-modal.js?v=5.59";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.59";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.60";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.60";
+import { onAuthChange } from "./store.js?v=5.60";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.60";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.60";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.60";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.60";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.60";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.60";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.60";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.60";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.60";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.60";
+import { artistStripHtml } from "./artist-strip.js?v=5.60";
+import { DECADES, isVisible } from "./limits.js?v=5.60";
+import { askChoice } from "./ui-modal.js?v=5.60";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.60";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -265,10 +266,15 @@ function punkterHtml(liste) {
   return `<ul class="h-punkter">${liste.map((p) => `<li>${renderInline(p, {})}</li>`).join("")}</ul>`;
 }
 
+// Wikimedia lager ikke en miniatyr som er bredere enn originalen (svarer
+// 400), så noen kort fikk tomt bilde: T-Bone Walker og Little Walter i
+// Blues-heftet (målt 2026-09-25). Samme reserve som appens imgTag: data-full
+// bærer originalen, og feillytteren under bytter til den.
 function bildeHtml(bilde, hoyde = "") {
   if (!bilde) return "";
-  const src = wikimediaThumb(bilde.url, 500) || bilde.url;
-  return `<figure class="h-bilde"><img src="${h(src)}" alt="" decoding="async"${hoyde ? ` style="height:${hoyde}"` : ""}>` +
+  const thumb = wikimediaThumb(bilde.url, 500);
+  const src = thumb || bilde.url;
+  return `<figure class="h-bilde"><img src="${h(src)}" alt="" decoding="async"${thumb ? ` data-full="${h(bilde.url)}"` : ""}${hoyde ? ` style="height:${hoyde}"` : ""}>` +
     `${bilde.kreditt ? `<figcaption>Foto: ${h(bilde.kreditt)}</figcaption>` : ""}</figure>`;
 }
 
@@ -278,6 +284,18 @@ function lyttHtml(liste, medNr) {
   }
   const eks = liste.map((l) => `«${h(l.label)}»${h(musicExampleLabel(l))}${medNr && l.nr ? `<span class="h-nr">${l.nr}</span>` : ""}`);
   return `<div class="h-lytt">${NOTE_SVG}<span><strong>Lytt</strong> ${eks.join(" · ")}</span></div>`;
+}
+
+// Tidslinja for virketid (v5.60): appens egen innflytelseslinje
+// (js/artist-strip.js), så kortet og heftet leser samme akse og samme
+// spenn. Kortet bærer spennet, ikke artisten; linja bygges av det.
+function virketidHtml(k) {
+  if (!k.span) return "";
+  return artistStripHtml({
+    influenceStart: k.span.start,
+    influenceEnd: k.span.open ? null : k.span.end,
+    metaGenre: k.familie,
+  });
 }
 
 function artistKortHtml(k, d, kompakt, medNr) {
@@ -296,6 +314,7 @@ function artistKortHtml(k, d, kompakt, medNr) {
   return `<article class="h-kort h-artist">
     <h3 class="h-kort-navn">${h(k.navn)}${k.levetid ? ` <span class="h-aar">${h(k.levetid)}</span>` : ""}</h3>
     ${d["artist.fakta"] && fakta.length ? `<p class="h-fakta">${fakta.join(" · ")}</p>` : ""}
+    ${d["artist.virketid"] ? virketidHtml(k) : ""}
     <div class="h-kort-kropp${bilde ? "" : " uten-bilde"}">
       <div class="h-kort-tekst">
         ${d["artist.punkter"] ? punkterHtml(k.punkter) : ""}
@@ -590,15 +609,22 @@ function tegnHefte(u) {
 // ----------------------------------------------------------------------------
 
 // Bildene må være lastet før dialogen åpnes, ellers står det tomme rammer i
-// PDF-en. Fire sekunder er taket: et bilde som henger, skal ikke stoppe
+// PDF-en. Åtte sekunder er taket: et bilde som henger, skal ikke stoppe
 // utskriften.
 async function skrivUt() {
+  const knapp = $("utskrift-skriv-ut");
   const bilder = [...document.querySelectorAll("#hefte img")].filter((i) => !i.complete);
+  if (bilder.length && knapp) {
+    knapp.disabled = true;
+    knapp.textContent = `Venter på ${bilder.length} ${bilder.length === 1 ? "bilde" : "bilder"} …`;
+  }
   const ventet = Promise.all(bilder.map((i) => new Promise((r) => {
     i.addEventListener("load", r, { once: true });
     i.addEventListener("error", r, { once: true });
   })));
-  await Promise.race([ventet, new Promise((r) => setTimeout(r, 4000))]);
+  await Promise.race([ventet, new Promise((r) => setTimeout(r, 8000))]);
+  if (knapp) knapp.disabled = false;
+  tegnHefte(lesUtvalg());   // knappeteksten (sideanslaget) tilbake
   window.print();
 }
 
@@ -675,6 +701,14 @@ async function lesLenke() {
 
 function koble() {
   $("utskrift-skriv-ut")?.addEventListener("click", skrivUt);
+  // Miniatyren feilet (se bildeHtml): bytt til originalen, én gang.
+  $("hefte")?.addEventListener("error", (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.dataset.full) return;
+    const full = img.dataset.full;
+    delete img.dataset.full;
+    img.src = full;
+  }, true);
   $("utskrift-lenke")?.addEventListener("click", kopierLenke);
   $("utskrift-toem")?.addEventListener("click", toemUtvalget);
 

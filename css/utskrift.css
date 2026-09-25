@@ -158,6 +158,13 @@
 .h-ordliste dt { font-weight: 600; }
 .h-ordliste dd { margin: 0; color: var(--h-demp); }
 
+/* Tidslinja for virketid på artistkortet (v5.60): appens egen innflytelses-
+   linje (.ai-strip i styles.css), satt i papirmål. */
+.hefte .ai-strip { margin: 1mm 0 3.5mm; padding: 0 3mm; }
+.hefte .ai-axis { font-size: 6.5pt; color: var(--h-demp2); height: 3.2mm; margin-bottom: 0.4mm; }
+.hefte .ai-track { height: 3mm; }
+.hefte.kompakt .ai-strip { margin-bottom: 2.5mm; }
+
 /* Kortene (artist og innovasjon) */
 .h-kort { margin: 6mm 0 0; padding-top: 4.5mm; border-top: 0.5pt solid var(--h-linje); }
 .h-kort-navn { font-size: 14pt; margin-bottom: 1mm; }
