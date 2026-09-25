@@ -22,18 +22,18 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.67";
-import { escapeHtml } from "./util.js?v=5.67";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.67";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.67";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.67";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.67";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.67";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.67";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.67";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.67";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.67";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.67";
+import { getState } from "./explore-context.js?v=5.68";
+import { escapeHtml } from "./util.js?v=5.68";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.68";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.68";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.68";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.68";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.68";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.68";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.68";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.68";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.68";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.68";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -246,7 +246,7 @@ function renderListe() {
       <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
       <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og fyll den mens du blar eller tar opp" ${lastet ? "" : "disabled"}>Ny + samle …</button>
     </div>
-    <p class="muted vis-tips">Raskest å bygge en plan: finn fram i appen og trykk lenkeknappen i kortets tittellinje. Menyen «Legg til som stopp i» legger kortet rett inn.</p>`
+    <p class="muted vis-tips">Raskest å bygge en plan: finn fram i appen og trykk visningsknappen i kortets tittellinje. Menyen «Legg til som stopp i» legger kortet rett inn.</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
   // Står visningen alt på, kan den avsluttes herfra.
   const paa = document.getElementById("vis-paa");
@@ -287,7 +287,7 @@ function renderKladd() {
         <button type="button" class="btn ghost small danger" data-pres-fjern="${i}" title="Fjern stoppet" aria-label="Fjern stoppet">✕</button>
       </span>
     </div>`;
-  }).join("") : `<p class="muted">Ingen stopp ennå. Finn fram i appen, trykk lenkeknappen i kortets tittellinje, og lim inn under.</p>`;
+  }).join("") : `<p class="muted">Ingen stopp ennå. Finn fram i appen, trykk visningsknappen i kortets tittellinje, velg «Kopier lenke», og lim inn under.</p>`;
 }
 
 // ----------------------------------------------------------------------------

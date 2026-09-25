@@ -2,25 +2,27 @@
 //  «LEGG TIL I KJØREPLAN»-MENYEN (v5.26)
 // ----------------------------------------------------------------------------
 //  Brukerens forenkling av kjøreplan-flyten: i stedet for å kopiere lenker og
-//  lime dem inn i editoren, får lenkeknappen i modalhodene en liten meny med
-//  de lagrede kjøreplanene — ett klikk legger kortet til som stopp, rett fra
-//  der man står. Lim-inn-feltet i editoren består som reserve.
+//  lime dem inn i editoren, får visningsknappen i modalhodene (samme ikon
+//  som Visning i toppmenyen, v5.68) en liten meny med de lagrede
+//  kjøreplanene — ett klikk legger kortet til som stopp, rett fra der man
+//  står. «Kopier lenke» er siste punkt i menyen, og lim-inn-feltet i
+//  editoren består som reserve.
 //
 //  Menyen finnes BARE når nettleserens Firebase-økt er en lærerkonto (samme
 //  liste som lærersidens gate); reglene håndhever uansett at bare læreren
-//  kan skrive content/presentasjoner. Kopieringen skjer alltid først, som
-//  før — menyen er et tillegg, ikke et bytte.
+//  kan skrive content/presentasjoner. Knappen selv vises bare i en lærerøkt
+//  (body.laerer-okt, satt her): studentene har ingen kjøreplaner å legge i.
 //
 //  Lastes av forsiden, lærersiden og slektstresiden (student.html laster
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePlan } from "./store.js?v=5.67";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.67";
-import { getState } from "./explore-context.js?v=5.67";
-import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.67";
-import { setLenkeMenyProvider } from "./ui-modal.js?v=5.67";
-import { escapeHtml } from "./util.js?v=5.67";
+import { onAuthChange, savePlan } from "./store.js?v=5.68";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.68";
+import { getState } from "./explore-context.js?v=5.68";
+import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.68";
+import { setLenkeMenyProvider, kopierVisLenke } from "./ui-modal.js?v=5.68";
+import { escapeHtml } from "./util.js?v=5.68";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen
@@ -88,10 +90,19 @@ function visMeny(knapp) {
       <button type="button" class="lenke-meny-valg" data-plan="${escapeHtml(id)}">
         ${escapeHtml(p.tittel)} <span class="muted">· ${p.stopp.length} stopp</span>
       </button>`).join("")}
-    <button type="button" class="lenke-meny-valg lenke-meny-ny" data-plan="">Ny kjøreplan …</button>`;
+    <button type="button" class="lenke-meny-valg lenke-meny-ny" data-plan="">Ny kjøreplan …</button>
+    <button type="button" class="lenke-meny-valg lenke-meny-ny" data-kopier="1">Kopier lenke</button>`;
   head.appendChild(meny);
 
-  meny.addEventListener("click", (e) => {
+  meny.addEventListener("click", async (e) => {
+    if (e.target.closest("[data-kopier]")) {
+      const ok = await kopierVisLenke(verdi);
+      if (meny) {
+        meny.innerHTML = `<p class="lenke-meny-hode lenke-meny-ok">${ok ? "Lenke kopiert" : "Lenken står i dialogen"}</p>`;
+        setTimeout(lukkMeny, 1200);
+      }
+      return;
+    }
     const valg = e.target.closest("[data-plan]");
     if (valg) leggTil(valg.dataset.plan, verdi);
   });
@@ -128,6 +139,8 @@ async function leggTil(planId, vis) {
 export function initPlanMeny() {
   onAuthChange((user) => {
     erLaerer = erLaererBruker(user);
+    // Visningsknappen i modalhodene vises bare i en lærerøkt (CSS).
+    document.body.classList.toggle("laerer-okt", erLaerer);
     if (!erLaerer) lukkMeny();
   });
   setLenkeMenyProvider(visMeny);

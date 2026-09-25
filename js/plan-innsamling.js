@@ -28,15 +28,15 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.67";
-import { getState } from "./explore-context.js?v=5.67";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.67";
-import { setModalApnetProvider, topOpenModal } from "./ui-modal.js?v=5.67";
-import { escapeHtml } from "./util.js?v=5.67";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.67";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.67";
-import { aktivPlanId } from "./presentasjon.js?v=5.67";
-import { erLaererBruker } from "./plan-meny.js?v=5.67";
+import { savePlan, onAuthChange } from "./store.js?v=5.68";
+import { getState } from "./explore-context.js?v=5.68";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.68";
+import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.68";
+import { escapeHtml } from "./util.js?v=5.68";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.68";
+import { registrerYtIntercept } from "./yt-spiller.js?v=5.68";
+import { aktivPlanId } from "./presentasjon.js?v=5.68";
+import { erLaererBruker } from "./plan-meny.js?v=5.68";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -73,7 +73,11 @@ const endringsLyttere = [];
 export function vedSamleEndring(fn) { endringsLyttere.push(fn); }
 const meldEndring = () => endringsLyttere.forEach((fn) => { try { fn(); } catch (e) { console.warn(e); } });
 
-const PLUSS_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+// Plukkeknappen bruker visningsikonet (v5.68, brukervalg): samme ikon som
+// menyknappen i hodet og som Visning i toppmenyen. Under plukking skjuler
+// CSS menyknappen, så det står ÉN visningsknapp i hodet, og den legger til i
+// den aktive planen med én gang.
+const PLUSS_SVG = VISNING_SVG;
 const HAKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
 function planerNaa() {

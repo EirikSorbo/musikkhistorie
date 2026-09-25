@@ -1294,9 +1294,13 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 .modal-head .modal-close,
 .modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
 .modal-head .modal-close { margin-right: 4px; }
-/* «Kopier lenke» (v5.22). [hidden]-skjulingen dekkes av den globale regelen
-   øverst (v5.24). */
-.modal-head .modal-lenke { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; }
+/* Visningsknappen (v5.68, før «Kopier lenke» v5.22): bare i en lærerøkt
+   (body.laerer-okt, plan-meny.js), og ikke under plukking, der plukkeknappen
+   med samme ikon tar over. [hidden]-skjulingen (intet mål) dekkes av den
+   globale regelen øverst (v5.24). */
+.modal-head .modal-lenke { display: none; padding: 5px 9px; min-width: 34px; align-items: center; justify-content: center; margin-right: 2px; }
+body.laerer-okt .modal-head .modal-lenke { display: inline-flex; }
+body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .modal-head .modal-lenke svg { display: block; }
 .modal-foot-right { display: flex; justify-content: flex-end; margin-top: 20px; }
 

@@ -129,11 +129,12 @@ export function setupModal(idOrEl, onClose) {
   m.querySelector(".modal-close")?.addEventListener("click", close);
 }
 
-// «Kopier lenke» (v5.22): dyplenke til modalens gjeldende innhold, lest fra
-// backdropens data-vis. Kvitteringen skjer i selve knappen (lenke → hake);
-// timeren flipper bare ikonet tilbake, så den er ufarlig om modalen lukkes.
-const LENKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
-const HAKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+// Visningsknappen i modalhodene (v5.68, brukervalg 2026-09-25): ÉN måte å
+// legge noe i en kjøreplan på, med samme ikon som Visning i toppmenyen.
+// Knappen åpner «Legg til som stopp i»-menyen (js/plan-meny.js), der
+// «Kopier lenke» (v5.22) nå bor som siste punkt. Fram til v5.67 var dette
+// lenkeknappen, som kopierte lenken ved hvert klikk og viste menyen attåt.
+export const VISNING_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 7.5l5 2.5-5 2.5z"/></svg>';
 
 // Modernt API først; execCommand som reserve. Verifisert nødvendig i praksis:
 // innebygde/administrerte nettlesere kan nekte Clipboard-API-et («Write
@@ -158,7 +159,7 @@ function kopierTilUtklipp(tekst) {
 // «Legg til i kjøreplan»-menyen (v5.26). ui-modal kjenner bevisst ingen
 // Firestore (testene importerer denne fila via ui.js, og store.js drar inn
 // SDK-en over nett) — sidene registrerer i stedet en leverandør som får
-// knappen etter hvert kopiklikk. js/plan-meny.js kobler den på, og viser
+// visningsknappen ved hvert klikk. js/plan-meny.js kobler den på, og viser
 // menyen bare når nettleseren er logget inn som lærer.
 let lenkeMenyProvider = null;
 export function setLenkeMenyProvider(fn) { lenkeMenyProvider = fn; }
@@ -169,33 +170,27 @@ export function setLenkeMenyProvider(fn) { lenkeMenyProvider = fn; }
 let modalApnetProvider = null;
 export function setModalApnetProvider(fn) { modalApnetProvider = fn; }
 
-async function kopierVisLenke(knapp) {
-  const verdi = knapp.closest(".modal-backdrop")?.dataset.vis;
-  if (!verdi) return;
-  lenkeMenyProvider?.(knapp);
-  // Lenken peker alltid på forsiden — det er den som har ?vis=-ruteren, og
-  // fra lærersiden/tre-siden ligger index.html i samme mappe.
+// «Kopier lenke» (v5.22; fra v5.68 et punkt i kjøreplan-menyen): dyplenke
+// til målet. Lenken peker alltid på forsiden, som har ?vis=-ruteren, og fra
+// lærersiden/tre-siden ligger index.html i samme mappe. Returnerer true når
+// lenken ligger på utklippstavla; ellers vises den i en dialog, så den kan
+// kopieres for hånd (styrte profiler og eldre nettlesere kan sperre
+// utklippstavla).
+export async function kopierVisLenke(verdi) {
+  if (!verdi) return false;
   const url = new URL("index.html", window.location.href);
   url.searchParams.set("vis", verdi);
   try {
     await kopierTilUtklipp(url.href);
-    knapp.focus();   // execCommand-reserven flytter fokus via textarea-en
-    knapp.innerHTML = HAKE_SVG;
-    knapp.title = "Lenke kopiert";
-    clearTimeout(knapp._kvittering);
-    knapp._kvittering = setTimeout(() => {
-      knapp.innerHTML = LENKE_SVG;
-      knapp.title = "Kopier lenke";
-    }, 1400);
+    return true;
   } catch (e) {
-    // Utklippstavla kan være sperret (styrte profiler, eldre nettlesere):
-    // vis lenken, så den kan kopieres for hånd.
     window.prompt("Kopier lenken:", url.href);
+    return false;
   }
 }
 
 // Konverter eksisterende ✕-knapp til ←-tilbakeknapp og injiser ny ✕ for "lukk alle",
-// pluss «Kopier lenke»-knappen foran dem.
+// pluss visningsknappen foran dem.
 // Idempotent (hopper over modaler som allerede har .modal-close-all), så den kan
 // kjøres på nytt etter at flere modaler er injisert dynamisk (se explore.js).
 export function initModalHeaders() {
@@ -213,14 +208,18 @@ export function initModalHeaders() {
     closeAll.setAttribute("aria-label", "Lukk alle");
     closeAll.addEventListener("click", modalCloseAll);
     closeBtn.parentNode.insertBefore(closeAll, closeBtn.nextSibling);
+    // Klassen heter fortsatt modal-lenke: den er merket «hodet kan bære et
+    // mål» for plan-innsamling.js og utskrift-utvalg.js. Bare synlig i en
+    // lærerøkt (CSS, body.laerer-okt satt av plan-meny.js): bare læreren
+    // har kjøreplaner å legge i.
     const lenke = document.createElement("button");
     lenke.type = "button";
     lenke.className = "modal-lenke btn ghost small";
-    lenke.title = "Kopier lenke";
-    lenke.setAttribute("aria-label", "Kopier lenke");
+    lenke.title = "Legg til i kjøreplan";
+    lenke.setAttribute("aria-label", "Legg til i kjøreplan");
     lenke.hidden = true;   // modalOpen slår den på når backdropen har data-vis
-    lenke.innerHTML = LENKE_SVG;
-    lenke.addEventListener("click", () => kopierVisLenke(lenke));
+    lenke.innerHTML = VISNING_SVG;
+    lenke.addEventListener("click", () => lenkeMenyProvider?.(lenke));
     closeBtn.parentNode.insertBefore(lenke, closeBtn);
   });
 }

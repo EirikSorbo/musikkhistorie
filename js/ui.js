@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.67";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.67";
-import { punkterHtml } from "./punkter.js?v=5.67";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.67";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.67";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.67";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.68";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.68";
+import { punkterHtml } from "./punkter.js?v=5.68";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.68";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.68";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.68";
 import {
   escapeHtml,
   linkDesc,
@@ -38,12 +38,12 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.67";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders } from "./ui-modal.js?v=5.67";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.67";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.67";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.67";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.67";
+} from "./ui-helpers.js?v=5.68";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.68";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.68";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.68";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.68";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.68";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -85,7 +85,8 @@ export function buildMainGenreList(artists) {
 // uten å åpne kortet først. Knappen er skjult med CSS til plan-innsamling.js
 // setter body.samler-plukk, og klikket fanges der (delegert på document), så
 // listene vet ingenting om økta. Bare artister studentene ser kan bli et stopp.
-const KORT_PLUSS_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+// Visningsikonet (v5.68): samme som i toppmenyen og i modalhodene.
+const KORT_PLUSS_SVG = VISNING_SVG;
 export function kortPlussHtml(a) {
   if (!a || !isVisible(a)) return "";
   return `<button type="button" class="kort-pluss" data-vis="artist:${escapeHtml(a.id)}" title="Legg til i kjøreplanen" aria-label="Legg ${escapeHtml(a.name)} til i kjøreplanen">${KORT_PLUSS_SVG}</button>`;
