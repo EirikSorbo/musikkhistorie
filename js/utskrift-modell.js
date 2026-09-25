@@ -43,16 +43,16 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.62";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.62";
-import { resolveSpan } from "./timeline-lanes.js?v=5.62";
-import { GENEALOGY, GENEALOGY_META_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.62";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.62";
-import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.62";
-import { heatRow } from "./heat-strip.js?v=5.62";
-import { ytMaal } from "./presentasjon-modell.js?v=5.62";
-import { normaliserPunkter } from "./punkter.js?v=5.62";
-import { safeUrl } from "./util.js?v=5.62";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.63";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.63";
+import { resolveSpan } from "./timeline-lanes.js?v=5.63";
+import { GENEALOGY, GENEALOGY_META_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.63";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.63";
+import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.63";
+import { heatRow } from "./heat-strip.js?v=5.63";
+import { ytMaal } from "./presentasjon-modell.js?v=5.63";
+import { normaliserPunkter } from "./punkter.js?v=5.63";
+import { safeUrl } from "./util.js?v=5.63";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten
@@ -177,7 +177,6 @@ export const DELER = [
     { id: "tiaar.samfunn", navn: "Samfunn" },
     { id: "tiaar.teknologi", navn: "Teknologi" },
     { id: "tiaar.innovasjoner", navn: "Innovasjonene i tiåret" },
-    { id: "tiaar.artister", navn: "Artistene i utvalget som hører til tiåret" },
   ] },
   { gruppe: "Foran og bak", valg: [
     { id: "foran.tidslinje", navn: "Tidslinje over utvalget" },
@@ -682,7 +681,6 @@ export function settSammen(utvalg, data = {}, valg = {}) {
       vis: `tiår:${tiaar}`, tiaar,
       samfunn: d["tiaar.samfunn"] ? String(desc.society || "") : "",
       teknologi: d["tiaar.teknologi"] ? String(desc.tech || "") : "",
-      artister: d["tiaar.artister"] ? dokArtister.filter((k) => k.tiaar.includes(tiaar)).map((k) => k.navn) : [],
       innovasjoner: d["tiaar.innovasjoner"]
         ? tech.filter((t) => t.type !== "hendelse" && tiaarFor(t) === tiaar)
           .map((t) => ({ navn: t.name || "(uten navn)", aar: heltall(t.adoptedYear) ?? heltall(t.inventedYear) }))

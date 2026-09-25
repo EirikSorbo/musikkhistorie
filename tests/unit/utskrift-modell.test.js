@@ -9,8 +9,8 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE,
-} from "../../js/utskrift-modell.js?v=5.62";
-import { isVisible } from "../../js/limits.js?v=5.62";
+} from "../../js/utskrift-modell.js?v=5.63";
+import { isVisible } from "../../js/limits.js?v=5.63";
 
 const NAA = 2026;
 
@@ -19,7 +19,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.62rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.63rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -237,12 +237,11 @@ test("kildene er ikke med i heftet (brukervalg 2026-09-25): ingen kilde-del, ing
   assert.equal("kilder" in m.instrumenter[0], false);
 });
 
-test("bakteppet: tiårene i tidsrekkefølge, utledet av artistene, med artistene i utvalget og innovasjonene i tiåret", () => {
+test("bakteppet: tiårene i tidsrekkefølge, utledet av artistene, med innovasjonene i tiåret", () => {
   const m = settSammen(["tiår:1950", "tiår:1920", "artist:muddy", "artist:bessie"], DATA, STUDENT);
   // 1920 og 1950 er valgt; 1930, 1940 og 1960 følger av innflytelsesperiodene.
   assert.deepEqual(m.bakteppe.map((b) => b.tiaar), [1920, 1930, 1940, 1950, 1960]);
-  assert.deepEqual(m.bakteppe[0].artister, ["Bessie Smith"]);
-  assert.deepEqual(m.bakteppe[3].artister, ["Muddy Waters"]);
+  assert.equal("artister" in m.bakteppe[0], false, "«I dette utvalget»-linja er tatt bort (brukervalg 2026-09-25)");
   assert.equal(m.bakteppe[0].samfunn, "Prohibition.\nHarlem-renessansen.");
   assert.deepEqual(m.bakteppe[3].innovasjoner, [{ navn: "Transistorradioen", aar: 1954 }], "hendelser og ventende kort holdes utenfor");
   const uten = settSammen(["tiår:1950"], DATA, { ...STUDENT, deler: { "tiaar.innovasjoner": false, "tiaar.samfunn": false } });

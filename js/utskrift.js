@@ -22,23 +22,23 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.62";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.62";
-import { onAuthChange } from "./store.js?v=5.62";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.62";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.62";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.62";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.62";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.62";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.62";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.62";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.62";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.62";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.62";
-import { artistStripHtml } from "./artist-strip.js?v=5.62";
-import { DECADES, isVisible } from "./limits.js?v=5.62";
-import { askChoice } from "./ui-modal.js?v=5.62";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.62";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.63";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.63";
+import { onAuthChange } from "./store.js?v=5.63";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.63";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.63";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.63";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.63";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.63";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.63";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.63";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.63";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.63";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.63";
+import { artistStripHtml } from "./artist-strip.js?v=5.63";
+import { DECADES, isVisible } from "./limits.js?v=5.63";
+import { askChoice } from "./ui-modal.js?v=5.63";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.63";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -459,8 +459,7 @@ function bakteppeHtml(d) {
   if (!modell.bakteppe.length) return "";
   const tekst = (t) => (t ? `<div class="rt">${formatInfoText(t, {})}</div>` : mangler("Teksten er ikke skrevet ennå."));
   const tiaar = modell.bakteppe.map((b) => `<article class="h-tiaar">
-    <header class="h-sjanger-hode"><h2>${b.tiaar}-tallet</h2>
-      ${b.artister.length ? `<p class="h-epoke">I dette utvalget: ${b.artister.map(h).join(", ")}.</p>` : ""}</header>
+    <header class="h-sjanger-hode"><h2>${b.tiaar}-tallet</h2></header>
     ${d["tiaar.samfunn"] ? `<h3 class="h-del">Samfunn</h3>${tekst(b.samfunn)}` : ""}
     ${d["tiaar.teknologi"] ? `<h3 class="h-del">Teknologi</h3>${tekst(b.teknologi)}` : ""}
     ${b.innovasjoner.length ? `<h3 class="h-del">Innovasjoner i tiåret</h3><p class="h-innov-liste">${b.innovasjoner.map((t) => `${h(t.navn)}${t.aar ? ` (${t.aar})` : ""}`).join(" · ")}</p>` : ""}
@@ -507,7 +506,6 @@ function lyttelisteHtml() {
   if (!modell.lytteliste.length) return "";
   const rader = modell.lytteliste.map((l) => `<div class="h-lytte-rad"><span class="h-nr">${l.nr}</span><span>${h(l.artist)}: «${h(l.label)}»${h(musicExampleLabel(l))}<span class="h-url">${h(kortUrl(l.url))}</span></span></div>`);
   return `<section class="h-seksjon h-lytteliste">${seksjonHode("Bakerst", "Lytteliste")}
-    <p class="h-ingress">Numrene viser til «Lytt»-boksene i heftet. Lenkene er de samme som i appen. Er en lenke død, søk på artist og tittel.</p>
     <div class="h-liste-2sp">${rader.join("")}</div>
   </section>`;
 }
