@@ -11,7 +11,7 @@
 //  sjanger), sub (fri undersjanger).
 // ============================================================================
 
-import { normaliserPunkter } from "./punkter.js?v=5.64";
+import { normaliserPunkter } from "./punkter.js?v=5.65";
 
 const LVL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 

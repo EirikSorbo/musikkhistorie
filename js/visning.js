@@ -22,18 +22,18 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.64";
-import { escapeHtml } from "./util.js?v=5.64";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.64";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.64";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.64";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.64";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.64";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.64";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.64";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.64";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.64";
-import { settFraPlan, antall as antallIUtskrift } from "./utskrift-utvalg.js?v=5.64";
+import { getState } from "./explore-context.js?v=5.65";
+import { escapeHtml } from "./util.js?v=5.65";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.65";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.65";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.65";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.65";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.65";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.65";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.65";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.65";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.65";
+import { settFraPlan, antall as antallIUtskrift } from "./utskrift-utvalg.js?v=5.65";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;

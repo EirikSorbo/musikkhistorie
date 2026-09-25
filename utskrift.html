@@ -14,9 +14,9 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.64" />
-  <link rel="stylesheet" href="css/utskrift.css?v=5.64" />
-  <script src="js/gate.js?v=5.64"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.65" />
+  <link rel="stylesheet" href="css/utskrift.css?v=5.65" />
+  <script src="js/gate.js?v=5.65"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -49,11 +49,11 @@
       <div class="utskrift-topp">
         <div>
           <h2>Utskrift</h2>
-          <p class="muted utskrift-intro">Velg hva som skal med. Heftet under viser hvordan det blir på papir. «Skriv ut» åpner utskriftsdialogen, der du kan velge «Lagre som PDF».</p>
+          <p class="muted utskrift-intro">Velg hva som skal med, og lagre som PDF.</p>
         </div>
         <div class="utskrift-knapper">
-          <button type="button" class="btn primary" id="utskrift-skriv-ut" disabled>Skriv ut / lagre som PDF</button>
-          <button type="button" class="btn ghost small" id="utskrift-lenke" title="Lenke som åpner dette utvalget i en annen nettleser" disabled>Kopier lenke</button>
+          <button type="button" class="btn primary" id="utskrift-skriv-ut" disabled>Lagre som PDF</button>
+          <button type="button" class="btn ghost small" id="utskrift-alt" title="Hele pensumet: alle metasjangrene, røttene, innovasjonene og instrumentene" disabled>Velg alt</button>
           <button type="button" class="btn ghost small danger" id="utskrift-toem" disabled>Tøm utvalget</button>
         </div>
       </div>
@@ -65,10 +65,6 @@
             <input type="search" id="utskrift-sok" class="sok-felt" autocomplete="off" enterkeyhint="search"
               placeholder="Legg til: søk etter artist, sjanger, tiår, innovasjon …" aria-label="Legg til i utvalget" />
             <div id="utskrift-sok-treff" class="utskrift-sok-treff" aria-live="polite"></div>
-          </div>
-          <div class="utskrift-alt">
-            <button type="button" class="btn ghost small" id="utskrift-alt">Velg hele pensumet</button>
-            <span class="muted">Alle metasjangrene, røttene, innovasjonene og instrumentene. Huk bort det du ikke vil ha.</span>
           </div>
           <ul id="utskrift-liste" class="utskrift-liste"></ul>
           <label class="utskrift-rekkefolge">Rekkefølge
@@ -100,7 +96,7 @@
 
   <footer class="sitefoot wrap"></footer>
 
-  <script src="js/load-guard.js?v=5.64"></script>
-  <script type="module" src="js/utskrift.js?v=5.64"></script>
+  <script src="js/load-guard.js?v=5.65"></script>
+  <script type="module" src="js/utskrift.js?v=5.65"></script>
 </body>
 </html>

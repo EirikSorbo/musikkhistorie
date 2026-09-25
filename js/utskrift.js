@@ -13,32 +13,31 @@
 //  tegner den. Tekstene går gjennom den delte markdown-light-rendereren
 //  UTEN lenkekontekst: på papir skal artistnavn stå som tekst, ikke lenker.
 //
-//  Utvalget bor i localStorage (js/utskrift-utvalg.js). En lenke med ?u=
-//  (én per mål), ?tittel= og ?r=valgt åpner et delt utvalg: er studentens
-//  eget utvalg tomt, tas lenkens i bruk; ellers spørres det.
+//  Utvalget bor i localStorage (js/utskrift-utvalg.js). («Kopier lenke» og
+//  ?u=-lenkene fantes fra v5.56 til v5.64; brukeren trengte dem ikke.)
 //
 //  Siden laster ikke utforsk-laget (ingen modaler, ingen kort å åpne), så
 //  lærerregelen fra plan-meny.js står også her: den modulen drar inn hele
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.64";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.64";
-import { onAuthChange } from "./store.js?v=5.64";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.64";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.64";
-import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.64";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.64";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.64";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.64";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.64";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.64";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.64";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.64";
-import { artistStripHtml } from "./artist-strip.js?v=5.64";
-import { DECADES, isVisible } from "./limits.js?v=5.64";
-import { askChoice } from "./ui-modal.js?v=5.64";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.64";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.65";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.65";
+import { onAuthChange } from "./store.js?v=5.65";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.65";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.65";
+import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.65";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.65";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.65";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.65";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.65";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.65";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.65";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.65";
+import { artistStripHtml } from "./artist-strip.js?v=5.65";
+import { DECADES, isVisible } from "./limits.js?v=5.65";
+import { askChoice } from "./ui-modal.js?v=5.65";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.65";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -180,7 +179,7 @@ function tegnPanel(u) {
 
   const knapp = (id, off) => { const b = $(id); if (b) b.disabled = off; };
   knapp("utskrift-skriv-ut", modell.tom || !klar());
-  knapp("utskrift-lenke", u.valg.length === 0);
+  knapp("utskrift-alt", !klar());
   knapp("utskrift-toem", u.valg.length === 0);
 }
 
@@ -596,7 +595,7 @@ function tegnHefte(u) {
   const status = $("utskrift-status");
   if (status) status.textContent = statusTekst(sider);
   const knapp = $("utskrift-skriv-ut");
-  if (knapp) knapp.textContent = sider ? `Skriv ut / lagre som PDF · ca. ${sider} ${sider === 1 ? "side" : "sider"}` : "Skriv ut / lagre som PDF";
+  if (knapp) knapp.textContent = sider ? `Lagre som PDF · ca. ${sider} ${sider === 1 ? "side" : "sider"}` : "Lagre som PDF";
 }
 
 // ----------------------------------------------------------------------------
@@ -623,25 +622,6 @@ async function skrivUt() {
   window.print();
 }
 
-async function kopierLenke() {
-  const u = lesUtvalg();
-  const url = new URL("utskrift.html", window.location.href);
-  for (const v of u.valg) url.searchParams.append("u", v);
-  for (const v of u.fravalg) url.searchParams.append("x", v);
-  if (u.tittel) url.searchParams.set("tittel", u.tittel);
-  if (u.form.rekkefolge === "valgt") url.searchParams.set("r", "valgt");
-  const b = $("utskrift-lenke");
-  try {
-    await navigator.clipboard.writeText(url.href);
-    if (b) {
-      b.textContent = "Lenke kopiert";
-      setTimeout(() => { b.textContent = "Kopier lenke"; }, 1400);
-    }
-  } catch (e) {
-    window.prompt("Kopier lenken:", url.href);
-  }
-}
-
 async function toemUtvalget() {
   const u = lesUtvalg();
   if (!u.valg.length) return;
@@ -654,46 +634,6 @@ async function toemUtvalget() {
   if (ok) toem();
 }
 
-// Et delt utvalg i adressen (?u=… fra «Kopier lenke»). Adressen ryddes
-// etterpå, så en omlasting ikke spør igjen.
-async function lesLenke() {
-  let params;
-  try { params = new URLSearchParams(window.location.search); } catch (e) { return; }
-  const fraUrl = normaliserUtvalg(params.getAll("u"));
-  if (!fraUrl.length) return;
-  const fravalgUrl = normaliserUtvalg(params.getAll("x"));
-  const tittelUrl = normaliserTittel(params.get("tittel") || "");
-  const somValgt = params.get("r") === "valgt";
-  const u = lesUtvalg();
-  const likt = u.valg.length === fraUrl.length && u.valg.every((v, i) => v === fraUrl[i]);
-  let valg = "erstatt";
-  if (u.valg.length && !likt) {
-    valg = await askChoice({
-      title: "Lenken har sitt eget utvalg",
-      text: `Lenken inneholder ${fraUrl.length} kort. Du har ${u.valg.length} kort i utskriften fra før.`,
-      buttons: [
-        { label: "Bruk lenkens utvalg", value: "erstatt", className: "primary" },
-        { label: "Legg til i mitt", value: "legg" },
-        { label: "Behold mitt", value: "behold" },
-      ],
-      dismissValue: "behold",
-    });
-  }
-  if (valg === "erstatt") {
-    u.valg = fraUrl;
-    u.fravalg = fravalgUrl;
-    u.plan = null;
-    if (tittelUrl) u.tittel = tittelUrl;
-    u.form.rekkefolge = somValgt ? "valgt" : "kronologisk";
-    lagreUtvalg(u);
-  } else if (valg === "legg") {
-    u.valg = normaliserUtvalg([...u.valg, ...fraUrl]);
-    u.fravalg = [...u.fravalg, ...fravalgUrl];
-    lagreUtvalg(u);
-  }
-  try { window.history.replaceState(null, "", window.location.pathname); } catch (e) { /* uvesentlig */ }
-}
-
 function koble() {
   $("utskrift-skriv-ut")?.addEventListener("click", skrivUt);
   // Miniatyren feilet (se bildeHtml): bytt til originalen, én gang.
@@ -704,7 +644,6 @@ function koble() {
     delete img.dataset.full;
     img.src = full;
   }, true);
-  $("utskrift-lenke")?.addEventListener("click", kopierLenke);
   $("utskrift-toem")?.addEventListener("click", toemUtvalget);
 
   $("utskrift-liste")?.addEventListener("change", (e) => {
@@ -765,14 +704,14 @@ function koble() {
     tegnSok();
   });
 
-  // Hele pensumet (v5.64): alt legges til det som alt står der; tittelen
-  // settes bare når feltet er tomt.
+  // «Velg alt» (v5.64): hele pensumet legges til det som alt står der;
+  // tittelen settes bare når feltet er tomt.
   $("utskrift-alt")?.addEventListener("click", async () => {
     if (!klar()) return;
     const alt = heltPensum(state);
     const ok = await askChoice({
-      title: "Hele pensumet i utskriften?",
-      text: "Dette legger til alle metasjangrene med sjangrene og artistene deres, røttene i treet, innovasjonskortene og instrumentsammendragene. Heftet blir langt, og du kan huke bort det du ikke vil ha med.",
+      title: "Velg alt",
+      text: "Heftet blir langt. Sikker på at du vil legge til alt?",
       buttons: [{ label: "Legg til alt", value: true, className: "primary" }, { label: "Avbryt", value: false }],
       dismissValue: false,
     });
@@ -809,7 +748,6 @@ function init() {
   // Vent på klassekoden (js/gate.js) før noe hentes; uten gate.js går
   // Promise.resolve(undefined) rett videre, så sperren feiler åpent.
   Promise.resolve(window.__pensumGate?.klar).then(async () => {
-    await lesLenke();
     if (!CONFIGURED) { showSetupBanner(); return; }
     wireFirestoreErrorBanner();
     onAuthChange((user) => {
