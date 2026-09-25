@@ -37,7 +37,7 @@ test("student- og lærer-dashbordet har samme kort i samme rekkefølge", () => {
 // «Jazz»-raden til hele jazzfamilien.
 
 test("sjangerraden teller treets sjanger, ikke metasjangeren", async () => {
-  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=5.53");
+  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=5.54");
   const artister = [
     { id: "1", name: "Tidlig", status: "active", metaGenre: "Jazz",
       mainGenre: ["Jazz"], subGenre: [], musicExamples: [{ label: "a", url: "u1" }] },
@@ -53,7 +53,7 @@ test("sjangerraden teller treets sjanger, ikke metasjangeren", async () => {
 });
 
 test("tellingen og lista bak klikket er fortsatt samme regnestykke", async () => {
-  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=5.53");
+  const { artistsInGenre, countPlaylistExamples } = await import("../../js/ui.js?v=5.54");
   const artister = [
     { id: "1", name: "A", status: "active", metaGenre: "R&B", mainGenre: ["Soul"], subGenre: [],
       musicExamples: [{ label: "x", url: "u1" }, { label: "y", url: "u2", genre: "Funk" }] },
@@ -75,7 +75,12 @@ test("toppfeltet: tittelen er skjult for øyet, men finnes for skjermlesere, på
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
   for (const side of ["index.html", "tre.html", "teacher.html", "student.html"]) {
     const brand = les(side).match(/<a class="brand"[^>]*>[\s\S]*?<\/a>/)?.[0] || "";
-    assert.match(brand, /<h1 class="sr-only">Populærmusikkhistorie - Del 1<\/h1>/, side);
+    assert.match(brand, /<h1 class="sr-only">Musikkhistorie<\/h1>/, side);
+  }
+  // v5.54 (brukerkrav 2026-09-25): kursnavnet er borte overalt, også fra
+  // sidetitlene og appnavnet som nettleseren viser i fanen og i appvinduet.
+  for (const f of ["index.html", "tre.html", "teacher.html", "student.html", "manifest.json", "js/gate.js"]) {
+    assert.doesNotMatch(les(f), /Populærmusikkhistorie|Del 1/, f);
   }
   assert.doesNotMatch(les("css/styles.css"), /^\s*\.brand h1 \{/m, "ingen stil som gjør tittelen synlig igjen");
 });

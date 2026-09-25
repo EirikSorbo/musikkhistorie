@@ -137,7 +137,7 @@
     wrap.className = "pass-gate";
     wrap.innerHTML =
       '<div class="pass-gate-card">' +
-      "<h2>Populærmusikkhistorie</h2>" +
+      "<h2>Musikkhistorie</h2>" +
       '<p class="pass-gate-hint">Skriv inn klassekoden for å åpne appen.</p>' +
       '<form id="pass-gate-form" autocomplete="off">' +
       '<input id="pass-gate-input" type="password" inputmode="text" ' +

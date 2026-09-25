@@ -1945,8 +1945,11 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
 
 /* Merke som lenke */
 /* Bare logoen står synlig øverst til venstre (brukerkrav 2026-09-19):
-   tittelen «Populærmusikkhistorie - Del 1» er skjult for øyet (.sr-only),
-   men står igjen som sidens h1 og som logolenkas navn for skjermlesere. */
+   tittelen er skjult for øyet (.sr-only), men står igjen som sidens h1 og
+   som logolenkas navn for skjermlesere. Kursnavnet «Populærmusikkhistorie -
+   Del 1» er fjernet overalt, også fra sidetitlene og appnavnet i
+   manifest.json, som nettleseren viser i fanen og i appvinduet (brukerkrav
+   2026-09-25). Navnet er nå «Musikkhistorie». */
 a.brand { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
 .brand-icon { height: 36px; width: auto; }
 
