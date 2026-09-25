@@ -29,7 +29,9 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   teknologi-, sjanger- og tiårskort; læreren godkjenner/avviser felt for felt.
 - **Stem frem**: studenter markerer forslag som «svært relevant».
 - **Utskrift**: studentene velger kort (artister, sjangre, tiår, innovasjoner …)
-  med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan, og får
+  med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan eller
+  en hel metasjanger (sjangrene, artistene og tiårene følger med, og kan hukes
+  bort én og én), og får
   et hefte i A4 med tidslinje, lytteliste og kilder, som nettleseren lagrer
   som PDF. Utvalget bor i nettleseren og kan deles som lenke. (Midlertidig
   skjult for studentrollen, bryteren `utskrift` i `js/feature-flags.js`.)

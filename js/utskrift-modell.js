@@ -23,18 +23,29 @@
 //  Feature-flaggene gjelder her som i appen: det studentene ikke ser på
 //  skjermen, kommer heller ikke på papir (historier, punkter, «Hør etter»,
 //  de skjulte hubsidene). Læreren får alt.
+//
+//  UTVIDELSEN (v5.58, brukerbestilling 2026-09-25): utvalget er det studenten
+//  har VALGT pluss det valget DRAR MED SEG, minus det studenten har huket
+//  bort (fravalg). En metasjanger («metasjanger:Blues», bare i heftet, ikke
+//  en ?vis=-type) drar inn alle sjangrene i treet og alle synlige artister
+//  med metasjangeren; en sjanger drar inn artistene sine; artistene drar inn
+//  tiårene innflytelsesperiodene faller i (sjangrenes perioder bare når
+//  utvalget ikke har artister). Undersjangrene følger artistene via ordlista.
+//  Alt utledet regnes på nytt ved hver endring, så en artist som legges til
+//  senere får tiårene sine av seg selv, og et bortvalg huskes til posten
+//  hukes på igjen. Se utvidUtvalg.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.57";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist } from "./limits.js?v=5.57";
-import { resolveSpan } from "./timeline-lanes.js?v=5.57";
-import { GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.57";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.57";
-import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.57";
-import { heatRow } from "./heat-strip.js?v=5.57";
-import { ytMaal } from "./presentasjon-modell.js?v=5.57";
-import { normaliserPunkter } from "./punkter.js?v=5.57";
-import { safeUrl } from "./util.js?v=5.57";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.58";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.58";
+import { resolveSpan } from "./timeline-lanes.js?v=5.58";
+import { GENEALOGY, GENEALOGY_META_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, findTreeGenreNode } from "./genre-model.js?v=5.58";
+import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.58";
+import { STORY_ORDER, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.58";
+import { heatRow } from "./heat-strip.js?v=5.58";
+import { ytMaal } from "./presentasjon-modell.js?v=5.58";
+import { normaliserPunkter } from "./punkter.js?v=5.58";
+import { safeUrl } from "./util.js?v=5.58";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten
@@ -53,9 +64,23 @@ export const ROTTER = "Røtter";
 export const UNDERSJANGRE_LOSE = "Undersjangre";
 
 export const TYPE_ETIKETT = {
+  metasjanger: "Metasjanger",
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger", "tiår": "Tiår",
   tech: "Innovasjon", instrument: "Instrument", historie: "Historie", side: "Side",
 };
+
+// Metasjangeren finnes bare i heftet (ingen ?vis=-type, ingen modal): verdien
+// er «metasjanger:<navn>», og parseVisVerdi kjenner den ikke. Denne parseren
+// dekker begge.
+export const META_PREFIKS = "metasjanger:";
+export function parseUtskriftVis(vis) {
+  if (typeof vis !== "string") return null;
+  if (vis.startsWith(META_PREFIKS)) {
+    const id = vis.slice(META_PREFIKS.length).trim();
+    return id && !id.includes(":") ? { hva: "metasjanger", id } : null;
+  }
+  return parseVisVerdi(vis);
+}
 
 // ---------------------------------------------------------------------------
 //  Utvalget
@@ -66,8 +91,10 @@ export const TYPE_ETIKETT = {
 // faner på skjermen, men ett oppslag på papir), så «tiår:1950:tech» og
 // «tiår:1950» er samme kort.
 export function kanoniskVis(vis) {
-  const m = parseVisVerdi(vis);
-  if (!m || !UTSKRIFT_TYPER.has(m.hva) || !m.id) return null;
+  const m = parseUtskriftVis(vis);
+  if (!m) return null;
+  if (m.hva === "metasjanger") return `${META_PREFIKS}${m.id}`;
+  if (!UTSKRIFT_TYPER.has(m.hva) || !m.id) return null;
   if (m.hva === "side" && !SIDER_I_HEFTET[m.id]) return null;
   if (m.hva === "tiår") {
     const d = Number(m.id);
@@ -183,9 +210,13 @@ export function normaliserLagret(raa) {
   const plan = o.plan && typeof o.plan === "object"
     ? { id: String(o.plan.id || ""), tittel: normaliserTittel(o.plan.tittel) }
     : null;
+  const valg = normaliserUtvalg(o.valg);
   return {
     v: 1,
-    valg: normaliserUtvalg(o.valg),
+    valg,
+    // Det studenten har huket bort av det utvalget drar med seg (v5.58).
+    // Aldri det samme som et valg: å huke av fjerner posten fra valg først.
+    fravalg: normaliserUtvalg(o.fravalg).filter((v) => !valg.includes(v)),
     tittel: normaliserTittel(o.tittel),
     deler: normaliserDeler(o.deler),
     form: normaliserForm(o.form),
@@ -286,11 +317,69 @@ function rydKilder(liste) {
 }
 
 // ---------------------------------------------------------------------------
+//  Utvidelsen: det valget drar med seg
+// ---------------------------------------------------------------------------
+
+// Alle kandidatene med opphav, i rekkefølge: de valgte først (i valgets
+// rekkefølge), så det metasjangrene drar inn, så det sjangrene drar inn, så
+// tiårene. `artists` er de synlige artistene. Returnerer
+//   kilde     Map vis → "valgt" | "metasjanger" | "sjanger" | "utledet"
+//   grunnlag  hva tiårene er utledet av: "artister", "sjangre" eller null
+// Et bortvalg (fravalg) stopper utledningen videre: en avhuket sjanger drar
+// ikke inn artistene sine, en avhuket artist gir ingen tiår. Metasjangrene
+// utledes aldri, de velges bare.
+export function utvidUtvalg(valg, fravalg, artists, naa = new Date().getFullYear(), genreDescs = {}) {
+  const kilde = new Map();
+  const legg = (vis, k) => { if (!kilde.has(vis)) kilde.set(vis, k); };
+  const bort = new Set(fravalg || []);
+  const liste = normaliserUtvalg(valg);
+  for (const v of liste) legg(v, "valgt");
+
+  for (const v of liste) {
+    const m = parseUtskriftVis(v);
+    if (m?.hva !== "metasjanger") continue;
+    for (const n of GENEALOGY) if (n.g === m.id) legg(`sjanger:${n.l}`, "metasjanger");
+    for (const a of artists) if (a.metaGenre === m.id) legg(`artist:${a.id}`, "metasjanger");
+  }
+  for (const [vis] of [...kilde]) {
+    const m = parseUtskriftVis(vis);
+    if (m?.hva !== "sjanger" || bort.has(vis)) continue;
+    const n = findTreeGenreNode(m.id);
+    if (!n) continue;
+    const navn = new Set([n.l.toLowerCase(), n.f.toLowerCase()]);
+    for (const a of artists) {
+      if ((a.mainGenre || []).some((s) => navn.has(String(s).toLowerCase()))) legg(`artist:${a.id}`, "sjanger");
+    }
+  }
+
+  const effArtister = artists.filter((a) => kilde.has(`artist:${a.id}`) && !bort.has(`artist:${a.id}`));
+  const tiaar = new Set();
+  let grunnlag = null;
+  if (effArtister.length) {
+    grunnlag = "artister";
+    for (const a of effArtister) for (const t of decadesForArtist(a, naa)) tiaar.add(t);
+  } else {
+    for (const [vis] of kilde) {
+      const m = parseUtskriftVis(vis);
+      if (m?.hva !== "sjanger" || bort.has(vis)) continue;
+      const n = findTreeGenreNode(m.id);
+      if (!n) continue;
+      const r = resolveDescAny(genreDescs, [n.l, n.f], "main");
+      if (!Number.isInteger(r.activeFrom)) continue;
+      grunnlag = "sjangre";
+      for (const t of decadesForRange(r.activeFrom, Number.isInteger(r.activeTo) ? r.activeTo : naa)) tiaar.add(t);
+    }
+  }
+  for (const t of [...tiaar].sort((a, b) => a - b)) if (DECADES.includes(t)) legg(`tiår:${t}`, "utledet");
+  return { kilde, grunnlag };
+}
+
+// ---------------------------------------------------------------------------
 //  Sammensetningen
 // ---------------------------------------------------------------------------
 
-// utvalg: vis-verdier. data: sidens state (artists, genreDescs, content,
-// decadeDescs, techItems). Returnerer heftets struktur:
+// utvalg: vis-verdier, eller { valg, fravalg }. data: sidens state (artists,
+// genreDescs, content, decadeDescs, techItems). Returnerer heftets struktur:
 //   familier[]     én per metasjanger: hodeKort (tre-noden med samme navn),
 //                  sjangre[] (hver med artister[]), loseArtister[] (artister
 //                  uten valgt sjangerkort), ordliste[], historie
@@ -298,6 +387,8 @@ function rydKilder(liste) {
 //   lytteliste[]   nummererte lytteeksempler i heftets rekkefølge
 //   kilder[]       kildene per kort i heftets rekkefølge
 //   tidslinje      radene til figuren foran, eller null
+//   tre            avkryssingstreet til panelet: ALLE kandidatene, også de
+//                  bortvalgte (med: false), med opphav (kilde)
 //   tellinger, aarsspenn, mangler[] ({ vis, grunn }), tom
 export function settSammen(utvalg, data = {}, valg = {}) {
   const {
@@ -306,7 +397,8 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   } = valg;
   const d = normaliserDeler(delerRaa);
   const f = normaliserForm(formRaa);
-  const liste = normaliserUtvalg(utvalg);
+  const eksplisitt = normaliserUtvalg(Array.isArray(utvalg) ? utvalg : utvalg?.valg);
+  const fravalg = normaliserUtvalg(Array.isArray(utvalg) ? [] : utvalg?.fravalg).filter((v) => !eksplisitt.includes(v));
   const artists = (data.artists || []).filter(isVisible);
   const genreDescs = data.genreDescs || {};
   const content = data.content || {};
@@ -320,15 +412,20 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   const valgtRekke = f.rekkefolge === "valgt";
   const byId = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
 
+  const { kilde, grunnlag } = utvidUtvalg(eksplisitt, fravalg, artists, naa, genreDescs);
+  const bort = new Set(fravalg);
+  const kandidater = [...kilde.keys()];
+  const liste = kandidater.filter((v) => !bort.has(v));
   const rekke = new Map();
-  liste.forEach((vis, i) => rekke.set(vis, i));
+  kandidater.forEach((vis, i) => rekke.set(vis, i));
   const mangler = [];
 
-  function lagArtistKort(a) {
+  function lagArtistKort(a, vis) {
     const span = resolveSpan(a, naa);
     const bildeUrl = safeUrl(a.imageUrl);
     return {
-      vis: `artist:${a.id}`, id: a.id, navn: a.name || "(uten navn)", familie: a.metaGenre || "",
+      vis, id: a.id, navn: a.name || "(uten navn)", familie: a.metaGenre || "",
+      med: !bort.has(vis), kilde: kilde.get(vis),
       levetid: levetid(a),
       fakta: {
         instrument: a.instrument || "", virkested: a.geography || "", plateselskap: a.recordLabel || "",
@@ -352,11 +449,12 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     };
   }
 
-  function lagSjangerKort(n) {
+  function lagSjangerKort(n, vis) {
     const r = resolveDescAny(genreDescs, [n.l, n.f], "main");
     const fra = heltall(r.activeFrom), til = heltall(r.activeTo);
     return {
-      vis: `sjanger:${n.l}`, id: n.id, navn: n.f || n.l, label: n.l, familie: n.g || ROTTER,
+      vis, id: n.id, navn: n.f || n.l, label: n.l, familie: n.g || ROTTER,
+      med: !bort.has(vis), kilde: kilde.get(vis),
       era: eraTekst(r), fra, til, apen: fra != null && til == null,
       stripe: heat && n.g ? { farge: nodeColor(n), verdier: heatRow(heat, n.l) } : null,
       relasjoner: {
@@ -374,11 +472,12 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     };
   }
 
-  function lagTechKort(t) {
+  function lagTechKort(t, vis) {
     const bildeUrl = safeUrl(t.imageUrl);
     const aar = heltall(t.adoptedYear) ?? heltall(t.inventedYear);
     return {
-      vis: `tech:${t.id}`, id: t.id, navn: t.name || "(uten navn)", hendelse: t.type === "hendelse",
+      vis, id: t.id, navn: t.name || "(uten navn)", hendelse: t.type === "hendelse",
+      med: !bort.has(vis), kilde: kilde.get(vis),
       kategori: t.category || "", instrument: t.instrument || "",
       oppfunnet: heltall(t.inventedYear), iBruk: heltall(t.adoptedYear), iBrukTekst: String(t.adoptedLabel || "").trim(),
       bilde: bildeUrl ? { url: bildeUrl, kreditt: kreditt(t.imageCredit) } : null,
@@ -389,52 +488,57 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     };
   }
 
-  // --- Slå opp hvert valg ---------------------------------------------------
-  const artistKort = [], sjangerKort = [], underValgt = [], tiaarValgt = [];
+  // --- Slå opp hver kandidat -------------------------------------------------
+  const metaValgt = [], artistKort = [], sjangerKort = [], underValgt = [], tiaarKand = [];
   const techKort = [], instrValgt = [], histValgt = [], sideValgt = [];
-  for (const vis of liste) {
-    const m = parseVisVerdi(vis);
+  for (const vis of kandidater) {
+    const m = parseUtskriftVis(vis);
+    const med = !bort.has(vis);
     switch (m.hva) {
+      case "metasjanger":
+        if (GENEALOGY_META_GENRES.includes(m.id)) metaValgt.push(m.id);
+        else mangler.push({ vis, grunn: "finnes-ikke" });
+        break;
       case "artist": {
         const a = artists.find((x) => x.id === m.id);
-        if (a) artistKort.push(lagArtistKort(a)); else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (a) artistKort.push(lagArtistKort(a, vis)); else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
       case "sjanger": {
         const n = findTreeGenreNode(m.id);
-        if (n) sjangerKort.push(lagSjangerKort(n)); else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (n) sjangerKort.push(lagSjangerKort(n, vis)); else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
       case "undersjanger": {
         const r = resolveDesc(genreDescs, m.id, "sub");
-        if (r.description) underValgt.push({ vis, navn: m.id, tekst: r.description, kilder: rydKilder(r.kilder) });
-        else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (r.description) underValgt.push({ vis, navn: m.id, tekst: r.description, kilder: rydKilder(r.kilder), med });
+        else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
       case "tiår":
-        tiaarValgt.push(Number(m.id));
+        tiaarKand.push({ vis, tiaar: Number(m.id), med, kilde: kilde.get(vis) });
         break;
       case "tech": {
         const t = tech.find((x) => x.id === m.id);
-        if (t) techKort.push(lagTechKort(t)); else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (t) techKort.push(lagTechKort(t, vis)); else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
       case "instrument":
-        if (INSTRUMENT_TIMELINE_GROUPS.includes(m.id)) instrValgt.push(m.id);
-        else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (INSTRUMENT_TIMELINE_GROUPS.includes(m.id)) instrValgt.push({ vis, gruppe: m.id, med });
+        else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       case "historie": {
-        if (!historierOk) { mangler.push({ vis, grunn: "skjult" }); break; }
+        if (!historierOk) { if (med) mangler.push({ vis, grunn: "skjult" }); break; }
         const s = storyFor(m.id, genreDescs);
-        if (s) histValgt.push({ vis, navn: m.id, body: stripGenrePath(s.body) });
-        else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (s) histValgt.push({ vis, navn: m.id, body: stripGenrePath(s.body), med });
+        else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
       case "side": {
-        if (!sideOk(m.id)) { mangler.push({ vis, grunn: "skjult" }); break; }
+        if (!sideOk(m.id)) { if (med) mangler.push({ vis, grunn: "skjult" }); break; }
         const p = pageFor(m.id, content);
-        if (p) sideValgt.push({ vis, id: m.id, tittel: SIDER_I_HEFTET[m.id], body: p.body, kilder: rydKilder(p.kilder) });
-        else mangler.push({ vis, grunn: "finnes-ikke" });
+        if (p) sideValgt.push({ vis, id: m.id, tittel: SIDER_I_HEFTET[m.id], body: p.body, kilder: rydKilder(p.kilder), med });
+        else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
         break;
       }
     }
@@ -445,72 +549,97 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   const etterSort = (a, b) => (a.sort[0] - b.sort[0])
     || (typeof a.sort[1] === "number" ? a.sort[1] - b.sort[1] : String(a.sort[1]).localeCompare(String(b.sort[1]), "no"));
   const ordne = (arr) => [...arr].sort(valgtRekke ? etterValg : etterSort);
+  const rang = familieRang();
 
-  // --- Familiene ------------------------------------------------------------
-  const familier = new Map();
-  const fam = (navn) => {
-    if (!familier.has(navn)) {
-      familier.set(navn, { navn, farge: familieFarge(navn), pseudo: navn === UNDERSJANGRE_LOSE,
-        hodeKort: null, sjangre: [], loseArtister: [], ordliste: new Map(), historie: null, forst: Infinity });
+  // --- Familiene: én montering for heftet (bare med), én for treet (alle) ----
+  // Kortene kopieres per montering: artister-lista på sjangerkortet fylles
+  // under plasseringen, og de to monteringene skal ikke dele den.
+  function monter({ sjangre, artister, under, historier, metaer, medOrdliste }) {
+    const familier = new Map();
+    const fam = (navn) => {
+      if (!familier.has(navn)) {
+        familier.set(navn, { navn, farge: familieFarge(navn), pseudo: navn === UNDERSJANGRE_LOSE,
+          hodeKort: null, sjangre: [], loseArtister: [], ordliste: new Map(), historie: null, forst: Infinity });
+      }
+      return familier.get(navn);
+    };
+    const merkForst = (F, vis) => { F.forst = Math.min(F.forst, rekke.get(vis) ?? Infinity); };
+
+    for (const meta of metaer) merkForst(fam(meta), `${META_PREFIKS}${meta}`);
+    const sjKopier = ordne(sjangre).map((k) => ({ ...k, artister: [] }));
+    for (const k of sjKopier) {
+      const F = fam(k.familie);
+      merkForst(F, k.vis);
+      // Noden med familiens eget navn (Blues i Blues) er familiens hode: den
+      // åpner seksjonen i stedet for å stå som ett kort blant flere.
+      if (!F.hodeKort && (k.label === F.navn || k.navn === F.navn)) F.hodeKort = k;
+      else F.sjangre.push(k);
     }
-    return familier.get(navn);
-  };
-  const merkForst = (F, vis) => { F.forst = Math.min(F.forst, rekke.get(vis) ?? Infinity); };
-
-  for (const k of ordne(sjangerKort)) {
-    const F = fam(k.familie);
-    merkForst(F, k.vis);
-    // Noden med familiens eget navn (Blues i Blues) er familiens hode: den
-    // åpner seksjonen i stedet for å stå som ett kort blant flere.
-    if (!F.hodeKort && (k.label === F.navn || k.navn === F.navn)) F.hodeKort = k;
-    else F.sjangre.push(k);
-  }
-
-  const kortForSjanger = new Map();
-  for (const k of sjangerKort) {
-    kortForSjanger.set(k.label.toLowerCase(), k);
-    kortForSjanger.set(k.navn.toLowerCase(), k);
-  }
-  for (const k of ordne(artistKort)) {
-    const treff = k.fakta.sjangre.map((s) => kortForSjanger.get(String(s).toLowerCase())).find(Boolean);
-    const F = fam(treff ? treff.familie : (k.familie || "Andre"));
-    merkForst(F, k.vis);
-    k.plassertI = F.navn;
-    if (treff) treff.artister.push(k); else F.loseArtister.push(k);
-  }
-
-  const leggIOrdliste = (F, navn, tekst, kilder, vis) => {
-    if (!F.ordliste.has(navn)) F.ordliste.set(navn, { vis, navn, tekst, kilder });
-  };
-  if (d["sjanger.ordliste"]) {
-    for (const k of artistKort) {
-      for (const tag of k.fakta.undersjangre) {
-        const r = resolveDesc(genreDescs, tag, "sub");
-        if (r.description) leggIOrdliste(fam(k.plassertI), tag, r.description, rydKilder(r.kilder), `undersjanger:${tag}`);
+    const kortForSjanger = new Map();
+    for (const k of sjKopier) {
+      kortForSjanger.set(k.label.toLowerCase(), k);
+      kortForSjanger.set(k.navn.toLowerCase(), k);
+    }
+    const artKopier = ordne(artister).map((a) => ({ ...a }));
+    for (const k of artKopier) {
+      const treff = k.fakta.sjangre.map((s) => kortForSjanger.get(String(s).toLowerCase())).find(Boolean);
+      const F = fam(treff ? treff.familie : (k.familie || "Andre"));
+      merkForst(F, k.vis);
+      k.plassertI = F.navn;
+      if (treff) treff.artister.push(k); else F.loseArtister.push(k);
+    }
+    const leggIOrdliste = (F, navn, tekst, kilder, vis) => {
+      if (!F.ordliste.has(navn)) F.ordliste.set(navn, { vis, navn, tekst, kilder });
+    };
+    if (medOrdliste) {
+      for (const k of artKopier) {
+        for (const tag of k.fakta.undersjangre) {
+          const r = resolveDesc(genreDescs, tag, "sub");
+          if (r.description) leggIOrdliste(fam(k.plassertI), tag, r.description, rydKilder(r.kilder), `undersjanger:${tag}`);
+        }
       }
     }
-  }
-  for (const u of underValgt) {
-    const F = fam(familieForUndersjanger(u.navn, artists));
-    merkForst(F, u.vis);
-    leggIOrdliste(F, u.navn, u.tekst, u.kilder, u.vis);
-  }
-  for (const hst of histValgt) {
-    const F = fam(hst.navn);
-    merkForst(F, hst.vis);
-    F.historie = hst;
+    for (const u of under) {
+      const F = fam(familieForUndersjanger(u.navn, artists));
+      merkForst(F, u.vis);
+      leggIOrdliste(F, u.navn, u.tekst, u.kilder, u.vis);
+    }
+    for (const hst of historier) {
+      const F = fam(hst.navn);
+      merkForst(F, hst.vis);
+      F.historie = hst;
+    }
+    return [...familier.values()]
+      .map((F) => ({ ...F, ordliste: [...F.ordliste.values()].sort((a, b) => a.navn.localeCompare(b.navn, "no")) }))
+      .sort((a, b) => {
+        if (a.pseudo !== b.pseudo) return a.pseudo ? 1 : -1;
+        if (valgtRekke) return a.forst - b.forst || a.navn.localeCompare(b.navn, "no");
+        const ia = rang.indexOf(a.navn), ib = rang.indexOf(b.navn);
+        const ra = ia < 0 ? Number.MAX_SAFE_INTEGER : ia, rb = ib < 0 ? Number.MAX_SAFE_INTEGER : ib;
+        return ra - rb || a.navn.localeCompare(b.navn, "no");
+      });
   }
 
-  const rang = familieRang();
-  const familieListe = [...familier.values()]
-    .map((F) => ({ ...F, ordliste: [...F.ordliste.values()].sort((a, b) => a.navn.localeCompare(b.navn, "no")) }))
-    .sort((a, b) => {
-      if (a.pseudo !== b.pseudo) return a.pseudo ? 1 : -1;
-      if (valgtRekke) return a.forst - b.forst || a.navn.localeCompare(b.navn, "no");
-      const ia = rang.indexOf(a.navn), ib = rang.indexOf(b.navn);
-      const ra = ia < 0 ? Number.MAX_SAFE_INTEGER : ia, rb = ib < 0 ? Number.MAX_SAFE_INTEGER : ib;
-      return ra - rb || a.navn.localeCompare(b.navn, "no");
-    });
+  const medBare = (arr) => arr.filter((x) => x.med);
+  const familieListe = monter({
+    sjangre: medBare(sjangerKort), artister: medBare(artistKort), under: medBare(underValgt),
+    historier: medBare(histValgt), metaer: [], medOrdliste: !!d["sjanger.ordliste"],
+  }).filter((F) => F.hodeKort || F.sjangre.length || F.loseArtister.length || F.ordliste.length || F.historie);
+
+  // Avkryssingstreet: alle kandidatene, også de bortvalgte, og de valgte
+  // metasjangrene som egne rader (også når alt under dem er huket bort).
+  const treFamilier = monter({
+    sjangre: sjangerKort, artister: artistKort, under: [], historier: [], metaer: metaValgt, medOrdliste: false,
+  }).filter((F) => !F.pseudo).map((F) => ({
+    navn: F.navn, vis: `${META_PREFIKS}${F.navn}`, farge: F.farge,
+    kanVelges: GENEALOGY_META_GENRES.includes(F.navn),
+    valgt: metaValgt.includes(F.navn),
+    sjangre: [F.hodeKort, ...F.sjangre].filter(Boolean).map((k) => ({
+      vis: k.vis, navn: k.navn, med: k.med, kilde: k.kilde,
+      artister: k.artister.map((a) => ({ vis: a.vis, navn: a.navn, med: a.med, kilde: a.kilde })),
+    })),
+    lose: F.loseArtister.map((a) => ({ vis: a.vis, navn: a.navn, med: a.med, kilde: a.kilde })),
+  }));
 
   // Heftets rekkefølge på kortene, brukt av nummereringen, kildene og
   // tidslinja.
@@ -536,7 +665,8 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   }
 
   // --- Bakteppet ------------------------------------------------------------
-  const tiaarListe = valgtRekke ? tiaarValgt : [...tiaarValgt].sort((a, b) => a - b);
+  const tiaarMed = tiaarKand.filter((t) => t.med);
+  const tiaarListe = (valgtRekke ? tiaarMed : [...tiaarMed].sort((a, b) => a.tiaar - b.tiaar)).map((t) => t.tiaar);
   const tiaarFor = (t) => {
     const dec = Number(t.decade);
     if (Number.isInteger(dec) && dec > 0) return dec;
@@ -558,15 +688,17 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     };
   });
 
-  const innovasjoner = ordne(techKort);
-  const instrListe = valgtRekke ? instrValgt : INSTRUMENT_TIMELINE_GROUPS.filter((g) => instrValgt.includes(g));
+  const innovasjoner = ordne(medBare(techKort));
+  const instrMed = medBare(instrValgt).map((i) => i.gruppe);
+  const instrListe = valgtRekke ? instrMed : INSTRUMENT_TIMELINE_GROUPS.filter((g) => instrMed.includes(g));
   const instrumenter = instrListe.map((g) => {
     const p = pageFor(instrumentPageId(g), content);
     return { vis: `instrument:${g}`, gruppe: g, tittel: INSTRUMENT_TITLE[g] || g, body: p?.body || "", kilder: rydKilder(p?.kilder) };
   });
+  const sideMed = medBare(sideValgt);
   const sider = valgtRekke
-    ? sideValgt
-    : Object.keys(SIDER_I_HEFTET).map((id) => sideValgt.find((s) => s.id === id)).filter(Boolean);
+    ? sideMed
+    : Object.keys(SIDER_I_HEFTET).map((id) => sideMed.find((s) => s.id === id)).filter(Boolean);
 
   // --- Kildene --------------------------------------------------------------
   const kilder = [];
@@ -620,17 +752,31 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     };
   }
 
+  // --- Treet: tiår og «annet» -------------------------------------------------
+  const treTiaar = [...tiaarKand].sort((a, b) => a.tiaar - b.tiaar);
+  const treAnnet = [
+    ...techKort.map((t) => ({ vis: t.vis, navn: t.navn, type: "tech", med: t.med })),
+    ...instrValgt.map((i) => ({ vis: i.vis, navn: INSTRUMENT_TITLE[i.gruppe] || i.gruppe, type: "instrument", med: i.med })),
+    ...underValgt.map((u) => ({ vis: u.vis, navn: u.navn, type: "undersjanger", med: u.med })),
+    ...histValgt.map((hs) => ({ vis: hs.vis, navn: `Historien om ${hs.navn}`, type: "historie", med: hs.med })),
+    ...sideValgt.map((sd) => ({ vis: sd.vis, navn: sd.tittel, type: "side", med: sd.med })),
+    ...mangler.map((x) => ({ vis: x.vis, navn: parseUtskriftVis(x.vis)?.id || x.vis, type: parseUtskriftVis(x.vis)?.hva || "", med: true, grunn: x.grunn })),
+  ].sort((a, b) => rekke.get(a.vis) - rekke.get(b.vis));
+
   const tellinger = {
-    sjangre: sjangerKort.length, artister: artistKort.length, undersjangre: underValgt.length,
-    tiaar: tiaarValgt.length, innovasjoner: techKort.length, instrumenter: instrValgt.length,
-    historier: histValgt.length, sider: sideValgt.length,
+    metasjangre: metaValgt.length,
+    sjangre: medBare(sjangerKort).length, artister: medBare(artistKort).length, undersjangre: medBare(underValgt).length,
+    tiaar: tiaarMed.length, innovasjoner: medBare(techKort).length, instrumenter: instrMed.length,
+    historier: medBare(histValgt).length, sider: sideMed.length,
+    bortvalgt: kandidater.filter((v) => bort.has(v)).length,
   };
 
   return {
-    valg: liste, deler: d, form: f, punkterOk,
+    valg: liste, eksplisitt, fravalg, deler: d, form: f, punkterOk,
     familier: familieListe, bakteppe, innovasjoner, instrumenter, sider,
     lytteliste, kilder, tidslinje, tellinger, aarsspenn, mangler,
-    tom: liste.length === 0,
+    tre: { familier: treFamilier, tiaar: treTiaar, grunnlag, annet: treAnnet },
+    tom: eksplisitt.length === 0,
   };
 }
 
@@ -639,6 +785,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
 // ---------------------------------------------------------------------------
 
 const TELLE_ORD = [
+  ["metasjangre", "metasjanger", "metasjangre"],
   ["sjangre", "sjanger", "sjangre"], ["artister", "artist", "artister"],
   ["undersjangre", "undersjanger", "undersjangre"], ["tiaar", "tiår", "tiår"],
   ["innovasjoner", "innovasjon", "innovasjoner"], ["instrumenter", "instrument", "instrumenter"],

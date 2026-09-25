@@ -22,22 +22,22 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.57";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.57";
-import { onAuthChange } from "./store.js?v=5.57";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.57";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.57";
-import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, SIDER_I_HEFTET, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.57";
-import { lesUtvalg, lagreUtvalg, leggTil, fjern, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.57";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.57";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.57";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.57";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.57";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.57";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.57";
-import { DECADES, INSTRUMENT_TITLE } from "./limits.js?v=5.57";
-import { askChoice } from "./ui-modal.js?v=5.57";
-import { onGenreModelChanged } from "./genre-model.js?v=5.57";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.58";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.58";
+import { onAuthChange } from "./store.js?v=5.58";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.58";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.58";
+import { settSammen, foreslaaTittel, tellingerTekst, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserUtvalg, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.58";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.58";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.58";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.58";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.58";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.58";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.58";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.58";
+import { DECADES, isVisible } from "./limits.js?v=5.58";
+import { askChoice } from "./ui-modal.js?v=5.58";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.58";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -67,7 +67,7 @@ function planleggTegning() {
 function tegn() {
   tegnPlanlagt = false;
   const u = lesUtvalg();
-  modell = settSammen(u.valg, state, {
+  modell = settSammen({ valg: u.valg, fravalg: u.fravalg }, state, {
     deler: u.deler, form: u.form, erLaerer,
     skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN, punkterSkjult: PUNKTER_BARE_I_PRESENTASJON,
   });
@@ -80,33 +80,48 @@ function tegn() {
 //  Panelet
 // ----------------------------------------------------------------------------
 
-function etikettFor(vis) {
-  const m = parseVisVerdi(vis);
-  if (!m) return null;
-  switch (m.hva) {
-    case "artist": return state.artists.find((a) => a.id === m.id)?.name || null;
-    case "sjanger": case "undersjanger": return m.id;
-    case "tiår": return `${m.id}-tallet`;
-    case "tech": return state.techItems.find((t) => t.id === m.id)?.name || null;
-    case "instrument": return INSTRUMENT_TITLE[m.id] || m.id;
-    case "historie": return `Historien om ${m.id}`;
-    case "side": return SIDER_I_HEFTET[m.id] || m.id;
-    default: return m.id || m.hva;
-  }
+// Avkryssingstreet (v5.58): metasjangrene med sjangrene og artistene under,
+// så tiårene, så alt annet. Alt utvalget drar med seg står her, også det som
+// er huket bort (gjennomstreket), så det kan hukes på igjen. Opphavet står i
+// grått: «fra metasjangeren», «fra sjangeren», «utledet».
+const OPPHAV = { metasjanger: "fra metasjangeren", sjanger: "fra sjangeren", utledet: "utledet" };
+
+// `stille` demper opphavet: under en valgt metasjanger kommer alt derfra, og
+// 25 rader med «fra metasjangeren» sier ingenting.
+function hukRad(x, klasse, hint, stille = false) {
+  const opphav = stille && x.kilde === "metasjanger" ? "" : OPPHAV[x.kilde];
+  const tekst = [hint, opphav].filter(Boolean).join(" · ");
+  return `<li class="${klasse}${x.med ? "" : " ut-av"}"><label>` +
+    `<input type="checkbox" data-huk="${h(x.vis)}"${x.med ? " checked" : ""}> ` +
+    `<span class="ut-navn">${h(x.navn)}</span>${tekst ? ` <span class="muted">${h(tekst)}</span>` : ""}</label></li>`;
 }
 
-function radHtml(vis) {
-  const m = parseVisVerdi(vis);
-  const grunn = modell.mangler.find((x) => x.vis === vis)?.grunn;
-  const navn = etikettFor(vis);
-  const tekst = navn ?? (klar() ? "(finnes ikke lenger)" : "laster …");
-  const merknad = grunn === "skjult" ? "vises ikke for studenter"
-    : grunn === "finnes-ikke" && navn ? "finnes ikke lenger" : "";
-  return `<li class="utskrift-rad${grunn ? " mangler" : ""}">
-    <span class="utskrift-rad-type">${h(TYPE_ETIKETT[m?.hva] || "")}</span>
-    <span class="utskrift-rad-navn">${h(tekst)}${merknad ? ` <span class="muted">· ${h(merknad)}</span>` : ""}</span>
-    <button type="button" class="btn ghost small" data-fjern="${h(vis)}" title="Ta ut av utskriften" aria-label="Ta ${h(tekst)} ut av utskriften">✕</button>
-  </li>`;
+function treHtml(tre) {
+  const familier = tre.familier.map((F) => {
+    const hode = F.kanVelges
+      ? `<label class="ut-fam-navn"><input type="checkbox" data-huk="${h(F.vis)}" data-eksplisitt="1"${F.valgt ? " checked" : ""}> ` +
+        `<b>${h(F.navn)}</b> <span class="muted">${F.valgt ? "hele metasjangeren" : "metasjanger"}</span></label>`
+      : `<span class="ut-fam-navn"><b>${h(F.navn)}</b></span>`;
+    const sjangre = F.sjangre.map((k) =>
+      `<li class="ut-sj${k.med ? "" : " ut-av"}"><label><input type="checkbox" data-huk="${h(k.vis)}"${k.med ? " checked" : ""}> ` +
+      `<span class="ut-navn">${h(k.navn)}</span> <span class="muted">${h(["sjanger", F.valgt && k.kilde === "metasjanger" ? "" : OPPHAV[k.kilde]].filter(Boolean).join(" · "))}</span></label>` +
+      `${k.artister.length ? `<ul>${k.artister.map((a) => hukRad(a, "ut-art", "", F.valgt)).join("")}</ul>` : ""}</li>`);
+    const lose = F.lose.length ? `<li class="ut-lose"><ul>${F.lose.map((a) => hukRad(a, "ut-art", "", F.valgt)).join("")}</ul></li>` : "";
+    return `<li class="ut-fam">${hode}<ul>${sjangre.join("")}${lose}</ul></li>`;
+  });
+  const grunnlag = tre.grunnlag === "artister" ? "utledet av artistenes innflytelsesperioder"
+    : tre.grunnlag === "sjangre" ? "utledet av sjangrenes perioder" : "";
+  const tiaar = tre.tiaar.length
+    ? `<li class="ut-gruppe"><span class="ut-fam-navn"><b>Tiår</b>${grunnlag ? ` <span class="muted">${h(grunnlag)}</span>` : ""}</span>` +
+      `<ul class="ut-rad">${tre.tiaar.map((x) => hukRad({ ...x, navn: `${x.tiaar}-tallet`, kilde: x.kilde === "valgt" ? "" : x.kilde }, "ut-tiaar", "")).join("")}</ul></li>`
+    : "";
+  const annet = tre.annet.length
+    ? `<li class="ut-gruppe"><span class="ut-fam-navn"><b>Annet</b></span><ul>${tre.annet.map((x) => {
+      const grunn = x.grunn === "skjult" ? "vises ikke for studenter" : x.grunn === "finnes-ikke" ? "finnes ikke lenger" : "";
+      return hukRad({ ...x, kilde: "" }, `ut-annet${x.grunn ? " ut-mangler" : ""}`, [TYPE_ETIKETT[x.type] || "", grunn].filter(Boolean).join(" · "));
+    }).join("")}</ul></li>`
+    : "";
+  return familier.join("") + tiaar + annet;
 }
 
 function tegnDeler(u) {
@@ -119,20 +134,27 @@ function tegnDeler(u) {
   }).join("");
 }
 
+// Statuslinja over utvalget: tellingene, det som er huket bort, og
+// sideanslaget når heftet er tegnet.
+function statusTekst(sider) {
+  if (!klar()) return "Laster innholdet …";
+  if (modell.tom) return "Utvalget er tomt. Søk under, eller trykk skriverikonet i tittellinja på et kort i appen.";
+  const deler = [tellingerTekst(modell.tellinger)];
+  if (modell.tellinger.bortvalgt) deler.push(`${modell.tellinger.bortvalgt} huket bort`);
+  if (sider) deler.push(`cirka ${sider} ${sider === 1 ? "side" : "sider"}`);
+  return deler.filter(Boolean).join(" · ");
+}
+
 function tegnPanel(u) {
   const status = $("utskrift-status");
-  if (status) {
-    status.textContent = !klar() ? "Laster innholdet …"
-      : modell.tom ? "Utvalget er tomt. Søk under, eller trykk skriverikonet i tittellinja på et kort i appen."
-      : tellingerTekst(modell.tellinger);
-  }
+  if (status) status.textContent = statusTekst(null);
   const antallEl = $("utskrift-antall-tekst");
-  if (antallEl) antallEl.textContent = u.valg.length ? `(${u.valg.length})` : "";
+  if (antallEl) antallEl.textContent = u.valg.length ? `(${u.valg.length} valgt)` : "";
 
   const liste = $("utskrift-liste");
   if (liste) {
     liste.innerHTML = u.valg.length
-      ? u.valg.map(radHtml).join("")
+      ? treHtml(modell.tre)
       : `<li class="muted utskrift-tom-liste">Ingenting valgt ennå.</li>`;
   }
 
@@ -193,6 +215,17 @@ function tegnSok() {
   const u = lesUtvalg();
   const sett = new Set();
   const treff = [];
+  // Metasjangrene finnes ikke i søkeindeksen (de har ingen egen flate på
+  // skjermen), så de matches på navnet her og står først.
+  const nq = normaliser(q);
+  for (const meta of META_GENRE_ORDER) {
+    if (!normaliser(meta).includes(nq)) continue;
+    const vis = `${META_PREFIKS}${meta}`;
+    const nArt = state.artists.filter((a) => isVisible(a) && a.metaGenre === meta).length;
+    const nSj = GENEALOGY.filter((n) => n.g === meta).length;
+    sett.add(vis);
+    treff.push({ t: { type: "metasjanger", tittel: meta, sti: `hele metasjangeren: ${nSj} sjangre, ${nArt} artister` }, vis });
+  }
   for (const t of res.grupper.flatMap((g) => g.treff)) {
     // Samfunn og teknologi er to treff på skjermen, men ett tiår på papir.
     const vis = kanoniskVis(byggVisVerdi(t.apne) || "");
@@ -202,10 +235,11 @@ function tegnSok() {
     if (treff.length >= MAKS_TREFF) break;
   }
   if (!treff.length) { ut.innerHTML = `<p class="muted">Ingen treff på «${h(q)}» som kan stå i et hefte.</p>`; return; }
+  const medNaa = new Set(modell?.valg || []);
   ut.innerHTML = treff.map(({ t, vis }) => {
-    const med = u.valg.includes(vis);
+    const med = u.valg.includes(vis) || medNaa.has(vis);
     return `<button type="button" class="utskrift-treff${med ? " er-med" : ""}" data-legg="${h(vis)}"${med ? " disabled" : ""}>
-      <span class="utskrift-rad-type">${h(TYPE_LABEL[t.type] || t.type)}</span>
+      <span class="utskrift-rad-type">${h(TYPE_ETIKETT[t.type] || TYPE_LABEL[t.type] || t.type)}</span>
       <span class="utskrift-treff-navn">${h(t.tittel)}${t.sti ? ` <span class="muted">${h(t.sti)}</span>` : ""}</span>
       <span class="utskrift-treff-merke">${med ? "i utskriften" : "Legg til"}</span>
     </button>`;
@@ -559,9 +593,11 @@ function tegnHefte(u) {
   ].join("");
   settSidestil(t);
   document.title = `${t} – Utskrift`;
-  const status = $("utskrift-status");
   const sider = sideanslag();
-  if (status && sider) status.textContent = `${tellingerTekst(modell.tellinger)} · cirka ${sider} ${sider === 1 ? "side" : "sider"}`;
+  const status = $("utskrift-status");
+  if (status) status.textContent = statusTekst(sider);
+  const knapp = $("utskrift-skriv-ut");
+  if (knapp) knapp.textContent = sider ? `Skriv ut / lagre som PDF · ca. ${sider} ${sider === 1 ? "side" : "sider"}` : "Skriv ut / lagre som PDF";
 }
 
 // ----------------------------------------------------------------------------
@@ -585,6 +621,7 @@ async function kopierLenke() {
   const u = lesUtvalg();
   const url = new URL("utskrift.html", window.location.href);
   for (const v of u.valg) url.searchParams.append("u", v);
+  for (const v of u.fravalg) url.searchParams.append("x", v);
   if (u.tittel) url.searchParams.set("tittel", u.tittel);
   if (u.form.rekkefolge === "valgt") url.searchParams.set("r", "valgt");
   const b = $("utskrift-lenke");
@@ -618,6 +655,7 @@ async function lesLenke() {
   try { params = new URLSearchParams(window.location.search); } catch (e) { return; }
   const fraUrl = normaliserUtvalg(params.getAll("u"));
   if (!fraUrl.length) return;
+  const fravalgUrl = normaliserUtvalg(params.getAll("x"));
   const tittelUrl = normaliserTittel(params.get("tittel") || "");
   const somValgt = params.get("r") === "valgt";
   const u = lesUtvalg();
@@ -637,12 +675,14 @@ async function lesLenke() {
   }
   if (valg === "erstatt") {
     u.valg = fraUrl;
+    u.fravalg = fravalgUrl;
     u.plan = null;
     if (tittelUrl) u.tittel = tittelUrl;
     u.form.rekkefolge = somValgt ? "valgt" : "kronologisk";
     lagreUtvalg(u);
   } else if (valg === "legg") {
     u.valg = normaliserUtvalg([...u.valg, ...fraUrl]);
+    u.fravalg = [...u.fravalg, ...fravalgUrl];
     lagreUtvalg(u);
   }
   try { window.history.replaceState(null, "", window.location.pathname); } catch (e) { /* uvesentlig */ }
@@ -653,9 +693,10 @@ function koble() {
   $("utskrift-lenke")?.addEventListener("click", kopierLenke);
   $("utskrift-toem")?.addEventListener("click", toemUtvalget);
 
-  $("utskrift-liste")?.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-fjern]");
-    if (b) fjern(b.dataset.fjern);
+  $("utskrift-liste")?.addEventListener("change", (e) => {
+    const inp = e.target.closest("input[data-huk]");
+    if (!inp) return;
+    huk(inp.dataset.huk, inp.checked, { eksplisitt: inp.dataset.eksplisitt === "1" });
   });
 
   $("utskrift-deler")?.addEventListener("change", (e) => {
@@ -728,7 +769,7 @@ function init() {
     }
     return;
   }
-  initUtskriftValg();
+  initUtskriftValg({ hentData: () => state });
   koble();
   document.addEventListener(UTSKRIFT_HENDELSE, planleggTegning);
   onGenreModelChanged(planleggTegning);

@@ -14,11 +14,18 @@
 //  åpning (class) og målbytte (data-vis) i alle modaler, også de som lages
 //  etter oppstart, så ingen åpner må vite om knappen.
 //
-//  Selve reglene (hva som kan stå i et hefte, kanonisk form) bor i
-//  js/utskrift-modell.js, som er DOM-fri og testet.
+//  Selve reglene (hva som kan stå i et hefte, kanonisk form, hva et valg
+//  drar med seg) bor i js/utskrift-modell.js, som er DOM-fri og testet.
+//
+//  Utvalget har to lister (v5.58): `valg` (det studenten har valgt) og
+//  `fravalg` (det studenten har huket bort av det valget drar med seg). Om
+//  et kort ER med, avgjøres av utvidUtvalg i modellen, som trenger artistene:
+//  sidene gir initUtskriftValg en hentData-funksjon, så «Ta med»-knappen kan
+//  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg } from "./utskrift-modell.js?v=5.57";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg } from "./utskrift-modell.js?v=5.58";
+import { isVisible } from "./limits.js?v=5.58";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -46,19 +53,58 @@ function meld() {
 
 export function antall() { return lesUtvalg().valg.length; }
 
-export function harMed(vis) {
-  const k = kanoniskVis(vis);
-  return !!k && lesUtvalg().valg.includes(k);
+// Sidens data (state), satt av initUtskriftValg. Uten den regnes bare de
+// valgte postene som «med» (skjemasiden har ingen kort å åpne uansett).
+let hentData = null;
+
+// Det utvalget drar med seg akkurat nå: Map vis → opphav (se utvidUtvalg).
+function avledet(u) {
+  const s = hentData?.() || {};
+  return utvidUtvalg(u.valg, u.fravalg, (s.artists || []).filter(isVisible), new Date().getFullYear(), s.genreDescs || {}).kilde;
 }
 
-// Legger til ett eller flere mål. Returnerer hvor mange som var nye.
+// Står kortet i heftet: valgt, eller dratt med av et valg og ikke huket bort.
+export function harMed(vis) {
+  const k = kanoniskVis(vis);
+  if (!k) return false;
+  const u = lesUtvalg();
+  if (u.valg.includes(k)) return true;
+  if (u.fravalg.includes(k)) return false;
+  return avledet(u).has(k);
+}
+
+// Legger til ett eller flere mål. Et bortvalg oppheves av et nytt valg.
+// Returnerer hvor mange som var nye.
 export function leggTil(vis) {
   const liste = Array.isArray(vis) ? vis : [vis];
   const u = lesUtvalg();
   const nye = normaliserUtvalg([...u.valg, ...liste]);
   const lagt = nye.length - u.valg.length;
-  if (lagt) { u.valg = nye; lagreUtvalg(u); }
+  const fravalg = u.fravalg.filter((v) => !nye.includes(v));
+  if (lagt || fravalg.length !== u.fravalg.length) {
+    u.valg = nye;
+    u.fravalg = fravalg;
+    lagreUtvalg(u);
+  }
   return lagt;
+}
+
+// Avkryssingen i utskriftspanelet. Av: posten tas ut av valget OG huskes som
+// bortvalgt, så den ikke kommer tilbake via metasjangeren eller sjangeren
+// sin. På: bortvalget oppheves; `eksplisitt` (metasjangerraden, som aldri
+// utledes) legger posten inn i valget.
+export function huk(vis, paa, { eksplisitt = false } = {}) {
+  const k = kanoniskVis(vis);
+  if (!k) return;
+  const u = lesUtvalg();
+  if (paa) {
+    u.fravalg = u.fravalg.filter((v) => v !== k);
+    if (eksplisitt && !u.valg.includes(k)) u.valg = [...u.valg, k];
+  } else {
+    u.valg = u.valg.filter((v) => v !== k);
+    if (!u.fravalg.includes(k)) u.fravalg = [...u.fravalg, k];
+  }
+  lagreUtvalg(u);
 }
 
 export function fjern(vis) {
@@ -69,9 +115,11 @@ export function fjern(vis) {
   lagreUtvalg(u);
 }
 
-// Ta med eller ta ut. Returnerer true når målet ble lagt til.
+// Ta med eller ta ut. Returnerer true når målet ble lagt til. Et kort som
+// følger med en metasjanger, tas ut som bortvalg (huk av), ikke ved å fjerne
+// et valg det ikke har.
 export function veksle(vis) {
-  if (harMed(vis)) { fjern(vis); return false; }
+  if (harMed(vis)) { huk(vis, false); return false; }
   leggTil(vis);
   return true;
 }
@@ -172,8 +220,11 @@ function startObservator() {
 }
 
 // Kalles fra sidenes oppstart, etter at modalene er injisert. Sider uten
-// modaler (skjemasiden) får bare merket på skriverikonet.
-export function initUtskriftValg() {
+// modaler (skjemasiden) får bare merket på skriverikonet. `hentData` gir
+// sidens state (artister og sjangerbeskrivelser), så harMed kan regne ut
+// hva som følger med.
+export function initUtskriftValg({ hentData: hent = null } = {}) {
+  if (hent) hentData = hent;
   if (document.body.dataset.utskriftValg) return;
   document.body.dataset.utskriftValg = "1";
   monterKnapper();
