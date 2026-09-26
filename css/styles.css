@@ -988,6 +988,10 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  /* Fire knapper (utskrift kom til i v5.70) får ikke plass på én linje i
+     kortbredden i Finn artister; det som brytes ned står da til høyre under
+     de andre, ikke alene til venstre. Første linje styres av .spacer. */
+  justify-content: flex-end;
   gap: 10px;
   margin-top: auto;
   padding-top: 12px;
@@ -2093,9 +2097,9 @@ body.is-teacher #gate { display: none; }
   .artist-image { float: none; max-width: 100%; margin: 0 0 12px; }
   .artist-image.big { max-width: 100%; }
 
-  /* Kortets bunntekst */
+  /* Kortets bunntekst: uten spacer, venstrestilt som før. */
   .spacer { display: none; }
-  .card-foot { gap: 8px; }
+  .card-foot { gap: 8px; justify-content: flex-start; }
 }
 
 /* ===========================================================================
