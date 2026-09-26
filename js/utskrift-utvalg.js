@@ -24,8 +24,9 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.68";
-import { isVisible } from "./limits.js?v=5.68";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.69";
+import { isVisible } from "./limits.js?v=5.69";
+import { escapeHtml } from "./util.js?v=5.69";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -48,6 +49,7 @@ export function lagreUtvalg(u) {
 function meld() {
   oppdaterMerker();
   document.querySelectorAll(".modal-backdrop.open").forEach(oppdaterKnapp);
+  oppdaterKortKnapper();
   document.dispatchEvent(new CustomEvent(UTSKRIFT_HENDELSE));
 }
 
@@ -60,18 +62,33 @@ let hentData = null;
 const synligeArtister = () => ((hentData?.() || {}).artists || []).filter(isVisible);
 
 // Det utvalget drar med seg akkurat nå: Map vis → opphav (se utvidUtvalg).
+// Huskes (v5.69): harMed kalles én gang per kort når artistlistene tegnes,
+// og utvidUtvalg går gjennom alle artistene hver gang. Nøkkelen er det som
+// faktisk ligger lagret pluss sidens artist- og beskrivelsesreferanser, så
+// et nytt snapshot eller en lagring regner på nytt.
+let avledetHusk = { raa: null, artister: null, descs: null, map: null };
 function avledet(u) {
   const s = hentData?.() || {};
-  return utvidUtvalg(u.valg, u.fravalg, synligeArtister(), new Date().getFullYear(), s.genreDescs || {}).kilde;
+  let raa = null;
+  try { raa = localStorage.getItem(NOKKEL); } catch (e) { /* som i lesUtvalg */ }
+  const h = avledetHusk;
+  if (h.map && h.raa === raa && h.artister === s.artists && h.descs === s.genreDescs) return h.map;
+  const map = utvidUtvalg(u.valg, u.fravalg, synligeArtister(), new Date().getFullYear(), s.genreDescs || {}).kilde;
+  avledetHusk = { raa, artister: s.artists, descs: s.genreDescs, map };
+  return map;
 }
 
 // Står kortet i heftet: valgt, eller dratt med av et valg og ikke huket bort.
+// Bortvalget sjekkes FØRST (v5.69): et valg kan stå avhuket i lista (v5.59),
+// og heftet holder det utenfor (modellen: med = !bort.has). Med valget
+// sjekket først meldte knappen «er med» etter «ta ut», og veksle kom aldri
+// ut av det igjen.
 export function harMed(vis) {
   const k = kanoniskVis(vis);
   if (!k) return false;
   const u = lesUtvalg();
-  if (u.valg.includes(k)) return true;
   if (u.fravalg.includes(k)) return false;
+  if (u.valg.includes(k)) return true;
   return avledet(u).has(k);
 }
 
@@ -172,13 +189,41 @@ export function oppdaterMerker() {
 export const TIL_UTSKRIFT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>';
 export const UTSKRIFT_HAKE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
+const TITTEL_MED = "Tatt med i utskriften. Klikk for å ta den ut.";
+const TITTEL_UTEN = "Ta med i utskriften";
+
 function knappTilstand(b, k) {
   const med = harMed(k);
   b.classList.toggle("er-med", med);
   b.innerHTML = med ? UTSKRIFT_HAKE_SVG : TIL_UTSKRIFT_SVG;
-  b.title = med ? "Tatt med i utskriften. Klikk for å ta den ut." : "Ta med i utskriften";
-  b.setAttribute("aria-label", b.title);
+  b.title = med ? TITTEL_MED : TITTEL_UTEN;
+  // Kortknappene bærer navnet (data-navn), så skjermleseren hører hvem det gjelder.
+  b.setAttribute("aria-label", b.dataset.navn ? `${b.dataset.navn}: ${b.title}` : b.title);
   b.setAttribute("aria-pressed", med ? "true" : "false");
+}
+
+// ----------------------------------------------------------------------------
+//  Knappen på kortene og radene i artistlistene (v5.69)
+// ----------------------------------------------------------------------------
+
+// Samme knapp som i modalhodet, men rett på kortet og raden i «Finn artister»,
+// sjanger-popupen og slektstreet, ved siden av samleøktas plussknapp
+// (kortPlussHtml i js/ui.js): studenten skal kunne legge en artist i heftet
+// uten å åpne kortet først. Tilstanden regnes ved rendering (listene tegnes
+// på nytt ved hvert snapshot), og meld() holder alle knappene med samme mål
+// i takt etterpå. Klikket fanges delegert i initUtskriftValg, så listene vet
+// ingenting om utvalget. Bare artister studentene ser kan stå i heftet.
+export function kortUtskriftHtml(a) {
+  if (!a || !isVisible(a)) return "";
+  const k = kanoniskVis(`artist:${a.id}`);
+  if (!k) return "";
+  const med = harMed(k);
+  const tittel = med ? TITTEL_MED : TITTEL_UTEN;
+  return `<button type="button" class="kort-utskrift${med ? " er-med" : ""}" data-vis="${escapeHtml(k)}" data-navn="${escapeHtml(a.name)}" title="${escapeHtml(tittel)}" aria-label="${escapeHtml(`${a.name}: ${tittel}`)}" aria-pressed="${med ? "true" : "false"}">${med ? UTSKRIFT_HAKE_SVG : TIL_UTSKRIFT_SVG}</button>`;
+}
+
+function oppdaterKortKnapper() {
+  document.querySelectorAll(".kort-utskrift[data-vis]").forEach((b) => knappTilstand(b, b.dataset.vis));
 }
 
 // Knappen følger modalens mål: skjult når kortet ikke kan stå i et hefte.
@@ -242,6 +287,18 @@ export function initUtskriftValg({ hentData: hent = null } = {}) {
   document.querySelectorAll(".modal-backdrop.open").forEach(oppdaterKnapp);
   startObservator();
   oppdaterMerker();
+  // Knappen på kortene og radene (v5.69): ett delegert klikk for alle lister,
+  // også de som tegnes senere. Radene hopper selv over klikk på knapper, så
+  // kortet åpnes ikke i tillegg.
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest?.(".kort-utskrift");
+    if (!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const k = kanoniskVis(b.dataset.vis || "");
+    if (!k) return;
+    veksle(k);
+  });
   // Endret i en annen fane: merket og åpne kort skal vise det samme her.
   window.addEventListener("storage", (e) => {
     if (e.key === NOKKEL) meld();
