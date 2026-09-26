@@ -24,9 +24,9 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.69";
-import { isVisible } from "./limits.js?v=5.69";
-import { escapeHtml } from "./util.js?v=5.69";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.70";
+import { isVisible } from "./limits.js?v=5.70";
+import { escapeHtml } from "./util.js?v=5.70";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -207,19 +207,23 @@ function knappTilstand(b, k) {
 // ----------------------------------------------------------------------------
 
 // Samme knapp som i modalhodet, men rett på kortet og raden i «Finn artister»,
-// sjanger-popupen og slektstreet, ved siden av samleøktas plussknapp
-// (kortPlussHtml i js/ui.js): studenten skal kunne legge en artist i heftet
-// uten å åpne kortet først. Tilstanden regnes ved rendering (listene tegnes
-// på nytt ved hvert snapshot), og meld() holder alle knappene med samme mål
-// i takt etterpå. Klikket fanges delegert i initUtskriftValg, så listene vet
-// ingenting om utvalget. Bare artister studentene ser kan stå i heftet.
-export function kortUtskriftHtml(a) {
+// sjanger-popupen og slektstreet: studenten skal kunne legge en artist i
+// heftet uten å åpne kortet først. To former: den runde på radene, ved siden
+// av samleøktas plussknapp (kortPlussHtml i js/ui.js), og `knapp` = samme
+// knappeform som listeknappen (btn ghost small utskrift-ikonknapp) nederst i
+// de fulle kortenes fotlinje (brukervalg 2026-09-26, v5.70). Tilstanden
+// regnes ved rendering (listene tegnes på nytt ved hvert snapshot), og
+// meld() holder alle knappene med samme mål i takt etterpå. Klikket fanges
+// delegert i initUtskriftValg, så listene vet ingenting om utvalget. Bare
+// artister studentene ser kan stå i heftet.
+export function kortUtskriftHtml(a, { knapp = false } = {}) {
   if (!a || !isVisible(a)) return "";
   const k = kanoniskVis(`artist:${a.id}`);
   if (!k) return "";
   const med = harMed(k);
   const tittel = med ? TITTEL_MED : TITTEL_UTEN;
-  return `<button type="button" class="kort-utskrift${med ? " er-med" : ""}" data-vis="${escapeHtml(k)}" data-navn="${escapeHtml(a.name)}" title="${escapeHtml(tittel)}" aria-label="${escapeHtml(`${a.name}: ${tittel}`)}" aria-pressed="${med ? "true" : "false"}">${med ? UTSKRIFT_HAKE_SVG : TIL_UTSKRIFT_SVG}</button>`;
+  const klasse = `${knapp ? "btn ghost small utskrift-ikonknapp " : ""}kort-utskrift${med ? " er-med" : ""}`;
+  return `<button type="button" class="${klasse}" data-vis="${escapeHtml(k)}" data-navn="${escapeHtml(a.name)}" title="${escapeHtml(tittel)}" aria-label="${escapeHtml(`${a.name}: ${tittel}`)}" aria-pressed="${med ? "true" : "false"}">${med ? UTSKRIFT_HAKE_SVG : TIL_UTSKRIFT_SVG}</button>`;
 }
 
 function oppdaterKortKnapper() {

@@ -24,7 +24,7 @@ globalThis.document = {
 };
 
 const { harMed, veksle, leggTil, huk, lesUtvalg, toem, kortUtskriftHtml } =
-  await import("../../js/utskrift-utvalg.js?v=5.69");
+  await import("../../js/utskrift-utvalg.js?v=5.70");
 
 test("et valg som er huket av i panelet står ikke i heftet", () => {
   toem();
@@ -62,4 +62,9 @@ test("kortUtskriftHtml speiler tilstanden og bare synlige artister får knapp", 
   assert.match(inne, /aria-pressed="true"/);
   assert.equal(kortUtskriftHtml({ ...a, status: "removed" }), "", "skjulte artister kan ikke stå i heftet");
   assert.equal(kortUtskriftHtml(null), "");
+  // Fotlinjeformen på de fulle kortene (v5.70): listeknappens klasser, samme
+  // hook og tilstand.
+  const fot = kortUtskriftHtml(a, { knapp: true });
+  assert.match(fot, /class="btn ghost small utskrift-ikonknapp kort-utskrift er-med"/);
+  assert.match(fot, /data-vis="artist:a"/);
 });

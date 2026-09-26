@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.69";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.69";
-import { punkterHtml } from "./punkter.js?v=5.69";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.69";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.69";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.69";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.70";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.70";
+import { punkterHtml } from "./punkter.js?v=5.70";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.70";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.70";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.70";
 import {
   escapeHtml,
   linkDesc,
@@ -38,13 +38,13 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.69";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.69";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.69";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.69";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.69";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.69";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.69";
+} from "./ui-helpers.js?v=5.70";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.70";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.70";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.70";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.70";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.70";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.70";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -87,8 +87,9 @@ export function buildMainGenreList(artists) {
 // setter body.samler-plukk, og klikket fanges der (delegert på document), så
 // listene vet ingenting om økta. Bare artister studentene ser kan bli et stopp.
 // Visningsikonet (v5.68): samme som i toppmenyen og i modalhodene.
-// Utskriftsknappen (kortUtskriftHtml, v5.69) står foran den på samme måte og
-// bor i js/utskrift-utvalg.js; rekkefølgen er som i modalhodene: utskrift, pluss.
+// Utskriftsknappen (kortUtskriftHtml, v5.69) står foran den på radene og bor
+// i js/utskrift-utvalg.js; på de fulle kortene står den NEDERST, i fotlinja
+// ved «Vis i tidslinje» (brukervalg 2026-09-26, v5.70), i knappeform.
 const KORT_PLUSS_SVG = VISNING_SVG;
 export function kortPlussHtml(a) {
   if (!a || !isVisible(a)) return "";
@@ -436,7 +437,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
       <header class="card-head">
         ${artistImage(a)}
         <div>
-          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}${kortUtskriftHtml(a)}${kortPlussHtml(a)}</h3>
+          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}${kortPlussHtml(a)}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${prioTag}
@@ -457,6 +458,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
         <div class="spacer"></div>
+        ${kortUtskriftHtml(a, { knapp: true })}
         <button class="btn ghost small" data-action="showTimeline" data-id="${escapeHtml(a.id)}">Vis i tidslinje</button>
         ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${escapeHtml(a.id)}">Foreslå endring</button>` : ""}
         ${voteBtn}
