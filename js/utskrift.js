@@ -21,24 +21,24 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.76";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.76";
-import { onAuthChange, savePlan } from "./store.js?v=5.76";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.76";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.76";
-import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.76";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.76";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.76";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.76";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.76";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.76";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.76";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.76";
-import { artistStripHtml } from "./artist-strip.js?v=5.76";
-import { DECADES, isVisible } from "./limits.js?v=5.76";
-import { askChoice, kopierTilUtklipp } from "./ui-modal.js?v=5.76";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.76";
-import { ytSpillelisteUrl, nyPlanId } from "./presentasjon-modell.js?v=5.76";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.77";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.77";
+import { onAuthChange, savePlan } from "./store.js?v=5.77";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.77";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.77";
+import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.77";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.77";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.77";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.77";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.77";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.77";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.77";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.77";
+import { artistStripHtml } from "./artist-strip.js?v=5.77";
+import { DECADES, isVisible } from "./limits.js?v=5.77";
+import { askChoice, kopierTilUtklipp } from "./ui-modal.js?v=5.77";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.77";
+import { ytSpillelisteUrl, nyPlanId } from "./presentasjon-modell.js?v=5.77";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -725,10 +725,15 @@ function spillAlleHtml() {
 
 function lyttelisteHtml() {
   if (!modell.lytteliste.length) return "";
-  const rader = modell.lytteliste.map((l) => `<div class="h-lytte-rad"><span class="h-nr">${l.nr}</span><span>${h(l.artist)}: «${h(l.label)}»${h(musicExampleLabel(l))}<span class="h-url">${h(kortUrl(l.url))}</span></span></div>`);
+  // Eksempler valgt utenom kortene (v5.77) står sist, bak et lite skille når
+  // lista også har kortenes egne.
+  const rad = (l) => `<div class="h-lytte-rad"><span class="h-nr">${l.nr}</span><span>${h(l.artist)}: «${h(l.label)}»${h(musicExampleLabel(l))}<span class="h-url">${h(kortUrl(l.url))}</span></span></div>`;
+  const egne = modell.lytteliste.filter((l) => !l.valgt).map(rad);
+  const valgte = modell.lytteliste.filter((l) => l.valgt).map(rad);
+  const skille = egne.length && valgte.length ? `<p class="h-lytte-skille">Valgt i tillegg til kortene</p>` : "";
   return `<section class="h-seksjon h-lytteliste" data-toc="lytteliste">${seksjonHode("Bakerst", "Lytteliste")}
     ${spillAlleHtml()}
-    <div class="h-liste-2sp">${rader.join("")}</div>
+    <div class="h-liste-2sp">${egne.join("")}${skille}${valgte.join("")}</div>
   </section>`;
 }
 

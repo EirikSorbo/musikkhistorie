@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.76";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.76";
+import { metaRader } from "../../js/ui-helpers.js?v=5.77";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.77";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -660,7 +660,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert } from "../../js/presentasjon-modell.js?v=5.76";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.77";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);
@@ -693,4 +693,55 @@ test("medStoppOppdatert: nivå og unntak på ett stopp, tomt unntak fjerner, inn
   assert.deepEqual(bareNivaa.p1.stopp[1], { vis: "artist:b", nivaa: 3, unntak: { "artist.verk": true } });
   assert.throws(() => medStoppOppdatert(planer, "nope", 0, {}));
   assert.throws(() => medStoppOppdatert(planer, "p1", 5, {}));
+});
+
+// --- Spilleren i hele appen (v5.77, brukerbestilling 2026-09-27) --------------
+
+test("ytSpillelisteIder leser watch_videos-lenker, og bare dem", () => {
+  assert.deepEqual(ytSpillelisteIder("https://www.youtube.com/watch_videos?video_ids=GtDlZdhHRCI,-SBmury81Ws,GtDlZdhHRCI"), ["GtDlZdhHRCI", "-SBmury81Ws"], "hver id én gang");
+  assert.deepEqual(ytSpillelisteIder(ytSpillelisteUrl(["GtDlZdhHRCI", "-SBmury81Ws"])[0]), ["GtDlZdhHRCI", "-SBmury81Ws"], "rundtur med ytSpillelisteUrl");
+  assert.equal(ytSpillelisteIder("https://www.youtube.com/watch?v=GtDlZdhHRCI"), null, "en vanlig video er ikke en kø");
+  assert.equal(ytSpillelisteIder("https://www.youtube.com/watch_videos?video_ids=x"), null, "ugyldige id-er gir ingen kø");
+  assert.equal(ytSpillelisteIder("https://example.com/watch_videos?video_ids=GtDlZdhHRCI"), null);
+  assert.equal(ytSpillelisteIder("ikke en url"), null);
+});
+
+test("finnLytteeksempel gir artist, etikett og lenke; lytteeksempelNavn bygger på den", () => {
+  const artister = [
+    { id: "a", name: "Muddy Waters", musicExamples: [{ label: "Got My Mojo Working", url: "https://www.youtube.com/watch?v=-SBmury81Ws", year: 1957 }] },
+    { id: "b", name: "Uten etikett", musicExamples: [{ url: "https://youtu.be/GtDlZdhHRCI" }] },
+  ];
+  assert.deepEqual(finnLytteeksempel("-SBmury81Ws", artister),
+    { artist: "Muddy Waters", artistId: "a", label: "Got My Mojo Working", url: "https://www.youtube.com/watch?v=-SBmury81Ws", year: 1957, performanceYear: null });
+  assert.equal(finnLytteeksempel("GtDlZdhHRCI", artister).label, "Lytteeksempel");
+  assert.equal(finnLytteeksempel("finnesikke1", artister), null);
+  assert.equal(finnLytteeksempel(null, artister), null);
+  assert.equal(lytteeksempelNavn("-SBmury81Ws", artister), "Got My Mojo Working (Muddy Waters)");
+});
+
+test("spilleren fanger YouTube-lenkene i hele appen, med reserve for sperrede videoer (v5.77)", () => {
+  const spiller = kilde("yt-spiller.js");
+  // Én lytter, alltid på, koblet av sidenes oppstart.
+  assert.match(spiller, /export function initYtSpiller\(\) \{\n\s*if \(koblet\) return;/);
+  assert.doesNotMatch(spiller, /registrerYtIntercept/, "betingelsene fra v5.28 er borte");
+  for (const side of ["landing.js", "tre-page.js", "teacher.js"]) {
+    assert.match(kilde(side), /\n\s*initYtSpiller\(\);/, `${side} kobler spilleren`);
+  }
+  for (const f of ["presentasjon.js", "plan-innsamling.js"]) {
+    assert.doesNotMatch(kilde(f), /registrerYtIntercept/, `${f} registrerer ingen egen betingelse lenger`);
+  }
+  // Ctrl/Cmd/Shift/Alt-klikk går til YouTube som før, og lenkene i selve
+  // spilleren (reservene) fanges ikke.
+  assert.match(spiller, /if \(!a \|\| a\.closest\("#modal-yt"\)\) return;\n\s*if \(e\.metaKey \|\| e\.ctrlKey \|\| e\.shiftKey \|\| e\.altKey\) return;/);
+  // «Spill alle» (watch_videos) spilles som kø i stedet for ny fane.
+  assert.match(spiller, /const ider = ytSpillelisteIder\(a\.href\);\n\s*if \(ider\) \{\n\s*if \(apneYtSpiller\(ytWatchUrl\(ider\[0\], null, null\), `Spilleliste · \$\{ider\.length\} videoer`, \{ kø: ider\.slice\(1\) \}\)\) e\.preventDefault\(\);/);
+  // Sperret video: tydelig melding med reserven som knapp, og reserven åpner
+  // hele køen når det er en.
+  assert.match(spiller, /const FEIL_TEKST = \{\n\s*100: /);
+  assert.match(spiller, /settKino\(m, false\);[^]*?visFeil\(e\.data\);/);
+  assert.match(spiller, /id="yt-feil" hidden role="alert"/);
+  assert.match(spiller, /visFeil\(null\);\n\s*ramme\.innerHTML = `<iframe/, "meldingen nullstilles ved ny video");
+  assert.match(spiller, /const ekstern = naa\.kø\.length\n\s*\? ytSpillelisteUrl\(\[naa\.video, \.\.\.naa\.kø\]\)\[0\]/);
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /\.yt-feil\[hidden\] \{ display: none; \}/);
 });

@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.76";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.77";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -334,6 +334,17 @@ export function ytSpillelisteUrl(ider) {
   return ut;
 }
 
+// Motsatt vei (v5.77): video-ID-ene i en watch_videos-lenke, så den innebygde
+// spilleren kan spille lista som kø i stedet for å sende brukeren til
+// YouTube. null for alt som ikke er en slik lenke.
+export function ytSpillelisteIder(url) {
+  let u;
+  try { u = new URL(String(url)); } catch (e) { return null; }
+  if (!YT_HOSTS.has(u.hostname.toLowerCase()) || u.pathname !== "/watch_videos") return null;
+  const ider = String(u.searchParams.get("video_ids") || "").split(",").map((s) => s.trim()).filter((id) => ID_OK.test(id));
+  return ider.length ? [...new Set(ider)] : null;
+}
+
 // ----------------------------------------------------------------------------
 //  Lytteeksempler: tittelen på et yt-mål slås opp blant artistenes egne
 //  eksempler. Delt av spilleren (explore-apne), editoren og oversiktskortet,
@@ -343,10 +354,22 @@ export function ytSpillelisteUrl(ider) {
 // «Hound Dog (Elvis Presley)», eller null når videoen ikke er noens
 // lytteeksempel (kalleren velger reserven selv).
 export function lytteeksempelNavn(videoId, artister) {
+  const e = finnLytteeksempel(videoId, artister);
+  return e ? `${e.label} (${e.artist})` : null;
+}
+
+// Selve eksempelet (v5.77, heftets lytteliste): artistens navn, etiketten,
+// årstallene og lenka, eller null når ingen synlig artist har videoen.
+export function finnLytteeksempel(videoId, artister) {
   if (!videoId) return null;
   for (const a of artister || []) {
     const eks = (a?.musicExamples || []).find((x) => ytMaal(x?.url || "")?.video === videoId);
-    if (eks) return `${eks.label || "Lytteeksempel"} (${a.name})`;
+    if (eks) {
+      return {
+        artist: a.name || "(uten navn)", artistId: a.id ?? null, label: eks.label || "Lytteeksempel", url: String(eks.url),
+        year: eks.year ?? null, performanceYear: eks.performanceYear ?? null,
+      };
+    }
   }
   return null;
 }

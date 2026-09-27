@@ -24,19 +24,19 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.76";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.76";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.76";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.76";
-import { GENEALOGY } from "./genre-model.js?v=5.76";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.76";
-import { registrerYtIntercept, veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.76";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.76";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.76";
-import { getState } from "./explore-context.js?v=5.76";
-import { onAuthChange } from "./store.js?v=5.76";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.76";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.76";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.77";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.77";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.77";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.77";
+import { GENEALOGY } from "./genre-model.js?v=5.77";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.77";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.77";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.77";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.77";
+import { getState } from "./explore-context.js?v=5.77";
+import { onAuthChange } from "./store.js?v=5.77";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.77";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.77";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -1000,9 +1000,6 @@ export function initPresentasjon() {
   if (qaPaa()) settQA(true); else oppdaterHubKort();
   observerModaler();
   brukNivaa();
-  // Betingelsen er alltid sann HER: registreringen skjer bare når modusen er
-  // aktiv (vi returnerte tidlig ellers). Samleøktene registrerer sin egen.
-  registrerYtIntercept(() => true);
   // Content kan alt ligge i state (lokal cache): prøv med en gang, ellers
   // tar sidenes content-hooks det når snapshotet lander.
   presPlanTikk();

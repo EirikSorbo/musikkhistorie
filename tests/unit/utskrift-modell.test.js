@@ -9,9 +9,9 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, heltPensum,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE, ROTTER,
-} from "../../js/utskrift-modell.js?v=5.76";
-import { isVisible } from "../../js/limits.js?v=5.76";
-import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=5.76";
+} from "../../js/utskrift-modell.js?v=5.77";
+import { isVisible } from "../../js/limits.js?v=5.77";
+import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=5.77";
 
 const NAA = 2026;
 
@@ -20,7 +20,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.76rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.77rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -39,7 +39,8 @@ const ARTISTER = [
     description: "Jazz.", musicExamples: [], kilder: [] },
   { id: "beyonce", name: "Beyoncé", status: "active", priority: 2, metaGenre: "R&B", instrument: "Vokal",
     birthYear: 1981, influenceStart: 1997, mainGenre: ["Cont. R&B"], description: "R&B.", musicExamples: [] },
-  { id: "skjult", name: "Skjult artist", status: "active", priority: -1, metaGenre: "Blues", influenceStart: 1950, mainGenre: ["Blues"] },
+  { id: "skjult", name: "Skjult artist", status: "active", priority: -1, metaGenre: "Blues", influenceStart: 1950, mainGenre: ["Blues"],
+    musicExamples: [{ label: "Skjult sang", url: "https://youtu.be/skjultvid01" }] },
   { id: "venter", name: "Venter", status: "pending", metaGenre: "Blues", influenceStart: 1950, mainGenre: ["Blues"] },
 ];
 
@@ -96,7 +97,10 @@ test("kanoniskVis: bare hefte-typer, tiår uten modus, guiden holdes utenfor", (
   assert.equal(kanoniskVis("metasjanger: Blues "), "metasjanger:Blues");
   assert.equal(kanoniskVis("metasjanger:"), null);
   assert.equal(kanoniskVis("metasjanger:a:b"), null);
-  for (const v of ["varmekart", "varmekart:Blues", "tidslinje", "kobling:blues__rnb", "yt:abc", "podkaster", "slektstre", "historie", "artist", "", null, undefined, 42]) {
+  // Et lytteeksempel kan stå i heftet fra v5.77 (lyttelista); resten av
+  // skjermflatene kan ikke.
+  assert.equal(kanoniskVis("yt:abc123"), "yt:abc123");
+  for (const v of ["varmekart", "varmekart:Blues", "tidslinje", "kobling:blues__rnb", "yt", "podkaster", "slektstre", "historie", "artist", "", null, undefined, 42]) {
     assert.equal(kanoniskVis(v), null, String(v));
   }
 });
@@ -301,7 +305,7 @@ test("tellingene teller hvert valg, og tellingerTekst bøyer riktig", () => {
   const m = settSammen(["sjanger:Blues", "sjanger:Electric blues", "artist:bessie", "tiår:1950", "tech:elgitar", "tech:ror", "undersjanger:Delta blues"], DATA, STUDENT);
   // Sjangrene drar med Robert Johnson og Muddy Waters, artistene drar med
   // tiårene 1920–1960 (v5.58).
-  assert.deepEqual(m.tellinger, { metasjangre: 0, sjangre: 2, artister: 3, undersjangre: 1, tiaar: 5, innovasjoner: 2, instrumenter: 0, historier: 0, sider: 0, bortvalgt: 0 });
+  assert.deepEqual(m.tellinger, { metasjangre: 0, sjangre: 2, artister: 3, undersjangre: 1, tiaar: 5, innovasjoner: 2, instrumenter: 0, historier: 0, sider: 0, lytteeksempler: 0, bortvalgt: 0 });
   assert.equal(tellingerTekst(m.tellinger), "2 sjangre · 3 artister · 1 undersjanger · 5 tiår · 2 innovasjoner");
   assert.equal(tellingerTekst({ metasjangre: 1, sjangre: 1, tiaar: 3, instrumenter: 1, historier: 2, sider: 1 }), "1 metasjanger · 1 sjanger · 3 tiår · 1 instrument · 2 historier · 1 side");
   assert.equal(tellingerTekst({}), "");
@@ -382,7 +386,7 @@ test("settSammen med bortvalg: heftet uten det bortvalgte, treet med alt", () =>
   // Frøets Blues-familie har tre noder: Blues, Electric blues og Blues rock.
   assert.deepEqual(blues.sjangre.map((k) => k.navn), ["Electric blues", "Blues rock"]);
   assert.deepEqual(m.bakteppe.map((b) => b.tiaar), [1920, 1930, 1940, 1950], "1960 er huket bort");
-  assert.deepEqual(m.tellinger, { metasjangre: 1, sjangre: 3, artister: 2, undersjangre: 0, tiaar: 4, innovasjoner: 1, instrumenter: 0, historier: 0, sider: 0, bortvalgt: 2 });
+  assert.deepEqual(m.tellinger, { metasjangre: 1, sjangre: 3, artister: 2, undersjangre: 0, tiaar: 4, innovasjoner: 1, instrumenter: 0, historier: 0, sider: 0, lytteeksempler: 0, bortvalgt: 2 });
   // Treet
   const F = m.tre.familier[0];
   assert.equal(F.navn, "Blues");
@@ -496,8 +500,8 @@ test("tittel: bare tiår, bare innovasjoner, ellers «Pensumutdrag»", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: koblingstekster, sideanslag, kjøreplan av heftet, små hefter
 // ---------------------------------------------------------------------------
-import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift-modell.js?v=5.76";
-import { GENEALOGY, edgeKey } from "../../js/genre-model.js?v=5.76";
+import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift-modell.js?v=5.77";
+import { GENEALOGY, edgeKey } from "../../js/genre-model.js?v=5.77";
 
 test("koblingstekster: av som standard, med for læreren når valget er på, aldri for studenter mens flagget står", () => {
   assert.equal(STANDARD_DELER["sjanger.koblinger"], false, "et tillegg læreren velger til");
@@ -556,4 +560,69 @@ test("pensumMetasjangre: den kuraterte rekkefølgen uten Pop og Rock, delt av «
   assert.ok(!metaer.includes("Pop") && !metaer.includes("Rock"));
   assert.equal(new Set(metaer).size, metaer.length);
   for (const m of metaer) assert.ok(heltPensum(DATA).includes(`metasjanger:${m}`));
+});
+
+// ---------------------------------------------------------------------------
+//  Lytteeksempler i heftet (v5.77, brukerbestilling 2026-09-27)
+// ---------------------------------------------------------------------------
+
+test("kanoniskVis: et lytteeksempel mister spilleliste og starttid, og står én gang", () => {
+  assert.equal(kanoniskVis("yt:GtDlZdhHRCI"), "yt:GtDlZdhHRCI");
+  assert.equal(kanoniskVis("yt:GtDlZdhHRCI:PLxyz:30"), "yt:GtDlZdhHRCI", "spillelista og starttiden er skjermting");
+  assert.equal(kanoniskVis("yt:GtDlZdhHRCI::90"), "yt:GtDlZdhHRCI");
+  assert.equal(kanoniskVis("yt:"), null);
+  assert.deepEqual(normaliserUtvalg(["yt:GtDlZdhHRCI:PLxyz", "yt:GtDlZdhHRCI", "artist:robert"]), ["yt:GtDlZdhHRCI", "artist:robert"]);
+  assert.equal(utvidUtvalg(["yt:GtDlZdhHRCI"], [], ARTISTER, NAA, GENRE_DESCS).kilde.get("yt:GtDlZdhHRCI"), "valgt");
+  assert.deepEqual(barnAv("yt:GtDlZdhHRCI", ARTISTER), [], "et lytteeksempel drar ingenting med seg");
+});
+
+test("settSammen: et valgt lytteeksempel uten artisten blir en linje i lyttelista, et lite hefte og ett stopp", () => {
+  const m = settSammen(["yt:GtDlZdhHRCI"], DATA, STUDENT);
+  assert.equal(m.tom, false);
+  assert.deepEqual(m.familier, []);
+  assert.deepEqual(m.bakteppe, [], "ingen tiår utledes av et lytteeksempel");
+  assert.deepEqual(m.lytteliste, [{
+    nr: 1, artist: "Robert Johnson", label: "Cross Road Blues", year: 1937, performanceYear: null,
+    url: "https://www.youtube.com/watch?v=GtDlZdhHRCI", video: "GtDlZdhHRCI", vis: "yt:GtDlZdhHRCI", valgt: true,
+  }]);
+  assert.equal(m.tellinger.lytteeksempler, 1);
+  assert.equal(tellingerTekst(m.tellinger), "1 lytteeksempel");
+  assert.equal(m.kort, 0);
+  assert.equal(m.liten, true, "ingen kort: kompakt forside");
+  assert.deepEqual(m.tre.annet.map((x) => [x.navn, x.type, x.med]), [["Cross Road Blues (Robert Johnson)", "yt", true]]);
+  assert.deepEqual(m.mangler, []);
+  assert.deepEqual(planFraModell(m), [{ vis: "yt:GtDlZdhHRCI" }]);
+  assert.equal(foreslaaTittel(m), "Lytteeksempler");
+  assert.equal(anslagSider(m.tellinger), 1);
+  assert.equal(anslagSider({ lytteeksempler: 0 }), 0);
+});
+
+test("settSammen: er artisten med, står eksempelet én gang, og de valgte kommer sist med merke", () => {
+  const m = settSammen(["artist:robert", "yt:GtDlZdhHRCI", "yt:-SBmury81Ws"], DATA, STUDENT);
+  // Robert Johnsons eget eksempel er alt med; Muddy Waters' kommer i tillegg.
+  assert.deepEqual(m.lytteliste.map((l) => [l.nr, l.artist, l.label, !!l.valgt]),
+    [[1, "Robert Johnson", "Cross Road Blues", false], [2, "Muddy Waters", "Got My Mojo Working", true]]);
+  assert.equal(m.tellinger.lytteeksempler, 2, "begge er valgt, selv om det ene faller sammen med kortet");
+  assert.equal(m.tellinger.artister, 1);
+  assert.deepEqual(planFraModell(m).map((s) => s.vis), ["artist:robert", "tiår:1930:society", "yt:-SBmury81Ws"], "kortet og tiåret først, det løse eksempelet sist");
+  assert.notEqual(foreslaaTittel(m), "Lytteeksempler", "heftet har kort");
+});
+
+test("settSammen: et valgt lytteeksempel står selv om lyttelista er huket av, men ikke når det selv er huket bort", () => {
+  const uten = settSammen(["artist:robert", "yt:-SBmury81Ws"], DATA, { ...STUDENT, deler: { "bak.lytteliste": false } });
+  assert.deepEqual(uten.lytteliste.map((l) => [l.label, !!l.valgt]), [["Got My Mojo Working", true]], "kortets egne faller bort, valget står");
+  const bort = settSammen({ valg: ["yt:-SBmury81Ws"], fravalg: ["yt:-SBmury81Ws"] }, DATA, STUDENT);
+  assert.deepEqual(bort.lytteliste, []);
+  assert.deepEqual(bort.tre.annet.map((x) => [x.type, x.med]), [["yt", false]], "står igjen avhuket i lista");
+  assert.equal(bort.tellinger.lytteeksempler, 0);
+  assert.equal(bort.tellinger.bortvalgt, 1);
+  assert.equal(bort.tom, true, "alt i utvalget er huket bort: heftet er tomt, som for et bortvalgt kort");
+});
+
+test("settSammen: et lytteeksempel ingen synlig artist har, havner i mangler", () => {
+  const m = settSammen(["yt:finnesikke1", "yt:skjultvid01"], DATA, STUDENT);
+  assert.deepEqual(m.lytteliste, []);
+  assert.deepEqual(m.mangler, [{ vis: "yt:finnesikke1", grunn: "finnes-ikke" }, { vis: "yt:skjultvid01", grunn: "skjult" }]);
+  assert.equal(m.tellinger.lytteeksempler, 0);
+  assert.deepEqual(m.tre.annet.map((x) => [x.type, x.grunn]), [["yt", "finnes-ikke"], ["yt", "skjult"]]);
 });

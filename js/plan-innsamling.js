@@ -28,15 +28,14 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.76";
-import { getState } from "./explore-context.js?v=5.76";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.76";
-import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.76";
-import { escapeHtml } from "./util.js?v=5.76";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.76";
-import { registrerYtIntercept } from "./yt-spiller.js?v=5.76";
-import { aktivPlanId } from "./presentasjon.js?v=5.76";
-import { erLaererBruker } from "./plan-meny.js?v=5.76";
+import { savePlan, onAuthChange } from "./store.js?v=5.77";
+import { getState } from "./explore-context.js?v=5.77";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.77";
+import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.77";
+import { escapeHtml } from "./util.js?v=5.77";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.77";
+import { aktivPlanId } from "./presentasjon.js?v=5.77";
+import { erLaererBruker } from "./plan-meny.js?v=5.77";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -640,9 +639,8 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
     leggTil(b.dataset.vis, "plukk");
     kvitter(b);
   });
-  // Lytteeksempler (v5.28): spilleren fanger YouTube-lenker også under en
-  // samleøkt, så eksemplene kan plukkes og tas opp som stopp.
-  registrerYtIntercept(() => !!økt);
+  // Lytteeksempler: spilleren fanger YouTube-lenker i hele appen (v5.77,
+  // initYtSpiller i sidenes oppstart), så eksemplene tas opp som stopp.
 
   // Hurtigtastene (v5.38): + legger kortet øverst til (som plussknappen),
   // Ctrl/Cmd+Z angrer siste stopp. Lytteren står på window, altså ETTER

@@ -256,6 +256,7 @@
 .h-liste-2sp { columns: 2; column-gap: 8mm; font-size: 9.5pt; }
 .h-lytte-rad { break-inside: avoid; margin-bottom: 2.6mm; display: flex; gap: 2mm; }
 .h-lytte-rad .h-nr { margin: 0.6mm 0 0; flex: none; }
+.h-lytte-skille { column-span: all; margin: 3mm 0 2.6mm; padding-top: 2mm; border-top: 0.3mm solid var(--h-linje); font-size: 8.5pt; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--h-demp); }
 .h-url { display: block; font-size: 7.5pt; color: var(--h-demp2); word-break: break-all; }
 .h-kolofon { margin-top: 10mm; padding-top: 3mm; border-top: 0.4pt solid var(--h-linje); font-size: 8pt; color: var(--h-demp); }
 

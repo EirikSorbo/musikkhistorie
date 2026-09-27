@@ -1,15 +1,22 @@
 // ============================================================================
 //  INNEBYGD YOUTUBE-SPILLER (flyttet ut av presentasjon.js i v5.28)
 // ----------------------------------------------------------------------------
-//  Delt av presentasjonsvisningen OG samleøktene: lytteeksempler spilles i en
-//  modal i appen i stedet for ny fane. Søkelenker har ingen video-ID og åpner
-//  som før; «Åpne på YouTube» står alltid som reserve, siden enkelte
-//  musikkvideoer har innbygging avslått av rettighetshaveren.
+//  Fra v5.77 fanger spilleren YouTube-lenkene i HELE appen, for alle
+//  (brukerbestilling 2026-09-27): et lytteeksempel spilles i en modal i appen
+//  i stedet for ny fane, uansett om en presentasjon, et opptak eller en
+//  aktiv kjøreplan står på. Til v5.76 gjaldt fangsten bare i presentasjonen
+//  og under et opptak, så mens læreren bygde en plan uten visning, gikk
+//  eksemplene til ny fane og fantes ikke som kort å legge til. Ctrl/Cmd/
+//  Shift-klikk åpner fortsatt ny fane, søkelenker har ingen video-ID og åpner
+//  som før, og «Åpne på YouTube» står alltid som reserve, siden enkelte
+//  musikkvideoer har innbygging avslått av rettighetshaveren. Da sier
+//  spilleren det tydelig (YouTubes iframe-API melder feilen), med reserven
+//  som knapp. «Spill alle på YouTube»-lenkene (watch_videos) spilles som kø.
 //
 //  Spillermodalen bærer data-vis="yt:<video>[:<liste>][:<sekunder>]": et
 //  lytteeksempel er dermed et fullverdig mål — det kan kopieres som lenke,
-//  plukkes med plussknappen og tas opp i en samleøkt, og spilles av som
-//  kjøreplan-stopp (explore-apne).
+//  legges i en kjøreplan og i heftet (utskrift, v5.77), tas opp i en
+//  samleøkt, og spilles av som kjøreplan-stopp (explore-apne).
 //
 //  STARTTIDSPUNKT (v5.29): tidsraden under videoen setter hvor avspillingen
 //  skal begynne. «Bruk tiden nå» leser av posisjonen gjennom YouTubes
@@ -18,14 +25,14 @@
 //  hånd; alt annet virker likt. Tiden havner i data-vis, så stoppet og lenka
 //  bærer den videre, og opptaket fanger den via endringsobservatøren.
 //
-//  Flere moduler kan trenge intercepten samtidig (presentasjonsmodus, aktiv
-//  samleøkt) — de registrerer hver sin betingelse, og ÉN delt lytter åpner
-//  spilleren når minst én av dem er sann. Da dobbeltåpner ingenting.
+//  Fangsten er ÉN delt lytter på dokumentet (initYtSpiller, kalt av sidenes
+//  oppstart). Til v5.76 registrerte presentasjonen og samleøkta hver sin
+//  betingelse for den; nå er den alltid på, så betingelsene er borte.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.76";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.76";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.76";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.77";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.77";
+import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.77";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres. `kø` (v5.74) er videoene som spilles etter den
@@ -53,6 +60,8 @@ function ytModal() {
       <button type="button" class="btn ghost small" id="yt-tid-null" hidden>Fra start</button>
       <span class="muted yt-tid-hint">Spol til stedet, og la stoppet starte der.</span>
     </div>
+    <p class="yt-feil" id="yt-feil" hidden role="alert"><span id="yt-feil-tekst"></span>
+      <a id="yt-feil-lenke" class="btn primary small" href="#" target="_blank" rel="noopener">Åpne på YouTube</a></p>
     <p class="muted yt-reserve">Spilles ikke videoen her (noen rettighetshavere tillater ikke innbygging):
       <a id="yt-ekstern" href="#" target="_blank" rel="noopener">Åpne på YouTube</a></p>
   </div>
@@ -167,8 +176,15 @@ function oppdaterMaal() {
   m.dataset.vis = naa.video
     ? byggVisVerdi({ hva: "yt", id: naa.video, modus: naa.list || "", ekstra: naa.start ? String(naa.start) : "" }) || ""
     : "";
-  const lenke = m.querySelector("#yt-ekstern");
-  if (lenke) lenke.href = ytWatchUrl(naa.video, naa.list, naa.start);
+  // Reserven åpner det som spilles: hele køen når det er en (watch_videos),
+  // ellers videoen fra starttidspunktet.
+  const ekstern = naa.kø.length
+    ? ytSpillelisteUrl([naa.video, ...naa.kø])[0] || ytWatchUrl(naa.video, naa.list, naa.start)
+    : ytWatchUrl(naa.video, naa.list, naa.start);
+  for (const id of ["#yt-ekstern", "#yt-feil-lenke"]) {
+    const lenke = m.querySelector(id);
+    if (lenke) lenke.href = ekstern;
+  }
   const felt = m.querySelector("#yt-tid");
   if (felt && document.activeElement !== felt) felt.value = formatTid(naa.start);
   const nullKnapp = m.querySelector("#yt-tid-null");
@@ -243,9 +259,29 @@ function lastIframe() {
   try { spiller?.destroy?.(); } catch (e) {}
   spiller = null;
   spillerKlar = false;
+  visFeil(null);
   ramme.innerHTML = `<iframe id="yt-iframe" title="YouTube-avspilling" src="${src}"
     allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
   bindSpiller();
+}
+
+// Meldingen når YouTube nekter å spille i appen (v5.77). Feilkodene er
+// iframe-API-ets: 100 = fjernet eller privat, 101/150 = innbygging avslått av
+// rettighetshaveren, 153 = avsender mangler. null skjuler meldingen.
+const FEIL_TEKST = {
+  100: "Videoen er fjernet fra YouTube eller gjort privat.",
+  101: "Rettighetshaveren tillater ikke at videoen spilles utenfor YouTube.",
+  150: "Rettighetshaveren tillater ikke at videoen spilles utenfor YouTube.",
+  153: "Videoen kan ikke spilles her.",
+};
+
+function visFeil(kode) {
+  const boks = document.getElementById("yt-feil");
+  if (!boks) return;
+  const tekst = kode == null ? "" : FEIL_TEKST[kode] || "Videoen kan ikke spilles her.";
+  boks.hidden = !tekst;
+  const el = boks.querySelector("#yt-feil-tekst");
+  if (el) el.textContent = tekst;
 }
 
 async function bindSpiller() {
@@ -269,7 +305,10 @@ async function bindSpiller() {
           const m = document.getElementById("modal-yt");
           if (!m) return;
           settKino(m, false);
-          m.querySelector("#yt-ekstern")?.focus();
+          // Tydelig melding med reserven som knapp (v5.77); fokus på knappen,
+          // så Enter fra klikkeren åpner videoen.
+          visFeil(e.data);
+          (m.querySelector("#yt-feil-lenke") || m.querySelector("#yt-ekstern"))?.focus();
         },
       },
     });
@@ -317,19 +356,27 @@ export function apneYtSpiller(url, tittel, { start = null, kø = [] } = {}) {
   return true;
 }
 
-const betingelser = [];
 let koblet = false;
 
-// Fang klikk på YouTube-lenker og spill dem i appen når minst én registrert
-// betingelse er sann (presentasjonsmodus, aktiv samleøkt).
-export function registrerYtIntercept(betingelse) {
-  betingelser.push(betingelse);
+// Fang klikk på YouTube-lenker i hele appen og spill dem her (v5.77, alltid
+// på). Kalles av sidenes oppstart; idempotent. Lenkene i selve spilleren
+// (reservene) og klikk med Ctrl/Cmd/Shift/Alt går til YouTube som vanlig.
+// Søkelenker og andre lenker uten video-ID lar seg ikke bygge inn og åpner
+// i ny fane som før (apneYtSpiller sier false).
+export function initYtSpiller() {
   if (koblet) return;
   koblet = true;
   document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[href*="yout"]');
-    if (!a || a.id === "yt-ekstern") return;
-    if (!betingelser.some((f) => f())) return;
-    if (apneYtSpiller(a.href, a.textContent.trim())) e.preventDefault();
+    const a = e.target.closest?.('a[href*="yout"]');
+    if (!a || a.closest("#modal-yt")) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const tittel = a.textContent.trim();
+    // «Spill alle N på YouTube» (watch_videos): første video nå, resten i kø.
+    const ider = ytSpillelisteIder(a.href);
+    if (ider) {
+      if (apneYtSpiller(ytWatchUrl(ider[0], null, null), `Spilleliste · ${ider.length} videoer`, { kø: ider.slice(1) })) e.preventDefault();
+      return;
+    }
+    if (apneYtSpiller(a.href, tittel)) e.preventDefault();
   });
 }

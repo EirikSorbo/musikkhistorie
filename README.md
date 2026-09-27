@@ -36,11 +36,16 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   inn med ett klikk (pille nede til venstre viser planen, Ferdig avslutter).
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
   «Husk visningen» per stopp.
+- **Lytteeksempler** spilles i appens egen spiller overalt (ikke i ny fane),
+  med starttidspunkt, «Kopier lenke» og knappene for kjøreplan og utskrift;
+  «Åpne på YouTube» står som reserve for videoer som ikke kan bygges inn.
+  «Spill alle» i spillelistene spilles som kø i samme spiller.
 - **Utskrift**: studentene velger kort (artister, sjangre, tiår, innovasjoner …)
   med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan eller
   en hel metasjanger (sjangrene, artistene og tiårene følger med, og kan hukes
-  bort én og én), og får et hefte i A4 med forside, innholdsfortegnelse,
-  tidslinje og lytteliste med QR-kode, som nettleseren lagrer som PDF.
+  bort én og én), eller tar med enkelte lytteeksempler fra spilleren, og får
+  et hefte i A4 med forside, innholdsfortegnelse, tidslinje og lytteliste
+  med QR-kode, som nettleseren lagrer som PDF.
   Skriverikonet i toppmenyen viser utvalget som en liste (ta ut, dra for
   rekkefølgen, tøm). Utvalget bor i nettleseren og kan sendes til en annen
   enhet som lenke eller QR-kode. (Midlertidig skjult for studentrollen,

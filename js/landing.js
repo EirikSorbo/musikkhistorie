@@ -1,24 +1,25 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.76";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.76";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.76";
-import { onGenreModelChanged } from "./genre-model.js?v=5.76";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.76";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.76";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.76";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.76";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.76";
-import { initExplore } from "./explore.js?v=5.76";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.76";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.76";
-import { initPlanMeny } from "./plan-meny.js?v=5.76";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.76";
-import { initVisning, visningTikk } from "./visning.js?v=5.76";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=5.76";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.76";
-import { askChoice } from "./ui-modal.js?v=5.76";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.76";
-import { currentEntityValues } from "./entity-values.js?v=5.76";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.76";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.77";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.77";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.77";
+import { onGenreModelChanged } from "./genre-model.js?v=5.77";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.77";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.77";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.77";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.77";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.77";
+import { initExplore } from "./explore.js?v=5.77";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.77";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.77";
+import { initPlanMeny } from "./plan-meny.js?v=5.77";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.77";
+import { initYtSpiller } from "./yt-spiller.js?v=5.77";
+import { initVisning, visningTikk } from "./visning.js?v=5.77";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=5.77";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.77";
+import { askChoice } from "./ui-modal.js?v=5.77";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.77";
+import { currentEntityValues } from "./entity-values.js?v=5.77";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.77";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -620,6 +621,8 @@ function init() {
   // Presentasjonsvisningen (v5.24): ETTER setupExplore, så verktøylinja og
   // QA-tilstanden finner modalene som nettopp ble injisert. No-op når
   // modusen er av.
+  // Lytteeksemplene spilles i appen, alltid (v5.77): én lytter for hele siden.
+  initYtSpiller();
   initPresentasjon();
   // «Legg til i kjøreplan» på lenkeknappene — synlig kun for lærer-innlogging.
   initPlanMeny();

@@ -14,15 +14,15 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=5.76";
-import { subscribeSharedData } from "./shared-data.js?v=5.76";
-import { onGenreModelChanged } from "./genre-model.js?v=5.76";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.76";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.76";
-import { initExplore } from "./explore.js?v=5.76";
+} from "./store.js?v=5.77";
+import { subscribeSharedData } from "./shared-data.js?v=5.77";
+import { onGenreModelChanged } from "./genre-model.js?v=5.77";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.77";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.77";
+import { initExplore } from "./explore.js?v=5.77";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=5.76";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=5.76";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=5.77";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=5.77";
 import {
   openDecadeAdmin,
   openSingleSubgenreModal,
@@ -41,17 +41,18 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=5.76";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=5.76";
-import { initVisning, visningTikk } from "./visning.js?v=5.76";
-import { initPlanMeny } from "./plan-meny.js?v=5.76";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.76";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=5.76";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.76";
-import { renderDesk } from "./teacher-desk.js?v=5.76";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=5.76";
-import { setupFormatBars } from "./format-bar.js?v=5.76";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=5.76";
+} from "./teacher-content.js?v=5.77";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=5.77";
+import { initVisning, visningTikk } from "./visning.js?v=5.77";
+import { initPlanMeny } from "./plan-meny.js?v=5.77";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.77";
+import { initYtSpiller } from "./yt-spiller.js?v=5.77";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=5.77";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.77";
+import { renderDesk } from "./teacher-desk.js?v=5.77";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=5.77";
+import { setupFormatBars } from "./format-bar.js?v=5.77";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=5.77";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -194,6 +195,8 @@ function startAppInner() {
   // har de samme kortene, og innloggingen er garantert. ETTER initExplore, som
   // på forsiden og slektstresiden (v5.52): en samleøkt som står på når sida
   // lastes, leser planene med én gang, og før initExplore fantes ikke state.
+  // Lytteeksemplene spilles i appen, alltid (v5.77): én lytter for hele siden.
+  initYtSpiller();
   initPlanMeny();
   initPlanInnsamling();
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).

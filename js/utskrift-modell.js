@@ -43,21 +43,23 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.76";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.76";
-import { resolveSpan } from "./timeline-lanes.js?v=5.76";
-import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.76";
-import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.76";
-import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.76";
-import { heatRow } from "./heat-strip.js?v=5.76";
-import { ytMaal } from "./presentasjon-modell.js?v=5.76";
-import { normaliserPunkter } from "./punkter.js?v=5.76";
-import { safeUrl } from "./util.js?v=5.76";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.77";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.77";
+import { resolveSpan } from "./timeline-lanes.js?v=5.77";
+import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.77";
+import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.77";
+import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.77";
+import { heatRow } from "./heat-strip.js?v=5.77";
+import { ytMaal, finnLytteeksempel } from "./presentasjon-modell.js?v=5.77";
+import { normaliserPunkter } from "./punkter.js?v=5.77";
+import { safeUrl } from "./util.js?v=5.77";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
-// tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten
+// tidslinje, koblinger, podkaster …) er skjermflater uten
 // papirform og hoppes stille over.
-export const UTSKRIFT_TYPER = new Set(["artist", "sjanger", "undersjanger", "tiår", "tech", "instrument", "historie", "side"]);
+// Et lytteeksempel («yt:<video>», v5.77) er også med: det blir en linje i
+// lyttelista bakerst, også når artisten ikke er med i heftet.
+export const UTSKRIFT_TYPER = new Set(["artist", "sjanger", "undersjanger", "tiår", "tech", "instrument", "historie", "side", "yt"]);
 
 // Innholdssidene som kan stå i et hefte. Bruksveiledningen («guide»/
 // «appGuide») er en manual for appen, ikke pensum, og holdes utenfor.
@@ -76,7 +78,7 @@ export const UNDERSJANGRE_LOSE = "Undersjangre";
 export const TYPE_ETIKETT = {
   metasjanger: "Metasjanger",
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger", "tiår": "Tiår",
-  tech: "Innovasjon", instrument: "Instrument", historie: "Historie", side: "Side",
+  tech: "Innovasjon", instrument: "Instrument", historie: "Historie", side: "Side", yt: "Lytteeksempel",
 };
 
 // Metasjangeren finnes bare i heftet (ingen ?vis=-type, ingen modal): verdien
@@ -565,7 +567,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
 
   // --- Slå opp hver kandidat -------------------------------------------------
   const metaValgt = [], artistKort = [], sjangerKort = [], underValgt = [], tiaarKand = [];
-  const techKort = [], instrValgt = [], histValgt = [], sideValgt = [];
+  const techKort = [], instrValgt = [], histValgt = [], sideValgt = [], lytteValgt = [];
   for (const vis of kandidater) {
     const m = parseUtskriftVis(vis);
     const med = !bort.has(vis);
@@ -614,6 +616,17 @@ export function settSammen(utvalg, data = {}, valg = {}) {
         const p = pageFor(m.id, content);
         if (p) sideValgt.push({ vis, id: m.id, tittel: SIDER_I_HEFTET[m.id], body: p.body, med });
         else if (med) mangler.push({ vis, grunn: "finnes-ikke" });
+        break;
+      }
+      // Et lytteeksempel (v5.77): slås opp blant de synlige artistenes egne
+      // eksempler. Finnes videoen bare hos en skjult artist, er den «skjult».
+      case "yt": {
+        const e = finnLytteeksempel(m.id, artists);
+        if (e) {
+          lytteValgt.push({ vis, video: m.id, artist: e.artist, label: e.label, url: e.url, year: heltall(e.year), performanceYear: heltall(e.performanceYear), med });
+        } else if (med) {
+          mangler.push({ vis, grunn: finnLytteeksempel(m.id, data.artists || []) ? "skjult" : "finnes-ikke" });
+        }
         break;
       }
     }
@@ -730,16 +743,26 @@ export function settSammen(utvalg, data = {}, valg = {}) {
 
   // --- Lyttelista -----------------------------------------------------------
   const lytteliste = [];
+  let lytteNr = 0;
   if (d["bak.lytteliste"] && d["artist.lytte"]) {
-    let nr = 0;
     for (const k of dokArtister) {
       for (const l of k.lytte) {
-        l.nr = ++nr;
+        l.nr = ++lytteNr;
         // video (v5.74): YouTube-ID-en, så lytteseksjonen kan lage én lenke som
         // spiller hele lista. Null for lenker som ikke er en YouTube-video.
-        lytteliste.push({ nr, artist: k.navn, label: l.label, year: l.year, performanceYear: l.performanceYear, url: l.url, video: ytMaal(l.url)?.video || null });
+        lytteliste.push({ nr: l.nr, artist: k.navn, label: l.label, year: l.year, performanceYear: l.performanceYear, url: l.url, video: ytMaal(l.url)?.video || null });
       }
     }
+  }
+  // Valgte lytteeksempler (v5.77): et eksempel tatt med fra spilleren står i
+  // lista også når artisten ikke er med, bakerst og merket `valgt`. Har
+  // artisten alt fått det med seg, telles det ikke to ganger. Valget er
+  // eksplisitt, så det står selv om lyttelista ellers er huket av.
+  const iLista = new Set(lytteliste.map((l) => l.video).filter(Boolean));
+  for (const l of lytteValgt) {
+    if (!l.med || iLista.has(l.video)) continue;
+    iLista.add(l.video);
+    lytteliste.push({ nr: ++lytteNr, artist: l.artist, label: l.label, year: l.year, performanceYear: l.performanceYear, url: l.url, video: l.video, vis: l.vis, valgt: true });
   }
 
   // --- Bakteppet ------------------------------------------------------------
@@ -818,6 +841,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     ...underValgt.map((u) => ({ vis: u.vis, navn: u.navn, type: "undersjanger", med: u.med })),
     ...histValgt.map((hs) => ({ vis: hs.vis, navn: `Historien om ${hs.navn}`, type: "historie", med: hs.med })),
     ...sideValgt.map((sd) => ({ vis: sd.vis, navn: sd.tittel, type: "side", med: sd.med })),
+    ...lytteValgt.map((l) => ({ vis: l.vis, navn: `${l.label} (${l.artist})`, type: "yt", med: l.med })),
     ...mangler.map((x) => ({ vis: x.vis, navn: parseUtskriftVis(x.vis)?.id || x.vis, type: parseUtskriftVis(x.vis)?.hva || "", med: true, grunn: x.grunn })),
   ].sort((a, b) => rekke.get(a.vis) - rekke.get(b.vis));
 
@@ -826,6 +850,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     sjangre: medBare(sjangerKort).length, artister: medBare(artistKort).length, undersjangre: medBare(underValgt).length,
     tiaar: tiaarMed.length, innovasjoner: medBare(techKort).length, instrumenter: instrMed.length,
     historier: medBare(histValgt).length, sider: sideMed.length,
+    lytteeksempler: medBare(lytteValgt).length,
     bortvalgt: kandidater.filter((v) => bort.has(v)).length,
   };
   // Kortene utenom tiårene. Et LITE hefte (v5.74) får kompakt forside uten
@@ -856,6 +881,7 @@ const TELLE_ORD = [
   ["undersjangre", "undersjanger", "undersjangre"], ["tiaar", "tiår", "tiår"],
   ["innovasjoner", "innovasjon", "innovasjoner"], ["instrumenter", "instrument", "instrumenter"],
   ["historier", "historie", "historier"], ["sider", "side", "sider"],
+  ["lytteeksempler", "lytteeksempel", "lytteeksempler"],
 ];
 
 // Grovt sideanslag fra tellingene alene (v5.74), for «Velg alt»-dialogen der
@@ -865,12 +891,13 @@ const TELLE_ORD = [
 export function anslagSider(t = {}) {
   const n = (k) => Number(t[k]) || 0;
   const kort = n("artister") + n("sjangre") + n("innovasjoner") + n("instrumenter") + n("historier") + n("sider");
-  if (!kort && !n("tiaar")) return 0;
+  if (!kort && !n("tiaar") && !n("lytteeksempler")) return 0;
   const front = kort <= LITEN_GRENSE ? 1 : 2;
   const sider = front
     + n("artister") * 0.42 + n("sjangre") * 0.35 + n("tiaar") * 0.75
     + n("innovasjoner") * 0.3 + n("instrumenter") * 0.6 + n("historier") * 1.5 + n("sider") * 1.2
-    + (n("artister") ? 0.5 + n("artister") * 0.02 : 0);
+    + (n("artister") ? 0.5 + n("artister") * 0.02 : 0)
+    + n("lytteeksempler") * 0.03;
   return Math.max(1, Math.round(sider));
 }
 
@@ -893,6 +920,8 @@ export function planFraModell(modell) {
   for (const t of modell?.innovasjoner || []) legg(t.vis);
   for (const i of modell?.instrumenter || []) legg(i.vis);
   for (const s of modell?.sider || []) legg(s.vis);
+  // Lytteeksemplene som er valgt utenom kortene (v5.77) blir egne stopp sist.
+  for (const l of modell?.lytteliste || []) if (l.valgt) legg(l.vis);
   return ut.map((vis) => ({ vis }));
 }
 
@@ -942,5 +971,7 @@ export function foreslaaTittel(modell, { planTittel = "" } = {}) {
   if (tiaar.length) return normaliserTittel(tiaarTekst(tiaar));
   if (modell?.innovasjoner?.length) return "Innovasjoner";
   if (modell?.instrumenter?.length) return "Instrumentene";
+  const lytte = modell?.lytteliste || [];
+  if (lytte.length && lytte.every((l) => l.valgt) && !(modell?.sider || []).length) return "Lytteeksempler";
   return "Pensumutdrag";
 }
