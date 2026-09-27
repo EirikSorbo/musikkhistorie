@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.71";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.71";
-import { punkterHtml } from "./punkter.js?v=5.71";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.71";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.71";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.71";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.72";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.72";
+import { punkterHtml } from "./punkter.js?v=5.72";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.72";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.72";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.72";
 import {
   escapeHtml,
   linkDesc,
@@ -38,13 +38,13 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.71";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.71";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.71";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.71";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.71";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.71";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.71";
+} from "./ui-helpers.js?v=5.72";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.72";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.72";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.72";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.72";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.72";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.72";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -89,8 +89,9 @@ export function buildMainGenreList(artists) {
 // Visningsikonet (v5.68): samme som i toppmenyen og i modalhodene.
 // Utskriftsknappen (kortUtskriftHtml, v5.69) står foran den på radene og bor
 // i js/utskrift-utvalg.js; på de fulle kortene står den NEDERST, sist i
-// fotlinja (brukervalg 2026-09-26, v5.70), i knappeform. Fire knapper får
-// ikke plass på én linje i kortbredden, så den brytes ned til høyre under de
+// fotlinja (brukervalg 2026-09-26, v5.70), i knappeform. Studentene ser tre
+// knapper der («Merk ★» er skjult av merking-flagget, v5.72), og de får plass
+// på én linje; læreren ser fire, og den fjerde brytes ned til høyre under de
 // andre (v5.71, .card-foot justify-content).
 const KORT_PLUSS_SVG = VISNING_SVG;
 export function kortPlussHtml(a) {
@@ -384,9 +385,12 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
 
   // Studenthandlinger. «Merk ★» (samme stjerne som prioritet «Viktigst») i
   // stedet for «Svært relevant» — small-knapp så den ligger på samme rad som
-  // «Vis i tidslinje» / «Foreslå endring».
+  // «Vis i tidslinje» / «Foreslå endring». Skjult for studentene mens
+  // stemming ikke er i bruk (merking-flagget, v5.72); da får utskriftsknappen
+  // plassen på samme linje. Læreren ser den alltid.
+  const visMerk = isTeacher || !SKJUL_I_STUDENTVISNING.merking;
   let voteBtn = "";
-  if (!removed && !pending && !returned) {
+  if (visMerk && !removed && !pending && !returned) {
     voteBtn = hasUpvoted
       ? `<button class="btn ghost small" data-action="undoVoteUp" data-id="${escapeHtml(a.id)}">Angre merking</button>`
       : `<button class="btn ghost small accent" data-action="voteUp" data-id="${escapeHtml(a.id)}" title="Merk som svært relevant">Merk ${PRIO_ICONS[3]}</button>`;

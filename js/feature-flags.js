@@ -30,6 +30,11 @@
 //                          js/utskrift.js). Lærerrollen ser alt. Brukervalg
 //                          2026-09-25: skjult inntil videre, rett etter at
 //                          funksjonen kom i v5.56.
+//    merking               «Merk ★»-knappen (stemming) nederst på artistkortene
+//                          (js/ui.js). Brukervalg 2026-09-27 (v5.72): stemming
+//                          er ikke i bruk nå, og uten knappen får
+//                          utskriftsknappen plass på samme linje som «Vis i
+//                          tidslinje» / «Foreslå endring». Læreren ser den.
 // ============================================================================
 
 // Oppsummeringspunktene (v5.50, js/punkter.js) vises bare i presentasjonen,
@@ -50,6 +55,7 @@ export const SKJUL_I_STUDENTVISNING = {
   storeBildet:          false,
   horEtter:             true,
   utskrift:             true,
+  merking:              true,
 };
 // Utskrift-flagget virker via en klasse på <html> (css/styles.css), som
 // punktene over: da trenger ingen av de fire sidene å vite om det.
