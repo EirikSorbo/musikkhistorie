@@ -988,10 +988,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  /* Fire knapper (utskrift kom til i v5.70) får ikke plass på én linje i
-     kortbredden i Finn artister; det som brytes ned står da til høyre under
-     de andre, ikke alene til venstre. Første linje styres av .spacer. */
-  justify-content: flex-end;
+  /* Knappene står til venstre, utskriftsknappen til høyre (margin-left: auto
+     på den, brukervalg 2026-09-27, v5.73). Ingen .spacer her lenger. */
   gap: 10px;
   margin-top: auto;
   padding-top: 12px;
@@ -2097,9 +2095,9 @@ body.is-teacher #gate { display: none; }
   .artist-image { float: none; max-width: 100%; margin: 0 0 12px; }
   .artist-image.big { max-width: 100%; }
 
-  /* Kortets bunntekst: uten spacer, venstrestilt som før. */
+  /* Kortets bunntekst */
   .spacer { display: none; }
-  .card-foot { gap: 8px; justify-content: flex-start; }
+  .card-foot { gap: 8px; }
 }
 
 /* ===========================================================================
@@ -3153,7 +3151,7 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
    listeknappens form (btn utskrift-ikonknapp, brukervalg 2026-09-26, v5.70);
    på radene er den rund, i samme mål som samleøktas plussknapp ved siden av. */
 .kort-utskrift svg { display: block; }
-.card-foot .kort-utskrift { color: var(--muted); }
+.card-foot .kort-utskrift { color: var(--muted); margin-left: auto; }
 .card-foot .kort-utskrift:hover, .card-foot .kort-utskrift.er-med { color: var(--accent-2); border-color: var(--accent-2); }
 .result-row .kort-utskrift {
   display: inline-flex; align-items: center; justify-content: center; flex: none;

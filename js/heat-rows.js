@@ -16,10 +16,10 @@
 //  bindingen er null når denne fila evalueres.
 // ============================================================================
 
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=5.72";
-import { DECADES } from "./limits.js?v=5.72";
-import { opts, getState, onMainGenreClick } from "./explore-context.js?v=5.72";
-import { heatRow, heatStripHtml, heatAxisHtml } from "./heat-strip.js?v=5.72";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=5.73";
+import { DECADES } from "./limits.js?v=5.73";
+import { opts, getState, onMainGenreClick } from "./explore-context.js?v=5.73";
+import { heatRow, heatStripHtml, heatAxisHtml } from "./heat-strip.js?v=5.73";
 
 // Sporene (etikett + stripe) settes i CSS på .vk-row/.vk-axisrow, ikke her:
 // historiene trenger en smalere etikettkolonne enn varmekartet, og en

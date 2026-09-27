@@ -1,8 +1,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artistStripHtml, spanText } from "../../js/artist-strip.js?v=5.72";
-import { rebuild } from "../../js/genre-model.js?v=5.72";
+import { artistStripHtml, spanText } from "../../js/artist-strip.js?v=5.73";
+import { rebuild } from "../../js/genre-model.js?v=5.73";
 
 // Artistkortets stripe plasserer innflytelsesperioden på en FAST akse:
 // 1900–2030, altså 130 år. Prosentene under er regnet for hånd derfra, så en
