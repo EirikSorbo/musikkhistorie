@@ -28,13 +28,23 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
 - **Endringsforslag**: studenter kan foreslå endringer på eksisterende artist-,
   teknologi-, sjanger- og tiårskort; læreren godkjenner/avviser felt for felt.
 - **Stem frem**: studenter markerer forslag som «svært relevant».
+- **Visning**: presentasjonsmodus for lerretet (nivåer, hurtigtaster,
+  YouTube-avspilling) og **kjøreplaner**: lagrede rekker av stopp som spilles
+  fra et oversiktskort, med «neste», klokke og «spill alle lytteeksemplene».
+  Læreren bygger en plan ved å velge «Bygg på» i Visning-vinduet: så legger
+  visningsknappen på kortene, plussknappen på radene og tasten + kortet rett
+  inn med ett klikk (pille nede til venstre viser planen, Ferdig avslutter).
+  «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
+  «Husk visningen» per stopp.
 - **Utskrift**: studentene velger kort (artister, sjangre, tiår, innovasjoner …)
   med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan eller
   en hel metasjanger (sjangrene, artistene og tiårene følger med, og kan hukes
-  bort én og én), og får
-  et hefte i A4 med tidslinje og lytteliste, som nettleseren lagrer
-  som PDF. Utvalget bor i nettleseren og kan deles som lenke. (Midlertidig
-  skjult for studentrollen, bryteren `utskrift` i `js/feature-flags.js`.)
+  bort én og én), og får et hefte i A4 med forside, innholdsfortegnelse,
+  tidslinje og lytteliste med QR-kode, som nettleseren lagrer som PDF.
+  Skriverikonet i toppmenyen viser utvalget som en liste (ta ut, dra for
+  rekkefølgen, tøm). Utvalget bor i nettleseren og kan sendes til en annen
+  enhet som lenke eller QR-kode. (Midlertidig skjult for studentrollen,
+  bryteren `utskrift` i `js/feature-flags.js`.)
 - **Sanntid**: alle ser endringer umiddelbart (Firebase Firestore).
 - **Lærermodus** (Google-innlogging): Skrivebord med arbeidsflyt-innboks og
   sjekk-fremdrift per innholdskategori, Oversikt over pensumets form og hull,
