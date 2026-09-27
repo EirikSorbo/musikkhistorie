@@ -1,23 +1,24 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.75";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.75";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.75";
-import { onGenreModelChanged } from "./genre-model.js?v=5.75";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.75";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.75";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.75";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.75";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.75";
-import { initExplore } from "./explore.js?v=5.75";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.75";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.75";
-import { initPlanMeny } from "./plan-meny.js?v=5.75";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.75";
-import { initVisning, visningTikk } from "./visning.js?v=5.75";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=5.75";
-import { askChoice } from "./ui-modal.js?v=5.75";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.75";
-import { currentEntityValues } from "./entity-values.js?v=5.75";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=5.75";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=5.76";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.76";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.76";
+import { onGenreModelChanged } from "./genre-model.js?v=5.76";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=5.76";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=5.76";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=5.76";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.76";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.76";
+import { initExplore } from "./explore.js?v=5.76";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=5.76";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.76";
+import { initPlanMeny } from "./plan-meny.js?v=5.76";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.76";
+import { initVisning, visningTikk } from "./visning.js?v=5.76";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=5.76";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.76";
+import { askChoice } from "./ui-modal.js?v=5.76";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=5.76";
+import { currentEntityValues } from "./entity-values.js?v=5.76";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=5.76";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -628,6 +629,8 @@ function init() {
   initVisning();
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
   initUtskriftValg({ hentData: () => state });
+  // Skuffen under skriverikonet (v5.76): utvalget som liste uten sidebytte.
+  initUtskriftSkuff();
   // Pil-mot-skriveren i Finn artister (v5.66): alle artistene i lista slik
   // den står filtrert nå. Uten filter er det hele pensumet, så da spørres det
   // først. Ikonet er det delte, så det ser likt ut som i kortene.

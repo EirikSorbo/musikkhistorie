@@ -56,6 +56,10 @@ export function modalOpen(el) {
   // markupen for de statiske (varmekart, sidene, …).
   const lenkeKnapp = el.querySelector(".modal-head .modal-lenke");
   if (lenkeKnapp) lenkeKnapp.hidden = !el.dataset.vis;
+  // Pila til menyen (v5.76) følger samme regel; CSS viser den bare når en
+  // kjøreplan er aktiv.
+  const menyPil = el.querySelector(".modal-head .modal-lenke-meny");
+  if (menyPil) menyPil.hidden = !el.dataset.vis;
   // Samleøktas plussknapp (v5.27, injiseres av plan-innsamling.js) følger
   // samme regel som lenkeknappen: bare mål som kan bli et stopp.
   const plussKnapp = el.querySelector(".modal-head .plan-pluss");
@@ -221,8 +225,21 @@ export function initModalHeaders() {
     lenke.innerHTML = VISNING_SVG;
     lenke.addEventListener("click", () => lenkeMenyProvider?.(lenke));
     closeBtn.parentNode.insertBefore(lenke, closeBtn);
+    // Pila (v5.76): når en kjøreplan er aktiv, legger knappen rett til, og
+    // menyen med de andre planene ligger bak denne. Synlig bare da (CSS).
+    const pil = document.createElement("button");
+    pil.type = "button";
+    pil.className = "modal-lenke-meny btn ghost small";
+    pil.title = "Velg en annen kjøreplan, eller kopier lenke";
+    pil.setAttribute("aria-label", "Velg kjøreplan");
+    pil.hidden = true;
+    pil.innerHTML = PIL_SVG;
+    pil.addEventListener("click", () => lenkeMenyProvider?.(lenke, { meny: true }));
+    closeBtn.parentNode.insertBefore(pil, closeBtn);
   });
 }
+
+const PIL_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 if (IS_BROWSER) {
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initModalHeaders);

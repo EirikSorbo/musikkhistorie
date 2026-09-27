@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.75";
+import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.76";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 const S = (...vis) => vis.map((v) => ({ vis: v }));
@@ -95,7 +95,10 @@ test("funn 1 og 2: samleøkta skriver ikke per kort, og aldri en kø av gamle ko
   assert.match(samle, /ø\.sendt = ø\.sendt\.filter\(\(b\) => b\.n > n\);/, "kvitteringer i rekkefølge");
   // Skrivere utenfor økta sender aldri merket (det kunne senke det): menyen,
   // «Legg til her» og «Husk visningen på dette stoppet» (oppdaterStopp, v5.75).
-  assert.equal((kilde("plan-meny.js").match(/savePlan\(planId, uttenMerke\(/g) || []).length, 3);
+  // v5.76: skrivStopp (menyen, den aktive planen, plussknappene), den nye
+  // planen fra menyens «Ny kjøreplan …» (skrevet i ett stykke med stoppet i),
+  // fjernStopp og oppdaterStopp. Ingen skriving går utenom uttenMerke.
+  assert.equal((kilde("plan-meny.js").match(/savePlan\(planId, uttenMerke\(/g) || []).length, 4);
   assert.doesNotMatch(kilde("plan-meny.js"), /savePlan\((?!planId, uttenMerke\()/, "ingen skriving i plan-meny går utenom uttenMerke");
 });
 
@@ -122,7 +125,9 @@ test("funn 6: en kjøreplan som spilles, tas ikke opp; fri visning tar opp som f
     "fri visning i samme fane: økta følger med og tar opp timen");
   assert.match(vis, /return forlatSamleokt\(\)\.then/, "kjøreplan i samme fane: spør og send før sidebyttet");
   assert.match(vis, /gaaTilVisning\(`index\.html\?presentasjon=\$\{encodeURIComponent\(spill\.dataset\.presSpill\)\}`, \{ spiller: true \}\);/);
-  assert.match(vis, /\.\.\.\(spilles \? \[\] : \[\{ label: "Ta opp alt jeg åpner", value: "opptak" \}\]\)/,
+  // v5.76: modusdialogen er borte (plukk = aktiv kjøreplan); «Ta opp» stopper
+  // selv når en plan spilles.
+  assert.match(vis, /if \(aktivPlanId\(\)\) \{\n\s*msg\("Opptak virker ikke mens en kjøreplan spilles/,
     "opptak tilbys ikke mens en plan spilles");
   const samle = kilde("plan-innsamling.js");
   assert.match(samle, /if \(økt\.modus === "opptak" && !spillerPlan\(\)\) leggTil\(vis, "apning"\);/);
@@ -134,7 +139,7 @@ test("funn 3: Rediger og Slett på planen som samles avslutter økta først", ()
   const vis = kilde("visning.js");
   assert.match(vis, /if \(aktivSamleokt\(\)\?\.planId === id\) \{\n\s*await medFrist\(avsluttInnsamling\(\), 4000\);/,
     "Rediger: det samlede sendes før kladden lages");
-  assert.match(vis, /forkastSamlinger\(id\);\n\s*if \(!\(await vakt\(deletePlan\(id\)\)\)\) return;/,
+  assert.match(vis, /forkastSamlinger\(id\);\n\s*if \(aktivPlan\(\) === id\) settAktivPlan\(null\);\n\s*if \(!\(await vakt\(deletePlan\(id\)\)\)\) return;/,
     "Slett: ingenting sendes, heller ikke fra avsluttede økter, ellers lages planen på nytt");
   assert.match(vis, /\$\{id === samles \? " · samles nå" : ""\}/);
 });

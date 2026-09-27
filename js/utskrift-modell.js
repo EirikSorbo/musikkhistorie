@@ -43,16 +43,16 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.75";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.75";
-import { resolveSpan } from "./timeline-lanes.js?v=5.75";
-import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.75";
-import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.75";
-import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.75";
-import { heatRow } from "./heat-strip.js?v=5.75";
-import { ytMaal } from "./presentasjon-modell.js?v=5.75";
-import { normaliserPunkter } from "./punkter.js?v=5.75";
-import { safeUrl } from "./util.js?v=5.75";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.76";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.76";
+import { resolveSpan } from "./timeline-lanes.js?v=5.76";
+import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.76";
+import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.76";
+import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.76";
+import { heatRow } from "./heat-strip.js?v=5.76";
+import { ytMaal } from "./presentasjon-modell.js?v=5.76";
+import { normaliserPunkter } from "./punkter.js?v=5.76";
+import { safeUrl } from "./util.js?v=5.76";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten

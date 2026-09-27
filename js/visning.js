@@ -28,20 +28,20 @@
 //  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.75";
-import { escapeHtml } from "./util.js?v=5.75";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.75";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.75";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.75";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.75";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.75";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.75";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon, sistSpilt } from "./presentasjon.js?v=5.75";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.75";
-import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.75";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.75";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.75";
-import { apneMaal } from "./explore-apne.js?v=5.75";
+import { getState } from "./explore-context.js?v=5.76";
+import { escapeHtml } from "./util.js?v=5.76";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.76";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.76";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.76";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.76";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.76";
+import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=5.76";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon, sistSpilt } from "./presentasjon.js?v=5.76";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.76";
+import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.76";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.76";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.76";
+import { apneMaal } from "./explore-apne.js?v=5.76";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -164,6 +164,7 @@ function renderListe() {
       || a.tittel.localeCompare(b.tittel, "no"));
   const aktiv = aktivPlanId();
   const samles = aktivSamleokt()?.planId;
+  const bygges = aktivPlan();
   const spilt = sistSpilt();
   const lastet = !!s.contentLoaded;
   // Plansjekken (v5.75) teller først når listene et stopp slås opp i, har
@@ -183,13 +184,16 @@ function renderListe() {
       return `
       <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
-          <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}</span>${
+          <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · bygges på" : ""}</span>${
           dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} ${dode === 1 ? "stopp finnes" : "stopp finnes"} ikke lenger</span>` : ""}</span>
         <span class="pres-adm-knapper">
           <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
           <button type="button" class="btn ghost small utskrift-ikonknapp" data-pres-utskrift="${escapeHtml(id)}" title="Kjøreplanen til utskriften (PDF)" aria-label="Kjøreplanen til utskriften">${TIL_UTSKRIFT_SVG}</button>
           ${erLaerer ? `
-          <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Legg til stopp mens du blar, eller ta opp alt du åpner">Samle</button>
+          ${id === bygges
+            ? `<button type="button" class="btn primary small" data-pres-bygg-ferdig="1" title="Slutt å bygge på denne planen">Ferdig med å bygge</button>`
+            : `<button type="button" class="btn ghost small" data-pres-bygg="${escapeHtml(id)}" title="Gjør planen aktiv: visningsknappen på kortene legger til her med ett klikk">Bygg på</button>`}
+          <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Ta opp alt du åpner som stopp, til du trykker Ferdig">Ta opp</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
           <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
@@ -200,9 +204,9 @@ function renderListe() {
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
       <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
-      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og fyll den mens du blar eller tar opp" ${lastet ? "" : "disabled"}>Ny + samle …</button>
+      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og bygg på den mens du blar" ${lastet ? "" : "disabled"}>Ny + bygg på …</button>
     </div>
-    <p class="muted vis-tips">Raskest å bygge en plan: finn fram i appen og trykk visningsknappen i kortets tittellinje. Menyen «Legg til som stopp i» legger kortet rett inn.</p>`
+    <p class="muted vis-tips">Raskest: «Bygg på» en plan, så legger visningsknappen på kortene, plussknappen på radene og tasten + kortet rett inn med ett klikk. Pila ved knappen gir menyen med de andre planene.</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
   // Står visningen alt på, kan den avsluttes herfra.
   const paa = document.getElementById("vis-paa");
@@ -347,30 +351,38 @@ function flyttStopp(fra, til) {
   renderKladd();
 }
 
-// Samleøkt (v5.27): velg modus, lukk editoren og la linja nede til venstre
-// ta over. planId er null for «Ny + samle» — da genereres id her, og planen
-// skrives først når det første stoppet legges til.
-async function velgModusOgStart(planId, tittelForNy) {
-  const navn = planId ? planerNaa()[planId]?.tittel : tittelForNy;
+// Opptak (v5.27, fra v5.76 uten modusvalg): alt læreren åpner blir stopp, i
+// rekkefølge, til Ferdig i linja nede til venstre. Plukk-modusen er
+// erstattet av den aktive kjøreplanen («Bygg på», js/plan-meny.js), så
+// dialogen er borte. Mens en kjøreplan spilles, tar opptaket ingenting opp
+// (audit v5.42 funn 6), så da startes det ikke.
+async function startOpptak(planId) {
+  const navn = planerNaa()[planId]?.tittel;
   if (!navn) return;
-  // Mens en kjøreplan spilles, tar opptaket ingenting opp (funn 6), så valget
-  // tilbys ikke da.
-  const spilles = !!aktivPlanId();
-  const modus = await askChoice({
-    title: `Samle stopp i «${navn}»`,
-    text: "Plukk: en plussknapp i kortenes tittellinje legger til det du velger. "
-      + (spilles
-        ? "Opptak virker ikke mens en kjøreplan spilles. Avslutt visningen eller bruk fri visning for å ta opp."
-        : "Ta opp: alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre."),
-    buttons: [
-      { label: "Plukk mens jeg blar", value: "plukk", className: "primary" },
-      ...(spilles ? [] : [{ label: "Ta opp alt jeg åpner", value: "opptak" }]),
-      { label: "Avbryt", value: null },
-    ],
-    dismissValue: null,
+  if (aktivPlanId()) {
+    msg("Opptak virker ikke mens en kjøreplan spilles. Avslutt visningen eller bruk fri visning for å ta opp.", false);
+    return;
+  }
+  const ok = await askChoice({
+    title: `Ta opp til «${navn}»`,
+    text: "Alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre. Vil du heller velge kort selv, bruk «Bygg på».",
+    buttons: [{ label: "Start opptaket", value: true, className: "primary" }, { label: "Avbryt", value: false }],
+    dismissValue: false,
   });
-  if (!modus) return;
-  startInnsamling(planId || nyPlanId(), modus, navn);
+  if (!ok) return;
+  // Opptaket og den aktive planen skal ikke fange samme klikk.
+  settAktivPlan(null);
+  startInnsamling(planId, "opptak", navn);
+  const m = document.getElementById(MODAL_ID);
+  if (m) modalClose(m);
+}
+
+// «Bygg på» (v5.76): planen blir den aktive, og vinduet lukkes så læreren
+// kan finne fram i appen. Et opptak som står på, avsluttes først.
+async function byggPaa(planId) {
+  if (!planerNaa()[planId]) return;
+  if (aktivSamleokt()) await medFrist(avsluttInnsamling(), 4000);
+  settAktivPlan(planId);
   const m = document.getElementById(MODAL_ID);
   if (m) modalClose(m);
 }
@@ -449,6 +461,9 @@ export function apneVisning() {
 // MENS vinduet står åpent — men aldri midt i en redigering (kladden er
 // lærerens, og skal ikke rykkes vekk).
 export function visningTikk() {
+  // Pilla for den aktive planen følger snapshotene (antall stopp, slettet
+  // plan), uansett om vinduet står åpent.
+  oppdaterAktiv();
   const m = document.getElementById(MODAL_ID);
   if (!m?.classList.contains("open")) return;
   // En åpen kladd tegnes bare på nytt når den venter på data (etiketter som
@@ -472,6 +487,8 @@ export function initVisning() {
   });
   // «samles nå» følger økta: Ferdig i linja kan trykkes mens vinduet står åpent.
   vedSamleEndring(() => visningTikk());
+  // «bygges på» følger den aktive planen (Ferdig i pilla nede til venstre).
+  vedAktivPlanEndring(() => visningTikk());
   let vis = null;
   try { vis = new URLSearchParams(window.location.search).get("visning"); } catch (e) {}
   if (vis !== null) {
@@ -541,11 +558,19 @@ function koblVindu(m) {
       return;
     }
     const samle = hit("[data-pres-samle]");
-    if (samle) return velgModusOgStart(samle.dataset.presSamle);
+    if (samle) return startOpptak(samle.dataset.presSamle);
+    const bygg = hit("[data-pres-bygg]");
+    if (bygg) return byggPaa(bygg.dataset.presBygg);
+    if (hit("[data-pres-bygg-ferdig]")) { settAktivPlan(null); renderListe(); return; }
+    // «Ny + bygg på …» (v5.76): planen skrives tom med en gang, så tilleggene
+    // fra kortene har et dokument å gå til.
     if (hit("#pres-adm-ny-samle")) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       const tittel = window.prompt("Navn på den nye kjøreplanen:", "");
-      if (tittel && tittel.trim()) velgModusOgStart(null, tittel.trim());
+      if (!tittel || !tittel.trim()) return;
+      const id = nyPlanId();
+      if (!(await vakt(savePlan(id, { tittel: tittel.trim().slice(0, 80), laget: new Date().toISOString(), stopp: [] })))) return;
+      await byggPaa(id);
       return;
     }
     // Kjøreplanen som hefte (v5.56): stoppene blir utvalget på utskrift.html,
@@ -591,6 +616,7 @@ function koblVindu(m) {
       // Samleøkter på planen (også avsluttede som ikke er kommet fram)
       // forkastes: ellers ville neste lagring laget planen på nytt.
       forkastSamlinger(id);
+      if (aktivPlan() === id) settAktivPlan(null);
       if (!(await vakt(deletePlan(id)))) return;
       renderListe();
       msg("Kjøreplanen er slettet.");

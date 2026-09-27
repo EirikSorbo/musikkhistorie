@@ -3167,6 +3167,58 @@ body.samler-plukk .kort-pluss {
 body.samler-plukk .kort-pluss:hover { background: var(--accent-2); color: #fff; }
 .kort-pluss svg { display: block; }
 .result-row .kort-pluss { margin-left: auto; }
+/* Den aktive kjøreplanen (v5.76, js/plan-meny.js): samme plussknapper som i
+   plukk-modus, og pila til menyen ved visningsknappen i modalhodene. */
+body.har-aktiv-plan .kort-pluss {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 28px; height: 28px; margin-left: 8px; padding: 0; vertical-align: middle;
+  border-radius: 50%; border: 1px solid var(--accent-2); background: var(--surface);
+  color: var(--accent-2); cursor: pointer;
+}
+body.har-aktiv-plan .kort-pluss:hover { background: var(--accent-2); color: #fff; }
+.modal-head .modal-lenke-meny { display: none; padding: 5px 5px; min-width: 24px; align-items: center; justify-content: center; margin: 0 2px 0 -4px; color: var(--muted); }
+.modal-head .modal-lenke-meny svg { display: block; }
+body.laerer-okt.har-aktiv-plan .modal-head .modal-lenke-meny { display: inline-flex; }
+body.laerer-okt.samler-plukk .modal-head .modal-lenke-meny { display: none; }
+body.laerer-okt.har-aktiv-plan .modal-head .modal-lenke { color: var(--accent-2); border-color: var(--accent-2); }
+#aktiv-plan-pille {
+  position: fixed; left: 14px; bottom: 14px; z-index: 99999;
+  display: flex; gap: 8px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 6px 8px 6px 12px; font-size: 0.88rem; color: var(--accent-2);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+#aktiv-plan-pille svg { flex: none; }
+#aktiv-plan-pille .aktiv-plan-tekst { color: var(--text); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Står opptakslinja der også, løftes pilla over den. */
+body:has(#samle-bar) #aktiv-plan-pille { bottom: 64px; }
+
+/* Skuffen (v5.76, js/utskrift-skuff.js): utskriftsutvalget som en liste
+   under skriverikonet i toppmenyen, med fjern og dra for rekkefølgen. */
+.skuff {
+  position: fixed; top: 60px; right: 14px; z-index: 10000;
+  width: min(400px, calc(100vw - 28px)); max-height: 70vh; overflow: auto;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16); padding: 12px 14px; text-align: left;
+}
+.skuff[hidden] { display: none; }
+.skuff-hode { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.95rem; }
+.skuff-hode .muted { font-size: 0.82rem; }
+.skuff-hode .skuff-lukk { margin-left: auto; }
+.skuff-liste { list-style: none; margin: 0; padding: 0; }
+.skuff-rad { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--line); cursor: grab; }
+.skuff-rad:first-child { border-top: 0; }
+.skuff-rad.pres-adm-drar { opacity: 0.45; }
+.skuff-rad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 8px; }
+.skuff-grep { flex: none; color: var(--muted-2); display: inline-flex; }
+.skuff-type { flex: none; min-width: 78px; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.skuff-navn { flex: 1; font-size: 0.88rem; }
+.skuff-fjern { flex: none; font: inherit; font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid transparent; border-radius: 6px; padding: 1px 6px; cursor: pointer; }
+.skuff-fjern:hover { color: var(--danger); border-color: var(--line); }
+.skuff-hint { font-size: 0.78rem; margin: 8px 0 0; }
+.skuff-tom { font-size: 0.88rem; padding: 6px 0; }
+.skuff-fot { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.skuff-fot .btn { text-decoration: none; }
 
 /* Utskrift (v5.56): skriverikonet i toppmenyen vises også for studenter (de
    andre ikonene skjules av body.role-student), med et merke som teller
