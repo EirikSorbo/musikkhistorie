@@ -3055,6 +3055,45 @@ body.presentasjon .kilder { display: none !important; }
 .pres-plan { display: inline-flex; gap: 4px; align-items: center; padding-right: 4px; border-right: 1px solid var(--line); }
 .pres-teller-knapp { font-variant-numeric: tabular-nums; font-size: 0.82em; }
 .pres-adm-hint { font-size: 0.85rem; margin: 10px 0 0; }
+/* «neste: …» ved telleren og klokka (v5.75): dempet tekst i verktøylinja,
+   klippet så linja aldri vokser seg over lerretet. */
+.pres-neste {
+  max-width: 18em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 0.8em; color: var(--muted); padding: 0 6px 0 2px;
+}
+.pres-klokke { font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; padding: 0 4px; }
+/* Varselet på lerretet (v5.75): et stopp som ikke finnes lenger. */
+#pres-varsel {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999;
+  max-width: min(640px, calc(100vw - 40px)); padding: 10px 16px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--danger);
+  border-radius: 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14); font-size: 15px;
+}
+#pres-varsel[hidden] { display: none; }
+/* «Spill alle lytteeksemplene» på oversiktskortet. */
+.pres-ov-verktoy { margin: -0.6rem 0 1.2rem; }
+.pres-ov-verktoy:empty { display: none; }
+/* Editoren (v5.75): søk for å legge til stopp, dra og slipp, «Vis». */
+.pres-adm-stopprad { cursor: grab; }
+.pres-adm-stopprad.pres-adm-drar { opacity: 0.45; }
+.pres-adm-stopprad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 8px; }
+.pres-adm-grep { flex: none; color: var(--muted-2); display: inline-flex; align-items: center; padding: 0 2px; }
+.pres-adm-lenkeknapp { font: inherit; font-size: 0.8rem; color: var(--accent-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.pres-adm-sok { margin-top: 12px; }
+.pres-adm-sok .sok-felt { width: 100%; }
+.pres-adm-sok-treff { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.pres-adm-treff {
+  display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left;
+  font: inherit; font-size: 0.88rem; color: var(--text); background: var(--surface-2);
+  border: 1px solid transparent; border-radius: 9px; padding: 6px 10px; cursor: pointer;
+}
+.pres-adm-treff:hover { border-color: var(--accent); }
+.pres-adm-treff.er-med { opacity: 0.75; }
+.pres-adm-treff-type { flex: none; min-width: 84px; font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.pres-adm-treff-navn { flex: 1; }
+.pres-adm-treff-merke { color: var(--accent-2); font-weight: 600; font-size: 0.8rem; white-space: nowrap; }
+/* «Spill alle på YouTube» øverst i spillelistene (v5.74). */
+.pl-alle { margin: 0 0 12px; display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Visning-vinduet bak presentasjonsikonet (v5.41, js/visning.js). Et
    verktøy, ikke et lysbilde: modal-verktoy holder det i vanlig bredde også

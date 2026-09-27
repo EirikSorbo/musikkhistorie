@@ -24,18 +24,19 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.74";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER } from "./presentasjon-modell.js?v=5.74";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.74";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.74";
-import { GENEALOGY } from "./genre-model.js?v=5.74";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.74";
-import { registrerYtIntercept, veksleYtAvspilling } from "./yt-spiller.js?v=5.74";
-import { escapeHtml } from "./util.js?v=5.74";
-import { apneVisNaarKlart } from "./explore-apne.js?v=5.74";
-import { getState } from "./explore-context.js?v=5.74";
-import { onAuthChange } from "./store.js?v=5.74";
-import { erLaererBruker, settInnStopp } from "./plan-meny.js?v=5.74";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.75";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.75";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.75";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.75";
+import { GENEALOGY } from "./genre-model.js?v=5.75";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.75";
+import { registrerYtIntercept, veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.75";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.75";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.75";
+import { getState } from "./explore-context.js?v=5.75";
+import { onAuthChange } from "./store.js?v=5.75";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.75";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.75";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -58,7 +59,31 @@ const LAGRING = {
   // Satt når læreren selv har gått ut av fullskjerm: da slås den ikke på
   // igjen automatisk resten av visningen (v5.55).
   fullNei: "pensumPresFullNei",
+  // Klokka i verktøylinja (v5.75), av som standard; valget i tannhjulet.
+  klokke: "pensumPresKlokke",
 };
+
+// Når hver kjøreplan sist ble spilt (v5.75): localStorage i lærerens
+// nettleser, { <planId>: ISO-dato }. Visning-lista viser det ved planen.
+const SPILT_NOKKEL = "pensum-plan-spilt";
+
+export function sistSpilt() {
+  try {
+    const o = JSON.parse(localStorage.getItem(SPILT_NOKKEL) || "{}");
+    return o && typeof o === "object" && !Array.isArray(o) ? o : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function merkSpilt(id) {
+  if (!id) return;
+  try {
+    const o = sistSpilt();
+    o[id] = new Date().toISOString();
+    localStorage.setItem(SPILT_NOKKEL, JSON.stringify(o));
+  } catch (e) {}
+}
 
 // sessionStorage kan kaste (blokkerte nettsteddata) — presentasjonen skal
 // virke likevel, den husker bare mindre.
@@ -231,6 +256,47 @@ function oppdaterTeller() {
   const teller = document.getElementById("pres-teller");
   if (!teller) return;
   teller.textContent = plan ? tellerTekst(stoppIdx, plan.stopp.length) : "…";
+  oppdaterNeste();
+}
+
+// «neste: …» ved telleren (v5.75): læreren skal vite hva som kommer uten å
+// huske planen. Navnet slås opp med samme etikett som editoren bruker;
+// etter siste stopp står oppsummeringskortet, og på det står ingenting.
+function oppdaterNeste() {
+  const el = document.getElementById("pres-neste");
+  if (!el) return;
+  if (!plan || !plan.stopp.length) { el.hidden = true; return; }
+  const p = planPosisjon(stoppIdx, plan.stopp.length);
+  let tekst = "";
+  if (p.oversikt === "start") tekst = stoppEtikett(plan.stopp[0]).navn;
+  else if (p.oversikt === "slutt") tekst = "";
+  else if (p.stopp + 1 < plan.stopp.length) tekst = stoppEtikett(plan.stopp[p.stopp + 1]).navn;
+  else tekst = "Oppsummering";
+  el.hidden = !tekst;
+  el.textContent = tekst ? `neste: ${tekst}` : "";
+  el.title = tekst ? `Neste stopp: ${tekst}` : "";
+}
+
+// Forhåndslaster bildet til posisjon `i` (artist- og innovasjonskort), så
+// lerretet ikke står uten bilde i sekundene etter et stoppbytte på tregt
+// nett (v5.75, audit v5.42 forslag 12). Samme miniatyrbredde som kortet ber
+// om (artistImage stor: 800, innovasjonskort på lerretet: 960), ellers
+// treffer ikke nettleserens hurtigbuffer.
+function forhaandslast(i) {
+  if (!plan || !plan.stopp.length) return;
+  const p = planPosisjon(i, plan.stopp.length);
+  if (p.oversikt) return;
+  const m = parseVisVerdi(plan.stopp[p.stopp]?.vis);
+  if (!m) return;
+  const s = getState();
+  let url = null, bredde = 800;
+  if (m.hva === "artist") url = (s.artists || []).find((x) => x.id === m.id)?.imageUrl;
+  else if (m.hva === "tech") { url = (s.techItems || []).find((x) => x.id === m.id)?.imageUrl; bredde = 960; }
+  const ren = safeUrl(url);
+  if (!ren) return;
+  const img = new Image();
+  img.decoding = "async";
+  img.src = wikimediaThumb(ren, bredde) || ren;
 }
 
 // Gå til en posisjon: lukk det som står åpent, sett stoppets nivå og unntak,
@@ -275,6 +341,7 @@ function gaTilStopp(i) {
   else if (!tilbakeTilTreet) apneVisNaarKlart(parseVisVerdi(stopp.vis));
   oppdaterTeller();
   oppdaterLeggTil();
+  forhaandslast(stoppIdx + 1);
 }
 
 // Satt når sida er nådd med nettleserens tilbake/fram (se over).
@@ -390,12 +457,14 @@ function oversiktModal() {
         <button type="button" class="modal-close btn ghost small">✕</button>
       </div>
       <p class="pres-ov-merke" id="pres-ov-merke"></p>
+      <div class="pres-ov-verktoy" id="pres-ov-verktoy"></div>
       <div class="pres-ov-grid" id="pres-ov-grid"></div>
     </div>`;
   document.body.appendChild(m);
   setupModal(m);
   initModalHeaders();   // idempotent: ← og ✕ som på alle de andre kortene
   m.addEventListener("click", (e) => {
+    if (e.target.closest("#pres-ov-spill")) return spillAlleLytteeksempler();
     const punkt = e.target.closest("[data-ov-stopp]");
     if (punkt) gaTilStopp(Number(punkt.dataset.ovStopp) + 1);
   });
@@ -415,6 +484,14 @@ function tegnOversikt() {
   m.querySelector("#pres-ov-tittel").textContent = plan.tittel;
   m.querySelector("#pres-ov-merke").textContent =
     `${slutt ? "Oppsummering" : "Oversikt"} · ${plan.stopp.length} stopp`;
+  // «Spill alle lytteeksemplene» (v5.75) når planen har minst to.
+  const ider = lytteeksemplerIPlanen();
+  const verktoy = m.querySelector("#pres-ov-verktoy");
+  if (verktoy) {
+    verktoy.innerHTML = ider.length >= 2
+      ? `<button type="button" class="btn ghost small" id="pres-ov-spill" title="Spiller alle lytteeksemplene i planen etter hverandre">Spill alle ${ider.length} lytteeksemplene</button>`
+      : "";
+  }
   m.querySelector("#pres-ov-grid").innerHTML = grupper.map((k) => `
     <section class="pres-ov-kat">
       <h3>${escapeHtml(k.navn)}</h3>
@@ -445,6 +522,7 @@ export function presPlanTikk() {
   const planer = normaliserPlaner(s.content?.presentasjoner?.planer);
   if (planer[planId]) {
     plan = planer[planId];
+    merkSpilt(planId);
     oppdaterLeggTil();
     if (!plan.stopp.length) {
       const teller = document.getElementById("pres-teller");
@@ -572,6 +650,7 @@ function byggBar() {
       <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet (T)">…</button>
       <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / →)" aria-label="Neste stopp">›</button>
       <button type="button" class="pres-knapp pres-leggtil" id="pres-leggtil" hidden aria-label="Legg til i kjøreplanen her">${IKON.pluss}</button>
+      <span class="pres-neste" id="pres-neste" hidden></span>
     </span>
     <span class="pres-nivaa" role="group" aria-label="Detaljnivå">
       ${[1, 2, 3].map((n) => `<button type="button" class="pres-knapp" data-nivaa="${n}" title="${NIVAA_NAVN[n]} (tast ${n})">${n}</button>`).join("")}
@@ -579,6 +658,7 @@ function byggBar() {
     <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst (A)">A</button>
     <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (F)">${IKON.full}</button>
     <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger" aria-label="Innstillinger">${IKON.tannhjul}</button>
+    <span class="pres-klokke" id="pres-klokke" hidden aria-label="Klokka"></span>
     <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt">Avslutt</button>
     <div id="pres-panel" hidden></div>`;
   document.body.appendChild(bar);
@@ -730,6 +810,10 @@ function tegnPanel(panel) {
     : `<p class="pres-panel-hode">Åpne et kort for å velge seksjoner.</p>`}
     <label class="pres-valg pres-qa"><input type="checkbox" id="pres-qa" ${qaPaa() ? "checked" : ""}>
       Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort)</label>
+    <label class="pres-valg"><input type="checkbox" id="pres-klokke-valg" ${klokkePaa() ? "checked" : ""}> Vis klokka i verktøylinja</label>
+    ${kanHuske() ? `<hr class="pres-skille">
+      <button type="button" class="btn ghost small" id="pres-husk" title="Lagrer nivået og unntakene som vises nå, på dette stoppet i kjøreplanen">Husk visningen på dette stoppet</button>
+      <p class="pres-panel-tips">Nivået og unntakene slik de står nå, lagres på stoppet, så de gjelder neste gang planen spilles.</p>` : ""}
     <p class="pres-panel-tips">Trykk <kbd>?</kbd> for hurtigtastene.</p>`;
 
   panel.querySelectorAll("[data-sekt-valg]").forEach((cb) => {
@@ -748,6 +832,107 @@ function tegnPanel(panel) {
   panel.querySelector("#pres-qa")?.addEventListener("change", (e) => {
     settQA(e.target.checked);
   });
+  panel.querySelector("#pres-klokke-valg")?.addEventListener("change", (e) => {
+    settKlokke(e.target.checked);
+  });
+  panel.querySelector("#pres-husk")?.addEventListener("click", huskVisning);
+}
+
+// ----------------------------------------------------------------------------
+//  Klokka (v5.75): bare tid, ingen nedtelling. Fast i verktøylinja, av som
+//  standard.
+// ----------------------------------------------------------------------------
+
+let klokkeTimer = null;
+
+function klokkePaa() { return les(LAGRING.klokke) === "1"; }
+
+function tegnKlokke() {
+  const el = document.getElementById("pres-klokke");
+  if (!el) return;
+  el.textContent = new Date().toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
+}
+
+function settKlokke(paa) {
+  skriv(LAGRING.klokke, paa ? "1" : "");
+  const el = document.getElementById("pres-klokke");
+  if (el) el.hidden = !paa;
+  clearInterval(klokkeTimer);
+  klokkeTimer = null;
+  if (!paa) return;
+  tegnKlokke();
+  klokkeTimer = setInterval(tegnKlokke, 15000);
+}
+
+// ----------------------------------------------------------------------------
+//  «Husk visningen på dette stoppet» (v5.75, audit v5.42 funn 29 og forslag
+//  5): nivået og unntakene som vises nå, skrives inn i planens stopp, så
+//  læreren slipper å gjenta avhukingene foran klassen hver gang. Bare i
+//  lærerøkter og bare på et ekte stopp (ikke oversiktskortene).
+// ----------------------------------------------------------------------------
+
+function kanHuske() {
+  if (!erLaerer || !plan || !plan.stopp.length) return false;
+  return !planPosisjon(stoppIdx, plan.stopp.length).oversikt;
+}
+
+async function huskVisning() {
+  if (!kanHuske()) return;
+  const p = planPosisjon(stoppIdx, plan.stopp.length);
+  const knapp = document.getElementById("pres-husk");
+  if (knapp) { knapp.disabled = true; knapp.textContent = "Lagrer …"; }
+  try {
+    plan = await oppdaterStopp(planId, p.stopp, { nivaa, unntak: { ...unntak } });
+    if (knapp) knapp.textContent = "Husket";
+  } catch (e) {
+    if (knapp) knapp.textContent = "Husk visningen på dette stoppet";
+    alert(`Fikk ikke lagret visningen (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+  } finally {
+    setTimeout(() => {
+      if (knapp) { knapp.disabled = false; knapp.textContent = "Husk visningen på dette stoppet"; }
+    }, 1500);
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  Varsel på lerretet (v5.75): et stopp som ikke kan åpnes (slettet kort,
+//  omdøpt sjanger) sto før som et tomt lerret med bare en konsollmelding.
+// ----------------------------------------------------------------------------
+
+let varselTimer = null;
+
+function visVarsel(tekst) {
+  let el = document.getElementById("pres-varsel");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "pres-varsel";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+  el.textContent = tekst;
+  el.hidden = false;
+  clearTimeout(varselTimer);
+  varselTimer = setTimeout(() => { el.hidden = true; }, 7000);
+}
+
+// ----------------------------------------------------------------------------
+//  «Spill alle lytteeksemplene» på oversiktskortet (v5.75): planens yt-stopp
+//  som én kø i den innebygde spilleren, i planens rekkefølge, i kinovisning.
+// ----------------------------------------------------------------------------
+
+function lytteeksemplerIPlanen() {
+  const ider = [];
+  for (const s of plan?.stopp || []) {
+    const m = parseVisVerdi(s.vis);
+    if (m?.hva === "yt" && m.id && !ider.includes(m.id)) ider.push(m.id);
+  }
+  return ider;
+}
+
+function spillAlleLytteeksempler() {
+  const ider = lytteeksemplerIPlanen();
+  if (!ider.length) return;
+  apneYtSpiller(ytWatchUrl(ider[0], null, null), `Alle lytteeksemplene i «${plan.tittel}»`, { kø: ider.slice(1) });
 }
 
 // ----------------------------------------------------------------------------
@@ -791,8 +976,14 @@ export function initPresentasjon() {
 
   byggBar();
   brukSkala(skalaTrinn);   // etter byggBar: knappen skal vise trinnet
+  settKlokke(klokkePaa());
   blankFaneOgVindu();
   fullskjermVedForsteHandling();
+  // Et stopp som ikke finnes lenger, sies fra om på lerretet (v5.75).
+  setVisMaalFeilProvider((maal) => {
+    const etikett = stoppEtikett({ vis: [maal.hva, maal.id, maal.modus, maal.ekstra].filter((x) => x != null && x !== "").join(":") });
+    visVarsel(`${etikett.tekst} finnes ikke lenger. Trykk → for neste stopp.`);
+  });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;

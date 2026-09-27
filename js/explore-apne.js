@@ -11,21 +11,21 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.74";
-import { showSubsjangerInfo } from "./ui.js?v=5.74";
-import { showEdgeInfo } from "./genealogy.js?v=5.74";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.74";
-import { openDecade } from "./explore-decade.js?v=5.74";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.74";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.74";
-import { openVarmekart } from "./explore-varmekart.js?v=5.74";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.74";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.74";
-import { openReferanser } from "./explore-referanser.js?v=5.74";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.74";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.74";
-import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.74";
-import { apneYtSpiller } from "./yt-spiller.js?v=5.74";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.75";
+import { showSubsjangerInfo } from "./ui.js?v=5.75";
+import { showEdgeInfo } from "./genealogy.js?v=5.75";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.75";
+import { openDecade } from "./explore-decade.js?v=5.75";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.75";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.75";
+import { openVarmekart } from "./explore-varmekart.js?v=5.75";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.75";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.75";
+import { openReferanser } from "./explore-referanser.js?v=5.75";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.75";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.75";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.75";
+import { apneYtSpiller } from "./yt-spiller.js?v=5.75";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -133,6 +133,13 @@ function klarFor(apne, s) {
 
 let ventendeVis = null;
 
+// Et mål som ikke finnes lenger (v5.75): presentasjonen viser en linje på
+// lerretet i stedet for at læreren står med et tomt kort og bare en
+// konsollmelding (audit v5.42 forslag 3). Sidene uten presentasjon lar
+// leverandøren stå tom, og bare konsollen sier fra som før.
+let visMaalFeilet = null;
+export function setVisMaalFeilProvider(fn) { visMaalFeilet = fn; }
+
 // Åpne et mål så snart datagrunnlaget dets har landet — brukes av ?vis=-
 // lenkene og av kjøreplanens stopp (presentasjon.js). Et nytt mål erstatter
 // et som fortsatt venter: det siste ønsket gjelder.
@@ -158,7 +165,10 @@ export function provVisMaal() {
   const maal = ventendeVis;
   ventendeVis = null;
   if (status === "klar") apneMaal(maal);
-  else console.warn("Dyp lenke peker på noe som ikke finnes lenger:", maal);
+  else {
+    console.warn("Dyp lenke peker på noe som ikke finnes lenger:", maal);
+    try { visMaalFeilet?.(maal); } catch (e) { console.warn(e); }
+  }
 }
 
 // Sjangertreet lander som egen hendelse (genre-model), ikke som et av sidens

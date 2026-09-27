@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.74";
+import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.75";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 const S = (...vis) => vis.map((v) => ({ vis: v }));
@@ -93,8 +93,10 @@ test("funn 1 og 2: samleøkta skriver ikke per kort, og aldri en kø av gamle ko
   assert.match(samle, /return lastet\(\) \? ventende\(ø\)\.some\(\(b\) => !b\.live\) : ø\.sendt\.length > 0;/);
   assert.match(samle, /samle: \{ \[ø\.øktId\]: n \},/);
   assert.match(samle, /ø\.sendt = ø\.sendt\.filter\(\(b\) => b\.n > n\);/, "kvitteringer i rekkefølge");
-  // Skrivere utenfor økta sender aldri merket (det kunne senke det).
-  assert.equal((kilde("plan-meny.js").match(/savePlan\(planId, uttenMerke\(/g) || []).length, 2);
+  // Skrivere utenfor økta sender aldri merket (det kunne senke det): menyen,
+  // «Legg til her» og «Husk visningen på dette stoppet» (oppdaterStopp, v5.75).
+  assert.equal((kilde("plan-meny.js").match(/savePlan\(planId, uttenMerke\(/g) || []).length, 3);
+  assert.doesNotMatch(kilde("plan-meny.js"), /savePlan\((?!planId, uttenMerke\()/, "ingen skriving i plan-meny går utenom uttenMerke");
 });
 
 test("funn 4: hver skriving rører bare sin egen plan, og ingenting skrives før planene er lastet", () => {

@@ -20,102 +20,33 @@
 //  planene har landet. To faner som redigerer SAMME plan samtidig
 //  overskriver hverandre; med én lærerkonto er det en akseptert enkelhet
 //  (samme som podkast-admin).
+//
+//  v5.75: stopp legges til ved å søke (samme indeks som søket i appen), rader
+//  kan dras, hvert stopp kan åpnes fra editoren («Vis»), lista står i
+//  tidsrekkefølge med «laget» og «sist spilt», og planer med stopp som ikke
+//  finnes lenger, varsles før avspilling. Etikettene bor i
+//  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.74";
-import { escapeHtml } from "./util.js?v=5.74";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.74";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.74";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.74";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.74";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.74";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.74";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.74";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.74";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.74";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.74";
+import { getState } from "./explore-context.js?v=5.75";
+import { escapeHtml } from "./util.js?v=5.75";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.75";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.75";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.75";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.75";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.75";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.75";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon, sistSpilt } from "./presentasjon.js?v=5.75";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.75";
+import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.75";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.75";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.75";
+import { apneMaal } from "./explore-apne.js?v=5.75";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
 
-const TYPE_NAVN = {
-  artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
-  historie: "Historie", tech: "Innovasjon", "tiår": "Tiår", side: "Side",
-  instrument: "Instrument", kobling: "Kobling", tidslinje: "Tidslinje",
-  varmekart: "Varmekart", sjangerperioder: "Sjangerperioder",
-  himmel: "Sjangerhimmel", referanser: "Referanser",
-  "store-bildet": "Det store bildet", podkaster: "Podkaster",
-  teknologi: "Teknologi", slektstre: "Slektstre", yt: "Lytteeksempel",
-};
-
 let kladd = null;   // { id, tittel, stopp } — settes ved Ny/Rediger, null i lista
-
-// Menneskelig etikett for et stopp, med «finnes ikke lenger»-varsel når målet
-// er borte (slettet artist, omdøpt sjanger — navnebytte-fella fra planen).
-// Alle navnebaserte mål sjekkes mot det åpneren faktisk slår opp i (audit
-// v5.42 funn 8: røttene og Reggae ble meldt døde selv om de virket, mens et
-// omdøpt varmekart, en undersjanger og en kobling aldri ble meldt). Mens
-// artistene eller kortene laster, står det «laster …», ikke et falskt varsel.
-// Alt leses ved kall: treet og vokabularet er live bindings.
-const DOD = "finnes ikke lenger";
-
-function stoppEtikett(stopp) {
-  const m = parseVisVerdi(stopp.vis);
-  if (!m) return { tekst: stopp.vis, feil: "ugyldig lenke" };
-  const navn = TYPE_NAVN[m.hva] || m.hva;
-  const s = getState();
-  switch (m.hva) {
-    case "artist": {
-      const a = (s.artists || []).find((x) => x.id === m.id);
-      if (a) return { tekst: `${navn}: ${a.name}` };
-      return s.artistsLoaded ? { tekst: `${navn}: ${m.id}`, feil: DOD } : { tekst: `${navn}: laster …`, laster: true };
-    }
-    case "tech": {
-      // Bare aktive kort: avspilleren på forsiden ser ikke ventende eller
-      // returnerte kort (lærersidens state har dem med).
-      const t = (s.techItems || []).find((x) => x.id === m.id && (x.status || "active") === "active");
-      if (t) return { tekst: `${navn}: ${t.name}` };
-      return s.techLoaded ? { tekst: `${navn}: ${m.id}`, feil: DOD } : { tekst: `${navn}: laster …`, laster: true };
-    }
-    // Sjangerkortet åpnes for ALLE noder i treet (også røttene), ikke bare
-    // for dem med metasjanger.
-    case "sjanger":
-      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY.some((n) => n.l === m.id || n.f === m.id) ? "" : DOD };
-    case "historie":
-      if (!m.id) return { tekst: `${navn}: oversikten` };
-      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : DOD };
-    case "varmekart":
-      if (!m.id) return { tekst: navn };
-      return { tekst: `${navn}: ${m.id}`, feil: GENEALOGY_META_GENRES.includes(m.id) ? "" : DOD };
-    case "undersjanger": {
-      if (!s.artistsLoaded || !s.genreDescsLoaded) return { tekst: `${navn}: ${m.id}`, laster: true };
-      // Som kortet: bare synlige artister, og uten hensyn til store og små
-      // bokstaver.
-      const lik = (x) => String(x).toLowerCase() === String(m.id).toLowerCase();
-      const kjent = !!s.genreDescs?.[m.id]?.sub
-        || (s.artists || []).some((a) => isVisible(a) && (a.subGenre || []).some(lik));
-      return { tekst: `${navn}: ${m.id}`, feil: kjent ? "" : DOD };
-    }
-    case "kobling": {
-      const [fra, til] = String(m.id || "").split("__");
-      const nodeNavn = (id) => GENEALOGY.find((n) => n.id === id)?.l || id;
-      return { tekst: `${navn}: ${nodeNavn(fra)} til ${nodeNavn(til)}`, feil: edgeExists(m.id) ? "" : DOD };
-    }
-    case "instrument":
-      if (!m.id) return { tekst: navn };
-      return { tekst: `${navn}: ${m.id}`, feil: INSTRUMENT_TIMELINE_GROUPS.includes(m.id) ? "" : DOD };
-    case "tiår":
-      return { tekst: `${navn}: ${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})` };
-    // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
-    case "yt": {
-      const tittel = lytteeksempelNavn(m.id, getState().artists);
-      if (!tittel && !s.artistsLoaded) return { tekst: `${navn}: laster …`, laster: true };
-      return { tekst: tittel ? `${navn}: ${tittel}` : `${navn} (YouTube)` };
-    }
-    default:
-      return { tekst: m.id ? `${navn}: ${m.id}` : navn };
-  }
-}
 
 // Godtar både en full «Kopier lenke»-URL og en rå vis-verdi. («artist:x»
 // alene parses som URL med artist:-protokoll — uten vis-parameter faller den
@@ -213,23 +144,47 @@ async function forlatSamleokt() {
 //  Rendering
 // ----------------------------------------------------------------------------
 
+// «27. sep. 2026» eller tom streng for en manglende eller ugyldig dato.
+function planDato(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
+}
+
 function renderListe() {
   const el = document.getElementById("pres-adm-liste");
   if (!el) return;
   const s = getState();
+  // Nyeste først (v5.75): «laget» lagres på hver plan, og et semester av
+  // planer leses bedre i tidsrekkefølge enn alfabetisk. Like datoer (og
+  // planer uten dato, bakerst) sorteres på tittel.
   const planer = Object.entries(planerNaa())
-    .sort(([, a], [, b]) => a.tittel.localeCompare(b.tittel, "no"));
+    .sort(([, a], [, b]) => String(b.laget || "").localeCompare(String(a.laget || ""))
+      || a.tittel.localeCompare(b.tittel, "no"));
   const aktiv = aktivPlanId();
   const samles = aktivSamleokt()?.planId;
+  const spilt = sistSpilt();
   const lastet = !!s.contentLoaded;
+  // Plansjekken (v5.75) teller først når listene et stopp slås opp i, har
+  // landet; ellers ville hvert artiststopp meldt «finnes ikke» et øyeblikk.
+  const dataKlar = !!(s.artistsLoaded && s.techLoaded);
   const tomTekst = !s.contentLoaded ? "Laster kjøreplanene …"
     : erLaerer ? "Ingen kjøreplaner ennå. Lag den første under."
     : "Ingen kjøreplaner ennå.";
   el.innerHTML = `
-    ${planer.length ? planer.map(([id, p]) => `
+    ${planer.length ? planer.map(([id, p]) => {
+      const merker = [`${p.stopp.length} stopp`];
+      const laget = planDato(p.laget);
+      if (laget) merker.push(`laget ${laget}`);
+      const sp = planDato(spilt[id]);
+      if (sp) merker.push(`spilt ${sp}`);
+      const dode = dataKlar ? dodeStopp(p) : 0;
+      return `
       <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
-          <span class="muted">${p.stopp.length} stopp${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}</span></span>
+          <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}</span>${
+          dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} ${dode === 1 ? "stopp finnes" : "stopp finnes"} ikke lenger</span>` : ""}</span>
         <span class="pres-adm-knapper">
           <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
           <button type="button" class="btn ghost small utskrift-ikonknapp" data-pres-utskrift="${escapeHtml(id)}" title="Kjøreplanen til utskriften (PDF)" aria-label="Kjøreplanen til utskriften">${TIL_UTSKRIFT_SVG}</button>
@@ -239,7 +194,8 @@ function renderListe() {
           <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
-      </div>`).join("")
+      </div>`;
+    }).join("")
     : `<p class="muted">${tomTekst}</p>`}
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
@@ -255,6 +211,8 @@ function renderListe() {
 
 // Står det «laster …» på et stopp, tegnes kladden på nytt når dataene lander.
 let kladdVenter = false;
+
+const GREP_SVG = '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true"><circle cx="3" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="3" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="3" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/></svg>';
 
 function renderKladd() {
   const boks = document.getElementById("pres-adm-rediger");
@@ -273,21 +231,76 @@ function renderKladd() {
   el.innerHTML = kladd.stopp.length ? kladd.stopp.map((s, i) => {
     const { tekst, feil, laster } = stoppEtikett(s);
     if (laster) kladdVenter = true;
+    const nUnntak = Object.keys(s.unntak || {}).length;
     return `
-    <div class="pres-adm-rad">
+    <div class="pres-adm-rad pres-adm-stopprad" draggable="true" data-pres-i="${i}">
+      <span class="pres-adm-grep" title="Dra for å flytte">${GREP_SVG}</span>
       <span class="pres-adm-navn">${i + 1}. ${escapeHtml(tekst)}
-        ${feil ? `<span class="pres-adm-feil">(${escapeHtml(feil)})</span>` : ""}</span>
+        ${feil ? `<span class="pres-adm-feil">(${escapeHtml(feil)})</span>` : ""}${
+        nUnntak ? ` <span class="muted">· ${nUnntak} unntak</span> <button type="button" class="pres-adm-lenkeknapp" data-pres-unntak="${i}" title="Fjern unntakene på dette stoppet, så nivået gjelder alene">fjern</button>` : ""}</span>
       <span class="pres-adm-knapper">
         <select data-pres-nivaa="${i}" title="Detaljnivå på dette stoppet" aria-label="Detaljnivå">
           <option value="">Nivå: uendret</option>
           ${[1, 2, 3].map((n) => `<option value="${n}" ${s.nivaa === n ? "selected" : ""}>Nivå ${n}: ${NIVAA_NAVN[n]}</option>`).join("")}
         </select>
+        <button type="button" class="btn ghost small" data-pres-vis="${i}" title="Åpne stoppet oppå editoren, så du ser hva det er">Vis</button>
         <button type="button" class="btn ghost small" data-pres-opp="${i}" title="Flytt opp" aria-label="Flytt opp" ${i === 0 ? "disabled" : ""}>↑</button>
         <button type="button" class="btn ghost small" data-pres-ned="${i}" title="Flytt ned" aria-label="Flytt ned" ${i === kladd.stopp.length - 1 ? "disabled" : ""}>↓</button>
         <button type="button" class="btn ghost small danger" data-pres-fjern="${i}" title="Fjern stoppet" aria-label="Fjern stoppet">✕</button>
       </span>
     </div>`;
-  }).join("") : `<p class="muted">Ingen stopp ennå. Finn fram i appen, trykk visningsknappen i kortets tittellinje, velg «Kopier lenke», og lim inn under.</p>`;
+  }).join("") : `<p class="muted">Ingen stopp ennå. Søk under, eller finn fram i appen og trykk visningsknappen i kortets tittellinje.</p>`;
+  tegnKladdSok();
+}
+
+// --- Søk for å legge til stopp (v5.75) ----------------------------------------
+// Samme indeks som søket i appen (js/search.js) og samme mønster som
+// utskriftssidens «Legg til». Treffene blir stopp med ett klikk; lim-inn-
+// feltet består som reserve for lenker søket ikke dekker.
+
+let kladdIndeks = null;
+let kladdAvtrykk = "";
+
+function kladdIndeksNaa() {
+  const s = getState();
+  const avtrykk = [
+    (s.artists || []).length, Object.keys(s.genreDescs || {}).length, (s.techItems || []).length,
+    Object.keys(s.decadeDescs || {}).length, Object.keys(s.content || {}).length,
+    Object.keys(s.edgeDescs || {}).length, !!s.isTeacher,
+  ].join("|");
+  if (!kladdIndeks || avtrykk !== kladdAvtrykk) {
+    kladdIndeks = byggIndeks(s, { erLærer: !!s.isTeacher, skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN });
+    kladdAvtrykk = avtrykk;
+  }
+  return kladdIndeks;
+}
+
+const MAKS_TREFF = 10;
+
+function tegnKladdSok() {
+  const felt = document.getElementById("pres-adm-sok");
+  const ut = document.getElementById("pres-adm-sok-treff");
+  if (!felt || !ut) return;
+  const q = kladd ? felt.value.trim() : "";
+  if (!q) { ut.innerHTML = ""; return; }
+  const res = sok(kladdIndeksNaa(), q);
+  if (res.forKort) { ut.innerHTML = `<p class="muted">Skriv minst to tegn.</p>`; return; }
+  const iPlan = new Set(kladd.stopp.map((s) => s.vis));
+  const sett = new Set();
+  const treff = [];
+  for (const t of res.grupper.flatMap((g) => g.treff)) {
+    const vis = byggVisVerdi(t.apne);
+    if (!vis || sett.has(vis)) continue;
+    sett.add(vis);
+    treff.push({ t, vis });
+    if (treff.length >= MAKS_TREFF) break;
+  }
+  if (!treff.length) { ut.innerHTML = `<p class="muted">Ingen treff på «${escapeHtml(q)}» som kan bli et stopp.</p>`; return; }
+  ut.innerHTML = treff.map(({ t, vis }) => `<button type="button" class="pres-adm-treff${iPlan.has(vis) ? " er-med" : ""}" data-pres-legg="${escapeHtml(vis)}">
+      <span class="pres-adm-treff-type">${escapeHtml(TYPE_LABEL[t.type] || t.type)}</span>
+      <span class="pres-adm-treff-navn">${escapeHtml(t.tittel)}${t.sti ? ` <span class="muted">${escapeHtml(t.sti)}</span>` : ""}</span>
+      <span class="pres-adm-treff-merke">${iPlan.has(vis) ? "i planen · legg til igjen" : "Legg til"}</span>
+    </button>`).join("");
 }
 
 // ----------------------------------------------------------------------------
@@ -324,6 +337,14 @@ function leggTilStopp() {
   msg("");
   renderKladd();
   felt.focus();
+}
+
+// Flytter stoppet på plass `fra` til plass `til` i kladden (dra og slipp).
+function flyttStopp(fra, til) {
+  if (!kladd || fra === til || !(fra >= 0 && fra < kladd.stopp.length) || !(til >= 0 && til < kladd.stopp.length)) return;
+  const [s] = kladd.stopp.splice(fra, 1);
+  kladd.stopp.splice(til, 0, s);
+  renderKladd();
 }
 
 // Samleøkt (v5.27): velg modus, lukk editoren og la linja nede til venstre
@@ -386,9 +407,14 @@ function byggModal() {
         </label>
       </div>
       <div id="pres-adm-stopp" style="margin-top:10px"></div>
-      <p class="muted pres-adm-hint">Et oversiktskort over innholdet, gruppert etter artister, lytteeksempler, sjangre, tiår og så videre, legges automatisk først og sist i avspillingen.</p>
+      <p class="muted pres-adm-hint">Et oversiktskort over innholdet, gruppert etter artister, lytteeksempler, sjangre, tiår og så videre, legges automatisk først og sist i avspillingen. Dra radene for å endre rekkefølgen.</p>
+      <div class="pres-adm-sok">
+        <input type="search" id="pres-adm-sok" class="sok-felt" autocomplete="off" enterkeyhint="search"
+          placeholder="Legg til stopp: søk etter artist, sjanger, tiår, innovasjon …" aria-label="Legg til stopp" />
+        <div id="pres-adm-sok-treff" class="pres-adm-sok-treff" aria-live="polite"></div>
+      </div>
       <div class="pres-adm-leggtil">
-        <input type="text" id="pres-adm-lenke" placeholder="Lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
+        <input type="text" id="pres-adm-lenke" placeholder="Eller lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
         <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
       </div>
       <div class="add-actions" style="margin-top:14px">
@@ -411,6 +437,8 @@ function byggModal() {
 export function apneVisning() {
   const m = document.getElementById(MODAL_ID) || byggModal();
   kladd = null;
+  const sokFelt = document.getElementById("pres-adm-sok");
+  if (sokFelt) sokFelt.value = "";
   renderListe();
   renderKladd();
   msg("");
@@ -579,6 +607,27 @@ function koblVindu(m) {
       msg("");
       return;
     }
+    // Søketreff (v5.75): treffet blir et stopp sist i planen.
+    const legg = hit("[data-pres-legg]");
+    if (legg) {
+      kladd.stopp.push({ vis: legg.dataset.presLegg });
+      msg("");
+      renderKladd();
+      return;
+    }
+    // «Vis» (v5.75): åpne stoppet oppå editoren, så læreren ser hva det er.
+    const vis = hit("[data-pres-vis]");
+    if (vis) {
+      const s = kladd.stopp[Number(vis.dataset.presVis)];
+      if (s) apneMaal(parseVisVerdi(s.vis));
+      return;
+    }
+    const unntak = hit("[data-pres-unntak]");
+    if (unntak) {
+      const s = kladd.stopp[Number(unntak.dataset.presUnntak)];
+      if (s) { delete s.unntak; renderKladd(); }
+      return;
+    }
     const opp = hit("[data-pres-opp]");
     if (opp) {
       const i = Number(opp.dataset.presOpp);
@@ -610,6 +659,48 @@ function koblVindu(m) {
     if (n >= 1 && n <= 3) kladd.stopp[i].nivaa = n;
     else delete kladd.stopp[i].nivaa;
   });
+
+  // Dra og slipp i stopplista (v5.75). Pilene består for tastaturet.
+  const stoppEl = m.querySelector("#pres-adm-stopp");
+  let drar = null;
+  stoppEl?.addEventListener("dragstart", (e) => {
+    const rad = e.target.closest?.("[data-pres-i]");
+    if (!rad || !kladd) return;
+    drar = Number(rad.dataset.presI);
+    rad.classList.add("pres-adm-drar");
+    try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(drar)); } catch (x) {}
+  });
+  stoppEl?.addEventListener("dragover", (e) => {
+    const rad = e.target.closest?.("[data-pres-i]");
+    if (!rad || drar === null) return;
+    e.preventDefault();
+    stoppEl.querySelectorAll(".pres-adm-over").forEach((r) => { if (r !== rad) r.classList.remove("pres-adm-over"); });
+    rad.classList.add("pres-adm-over");
+  });
+  stoppEl?.addEventListener("dragleave", (e) => {
+    e.target.closest?.("[data-pres-i]")?.classList.remove("pres-adm-over");
+  });
+  stoppEl?.addEventListener("drop", (e) => {
+    const rad = e.target.closest?.("[data-pres-i]");
+    if (!rad || drar === null) return;
+    e.preventDefault();
+    const til = Number(rad.dataset.presI);
+    const fra = drar;
+    drar = null;
+    flyttStopp(fra, til);
+  });
+  stoppEl?.addEventListener("dragend", () => {
+    drar = null;
+    stoppEl.querySelectorAll(".pres-adm-drar, .pres-adm-over").forEach((r) => r.classList.remove("pres-adm-drar", "pres-adm-over"));
+  });
+
+  // Søkefeltet i editoren (v5.75): treff mens man skriver.
+  const sokFelt = m.querySelector("#pres-adm-sok");
+  if (sokFelt) {
+    let venter = null;
+    sokFelt.addEventListener("input", () => { clearTimeout(venter); venter = setTimeout(tegnKladdSok, 130); });
+    sokFelt.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); clearTimeout(venter); tegnKladdSok(); } });
+  }
 
   // Tittelen følger feltet: renderKladd (etter «Legg til stopp», ↑, ↓, ✕)
   // skrev ellers den gamle tittelen tilbake over det læreren hadde skrevet

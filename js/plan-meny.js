@@ -17,12 +17,12 @@
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePlan } from "./store.js?v=5.74";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.74";
-import { getState } from "./explore-context.js?v=5.74";
-import { normaliserPlaner, nyPlanId, medStoppSattInn } from "./presentasjon-modell.js?v=5.74";
-import { setLenkeMenyProvider, kopierVisLenke } from "./ui-modal.js?v=5.74";
-import { escapeHtml } from "./util.js?v=5.74";
+import { onAuthChange, savePlan } from "./store.js?v=5.75";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.75";
+import { getState } from "./explore-context.js?v=5.75";
+import { normaliserPlaner, nyPlanId, medStoppSattInn, medStoppOppdatert } from "./presentasjon-modell.js?v=5.75";
+import { setLenkeMenyProvider, kopierVisLenke } from "./ui-modal.js?v=5.75";
+import { escapeHtml } from "./util.js?v=5.75";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen
@@ -41,6 +41,16 @@ export function erLaererBruker(user) {
 export async function settInnStopp(planId, indeks, stopp) {
   if (!planeneLastet()) throw new Error("kjøreplanene er ikke lastet ennå");
   const planer = medStoppSattInn(planerNaa(), planId, indeks, stopp);
+  await savePlan(planId, uttenMerke(planer[planId]));
+  return planer[planId];
+}
+
+// Nivå og unntak på ett stopp («Husk visningen på dette stoppet», v5.75).
+// Samme regler som settInnStopp: ferskeste planer i state, bare denne planen
+// skrives. Returnerer planen slik den ble lagret.
+export async function oppdaterStopp(planId, indeks, endring) {
+  if (!planeneLastet()) throw new Error("kjøreplanene er ikke lastet ennå");
+  const planer = medStoppOppdatert(planerNaa(), planId, indeks, endring);
   await savePlan(planId, uttenMerke(planer[planId]));
   return planer[planId];
 }

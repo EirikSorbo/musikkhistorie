@@ -30,16 +30,19 @@ test("funn 12: tilbake i samme plan beholder posisjonen, og slektstre-stoppet ho
 });
 
 test("funn 8: editoren sjekker hvert mål mot det åpneren slår opp i, og venter på dataene", () => {
-  const v = kilde("visning.js");
-  assert.match(v, /case "sjanger":\n\s*return \{ tekst: `\$\{navn\}: \$\{m\.id\}`, feil: GENEALOGY\.some\(\(n\) => n\.l === m\.id \|\| n\.f === m\.id\) \? "" : DOD \};/,
+  // Etikettene flyttet til js/stopp-etikett.js i v5.75 (delt med
+  // verktøylinja i presentasjonen); reglene er de samme.
+  const v = kilde("stopp-etikett.js");
+  assert.match(v, /case "sjanger":\n\s*return ut\(m\.id, GENEALOGY\.some\(\(n\) => n\.l === m\.id \|\| n\.f === m\.id\) \? \{\} : \{ feil: DOD \}\);/,
     "røttene og Reggae er sjanger-noder uten metasjanger");
   for (const hva of ["varmekart", "undersjanger", "kobling", "instrument"]) {
     assert.match(v, new RegExp(`case "${hva}":`), `${hva} har egen sjekk`);
   }
-  assert.match(v, /feil: edgeExists\(m\.id\) \? "" : DOD/);
-  assert.match(v, /return s\.artistsLoaded \? \{ tekst: `\$\{navn\}: \$\{m\.id\}`, feil: DOD \} : \{ tekst: `\$\{navn\}: laster …`, laster: true \};/);
-  assert.match(v, /if \(kladd\) \{ if \(kladdVenter\) renderKladd\(\); return; \}/);
+  assert.match(v, /edgeExists\(m\.id\) \? \{\} : \{ feil: DOD \}/);
+  assert.match(v, /return s\.artistsLoaded \? ut\(m\.id, \{ feil: DOD \}\) : ut\("laster …", \{ laster: true \}\);/);
+  assert.match(kilde("visning.js"), /if \(kladd\) \{ if \(kladdVenter\) renderKladd\(\); return; \}/);
   assert.doesNotMatch(v, /GENEALOGY_MAIN_GENRES/, "det smale vokabularet ga de falske varslene");
+  assert.doesNotMatch(kilde("visning.js"), /GENEALOGY_MAIN_GENRES/);
   for (const f of ["landing.js", "tre-page.js", "teacher.js"]) {
     assert.ok((kilde(f).match(/visningTikk\(\);/g) || []).length >= 3, `${f}: kladden følger artist-, tech- og beskrivelsessnapshotene`);
   }
