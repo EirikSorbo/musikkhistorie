@@ -62,6 +62,34 @@
 .utskrift-deler-gruppe legend, .utskrift-form legend { padding: 0; font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
 .utskrift-deler-gruppe label, .utskrift-form label { display: inline-flex; align-items: center; gap: 5px; margin: 2px 12px 2px 0; font-size: 0.88rem; }
 
+/* v5.74: hint under knappene, meldingslinje, hurtigvalg for metasjangre,
+   sammenleggbare sjangergrupper, «ta ut»-knappene og «send til en annen
+   enhet». */
+.utskrift-hint { margin: 4px 0 0; font-size: 0.78rem; flex-basis: 100%; }
+#utskrift-melding { margin: 8px 0 0; font-size: 0.88rem; }
+#utskrift-melding:empty { display: none; }
+.utskrift-metaer { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; font-size: 0.85rem; }
+.utskrift-metaer:empty { display: none; }
+.utskrift-metaer .tag-meta-valg { cursor: pointer; }
+.utskrift-metaer .tag-meta-valg.er-med { opacity: 0.6; }
+.ut-sj-rad { display: flex; align-items: baseline; gap: 8px; }
+.ut-sj-rad label { flex: 1; }
+.ut-fold {
+  flex: none; font: inherit; font-size: 0.76rem; color: var(--muted); background: none;
+  border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; cursor: pointer; white-space: nowrap;
+}
+.ut-fold:hover { color: var(--text); border-color: var(--line-strong); }
+.ut-fold::before { content: "▾ "; font-size: 0.7rem; }
+.ut-sj.ut-lukket .ut-fold::before { content: "▸ "; }
+.utskrift-hurtig { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 8px; font-size: 0.85rem; }
+.utskrift-hurtig:empty { display: none; }
+.utskrift-del { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+.utskrift-del-hode { margin: 0 0 6px; font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.utskrift-del-rad { display: flex; gap: 12px; align-items: flex-start; }
+.utskrift-del-rad p { margin: 0 0 6px; font-size: 0.85rem; }
+.h-qr { flex: none; }
+.h-qr svg { display: block; width: 100%; height: 100%; }
+
 /* --- Heftet på skjerm ----------------------------------------------------- */
 .hefte {
   --h-tekst: #101a13; --h-demp: #4e6657; --h-demp2: #7d9885; --h-linje: #d5dfd8; --h-flate: #f1f5f2;
@@ -91,37 +119,56 @@
 .h-hint, .h-ingress { font-size: 9pt; color: var(--h-demp); margin-bottom: 4mm; }
 .h-mangler { color: var(--h-demp2); font-style: italic; }
 
-/* Forside */
-.h-forside { min-height: 240mm; display: flex; flex-direction: column; }
-.h-tittelblokk { margin-top: 70mm; border-left: 1.6mm solid var(--farge, #16a34a); padding-left: 7mm; }
+/* Forside (v5.74): tittelblokka øverst og innholdsfortegnelsen under. Små
+   hefter (h-forside-liten) har tittelblokka som et hode på første side, uten
+   sideskift etter. */
+.h-forside { display: flex; flex-direction: column; }
+.h-tittelblokk { margin-top: 24mm; border-left: 1.6mm solid var(--farge, #16a34a); padding-left: 7mm; }
+.h-forside-liten .h-tittelblokk { margin-top: 2mm; }
+.h-forside-liten .h-tidslinje { margin-top: 10mm; }
 .h-tittel { font-size: 30pt; line-height: 1.08; margin-bottom: 4mm; }
 .h-under { font-size: 14pt; color: var(--h-demp); font-family: "Space Grotesk", "Inter", sans-serif; }
 .h-meta { margin-top: 12mm; font-size: 9.5pt; color: var(--h-demp); }
 .h-meta strong { color: var(--h-tekst); font-weight: 600; }
 
-/* Innhold og tidslinje */
-.h-innhold h1 { font-size: 20pt; margin-bottom: 5mm; }
-.h-toc { list-style: none; margin: 0 0 10mm; padding: 0; }
-.h-toc li { padding: 1.6mm 0; border-bottom: 1px dotted var(--h-linje); }
-.h-toc-navn { display: block; font-weight: 600; }
+/* Innholdsfortegnelsen (på forsiden, v5.74) og tidslinja (egen side) */
+.h-innholdsliste { margin-top: 16mm; }
+.h-innholdsliste h2 { font-size: 13pt; margin-bottom: 3mm; }
+.h-toc { list-style: none; margin: 0; padding: 0; }
+.h-toc li { padding: 1.4mm 0; }
+.h-toc-rad { display: flex; align-items: baseline; gap: 2mm; }
+.h-toc-navn { font-weight: 600; }
+.h-toc-prikker { flex: 1; border-bottom: 1px dotted var(--h-demp2); transform: translateY(-1.1mm); }
+.h-toc-side { font-size: 9pt; color: var(--h-demp); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.h-toc.uten-sidetall .h-toc-prikker, .h-toc.uten-sidetall .h-toc-side { display: none; }
 .h-toc-under { display: block; padding-left: 6mm; font-size: 9.5pt; color: var(--h-demp); }
+.h-toc-hint { font-size: 7.5pt; color: var(--h-demp2); margin: 3mm 0 0; }
 .h-tidslinje h2 { font-size: 13pt; margin-bottom: 1.5mm; }
-.h-tl { display: grid; grid-template-columns: 34mm 1fr; row-gap: 1.6mm; font-size: 8.5pt; }
+/* Navnekolonnen er bredere og skriften mindre (v5.74), så navn som «Blind
+   Lemon Jefferson» ikke kuttes. */
+.h-tl { display: grid; grid-template-columns: 42mm 1fr; row-gap: 1.6mm; font-size: 8pt; }
 .h-tl-akse { grid-column: 2; position: relative; height: 4mm; font-size: 6.5pt; color: var(--h-demp2); border-bottom: 0.4pt solid var(--h-linje); margin-bottom: 1mm; }
 .h-tl-akse span { position: absolute; top: 0; transform: translateX(-50%); }
 .h-tl-navn { color: var(--h-tekst); padding-right: 3mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-tl-navn.sj { font-weight: 600; }
 .h-tl-spor { position: relative; height: 4mm; background-image: linear-gradient(to right, var(--h-linje) 0, var(--h-linje) 0.3pt, transparent 0.3pt); background-repeat: repeat-x; }
-.h-tl-stolpe { position: absolute; top: 0; height: 100%; border-radius: 1mm; }
+.h-tl-stolpe { position: absolute; top: 0; height: 100%; border-radius: 1mm; background: var(--stolpe, #16a34a); }
 .h-tl-stolpe.sjanger { opacity: 0.32; }
 .h-tl-stolpe.artist { top: 1mm; height: 2mm; }
-.h-tl-stolpe.apen { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+/* Åpne perioder tones ut mot høyre (v5.74), som i Sjangerperioder-kortet:
+   full farge til i dag leste som «alltid». */
+.h-tl-stolpe.apen {
+  border-top-right-radius: 0; border-bottom-right-radius: 0;
+  background: linear-gradient(to right, var(--stolpe, #16a34a) 0, var(--stolpe, #16a34a) 55%, transparent 100%);
+}
 
 /* På skjerm markeres sidestartene (ny side i utskriften) med en stiplet
    linje, så forhåndsvisningen forteller hvor heftet brytes. */
 @media screen {
   .h-familie, .h-nyside { margin-top: 14mm; padding-top: 8mm; border-top: 1px dashed var(--h-linje); }
   .h-innhold { margin-top: 10mm; padding-top: 8mm; border-top: 1px dashed var(--h-linje); }
+  /* Små hefter: første seksjon følger tittelblokka på samme side (v5.74). */
+  .h-forside-liten + .h-familie, .h-forside-liten + .h-nyside { margin-top: 8mm; padding-top: 0; border-top: 0; }
 }
 
 /* Familie- og sjangerhoder */
@@ -177,6 +224,23 @@
 .h-nr { display: inline-block; min-width: 4.4mm; height: 4.4mm; line-height: 4.4mm; padding: 0 1mm; text-align: center; border-radius: 2.2mm; background: var(--h-tekst); color: #fff; font-size: 7pt; font-weight: 600; vertical-align: 0.2mm; margin-left: 1mm; }
 .hefte.kompakt .h-kort { margin-top: 4mm; padding-top: 3mm; }
 .hefte.kompakt .h-kort-navn { font-size: 12.5pt; }
+/* Kompakt form har små bilder (v5.74), ikke ingen. */
+.hefte.kompakt .h-kort-kropp { grid-template-columns: 1fr 20mm; gap: 4mm; }
+.hefte.kompakt .h-kort-kropp.uten-bilde { grid-template-columns: 1fr; }
+.hefte.kompakt .h-bilde img { width: 20mm; height: 24mm; border-radius: 1.5mm; }
+.hefte.kompakt .h-bilde figcaption { display: none; }
+
+/* Koblingstekstene fra slektstreet (v5.74), under sjangerbeskrivelsen. */
+.h-koblinger { margin: 3mm 0 4mm; }
+.h-kobling { margin: 0 0 3mm; padding-left: 3mm; border-left: 0.5mm solid var(--h-linje); }
+.h-kobling-hode { margin: 0 0 1mm; font-size: 9.5pt; font-weight: 600; }
+.h-kobling-hode .h-etikett { color: var(--h-demp2); font-weight: 500; }
+.h-kobling .rt { font-size: 9.5pt; }
+
+/* «Spill hele lista» med QR-kode øverst i lytteseksjonen (v5.74). */
+.h-lytte-alle { margin: 0 0 5mm; }
+.h-qr-rad { display: flex; gap: 5mm; align-items: center; }
+.h-lytte-alle-tekst { margin: 0 0 1mm; font-size: 9.5pt; }
 
 /* Tiår, instrumenter, sider */
 .h-seksjon { margin-top: 2mm; }
@@ -202,10 +266,12 @@
   .topbar, .utskrift-panel, #banner, .sitefoot, #app-load-error, .modal-backdrop, #samle-bar, #pres-bar { display: none !important; }
   main.wrap { max-width: none; padding: 0; margin: 0; }
   .hefte { width: auto; max-width: none; margin: 0; padding: 0; box-shadow: none; border-radius: 0; }
-  .h-forside, .h-innhold { break-after: page; page-break-after: always; min-height: 0; }
-  .h-forside { min-height: 240mm; }
+  .h-forside, .h-innhold { break-after: page; page-break-after: always; }
+  /* Små hefter (v5.74): tittelblokka er et hode, ikke en side for seg. */
+  .h-forside-liten { break-after: auto; page-break-after: auto; }
   .h-familie, .h-nyside { break-before: page; page-break-before: always; }
-  .h-kort, .h-familie-hode, .h-seksjon-hode, .h-sjanger-hode, .h-ordliste, .h-tidslinje { break-inside: avoid; page-break-inside: avoid; }
+  .h-forside-liten + .h-familie, .h-forside-liten + .h-nyside { break-before: auto; page-break-before: auto; }
+  .h-kort, .h-familie-hode, .h-seksjon-hode, .h-sjanger-hode, .h-ordliste, .h-tidslinje, .h-qr-rad, .h-kobling { break-inside: avoid; page-break-inside: avoid; }
   .hefte h1, .hefte h2, .hefte h3 { break-after: avoid; page-break-after: avoid; }
   .h-bilde img { max-height: 44mm; }
   .h-kolofon { break-inside: avoid; }

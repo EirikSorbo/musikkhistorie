@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.73";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.73";
+import { metaRader } from "../../js/ui-helpers.js?v=5.74";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.74";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -654,4 +654,42 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
   assert.match(spiller, /\} else \{\n(\s*\/\/[^\n]*\n)*\s*for \(const k of \[LAGRING\.plan, LAGRING\.stopp\]\) \{ try \{ sessionStorage\.removeItem\(k\); \} catch \(e\) \{\} \}/);
   assert.match(spiller, /export function aktivPlanId\(\)/);
   assert.match(spiller, /export function avsluttPresentasjon\(\)/);
+});
+
+// ---------------------------------------------------------------------------
+//  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
+// ---------------------------------------------------------------------------
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert } from "../../js/presentasjon-modell.js?v=5.74";
+
+test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
+  assert.equal(YT_LISTE_MAKS, 50);
+  assert.deepEqual(ytSpillelisteUrl([]), []);
+  assert.deepEqual(ytSpillelisteUrl(["dQw4w9WgXcQ", "dQw4w9WgXcQ", "GtDlZdhHRCI", "x", null]),
+    ["https://www.youtube.com/watch_videos?video_ids=dQw4w9WgXcQ,GtDlZdhHRCI"]);
+  const mange = Array.from({ length: 60 }, (_, i) => `video${String(i).padStart(5, "0")}`);
+  const lenker = ytSpillelisteUrl(mange);
+  assert.equal(lenker.length, 2);
+  assert.equal(lenker[0].split(",").length, 50);
+  assert.equal(lenker[1].split(",").length, 10);
+});
+
+test("ytEmbedUrl: en kø av videoer blir playlist-parameteret, aldri sammen med en ekte liste", () => {
+  const u = ytEmbedUrl("https://youtu.be/dQw4w9WgXcQ", { kø: ["GtDlZdhHRCI", "dQw4w9WgXcQ", "-SBmury81Ws", "x"] });
+  assert.match(u, /[?&]playlist=GtDlZdhHRCI%2C-SBmury81Ws(&|$)/, "hovedvideoen og ugyldige ID-er er ute av køen");
+  assert.doesNotMatch(ytEmbedUrl("https://youtu.be/dQw4w9WgXcQ"), /playlist=/);
+  assert.doesNotMatch(ytEmbedUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLabc123456789", { kø: ["GtDlZdhHRCI"] }), /playlist=/);
+});
+
+test("medStoppOppdatert: nivå og unntak på ett stopp, tomt unntak fjerner, inndata røres ikke", () => {
+  const planer = { p1: { tittel: "T", laget: "", stopp: [{ vis: "artist:a" }, { vis: "artist:b", nivaa: 1, unntak: { "artist.verk": true } }] } };
+  const ny = medStoppOppdatert(planer, "p1", 0, { nivaa: 2, unntak: { "artist.bilde": false } });
+  assert.deepEqual(ny.p1.stopp[0], { vis: "artist:a", nivaa: 2, unntak: { "artist.bilde": false } });
+  assert.deepEqual(ny.p1.stopp[1], planer.p1.stopp[1], "de andre stoppene står");
+  assert.deepEqual(planer.p1.stopp[0], { vis: "artist:a" }, "inndata urørt");
+  const uten = medStoppOppdatert(planer, "p1", 1, { unntak: {} });
+  assert.deepEqual(uten.p1.stopp[1], { vis: "artist:b", nivaa: 1 }, "tomt unntak fjerner feltet, nivået beholdes");
+  const bareNivaa = medStoppOppdatert(planer, "p1", 1, { nivaa: 3 });
+  assert.deepEqual(bareNivaa.p1.stopp[1], { vis: "artist:b", nivaa: 3, unntak: { "artist.verk": true } });
+  assert.throws(() => medStoppOppdatert(planer, "nope", 0, {}));
+  assert.throws(() => medStoppOppdatert(planer, "p1", 5, {}));
 });

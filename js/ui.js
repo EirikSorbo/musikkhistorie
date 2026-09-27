@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.73";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.73";
-import { punkterHtml } from "./punkter.js?v=5.73";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.73";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.73";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.73";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.74";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.74";
+import { punkterHtml } from "./punkter.js?v=5.74";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.74";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.74";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.74";
 import {
   escapeHtml,
   linkDesc,
@@ -38,13 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.73";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.73";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.73";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.73";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.73";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.73";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.73";
+} from "./ui-helpers.js?v=5.74";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.74";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.74";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.74";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.74";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.74";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.74";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.74";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -646,10 +647,22 @@ export function openArtistListModal(title, list, onArtistClick, emptyText = "Ing
 
 // Fyller og åpner spilleliste-popupen (#modal-spilleliste).
 export function openPlaylistModal(fullName, node, artists) {
-  const { total, html } = buildPlaylistHtml(node, artists);
+  const { total, html, ider } = buildPlaylistHtml(node, artists);
   document.getElementById("pl-title").textContent = `Spilleliste: ${fullName} (${total})`;
-  document.getElementById("pl-body").innerHTML = html;
+  document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
   modalOpen(document.getElementById("modal-spilleliste"));
+}
+
+// «Spill alle på YouTube» (v5.74): én lenke som spiller alle videoene i lista
+// etter hverandre (watch_videos, se ytSpillelisteUrl). Bare når det er minst to
+// YouTube-videoer; søkelenker og andre verter har ingen ID og telles ikke.
+// Over 50 videoer blir det flere lenker («del 1», «del 2»).
+function spillAlleHtml(ider) {
+  const lenker = ytSpillelisteUrl(ider);
+  if (!lenker.length || (ider || []).length < 2) return "";
+  const antall = new Set(ider).size;
+  return `<p class="pl-alle">${lenker.map((url, i) =>
+    `<a class="btn ghost small" href="${escapeHtml(url)}" target="_blank" rel="noopener">Spill alle ${antall} på YouTube${lenker.length > 1 ? ` (del ${i + 1} av ${lenker.length})` : ""}</a>`).join(" ")}</p>`;
 }
 
 // Bygger HTML for spilleliste-popup: KUN lytteeksempler (musicExamples) — de
@@ -682,6 +695,8 @@ function playlistRows(list, sj = null) {
   const exOk = (m) => !sj || !m.genre || String(m.genre).toLowerCase() === sj;
 
   const seen = new Set();
+  // Video-ID-ene i lista, i samme rekkefølge som radene, til «Spill alle».
+  const ider = [];
   const items = list.flatMap((a) => {
     const rows = [];
     const nameLow = a.name.toLowerCase();
@@ -696,6 +711,8 @@ function playlistRows(list, sj = null) {
       const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
       if (seen.has(key)) return;
       seen.add(key);
+      const video = ytMaal(m.url)?.video;
+      if (video) ider.push(video);
       const yInfo = musicExampleLabel(m);
       rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">· ${escapeHtml(a.name)}</span> ${rowTag(m)}</li>`);
     });
@@ -703,8 +720,8 @@ function playlistRows(list, sj = null) {
   });
 
   const total = items.length;
-  if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>` };
-  return { total, html: `<ul class="pl-list">${items.join("")}</ul>` };
+  if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>`, ider: [] };
+  return { total, html: `<ul class="pl-list">${items.join("")}</ul>`, ider };
 }
 
 // Antall lytteeksempler i en sjangers spilleliste — SAMME logikk som popupen
@@ -725,8 +742,8 @@ export function countArtistExamples(list) {
 }
 
 export function openArtistsPlaylistModal(title, list) {
-  const { total, html } = playlistRows([...(list || [])].sort(byInfluenceThenName));
+  const { total, html, ider } = playlistRows([...(list || [])].sort(byInfluenceThenName));
   document.getElementById("pl-title").textContent = `${title} (${total})`;
-  document.getElementById("pl-body").innerHTML = html;
+  document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
   modalOpen(document.getElementById("modal-spilleliste"));
 }

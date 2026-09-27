@@ -9,9 +9,9 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, heltPensum,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE, ROTTER,
-} from "../../js/utskrift-modell.js?v=5.73";
-import { isVisible } from "../../js/limits.js?v=5.73";
-import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=5.73";
+} from "../../js/utskrift-modell.js?v=5.74";
+import { isVisible } from "../../js/limits.js?v=5.74";
+import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=5.74";
 
 const NAA = 2026;
 
@@ -20,7 +20,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.73rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=5.74rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -177,7 +177,8 @@ test("«som valgt» følger utvalgets rekkefølge i stedet for den kuraterte", (
 test("sjangerkortet: epoke, varmestripe, slektskap og kilder fra data", () => {
   const m = settSammen(["sjanger:Electric blues", "sjanger:Blues"], DATA, STUDENT);
   const blues = m.familier[0].hodeKort;
-  assert.equal(blues.era, "ca. 1900–i dag. ca. 1900");
+  // Friteksten «ca. 1900» gjentar bare startåret og utelates (v5.74).
+  assert.equal(blues.era, "ca. 1900–i dag");
   assert.equal(blues.apen, true);
   assert.deepEqual(blues.stripe.verdier, [2, 4, 4, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2]);
   assert.ok(blues.relasjoner.fra.length > 0, "vokste ut av røttene");
@@ -490,4 +491,69 @@ test("tittel: bare tiår, bare innovasjoner, ellers «Pensumutdrag»", () => {
   assert.equal(foreslaaTittel(settSammen(["instrument:Gitar"], DATA, STUDENT)), "Instrumentene");
   assert.equal(foreslaaTittel(settSammen([], DATA, STUDENT)), "Pensumutdrag");
   assert.equal(foreslaaTittel(null), "Pensumutdrag");
+});
+
+// ---------------------------------------------------------------------------
+//  v5.74: koblingstekster, sideanslag, kjøreplan av heftet, små hefter
+// ---------------------------------------------------------------------------
+import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift-modell.js?v=5.74";
+import { GENEALOGY, edgeKey } from "../../js/genre-model.js?v=5.74";
+
+test("koblingstekster: av som standard, med for læreren når valget er på, aldri for studenter mens flagget står", () => {
+  assert.equal(STANDARD_DELER["sjanger.koblinger"], false, "et tillegg læreren velger til");
+  const n = GENEALOGY.find((x) => x.l === "Electric blues");
+  assert.ok(n && n.p.length, "Electric blues har en forelder i frøet");
+  const forelder = n.p[0];
+  const edgeDescs = { [edgeKey(forelder, n.id)]: { description: "Forsterkeren kom til bluesen." } };
+  const data = { ...DATA, edgeDescs };
+  const kortI = (m) => m.familier[0].sjangre[0] || m.familier[0].hodeKort;
+  assert.deepEqual(kortI(settSammen(["sjanger:Electric blues"], data, { ...LAERER })).koblinger, [], "valget er av som standard");
+  const med = kortI(settSammen(["sjanger:Electric blues"], data, { ...LAERER, deler: { "sjanger.koblinger": true } }));
+  assert.equal(med.koblinger.length, 1);
+  assert.equal(med.koblinger[0].etikett, "Vokste ut av");
+  assert.equal(med.koblinger[0].tekst, "Forsterkeren kom til bluesen.");
+  assert.equal(med.koblinger[0].vis, `kobling:${edgeKey(forelder, n.id)}`);
+  const student = kortI(settSammen(["sjanger:Electric blues"], data, { ...STUDENT, deler: { "sjanger.koblinger": true } }));
+  assert.deepEqual(student.koblinger, [], "flagget koblingsbeskrivelser holder tekstene ute for studenter");
+});
+
+test("anslagSider: grovt anslag fra tellingene, målt mot Blues-heftet", () => {
+  assert.equal(anslagSider({}), 0);
+  assert.equal(anslagSider({ artister: 1 }), 2);
+  const blues = anslagSider({ metasjangre: 1, sjangre: 3, artister: 25, tiaar: 12 });
+  assert.ok(blues >= 22 && blues <= 26, `Blues ≈ 24 sider, fikk ${blues}`);
+});
+
+test("planFraModell: heftets kort som stopp i heftets rekkefølge, hvert mål én gang", () => {
+  const m = settSammen(["metasjanger:Blues", "tech:elgitar", "tiår:1950"], DATA, { ...LAERER });
+  const stopp = planFraModell(m).map((s) => s.vis);
+  assert.equal(stopp[0], "sjanger:Blues", "familiens hode først");
+  assert.ok(stopp.includes("artist:bessie"));
+  assert.ok(stopp.includes("tech:elgitar"));
+  assert.ok(stopp.includes("tiår:1950:society"), "tiårene får samfunnsvisningen");
+  assert.equal(new Set(stopp).size, stopp.length, "hvert mål én gang");
+  assert.ok(stopp.indexOf("sjanger:Blues") < stopp.indexOf("artist:bessie"), "sjangeren står før artistene sine");
+  assert.deepEqual(planFraModell(null), []);
+});
+
+test("liten: høyst LITEN_GRENSE kort gir kompakt forside uten egen innholdsfortegnelse", () => {
+  assert.equal(LITEN_GRENSE, 3);
+  const ett = settSammen(["artist:bessie"], DATA, { ...STUDENT });
+  assert.equal(ett.kort, 1, "tiårene hun drar inn teller ikke");
+  assert.equal(ett.tellinger.tiaar, 2);
+  assert.equal(ett.liten, true);
+  assert.equal(settSammen(["metasjanger:Blues"], DATA, { ...STUDENT }).liten, false);
+});
+
+test("lytteliste bærer YouTube-ID-en til «Spill hele lista»", () => {
+  const m = settSammen(["artist:robert", "artist:muddy"], DATA, { ...STUDENT });
+  assert.deepEqual(m.lytteliste.map((l) => l.video), ["GtDlZdhHRCI", "-SBmury81Ws"]);
+});
+
+test("pensumMetasjangre: den kuraterte rekkefølgen uten Pop og Rock, delt av «Velg alt» og hurtigvalgene", () => {
+  const metaer = pensumMetasjangre();
+  assert.ok(metaer.includes("Blues"));
+  assert.ok(!metaer.includes("Pop") && !metaer.includes("Rock"));
+  assert.equal(new Set(metaer).size, metaer.length);
+  for (const m of metaer) assert.ok(heltPensum(DATA).includes(`metasjanger:${m}`));
 });

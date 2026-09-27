@@ -12,17 +12,17 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.73";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.73";
-import { renderRichText } from "./rich-text.js?v=5.73";
-import { punkterHtml } from "./punkter.js?v=5.73";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.73";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=5.73";
-import { modalOpen } from "./ui-modal.js?v=5.73";
-import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.73";
-import { wireProposeFoot } from "./ui-edit.js?v=5.73";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.73";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.73";
+import { wireAllLinks } from "./linkify.js?v=5.74";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.74";
+import { renderRichText } from "./rich-text.js?v=5.74";
+import { punkterHtml } from "./punkter.js?v=5.74";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.74";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.74";
+import { modalOpen } from "./ui-modal.js?v=5.74";
+import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.74";
+import { wireProposeFoot } from "./ui-edit.js?v=5.74";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.74";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.74";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -66,7 +66,9 @@ export function eraText(resolved) {
 // («midten av 1940-tallet»), og skal stå selv når årstallene er utfylt.
 export function eraLine(resolved) {
   const aar = eraYears(resolved);
-  const ord = (resolved?.era || "").trim();
+  // Friteksten utelates når den bare gjentar årstallene (v5.74): «ca. 1900»
+  // eller «1930-tallet» ved siden av samme startår ga «ca. 1900–i dag. ca. 1900».
+  const ord = epokeFritekst(resolved);
   if (!aar) return ord;
   if (!ord) return aar;
   return `${aar}. ${ord}`;
@@ -164,10 +166,19 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
 
   modal.dataset.vis = `sjanger:${n.l}`;   // «Kopier lenke» (v5.22)
 
-  const inf = n.p.map((p) => escapeHtml(map[p]?.f || p)).join(", ") || "—";
-  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => escapeHtml(x.f)).join(", ") || "—";
+  // Tomme linjer utelates (v5.74): røttene har ingenting å vokse ut av, og 12
+  // av 53 sjangre har ingen barn. En tankestrek som plassholder leste som et
+  // hull i pensumet, også på lerretet i presentasjonen.
+  const inf = n.p.map((p) => escapeHtml(map[p]?.f || p)).join(", ");
+  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => escapeHtml(x.f)).join(", ");
   const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
+  const relasjoner = [
+    inf ? `<p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>` : "",
+    reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : "",
+    grewInto ? `<p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>` : "",
+    reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : "",
+  ].filter(Boolean).join("\n    ");
   // Tre-noder er på «main»-nivå. Hent beskrivelse/kilder nivå-bevisst — kun
   // fra data (ingen fallback; mangler teksten, vises missingDesc under).
   // Delt resolver med lærerens editor, så de aldri leser ulike dokumenter.
@@ -192,11 +203,7 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
     ${sekt("punkter", punkterHtml(resolved.punkter, lc))}
     ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
     ${sekt("lytt", (onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : "")}
-    ${sekt("relasjoner", `
-    <p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>
-    ${reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : ""}
-    <p class="gx-rel"><strong>Førte videre til:</strong> ${grewInto}</p>
-    ${reactedBy.length ? `<p class="gx-rel gx-react-rel"><strong>Reaksjoner mot denne:</strong> ${reactedBy.join(", ")}</p>` : ""}`)}
+    ${sekt("relasjoner", relasjoner)}
     ${sekt("kilder", kilderHtml)}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireAllLinks(mBody, lc);

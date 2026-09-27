@@ -21,29 +21,32 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.73";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.73";
-import { onAuthChange } from "./store.js?v=5.73";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.73";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.73";
-import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.73";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.73";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.73";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.73";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.73";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.73";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.73";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.73";
-import { artistStripHtml } from "./artist-strip.js?v=5.73";
-import { DECADES, isVisible } from "./limits.js?v=5.73";
-import { askChoice } from "./ui-modal.js?v=5.73";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.73";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.74";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.74";
+import { onAuthChange, savePlan } from "./store.js?v=5.74";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.74";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.74";
+import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.74";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.74";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.74";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.74";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.74";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.74";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.74";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.74";
+import { artistStripHtml } from "./artist-strip.js?v=5.74";
+import { DECADES, isVisible } from "./limits.js?v=5.74";
+import { askChoice, kopierTilUtklipp } from "./ui-modal.js?v=5.74";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.74";
+import { ytSpillelisteUrl, nyPlanId } from "./presentasjon-modell.js?v=5.74";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
 let modell = null;
 let tittelForslag = "Pensumutdrag";
 let tegnPlanlagt = false;
+// Tittelen heftet tegnes med nå (overlinjene på familie- og seksjonshodene).
+let tittelVist = "";
 
 const $ = (id) => document.getElementById(id);
 const h = escapeHtml;
@@ -86,6 +89,32 @@ function tegn() {
 // grått: «fra metasjangeren», «fra sjangeren», «utledet».
 const OPPHAV = { metasjanger: "fra metasjangeren", sjanger: "fra sjangeren", utledet: "utledet" };
 
+// Sammenleggbare sjangergrupper (v5.74): én metasjanger gir 40 til 90 rader,
+// så artistene under en sjanger kan legges sammen. Brukerens egne valg
+// huskes her for økta; ellers er gruppa lukket når hele metasjangeren er
+// valgt (de lange listene) og åpen når sjangeren er valgt for seg.
+const foldValg = new Map();
+
+function erApen(k, F) {
+  if (foldValg.has(k.vis)) return foldValg.get(k.vis);
+  return !F.valgt || k.artister.length <= 3;
+}
+
+function sjangerRad(k, F) {
+  const opphav = [ "sjanger", F.valgt && k.kilde === "metasjanger" ? "" : OPPHAV[k.kilde] ].filter(Boolean).join(" · ");
+  const n = k.artister.length;
+  const med = k.artister.filter((a) => a.med).length;
+  const teller = !n ? "" : med === n ? `${n} ${n === 1 ? "artist" : "artister"}` : `${med} av ${n} artister`;
+  const apen = erApen(k, F);
+  return `<li class="ut-sj${k.med ? "" : " ut-av"}${apen ? "" : " ut-lukket"}">` +
+    `<div class="ut-sj-rad"><label><input type="checkbox" data-huk="${h(k.vis)}"${k.med ? " checked" : ""}> ` +
+    `<span class="ut-navn">${h(k.navn)}</span> <span class="muted">${h(opphav)}</span></label>` +
+    (n ? `<button type="button" class="ut-fold" data-fold="${h(k.vis)}" aria-expanded="${apen ? "true" : "false"}" title="${apen ? "Skjul artistene" : "Vis artistene"}">${h(teller)}</button>` : "") +
+    `</div>` +
+    (n ? `<ul${apen ? "" : " hidden"}>${k.artister.map((a) => hukRad(a, "ut-art", "", F.valgt)).join("")}</ul>` : "") +
+    `</li>`;
+}
+
 // `stille` demper opphavet: under en valgt metasjanger kommer alt derfra, og
 // 25 rader med «fra metasjangeren» sier ingenting.
 function hukRad(x, klasse, hint, stille = false) {
@@ -102,18 +131,16 @@ function treHtml(tre) {
       ? `<label class="ut-fam-navn${F.valgt && !F.med ? " ut-av" : ""}"><input type="checkbox" data-huk="${h(F.vis)}" data-eksplisitt="1"${F.med ? " checked" : ""}> ` +
         `<b class="ut-navn">${h(F.navn)}</b> <span class="muted">${F.valgt ? "hele metasjangeren" : "metasjanger"}</span></label>`
       : `<span class="ut-fam-navn"><b>${h(F.navn)}</b></span>`;
-    const sjangre = F.sjangre.map((k) =>
-      `<li class="ut-sj${k.med ? "" : " ut-av"}"><label><input type="checkbox" data-huk="${h(k.vis)}"${k.med ? " checked" : ""}> ` +
-      `<span class="ut-navn">${h(k.navn)}</span> <span class="muted">${h(["sjanger", F.valgt && k.kilde === "metasjanger" ? "" : OPPHAV[k.kilde]].filter(Boolean).join(" · "))}</span></label>` +
-      `${k.artister.length ? `<ul>${k.artister.map((a) => hukRad(a, "ut-art", "", F.valgt)).join("")}</ul>` : ""}</li>`);
+    const sjangre = F.sjangre.map((k) => sjangerRad(k, F));
     const lose = F.lose.length ? `<li class="ut-lose"><ul>${F.lose.map((a) => hukRad(a, "ut-art", "", F.valgt)).join("")}</ul></li>` : "";
     return `<li class="ut-fam">${hode}<ul>${sjangre.join("")}${lose}</ul></li>`;
   });
   const grunnlag = tre.grunnlag === "artister" ? "utledet av artistenes innflytelsesperioder"
     : tre.grunnlag === "sjangre" ? "utledet av sjangrenes perioder" : "";
+  // Opphavet står én gang i gruppehodet (v5.74), ikke på hver tiårsrad.
   const tiaar = tre.tiaar.length
     ? `<li class="ut-gruppe"><span class="ut-fam-navn"><b>Tiår</b>${grunnlag ? ` <span class="muted">${h(grunnlag)}</span>` : ""}</span>` +
-      `<ul class="ut-rad">${tre.tiaar.map((x) => hukRad({ ...x, navn: `${x.tiaar}-tallet`, kilde: x.kilde === "valgt" ? "" : x.kilde }, "ut-tiaar", "")).join("")}</ul></li>`
+      `<ul class="ut-rad">${tre.tiaar.map((x) => hukRad({ ...x, navn: `${x.tiaar}-tallet`, kilde: "" }, "ut-tiaar", "")).join("")}</ul></li>`
     : "";
   const annet = tre.annet.length
     ? `<li class="ut-gruppe"><span class="ut-fam-navn"><b>Annet</b></span><ul>${tre.annet.map((x) => {
@@ -145,18 +172,136 @@ function statusTekst(sider) {
   return deler.filter(Boolean).join(" · ");
 }
 
+// Hurtigvalg for hele metasjangre (v5.74): samme liste som «Velg alt» bruker,
+// i pensumets rekkefølge. Valgte står dempet med hake.
+function tegnMetaChips(u) {
+  const el = $("utskrift-metaer");
+  if (!el) return;
+  if (!klar()) { el.innerHTML = ""; return; }
+  el.innerHTML = `<span class="muted">Hele metasjangre:</span> ` + pensumMetasjangre().map((m) => {
+    const vis = `${META_PREFIKS}${m}`;
+    const med = u.valg.includes(vis);
+    return `<button type="button" class="tag tag-meta-valg${med ? " er-med" : ""}" data-meta="${h(m)}"${med ? ' title="Er med i utskriften"' : ""}>${med ? "✓ " : ""}${h(m)}</button>`;
+  }).join("");
+}
+
+// Artistene i treet som mangler lytteeksempel eller bilde, og som er med nå.
+// Grunnlaget for hurtigvalgene «Ta ut …» under lista.
+function artisterUten(felt) {
+  if (!modell) return [];
+  const ut = [];
+  const sjekk = (a) => {
+    if (!a.med) return;
+    const id = String(a.vis).slice("artist:".length);
+    const art = state.artists.find((x) => x.id === id);
+    if (!art) return;
+    const har = felt === "lytte"
+      ? (art.musicExamples || []).some((m) => m && m.url)
+      : !!art.imageUrl;
+    if (!har) ut.push(a.vis);
+  };
+  for (const F of modell.tre.familier) {
+    for (const k of F.sjangre) k.artister.forEach(sjekk);
+    F.lose.forEach(sjekk);
+  }
+  return ut;
+}
+
+function tegnHurtig() {
+  const el = $("utskrift-hurtig");
+  if (!el) return;
+  if (!modell || modell.tom) { el.innerHTML = ""; return; }
+  const utenLytte = artisterUten("lytte").length;
+  const utenBilde = artisterUten("bilde").length;
+  if (!utenLytte && !utenBilde) { el.innerHTML = ""; return; }
+  el.innerHTML = `<span class="muted">Ta ut:</span>` +
+    (utenLytte ? ` <button type="button" class="btn ghost small" data-hurtig="lytte">artister uten lytteeksempel (${utenLytte})</button>` : "") +
+    (utenBilde ? ` <button type="button" class="btn ghost small" data-hurtig="bilde">artister uten bilde (${utenBilde})</button>` : "");
+}
+
+// «Send til en annen enhet» (v5.74): utvalget bor i denne nettleseren, og
+// studentene velger på telefonen og skriver ut fra en PC. Lenka bærer valg,
+// bortvalg og tittel (delene og formen velges på nytt der). QR-koden lages
+// av js/vendor/qrcode.js; blir lenka for lang for en kode, vises bare
+// «Kopier lenke».
+function delLenke(u) {
+  const url = new URL("utskrift.html", window.location.href);
+  url.searchParams.set("u", u.valg.join("|"));
+  if (u.fravalg.length) url.searchParams.set("x", u.fravalg.join("|"));
+  if (u.tittel) url.searchParams.set("t", u.tittel);
+  return url.href;
+}
+
+function tegnDel(u) {
+  const boks = $("utskrift-del-boks");
+  const qr = $("utskrift-qr");
+  if (!boks || !qr) return;
+  boks.hidden = !u.valg.length;
+  if (!u.valg.length) { qr.innerHTML = ""; return; }
+  const kode = qrSvg(delLenke(u), 34);
+  qr.innerHTML = kode;
+  qr.hidden = !kode;
+}
+
+// Utvalget fra en delt lenke (?u=…&x=…&t=…): skrives inn i nettleseren og
+// tas ut av adressen, så en omlasting ikke setter det inn på nytt.
+function lesUtvalgFraUrl() {
+  let q;
+  try { q = new URLSearchParams(window.location.search); } catch (e) { return; }
+  if (!q.has("u")) return;
+  const del = (s) => String(s || "").split("|").map((x) => x.trim()).filter(Boolean);
+  const u = lesUtvalg();
+  u.valg = del(q.get("u"));
+  u.fravalg = del(q.get("x"));
+  u.tittel = q.get("t") || "";
+  lagreUtvalg(normaliserLagret(u));
+  try {
+    const url = new URL(window.location.href);
+    for (const k of ["u", "x", "t"]) url.searchParams.delete(k);
+    window.history.replaceState(null, "", url);
+  } catch (e) {}
+}
+
+// QR-kode som SVG i oppgitt størrelse (mm), eller tom streng når biblioteket
+// mangler eller teksten er for lang.
+function qrSvg(tekst, mm = 26) {
+  const lag = window.qrcode;
+  if (typeof lag !== "function") return "";
+  try {
+    const qr = lag(0, "M");
+    qr.addData(String(tekst), "Byte");
+    qr.make();
+    return `<div class="h-qr" style="width:${mm}mm;height:${mm}mm" role="img" aria-label="QR-kode">${qr.createSvgTag({ scalable: true, margin: 0 })}</div>`;
+  } catch (e) {
+    return "";
+  }
+}
+
+let meldingTimer = null;
+function melding(tekst, ok = true) {
+  const el = $("utskrift-melding");
+  if (!el) return;
+  el.textContent = tekst;
+  el.className = "form-msg " + (ok ? "ok" : "err");
+  clearTimeout(meldingTimer);
+  if (tekst) meldingTimer = setTimeout(() => { el.textContent = ""; }, 8000);
+}
+
 function tegnPanel(u) {
   const status = $("utskrift-status");
   if (status) status.textContent = statusTekst(null);
   const antallEl = $("utskrift-antall-tekst");
   if (antallEl) antallEl.textContent = u.valg.length ? `(${u.valg.length} valgt)` : "";
 
+  tegnMetaChips(u);
   const liste = $("utskrift-liste");
   if (liste) {
     liste.innerHTML = u.valg.length
       ? treHtml(modell.tre)
       : `<li class="muted utskrift-tom-liste">Ingenting valgt ennå.</li>`;
   }
+  tegnHurtig();
+  tegnDel(u);
 
   const tittelFelt = $("utskrift-tittel");
   if (tittelFelt) {
@@ -181,6 +326,9 @@ function tegnPanel(u) {
   knapp("utskrift-skriv-ut", modell.tom || !klar());
   knapp("utskrift-alt", !klar());
   knapp("utskrift-toem", u.valg.length === 0);
+  // «Lag kjøreplan» (v5.74): bare i lærerøkt, og bare når heftet har kort.
+  const plan = $("utskrift-plan");
+  if (plan) { plan.hidden = !erLaerer; plan.disabled = modell.tom || !klar(); }
 }
 
 // --- Søk for å legge til -----------------------------------------------------
@@ -268,10 +416,11 @@ function punkterHtml(liste) {
 // Wikimedia lager ikke en miniatyr som er bredere enn originalen (svarer
 // 400), så noen kort fikk tomt bilde: T-Bone Walker og Little Walter i
 // Blues-heftet (målt 2026-09-25). Samme reserve som appens imgTag: data-full
-// bærer originalen, og feillytteren under bytter til den.
-function bildeHtml(bilde, hoyde = "") {
+// bærer originalen, og feillytteren under bytter til den. `bredde` er
+// miniatyrbredden (kompakt form ber om en smalere, v5.74).
+function bildeHtml(bilde, hoyde = "", bredde = 500) {
   if (!bilde) return "";
-  const thumb = wikimediaThumb(bilde.url, 500);
+  const thumb = wikimediaThumb(bilde.url, bredde);
   const src = thumb || bilde.url;
   return `<figure class="h-bilde"><img src="${h(src)}" alt="" decoding="async"${thumb ? ` data-full="${h(bilde.url)}"` : ""}${hoyde ? ` style="height:${hoyde}"` : ""}>` +
     `${bilde.kreditt ? `<figcaption>Foto: ${h(bilde.kreditt)}</figcaption>` : ""}</figure>`;
@@ -311,7 +460,9 @@ function faktaHtml(k) {
 }
 
 function artistKortHtml(k, d, kompakt, medNr) {
-  const bilde = !kompakt && d["artist.bilde"] ? bildeHtml(k.bilde) : "";
+  // Kompakt form (v5.74): et lite bilde ved navnet i stedet for ingen; det gir
+  // gjenkjenning uten å koste plass. CSS setter målene (20 × 24 mm).
+  const bilde = d["artist.bilde"] ? bildeHtml(k.bilde, kompakt ? "24mm" : "", kompakt ? 250 : 500) : "";
   const beskrivelse = d["artist.beskrivelse"]
     ? (k.beskrivelse ? rt(k.beskrivelse) : mangler("Beskrivelsen er ikke skrevet ennå."))
     : "";
@@ -351,11 +502,19 @@ function sjangerHodeHtml(k, d) {
     ${d["sjanger.relasjoner"] ? relasjonerHtml(k.relasjoner) : ""}`;
 }
 
+// Koblingstekstene (v5.74): strekene inn i og ut av sjangeren i slektstreet,
+// som prosa under beskrivelsen. Modellen har alt filtrert på flagget og valget.
+function koblingerHtml(k) {
+  if (!k.koblinger?.length) return "";
+  return `<div class="h-koblinger"><h3 class="h-del">Koblinger i slektstreet</h3>${k.koblinger.map((x) =>
+    `<div class="h-kobling"><p class="h-kobling-hode"><span class="h-etikett">${h(x.etikett)}</span> ${h(x.navn)}</p>${rt(x.tekst)}</div>`).join("")}</div>`;
+}
+
 function sjangerKroppHtml(k, d, kompakt, medNr) {
   const beskrivelse = d["sjanger.beskrivelse"]
     ? (k.beskrivelse ? rt(k.beskrivelse) : mangler("Beskrivelsen er ikke skrevet ennå."))
     : "";
-  return `${d["sjanger.punkter"] ? punkterHtml(k.punkter) : ""}${beskrivelse}
+  return `${d["sjanger.punkter"] ? punkterHtml(k.punkter) : ""}${beskrivelse}${koblingerHtml(k)}
     ${k.artister.map((a) => artistKortHtml(a, d, kompakt, medNr)).join("")}`;
 }
 
@@ -376,18 +535,22 @@ function ordlisteHtml(liste, tittel) {
     `<div><dt>${h(u.navn)}</dt><dd>${renderInline(u.tekst, {})}</dd></div>`).join("")}</dl></div>`;
 }
 
+// Overlinja på hodene bærer heftets tittel (v5.74): Safari lager ingen
+// løpende topptekst, så hvert kapittel skal si hvilket hefte det hører til.
+const overlinje = (hva) => `<p class="h-overlinje">${h(tittelVist)} · ${h(hva)}</p>`;
+
 function familieHtml(F, d, kompakt, medNr) {
   if (F.pseudo) {
-    return `<section class="h-familie" style="--farge:${h(F.farge)}">
-      <header class="h-familie-hode"><p class="h-overlinje">Undersjangre</p><h1>Undersjangre</h1></header>
+    return `<section class="h-familie" data-toc="familie:${h(F.navn)}" style="--farge:${h(F.farge)}">
+      <header class="h-familie-hode">${overlinje("Undersjangre")}<h1>Undersjangre</h1></header>
       ${ordlisteHtml(F.ordliste, "Undersjangre i utvalget")}
     </section>`;
   }
   const hode = F.hodeKort;
   const harKort = !!hode || F.sjangre.length > 0;
-  return `<section class="h-familie" style="--farge:${h(F.farge)}">
+  return `<section class="h-familie" data-toc="familie:${h(F.navn)}" style="--farge:${h(F.farge)}">
     <header class="h-familie-hode">
-      <p class="h-overlinje">${hode ? "Metasjanger og sjanger" : "Metasjanger"}</p>
+      ${overlinje(hode ? "Metasjanger og sjanger" : "Metasjanger")}
       <h1>${h(F.navn)}</h1>
       ${hode ? sjangerHodeHtml(hode, d) : ""}
     </header>
@@ -402,12 +565,14 @@ function familieHtml(F, d, kompakt, medNr) {
 function tidslinjeHtml(t) {
   const pct = (aar) => ((aar - t.start) / (t.slutt - t.start)) * 100;
   const tiaarBredde = (10 / (t.slutt - t.start)) * 100;
-  const rader = t.rader.map((r) => `<div class="h-tl-navn${r.type === "sjanger" ? " sj" : ""}">${h(r.navn)}</div>` +
+  // Fargen som variabel (v5.74): åpne perioder tones ut mot høyre i CSS, som
+  // Sjangerperioder-kortet gjør på skjermen, i stedet for full farge til i dag.
+  const rader = t.rader.map((r) => `<div class="h-tl-navn${r.type === "sjanger" ? " sj" : ""}" title="${h(r.navn)}">${h(r.navn)}</div>` +
     `<div class="h-tl-spor" style="background-size:${tiaarBredde.toFixed(3)}% 100%">` +
-    `<i class="h-tl-stolpe ${r.type}${r.apen ? " apen" : ""}" style="left:${pct(r.fra).toFixed(2)}%;width:${Math.max(0.7, pct(r.til) - pct(r.fra)).toFixed(2)}%;background:${h(r.farge)}"></i></div>`);
+    `<i class="h-tl-stolpe ${r.type}${r.apen ? " apen" : ""}" style="left:${pct(r.fra).toFixed(2)}%;width:${Math.max(0.7, pct(r.til) - pct(r.fra)).toFixed(2)}%;--stolpe:${h(r.farge)}"></i></div>`);
   return `<div class="h-tidslinje">
     <h2>Tidslinje over utvalget</h2>
-    <p class="h-hint">Sjangrene som brede stolper, artistene som streker. Årstallene er innflytelsesperiodene fra kortene; uten sluttår betyr fortsatt aktiv.</p>
+    <p class="h-hint">Sjangrene som brede stolper, artistene som streker. Årstallene er innflytelsesperiodene fra kortene; en stolpe som tones ut, er fortsatt aktiv.</p>
     <div class="h-tl">
       <div class="h-tl-akse">${t.ticks.map((x) => `<span style="left:${pct(x).toFixed(2)}%">${x}</span>`).join("")}</div>
       ${rader.join("")}
@@ -415,20 +580,10 @@ function tidslinjeHtml(t) {
   </div>`;
 }
 
-// Forsiden (brukervalg 2026-09-25): bare tittelblokka. Merket øverst og
-// «Slik er heftet bygd opp» er tatt bort.
-function forsideHtml(t, farge) {
-  return `<section class="h-forside">
-    <div class="h-tittelblokk" style="--farge:${h(farge)}">
-      <p class="h-overlinje">Pensumutdrag · MUR114</p>
-      <h1 class="h-tittel">${h(t)}</h1>
-      <p class="h-under">Populærmusikkhistorie</p>
-      <p class="h-meta">Laget <strong>${h(datoTekst())}</strong><br>Utvalg: <strong>${h(tellingerTekst(modell.tellinger))}</strong></p>
-    </div>
-  </section>`;
-}
-
-function innholdHtml() {
+// Innholdsfortegnelsen (v5.74): på forsiden, under tittelblokka. Hver rad
+// bærer nøkkelen til seksjonen sin (data-toc-ref), så sidetallene kan fylles
+// inn etter at heftet er tegnet og målt (fyllSidetall).
+function tocHtml() {
   const punkter = [];
   const navnAv = (liste) => liste.map((a) => a.navn);
   for (const F of modell.familier) {
@@ -436,22 +591,73 @@ function innholdHtml() {
     if (F.hodeKort?.artister.length) linjer.push(kortListe(navnAv(F.hodeKort.artister)));
     for (const k of F.sjangre) linjer.push(`${k.navn}${k.artister.length ? `: ${kortListe(navnAv(k.artister))}` : ""}`);
     if (F.loseArtister.length) linjer.push(kortListe(navnAv(F.loseArtister)));
-    punkter.push({ navn: F.navn, linjer });
+    punkter.push({ navn: F.navn, linjer, ref: `familie:${F.navn}` });
   }
-  if (modell.bakteppe.length) punkter.push({ navn: "Bakteppe", linjer: [modell.bakteppe.map((b) => `${b.tiaar}-tallet`).join(" · ")] });
-  if (modell.innovasjoner.length) punkter.push({ navn: "Innovasjoner", linjer: [kortListe(modell.innovasjoner.map((t) => t.navn))] });
-  if (modell.instrumenter.length) punkter.push({ navn: "Instrumenter", linjer: [kortListe(modell.instrumenter.map((i) => i.tittel))] });
-  for (const s of modell.sider) punkter.push({ navn: s.tittel, linjer: [] });
-  if (modell.lytteliste.length) punkter.push({ navn: "Lytteliste", linjer: [] });
-  return `<section class="h-innhold">
-    <h1>Innhold</h1>
-    <ul class="h-toc">${punkter.map((p) => `<li><span class="h-toc-navn">${h(p.navn)}</span>${p.linjer.map((l) => `<span class="h-toc-under">${h(l)}</span>`).join("")}</li>`).join("")}</ul>
-    ${modell.tidslinje ? tidslinjeHtml(modell.tidslinje) : ""}
+  if (modell.tidslinje) punkter.push({ navn: "Tidslinje over utvalget", linjer: [], ref: "tidslinje" });
+  if (modell.bakteppe.length) punkter.push({ navn: "Bakteppe", linjer: [modell.bakteppe.map((b) => `${b.tiaar}-tallet`).join(" · ")], ref: "bakteppe" });
+  if (modell.innovasjoner.length) punkter.push({ navn: "Innovasjoner", linjer: [kortListe(modell.innovasjoner.map((t) => t.navn))], ref: "innovasjoner" });
+  if (modell.instrumenter.length) punkter.push({ navn: "Instrumenter", linjer: [kortListe(modell.instrumenter.map((i) => i.tittel))], ref: "instrumenter" });
+  for (const s of modell.sider) punkter.push({ navn: s.tittel, linjer: [], ref: `side:${s.id}` });
+  if (modell.lytteliste.length) punkter.push({ navn: "Lytteliste", linjer: [], ref: "lytteliste" });
+  // Tidslinja står på side 2, altså før familiene: sorter etter rekkefølgen i
+  // heftet, som er den vi tegner i (tidslinja rett etter forsiden).
+  const rekkefolge = (p) => (p.ref === "tidslinje" ? 0 : 1);
+  punkter.sort((a, b) => rekkefolge(a) - rekkefolge(b));
+  return `<div class="h-innholdsliste">
+    <h2>Innhold</h2>
+    <ul class="h-toc">${punkter.map((p) =>
+      `<li><div class="h-toc-rad"><span class="h-toc-navn">${h(p.navn)}</span><span class="h-toc-prikker"></span><span class="h-toc-side" data-toc-ref="${h(p.ref)}"></span></div>` +
+      `${p.linjer.map((l) => `<span class="h-toc-under">${h(l)}</span>`).join("")}</li>`).join("")}</ul>
+    <p class="h-toc-hint" hidden>Sidetallene er anslag fra skjermen; utskriften kan avvike med en side.</p>
+  </div>`;
+}
+
+// Forsiden (v5.74): tittelblokka øverst og innholdsfortegnelsen under. Et
+// LITE hefte (modell.liten) får tittelblokka som et hode på første side, uten
+// innholdsfortegnelse og uten sideskift: ett artistkort skal ikke koste tre
+// ark. Tidslinja følger da rett under. (Merket «historieappen.no» og «Slik er
+// heftet bygd opp» er bevisst ute, brukervalg 2026-09-25.)
+function forsideHtml(t, farge) {
+  const liten = modell.liten;
+  return `<section class="h-forside${liten ? " h-forside-liten" : ""}" data-toc="forside">
+    <div class="h-tittelblokk" style="--farge:${h(farge)}">
+      <p class="h-overlinje">Pensumutdrag · MUR114</p>
+      <h1 class="h-tittel">${h(t)}</h1>
+      <p class="h-under">Populærmusikkhistorie</p>
+      <p class="h-meta">Laget <strong>${h(datoTekst())}</strong><br>Utvalg: <strong>${h(tellingerTekst(modell.tellinger))}</strong></p>
+    </div>
+    ${liten ? (modell.tidslinje ? tidslinjeHtml(modell.tidslinje) : "") : tocHtml()}
   </section>`;
 }
 
-function seksjonHode(overlinje, tittel) {
-  return `<header class="h-seksjon-hode"><p class="h-overlinje">${h(overlinje)}</p><h1>${h(tittel)}</h1></header>`;
+// Tidslinja på egen side etter forsiden (store hefter). Små hefter har den
+// på første side (forsideHtml).
+function tidslinjeSideHtml() {
+  if (modell.liten || !modell.tidslinje) return "";
+  return `<section class="h-innhold" data-toc="tidslinje">${tidslinjeHtml(modell.tidslinje)}</section>`;
+}
+
+// Fyller sidetallene i innholdsfortegnelsen fra anslaget (bare på skjermer
+// som bryter som papiret; ellers skjules prikkene og tallene).
+function fyllSidetall(anslag) {
+  const toc = $("hefte")?.querySelector(".h-toc");
+  if (!toc) return;
+  const hint = toc.parentElement?.querySelector(".h-toc-hint");
+  if (!anslag) {
+    toc.classList.add("uten-sidetall");
+    if (hint) hint.hidden = true;
+    return;
+  }
+  toc.classList.remove("uten-sidetall");
+  toc.querySelectorAll("[data-toc-ref]").forEach((sp) => {
+    const s = anslag.start.get(sp.dataset.tocRef);
+    sp.textContent = s ? `s. ${s}` : "";
+  });
+  if (hint) hint.hidden = false;
+}
+
+function seksjonHode(hva, tittel) {
+  return `<header class="h-seksjon-hode">${overlinje(hva)}<h1>${h(tittel)}</h1></header>`;
 }
 
 function bakteppeHtml(d) {
@@ -463,7 +669,7 @@ function bakteppeHtml(d) {
     ${d["tiaar.teknologi"] ? `<h3 class="h-del">Teknologi</h3>${tekst(b.teknologi)}` : ""}
     ${b.innovasjoner.length ? `<h3 class="h-del">Innovasjoner i tiåret</h3><p class="h-innov-liste">${b.innovasjoner.map((t) => `${h(t.navn)}${t.aar ? ` (${t.aar})` : ""}`).join(" · ")}</p>` : ""}
   </article>`);
-  return `<section class="h-seksjon h-nyside h-bakteppe" style="--farge:#534ab7">${seksjonHode("Bakteppe", "Tiårene")}${tiaar.join("")}</section>`;
+  return `<section class="h-seksjon h-nyside h-bakteppe" data-toc="bakteppe" style="--farge:#534ab7">${seksjonHode("Bakteppe", "Tiårene")}${tiaar.join("")}</section>`;
 }
 
 function techKortHtml(t, d, kompakt) {
@@ -473,7 +679,7 @@ function techKortHtml(t, d, kompakt) {
   else if (t.kategori) fakta.push(`<b>${h(t.kategori)}</b>`);
   if (t.instrument) fakta.push(h(t.instrument));
   if (t.iBrukTekst) fakta.push(h(t.iBrukTekst));
-  const bilde = !kompakt && d["tech.bilde"] ? bildeHtml(t.bilde, "30mm") : "";
+  const bilde = d["tech.bilde"] ? bildeHtml(t.bilde, kompakt ? "20mm" : "30mm", kompakt ? 250 : 500) : "";
   const beskrivelse = d["tech.beskrivelse"]
     ? (t.beskrivelse ? rt(t.beskrivelse) : mangler("Beskrivelsen er ikke skrevet ennå."))
     : "";
@@ -488,23 +694,40 @@ function techKortHtml(t, d, kompakt) {
 
 function innovasjonerHtml(d, kompakt) {
   if (!modell.innovasjoner.length) return "";
-  return `<section class="h-seksjon h-nyside h-innovasjoner" style="--farge:#d97706">${seksjonHode("Innovasjoner", "Teknologien bak lyden")}${modell.innovasjoner.map((t) => techKortHtml(t, d, kompakt)).join("")}</section>`;
+  return `<section class="h-seksjon h-nyside h-innovasjoner" data-toc="innovasjoner" style="--farge:#d97706">${seksjonHode("Innovasjoner", "Teknologien bak lyden")}${modell.innovasjoner.map((t) => techKortHtml(t, d, kompakt)).join("")}</section>`;
 }
 
 function instrumenterHtml() {
   if (!modell.instrumenter.length) return "";
   const deler = modell.instrumenter.map((i) => `<article class="h-instrument"><h2>${h(i.tittel)}</h2>${i.body.trim() ? rt(i.body) : mangler("Sammendraget er ikke skrevet ennå.")}</article>`);
-  return `<section class="h-seksjon h-nyside h-instrumenter" style="--farge:#0f766e">${seksjonHode("Instrumenter", "Instrumentenes utvikling")}${deler.join("")}</section>`;
+  return `<section class="h-seksjon h-nyside h-instrumenter" data-toc="instrumenter" style="--farge:#0f766e">${seksjonHode("Instrumenter", "Instrumentenes utvikling")}${deler.join("")}</section>`;
 }
 
 function siderHtml() {
-  return modell.sider.map((s) => `<section class="h-seksjon h-nyside h-side" style="--farge:#7c3aed">${seksjonHode("Det store bildet", s.tittel)}${s.body.trim() ? rt(s.body) : mangler("Teksten er ikke skrevet ennå.")}</section>`).join("");
+  return modell.sider.map((s) => `<section class="h-seksjon h-nyside h-side" data-toc="side:${h(s.id)}" style="--farge:#7c3aed">${seksjonHode("Det store bildet", s.tittel)}${s.body.trim() ? rt(s.body) : mangler("Teksten er ikke skrevet ennå.")}</section>`).join("");
+}
+
+// «Spill hele lista» (v5.74): én YouTube-lenke som spiller alle videoene i
+// lytteseksjonen, som QR-kode. Ingen skriver av en nettadresse fra et ark, og
+// en adresse på 200 tegn er uansett ikke til å skrive av. Over 50 videoer
+// deles lenka (YouTubes tak), én kode per del.
+function spillAlleHtml() {
+  const ider = modell.lytteliste.map((l) => l.video).filter(Boolean);
+  if (ider.length < 2) return "";
+  const lenker = ytSpillelisteUrl(ider);
+  const antall = new Set(ider).size;
+  return `<div class="h-lytte-alle">${lenker.map((url, i) => {
+    const kode = qrSvg(url, 26);
+    const del = lenker.length > 1 ? ` (del ${i + 1} av ${lenker.length})` : "";
+    return `<div class="h-qr-rad">${kode}<div><p class="h-lytte-alle-tekst"><strong>Spill hele lista${del}</strong> ${antall} videoer på YouTube${kode ? ": skann koden med mobilen." : "."}</p>${kode ? "" : `<p class="h-url">${h(kortUrl(url))}</p>`}</div></div>`;
+  }).join("")}</div>`;
 }
 
 function lyttelisteHtml() {
   if (!modell.lytteliste.length) return "";
   const rader = modell.lytteliste.map((l) => `<div class="h-lytte-rad"><span class="h-nr">${l.nr}</span><span>${h(l.artist)}: «${h(l.label)}»${h(musicExampleLabel(l))}<span class="h-url">${h(kortUrl(l.url))}</span></span></div>`);
-  return `<section class="h-seksjon h-lytteliste">${seksjonHode("Bakerst", "Lytteliste")}
+  return `<section class="h-seksjon h-lytteliste" data-toc="lytteliste">${seksjonHode("Bakerst", "Lytteliste")}
+    ${spillAlleHtml()}
     <div class="h-liste-2sp">${rader.join("")}</div>
   </section>`;
 }
@@ -531,27 +754,40 @@ function settSidestil(t) {
     + `@page :first { @top-left { content: none; } }`;
 }
 
+// Sideanslaget: { sider, start } der start er Map fra seksjonsnøkkel
+// (data-toc) til første side, eller null på smal skjerm (bryter ikke som
+// papiret). Seksjonene som starter på ny side (css/utskrift.css) åpner hver
+// sin gruppe; lyttelista og kolofonen flyter inn i gruppa foran. Et lite
+// hefte (h-forside-liten) har ingen sideskift etter forsiden, så den første
+// seksjonen etter den hører til samme gruppe.
 function sideanslag() {
   const el = $("hefte");
   if (!el) return null;
   const mm = 96 / 25.4;
-  // A4 minus margene i css/utskrift.css. Smal skjerm bryter ikke som papiret.
   if (el.clientWidth < 170 * mm) return null;
   const perSide = 263 * mm;
-  // Seksjonene som starter på ny side (css/utskrift.css) åpner hver sin
-  // gruppe; lyttelista, kildene og kolofonen flyter inn i gruppa foran.
-  const grupper = [];
+  const start = new Map();
+  let total = 0;
   let gruppe = null;
+  let gruppeStart = 1;
+  let litenForsideForan = false;
+  const lukk = () => { if (gruppe) total += Math.max(1, Math.ceil(gruppe.h / perSide)); gruppe = null; };
   el.querySelectorAll(":scope > section, :scope > footer").forEach((s) => {
     const c = s.classList;
-    if (!gruppe || c.contains("h-familie") || c.contains("h-nyside") || c.contains("h-forside") || c.contains("h-innhold")) {
+    const bryter = c.contains("h-familie") || c.contains("h-nyside") || c.contains("h-forside") || c.contains("h-innhold");
+    if (!gruppe || (bryter && !litenForsideForan)) {
+      lukk();
       gruppe = { h: 0 };
-      grupper.push(gruppe);
+      gruppeStart = total + 1;
     }
+    const nokkel = s.dataset.toc;
+    if (nokkel && !start.has(nokkel)) start.set(nokkel, gruppeStart + Math.floor(gruppe.h / perSide));
     gruppe.h += s.offsetHeight;
-    if (c.contains("h-forside") || c.contains("h-innhold")) gruppe = null;   // break-after: page
+    litenForsideForan = c.contains("h-forside-liten");
+    if ((c.contains("h-forside") && !litenForsideForan) || c.contains("h-innhold")) lukk();   // break-after: page
   });
-  return grupper.reduce((n, g) => n + Math.max(1, Math.ceil(g.h / perSide)), 0);
+  lukk();
+  return { sider: total, start };
 }
 
 function tegnHefte(u) {
@@ -574,13 +810,14 @@ function tegnHefte(u) {
     return;
   }
   const t = tittelNaa();
+  tittelVist = t;
   const d = modell.deler;
   const kompakt = !!u.form.kompakt;
   const medNr = modell.lytteliste.length > 0;
   const farge = modell.familier.find((F) => !F.pseudo)?.farge || "#16a34a";
   el.innerHTML = [
     forsideHtml(t, farge),
-    innholdHtml(),
+    tidslinjeSideHtml(),
     ...modell.familier.map((F) => familieHtml(F, d, kompakt, medNr)),
     bakteppeHtml(d),
     innovasjonerHtml(d, kompakt),
@@ -591,7 +828,9 @@ function tegnHefte(u) {
   ].join("");
   settSidestil(t);
   document.title = `${t} – Utskrift`;
-  const sider = sideanslag();
+  const anslag = sideanslag();
+  fyllSidetall(anslag);
+  const sider = anslag?.sider || null;
   const status = $("utskrift-status");
   if (status) status.textContent = statusTekst(sider);
   const knapp = $("utskrift-skriv-ut");
@@ -705,20 +944,93 @@ function koble() {
   });
 
   // «Velg alt» (v5.64): hele pensumet legges til det som alt står der;
-  // tittelen settes bare når feltet er tomt.
+  // tittelen settes bare når feltet er tomt. Dialogen sier hvor langt heftet
+  // blir (v5.74): et grovt anslag fra tellingene, før noe er tegnet.
   $("utskrift-alt")?.addEventListener("click", async () => {
     if (!klar()) return;
     const alt = heltPensum(state);
+    const u0 = lesUtvalg();
+    const hele = settSammen({ valg: [...u0.valg, ...alt], fravalg: u0.fravalg }, state, {
+      deler: u0.deler, form: u0.form, erLaerer,
+      skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN, punkterSkjult: PUNKTER_BARE_I_PRESENTASJON,
+    });
+    const sider = anslagSider(hele.tellinger);
     const ok = await askChoice({
       title: "Velg alt",
-      text: "Heftet blir langt. Sikker på at du vil legge til alt?",
-      buttons: [{ label: "Legg til alt", value: true, className: "primary" }, { label: "Avbryt", value: false }],
+      text: `Hele pensumet blir et hefte på cirka ${sider} sider (${tellingerTekst(hele.tellinger)}). Vil du heller velge én metasjanger om gangen, står de som knapper over lista.`,
+      buttons: [{ label: "Legg til alt likevel", value: true, className: "primary" }, { label: "Avbryt", value: false }],
       dismissValue: false,
     });
     if (!ok) return;
     leggTil(alt);
     const u = lesUtvalg();
     if (!u.tittel) { u.tittel = "Hele pensumet"; lagreUtvalg(u); }
+  });
+
+  // Hurtigvalg for hele metasjangre (v5.74).
+  $("utskrift-metaer")?.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-meta]");
+    if (!b) return;
+    leggTil(`${META_PREFIKS}${b.dataset.meta}`);
+  });
+
+  // Sammenleggbare sjangergrupper (v5.74): valget huskes for økta.
+  $("utskrift-liste")?.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-fold]");
+    if (!b) return;
+    const vis = b.dataset.fold;
+    const li = b.closest(".ut-sj");
+    const apen = b.getAttribute("aria-expanded") === "true";
+    foldValg.set(vis, !apen);
+    b.setAttribute("aria-expanded", apen ? "false" : "true");
+    b.title = apen ? "Vis artistene" : "Skjul artistene";
+    li?.classList.toggle("ut-lukket", apen);
+    const ul = li?.querySelector(":scope > ul");
+    if (ul) ul.hidden = apen;
+  });
+
+  // «Ta ut artister uten lytteeksempel/bilde» (v5.74): én lagring for alle.
+  $("utskrift-hurtig")?.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-hurtig]");
+    if (!b) return;
+    hukFlere(artisterUten(b.dataset.hurtig), false);
+  });
+
+  // «Send til en annen enhet» (v5.74): lenka med utvalget på utklippstavla.
+  $("utskrift-del-kopier")?.addEventListener("click", async () => {
+    const lenke = delLenke(lesUtvalg());
+    const msg = $("utskrift-del-msg");
+    try {
+      await kopierTilUtklipp(lenke);
+      if (msg) msg.textContent = "Lenke kopiert.";
+    } catch (e) {
+      window.prompt("Kopier lenken:", lenke);
+      if (msg) msg.textContent = "";
+    }
+    setTimeout(() => { if (msg) msg.textContent = ""; }, 3000);
+  });
+
+  // «Lag kjøreplan av utvalget» (v5.74, lærer): heftets kort blir stopp i
+  // heftets rekkefølge, som en ny plan under Visning.
+  $("utskrift-plan")?.addEventListener("click", async () => {
+    if (!erLaerer || !modell || modell.tom) return;
+    const stopp = planFraModell(modell);
+    if (!stopp.length) return;
+    if (!state.contentLoaded) { melding("Kjøreplanene er ikke lastet ennå. Vent litt og prøv igjen.", false); return; }
+    const tittel = tittelNaa();
+    const ok = await askChoice({
+      title: "Lag kjøreplan av utvalget",
+      text: `«${tittel}» får ${stopp.length} stopp i heftets rekkefølge. Du finner den under Visning etterpå, og kan endre den der.`,
+      buttons: [{ label: "Lag kjøreplanen", value: true, className: "primary" }, { label: "Avbryt", value: false }],
+      dismissValue: false,
+    });
+    if (!ok) return;
+    try {
+      await savePlan(nyPlanId(), { tittel, laget: new Date().toISOString(), stopp });
+      melding(`Kjøreplanen «${tittel}» er lagret. Åpne Visning (ikonet i toppmenyen) for å spille den.`);
+    } catch (e) {
+      melding(`Kjøreplanen ble ikke lagret (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`, false);
+    }
   });
 }
 
@@ -739,6 +1051,8 @@ function init() {
     }
     return;
   }
+  // Et utvalg sendt fra en annen enhet (v5.74) skrives inn før noe tegnes.
+  lesUtvalgFraUrl();
   initUtskriftValg({ hentData: () => state });
   koble();
   document.addEventListener(UTSKRIFT_HENDELSE, planleggTegning);
@@ -764,6 +1078,8 @@ function init() {
       onContent: planleggTegning,
       onDecades: planleggTegning,
       onTech: planleggTegning,
+      // Koblingstekstene (v5.74) bor i sin egen samling.
+      onEdgeDescs: planleggTegning,
     });
   });
 }

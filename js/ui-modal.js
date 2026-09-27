@@ -140,7 +140,7 @@ export const VISNING_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill
 // innebygde/administrerte nettlesere kan nekte Clipboard-API-et («Write
 // permission denied») selv med ekte klikk, og skolemaskiner har ofte samme
 // sperre. execCommand krever bare brukerbevegelsen, som klikket er.
-function kopierTilUtklipp(tekst) {
+export function kopierTilUtklipp(tekst) {
   return navigator.clipboard.writeText(tekst).catch(() => new Promise((resolve, reject) => {
     const ta = document.createElement("textarea");
     ta.value = tekst;

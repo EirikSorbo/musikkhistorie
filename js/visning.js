@@ -22,18 +22,18 @@
 //  (samme som podkast-admin).
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.73";
-import { escapeHtml } from "./util.js?v=5.73";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.73";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.73";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.73";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.73";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.73";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.73";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.73";
-import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.73";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.73";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.73";
+import { getState } from "./explore-context.js?v=5.74";
+import { escapeHtml } from "./util.js?v=5.74";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.74";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.74";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.74";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.74";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.74";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.74";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.74";
+import { erLaererBruker, planeneLastet } from "./plan-meny.js?v=5.74";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.74";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.74";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;

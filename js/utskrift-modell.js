@@ -43,16 +43,16 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.73";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.73";
-import { resolveSpan } from "./timeline-lanes.js?v=5.73";
-import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor } from "./genre-model.js?v=5.73";
-import { resolveDesc, resolveDescAny } from "./genre-descriptions.js?v=5.73";
-import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.73";
-import { heatRow } from "./heat-strip.js?v=5.73";
-import { ytMaal } from "./presentasjon-modell.js?v=5.73";
-import { normaliserPunkter } from "./punkter.js?v=5.73";
-import { safeUrl } from "./util.js?v=5.73";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.74";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.74";
+import { resolveSpan } from "./timeline-lanes.js?v=5.74";
+import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.74";
+import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.74";
+import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.74";
+import { heatRow } from "./heat-strip.js?v=5.74";
+import { ytMaal } from "./presentasjon-modell.js?v=5.74";
+import { normaliserPunkter } from "./punkter.js?v=5.74";
+import { safeUrl } from "./util.js?v=5.74";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster, spilleren …) er skjermflater uten
@@ -66,6 +66,9 @@ const HUB_KORT_FOR_SIDE = { rotter: "sb-rotter", omHistorie: "sb-om-historie" };
 
 export const TITTEL_MAKS = 60;
 export const ROTTER = "Røtter";
+// Høyst så mange kort gir et «lite» hefte: tittelblokka øverst på første side,
+// ingen egen innholdsfortegnelse (v5.74).
+export const LITEN_GRENSE = 3;
 // Undersjangre som ikke lar seg plassere i en familie (ingen artist bærer
 // taggen, og navnet er ikke en tre-node) samles i en egen bolk bakerst.
 export const UNDERSJANGRE_LOSE = "Undersjangre";
@@ -165,6 +168,9 @@ export const DELER = [
     { id: "sjanger.punkter", navn: "Oppsummering i punkter", punkter: true },
     { id: "sjanger.beskrivelse", navn: "Beskrivelse" },
     { id: "sjanger.relasjoner", navn: "Slektskap" },
+    // Koblingstekstene (v5.74): strekene inn i og ut av sjangeren i slektstreet.
+    // Av som standard: de er et tillegg, og læreren velger dem til.
+    { id: "sjanger.koblinger", navn: "Koblingstekster fra slektstreet", standard: false },
     { id: "sjanger.ordliste", navn: "Ordliste over undersjangrene på artistkortene" },
   ] },
   { gruppe: "Innovasjonskort", valg: [
@@ -184,7 +190,7 @@ export const DELER = [
   ] },
 ];
 
-export const STANDARD_DELER = Object.freeze(Object.fromEntries(DELER.flatMap((g) => g.valg.map((v) => [v.id, true]))));
+export const STANDARD_DELER = Object.freeze(Object.fromEntries(DELER.flatMap((g) => g.valg.map((v) => [v.id, v.standard ?? true]))));
 
 export function normaliserDeler(raa) {
   const ut = { ...STANDARD_DELER };
@@ -240,7 +246,8 @@ export function normaliserLagret(raa) {
 function eraTekst(r) {
   const fra = r?.activeFrom, til = r?.activeTo;
   const aar = Number.isInteger(fra) ? `ca. ${fra}–${Number.isInteger(til) ? til : "i dag"}` : "";
-  const ord = String(r?.era || "").trim();
+  // Friteksten bare når den sier noe årstallene ikke sier (v5.74).
+  const ord = epokeFritekst(r);
   if (!aar) return ord;
   if (!ord) return aar;
   return `${aar}. ${ord}`;
@@ -320,12 +327,21 @@ function familieForUndersjanger(navn, artists) {
 // som drar inn sjangrene, artistene og tiårene; røttene i treet; alle aktive
 // innovasjonskort; og instrumentsammendragene som er skrevet. Historiene og
 // innholdssidene holdes utenfor (de er lærerstoff og skjult for studenter).
+// Metasjangrene i pensumet, i den kuraterte rekkefølgen: STORY_ORDER først,
+// så resten av treets, uten STORY_SKJULT (Pop og Rock er utenfor MUR114).
+// Delt av «Velg alt» og hurtigvalgene i panelet (v5.74). Leses ved kall.
+export function pensumMetasjangre() {
+  const kjente = GENEALOGY_META_GENRES;
+  const ut = [];
+  for (const m of [...STORY_ORDER, ...META_GENRE_ORDER]) {
+    if (kjente.includes(m) && !STORY_SKJULT.includes(m) && !ut.includes(m)) ut.push(m);
+  }
+  return ut;
+}
+
 export function heltPensum(data = {}) {
   const ut = [];
-  const kjente = GENEALOGY_META_GENRES;
-  for (const m of [...STORY_ORDER, ...META_GENRE_ORDER]) {
-    if (kjente.includes(m) && !STORY_SKJULT.includes(m)) ut.push(`${META_PREFIKS}${m}`);
-  }
+  for (const m of pensumMetasjangre()) ut.push(`${META_PREFIKS}${m}`);
   for (const n of GENEALOGY_ROOT_GENRES) ut.push(`sjanger:${n.l}`);
   for (const t of data.techItems || []) if (t && (t.status || "active") === "active" && t.id) ut.push(`tech:${t.id}`);
   for (const g of INSTRUMENT_TIMELINE_GROUPS) {
@@ -443,6 +459,11 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   const heat = content?.varmekart?.heat || null;
   const punkterOk = !punkterSkjult;
   const historierOk = erLaerer || !skjul.metasjangerhistorier;
+  // Koblingstekstene (v5.74): strekene inn i og ut av sjangeren i slektstreet,
+  // med teksten fra edgeDescriptions. Samme flagg som strekene i appen, og
+  // bare når valget «Koblingstekster» er huket på.
+  const edgeDescs = data.edgeDescs || {};
+  const koblingerOk = !!d["sjanger.koblinger"] && (erLaerer || !skjul.koblingsbeskrivelser);
   const sideOk = (id) => erLaerer || !skjulHub[HUB_KORT_FOR_SIDE[id]];
   const valgtRekke = f.rekkefolge === "valgt";
   const byId = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
@@ -454,6 +475,26 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   const rekke = new Map();
   kandidater.forEach((vis, i) => rekke.set(vis, i));
   const mangler = [];
+
+  // Koblingene en sjanger har i treet, med tekst: inn (foreldre og det den er
+  // en motreaksjon mot) og ut (barn og reaksjoner mot den). Retningen følger
+  // showEdgeInfo i js/genealogy.js: nøkkelen er fra→til, og «til» er den som
+  // bærer rx når koblingen er en motreaksjon.
+  function koblingerFor(n) {
+    if (!koblingerOk) return [];
+    const ut = [];
+    const legg = (fraId, tilId, etikett, navn) => {
+      const tekst = String(edgeDescs[edgeKey(fraId, tilId)]?.description || "").trim();
+      if (tekst) ut.push({ etikett, navn, tekst, vis: `kobling:${edgeKey(fraId, tilId)}` });
+    };
+    for (const p of n.p || []) legg(p, n.id, "Vokste ut av", byId[p]?.f || p);
+    for (const p of n.rx || []) legg(p, n.id, "Motreaksjon mot", byId[p]?.f || p);
+    for (const x of GENEALOGY) {
+      if ((x.p || []).includes(n.id)) legg(n.id, x.id, "Førte videre til", x.f);
+      if ((x.rx || []).includes(n.id)) legg(n.id, x.id, "Reaksjon mot denne", x.f);
+    }
+    return ut;
+  }
 
   function lagArtistKort(a, vis) {
     const span = resolveSpan(a, naa);
@@ -499,6 +540,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
       },
       punkter: punkterOk ? r.punkter : [],
       beskrivelse: r.description || "",
+      koblinger: koblingerFor(n),
       // «Hør etter»-lista på sjangerkortet er BEVISST ikke med i heftet
       // (brukervalg 2026-09-25): innholdet er ikke ferdig.
       artister: [],
@@ -693,7 +735,9 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     for (const k of dokArtister) {
       for (const l of k.lytte) {
         l.nr = ++nr;
-        lytteliste.push({ nr, artist: k.navn, label: l.label, year: l.year, performanceYear: l.performanceYear, url: l.url });
+        // video (v5.74): YouTube-ID-en, så lytteseksjonen kan lage én lenke som
+        // spiller hele lista. Null for lenker som ikke er en YouTube-video.
+        lytteliste.push({ nr, artist: k.navn, label: l.label, year: l.year, performanceYear: l.performanceYear, url: l.url, video: ytMaal(l.url)?.video || null });
       }
     }
   }
@@ -784,9 +828,15 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     historier: medBare(histValgt).length, sider: sideMed.length,
     bortvalgt: kandidater.filter((v) => bort.has(v)).length,
   };
+  // Kortene utenom tiårene. Et LITE hefte (v5.74) får kompakt forside uten
+  // egen innholdsfortegnelse: ett artistkort skal ikke koste tre ark. Tiårene
+  // teller ikke, for én artist drar alltid inn to til fire av dem.
+  const kort = tellinger.sjangre + tellinger.artister + tellinger.innovasjoner
+    + tellinger.instrumenter + tellinger.historier + tellinger.sider;
 
   return {
     valg: liste, eksplisitt, fravalg, deler: d, form: f, punkterOk,
+    kort, liten: kort <= LITEN_GRENSE,
     familier: familieListe, bakteppe, innovasjoner, instrumenter, sider,
     lytteliste, tidslinje, tellinger, aarsspenn, mangler,
     tre: { familier: treFamilier, tiaar: treTiaar, grunnlag, annet: treAnnet },
@@ -807,6 +857,44 @@ const TELLE_ORD = [
   ["innovasjoner", "innovasjon", "innovasjoner"], ["instrumenter", "instrument", "instrumenter"],
   ["historier", "historie", "historier"], ["sider", "side", "sider"],
 ];
+
+// Grovt sideanslag fra tellingene alene (v5.74), for «Velg alt»-dialogen der
+// heftet ikke er tegnet ennå. Koeffisientene er målt mot et ferdig hefte
+// (Blues: 25 artister, 3 sjangre og 12 tiår ga 24 sider). Det ekte anslaget
+// måles på skjermen etter tegning (sideanslag i js/utskrift.js).
+export function anslagSider(t = {}) {
+  const n = (k) => Number(t[k]) || 0;
+  const kort = n("artister") + n("sjangre") + n("innovasjoner") + n("instrumenter") + n("historier") + n("sider");
+  if (!kort && !n("tiaar")) return 0;
+  const front = kort <= LITEN_GRENSE ? 1 : 2;
+  const sider = front
+    + n("artister") * 0.42 + n("sjangre") * 0.35 + n("tiaar") * 0.75
+    + n("innovasjoner") * 0.3 + n("instrumenter") * 0.6 + n("historier") * 1.5 + n("sider") * 1.2
+    + (n("artister") ? 0.5 + n("artister") * 0.02 : 0);
+  return Math.max(1, Math.round(sider));
+}
+
+// Heftet som kjøreplan (v5.74, lærerens «Lag kjøreplan av utvalget»): ett
+// stopp per kort, i heftets rekkefølge. Tiårene får samfunnsvisningen, som
+// er tiårskortets første fane. Hvert mål én gang.
+export function planFraModell(modell) {
+  const ut = [];
+  const legg = (vis) => { if (vis && !ut.includes(vis)) ut.push(vis); };
+  for (const F of modell?.familier || []) {
+    if (F.pseudo) continue;
+    if (F.historie) legg(F.historie.vis);
+    for (const k of [F.hodeKort, ...F.sjangre].filter(Boolean)) {
+      legg(k.vis);
+      for (const a of k.artister) legg(a.vis);
+    }
+    for (const a of F.loseArtister) legg(a.vis);
+  }
+  for (const b of modell?.bakteppe || []) legg(`tiår:${b.tiaar}:society`);
+  for (const t of modell?.innovasjoner || []) legg(t.vis);
+  for (const i of modell?.instrumenter || []) legg(i.vis);
+  for (const s of modell?.sider || []) legg(s.vis);
+  return ut.map((vis) => ({ vis }));
+}
 
 // «2 sjangre · 5 artister · 1 tiår · 2 innovasjoner»
 export function tellingerTekst(tellinger = {}) {

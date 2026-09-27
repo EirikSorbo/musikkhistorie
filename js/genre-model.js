@@ -25,7 +25,7 @@
 //  (isGenreModelReady()).
 // ============================================================================
 
-import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=5.73";
+import { computeColumns, LAYOUT_WIDTH } from "./genre-layout.js?v=5.74";
 
 // --- Modelltilstanden (byttes av rebuild) -----------------------------------
 

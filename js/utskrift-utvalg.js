@@ -24,9 +24,9 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.73";
-import { isVisible } from "./limits.js?v=5.73";
-import { escapeHtml } from "./util.js?v=5.73";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.74";
+import { isVisible } from "./limits.js?v=5.74";
+import { escapeHtml } from "./util.js?v=5.74";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -127,6 +127,19 @@ export function huk(vis, paa, { eksplisitt = false } = {}) {
   } else {
     u.fravalg = normaliserUtvalg([...u.fravalg, ...berort]);
   }
+  lagreUtvalg(u);
+}
+
+// Flere poster av eller på i ÉN lagring (v5.74, hurtigvalgene «ta ut artister
+// uten lytteeksempel/bilde»): én huk() per post ville tegnet panelet på nytt
+// for hver. Bare selve postene, ikke det de drar med seg.
+export function hukFlere(liste, paa) {
+  const berort = new Set((Array.isArray(liste) ? liste : []).map(kanoniskVis).filter(Boolean));
+  if (!berort.size) return;
+  const u = lesUtvalg();
+  u.fravalg = paa
+    ? u.fravalg.filter((v) => !berort.has(v))
+    : normaliserUtvalg([...u.fravalg, ...berort]);
   lagreUtvalg(u);
 }
 

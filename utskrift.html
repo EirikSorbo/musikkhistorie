@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
-  <title>Utskrift – Pensumforslag</title>
+  <title>Utskrift – Musikkhistorie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Fontene lastes ikke-blokkerende (media="print" til de er klare): en
@@ -14,9 +14,9 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=5.73" />
-  <link rel="stylesheet" href="css/utskrift.css?v=5.73" />
-  <script src="js/gate.js?v=5.73"></script>
+  <link rel="stylesheet" href="css/styles.css?v=5.74" />
+  <link rel="stylesheet" href="css/utskrift.css?v=5.74" />
+  <script src="js/gate.js?v=5.74"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -54,10 +54,15 @@
         <div class="utskrift-knapper">
           <button type="button" class="btn primary" id="utskrift-skriv-ut" disabled>Lagre som PDF</button>
           <button type="button" class="btn ghost small" id="utskrift-alt" title="Hele pensumet: alle metasjangrene, røttene, innovasjonene og instrumentene" disabled>Velg alt</button>
+          <button type="button" class="btn ghost small" id="utskrift-plan" title="Lag en kjøreplan for Visning med heftets kort som stopp" hidden>Lag kjøreplan</button>
           <button type="button" class="btn ghost small danger" id="utskrift-toem" disabled>Tøm utvalget</button>
+          <!-- Sidetall og løpende topptekst lages av nettleserens @page-
+               marginbokser (js/utskrift.js, settSidestil). Safari har dem ikke. -->
+          <p class="muted utskrift-hint">Sidetall og topptekst avhenger av nettleseren: Chrome har dem, Safari lager heftet uten.</p>
         </div>
       </div>
       <p class="muted" id="utskrift-status">Laster innholdet …</p>
+      <p id="utskrift-melding" class="form-msg"></p>
       <div class="utskrift-kolonner">
         <details class="utskrift-boks" open>
           <summary>Utvalg <span id="utskrift-antall-tekst"></span></summary>
@@ -66,7 +71,11 @@
               placeholder="Legg til: søk etter artist, sjanger, tiår, innovasjon …" aria-label="Legg til i utvalget" />
             <div id="utskrift-sok-treff" class="utskrift-sok-treff" aria-live="polite"></div>
           </div>
+          <!-- Hurtigvalg for hele metasjangre (v5.74), fylles av js/utskrift.js. -->
+          <div id="utskrift-metaer" class="utskrift-metaer"></div>
           <ul id="utskrift-liste" class="utskrift-liste"></ul>
+          <!-- «Ta ut artister uten lytteeksempel/bilde» (v5.74). -->
+          <div id="utskrift-hurtig" class="utskrift-hurtig"></div>
           <label class="utskrift-rekkefolge">Rekkefølge
             <select id="utskrift-rekkefolge">
               <option value="kronologisk">Kronologisk: metasjanger, sjanger, artist</option>
@@ -84,8 +93,21 @@
           <fieldset class="utskrift-form">
             <legend>Form</legend>
             <label><input type="radio" name="utskrift-form" value="lesevennlig" checked /> Lesevennlig, med bilder</label>
-            <label><input type="radio" name="utskrift-form" value="kompakt" /> Kompakt, uten bilder</label>
+            <label><input type="radio" name="utskrift-form" value="kompakt" /> Kompakt, med små bilder</label>
           </fieldset>
+          <!-- «Send til en annen enhet» (v5.74): utvalget bor i denne nettleseren,
+               lenka og QR-koden tar det med til en annen. -->
+          <div class="utskrift-del" id="utskrift-del-boks" hidden>
+            <p class="utskrift-del-hode">Send til en annen enhet</p>
+            <div class="utskrift-del-rad">
+              <div id="utskrift-qr"></div>
+              <div>
+                <p class="muted">Valgte deg på mobilen og vil skrive ut fra en PC? Skann koden, eller kopier lenka og åpne den der. Utvalget og tittelen følger med.</p>
+                <button type="button" class="btn ghost small" id="utskrift-del-kopier">Kopier lenke</button>
+                <span class="muted" id="utskrift-del-msg"></span>
+              </div>
+            </div>
+          </div>
         </details>
       </div>
     </section>
@@ -96,7 +118,10 @@
 
   <footer class="sitefoot wrap"></footer>
 
-  <script src="js/load-guard.js?v=5.73"></script>
-  <script type="module" src="js/utskrift.js?v=5.73"></script>
+  <!-- QR-kodene (v5.74): js/vendor/qrcode.js er Kazuhiko Arases MIT-lisensierte
+       generator, uendret. Klassisk skript, setter window.qrcode. -->
+  <script src="js/vendor/qrcode.js?v=5.74"></script>
+  <script src="js/load-guard.js?v=5.74"></script>
+  <script type="module" src="js/utskrift.js?v=5.74"></script>
 </body>
 </html>

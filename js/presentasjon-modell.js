@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.73";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.74";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -297,7 +297,11 @@ export function ytWatchUrl(video, list, start) {
 // avspilling). autoplay er trygt: spilleren åpnes alltid av et klikk.
 // `start` (sekunder) overstyrer et eventuelt tidspunkt i selve lenka, og
 // `jsapi` slår på styre-API-et spilleren bruker til å lese av tiden.
-export function ytEmbedUrl(url, { start = null, jsapi = false } = {}) {
+// `kø` (v5.74) er flere video-ID-er som skal spilles etter den første, i
+// rekkefølge: YouTubes «playlist»-parameter tar en kommadelt liste uten at
+// noen spilleliste må lagres. Brukes av «Spill alle lytteeksemplene» på
+// kjøreplanens oversiktskort. Ikke sammen med en ekte spilleliste (list).
+export function ytEmbedUrl(url, { start = null, jsapi = false, kø = [] } = {}) {
   const maal = ytMaal(url);
   if (!maal) return null;
   const p = new URLSearchParams({ autoplay: "1", rel: "0" });
@@ -306,10 +310,28 @@ export function ytEmbedUrl(url, { start = null, jsapi = false } = {}) {
   if (jsapi) p.set("enablejsapi", "1");
   if (maal.video) {
     if (maal.list) p.set("list", maal.list);
+    const rest = [...new Set((kø || []).filter((id) => ID_OK.test(String(id || "")) && id !== maal.video))];
+    if (rest.length && !maal.list) p.set("playlist", rest.join(","));
     return `https://www.youtube-nocookie.com/embed/${maal.video}?${p}`;
   }
   p.set("list", maal.list);
   return `https://www.youtube-nocookie.com/embed/videoseries?${p}`;
+}
+
+// Én lenke som spiller flere videoer på YouTube (v5.74): watch_videos lager
+// en midlertidig spilleliste av ID-ene (verifisert 2026-09-27: adressen blir
+// til watch?v=…&list=TLGG…). Høyst YT_LISTE_MAKS per lenke; lengre lister
+// deles, så en lang lytteliste blir to eller flere lenker. Brukt av heftets
+// lytteliste (som QR-kode) og av «Spill alle på YouTube» i spillelistene.
+export const YT_LISTE_MAKS = 50;
+
+export function ytSpillelisteUrl(ider) {
+  const rene = [...new Set((ider || []).filter((id) => ID_OK.test(String(id || ""))))];
+  const ut = [];
+  for (let i = 0; i < rene.length; i += YT_LISTE_MAKS) {
+    ut.push(`https://www.youtube.com/watch_videos?video_ids=${rene.slice(i, i + YT_LISTE_MAKS).join(",")}`);
+  }
+  return ut;
 }
 
 // ----------------------------------------------------------------------------
@@ -487,6 +509,28 @@ export function medStoppSattInn(planer, planId, indeks, stopp) {
   return {
     ...planer,
     [planId]: { ...plan, stopp: [...plan.stopp.slice(0, i), stopp, ...plan.stopp.slice(i)] },
+  };
+}
+
+// Ett stopp med nytt nivå og/eller nye unntak (v5.74, «Husk visningen på
+// dette stoppet» i tannhjulpanelet). Samme form som medStoppSattInn: nye
+// objekter, inndata røres ikke. `endring` kan ha `nivaa` (1–3, ellers fjernes
+// det) og `unntak` (objekt; tomt objekt fjerner unntakene). Felt som ikke
+// står i endringen, beholdes. Kaster når planen eller stoppet er borte.
+export function medStoppOppdatert(planer, planId, indeks, endring = {}) {
+  const plan = planer?.[planId];
+  if (!plan) throw new Error("Kjøreplanen finnes ikke lenger.");
+  const i = Math.trunc(Number(indeks));
+  if (!(i >= 0 && i < plan.stopp.length)) throw new Error("Stoppet finnes ikke i planen.");
+  const gammel = plan.stopp[i];
+  const nytt = { vis: gammel.vis };
+  const n = Number("nivaa" in endring ? endring.nivaa : gammel.nivaa);
+  if (n >= 1 && n <= 3) nytt.nivaa = Math.round(n);
+  const u = "unntak" in endring ? endring.unntak : gammel.unntak;
+  if (u && typeof u === "object" && !Array.isArray(u) && Object.keys(u).length) nytt.unntak = { ...u };
+  return {
+    ...planer,
+    [planId]: { ...plan, stopp: plan.stopp.map((s, k) => (k === i ? nytt : s)) },
   };
 }
 

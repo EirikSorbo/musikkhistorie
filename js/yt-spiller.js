@@ -23,13 +23,14 @@
 //  spilleren når minst én av dem er sann. Da dobbeltåpner ingenting.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.73";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.73";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.73";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.74";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.74";
+import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.74";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
-// YouTube» når tiden endres.
-let naa = { video: null, list: null, start: null };
+// YouTube» når tiden endres. `kø` (v5.74) er videoene som spilles etter den
+// første («Spill alle lytteeksemplene» på oversiktskortet).
+let naa = { video: null, list: null, start: null, kø: [] };
 
 function ytModal() {
   let m = document.getElementById("modal-yt");
@@ -237,7 +238,7 @@ function lastYtApi() {
 function lastIframe() {
   const ramme = document.getElementById("yt-ramme");
   if (!ramme || !naa.video && !naa.list) return;
-  const src = ytEmbedUrl(ytWatchUrl(naa.video, naa.list), { start: naa.start, jsapi: true });
+  const src = ytEmbedUrl(ytWatchUrl(naa.video, naa.list), { start: naa.start, jsapi: true, kø: naa.kø });
   if (!src) return;
   try { spiller?.destroy?.(); } catch (e) {}
   spiller = null;
@@ -295,11 +296,12 @@ export function veksleYtAvspilling() {
 
 // Åpner spilleren for en YouTube-lenke. Returnerer false når lenka ikke kan
 // bygges inn (søkelenker o.l.) — kalleren lar den da åpne i ny fane som før.
-export function apneYtSpiller(url, tittel, { start = null } = {}) {
+// `kø` (v5.74): flere video-ID-er som spilles etter den første, i rekkefølge.
+export function apneYtSpiller(url, tittel, { start = null, kø = [] } = {}) {
   const maal = ytMaal(url);
   if (!maal) return false;
   const m = ytModal();
-  naa = { video: maal.video, list: maal.list, start: start != null ? start : maal.start };
+  naa = { video: maal.video, list: maal.list, start: start != null ? start : maal.start, kø: Array.isArray(kø) ? kø : [] };
   m.querySelector("#yt-tittel").textContent = tittel || "Avspilling";
   // Tidsraden gjelder én video; en ren spilleliste har ingenting å feste den til.
   m.querySelector(".yt-tidrad").hidden = !naa.video;

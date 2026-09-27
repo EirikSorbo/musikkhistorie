@@ -11,7 +11,7 @@
 //  sjanger), sub (fri undersjanger).
 // ============================================================================
 
-import { normaliserPunkter } from "./punkter.js?v=5.73";
+import { normaliserPunkter } from "./punkter.js?v=5.74";
 
 const LVL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 
@@ -73,6 +73,26 @@ function fromOverride(o, level) {
     // kortet), men oppslaget er likt for alle nivåer.
     punkter: normaliserPunkter(lvl.punkter),
   };
+}
+
+// Fritekst-epoken bare når den sier noe årstallene ikke sier (v5.74). Mange
+// sjangre har «ca. 1900» eller «1930-tallet» som fritekst ved siden av
+// activeFrom = 1900 eller 1930, og kortet leste da «ca. 1900–i dag. ca. 1900»
+// på skjerm, lerret og papir. Sammenligningen ser bort fra «ca.», mellomrom
+// og hvilken strek som er brukt. Uten årstall er friteksten alt vi har, og
+// den vises som før.
+export function epokeFritekst(resolved) {
+  const ord = String(resolved?.era || "").trim();
+  if (!ord) return "";
+  const fra = resolved?.activeFrom, til = resolved?.activeTo;
+  if (!Number.isInteger(fra)) return ord;
+  const norm = (s) => String(s).toLowerCase().replace(/^ca\.?\s*/, "").replace(/\s+/g, "").replace(/[–—]/g, "-");
+  const tilTekst = Number.isInteger(til) ? String(til) : "idag";
+  const gjentak = new Set([
+    `${fra}`, `${fra}-`, `fra${fra}`, `${fra}-tallet`,
+    `${fra}-${tilTekst}`, `${fra}-idag`, `${fra}-nå`,
+  ]);
+  return gjentak.has(norm(ord)) ? "" : ord;
 }
 
 // Beskrivelse for (navn, nivå) fra data. Tom { description: "" } hvis ingenting
