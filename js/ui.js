@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.80";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.80";
-import { punkterHtml } from "./punkter.js?v=5.80";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.80";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.80";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.80";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.81";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.81";
+import { punkterHtml } from "./punkter.js?v=5.81";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.81";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.81";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.81";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.80";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.80";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.80";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.80";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.80";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.80";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.80";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.80";
+} from "./ui-helpers.js?v=5.81";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.81";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.81";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.81";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.81";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.81";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.81";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.81";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -98,6 +98,15 @@ const KORT_PLUSS_SVG = VISNING_SVG;
 export function kortPlussHtml(a) {
   if (!a || !isVisible(a)) return "";
   return `<button type="button" class="kort-pluss" data-vis="artist:${escapeHtml(a.id)}" title="Legg til i kjøreplanen" aria-label="Legg ${escapeHtml(a.name)} til i kjøreplanen">${KORT_PLUSS_SVG}</button>`;
+}
+
+// «Vis»-knappen på artistkortene i «Finn artister» (v5.81, brukerbestilling
+// 2026-09-28): i fri visning åpner den artisten på lerretet, med nivå 1–3 og
+// fullskjerm som ellers i visningen. Synlig bare i presentasjonsmodus (CSS);
+// klikket går som de andre kortknappene (data-action → handlers.vis).
+export function kortVisHtml(a) {
+  if (!a || !isVisible(a)) return "";
+  return `<button type="button" class="kort-vis" data-action="vis" data-id="${escapeHtml(a.id)}" title="Vis på lerretet" aria-label="Vis ${escapeHtml(a.name)} på lerretet">${VISNING_SVG}</button>`;
 }
 
 export function renderResultList(el, artists, onSelect) {
@@ -444,7 +453,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
       <header class="card-head">
         ${artistImage(a)}
         <div>
-          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}${kortPlussHtml(a)}</h3>
+          <h3>${escapeHtml(a.name)} ${pendingBadge} ${returnedBadge} ${removedBadge}${kortPlussHtml(a)}${kortVisHtml(a)}</h3>
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${prioTag}

@@ -3181,6 +3181,22 @@ body.har-aktiv-plan .kort-pluss {
   color: var(--accent-2); cursor: pointer;
 }
 body.har-aktiv-plan .kort-pluss:hover { background: var(--accent-2); color: #fff; }
+/* «Vis»-knappen på artistkortene i «Finn artister» (v5.81): bare i
+   presentasjonsmodus, der den åpner artisten på lerretet (nivå 1–3). */
+.kort-vis { display: none; }
+body.presentasjon .kort-vis {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 28px; height: 28px; margin-left: 8px; padding: 0; vertical-align: middle;
+  border-radius: 50%; border: 1px solid var(--accent-2); background: var(--surface);
+  color: var(--accent-2); cursor: pointer;
+}
+body.presentasjon .kort-vis:hover { background: var(--accent-2); color: #fff; }
+.kort-vis svg { display: block; }
+/* Bredere artistkort i «Finn artister» under visning (v5.81, brukerkrav
+   2026-09-28): minstebredden følger tekststørrelsen (rem, html.pres-modus),
+   så det blir to kolonner på en laptop og én på små skjermer og med størst
+   tekst, i stedet for tre–fire smale kort. */
+body.presentasjon #artist-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr)); gap: 1.4rem; }
 .modal-head .modal-lenke-meny { display: none; padding: 5px 5px; min-width: 24px; align-items: center; justify-content: center; margin: 0 2px 0 -4px; color: var(--muted); }
 .modal-head .modal-lenke-meny svg { display: block; }
 body.laerer-okt.har-aktiv-plan .modal-head .modal-lenke-meny { display: inline-flex; }

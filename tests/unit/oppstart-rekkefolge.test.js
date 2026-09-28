@@ -53,3 +53,16 @@ test("visningen blanker fanen og går i fullskjerm ved første handling, men res
   assert.match(p, /e\.key === "Escape"/, "Esc teller ikke som første handling");
   assert.match(p, /fullNei: "pensumPresFullNei"/, "nullstilles med resten av LAGRING ved avslutning");
 });
+
+// v5.81 (brukerbestilling 2026-09-28): «Vis»-knapp på artistkortene i fri
+// visning, og bredere kort i «Finn artister» under visning.
+test("fri visning: artistkortene har Vis-knapp som åpner artisten på lerretet, og bredere kort", () => {
+  const ui = les("js/ui.js");
+  assert.match(ui, /export function kortVisHtml\(a\) \{\n  if \(!a \|\| !isVisible\(a\)\) return "";/);
+  assert.match(ui, /\$\{kortPlussHtml\(a\)\}\$\{kortVisHtml\(a\)\}<\/h3>/, "knappen står i kortets tittel, etter plussen");
+  assert.match(les("js/landing.js"), /vis: \(id\) => \{[^]*?openDetail\(a\)/);
+  const css = les("css/styles.css");
+  assert.match(css, /\.kort-vis \{ display: none; \}/);
+  assert.match(css, /body\.presentasjon \.kort-vis \{/);
+  assert.match(css, /body\.presentasjon #artist-list \{ grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 30rem\), 1fr\)\); gap: 1\.4rem; \}/);
+});
