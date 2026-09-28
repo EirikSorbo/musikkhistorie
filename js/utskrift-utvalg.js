@@ -24,9 +24,9 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.79";
-import { isVisible } from "./limits.js?v=5.79";
-import { escapeHtml } from "./util.js?v=5.79";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=5.80";
+import { isVisible } from "./limits.js?v=5.80";
+import { escapeHtml } from "./util.js?v=5.80";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
@@ -204,6 +204,7 @@ export const UTSKRIFT_HAKE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24
 
 const TITTEL_MED = "Tatt med i utskriften. Klikk for å ta den ut.";
 const TITTEL_UTEN = "Ta med i utskriften";
+const TITTEL_IKKE = "Kan ikke stå i heftet. Bare kort, tiår, sider og lytteeksempler kan skrives ut.";
 
 function knappTilstand(b, k) {
   const med = harMed(k);
@@ -243,13 +244,25 @@ function oppdaterKortKnapper() {
   document.querySelectorAll(".kort-utskrift[data-vis]").forEach((b) => knappTilstand(b, b.dataset.vis));
 }
 
-// Knappen følger modalens mål: skjult når kortet ikke kan stå i et hefte.
+// Knappen følger modalens mål. Fra v5.80 (brukervalg 2026-09-28: tittellinja
+// skal ha de samme knappene på alle kort) står den så snart kortet bærer et
+// mål, som visningsknappen, og er grået ut med forklaring når målet ikke kan
+// stå i heftet (varmekart, tidslinje, koblinger …). Uten mål: skjult, som de
+// andre knappene i hodet.
 function oppdaterKnapp(modal) {
   const b = modal?.querySelector?.(".modal-head .utskrift-ta-med");
   if (!b) return;
-  const k = kanoniskVis(modal.dataset.vis || "");
-  b.hidden = !k;
-  if (k) knappTilstand(b, k);
+  const vis = modal.dataset.vis || "";
+  const k = kanoniskVis(vis);
+  b.hidden = !vis;
+  if (!vis) return;
+  b.disabled = !k;
+  if (k) { knappTilstand(b, k); return; }
+  b.classList.remove("er-med");
+  b.innerHTML = TIL_UTSKRIFT_SVG;
+  b.title = TITTEL_IKKE;
+  b.setAttribute("aria-label", TITTEL_IKKE);
+  b.setAttribute("aria-pressed", "false");
 }
 
 // Idempotent: bare hoder som kan bære et mål (de har lenkeknappen fra

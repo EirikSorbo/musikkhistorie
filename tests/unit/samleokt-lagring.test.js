@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.79";
+import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js?v=5.80";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 const S = (...vis) => vis.map((v) => ({ vis: v }));
@@ -174,4 +174,17 @@ test("kontrollrunde 3: én fane per økt, og tilbake fra bfcache lastes sida på
   assert.match(samle, /if \(ø\.forkastet \|\| !lastet\(\) \|\| ø\.venterEier\) return null;/, "ingen skriving før eierskapet er avklart");
   assert.match(samle, /if \(e\.persisted && \(økt \|\| les\(LAGRING\.plan\)\)\) window\.location\.reload\(\);/);
   assert.match(samle, /export function forkastSamlinger\(planId\)/);
+});
+
+test("v5.80: gamle plukk-økter gjenopptas ikke, utskriftsknappen står på alle mål, søket uten forklaringstekst", () => {
+  const inn = kilde("plan-innsamling.js");
+  assert.match(inn, /if \(modus === "plukk"\) \{ for \(const k of Object\.values\(LAGRING\)\) slett\(k\); return; \}/, "plukk forkastes ved gjenoppretting");
+  assert.match(inn, /if \(!planId \|\| modus !== "opptak"\) return;/);
+  assert.match(inn, /if \(overtatt\?\.modus === "opptak"\) \{/, "en overtatt plukk-økt startes heller ikke");
+  const ut = kilde("utskrift-utvalg.js");
+  assert.match(ut, /b\.hidden = !vis;\n\s*if \(!vis\) return;\n\s*b\.disabled = !k;/, "synlig med mål, grået ut uten heftetype");
+  assert.match(ut, /const TITTEL_IKKE = "Kan ikke stå i heftet\./);
+  assert.match(kilde("explore-search.js"), /status\.textContent = q \? "Skriv minst to tegn\." : "";/);
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /\.modal-head \.utskrift-ta-med:disabled \{ opacity: 0\.35; cursor: default; \}/);
 });

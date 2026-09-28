@@ -5,9 +5,9 @@
 //  importerer Firebase fra CDN og kan ikke lastes utenfor nettleser).
 // ============================================================================
 
-import { safeUrl } from "./util.js?v=5.79";
-import { ARTIST_FIELDS, RETUR_FELTER, emptyValueFor } from "./artist-schema.js?v=5.79";
-import { normaliserPunkter } from "./punkter.js?v=5.79";
+import { safeUrl } from "./util.js?v=5.80";
+import { ARTIST_FIELDS, RETUR_FELTER, emptyValueFor } from "./artist-schema.js?v=5.80";
+import { normaliserPunkter } from "./punkter.js?v=5.80";
 
 // Normaliserer rå Firestore-data til intern modell: vasker URL-felter (kun
 // http/https slipper gjennom) og filtrerer søppel ut av listefeltene, så ett

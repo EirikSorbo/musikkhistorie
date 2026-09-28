@@ -28,14 +28,14 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.79";
-import { getState } from "./explore-context.js?v=5.79";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.79";
-import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.79";
-import { escapeHtml } from "./util.js?v=5.79";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.79";
-import { aktivPlanId } from "./presentasjon.js?v=5.79";
-import { erLaererBruker } from "./plan-meny.js?v=5.79";
+import { savePlan, onAuthChange } from "./store.js?v=5.80";
+import { getState } from "./explore-context.js?v=5.80";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.80";
+import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.80";
+import { escapeHtml } from "./util.js?v=5.80";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.80";
+import { aktivPlanId } from "./presentasjon.js?v=5.80";
+import { erLaererBruker } from "./plan-meny.js?v=5.80";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -689,7 +689,7 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
   // ikke med noopener). Bare for en lærerkonto, så en tilfeldig lenke aldri
   // setter i gang et opptak.
   const overtatt = lesOvertakelse();
-  if (overtatt) {
+  if (overtatt?.modus === "opptak") {
     let av = null, startet = false;
     av = onAuthChange((user) => {
       if (startet || !erLaererBruker(user) || økt) return;
@@ -702,7 +702,11 @@ export function initPlanInnsamling({ erTreSide = false } = {}) {
 
   const planId = les(LAGRING.plan);
   const modus = les(LAGRING.modus);
-  if (!planId || (modus !== "plukk" && modus !== "opptak")) return;
+  // Plukk-økter finnes ikke lenger (v5.76: den aktive kjøreplanen tok over).
+  // En som ligger igjen i fanen fra før, forkastes (v5.80): gjenopptatt
+  // skjulte den visningsknappen i tittellinja og satte inn plukk-plussen.
+  if (modus === "plukk") { for (const k of Object.values(LAGRING)) slett(k); return; }
+  if (!planId || modus !== "opptak") return;
   økt = nyØkt(planId, modus, les(LAGRING.tittel) || "(uten tittel)");
   // Handlingene fra forrige side, også det som kanskje ikke rakk fram før
   // sidebyttet. (En økt fra v5.42 har ingen; den skrev for hvert klikk.)

@@ -10,12 +10,12 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml } from "./ui.js?v=5.79";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.79";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.79";
-import { getState } from "./explore-context.js?v=5.79";
-import { apneMaal } from "./explore-apne.js?v=5.79";
-import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.79";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.80";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.80";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.80";
+import { getState } from "./explore-context.js?v=5.80";
+import { apneMaal } from "./explore-apne.js?v=5.80";
+import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.80";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
@@ -142,7 +142,8 @@ function renderSok() {
 
   visteTreff = [];
   if (res.forKort) {
-    if (status) status.textContent = q ? "Skriv minst to tegn." : "Søker i artister, sjangre, innovasjonskort, tiårstekster, historier og sider.";
+    // Tomt felt: ingen forklaringstekst (brukervalg 2026-09-28).
+    if (status) status.textContent = q ? "Skriv minst to tegn." : "";
     treffEl.innerHTML = "";
     return;
   }

@@ -3242,6 +3242,9 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
 .modal-head .utskrift-ta-med { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; color: var(--muted); }
 .modal-head .utskrift-ta-med.er-med { color: var(--accent-2); border-color: var(--accent-2); }
 .modal-head .utskrift-ta-med svg { display: block; }
+/* Målet kan ikke stå i heftet (v5.80): knappen står, men grået ut. */
+.modal-head .utskrift-ta-med:disabled { opacity: 0.35; cursor: default; }
+.modal-head .utskrift-ta-med:disabled:hover { color: var(--muted); border-color: var(--line); background: transparent; }
 /* Samme knapp på artistkortene og -radene i listene (v5.69), alltid synlig.
    Haken = er med. På de fulle kortene står den nederst i fotlinja, i
    listeknappens form (btn utskrift-ikonknapp, brukervalg 2026-09-26, v5.70);
