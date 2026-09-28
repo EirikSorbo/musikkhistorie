@@ -23,25 +23,26 @@
 //
 //  v5.75: stopp legges til ved å søke (samme indeks som søket i appen), rader
 //  kan dras, hvert stopp kan åpnes fra editoren («Vis»), lista står i
-//  tidsrekkefølge med «laget» og «sist spilt», og planer med stopp som ikke
-//  finnes lenger, varsles før avspilling. Etikettene bor i
+//  tidsrekkefølge (nyeste først; datoene vises ikke, brukervalg 2026-09-28:
+//  «bare rot»), og planer med stopp som ikke finnes lenger, varsles før
+//  avspilling. Etikettene bor i
 //  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.77";
-import { escapeHtml } from "./util.js?v=5.77";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.77";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.77";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.77";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.77";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.77";
-import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=5.77";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon, sistSpilt } from "./presentasjon.js?v=5.77";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.77";
-import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.77";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.77";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.77";
-import { apneMaal } from "./explore-apne.js?v=5.77";
+import { getState } from "./explore-context.js?v=5.78";
+import { escapeHtml } from "./util.js?v=5.78";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.78";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.78";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.78";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.78";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.78";
+import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=5.78";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.78";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.78";
+import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.78";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.78";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.78";
+import { apneMaal } from "./explore-apne.js?v=5.78";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -144,14 +145,6 @@ async function forlatSamleokt() {
 //  Rendering
 // ----------------------------------------------------------------------------
 
-// «27. sep. 2026» eller tom streng for en manglende eller ugyldig dato.
-function planDato(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" });
-}
-
 function renderListe() {
   const el = document.getElementById("pres-adm-liste");
   if (!el) return;
@@ -165,7 +158,6 @@ function renderListe() {
   const aktiv = aktivPlanId();
   const samles = aktivSamleokt()?.planId;
   const bygges = aktivPlan();
-  const spilt = sistSpilt();
   const lastet = !!s.contentLoaded;
   // Plansjekken (v5.75) teller først når listene et stopp slås opp i, har
   // landet; ellers ville hvert artiststopp meldt «finnes ikke» et øyeblikk.
@@ -176,10 +168,6 @@ function renderListe() {
   el.innerHTML = `
     ${planer.length ? planer.map(([id, p]) => {
       const merker = [`${p.stopp.length} stopp`];
-      const laget = planDato(p.laget);
-      if (laget) merker.push(`laget ${laget}`);
-      const sp = planDato(spilt[id]);
-      if (sp) merker.push(`spilt ${sp}`);
       const dode = dataKlar ? dodeStopp(p) : 0;
       return `
       <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">

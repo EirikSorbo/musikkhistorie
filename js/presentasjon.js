@@ -24,19 +24,19 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.77";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.77";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.77";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.77";
-import { GENEALOGY } from "./genre-model.js?v=5.77";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.77";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.77";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.77";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.77";
-import { getState } from "./explore-context.js?v=5.77";
-import { onAuthChange } from "./store.js?v=5.77";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.77";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.77";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.78";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.78";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.78";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.78";
+import { GENEALOGY } from "./genre-model.js?v=5.78";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.78";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.78";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.78";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.78";
+import { getState } from "./explore-context.js?v=5.78";
+import { onAuthChange } from "./store.js?v=5.78";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.78";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.78";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -63,27 +63,10 @@ const LAGRING = {
   klokke: "pensumPresKlokke",
 };
 
-// Når hver kjøreplan sist ble spilt (v5.75): localStorage i lærerens
-// nettleser, { <planId>: ISO-dato }. Visning-lista viser det ved planen.
-const SPILT_NOKKEL = "pensum-plan-spilt";
-
-export function sistSpilt() {
-  try {
-    const o = JSON.parse(localStorage.getItem(SPILT_NOKKEL) || "{}");
-    return o && typeof o === "object" && !Array.isArray(o) ? o : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function merkSpilt(id) {
-  if (!id) return;
-  try {
-    const o = sistSpilt();
-    o[id] = new Date().toISOString();
-    localStorage.setItem(SPILT_NOKKEL, JSON.stringify(o));
-  } catch (e) {}
-}
+// «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
+// igjen i v5.78: datoene i Visning-lista ble bare rot (brukervalg 2026-09-28).
+// Nøkkelen ryddes bort der den måtte ligge igjen.
+try { localStorage.removeItem("pensum-plan-spilt"); } catch (e) {}
 
 // sessionStorage kan kaste (blokkerte nettsteddata) — presentasjonen skal
 // virke likevel, den husker bare mindre.
@@ -522,7 +505,6 @@ export function presPlanTikk() {
   const planer = normaliserPlaner(s.content?.presentasjoner?.planer);
   if (planer[planId]) {
     plan = planer[planId];
-    merkSpilt(planId);
     oppdaterLeggTil();
     if (!plan.stopp.length) {
       const teller = document.getElementById("pres-teller");

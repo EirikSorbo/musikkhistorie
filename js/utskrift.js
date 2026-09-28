@@ -21,24 +21,24 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.77";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.77";
-import { onAuthChange, savePlan } from "./store.js?v=5.77";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=5.77";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.77";
-import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.77";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.77";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.77";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.77";
-import { renderRichText, renderInline } from "./rich-text.js?v=5.77";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.77";
-import { escapeHtml, wikimediaThumb } from "./util.js?v=5.77";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.77";
-import { artistStripHtml } from "./artist-strip.js?v=5.77";
-import { DECADES, isVisible } from "./limits.js?v=5.77";
-import { askChoice, kopierTilUtklipp } from "./ui-modal.js?v=5.77";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.77";
-import { ytSpillelisteUrl, nyPlanId } from "./presentasjon-modell.js?v=5.77";
+import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js?v=5.78";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=5.78";
+import { onAuthChange, savePlan } from "./store.js?v=5.78";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=5.78";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "./feature-flags.js?v=5.78";
+import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js?v=5.78";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=5.78";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js?v=5.78";
+import { byggVisVerdi } from "./vis-lenke.js?v=5.78";
+import { renderRichText, renderInline } from "./rich-text.js?v=5.78";
+import { formatInfoText, musicExampleLabel } from "./ui-helpers.js?v=5.78";
+import { escapeHtml, wikimediaThumb } from "./util.js?v=5.78";
+import { heatColor, HEAT_NODATA } from "./heat-strip.js?v=5.78";
+import { artistStripHtml } from "./artist-strip.js?v=5.78";
+import { DECADES, isVisible } from "./limits.js?v=5.78";
+import { askChoice, kopierTilUtklipp } from "./ui-modal.js?v=5.78";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js?v=5.78";
+import { ytSpillelisteUrl, nyPlanId } from "./presentasjon-modell.js?v=5.78";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;

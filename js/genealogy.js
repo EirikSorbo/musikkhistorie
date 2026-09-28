@@ -12,17 +12,17 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.77";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.77";
-import { renderRichText } from "./rich-text.js?v=5.77";
-import { punkterHtml } from "./punkter.js?v=5.77";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.77";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.77";
-import { modalOpen } from "./ui-modal.js?v=5.77";
-import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.77";
-import { wireProposeFoot } from "./ui-edit.js?v=5.77";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.77";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.77";
+import { wireAllLinks } from "./linkify.js?v=5.78";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.78";
+import { renderRichText } from "./rich-text.js?v=5.78";
+import { punkterHtml } from "./punkter.js?v=5.78";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.78";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.78";
+import { modalOpen } from "./ui-modal.js?v=5.78";
+import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.78";
+import { wireProposeFoot } from "./ui-edit.js?v=5.78";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.78";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.78";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
