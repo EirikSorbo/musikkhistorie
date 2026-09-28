@@ -68,19 +68,20 @@ export function byggVisVerdi({ hva, id, modus, ekstra } = {}) {
   return deler.join(":");
 }
 
-// Skrivefelter der «S» skal skrive bokstaven, ikke åpne søket.
+// Skrivefelter der «F» skal skrive bokstaven, ikke åpne søket.
 export function erSkrivefelt(el) {
   if (!el) return false;
   const tag = String(el.tagName || "").toUpperCase();
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || !!el.isContentEditable;
 }
 
-// «S» alene, utenfor skrivefelt (brukervalg 2026-09-28, v5.79; til da «/»
-// eller Ctrl/Cmd+K). Med Ctrl, Cmd eller Alt er det en annen kombinasjon
-// (Cmd+S er nettleserens «lagre», Alt-kombinasjoner skriver tegn på norsk
-// tastatur), og i et skrivefelt skal bokstaven skrives.
+// «F» (finn) alene, utenfor skrivefelt (brukervalg 2026-09-28, v5.83; S i
+// v5.79, før det «/» eller Ctrl/Cmd+K). Med Ctrl, Cmd eller Alt er det en
+// annen kombinasjon (Cmd+F er nettleserens «finn på siden», Alt-
+// kombinasjoner skriver tegn på norsk tastatur), og i et skrivefelt skal
+// bokstaven skrives. Fullskjerm i visningen flyttet samtidig til H.
 export function erSokHurtigtast(e, iSkrivefelt) {
   if (!e || e.altKey || e.ctrlKey || e.metaKey || iSkrivefelt) return false;
   const k = String(e.key || "");
-  return k === "s" || k === "S";
+  return k === "f" || k === "F";
 }

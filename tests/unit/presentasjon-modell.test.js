@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.82";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.82";
+import { metaRader } from "../../js/ui-helpers.js?v=5.83";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.83";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -454,8 +454,9 @@ test("presTast: kjøreplan-tastene virker bare når en plan spilles", () => {
 });
 
 test("presTast: visningstastene virker i all presentasjon", () => {
-  assert.equal(presTast(tast("f")), "fullskjerm");
-  assert.equal(presTast(tast("F")), "fullskjerm");
+  assert.equal(presTast(tast("h")), "fullskjerm", "H = helskjerm (v5.83)");
+  assert.equal(presTast(tast("H")), "fullskjerm");
+  assert.equal(presTast(tast("f")), null, "F er søket (vis-lenke.js), ikke fullskjerm lenger");
   assert.equal(presTast(tast("a")), "skala");
   assert.equal(presTast(tast("b")), "svart");
   assert.equal(presTast(tast(".")), "svart", "klikkernes svart-skjerm-knapp");
@@ -466,20 +467,20 @@ test("presTast: visningstastene virker i all presentasjon", () => {
 
 test("presTast: aldri i skrivefelt eller med modifikator, unntatt klikkernes PageUp/PageDown", () => {
   const felt = { plan: true, iSkrivefelt: true };
-  for (const k of ["f", "a", "b", "?", "t", "+", "Home", "End", "ArrowRight", "1"]) {
+  for (const k of ["h", "a", "b", "?", "t", "+", "n", "Home", "End", "ArrowRight", "1"]) {
     assert.equal(presTast(tast(k), felt), null, `${k} i skrivefelt`);
   }
   assert.equal(presTast(tast("PageDown"), felt), "neste");
   assert.equal(presTast(tast("PageUp"), felt), "forrige");
   for (const mod of ["ctrlKey", "metaKey", "altKey"]) {
-    assert.equal(presTast(tast("f", { [mod]: true }), { plan: true }), null, `${mod}+F tilhører nettleseren`);
+    assert.equal(presTast(tast("h", { [mod]: true }), { plan: true }), null, `${mod}+H tilhører nettleseren`);
     assert.equal(presTast(tast("PageDown", { [mod]: true }), { plan: true }), null);
   }
 });
 
 test("presTast: av/på-tastene reagerer ikke på auto-gjentak, blaingen gjør det", () => {
   const holdt = (k) => presTast(tast(k, { repeat: true }), { plan: true });
-  for (const k of ["f", "a", "b", ".", "?", "t", "+"]) assert.equal(holdt(k), null, k);
+  for (const k of ["h", "a", "b", ".", "?", "t", "+", "n"]) assert.equal(holdt(k), null, k);
   assert.equal(holdt("ArrowRight"), "neste");
   assert.equal(holdt("2"), "nivaa2");
 });
@@ -507,21 +508,26 @@ test("samleTast: + legger til, Ctrl/Cmd+Z angrer, aldri i skrivefelt", () => {
   assert.equal(samleTast(tast("z", { ctrlKey: true }), { iSkrivefelt: true }), null, "feltets egen angre");
 });
 
-test("presTast: L åpner «Navn fra timen» utenfor skrivefelt (v5.82)", () => {
+test("presTast: N åpner «Navn fra timen» utenfor skrivefelt (v5.82, N fra v5.83)", () => {
   const tast = (key, mods = {}) => ({ key, altKey: false, ctrlKey: false, metaKey: false, repeat: false, ...mods });
-  assert.equal(presTast(tast("l")), "timeliste");
-  assert.equal(presTast(tast("L")), "timeliste");
-  assert.equal(presTast(tast("l"), { iSkrivefelt: true }), null, "i panelets egne felt skrives bokstaven");
-  assert.equal(presTast(tast("l", { metaKey: true })), null);
-  assert.equal(presTast(tast("l", { repeat: true })), null, "en holdt tast blinker ikke panelet av og på");
-  const rad = PRES_TASTER.flatMap((g) => g.rader).find((r) => r.taster.includes("L"));
-  assert.ok(rad?.laerer, "oversikten viser L bare for læreren");
+  assert.equal(presTast(tast("n")), "timeliste");
+  assert.equal(presTast(tast("N")), "timeliste");
+  assert.equal(presTast(tast("n"), { iSkrivefelt: true }), null, "i panelets egne felt skrives bokstaven");
+  assert.equal(presTast(tast("n", { metaKey: true })), null);
+  assert.equal(presTast(tast("n", { repeat: true })), null, "en holdt tast blinker ikke panelet av og på");
+  assert.equal(presTast(tast("l")), null, "L er lytteeksempelet (yt-spiller.js), ikke navnelista");
+  const rad = PRES_TASTER.flatMap((g) => g.rader).find((r) => r.taster.includes("N"));
+  assert.ok(rad?.laerer, "oversikten viser N bare for læreren");
+  const lytt = PRES_TASTER.flatMap((g) => g.rader).find((r) => r.taster.includes("L"));
+  assert.match(lytt?.hva || "", /lytteeksempel/i);
 });
 
 test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
   // Søket og Esc bor andre steder (vis-lenke og modalene); resten skal
   // presTast kjenne, ellers lover oversikten noe som ikke virker.
-  const andreSteder = new Set(["S", "Esc"]);
+  // Søket (F) og lytteeksempelet (L) virker i hele appen (vis-lenke og
+  // yt-spiller), Esc i modalene; resten skal presTast kjenne.
+  const andreSteder = new Set(["F", "L", "Esc"]);
   const navn = { "→": "ArrowRight", "←": "ArrowLeft", "Mellomrom": " " };
   for (const g of PRES_TASTER) {
     for (const r of g.rader) {
@@ -671,7 +677,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.82";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.83";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);
@@ -755,4 +761,8 @@ test("spilleren fanger YouTube-lenkene i hele appen, med reserve for sperrede vi
   assert.match(spiller, /const ekstern = naa\.kø\.length\n\s*\? ytSpillelisteUrl\(\[naa\.video, \.\.\.naa\.kø\]\)\[0\]/);
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
   assert.match(css, /\.yt-feil\[hidden\] \{ display: none; \}/);
+  // Tasten L (v5.83): første lytteeksempel til artisten øverst, utenfor skrivefelt.
+  assert.match(spiller, /if \(e\.key !== "l" && e\.key !== "L"\) return;\n\s*if \(erSkrivefelt\(document\.activeElement\)\) return;/);
+  assert.match(spiller, /if \(m\?\.hva !== "artist"\) return;/);
+  assert.match(spiller, /const eks = \(a\?\.musicExamples \|\| \[\]\)\.find\(\(x\) => safeUrl\(x\?\.url\)\);/, "det første eksempelet med gyldig lenke");
 });

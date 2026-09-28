@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.82";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.83";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -650,14 +650,15 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   if (e.repeat) return null;
   if (plan && (k === "t" || k === "T")) return "tilStoppet";
   if (plan && k === "+") return "leggTil";
-  if (k === "f" || k === "F") return "fullskjerm";
+  // H = helskjerm (v5.83): F ble søket, som overalt ellers i appen.
+  if (k === "h" || k === "H") return "fullskjerm";
   if (k === "a" || k === "A") return "skala";
   // «.» er det mange presentasjonsklikkere sender fra svart-skjerm-knappen.
   if (k === "b" || k === "B" || k === ".") return "svart";
   if (k === "?") return "hjelp";
   // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
   // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
-  if (k === "l" || k === "L") return "timeliste";
+  if (k === "n" || k === "N") return "timeliste";
   if (video && (k === " " || k === "k" || k === "K")) return "spill";
   return null;
 }
@@ -689,13 +690,14 @@ export const PRES_TASTER = [
   { gruppe: "Visning", rader: [
     { taster: ["1", "2", "3"], hva: "Detaljnivå" },
     { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
-    { taster: ["F"], hva: "Fullskjerm av og på" },
+    { taster: ["H"], hva: "Helskjerm (fullskjerm) av og på" },
     { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
     { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
   { gruppe: "Ellers", rader: [
-    { taster: ["S"], hva: "Søk" },
-    { taster: ["L"], hva: "Navn fra timen: noter en artist som kom opp, og hvem som foreslo den", laerer: true },
+    { taster: ["F"], hva: "Søk (finn)" },
+    { taster: ["L"], hva: "Lytt: spill det første lytteeksempelet til artisten som vises" },
+    { taster: ["N"], hva: "Navn fra timen: noter en artist som kom opp, og hvem som foreslo den", laerer: true },
     { taster: ["Esc"], hva: "Lukk øverste kort" },
     { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
   ] },

@@ -35,13 +35,14 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   visningsknappen på kortene, plussknappen på radene og tasten + kortet rett
   inn med ett klikk (pille nede til venstre viser planen, Ferdig avslutter).
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
-  «Husk visningen» per stopp. Tasten L i visningen åpner «Navn fra timen»:
+  «Husk visningen» per stopp. Tasten N i visningen åpner «Navn fra timen»:
   en artist som kom opp, og hvem som foreslo den, lagres til oppfølging på
   Skrivebordet på lærersiden (samlingen `timeforslag`, bare læreren).
 - **Lytteeksempler** spilles i appens egen spiller overalt (ikke i ny fane),
   med starttidspunkt, «Kopier lenke» og knappene for kjøreplan og utskrift;
   «Åpne på YouTube» står som reserve for videoer som ikke kan bygges inn.
-  «Spill alle» i spillelistene spilles som kø i samme spiller.
+  «Spill alle» i spillelistene spilles som kø i samme spiller. Tasten L
+  spiller det første lytteeksempelet til artisten som vises; F åpner søket.
 - **Utskrift**: studentene velger kort (artister, sjangre, tiår, innovasjoner …)
   med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan eller
   en hel metasjanger (sjangrene, artistene og tiårene følger med, og kan hukes

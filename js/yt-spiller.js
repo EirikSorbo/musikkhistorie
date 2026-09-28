@@ -30,9 +30,11 @@
 //  betingelse for den; nå er den alltid på, så betingelsene er borte.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.82";
-import { byggVisVerdi } from "./vis-lenke.js?v=5.82";
-import { modalOpen, setupModal, initModalHeaders } from "./ui-modal.js?v=5.82";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.83";
+import { byggVisVerdi, parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.83";
+import { modalOpen, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.83";
+import { getState } from "./explore-context.js?v=5.83";
+import { safeUrl } from "./util.js?v=5.83";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres. `kø` (v5.74) er videoene som spilles etter den
@@ -102,7 +104,7 @@ function ytModal() {
 //  Fullskjerm som standard i presentasjonen (v5.39, brukerkrav 2026-09-19).
 //  Kinovisning: videoen fyller lerretet på svart bakgrunn, og tittellinja
 //  vises bare når pekeren står øverst (CSS, .yt-kino). Er ikke siden alt i
-//  fullskjerm (F), bes nettleseren om ekte fullskjerm for spilleren. Det
+//  fullskjerm (H), bes nettleseren om ekte fullskjerm for spilleren. Det
 //  krever et tastetrykk eller klikk rett før (brukeraktivering); uten det,
 //  for eksempel ved omlasting på et lytteeksempel-stopp, fyller videoen
 //  vinduet i stedet. Knappen i tittellinja veksler til kortet og tilbake, så
@@ -378,5 +380,24 @@ export function initYtSpiller() {
       return;
     }
     if (apneYtSpiller(a.href, tittel)) e.preventDefault();
+  });
+
+  // Tasten L (v5.83, brukerbestilling 2026-09-28): spill det FØRSTE
+  // lytteeksempelet til artisten som vises (det øverste åpne artistkortet),
+  // uten å lete etter lenka på kortet. Utenfor skrivefelt, uten Ctrl/Cmd/Alt.
+  // Er lenka ikke en YouTube-video (søkelenke, annen vert), åpnes den i ny
+  // fane, som et klikk ville gjort. Ingen artist øverst: ingenting skjer.
+  document.addEventListener("keydown", (e) => {
+    if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key !== "l" && e.key !== "L") return;
+    if (erSkrivefelt(document.activeElement)) return;
+    const m = parseVisVerdi(topOpenModal()?.dataset.vis || "");
+    if (m?.hva !== "artist") return;
+    const a = (getState().artists || []).find((x) => x.id === m.id);
+    const eks = (a?.musicExamples || []).find((x) => safeUrl(x?.url));
+    if (!eks) return;
+    e.preventDefault();
+    const tittel = `${eks.label || "Lytteeksempel"} (${a.name})`;
+    if (!apneYtSpiller(eks.url, tittel)) window.open(eks.url, "_blank", "noopener");
   });
 }
