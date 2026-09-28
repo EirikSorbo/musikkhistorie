@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.83";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.83";
-import { punkterHtml } from "./punkter.js?v=5.83";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.83";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.83";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.83";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.84";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.84";
+import { punkterHtml } from "./punkter.js?v=5.84";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.84";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.84";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.84";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.83";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.83";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.83";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.83";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.83";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.83";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.83";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.83";
+} from "./ui-helpers.js?v=5.84";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.84";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.84";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.84";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.84";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.84";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.84";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.84";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };

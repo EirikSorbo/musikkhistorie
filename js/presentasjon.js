@@ -24,19 +24,19 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.83";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.83";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.83";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.83";
-import { GENEALOGY } from "./genre-model.js?v=5.83";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.83";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.83";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.83";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.83";
-import { getState } from "./explore-context.js?v=5.83";
-import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.83";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.83";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.83";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.84";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.84";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.84";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.84";
+import { GENEALOGY } from "./genre-model.js?v=5.84";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.84";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.84";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.84";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.84";
+import { getState } from "./explore-context.js?v=5.84";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.84";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.84";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.84";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -750,7 +750,7 @@ function byggBar() {
       ${[1, 2, 3].map((n) => `<button type="button" class="pres-knapp" data-nivaa="${n}" title="${NIVAA_NAVN[n]} (tast ${n})">${n}</button>`).join("")}
     </span>
     <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst (A)">A</button>
-    <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (H)">${IKON.full}</button>
+    <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (F)">${IKON.full}</button>
     <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger" aria-label="Innstillinger">${IKON.tannhjul}</button>
     <span class="pres-klokke" id="pres-klokke" hidden aria-label="Klokka"></span>
     <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt">Avslutt</button>

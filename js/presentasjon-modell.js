@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.83";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.84";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -650,8 +650,7 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   if (e.repeat) return null;
   if (plan && (k === "t" || k === "T")) return "tilStoppet";
   if (plan && k === "+") return "leggTil";
-  // H = helskjerm (v5.83): F ble søket, som overalt ellers i appen.
-  if (k === "h" || k === "H") return "fullskjerm";
+  if (k === "f" || k === "F") return "fullskjerm";
   if (k === "a" || k === "A") return "skala";
   // «.» er det mange presentasjonsklikkere sender fra svart-skjerm-knappen.
   if (k === "b" || k === "B" || k === ".") return "svart";
@@ -690,12 +689,12 @@ export const PRES_TASTER = [
   { gruppe: "Visning", rader: [
     { taster: ["1", "2", "3"], hva: "Detaljnivå" },
     { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
-    { taster: ["H"], hva: "Helskjerm (fullskjerm) av og på" },
+    { taster: ["F"], hva: "Fullskjerm av og på" },
     { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
     { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
   { gruppe: "Ellers", rader: [
-    { taster: ["F"], hva: "Søk (finn)" },
+    { taster: ["S"], hva: "Søk" },
     { taster: ["L"], hva: "Lytt: spill det første lytteeksempelet til artisten som vises" },
     { taster: ["N"], hva: "Navn fra timen: noter en artist som kom opp, og hvem som foreslo den", laerer: true },
     { taster: ["Esc"], hva: "Lukk øverste kort" },
