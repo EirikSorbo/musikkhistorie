@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.81";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.81";
+import { metaRader } from "../../js/ui-helpers.js?v=5.82";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.82";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -507,6 +507,17 @@ test("samleTast: + legger til, Ctrl/Cmd+Z angrer, aldri i skrivefelt", () => {
   assert.equal(samleTast(tast("z", { ctrlKey: true }), { iSkrivefelt: true }), null, "feltets egen angre");
 });
 
+test("presTast: L åpner «Navn fra timen» utenfor skrivefelt (v5.82)", () => {
+  const tast = (key, mods = {}) => ({ key, altKey: false, ctrlKey: false, metaKey: false, repeat: false, ...mods });
+  assert.equal(presTast(tast("l")), "timeliste");
+  assert.equal(presTast(tast("L")), "timeliste");
+  assert.equal(presTast(tast("l"), { iSkrivefelt: true }), null, "i panelets egne felt skrives bokstaven");
+  assert.equal(presTast(tast("l", { metaKey: true })), null);
+  assert.equal(presTast(tast("l", { repeat: true })), null, "en holdt tast blinker ikke panelet av og på");
+  const rad = PRES_TASTER.flatMap((g) => g.rader).find((r) => r.taster.includes("L"));
+  assert.ok(rad?.laerer, "oversikten viser L bare for læreren");
+});
+
 test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
   // Søket og Esc bor andre steder (vis-lenke og modalene); resten skal
   // presTast kjenne, ellers lover oversikten noe som ikke virker.
@@ -660,7 +671,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.81";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.82";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

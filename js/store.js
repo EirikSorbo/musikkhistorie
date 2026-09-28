@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.81";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.81";
-import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.81";
-import { RETUR_FELTER } from "./artist-schema.js?v=5.81";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.81";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.81";
-import { mergeHeatRows } from "./import-format.js?v=5.81";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.81";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.81";
+import { firebaseConfig } from "./firebase-config.js?v=5.82";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.82";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.82";
+import { RETUR_FELTER } from "./artist-schema.js?v=5.82";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.82";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.82";
+import { mergeHeatRows } from "./import-format.js?v=5.82";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.82";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.82";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
@@ -82,6 +82,10 @@ const genreDescsCol = collection(db, "genreDescriptions");
 // f.eks. "blues__jazz" — se GENEALOGY_EDGES/edgeKey i genealogy.js.
 const edgeDescsCol = collection(db, "edgeDescriptions");
 const podcastsCol = collection(db, "podcasts");
+// Navn fra timen (v5.82): lærerens hurtignotater fra visningen. Bare læreren
+// har lesetilgang (firestore.rules), så abonnementet settes opp kun på
+// lærersiden, etter innlogging.
+const timeforslagCol = collection(db, "timeforslag");
 const techCol = collection(db, "tech");
 const pendingEditsCol = collection(db, "pendingEdits");
 // Innholdssider (Om historie, Røtter) og varmekartet — se INNHOLD-seksjonen.
@@ -378,6 +382,31 @@ export function subscribePodcasts(callback) {
 
 export async function addPodcast(data) {
   return addDoc(podcastsCol, data);
+}
+
+// ---- Navn fra timen (v5.82) ----
+
+export function subscribeTimeforslag(callback) {
+  return onSnapshot(timeforslagCol, (snapshot) => {
+    const liste = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    liste.sort((a, b) => String(b.laget || "").localeCompare(String(a.laget || "")));
+    callback(liste);
+  }, onSubscribeError("navn fra timen"));
+}
+
+// Én post: artisten som kom opp, fornavnet på den som foreslo (valgfritt) og
+// hvor i visningen det skjedde (valgfritt). Tidspunktet settes her.
+export async function addTimeforslag({ artist, student = "", kontekst = "" }) {
+  return addDoc(timeforslagCol, {
+    artist: String(artist || "").trim().slice(0, 120),
+    student: String(student || "").trim().slice(0, 60),
+    kontekst: String(kontekst || "").trim().slice(0, 200),
+    laget: new Date().toISOString(),
+  });
+}
+
+export async function deleteTimeforslag(id) {
+  return deleteDoc(doc(db, "timeforslag", id));
 }
 
 // Import-oppdatering av eksisterende episode (matchet på tittel i importen).

@@ -24,19 +24,19 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.81";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.81";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.81";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.81";
-import { GENEALOGY } from "./genre-model.js?v=5.81";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.81";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.81";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.81";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.81";
-import { getState } from "./explore-context.js?v=5.81";
-import { onAuthChange } from "./store.js?v=5.81";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.81";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.81";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.82";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.82";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.82";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.82";
+import { GENEALOGY } from "./genre-model.js?v=5.82";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.82";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.82";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.82";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.82";
+import { getState } from "./explore-context.js?v=5.82";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.82";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.82";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.82";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -549,6 +549,7 @@ function wireTaster() {
       case "skala": return vekslSkala();
       case "svart": return vekslSvart();
       case "hjelp": return vekslHjelp();
+      case "timeliste": return vekslTimeliste();
       case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
     }
@@ -610,6 +611,117 @@ function vekslHjelp() {
         <dd>${escapeHtml(r.hva)}</dd>`).join("")}
       </dl>`).join("");
   modalOpen(m);
+}
+
+// ----------------------------------------------------------------------------
+//  Navn fra timen (v5.82, brukerbestilling 2026-09-28)
+// ----------------------------------------------------------------------------
+//  Når læreren improviserer med studentene, kommer det opp artister som ikke
+//  er i pensumet. Tasten L åpner et lite panel: artistens navn og fornavnet
+//  på den som foreslo, Enter lagrer og gjør klart for neste. Postene går til
+//  samlingen timeforslag (bare læreren leser den) og står på Skrivebordet på
+//  lærersiden til oppfølging. Hvor i visningen det skjedde (kjøreplan, stopp
+//  eller åpent kort) noteres av seg selv når panelet åpnes.
+// ----------------------------------------------------------------------------
+
+let timeKontekstNaa = "";
+const timeLagt = [];   // denne øktas poster, nyeste først
+
+function timeKontekst() {
+  const deler = [];
+  if (plan) {
+    const p = planPosisjon(stoppIdx, plan.stopp.length);
+    deler.push(plan.tittel);
+    const stopp = p.oversikt ? null : plan.stopp[p.stopp];
+    if (stopp) deler.push(`stopp ${p.stopp + 1}: ${stoppEtikett(stopp).navn}`);
+  }
+  const topp = topOpenModal();
+  const tittel = topp && topp.id !== "modal-timeliste" ? (topp.querySelector(".modal-head h2")?.textContent || "").trim() : "";
+  if (tittel && !deler.some((d) => d.includes(tittel))) deler.push(tittel);
+  return deler.join(" · ").slice(0, 200);
+}
+
+function byggTimeliste() {
+  const m = document.createElement("div");
+  m.className = "modal-backdrop";
+  m.id = "modal-timeliste";
+  m.innerHTML = `
+    <div class="modal modal-hjelp modal-timeliste">
+      <div class="modal-head">
+        <h2>Navn fra timen</h2>
+        <button type="button" class="modal-close btn ghost small">✕</button>
+      </div>
+      <p class="muted timeliste-kontekst" id="timeliste-kontekst"></p>
+      <form id="timeliste-skjema" class="timeliste-skjema" autocomplete="off">
+        <label>Artist <input type="text" id="timeliste-artist" maxlength="120" placeholder="Navn på artisten" required></label>
+        <label>Foreslått av <input type="text" id="timeliste-student" maxlength="60" placeholder="Fornavn (valgfritt)"></label>
+        <button type="submit" class="btn primary small">Legg til</button>
+      </form>
+      <p class="muted timeliste-hint">Enter lagrer og gjør klart for neste. Lista står på Skrivebordet på lærersiden.</p>
+      <ul class="timeliste-liste" id="timeliste-liste"></ul>
+    </div>`;
+  document.body.appendChild(m);
+  setupModal(m);
+  initModalHeaders();
+  m.querySelector("#timeliste-skjema").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const artistFelt = m.querySelector("#timeliste-artist");
+    const studentFelt = m.querySelector("#timeliste-student");
+    const artist = artistFelt.value.trim();
+    if (!artist) { artistFelt.focus(); return; }
+    const post = { artist, student: studentFelt.value.trim(), kontekst: timeKontekstNaa, id: null, status: "lagrer", feil: "" };
+    timeLagt.unshift(post);
+    artistFelt.value = "";
+    studentFelt.value = "";
+    artistFelt.focus();
+    tegnTimeliste();
+    addTimeforslag(post)
+      .then((ref) => { post.id = ref.id; post.status = "ok"; tegnTimeliste(); })
+      .catch((err) => { post.status = "feil"; post.feil = err?.message || String(err); tegnTimeliste(); });
+  });
+  m.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-time-angre]");
+    if (!b) return;
+    const post = timeLagt[Number(b.dataset.timeAngre)];
+    if (!post?.id) return;
+    b.disabled = true;
+    try {
+      await deleteTimeforslag(post.id);
+      timeLagt.splice(timeLagt.indexOf(post), 1);
+    } catch (err) {
+      b.disabled = false;
+      post.feil = `angre feilet: ${err?.message || err}`;
+    }
+    tegnTimeliste();
+  });
+  return m;
+}
+
+function tegnTimeliste() {
+  const el = document.getElementById("timeliste-liste");
+  if (!el) return;
+  el.innerHTML = timeLagt.length
+    ? timeLagt.map((p, i) => `<li class="timeliste-rad${p.status === "feil" ? " timeliste-feil" : ""}">
+        <span><strong>${escapeHtml(p.artist)}</strong>${p.student ? ` <span class="muted">· ${escapeHtml(p.student)}</span>` : ""}${
+          p.status === "lagrer" ? ` <span class="muted">· lagrer …</span>`
+          : p.status === "feil" ? ` <span>· ikke lagret${p.feil ? ` (${escapeHtml(p.feil)})` : ""}</span>` : ""}</span>
+        ${p.id ? `<button type="button" class="btn ghost small" data-time-angre="${i}">Angre</button>` : ""}
+      </li>`).join("")
+    : `<li class="muted timeliste-tom">Ingenting notert ennå i denne økta.</li>`;
+}
+
+// Tasten L: åpne (eller lukke) panelet. Bare for læreren; ellers ingenting.
+function vekslTimeliste() {
+  if (!erLaerer) return;
+  let m = document.getElementById("modal-timeliste");
+  if (m?.classList.contains("open")) { modalClose(m); return; }
+  timeKontekstNaa = timeKontekst();
+  if (!m) m = byggTimeliste();
+  const k = m.querySelector("#timeliste-kontekst");
+  if (k) k.textContent = timeKontekstNaa ? `Under: ${timeKontekstNaa}` : "";
+  tegnTimeliste();
+  modalOpen(m);
+  m.querySelector("#timeliste-artist")?.focus();
 }
 
 // ----------------------------------------------------------------------------
@@ -966,13 +1078,15 @@ export function initPresentasjon() {
     const etikett = stoppEtikett({ vis: [maal.hva, maal.id, maal.modus, maal.ekstra].filter((x) => x != null && x !== "").join(":") });
     visVarsel(`${etikett.tekst} finnes ikke lenger. Trykk → for neste stopp.`);
   });
+  // Lærerøkta følger innloggingen også i fri visning (v5.82): «Navn fra
+  // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
+  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;
     // «Legg til her»: knappen følger lærerøkta og det øverste kortet. Kort
     // åpnes, lukkes, heves (z-index) og bytter mål (data-vis) uten noen
     // felles hendelse, så en vakt på backdropenes attributter gjør jobben.
-    onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); });
     if ("MutationObserver" in window) {
       new MutationObserver((endringer) => {
         if (endringer.some((m) => m.target.classList?.contains("modal-backdrop"))) oppdaterLeggTil();

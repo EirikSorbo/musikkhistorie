@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.81";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.82";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -655,6 +655,9 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   // «.» er det mange presentasjonsklikkere sender fra svart-skjerm-knappen.
   if (k === "b" || k === "B" || k === ".") return "svart";
   if (k === "?") return "hjelp";
+  // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
+  // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
+  if (k === "l" || k === "L") return "timeliste";
   if (video && (k === " " || k === "k" || k === "K")) return "spill";
   return null;
 }
@@ -692,6 +695,7 @@ export const PRES_TASTER = [
   ] },
   { gruppe: "Ellers", rader: [
     { taster: ["S"], hva: "Søk" },
+    { taster: ["L"], hva: "Navn fra timen: noter en artist som kom opp, og hvem som foreslo den", laerer: true },
     { taster: ["Esc"], hva: "Lukk øverste kort" },
     { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
   ] },

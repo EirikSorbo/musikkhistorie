@@ -14,12 +14,12 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=5.81";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.81";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.81";
-import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=5.81";
-import { sharedStateDefaults } from "./shared-data.js?v=5.81";
-import { $ } from "./shared.js?v=5.81";
+} from "./store.js?v=5.82";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=5.82";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=5.82";
+import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=5.82";
+import { sharedStateDefaults } from "./shared-data.js?v=5.82";
+import { $ } from "./shared.js?v=5.82";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -30,6 +30,9 @@ export const state = {
   ...sharedStateDefaults(),
   teacherChecks: { genres: [], subgenres: [] },
   teacherChecksLoaded: false,
+  // Navn fra timen (v5.82): lærerens notater fra visningen, til Skrivebordet.
+  timeforslag: [],
+  timeforslagLoaded: false,
   pendingEdits: [],
   // showRemoved starter AV (brukervalg): lærerlista skal åpne på pensumet slik
   // det faktisk står, ikke med de skjulte blandet inn. «Vis skjulte» slår dem

@@ -586,3 +586,20 @@ test("funn 45 + 25: studentComment har tak og typevakt, og en retur uten kode ka
   const { innsendtKode: _p, ...forslagUtenKode } = forslagResubmit("");
   await assertFails(anonDb("anon-1").collection("pendingEdits").doc("p45b").update(forslagUtenKode));
 });
+
+// v5.82: navn fra timen (tasten L i visningen) — bare læreren, med typevakter.
+test("timeforslag: bare læreren leser og skriver, og bare de fire feltene", async () => {
+  const post = { artist: "Sister Rosetta Tharpe", student: "Ida", kontekst: "Gospel · stopp 5", laget: "2026-09-28T10:00:00.000Z" };
+  await assertSucceeds(teacherDb().collection("timeforslag").doc("t1").set(post));
+  await assertSucceeds(teacherDb().collection("timeforslag").doc("t1").get());
+  await assertSucceeds(teacherDb().collection("timeforslag").doc("t1").delete());
+  await assertSucceeds(teacherDb().collection("timeforslag").add({ artist: "Bare navn" }), "student og kontekst er valgfrie");
+  for (const db of [anonDb(), unauthDb(), otherUserDb()]) {
+    await assertFails(db.collection("timeforslag").doc("t2").set(post));
+    await assertFails(db.collection("timeforslag").doc("t1").get());
+  }
+  await assertFails(teacherDb().collection("timeforslag").doc("t3").set({ ...post, ekstra: 1 }), "ukjent felt");
+  await assertFails(teacherDb().collection("timeforslag").doc("t3").set({ ...post, artist: "" }), "tom artist");
+  await assertFails(teacherDb().collection("timeforslag").doc("t3").set({ ...post, artist: "x".repeat(121) }), "for lang");
+  await assertFails(teacherDb().collection("timeforslag").doc("t3").set({ ...post, student: { a: 1 } }), "typevakt");
+});

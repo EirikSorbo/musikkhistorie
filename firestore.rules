@@ -430,5 +430,22 @@ service cloud.firestore {
       );
       allow delete: if isTeacher();
     }
+
+    // ---- Navn fra timen (v5.82) ----
+    // Lærerens hurtignotater fra visningen (tasten L): en artist som kom opp,
+    // og fornavnet på studenten som foreslo den. Bare læreren leser og
+    // skriver: fornavnene er personopplysninger, og lista er lærerens egen
+    // oppfølging på Skrivebordet. Samme typevakter og tak som ellers.
+    match /timeforslag/{doc} {
+      function timeforslagOk() {
+        return request.resource.data.keys().hasOnly(["artist", "student", "kontekst", "laget"]) &&
+          request.resource.data.get("artist", "") is string &&
+          request.resource.data.get("artist", "").size() > 0 &&
+          strOk("artist", 120) && strOk("student", 60) && strOk("kontekst", 200) && strOk("laget", 40);
+      }
+      allow read: if isTeacher();
+      allow create, update: if isTeacher() && timeforslagOk();
+      allow delete: if isTeacher();
+    }
   }
 }

@@ -14,15 +14,17 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=5.81";
-import { modalOpen } from "./ui.js?v=5.81";
-import { renderPendingEditsList } from "./teacher-review.js?v=5.81";
-import { openDetail } from "./teacher-artists.js?v=5.81";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=5.81";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=5.81";
-import { storyOrder } from "./story-format.js?v=5.81";
-import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=5.81";
-import { escapeHtml, pct } from "./ui-helpers.js?v=5.81";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=5.82";
+import { modalOpen } from "./ui.js?v=5.82";
+import { renderPendingEditsList } from "./teacher-review.js?v=5.82";
+import { openDetail } from "./teacher-artists.js?v=5.82";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=5.82";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=5.82";
+import { storyOrder } from "./story-format.js?v=5.82";
+import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=5.82";
+import { escapeHtml, pct } from "./ui-helpers.js?v=5.82";
+import { deleteTimeforslag } from "./store.js?v=5.82";
+import { askChoice } from "./ui-modal.js?v=5.82";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -187,6 +189,7 @@ export function renderDesk(el) {
   el.innerHTML = `
     <p class="section-label">Skrivebord</p>
     ${inboxHtml}
+    ${timeforslagHtml()}
     <div class="desk-grid">${cats.map(catCard).join("")}</div>
   `;
 
@@ -210,6 +213,9 @@ export function renderDesk(el) {
     const uncheckBtn = hit("[data-desk-uncheck]");
     if (uncheckBtn) return checkItem(uncheckBtn.dataset.deskUncheck, uncheckBtn.dataset.id, false);
 
+    const slett = hit("[data-desk-time-slett]");
+    if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
+
     const act = hit("[data-desk]");
     if (!act) return;
     switch (act.dataset.desk) {
@@ -230,6 +236,45 @@ export function renderDesk(el) {
         break;
     }
   };
+}
+
+// Navn fra timen (v5.82): lærerens notater fra visningen (tasten L), til
+// oppfølging. «Foreslå» åpner artistskjemaet med navnet fylt inn; «Fjern»
+// sletter notatet. Bolken vises bare når det ligger noe der.
+function timeforslagHtml() {
+  const liste = state.timeforslag || [];
+  if (!liste.length) return "";
+  const dato = (iso) => {
+    const d = new Date(iso || "");
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("nb-NO", { day: "numeric", month: "short" });
+  };
+  return `<div class="desk-time">
+    <div class="desk-cat-top"><span class="desk-cat-h">Navn fra timene</span><span class="muted">${liste.length}</span></div>
+    <ul class="desk-time-liste">${liste.map((p) => `<li class="desk-time-rad">
+      <span class="desk-time-tekst"><b>${escapeHtml(p.artist || "")}</b>${p.student ? ` <span class="muted">· foreslått av ${escapeHtml(p.student)}</span>` : ""}
+        <span class="muted desk-time-meta">${[dato(p.laget), p.kontekst].filter(Boolean).map((x) => escapeHtml(x)).join(" · ")}</span></span>
+      <span class="desk-time-knapper">
+        <a class="btn ghost small" href="student.html?navn=${encodeURIComponent(p.artist || "")}" title="Åpne artistskjemaet med navnet fylt inn">Foreslå</a>
+        <button type="button" class="btn ghost small" data-desk-time-slett="${escapeHtml(p.id)}">Fjern</button>
+      </span>
+    </li>`).join("")}</ul>
+  </div>`;
+}
+
+async function slettTimeforslag(id) {
+  const p = (state.timeforslag || []).find((x) => x.id === id);
+  const ok = await askChoice({
+    title: "Fjerne notatet?",
+    text: `«${p?.artist || ""}» tas ut av lista.`,
+    buttons: [{ label: "Fjern", value: true, className: "primary" }, { label: "Avbryt", value: false }],
+    dismissValue: false,
+  });
+  if (!ok) return;
+  try {
+    await deleteTimeforslag(id);
+  } catch (e) {
+    alert(`Fikk ikke fjernet notatet (${e?.message || e}).`);
+  }
 }
 
 // Åpne kategoriens naturlige visning for gjennomsyn før sjekk.

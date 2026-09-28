@@ -35,7 +35,9 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   visningsknappen på kortene, plussknappen på radene og tasten + kortet rett
   inn med ett klikk (pille nede til venstre viser planen, Ferdig avslutter).
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
-  «Husk visningen» per stopp.
+  «Husk visningen» per stopp. Tasten L i visningen åpner «Navn fra timen»:
+  en artist som kom opp, og hvem som foreslo den, lagres til oppfølging på
+  Skrivebordet på lærersiden (samlingen `timeforslag`, bare læreren).
 - **Lytteeksempler** spilles i appens egen spiller overalt (ikke i ny fane),
   med starttidspunkt, «Kopier lenke» og knappene for kjøreplan og utskrift;
   «Åpne på YouTube» står som reserve for videoer som ikke kan bygges inn.
