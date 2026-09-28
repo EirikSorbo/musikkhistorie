@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { VIS_TYPER, parseVisVerdi, byggVisVerdi, erSkrivefelt, erSokHurtigtast } from "../../js/vis-lenke.js?v=5.78";
+import { VIS_TYPER, parseVisVerdi, byggVisVerdi, erSkrivefelt, erSokHurtigtast } from "../../js/vis-lenke.js?v=5.79";
 
 // Rundtur: alt «Kopier lenke» kan bygge, må parseren lese tilbake identisk —
 // ellers kopierer læreren en lenke som åpner noe annet (eller ingenting).
@@ -77,14 +77,16 @@ test("erSkrivefelt: input/textarea/select/contenteditable, ingenting annet", () 
   assert.equal(erSkrivefelt(null), false);
 });
 
-test("erSokHurtigtast: «/» utenfor skrivefelt, Ctrl/Cmd+K overalt", () => {
+test("erSokHurtigtast: «S» utenfor skrivefelt, ingenting annet (brukervalg 2026-09-28)", () => {
   const tast = (key, mods = {}) => ({ key, altKey: false, ctrlKey: false, metaKey: false, ...mods });
-  assert.equal(erSokHurtigtast(tast("/"), false), true);
-  assert.equal(erSokHurtigtast(tast("/"), true), false, "«/» i et skrivefelt skal skrive tegnet");
-  assert.equal(erSokHurtigtast(tast("k", { metaKey: true }), false), true);
-  assert.equal(erSokHurtigtast(tast("K", { ctrlKey: true }), true), true, "Ctrl+K virker også i skrivefelt");
-  assert.equal(erSokHurtigtast(tast("k"), false), false, "k alene er bare en bokstav");
-  assert.equal(erSokHurtigtast(tast("/", { altKey: true }), false), false, "alt-kombinasjoner skriver tegn på norsk tastatur");
-  assert.equal(erSokHurtigtast(tast("/", { ctrlKey: true }), false), false);
+  assert.equal(erSokHurtigtast(tast("s"), false), true);
+  assert.equal(erSokHurtigtast(tast("S"), false), true, "Shift+S er også S");
+  assert.equal(erSokHurtigtast(tast("s"), true), false, "«s» i et skrivefelt skal skrive bokstaven");
+  assert.equal(erSokHurtigtast(tast("s", { metaKey: true }), false), false, "Cmd+S er nettleserens lagre");
+  assert.equal(erSokHurtigtast(tast("s", { ctrlKey: true }), false), false);
+  assert.equal(erSokHurtigtast(tast("s", { altKey: true }), false), false, "alt-kombinasjoner skriver tegn på norsk tastatur");
+  assert.equal(erSokHurtigtast(tast("/"), false), false, "«/» åpner ikke søket lenger");
+  assert.equal(erSokHurtigtast(tast("k", { metaKey: true }), false), false, "Cmd+K åpner ikke søket lenger");
+  assert.equal(erSokHurtigtast(tast("k"), false), false);
   assert.equal(erSokHurtigtast(null, false), false);
 });

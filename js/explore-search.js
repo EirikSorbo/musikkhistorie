@@ -10,12 +10,12 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml } from "./ui.js?v=5.78";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.78";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.78";
-import { getState } from "./explore-context.js?v=5.78";
-import { apneMaal } from "./explore-apne.js?v=5.78";
-import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.78";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.79";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.79";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=5.79";
+import { getState } from "./explore-context.js?v=5.79";
+import { apneMaal } from "./explore-apne.js?v=5.79";
+import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=5.79";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
@@ -114,7 +114,7 @@ export function wireSok() {
     });
   }
 
-  // Hurtigtast (v5.22): «/» eller Ctrl/Cmd+K åpner søket fra hvor som helst
+  // Hurtigtast (v5.22, «S» fra v5.79): åpner søket fra hvor som helst
   // på sidene som laster utforsk-laget (forsiden, lærersiden, slektstresiden
   // — modal-sok injiseres av initExplore på alle tre). Vaktene er rene
   // funksjoner i vis-lenke.js. Datasett-vakten gjør koblingen idempotent.

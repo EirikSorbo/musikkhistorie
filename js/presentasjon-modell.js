@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.78";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.79";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -691,7 +691,7 @@ export const PRES_TASTER = [
     { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
   { gruppe: "Ellers", rader: [
-    { taster: ["/", "Ctrl/Cmd+K"], hva: "Søk" },
+    { taster: ["S"], hva: "Søk" },
     { taster: ["Esc"], hva: "Lukk øverste kort" },
     { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
   ] },

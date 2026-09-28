@@ -68,20 +68,19 @@ export function byggVisVerdi({ hva, id, modus, ekstra } = {}) {
   return deler.join(":");
 }
 
-// Skrivefelter der «/» skal skrive tegnet, ikke åpne søket.
+// Skrivefelter der «S» skal skrive bokstaven, ikke åpne søket.
 export function erSkrivefelt(el) {
   if (!el) return false;
   const tag = String(el.tagName || "").toUpperCase();
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || !!el.isContentEditable;
 }
 
-// «/» alene (utenfor skrivefelt), eller Ctrl/Cmd+K (også i skrivefelt — det
-// er nettopp poenget med den varianten). Alt-kombinasjoner slippes forbi:
-// på norsk tastatur skriver de tegn.
+// «S» alene, utenfor skrivefelt (brukervalg 2026-09-28, v5.79; til da «/»
+// eller Ctrl/Cmd+K). Med Ctrl, Cmd eller Alt er det en annen kombinasjon
+// (Cmd+S er nettleserens «lagre», Alt-kombinasjoner skriver tegn på norsk
+// tastatur), og i et skrivefelt skal bokstaven skrives.
 export function erSokHurtigtast(e, iSkrivefelt) {
-  if (!e || e.altKey) return false;
+  if (!e || e.altKey || e.ctrlKey || e.metaKey || iSkrivefelt) return false;
   const k = String(e.key || "");
-  if ((e.ctrlKey || e.metaKey) && (k === "k" || k === "K")) return true;
-  if (e.ctrlKey || e.metaKey) return false;
-  return k === "/" && !iSkrivefelt;
+  return k === "s" || k === "S";
 }

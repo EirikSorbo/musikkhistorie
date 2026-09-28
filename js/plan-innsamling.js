@@ -28,14 +28,14 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=5.78";
-import { getState } from "./explore-context.js?v=5.78";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.78";
-import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.78";
-import { escapeHtml } from "./util.js?v=5.78";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.78";
-import { aktivPlanId } from "./presentasjon.js?v=5.78";
-import { erLaererBruker } from "./plan-meny.js?v=5.78";
+import { savePlan, onAuthChange } from "./store.js?v=5.79";
+import { getState } from "./explore-context.js?v=5.79";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=5.79";
+import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=5.79";
+import { escapeHtml } from "./util.js?v=5.79";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.79";
+import { aktivPlanId } from "./presentasjon.js?v=5.79";
+import { erLaererBruker } from "./plan-meny.js?v=5.79";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
