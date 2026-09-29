@@ -12,18 +12,18 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.91";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.91";
-import { renderRichText } from "./rich-text.js?v=5.91";
-import { punkterHtml } from "./punkter.js?v=5.91";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.91";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.91";
-import { modalOpen } from "./ui-modal.js?v=5.91";
-import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.91";
-import { artistsInGenre } from "./limits.js?v=5.91";
-import { wireProposeFoot } from "./ui-edit.js?v=5.91";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.91";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.91";
+import { wireAllLinks } from "./linkify.js?v=5.92";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.92";
+import { renderRichText } from "./rich-text.js?v=5.92";
+import { punkterHtml } from "./punkter.js?v=5.92";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.92";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.92";
+import { modalOpen } from "./ui-modal.js?v=5.92";
+import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.92";
+import { artistsInGenre } from "./limits.js?v=5.92";
+import { wireProposeFoot } from "./ui-edit.js?v=5.92";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.92";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.92";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -170,10 +170,22 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   // Tomme linjer utelates (v5.74): røttene har ingenting å vokse ut av, og 12
   // av 53 sjangre har ingen barn. En tankestrek som plassholder leste som et
   // hull i pensumet, også på lerretet i presentasjonen.
-  const inf = n.p.map((p) => escapeHtml(map[p]?.f || p)).join(", ");
-  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => escapeHtml(x.f)).join(", ");
-  const reactAgainst = (n.rx || []).map((p) => escapeHtml(map[p]?.f || p));
-  const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => escapeHtml(x.f));
+  // Sjangrene i slektskapslinjene er lenker (v5.92, brukerønske 2026-09-29;
+  // de har vært ren tekst siden slektstreet kom i v1.39). Samme markup som
+  // sjangerlenkene i beskrivelsene (linkify.js), så wireAllLinks under kobler
+  // dem til onMainGenreClick, og de ser like ut overalt, i appen som på
+  // lerretet. data-genre er nodens etikett, som showSjangerInfo slår opp på.
+  // Uten onMainGenreClick blir navnet stående som tekst, ingen død lenke.
+  const sjLenke = (node, reserve) => {
+    const navn = escapeHtml(node?.f || reserve);
+    return node && onMainGenreClick
+      ? `<a class="genre-link" data-genre="${escapeHtml(node.l)}" tabindex="0" role="button">${navn}</a>`
+      : navn;
+  };
+  const inf = n.p.map((p) => sjLenke(map[p], p)).join(", ");
+  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => sjLenke(x)).join(", ");
+  const reactAgainst = (n.rx || []).map((p) => sjLenke(map[p], p));
+  const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => sjLenke(x));
   const relasjoner = [
     inf ? `<p class="gx-rel"><strong>Vokste ut av:</strong> ${inf}</p>` : "",
     reactAgainst.length ? `<p class="gx-rel gx-react-rel"><strong>Motreaksjon mot:</strong> ${reactAgainst.join(", ")}</p>` : "",

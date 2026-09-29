@@ -43,16 +43,16 @@
 //  hører hjemme i appen, som i presentasjonen.
 // ============================================================================
 
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.91";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.91";
-import { resolveSpan } from "./timeline-lanes.js?v=5.91";
-import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.91";
-import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.91";
-import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.91";
-import { heatRow } from "./heat-strip.js?v=5.91";
-import { ytMaal, finnLytteeksempel } from "./presentasjon-modell.js?v=5.91";
-import { normaliserPunkter } from "./punkter.js?v=5.91";
-import { safeUrl } from "./util.js?v=5.91";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.92";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "./limits.js?v=5.92";
+import { resolveSpan } from "./timeline-lanes.js?v=5.92";
+import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "./genre-model.js?v=5.92";
+import { resolveDesc, resolveDescAny, epokeFritekst } from "./genre-descriptions.js?v=5.92";
+import { STORY_ORDER, STORY_SKJULT, storyFor, pageFor, stripGenrePath } from "./story-format.js?v=5.92";
+import { heatRow } from "./heat-strip.js?v=5.92";
+import { ytMaal, finnLytteeksempel } from "./presentasjon-modell.js?v=5.92";
+import { normaliserPunkter } from "./punkter.js?v=5.92";
+import { safeUrl } from "./util.js?v=5.92";
 
 // Måltypene som kan stå i et hefte. Resten av vis-typene (varmekart,
 // tidslinje, koblinger, podkaster …) er skjermflater uten

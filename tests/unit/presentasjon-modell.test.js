@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.91";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.91";
+import { metaRader } from "../../js/ui-helpers.js?v=5.92";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.92";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -708,6 +708,18 @@ test("sjangerkortet: samme utvalg som «Artister»-knappen, spaltene bygges før
     "i appen er knappen inngangen");
 });
 
+test("slektskapslinjene: sjangrene er lenker, og linjene får luft over seg på lerretet", () => {
+  // v5.92 (brukerønske 2026-09-29): ren tekst siden v1.39, nå samme lenke som
+  // sjangernavnene i beskrivelsene, koblet av wireAllLinks til onMainGenreClick.
+  const gen = kilde("genealogy.js");
+  assert.match(gen, /`<a class="genre-link" data-genre="\$\{escapeHtml\(node\.l\)\}" tabindex="0" role="button">\$\{navn\}<\/a>`/);
+  assert.match(gen, /const inf = n\.p\.map\(\(p\) => sjLenke\(map\[p\], p\)\)\.join\(", "\);/);
+  assert.match(gen, /const grewInto = GENEALOGY\.filter\(\(x\) => x\.p\.includes\(n\.id\)\)\.map\(\(x\) => sjLenke\(x\)\)\.join\(", "\);/);
+  assert.match(kilde("linkify.js"), /container\.querySelectorAll\("\.genre-link\[data-genre\]"\)/, "wireAllLinks kobler dem");
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.presentasjon \.pres-sjanger-venstre > \[data-sekt\]:not\(\[hidden\]\) ~ \[data-sekt="relasjoner"\] > :first-child \{ margin-top: 1\.6rem; \}/);
+});
+
 // --- Visning-vinduet bak presentasjonsikonet (v5.41) --------------------------
 // Brukerkrav 2026-09-19: alt som har med visning å gjøre, under ikonet.
 
@@ -754,7 +766,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.91";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.92";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

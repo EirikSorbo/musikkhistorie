@@ -2863,6 +2863,10 @@ body.presentasjon .pres-sjanger-spalter {
    justeres etter første grunnlinje, så «Artister» står på linje med første
    punkt, eller med første linje i beskrivelsen på nivå 3. */
 body.presentasjon .pres-sjanger .gx-era { margin: 0; }
+/* Like mye luft over slektskapslinjene («Vokste ut av …») etter punktene
+   eller beskrivelsen (v5.92, brukerønske 2026-09-29). Bare når en synlig
+   seksjon står over dem i spalta, så de aldri får luft øverst. */
+body.presentasjon .pres-sjanger-venstre > [data-sekt]:not([hidden]) ~ [data-sekt="relasjoner"] > :first-child { margin-top: 1.6rem; }
 body.presentasjon .pres-sjanger-spalter:not(:has(> .pres-sjanger-hoyre > [data-sekt]:not([hidden]))) {
   grid-template-columns: minmax(0, 1fr);
 }
