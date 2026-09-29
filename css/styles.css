@@ -2796,10 +2796,12 @@ body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img {
   max-height: 60vh;
 }
-/* Nivå 3 har de beslektede artistene under bildet i samme spalte: litt
-   lavere bilde, så alt får plass uten rulling på et 1280×800-lerret. */
-body.presentasjon[data-pres-nivaa="3"] #modal-detail .artist-image img,
-body.presentasjon[data-pres-nivaa="3"] #modal-artist-detail .artist-image img {
+/* Står de beslektede artistene under bildet i samme spalte (nivå 2 og 3,
+   v5.85): litt lavere bilde, så alt får plass uten rulling på et
+   1280×800-lerret. Regelen følger seksjonen, ikke nivået: uten slektninger,
+   eller med dem slått av i tannhjulet, beholder nivå 2 det store bildet.
+   Nivå 3 har grunnregelens 48vh uansett. */
+body.presentasjon :is(#modal-detail, #modal-artist-detail) .pres-artist-hoyre:has(> [data-sekt="beslektede"]:not([hidden])) .artist-image img {
   max-height: 48vh;
 }
 body.presentasjon[data-pres-nivaa="2"] #modal-detail .meta,

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.84";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.84";
+import { metaRader } from "../../js/ui-helpers.js?v=5.85";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.85";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -21,7 +21,7 @@ test("kilder vises ALDRI i visning, uansett nivå eller unntak", () => {
   }
 });
 
-test("artistnivåene: bilde + levetid + innflytelseslinje + lytteeksempler, så tags", () => {
+test("artistnivåene: bilde + levetid + innflytelseslinje + lytteeksempler, så tags og beslektede", () => {
   const synlig = (sekt, n) => erSynlig("artist", sekt, n);
   // Nivå 1: bildet i fokus, levetiden og stripa — ikke årstallslinja.
   assert.equal(synlig("bilde", 1), true);
@@ -38,9 +38,12 @@ test("artistnivåene: bilde + levetid + innflytelseslinje + lytteeksempler, så 
   // Lytteeksemplene står fra nivå 1 (brukerkrav 2026-09-19).
   assert.equal(synlig("lytte", 1), true);
   assert.equal(synlig("lytte", 2), true);
-  // Nivå 2: + instrument/sjanger.
+  // Nivå 2: + instrument/sjanger og de beslektede artistene (brukerkrav
+  // 2026-09-29; før v5.85 bare på nivå 3).
   assert.equal(synlig("tags", 1), false);
   assert.equal(synlig("tags", 2), true);
+  assert.equal(synlig("beslektede", 1), false);
+  assert.equal(synlig("beslektede", 2), true, "beslektede artister fra nivå 2");
   assert.equal(synlig("beskrivelse", 2), false, "beskrivelsen hører til nivå 3");
   // Nivå 3: alt annet, unntatt oppsummeringspunktene (de hører til nivå 2).
   for (const { id } of FLATER.artist) assert.equal(synlig(id, 3), id !== "punkter", id);
@@ -677,7 +680,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.84";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.85";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);
