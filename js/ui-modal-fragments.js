@@ -16,7 +16,7 @@
 // og .head-actions-reglene er gated på :not(:empty) — da ser hodet ut som før.
 export const SJANGER_MODAL_HTML = `
 <div class="modal-backdrop" id="modal-sjanger">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="sj-title"></h2>
       <div id="sj-extra" class="head-actions"></div>
@@ -32,7 +32,7 @@ export const SJANGER_MODAL_HTML = `
 // Artistliste-popup (artister i sjanger/instrument).
 export const ARTISTLISTE_MODAL_HTML = `
 <div class="modal-backdrop" id="modal-artistliste">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="al-title"></h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -44,7 +44,7 @@ export const ARTISTLISTE_MODAL_HTML = `
 // Spilleliste-popup (musikkeksempler/verk for en sjanger).
 export const SPILLELISTE_MODAL_HTML = `
 <div class="modal-backdrop" id="modal-spilleliste">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="pl-title"></h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -56,7 +56,7 @@ export const SPILLELISTE_MODAL_HTML = `
 // Teknologi-detalj.
 export const TECH_DETAIL_MODAL_HTML = `
 <div class="modal-backdrop" id="modal-tech-detail">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="td-title"></h2>
       <button class="modal-close btn ghost small">&#x2715;</button>

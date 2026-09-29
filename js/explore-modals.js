@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.85";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.85";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.86";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.86";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -16,7 +16,7 @@ import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TEC
 export const MODAL_HTML = `
 <!-- Teknologi -->
 <div class="modal-backdrop" id="modal-teknologi" data-vis="teknologi">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Teknologiske innovasjoner</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -37,7 +37,7 @@ export const MODAL_HTML = `
      Innholdet skrives av studentene via «Foreslå nytt kort» i hver seksjon.
      NB: markupen her er én stor template-literal — ingen backticks i teksten. -->
 <div class="modal-backdrop" id="modal-instrumenter">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <!-- Tittelen er tilbake i hodet (v5.07). Kortet hadde to faner her, men
          podkastene har fått sitt eget vindu, og én fane er ingen fane. -->
     <div class="modal-head">
@@ -72,7 +72,7 @@ export const MODAL_HTML = `
      Instrumenter-kortet. Lå tidligere som fane nummer to der inne — med
      knappen på plass var fanen bare et ekstra lag rundt den samme lista. -->
 <div class="modal-backdrop" id="modal-podkaster" data-vis="podkaster">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Podkaster</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -86,7 +86,7 @@ export const MODAL_HTML = `
      kortet. Samme kortmarkup som Teknologi-seksjonen, men uten kategorifaner
      og MED hendelseskortene: lista skal svare til instrumentets tidslinje. -->
 <div class="modal-backdrop" id="modal-instr-tech">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="itl-title">Nyvinninger</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -114,7 +114,7 @@ export const MODAL_HTML = `
 
 <!-- Enkelt tiår (les) — tidslinje-stripa øverst er selve tiårsvelgeren -->
 <div class="modal-backdrop" id="modal-decade-view">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="dv-title"></h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -144,7 +144,7 @@ export const MODAL_HTML = `
 
 <!-- Varmekart: metasjanger × tiår -->
 <div class="modal-backdrop" id="modal-varmekart" data-vis="varmekart">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Tyngdepunkt gjennom tiårene</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -160,7 +160,7 @@ export const MODAL_HTML = `
      slektstreet, så figuren følger endringer uten at noe må vedlikeholdes.
      Tegnes av js/explore-sjangerperioder.js. -->
 <div class="modal-backdrop" id="modal-sjangerperioder" data-vis="sjangerperioder">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Sjangerperioder</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -186,7 +186,7 @@ export const MODAL_HTML = `
 <!-- Sjangerhimmel: konstellasjonskart — artister som satellitter rundt
      sjangrene sine; bro-artister spennes ut mellom klyngene (constellation.js) -->
 <div class="modal-backdrop" id="modal-sjangerhimmel" data-vis="himmel">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Sjangerhimmelen</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -198,7 +198,7 @@ export const MODAL_HTML = `
 
 <!-- Tidslinje: når var artistene aktive, gruppert per sjanger -->
 <div class="modal-backdrop" id="modal-tidslinje" data-vis="tidslinje">
-  <div class="modal modal-wide">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Tidslinje: når var artistene aktive?</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -210,7 +210,7 @@ export const MODAL_HTML = `
 
 <!-- Sjangere-liste -->
 <div class="modal-backdrop" id="modal-subgenre-list">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -223,7 +223,7 @@ export const MODAL_HTML = `
 
 <!-- Undersjangre (åpnes fra Sjangre-modalen, oppå den) -->
 <div class="modal-backdrop" id="modal-undersjangre">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Undersjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -236,7 +236,7 @@ export const MODAL_HTML = `
 <!-- Sjanger-info (nås fra lærer-oversiktens rader, f.eks. foreldreløse
      undersjangre — via explore-API-ets openSubgenreInfo) -->
 <div class="modal-backdrop" id="modal-subgenre-info">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2 id="sgi-title"></h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -263,7 +263,7 @@ ${TECH_DETAIL_MODAL_HTML}
      i stedet for «vis meg artister». Gjenbruker dash-kort-utseendet så
      modalen leses som et mini-dashbord. -->
 <div class="modal-backdrop" id="modal-store-bildet" data-vis="store-bildet">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Det store bildet</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -328,7 +328,7 @@ ${TECH_DETAIL_MODAL_HTML}
      hver åpning (explore-referanser.js) — ingen tekst å redigere, og derfor
      heller ingen Rediger-knapp. -->
 <div class="modal-backdrop" id="modal-referanser" data-vis="referanser">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Referanser</h2>
       <button class="modal-close btn ghost small">✕</button>
@@ -342,7 +342,7 @@ ${TECH_DETAIL_MODAL_HTML}
      Rediger-knapp som Om historie/Røtter — ingen hardkodet tekst i koden.
      Åpnes som siste kort i «Det store bildet». -->
 <div class="modal-backdrop" id="modal-app-guide" data-vis="side:guide">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Slik bruker du appen</h2>
       <div id="app-guide-extra" class="head-actions"></div>
@@ -357,7 +357,7 @@ ${TECH_DETAIL_MODAL_HTML}
      rendres ved hver åpning — ingen hardkodet tekst i koden. Foten er
      navigasjon (kode), ikke innhold. -->
 <div class="modal-backdrop" id="modal-om-historie" data-vis="side:omHistorie">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Om historie</h2>
       <div id="omh-extra" class="head-actions"></div>
@@ -368,7 +368,7 @@ ${TECH_DETAIL_MODAL_HTML}
 </div>
 
 <div class="modal-backdrop" id="modal-rotter" data-vis="side:rotter">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Røtter før 1910</h2>
       <div id="rotter-extra" class="head-actions"></div>
@@ -388,7 +388,7 @@ ${TECH_DETAIL_MODAL_HTML}
      til sammen dekker pensumet. Én modal med sjanger-chips øverst — samme
      leseflate uansett historie, og bytte skjer uten modal-stabling. -->
 <div class="modal-backdrop" id="modal-historier">
-  <div class="modal">
+  <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Sjangerhistorier</h2>
       <div id="hist-extra" class="head-actions"></div>

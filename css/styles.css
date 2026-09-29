@@ -1265,6 +1265,29 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    320 px er målt: knapperadene står på én linje med god margin, og modalhodet
    («Innstillinger» + ←/✕) holder seg på én rad. */
 .modal.modal-narrow { max-width: 320px; }
+/* Innholdskortene (v5.86, brukervalg 2026-09-29): artist-, sjanger- og
+   innovasjonskort, tiår, historier, Det store bildet, Instrumenter og de
+   andre visningene deler én bredere ramme. 640 og 860 px var bredden på
+   lærerens skjemaer i første versjon, og kortene arvet dem; skjemaer og små
+   dialoger beholder dem. Rammen er 1000 px, men aldri over 90 % av skjermen
+   når vinduet er bredt nok til at det betyr noe. Nedre grense 860 px: i
+   smalere vinduer fyller kortet vinduet, slik de brede kortene alltid har
+   gjort, og på mobil er alt som før. */
+.modal.modal-innhold { max-width: clamp(860px, 90vw, 1000px); }
+/* Brødteksten beholder en lesbar linjelengde i den brede rammen: 68ch er
+   rundt 85 tegn med Inter, omtrent det beskrivelsene hadde i 640 px-kortet
+   (de står under bildet, i full bredde). Tidslinjer, varmekart, lister og
+   rutenett bruker hele bredden. .info-text er tiårstekstene. Presentasjonen
+   har sine egne regler (80ch, lerretets bildeoppsett) og holdes utenfor. */
+body:not(.presentasjon) .modal.modal-innhold :is(p, .rt, .info-text) { max-width: 68ch; }
+/* Større bilde på artist- og innovasjonskortet når kortet har plass til det.
+   På innovasjonskortet står bildet i margen ved siden av den avgrensede
+   teksten. På mobil står bildet over teksten med dagens størrelse (se
+   640 px-blokka). */
+@media (min-width: 641px) {
+  body:not(.presentasjon) .modal.modal-innhold .artist-image.big,
+  body:not(.presentasjon) #modal-tech-detail .artist-image { width: 240px; }
+}
 .modal-head {
   display: flex;
   justify-content: space-between;
@@ -1849,6 +1872,24 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 /* Ti kort: lærerens hub fra v5.20. Tre kolonner (det auto-fit gir i 640 px-
    modalen) ga 3+3+3+1 med et ensomt kort nederst. To kolonner er eneste
    jevne oppsett som får plass. Står i samme regel som fire kort over. */
+/* Den brede huben (v5.86, .modal-innhold) har plass til hele rader: fire kort
+   på én rad, ti som 5 + 5. Grensene er regnet på samme måte som over: under
+   900 px fyller modalen vinduet minus 40 px luft, og innholdet er 56 px
+   smalere enn modalen.
+     4 på rad: 4·150 + 3·10 = 630 px innhold → skjerm ≥ 726 px
+     5 på rad: 5·150 + 4·10 = 790 px innhold → skjerm ≥ 886 px
+   Presentasjonen holdes utenfor: der fyller kortet lerretet og har sitt eget
+   oppsett. */
+@media (min-width: 726px) {
+  body:not(.presentasjon) #modal-store-bildet .dash-grid:has(> :nth-child(4):last-child) {
+    grid-template-columns: repeat(4, minmax(0, 240px));
+  }
+}
+@media (min-width: 886px) {
+  body:not(.presentasjon) #modal-store-bildet .dash-grid:has(> :nth-child(10):last-child) {
+    grid-template-columns: repeat(5, minmax(0, 240px));
+  }
+}
 .dash-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -2337,8 +2378,10 @@ body.is-teacher #gate { display: none; }
    en stripe som la seg ved siden av bildet ble kortere på noen kort enn på
    andre. Da måler ikke to kort det samme, og det er nettopp sammenligningen
    stripa er til for. Nå står den alltid i full kortbredde, under bildet.
-   Etter boblene er bildet stort sett slutt uansett, så det koster nesten ingen
-   høyde. display:flow-root blir stående som vern mot at en blokk med bakgrunn
+   Med 180 px-bildet var bildet stort sett slutt etter boblene; med 240 px i
+   det brede kortet (v5.86) rekker det lenger ned, og stripa venter på det
+   (ca. 180 px luft under boblene, målt som median over 16 artister).
+   display:flow-root blir stående som vern mot at en blokk med bakgrunn
    sklir inn under et flytende bilde.
 
    Den vannrette luften er nettopp til de ytterste årstallene: de er sentrert på
