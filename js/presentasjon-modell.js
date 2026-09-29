@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.90";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.91";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -745,11 +745,13 @@ export function artistPlassering(sekt) {
 // ----------------------------------------------------------------------------
 //  Sjangerkortets lerret (v5.89, brukerønske 2026-09-29): varmestripa øverst
 //  over hele bredden, artistene i sjangeren (navnelista) i en egen spalte til
-//  høyre, og resten (epoke, punkter eller beskrivelse, «Hør etter»,
-//  slektskap) til venstre. DOM-flyttingen bor i js/pres-sjanger.js.
+//  høyre, og resten (punkter eller beskrivelse, «Hør etter», slektskap) til
+//  venstre. Epokelinja står under stripa som bildetekst (v5.91), så punktene
+//  og «Artister»-overskriften begynner på samme linje. DOM-flyttingen bor i
+//  js/pres-sjanger.js.
 // ----------------------------------------------------------------------------
 export function sjangerPlassering(sekt) {
-  if (sekt === "stripe") return "topp";
+  if (sekt === "stripe" || sekt === "era") return "topp";
   if (sekt === "artister") return "hoyre";
   return "venstre";
 }

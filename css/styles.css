@@ -2856,8 +2856,13 @@ body.presentasjon .pres-artist-hoyre .related-chip { font-size: 0.95rem; }
    venstre spalte hele bredden. */
 body.presentasjon .pres-sjanger-spalter {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24%);
-  gap: 0 3rem; align-items: start;
+  gap: 0 3rem; align-items: first baseline; margin-top: 1.6rem;
 }
+/* Epokelinja står som bildetekst tett under varmestripa (v5.91, brukerønske
+   2026-09-29), og spaltene får luft over seg (margin-top over). Spaltene
+   justeres etter første grunnlinje, så «Artister» står på linje med første
+   punkt, eller med første linje i beskrivelsen på nivå 3. */
+body.presentasjon .pres-sjanger .gx-era { margin: 0; }
 body.presentasjon .pres-sjanger-spalter:not(:has(> .pres-sjanger-hoyre > [data-sekt]:not([hidden]))) {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -2871,7 +2876,7 @@ body.presentasjon .pres-sjanger-hoyre:not(:has(> [data-sekt]:not([hidden]))) { d
    4,6–9,3:1. --sj-farge settes på lista i genealogy.js (nodeColor). Med denne
    størrelsen får 18 navn (Swing, Pop) plass i én kolonne uten rulling på
    lerretene høydene ellers er målt mot, 1920×1080 og 1280×800 (også
-   1512×982); på 1280×720 ruller de to lengste listene 56 px.
+   1512×982); på 1280×720 ruller de to lengste listene 67 px (målt v5.91).
    I appen er knappen «Artister» inngangen, og lista står ikke der. */
 body:not(.presentasjon) #modal-sjanger [data-sekt="artister"] { display: none !important; }
 .sj-artister {
@@ -2883,8 +2888,10 @@ body:not(.presentasjon) #modal-sjanger [data-sekt="artister"] { display: none !i
   color: color-mix(in srgb, var(--sj-farge, var(--muted)) 70%, black);
 }
 .sj-artister-liste { list-style: none; margin: 0; padding: 0; }
+/* display: block, ikke knappens inline-block: inline tok listepunktets egen
+   linjehøyde over (ca. 1,6), og line-height her virket ikke (v5.91). */
 .sj-artist {
-  background: none; border: 0; padding: 0; font: inherit; font-size: 0.95rem; line-height: 1.5;
+  display: block; background: none; border: 0; padding: 0; font: inherit; font-size: 0.95rem; line-height: 1.5;
   color: color-mix(in srgb, var(--text) 50%, var(--muted)); text-align: left; cursor: pointer;
 }
 .sj-artist:hover, .sj-artist:focus-visible { color: var(--accent-2); text-decoration: underline; }

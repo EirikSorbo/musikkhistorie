@@ -3,8 +3,9 @@
 // ----------------------------------------------------------------------------
 //  Brukerønske 2026-09-29: artistene i sjangeren som navneliste i en egen
 //  spalte til høyre, så punktene (nivå 2) eller beskrivelsen (nivå 3) står
-//  til venstre som før. Varmestripa står øverst over hele bredden, som
-//  innflytelseslinja på artistkortet (js/pres-artist.js, samme mønster).
+//  til venstre som før. Varmestripa står øverst over hele bredden, med
+//  epokelinja under som bildetekst (v5.91), som innflytelseslinja på
+//  artistkortet (js/pres-artist.js, samme mønster).
 //  Seksjonene flyttes i DOM-en når kortet vises på lerretet, og på nytt ved
 //  hver omtegning: showSjangerInfo bygger kroppen fra bunnen.
 //
@@ -18,7 +19,7 @@
 //  presentasjon.js (brukNivaaPaa) og er inert ellers.
 // ============================================================================
 
-import { sjangerPlassering } from "./presentasjon-modell.js?v=5.90";
+import { sjangerPlassering } from "./presentasjon-modell.js?v=5.91";
 
 // Bygger spaltene. Idempotent: står oppsettet alt, gjøres ingenting — modalens
 // observatør kaller oss igjen etter våre egne flyttinger.
