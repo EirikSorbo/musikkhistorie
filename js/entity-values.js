@@ -8,9 +8,9 @@
 //  `state` er sidens delte samlinger (sharedStateDefaults-formen).
 // ============================================================================
 
-import { resolveDesc } from "./genre-descriptions.js?v=5.86";
-import { resolveMainDesc } from "./genealogy.js?v=5.86";
-import { genreEditLevel } from "./store.js?v=5.86";
+import { resolveDesc } from "./genre-descriptions.js?v=5.87";
+import { resolveMainDesc } from "./genealogy.js?v=5.87";
+import { genreEditLevel } from "./store.js?v=5.87";
 
 export function currentEntityValues(state, edit) {
   const { entityType, entityId } = edit;

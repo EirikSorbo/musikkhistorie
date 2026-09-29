@@ -14,20 +14,20 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=5.86";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.86";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.86";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.86";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.86";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.86";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.86";
-import { initPlanMeny } from "./plan-meny.js?v=5.86";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.86";
-import { initYtSpiller } from "./yt-spiller.js?v=5.86";
-import { initVisning, visningTikk } from "./visning.js?v=5.86";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=5.86";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.86";
-import { provVisMaal } from "./explore-apne.js?v=5.86";
+import { initExplore } from "./explore.js?v=5.87";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=5.87";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=5.87";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.87";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=5.87";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=5.87";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=5.87";
+import { initPlanMeny } from "./plan-meny.js?v=5.87";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=5.87";
+import { initYtSpiller } from "./yt-spiller.js?v=5.87";
+import { initVisning, visningTikk } from "./visning.js?v=5.87";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=5.87";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=5.87";
+import { provVisMaal } from "./explore-apne.js?v=5.87";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:

@@ -1319,6 +1319,11 @@ body:not(.presentasjon) .modal.modal-innhold :is(p, .rt, .info-text) { max-width
 .modal-head .modal-close,
 .modal-head .modal-close-all { font-size: 1.05rem; padding: 4px 10px; min-width: 36px; }
 .modal-head .modal-close { margin-right: 4px; }
+/* Litt luft mellom verktøyene (utskrift, pluss, visning, pil) og ←/✕
+   (brukerønske 2026-09-29): de to gruppene sto kloss inntil hverandre med
+   2 px mellomrom. Verktøyene står alltid foran ← i DOM-en, også når de er
+   skjult; da tar tittelens flex: 1 opp luften, og ingenting flytter seg. */
+.modal-head :is(.utskrift-ta-med, .plan-pluss, .modal-lenke, .modal-lenke-meny) ~ .modal-close { margin-left: 8px; }
 /* Visningsknappen (v5.68, før «Kopier lenke» v5.22): bare i en lærerøkt
    (body.laerer-okt, plan-meny.js), og ikke under plukking, der plukkeknappen
    med samme ikon tar over. [hidden]-skjulingen (intet mål) dekkes av den
