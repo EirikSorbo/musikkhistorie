@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.89";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.89";
+import { metaRader } from "../../js/ui-helpers.js?v=5.90";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.90";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -697,7 +697,10 @@ test("sjangerkortet: samme utvalg som «Artister»-knappen, spaltene bygges før
   assert.match(modul, /kropp\.insertBefore\(lerret, forste\);/, "knapperaden blir stående under spaltene");
   assert.doesNotMatch(modul, /from "\.\/(store|ui|explore-context)\.js/, "modulen skal kunne lastes uten Firebase");
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
-  assert.match(css, /body\.presentasjon \.pres-sjanger-spalter \{\n\s*display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 30%\);/);
+  assert.match(css, /body\.presentasjon \.pres-sjanger-spalter \{\n\s*display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 24%\);/);
+  // v5.90: sidespalta i sjangerens farge, med mørk nyanse på overskriften (kontrast).
+  assert.match(gen, /class="sj-artister" style="--sj-farge:\$\{escapeHtml\(nodeColor\(n\)\)\}"/);
+  assert.match(css, /\.sj-artister \.related-head \{[^}]*color: color-mix\(in srgb, var\(--sj-farge, var\(--muted\)\) 70%, black\);/);
   assert.match(css, /body:not\(\.presentasjon\) #modal-sjanger \[data-sekt="artister"\] \{ display: none !important; \}/,
     "i appen er knappen inngangen");
 });
@@ -748,7 +751,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.89";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.90";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

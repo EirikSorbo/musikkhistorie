@@ -12,18 +12,18 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.89";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.89";
-import { renderRichText } from "./rich-text.js?v=5.89";
-import { punkterHtml } from "./punkter.js?v=5.89";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.89";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.89";
-import { modalOpen } from "./ui-modal.js?v=5.89";
-import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.89";
-import { artistsInGenre } from "./limits.js?v=5.89";
-import { wireProposeFoot } from "./ui-edit.js?v=5.89";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.89";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.89";
+import { wireAllLinks } from "./linkify.js?v=5.90";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.90";
+import { renderRichText } from "./rich-text.js?v=5.90";
+import { punkterHtml } from "./punkter.js?v=5.90";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.90";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.90";
+import { modalOpen } from "./ui-modal.js?v=5.90";
+import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.90";
+import { artistsInGenre } from "./limits.js?v=5.90";
+import { wireProposeFoot } from "./ui-edit.js?v=5.90";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.90";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.90";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -200,7 +200,9 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   // punktene (js/pres-sjanger.js); CSS skjuler den i appen, der knappen er
   // inngangen. Et navn åpner artistkortet, som de beslektede artistene.
   const iSjangeren = n.g ? artistsInGenre(artists, n.l) : [];
-  const artisterHtml = iSjangeren.length ? `<div class="sj-artister">
+  // --sj-farge (v5.90): sjangerens farge, den samme som varmestripa, til
+  // streken og overskriften i sidespalta (se .sj-artister i styles.css).
+  const artisterHtml = iSjangeren.length ? `<div class="sj-artister" style="--sj-farge:${escapeHtml(nodeColor(n))}">
       <h4 class="related-head">Artister</h4>
       <ul class="sj-artister-liste">${iSjangeren.map((a) =>
         `<li><button type="button" class="sj-artist" data-related-id="${escapeHtml(String(a.id))}">${escapeHtml(a.name)}</button></li>`).join("")}</ul>

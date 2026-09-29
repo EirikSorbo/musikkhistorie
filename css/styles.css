@@ -2855,28 +2855,38 @@ body.presentasjon .pres-artist-hoyre .related-chip { font-size: 0.95rem; }
    (nivå 1, en sjanger uten artister, eller slått av i tannhjulet) får
    venstre spalte hele bredden. */
 body.presentasjon .pres-sjanger-spalter {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 30%);
-  gap: 0 2.4rem; align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24%);
+  gap: 0 3rem; align-items: start;
 }
 body.presentasjon .pres-sjanger-spalter:not(:has(> .pres-sjanger-hoyre > [data-sekt]:not([hidden]))) {
   grid-template-columns: minmax(0, 1fr);
 }
 body.presentasjon .pres-sjanger-hoyre:not(:has(> [data-sekt]:not([hidden]))) { display: none; }
-/* Navnelista: bare navnene, ett per linje. Et navn åpner artistkortet, som
-   de beslektede artistene. I appen er knappen «Artister» inngangen, og lista
-   står ikke der. */
+/* Navnelista som en rolig sidespalte (v5.90, «litt mer elegant»): ingen boks,
+   men en tynn strek i sjangerens farge (den samme som varmestripa) mot
+   punktene, overskriften med små versaler i en mørk nyanse av fargen, og
+   navnene mindre og mykere enn punktene, så de leses som et tillegg. Den
+   mørke nyansen fordi fire av sjangerfargene (grå, oransje, blå, turkis) har
+   under 4,5:1 kontrast som liten tekst; 70 % farge og 30 % svart gir
+   4,6–9,3:1. --sj-farge settes på lista i genealogy.js (nodeColor). Med denne
+   størrelsen får 18 navn (Swing, Pop) plass i én kolonne uten rulling på
+   lerretene høydene ellers er målt mot, 1920×1080 og 1280×800 (også
+   1512×982); på 1280×720 ruller de to lengste listene 56 px.
+   I appen er knappen «Artister» inngangen, og lista står ikke der. */
 body:not(.presentasjon) #modal-sjanger [data-sekt="artister"] { display: none !important; }
-.sj-artister-liste { list-style: none; margin: 0; padding: 0; }
-.sj-artister-liste li { margin: 0 0 0.2em; break-inside: avoid; }
-.sj-artist {
-  background: none; border: 0; padding: 0; font: inherit; font-size: 1.05rem;
-  line-height: 1.4; color: var(--text); text-align: left; cursor: pointer;
+.sj-artister {
+  border-left: 2px solid color-mix(in srgb, var(--sj-farge, var(--line-strong)) 35%, white);
+  padding: 0.15rem 0 0.15rem 1.6rem;
 }
-/* Lange lister (15 navn eller flere: Swing og Pop har 18, Cont. jazz 15) går
-   i to kolonner, så kortet ikke må rulles: 18 navn i én kolonne ble høyere enn
-   lerretet på 1920×1080. Kortere lister står i én kolonne, der også lange
-   navn («Booker T. & the M.G.'s») får plass på én linje. */
-body.presentasjon .sj-artister-liste:has(> li:nth-child(15)) { columns: 2; column-gap: 1.5rem; }
+.sj-artister .related-head {
+  margin: 0 0 0.6rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--sj-farge, var(--muted)) 70%, black);
+}
+.sj-artister-liste { list-style: none; margin: 0; padding: 0; }
+.sj-artist {
+  background: none; border: 0; padding: 0; font: inherit; font-size: 0.95rem; line-height: 1.5;
+  color: color-mix(in srgb, var(--text) 50%, var(--muted)); text-align: left; cursor: pointer;
+}
 .sj-artist:hover, .sj-artist:focus-visible { color: var(--accent-2); text-decoration: underline; }
 body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img {

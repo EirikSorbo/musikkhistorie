@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.89";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.89";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.89";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.89";
-import { GENEALOGY } from "./genre-model.js?v=5.89";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.89";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.89";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.89";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.89";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.89";
-import { getState } from "./explore-context.js?v=5.89";
-import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.89";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.89";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.89";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.90";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.90";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.90";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.90";
+import { GENEALOGY } from "./genre-model.js?v=5.90";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.90";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.90";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.90";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.90";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.90";
+import { getState } from "./explore-context.js?v=5.90";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.90";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.90";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.90";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
