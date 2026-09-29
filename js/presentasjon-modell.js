@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.87";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.88";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -292,6 +292,27 @@ export function ytWatchUrl(video, list, start) {
   if (list) u.searchParams.set("list", list);
   if (start) u.searchParams.set("t", String(start));
   return u.href;
+}
+
+// Starttiden til et lytteeksempel bor i selve lenka (t=), og ytMaal leser
+// den derfra. medStarttid skriver den (v5.88, starttidsfeltet i rad-
+// editoren): «t=<sek>s», YouTubes egen form, som de lagrede lenkene bruker.
+// Tom eller 0 fjerner tiden, og en gammel «start=» ryddes alltid bort (t
+// vinner uansett i lesStart). Andre parametre (v, list, si) står urørt.
+// Lenker som ikke er YouTube, eller ikke kan leses, returneres uendret.
+export function medStarttid(url, sek) {
+  if (!ytMaal(url)) return url;
+  const u = new URL(String(url).trim());
+  u.searchParams.delete("start");
+  const s = Math.round(Number(sek) || 0);
+  if (s > 0) u.searchParams.set("t", `${s}s`);
+  else u.searchParams.delete("t");
+  return u.href;
+}
+
+// Starttiden i en lenke som tekst for feltet («6:35»), tom uten tid.
+export function starttidTekst(url) {
+  return formatTid(ytMaal(url)?.start);
 }
 
 // Embed-URL for spilleren (privacy-varianten uten sporingscookies før

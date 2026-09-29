@@ -8,16 +8,16 @@
 //  innovasjonskort via addTechProposal.
 // ============================================================================
 
-import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.87";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.87";
-import { ARTIST_FIELDS } from "./artist-schema.js?v=5.87";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.87";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.87";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.87";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.87";
-import { setupFormatBars } from "./format-bar.js?v=5.87";
-import { TREG_SENDING_MELDING } from "./util.js?v=5.87";
-import { wireCharCount } from "./ui-helpers.js?v=5.87";
+import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js?v=5.88";
+import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js?v=5.88";
+import { ARTIST_FIELDS } from "./artist-schema.js?v=5.88";
+import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js?v=5.88";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js?v=5.88";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=5.88";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=5.88";
+import { setupFormatBars } from "./format-bar.js?v=5.88";
+import { TREG_SENDING_MELDING } from "./util.js?v=5.88";
+import { wireCharCount } from "./ui-helpers.js?v=5.88";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.
 // Derfor bygges det ved KALL, ikke ved import: en modulnivå-konstant ville
@@ -352,6 +352,11 @@ function validateRows(specs) {
         if (!tittel && !url) continue;
         if (!erHttpUrl(url)) {
           return `Musikkeksempelet ${tittel ? `«${tittel}»` : "(uten tittel)"} mangler en gyldig lenke (må starte med https://).`;
+        }
+        // Starttidsfeltet (v5.88) merker seg selv ugyldig, se kobleStarttid.
+        const start = rad.querySelector(".me-start");
+        if (start && !start.validity.valid) {
+          return `Starttiden for ${tittel ? `«${tittel}»` : "musikkeksempelet"}: ${start.validationMessage}`;
         }
       } else if (rowSpec === WORK_SPEC) {
         const tittel = les("work-title"), url = les("work-url");

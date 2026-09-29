@@ -656,6 +656,13 @@ textarea { resize: vertical; }
 .me-row .me-label { flex: 1; }
 .me-row .me-url { flex: 1.4; }
 .me-row .me-year { flex: 0 0 90px; }
+/* Starttiden (v5.88) skrives inn i lenka; se kobleStarttid i row-editor.js.
+   min-width: 0, ellers holder flex tekstfeltet på standardbredden sin (ca.
+   20 tegn, 213 px) og skyver framføringsåret ned på en egen linje; tallfeltene
+   ved siden av har en smalere standardbredde og slipper. Rød kant bare når
+   feltet har merket seg ugyldig (setCustomValidity). */
+.me-row .me-start { flex: 0 0 90px; min-width: 0; }
+.me-row .me-start:invalid { border-color: var(--danger); }
 .me-row .me-perf-year { flex: 0 0 110px; }
 .me-row .me-note { flex: 1 1 100%; }
 .me-row .me-genre { flex: 0 0 240px; }
@@ -2124,6 +2131,7 @@ body.is-teacher #gate { display: none; }
   .me-row .me-perf-year,
   .me-row .me-label,
   .me-row .me-url,
+  .me-row .me-start,
   .me-row .me-note { flex: 1 1 auto; }
   /* Stablet er «øverst til høyre» meningsløst: tilbake til DOM-rekkefølge. */
   .me-row .me-genre { order: 0; }

@@ -8,17 +8,22 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=5.87";
+import { escapeHtml } from "./util.js?v=5.88";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=5.87";
+import { KILDE_KATEGORIER } from "./kilder.js?v=5.88";
+// Starttiden (v5.88) bor i lenka; hjelperne er rene og deles med spilleren.
+import { ytMaal, parseTid, medStarttid, starttidTekst } from "./presentasjon-modell.js?v=5.88";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,
 // always? (ta med i output selv når tom — ellers kun hvis utfylt),
-// breakAfter? (tving linjeskift etter feltet i den wrappende flex-raden) }.
-// removeLabel = aria-label på ✕-fjern-knappen.
+// breakAfter? (tving linjeskift etter feltet i den wrappende flex-raden),
+// ui? (bare et hjelpefelt i skjemaet: lagres aldri som egen nøkkel),
+// verdi? (values → feltets startverdi, for ui-felt som vises fra et annet felt) }.
+// removeLabel = aria-label på ✕-fjern-knappen. kobleRad? (row → void) kobler
+// feltene i en ny rad til hverandre, se addRow.
 export const WORK_SPEC = {
   rowClass: "work-row", removeClass: "remove-work", keepKey: "title",
   removeLabel: "Fjern verk",
@@ -40,10 +45,64 @@ export const MUSIC_SPEC = {
     { key: "label", cls: "me-label", type: "text", ph: "Tittel (f.eks. «Hellhound on My Trail»)", label: "Tittel", always: true },
     { key: "year",  cls: "me-year",  type: "number", ph: "Årstall", label: "Årstall" },
     { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
+    // Starttiden (v5.88, brukerønske 2026-09-29) lagres ikke for seg: den
+    // skrives inn i lenka som t=, der spilleren, visningen og heftet alltid
+    // har lest den. Feltet og lenka speiler hverandre, se kobleStarttid.
+    { key: "start", cls: "me-start", type: "text", ph: "Start m:ss", label: "Starttid", title: "Hvor avspillingen starter, som 1:30 eller 90 (sekunder). Skrives inn i YouTube-lenka (t=…). Limer du inn en lenke med tid, hentes tiden derfra.", ui: true, verdi: (v) => starttidTekst(v.url) },
     { key: "performanceYear", cls: "me-perf-year", type: "number", ph: "Framf.år", label: "Framføringsår", title: "Året for framføring/konsert (kun hvis annet enn utgivelsesår)" },
     { key: "note", cls: "me-note", type: "text", ph: "Hør etter … (valgfritt lytteanvisning)", label: "Hør etter", title: "Kort lytteanvisning: hva skal man legge merke til i akkurat denne innspillingen?" },
   ],
+  kobleRad: (row) => kobleStarttid(row),
 };
+
+// Starttidsfeltet og lenka i én lytteeksempel-rad (v5.88). Lenka er det som
+// lagres; feltet er en snarvei inn i den, og det sist redigerte feltet vinner:
+//  - skriver du en tid, settes t= i lenka med en gang (tomt felt fjerner den);
+//  - limer du inn en lenke med egen tid, vises den i feltet;
+//  - bytter du til en lenke UTEN tid, tømmes feltet, for en tid fra en annen
+//    opplasting treffer sjelden. Unntaket er en tid skrevet før det fantes en
+//    lenke i raden: den legges inn i lenka når den kommer.
+// En tid som ikke kan leses, eller en tid på en lenke som ikke er YouTube,
+// merkes ugyldig (setCustomValidity), så skjemaet ikke sendes med en tid som
+// stille forsvinner.
+export function kobleStarttid(row) {
+  const tid = row.querySelector(".me-start");
+  const lenke = row.querySelector(".me-url");
+  if (!tid || !lenke) return;
+  let venter = false;   // tid skrevet før raden hadde en lenke
+  const merk = (melding) => tid.setCustomValidity(melding || "");
+
+  tid.addEventListener("input", () => {
+    const tekst = tid.value.trim();
+    const url = lenke.value.trim();
+    const sek = parseTid(tekst);
+    if (tekst && sek == null) { merk("Skriv tiden som 1:30 eller 90 (sekunder)."); return; }
+    if (!url) { venter = !!sek; merk(""); return; }
+    if (!ytMaal(url)) { merk(sek ? "Starttid virker bare med YouTube-lenker." : ""); return; }
+    venter = false;
+    merk("");
+    lenke.value = medStarttid(url, sek);
+  });
+
+  // Mens lenka skrives eller limes inn: vis tiden den har med seg.
+  lenke.addEventListener("input", () => {
+    const egen = ytMaal(lenke.value.trim())?.start;
+    if (egen) { tid.value = starttidTekst(lenke.value.trim()); venter = false; merk(""); }
+  });
+
+  // Når lenka er ferdig redigert: speil den, eller legg inn en ventende tid.
+  lenke.addEventListener("change", () => {
+    const url = lenke.value.trim();
+    const maal = ytMaal(url);
+    if (maal?.start) return;   // tatt av input-lytteren
+    const sek = parseTid(tid.value.trim());
+    if (!url) { venter = !!sek; merk(""); return; }   // tom lenke: tiden venter
+    if (venter && sek && maal) lenke.value = medStarttid(url, sek);
+    else tid.value = "";
+    venter = false;
+    merk("");
+  });
+}
 
 // MUSIC_SPEC med sjangervalgene fylt inn i genre-selecten. Holder row-editor
 // avhengighetsfri: kalleren sender inn gyldige tre-sjangre (typisk
@@ -92,6 +151,7 @@ export function normalizeRows(spec, list) {
       : (rå && typeof rå === "object" ? rå : {});
     const ut = {};
     for (const f of spec.fields) {
+      if (f.ui) continue;
       if (f.type === "number") {
         const n = parseInt(kilde[f.key], 10);
         if (Number.isFinite(n)) ut[f.key] = n;
@@ -112,7 +172,7 @@ export function normalizeSources(v) {
 }
 
 function inputHtml(f, values) {
-  const v = values[f.key] == null ? "" : values[f.key];
+  const v = f.verdi ? f.verdi(values) : (values[f.key] == null ? "" : values[f.key]);
   if (f.type === "select") {
     // Eksisterende verdi som ikke står i options beholdes som eget valg,
     // så en re-lagring aldri mister den stille.
@@ -151,6 +211,7 @@ export function addRow(wrapEl, spec, values = {}) {
   row.className = spec.rowClass;
   row.innerHTML = rowInnerHtml(spec, values);
   row.querySelector("." + spec.removeClass).addEventListener("click", () => row.remove());
+  spec.kobleRad?.(row);
   wrapEl.appendChild(row);
   return row;
 }
@@ -169,6 +230,7 @@ export function collectRows(wrapEl, spec) {
   return [...wrapEl.querySelectorAll("." + spec.rowClass)].map((r) => {
     const out = {};
     for (const f of spec.fields) {
+      if (f.ui) continue;
       const v = r.querySelector("." + f.cls).value.trim();
       if (f.type === "number") {
         const n = parseInt(v, 10);

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.87";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.87";
+import { metaRader } from "../../js/ui-helpers.js?v=5.88";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.88";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -98,6 +98,32 @@ test("starttidspunkt: leses fra lenka og settes i embed-URL", () => {
 // yt-stoppene (v5.28) lagrer bare ID-ene; ytWatchUrl må gi en adresse ytMaal
 // leser tilbake identisk, ellers spiller stoppet noe annet enn det som ble
 // tatt opp.
+// v5.88: starttidsfeltet i lytteeksempel-raden skriver tiden inn i lenka.
+test("medStarttid: skriver, bytter og fjerner t= i YouTube-lenker", () => {
+  // Uten tid fra før: t=…s bakerst, samme form som de lagrede lenkene.
+  assert.equal(medStarttid("https://www.youtube.com/watch?v=lNj9zzVaPzs", 90),
+    "https://www.youtube.com/watch?v=lNj9zzVaPzs&t=90s");
+  // En tid som står der, byttes på samme plass; andre parametre står urørt.
+  assert.equal(medStarttid("https://youtu.be/lNj9zzVaPzs?si=Ab12&t=83", 395),
+    "https://youtu.be/lNj9zzVaPzs?si=Ab12&t=395s");
+  // Tom eller 0 fjerner tiden, også den gamle start=-formen, uten hengende «?».
+  assert.equal(medStarttid("https://youtu.be/lNj9zzVaPzs?t=83", null), "https://youtu.be/lNj9zzVaPzs");
+  assert.equal(medStarttid("https://www.youtube.com/watch?v=lNj9zzVaPzs&start=40", 0),
+    "https://www.youtube.com/watch?v=lNj9zzVaPzs");
+  // Rundtur: ytMaal leser det medStarttid skrev.
+  assert.equal(ytMaal(medStarttid("https://youtu.be/lNj9zzVaPzs", 3723)).start, 3723);
+  // Ikke YouTube, eller ikke en lenke: returneres uendret.
+  assert.equal(medStarttid("https://open.spotify.com/track/abc", 90), "https://open.spotify.com/track/abc");
+  assert.equal(medStarttid("ikke en lenke", 90), "ikke en lenke");
+});
+
+test("starttidTekst: tiden i lenka som m:ss, tom uten tid", () => {
+  assert.equal(starttidTekst("https://www.youtube.com/watch?v=lNj9zzVaPzs&t=395s"), "6:35");
+  assert.equal(starttidTekst("https://youtu.be/lNj9zzVaPzs?t=1m30s"), "1:30");
+  assert.equal(starttidTekst("https://youtu.be/lNj9zzVaPzs"), "");
+  assert.equal(starttidTekst(""), "");
+});
+
 test("ytWatchUrl: rundtur mot ytMaal", () => {
   assert.deepEqual(ytMaal(ytWatchUrl("dQw4w9WgXcQ", null)), { video: "dQw4w9WgXcQ", list: null, start: null });
   assert.deepEqual(ytMaal(ytWatchUrl("dQw4w9WgXcQ", "PLabc123456789")), { video: "dQw4w9WgXcQ", list: "PLabc123456789", start: null });
@@ -680,7 +706,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.87";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.88";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

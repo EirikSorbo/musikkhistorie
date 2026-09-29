@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rowInnerHtml, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=5.87";
-import { KILDE_KATEGORIER } from "../../js/kilder.js?v=5.87";
+import { rowInnerHtml, normalizeRows, normalizeSources, WORK_SPEC, MUSIC_SPEC, SOURCE_SPEC, musicSpecWithGenres } from "../../js/row-editor.js?v=5.88";
+import { KILDE_KATEGORIER } from "../../js/kilder.js?v=5.88";
 
 test("rowInnerHtml escaper verdier (lukker XSS-fella)", () => {
   const html = rowInnerHtml(SOURCE_SPEC, { text: `"><img src=x onerror=alert(1)>`, url: "https://ex.com" });
@@ -32,6 +32,26 @@ test("musikkeksempel: sjangervelgeren står først, med linjeskift etter seg", (
   assert.ok(me.indexOf('class="me-genre"') < me.indexOf('class="me-label"'),
     "sjangeren skal ligge foran tittelen i markupen");
   assert.match(me, /<select class="me-genre"[\s\S]*?<\/select><span class="row-break"/);
+});
+
+// v5.88: starttiden bor i lenka (t=). Feltet står rett etter lenka, viser
+// tiden lenka har, og lagres aldri som egen nøkkel (kobleStarttid skriver den
+// inn i lenka; det prøves i nettleseren, ikke her).
+test("musikkeksempel: starttidsfeltet står etter lenka og viser tiden i den", () => {
+  const me = rowInnerHtml(MUSIC_SPEC, { url: "https://www.youtube.com/watch?v=lNj9zzVaPzs&t=395s" });
+  assert.ok(me.indexOf('class="me-url"') < me.indexOf('class="me-start"'), "rett etter lenka");
+  assert.match(me, /class="me-start"[^>]*value="6:35"/);
+  assert.match(rowInnerHtml(MUSIC_SPEC, {}), /class="me-start"[^>]*value=""/);
+});
+
+test("starttidsfeltet er et hjelpefelt: normalizeRows tar det aldri med", () => {
+  assert.equal(MUSIC_SPEC.fields.find((f) => f.key === "start").ui, true);
+  const rad = { label: "Lytt", url: "https://youtu.be/lNj9zzVaPzs?t=83", start: "9:99" };
+  assert.deepEqual(normalizeRows(MUSIC_SPEC, [rad]), [{ label: "Lytt", url: "https://youtu.be/lNj9zzVaPzs?t=83" }]);
+  // Sjangervarianten (den skjemaene bruker) beholder feltet og koblingen.
+  const spec = musicSpecWithGenres(["Blues"]);
+  assert.equal(typeof spec.kobleRad, "function");
+  assert.ok(spec.fields.some((f) => f.key === "start" && f.ui));
 });
 
 // breakAfter er generisk i spec-en; felter uten flagget skal ikke få skiftet.

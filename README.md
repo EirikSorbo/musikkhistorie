@@ -43,6 +43,8 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   «Åpne på YouTube» står som reserve for videoer som ikke kan bygges inn.
   «Spill alle» i spillelistene spilles som kø i samme spiller. Tasten L
   spiller det første lytteeksempelet til artisten som vises; S åpner søket.
+  Starttiden settes i feltet «Start» i lytteeksempel-raden (redigering og
+  forslag) og lagres i selve YouTube-lenka som `t=…s`.
 - **Utskrift**: studentene velger kort (artister, sjangre, tiår, innovasjoner …)
   med skriverikonet i kortenes tittellinje, eller tar en hel kjøreplan eller
   en hel metasjanger (sjangrene, artistene og tiårene følger med, og kan hukes

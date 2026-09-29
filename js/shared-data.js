@@ -36,8 +36,8 @@ import {
   subscribeContent,
   subscribeDecades,
   subscribePodcasts,
-} from "./store.js?v=5.87";
-import { applyGenealogyDoc } from "./genre-model.js?v=5.87";
+} from "./store.js?v=5.88";
+import { applyGenealogyDoc } from "./genre-model.js?v=5.88";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan
