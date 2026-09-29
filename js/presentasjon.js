@@ -24,19 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.88";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.88";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.88";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.88";
-import { GENEALOGY } from "./genre-model.js?v=5.88";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.88";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.88";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.88";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.88";
-import { getState } from "./explore-context.js?v=5.88";
-import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.88";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.88";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.88";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.89";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.89";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.89";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.89";
+import { GENEALOGY } from "./genre-model.js?v=5.89";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.89";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.89";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.89";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.89";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.89";
+import { getState } from "./explore-context.js?v=5.89";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.89";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.89";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.89";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -134,6 +135,9 @@ function brukNivaaPaa(flate, modal) {
   // Artistkortets spalter (v5.40, js/pres-artist.js) bygges FØR nivået
   // settes: skillelinja må finnes når synligheten dens regnes ut under.
   if (flate === "artist") ordneArtistLerret(modal);
+  // Sjangerkortets spalter (v5.89, js/pres-sjanger.js): navnelista med
+  // artistene til høyre for punktene.
+  if (flate === "sjanger") ordneSjangerLerret(modal);
   // Oppsummeringspunktene (v5.50) erstatter beskrivelsen på nivå 2, men bare
   // når kortet faktisk har punkter (seksjonen tegnes bare da).
   const harPunkter = !!modal.querySelector('[data-sekt="punkter"]');

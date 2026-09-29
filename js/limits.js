@@ -10,7 +10,7 @@
 //  til slutt ingen reell funksjon i den kuraterte pensum-appen.
 // ============================================================================
 
-import { resolveSpan } from "./timeline-lanes.js?v=5.88";
+import { resolveSpan } from "./timeline-lanes.js?v=5.89";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -172,6 +172,31 @@ export function erTilModerasjon(x) {
 // Bare aktive, synlige forslag teller i statistikken. Skjulte utelates.
 export function activeArtists(artists) {
   return artists.filter(isVisible);
+}
+
+// Kronologisk etter innflytelsesår, så alfabetisk. Delt av artistlistene.
+export const byInfluenceThenName = (a, b) =>
+  (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no");
+
+// Aktive, synlige artister som hører til en sjanger (meta/main/sub matcher label).
+// Sjangernavnet MÅ måles mot tre-taggene (mainGenre/subGenre) alene. Klausulen
+// «a.metaGenre === label» sto her fra den gang artisten hadde ETT genre-felt, og
+// ble med mekanisk gjennom omdøpingen i juni. Med dagens modell er den direkte
+// feil for de seks navnene som finnes både som node i treet og som metasjanger
+// (Blues, Gospel, Jazz, Pop, R&B, Rock): «Jazz»-noden betyr TIDLIG jazz, men
+// klausulen dro inn hele jazzfamilien — 78 artister i stedet for 9. Vil man se
+// familien, finnes metasjangeren som egen inngang.
+// Flyttet hit fra ui.js i v5.89: sjangerkortet (genealogy.js) viser samme
+// liste som navneliste i presentasjonen, og kan ikke importere ui.js (ui.js
+// importerer genealogy.js). ui.js eksporterer den videre som før.
+export function artistsInGenre(artists, label) {
+  const sj = label.toLowerCase();
+  return (artists || [])
+    .filter((a) => isVisible(a) && (
+      (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
+      || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
+    ))
+    .sort(byInfluenceThenName);
 }
 
 // Regner ut hvilke tiår et ÅRSSPENN dekker. Ren primitiv: begge endene må være

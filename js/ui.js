@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS } from "./limits.js?v=5.88";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.88";
-import { punkterHtml } from "./punkter.js?v=5.88";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.88";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.88";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.88";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=5.89";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.89";
+import { punkterHtml } from "./punkter.js?v=5.89";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.89";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.89";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.89";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.88";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.88";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.88";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.88";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.88";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.88";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.88";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.88";
+} from "./ui-helpers.js?v=5.89";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.89";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.89";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.89";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.89";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.89";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.89";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.89";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -591,26 +591,9 @@ function buildArtistListRows(list) {
   }).join("");
 }
 
-const byInfluenceThenName = (a, b) =>
-  (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no");
-
-// Aktive, synlige artister som hører til en sjanger (meta/main/sub matcher label).
-// Sjangernavnet MÅ måles mot tre-taggene (mainGenre/subGenre) alene. Klausulen
-// «a.metaGenre === label» sto her fra den gang artisten hadde ETT genre-felt, og
-// ble med mekanisk gjennom omdøpingen i juni. Med dagens modell er den direkte
-// feil for de seks navnene som finnes både som node i treet og som metasjanger
-// (Blues, Gospel, Jazz, Pop, R&B, Rock): «Jazz»-noden betyr TIDLIG jazz, men
-// klausulen dro inn hele jazzfamilien — 78 artister i stedet for 9. Vil man se
-// familien, finnes metasjangeren som egen inngang.
-export function artistsInGenre(artists, label) {
-  const sj = label.toLowerCase();
-  return (artists || [])
-    .filter((a) => isVisible(a) && (
-      (a.mainGenre || []).some((s) => s.toLowerCase() === sj)
-      || (a.subGenre || []).some((s) => s.toLowerCase() === sj)
-    ))
-    .sort(byInfluenceThenName);
-}
+// artistsInGenre bor i limits.js fra v5.89 (sjangerkortet trenger den, og kan
+// ikke importere ui.js). Eksporteres videre herfra, så kallerne står urørt.
+export { artistsInGenre };
 
 // Aktive, synlige artister på et instrument.
 export function artistsByInstrument(artists, instrument) {

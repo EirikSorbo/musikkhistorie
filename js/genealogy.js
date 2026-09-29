@@ -12,17 +12,18 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.88";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.88";
-import { renderRichText } from "./rich-text.js?v=5.88";
-import { punkterHtml } from "./punkter.js?v=5.88";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.88";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.88";
-import { modalOpen } from "./ui-modal.js?v=5.88";
-import { renderGenreEditBtn, sekt } from "./ui-helpers.js?v=5.88";
-import { wireProposeFoot } from "./ui-edit.js?v=5.88";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.88";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.88";
+import { wireAllLinks } from "./linkify.js?v=5.89";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.89";
+import { renderRichText } from "./rich-text.js?v=5.89";
+import { punkterHtml } from "./punkter.js?v=5.89";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.89";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.89";
+import { modalOpen } from "./ui-modal.js?v=5.89";
+import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.89";
+import { artistsInGenre } from "./limits.js?v=5.89";
+import { wireProposeFoot } from "./ui-edit.js?v=5.89";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.89";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.89";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -193,6 +194,17 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   ].filter(Boolean).join(" ");
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  // Artistene i sjangeren som navneliste (v5.89, brukerønske 2026-09-29):
+  // samme utvalg og rekkefølge som «Artister»-knappen under (artistsInGenre),
+  // bare navnet. Vises bare på lerretet, i en egen spalte til høyre for
+  // punktene (js/pres-sjanger.js); CSS skjuler den i appen, der knappen er
+  // inngangen. Et navn åpner artistkortet, som de beslektede artistene.
+  const iSjangeren = n.g ? artistsInGenre(artists, n.l) : [];
+  const artisterHtml = iSjangeren.length ? `<div class="sj-artister">
+      <h4 class="related-head">Artister</h4>
+      <ul class="sj-artister-liste">${iSjangeren.map((a) =>
+        `<li><button type="button" class="sj-artist" data-related-id="${escapeHtml(String(a.id))}">${escapeHtml(a.name)}</button></li>`).join("")}</ul>
+    </div>` : "";
   openSjanger = { label, opts };
   mTitle.textContent = n.f;
   // data-sekt-merkene styrer detaljnivået i presentasjonsvisningen (v5.24).
@@ -204,9 +216,11 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
     ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
     ${sekt("lytt", (onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : "")}
     ${sekt("relasjoner", relasjoner)}
+    ${sekt("artister", artisterHtml)}
     ${sekt("kilder", kilderHtml)}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireAllLinks(mBody, lc);
+  wireRelated(mBody, lc);
   const b = mBody.querySelector(".gx-artists-btn");
   if (b) b.addEventListener("click", () => onShowArtists({ label: n.l }));
   const bp = mBody.querySelector(".gx-playlist-btn");

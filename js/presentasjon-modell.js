@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.88";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.89";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -36,6 +36,7 @@ export const FLATER = {
     { id: "beskrivelse", navn: "Beskrivelse" },
     { id: "lytt", navn: "Hør etter" },
     { id: "relasjoner", navn: "Slektskap (vokste ut av …)" },
+    { id: "artister", navn: "Artister i sjangeren (navneliste)" },
   ],
   tech: [
     { id: "bilde", navn: "Bilde" },
@@ -73,9 +74,11 @@ export const NIVAA_SEKT = {
     1: ["bilde", "fakta", "stripe", "lytte"],
     2: ["bilde", "fakta", "stripe", "tags", "punkter", "lytte", "beslektede"],
   },
+  // Artistene i sjangeren (v5.89, brukerønske 2026-09-29) står som navneliste
+  // til høyre fra nivå 2, også på nivå 3; punktene blir stående til venstre.
   sjanger: {
     1: ["stripe", "era"],
-    2: ["stripe", "era", "punkter", "beskrivelse", "relasjoner"],
+    2: ["stripe", "era", "punkter", "beskrivelse", "relasjoner", "artister"],
   },
   tech: {
     1: ["bilde", "fakta"],
@@ -736,5 +739,17 @@ export const PRES_TASTER = [
 export function artistPlassering(sekt) {
   if (sekt === "stripe") return "topp";
   if (sekt === "bilde" || sekt === "beslektede") return "hoyre";
+  return "venstre";
+}
+
+// ----------------------------------------------------------------------------
+//  Sjangerkortets lerret (v5.89, brukerønske 2026-09-29): varmestripa øverst
+//  over hele bredden, artistene i sjangeren (navnelista) i en egen spalte til
+//  høyre, og resten (epoke, punkter eller beskrivelse, «Hør etter»,
+//  slektskap) til venstre. DOM-flyttingen bor i js/pres-sjanger.js.
+// ----------------------------------------------------------------------------
+export function sjangerPlassering(sekt) {
+  if (sekt === "stripe") return "topp";
+  if (sekt === "artister") return "hoyre";
   return "venstre";
 }

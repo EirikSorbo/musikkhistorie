@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.88";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.88";
+import { metaRader } from "../../js/ui-helpers.js?v=5.89";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.89";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -660,6 +660,48 @@ test("lerretet bygges før nivået settes, og ryddes etterpå", () => {
   assert.doesNotMatch(css, /float: right; width: 42%; max-width: 42%;/, "flytebildet fra v5.30 er erstattet av spaltene");
 });
 
+// --- Sjangerkortets lerret (v5.89, brukerønske 2026-09-29) -------------------
+
+test("sjangernivåene: navnelista med artister fra nivå 2, også på nivå 3", () => {
+  for (const harPunkter of [true, false]) {
+    assert.equal(erSynlig("sjanger", "artister", 1, {}, { harPunkter }), false, "ikke på Overskrift");
+    assert.equal(erSynlig("sjanger", "artister", 2, {}, { harPunkter }), true, "ved siden av punktene");
+    assert.equal(erSynlig("sjanger", "artister", 3, {}, { harPunkter }), true, "ved siden av beskrivelsen");
+  }
+  // Punktene står fortsatt på nivå 2, nå med lista ved siden av.
+  assert.equal(erSynlig("sjanger", "punkter", 2, {}, { harPunkter: true }), true);
+  assert.ok(FLATER.sjanger.some((f) => f.id === "artister"), "valgbar i tannhjulpanelet");
+});
+
+test("sjangerPlassering: varmestripa øverst, navnelista til høyre, resten til venstre", () => {
+  assert.equal(sjangerPlassering("stripe"), "topp");
+  assert.equal(sjangerPlassering("artister"), "hoyre");
+  for (const id of ["era", "punkter", "beskrivelse", "lytt", "relasjoner", "kilder"]) {
+    assert.equal(sjangerPlassering(id), "venstre", id);
+  }
+  assert.equal(sjangerPlassering("noe-nytt"), "venstre", "ukjente seksjoner i tekstspalta");
+});
+
+test("sjangerkortet: samme utvalg som «Artister»-knappen, spaltene bygges før nivået settes", () => {
+  const gen = kilde("genealogy.js");
+  assert.match(gen, /const iSjangeren = n\.g \? artistsInGenre\(artists, n\.l\) : \[\];/,
+    "samme funksjon og samme etikett som knappen (showArtistsForSjanger)");
+  assert.match(kilde("explore-context.js"), /artistsInGenre\(getState\(\)\.artists, label\)/);
+  assert.match(gen, /\$\{sekt\("artister", artisterHtml\)\}/);
+  const spiller = kilde("presentasjon.js");
+  const kroppen = spiller.slice(spiller.indexOf("function brukNivaaPaa("), spiller.indexOf("function brukNivaa()"));
+  assert.ok(kroppen.indexOf("ordneSjangerLerret(modal)") > -1 &&
+    kroppen.indexOf("ordneSjangerLerret(modal)") < kroppen.indexOf('querySelectorAll("[data-sekt]")'));
+  const modul = kilde("pres-sjanger.js");
+  assert.match(modul, /if \(!modal \|\| modal\.querySelector\("\.pres-sjanger"\)\) return;/, "idempotent mot observatøren");
+  assert.match(modul, /kropp\.insertBefore\(lerret, forste\);/, "knapperaden blir stående under spaltene");
+  assert.doesNotMatch(modul, /from "\.\/(store|ui|explore-context)\.js/, "modulen skal kunne lastes uten Firebase");
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.presentasjon \.pres-sjanger-spalter \{\n\s*display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 30%\);/);
+  assert.match(css, /body:not\(\.presentasjon\) #modal-sjanger \[data-sekt="artister"\] \{ display: none !important; \}/,
+    "i appen er knappen inngangen");
+});
+
 // --- Visning-vinduet bak presentasjonsikonet (v5.41) --------------------------
 // Brukerkrav 2026-09-19: alt som har med visning å gjøre, under ikonet.
 
@@ -706,7 +748,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.88";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.89";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);
