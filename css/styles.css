@@ -2957,6 +2957,11 @@ body.presentasjon #dv-society-propose,
 body.presentasjon #dv-tech-propose,
 body.presentasjon #btn-tech-new,
 body.presentasjon [data-action="voteUp"] { display: none !important; }
+/* Utskrift- og visningssymbolene hører til forberedelsen, ikke lerretet
+   (v5.93, brukerønske 2026-09-29: «overflødig» i visningen): utskrift- og
+   visningsknappen i korthodene med pila, og de samme små symbolene på
+   kortene og over lista i «Finn artister». Samleøktas pluss står. */
+body.presentasjon :is(.modal-head .utskrift-ta-med, .modal-head .modal-lenke, .modal-head .modal-lenke-meny, .kort-utskrift, .kort-pluss, #btn-utskrift-liste) { display: none !important; }
 
 /* Et rolig, hvitt lerret (v5.36, brukerkrav): siden skimtet uklart bak
    kortene og forstyrret. Kortet blir selve lysbildet, nesten hele bredden og
@@ -3113,6 +3118,8 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
    9). buildKilderList er eneste kilde til klassen. */
 body.presentasjon .kilder { display: none !important; }
 
+/* Menyen skjult med M (v5.93): bare synligheten; tastene virker som før. */
+body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 #pres-bar {
   /* Fast størrelse (v5.36): verktøy, ikke innhold. Rot-skalaen følger
      skjermbredden i presentasjon, og linja skal ikke vokse med den. */

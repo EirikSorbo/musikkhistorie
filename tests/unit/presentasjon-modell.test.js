@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.92";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.92";
+import { metaRader } from "../../js/ui-helpers.js?v=5.93";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.93";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -514,6 +514,28 @@ test("presTast: av/på-tastene reagerer ikke på auto-gjentak, blaingen gjør de
   assert.equal(holdt("2"), "nivaa2");
 });
 
+// v5.93 (brukerønske 2026-09-29): M skjuler og viser menyen nede til høyre.
+// Tastene lyttes på dokumentet, så de virker også mens den er skjult.
+test("presTast: M veksler menyen, som de andre av/på-tastene", () => {
+  assert.equal(presTast(tast("m")), "meny");
+  assert.equal(presTast(tast("M", { shiftKey: true })), "meny");
+  assert.equal(presTast(tast("m"), { plan: true }), "meny", "også når en kjøreplan spilles");
+  assert.equal(presTast(tast("m", { repeat: true })), null, "en holdt tast blinker ikke");
+  assert.equal(presTast(tast("m"), { iSkrivefelt: true }), null, "aldri i skrivefelt");
+  assert.equal(presTast(tast("m", { metaKey: true })), null, "Cmd+M tilhører systemet");
+  assert.ok(PRES_TASTER.some((g) => g.rader.some((r) => r.taster.includes("M"))), "står i oversikten (?)");
+  const spiller = kilde("presentasjon.js");
+  assert.match(spiller, /case "meny": return settMenySkjult\(!document\.body\.classList\.contains\("pres-meny-skjult"\)\);/);
+  assert.match(spiller, /settMenySkjult\(les\(LAGRING\.menySkjult\) === "1"\);/, "huskes over sidebytter");
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.presentasjon\.pres-meny-skjult #pres-bar \{ display: none; \}/);
+});
+
+test("utskrift- og visningssymbolene står ikke på lerretet (v5.93)", () => {
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.presentasjon :is\(\.modal-head \.utskrift-ta-med, \.modal-head \.modal-lenke, \.modal-head \.modal-lenke-meny, \.kort-utskrift, \.kort-pluss, #btn-utskrift-liste\) \{ display: none !important; \}/);
+});
+
 test("presTast: mellomrom og K spiller og pauser, men bare når lytteeksempelet ligger øverst (funn 10)", () => {
   assert.equal(presTast(tast(" "), { video: true }), "spill");
   assert.equal(presTast(tast("k"), { video: true }), "spill");
@@ -766,7 +788,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.92";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.93";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

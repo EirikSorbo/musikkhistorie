@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.92";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.92";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.92";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.92";
-import { GENEALOGY } from "./genre-model.js?v=5.92";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.92";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.92";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.92";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.92";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.92";
-import { getState } from "./explore-context.js?v=5.92";
-import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.92";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.92";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.92";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.93";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.93";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.93";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.93";
+import { GENEALOGY } from "./genre-model.js?v=5.93";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.93";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.93";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.93";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.93";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.93";
+import { getState } from "./explore-context.js?v=5.93";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.93";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.93";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.93";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -62,6 +62,8 @@ const LAGRING = {
   fullNei: "pensumPresFullNei",
   // Klokka i verktøylinja (v5.75), av som standard; valget i tannhjulet.
   klokke: "pensumPresKlokke",
+  // Menyen nede til høyre skjult med M (v5.93); følger visningen videre.
+  menySkjult: "pensumPresMenySkjult",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -554,6 +556,7 @@ function wireTaster() {
       case "svart": return vekslSvart();
       case "hjelp": return vekslHjelp();
       case "timeliste": return vekslTimeliste();
+      case "meny": return settMenySkjult(!document.body.classList.contains("pres-meny-skjult"));
       case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
     }
@@ -774,6 +777,15 @@ function byggBar() {
     if (e.target.closest("#pres-tannhjul")) return vekslPanel();
     if (e.target.closest("#pres-avslutt")) return avsluttPresentasjon();
   });
+}
+
+// Menyen nede til høyre (v5.93, brukerønske 2026-09-29): M skjuler og viser
+// den, for et renere lerret. Bare synligheten endres; tastene lyttes på
+// dokumentet og virker som før. Valget huskes resten av visningen, også over
+// sidebytter, som nivået og tekststørrelsen.
+function settMenySkjult(skjult) {
+  document.body.classList.toggle("pres-meny-skjult", !!skjult);
+  skriv(LAGRING.menySkjult, skjult ? "1" : "");
 }
 
 // Tekststørrelse i tre trinn (v5.29): normal → stor → størst, og rundt igjen.
@@ -1075,6 +1087,7 @@ export function initPresentasjon() {
   byggBar();
   brukSkala(skalaTrinn);   // etter byggBar: knappen skal vise trinnet
   settKlokke(klokkePaa());
+  settMenySkjult(les(LAGRING.menySkjult) === "1");
   blankFaneOgVindu();
   fullskjermVedForsteHandling();
   // Et stopp som ikke finnes lenger, sies fra om på lerretet (v5.75).

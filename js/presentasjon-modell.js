@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.92";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.93";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -683,6 +683,9 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
   // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
   if (k === "n" || k === "N") return "timeliste";
+  // Menyen nede til høyre av og på (v5.93, brukerønske 2026-09-29). Tastene
+  // lyttes på dokumentet, så de virker like godt når menyen er skjult.
+  if (k === "m" || k === "M") return "meny";
   if (video && (k === " " || k === "k" || k === "K")) return "spill";
   return null;
 }
@@ -716,6 +719,7 @@ export const PRES_TASTER = [
     { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
     { taster: ["F"], hva: "Fullskjerm av og på" },
     { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
+    { taster: ["M"], hva: "Vis eller skjul menyen nede til høyre (tastene virker uansett)" },
     { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
   { gruppe: "Ellers", rader: [
