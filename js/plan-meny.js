@@ -27,13 +27,13 @@
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePlan } from "./store.js?v=6.00";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=6.00";
-import { getState } from "./explore-context.js?v=6.00";
-import { normaliserPlaner, nyPlanId, medStoppSattInn, medStoppOppdatert, samleTast } from "./presentasjon-modell.js?v=6.00";
-import { setLenkeMenyProvider, kopierVisLenke, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=6.00";
-import { erSkrivefelt } from "./vis-lenke.js?v=6.00";
-import { escapeHtml } from "./util.js?v=6.00";
+import { onAuthChange, savePlan } from "./store.js?v=6.01";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=6.01";
+import { getState } from "./explore-context.js?v=6.01";
+import { normaliserPlaner, nyPlanId, medStoppSattInn, medStoppOppdatert, samleTast } from "./presentasjon-modell.js?v=6.01";
+import { setLenkeMenyProvider, kopierVisLenke, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=6.01";
+import { erSkrivefelt } from "./vis-lenke.js?v=6.01";
+import { escapeHtml } from "./util.js?v=6.01";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen
