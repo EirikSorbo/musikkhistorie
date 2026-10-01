@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.93";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.93";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.94";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.94";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -396,12 +396,27 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
     <p class="muted hist-intro">Fortellinger som til sammen dekker hele pensumet. Trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
+    <!-- Oversikten over metasjangeren (v5.94): bare i visningsmodus (CSS). -->
+    <div class="hist-oversikt-rad"><button type="button" class="btn ghost small" id="hist-oversikt">Vis oversikt</button></div>
     <!-- Sjangerfamilien som varmestriper (v5.16): én rad per sjanger under
          metasjangeren, samme rad som i varmekartet. Her lå først den
          håndskrevne «Sjangertre-løype»-linjen i teksten, så en generert
          tidslinje over startårene. -->
     <div id="hist-tre" data-sekt="striper"></div>
     <div id="hist-body" data-sekt="tekst" class="story-body"></div>
+  </div>
+</div>
+
+<!-- Oversikt over en metasjanger (v5.94, brukerønske 2026-10-01): bare i
+     visningsmodus, åpnes fra Sjangerhistoriene eller som stopp i en
+     kjøreplan (oversikt:<metasjanger>). Tegnes av explore-metaoversikt.js. -->
+<div class="modal-backdrop" id="modal-meta-oversikt">
+  <div class="modal modal-innhold meta-oversikt">
+    <div class="modal-head">
+      <h2 id="mo-tittel">Oversikt</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="mo-body" class="mo-body"></div>
   </div>
 </div>
 `;

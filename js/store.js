@@ -37,15 +37,15 @@ import {
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { firebaseConfig } from "./firebase-config.js?v=5.93";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.93";
-import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.93";
-import { RETUR_FELTER } from "./artist-schema.js?v=5.93";
-import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.93";
-import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.93";
-import { mergeHeatRows } from "./import-format.js?v=5.93";
-import { BATCH_MAX } from "./genre-migrate.js?v=5.93";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.93";
+import { firebaseConfig } from "./firebase-config.js?v=5.94";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.94";
+import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js?v=5.94";
+import { RETUR_FELTER } from "./artist-schema.js?v=5.94";
+import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "./util.js?v=5.94";
+import { PROPOSABLE_KEYS } from "./proposal-fields.js?v=5.94";
+import { mergeHeatRows } from "./import-format.js?v=5.94";
+import { BATCH_MAX } from "./genre-migrate.js?v=5.94";
+import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "./limits.js?v=5.94";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den

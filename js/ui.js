@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=5.93";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.93";
-import { punkterHtml } from "./punkter.js?v=5.93";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.93";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.93";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.93";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=5.94";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.94";
+import { punkterHtml } from "./punkter.js?v=5.94";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.94";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.94";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.94";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.93";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.93";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.93";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.93";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.93";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.93";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.93";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.93";
+} from "./ui-helpers.js?v=5.94";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.94";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.94";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.94";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.94";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.94";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.94";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.94";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -649,7 +649,7 @@ export function openPlaylistModal(fullName, node, artists) {
 // etter hverandre (watch_videos, se ytSpillelisteUrl). Bare når det er minst to
 // YouTube-videoer; søkelenker og andre verter har ingen ID og telles ikke.
 // Over 50 videoer blir det flere lenker («del 1», «del 2»).
-function spillAlleHtml(ider) {
+export function spillAlleHtml(ider) {
   const lenker = ytSpillelisteUrl(ider);
   if (!lenker.length || (ider || []).length < 2) return "";
   const antall = new Set(ider).size;

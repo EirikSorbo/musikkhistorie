@@ -19,12 +19,12 @@
 //  explore-context importerer feature-modulene tilbake, og GENEALOGY byttes ut
 //  ved hver ombygging av treet.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=5.93";
-import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=5.93";
-import { storyOrder } from "./story-format.js?v=5.93";
-import { eraYears } from "./genealogy.js?v=5.93";
-import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=5.93";
-import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=5.93";
+import { escapeHtml, modalOpen } from "./ui.js?v=5.94";
+import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=5.94";
+import { storyOrder } from "./story-format.js?v=5.94";
+import { eraYears } from "./genealogy.js?v=5.94";
+import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=5.94";
+import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=5.94";
 
 // Hvilken metagruppe som står åpen (navnet), «__ingen» når brukeren har lukket
 // alle, null ved frisk åpning (da åpnes den første).
@@ -76,9 +76,32 @@ function hullHtml(r) {
     + `<span class="sp-navn">${escapeHtml(r.genre)}</span><span class="sp-mangler">${hva}</span></button>`;
 }
 
+// Tiårsstrekene i sporet og årstallsaksen under, delt av figuren og
+// metasjanger-oversikten.
+function akseHtml(axis) {
+  return {
+    streker: axis.ticks.map((t) => `<span class="sp-strek" style="left:${pctAv(axis, t).toFixed(3)}%"></span>`).join(""),
+    akse: `<div class="sp-akse">${axis.ticks.map((t) => `<span style="left:${pctAv(axis, t).toFixed(3)}%">${t}</span>`).join("")}</div>`,
+  };
+}
+
+// Stolpene for ÉN metasjanger, uten gruppehodet (metasjanger-oversikten i
+// visningsmodus, v5.94). Samme stolper og akse som figuren; kalleren kobler
+// klikkene (data-sp-open). `rader` gir tidsrommet.
+export function periodeFigurForMeta(meta) {
+  const s = getState();
+  const naa = new Date().getFullYear();
+  const groups = periodGroups([meta], s.genreDescs || {}, GENEALOGY, naa);
+  const g = groups[0];
+  if (!g || !g.rows.length) return { html: "", rader: [] };
+  const axis = periodAxis(groups, naa);
+  const { streker, akse } = akseHtml(axis);
+  const rader = g.rows.map((r) => (r.status === "ok" ? stolpeHtml(r, axis, naa) : hullHtml(r))).join("");
+  return { html: `<div class="sp-scroll"><div class="sp-figur"><div class="sp-rader">${streker}${rader}</div>${akse}</div></div>`, rader: g.rows };
+}
+
 function figurHtml(groups, axis, naa) {
-  const streker = axis.ticks.map((t) => `<span class="sp-strek" style="left:${pctAv(axis, t).toFixed(3)}%"></span>`).join("");
-  const akse = `<div class="sp-akse">${axis.ticks.map((t) => `<span style="left:${pctAv(axis, t).toFixed(3)}%">${t}</span>`).join("")}</div>`;
+  const { streker, akse } = akseHtml(axis);
   // Står den lagrede gruppa ikke lenger i figuren (metasjangeren har byttet navn
   // eller blitt tom), åpnes den første i stedet for at alle står lukket.
   const finnes = groups.some((g) => g.meta === spOpenMeta);

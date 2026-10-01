@@ -17,10 +17,10 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.93";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.93";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.93";
-import { escapeHtml } from "./util.js?v=5.93";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.94";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.94";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.94";
+import { escapeHtml } from "./util.js?v=5.94";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -37,6 +37,7 @@ export const TYPE_LABEL = {
   instrument: "Instrument",
   kobling: "Sjangerkobling",
   podkast: "Podkast",
+  oversikt: "Oversikt",
 };
 
 // Overskriften over en gruppe treff.
@@ -54,13 +55,14 @@ export const TYPE_FLERTALL = {
   instrument: "Instrumenter",
   kobling: "Sjangerkoblinger",
   podkast: "Podkaster",
+  oversikt: "Oversikter",
 };
 
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
   "artist", "sjanger", "rot", "undersjanger", "tech", "hendelse",
-  "historie", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
+  "historie", "oversikt", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
 ];
 
 const SIDE_TITTEL = { rotter: "Røtter før 1910", omHistorie: "Om historie", appGuide: "Slik bruker du appen" };
@@ -104,7 +106,7 @@ function post(type, id, tittel, sti, biter, apne) {
 //  `skjulHub` de samme bryterne for kortene inne i «Det store bildet». Et
 //  treff som fører til en flate studenten ikke kan åpne, skal ikke være der:
 //  søket ville ellers vært en bakvei rundt akkurat de bryterne.
-export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub = {} } = {}) {
+export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub = {}, visningsflater = false } = {}) {
   const ut = [];
   const artists = state.artists || [];
   const genreDescs = state.genreDescs || {};
@@ -155,6 +157,16 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
       if (!story) continue;
       ut.push(post("historie", meta, `Historien om ${meta}`, "Metasjanger",
         [story.body], { hva: "historie", id: meta }));
+    }
+  }
+
+  // --- Metasjanger-oversiktene (v5.94) ---------------------------------------
+  // Bare for visningsmodus: Visning-editoren ber om dem (visningsflater), så
+  // de kan legges inn som stopp i en kjøreplan. Appens eget søk viser dem ikke.
+  if (visningsflater) {
+    for (const meta of storyOrder(genreDescs)) {
+      ut.push(post("oversikt", meta, `Oversikt over ${meta}`, "Visningsmodus",
+        [meta, "oversikt metasjanger"], { hva: "oversikt", id: meta }));
     }
   }
 

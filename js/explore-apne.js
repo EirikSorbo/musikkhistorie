@@ -11,21 +11,22 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.93";
-import { showSubsjangerInfo } from "./ui.js?v=5.93";
-import { showEdgeInfo } from "./genealogy.js?v=5.93";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.93";
-import { openDecade } from "./explore-decade.js?v=5.93";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.93";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.93";
-import { openVarmekart } from "./explore-varmekart.js?v=5.93";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.93";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.93";
-import { openReferanser } from "./explore-referanser.js?v=5.93";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.93";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.93";
-import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.93";
-import { apneYtSpiller } from "./yt-spiller.js?v=5.93";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=5.94";
+import { showSubsjangerInfo } from "./ui.js?v=5.94";
+import { showEdgeInfo } from "./genealogy.js?v=5.94";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=5.94";
+import { openDecade } from "./explore-decade.js?v=5.94";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=5.94";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=5.94";
+import { openVarmekart } from "./explore-varmekart.js?v=5.94";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=5.94";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.94";
+import { openReferanser } from "./explore-referanser.js?v=5.94";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=5.94";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.94";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=5.94";
+import { apneYtSpiller } from "./yt-spiller.js?v=5.94";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=5.94";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -51,6 +52,8 @@ export function apneMaal(apne) {
       return;
     }
     case "historie": return openHistorier(apne.id);
+    // Metasjanger-oversikten (v5.94), visningsmodusens side for familien.
+    case "oversikt": return openMetaOversikt(apne.id);
     case "tech": {
       const t = (s.techItems || []).find((x) => x.id === apne.id);
       if (t) openTechDetail(t);
@@ -110,6 +113,9 @@ function klarFor(apne, s) {
       return isGenreModelReady() && s.edgeDescsLoaded && s.genreDescsLoaded ? "klar" : "vent";
     case "himmel": case "tidslinje":
       return isGenreModelReady() && s.artistsLoaded ? "klar" : "vent";
+    // Oversikten tegnes av treet, periodene (genreDescriptions) og artistene.
+    case "oversikt":
+      return isGenreModelReady() && s.artistsLoaded && s.genreDescsLoaded ? "klar" : "vent";
     case "undersjanger": case "historie":
       // Teksten bor i genreDescriptions og familien i treet: vent på begge,
       // så kortet ikke åpnes med «mangler»-tekst som straks byttes ut.

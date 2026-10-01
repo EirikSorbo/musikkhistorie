@@ -6,16 +6,17 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=5.93";
-import { isVisible } from "./limits.js?v=5.93";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.93";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.93";
-import { renderRichText } from "./rich-text.js?v=5.93";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.93";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.93";
-import { wireLinks } from "./ui-helpers.js?v=5.93";
-import { renderSjangerhimmel } from "./constellation.js?v=5.93";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.93";
+import { modalOpen, escapeHtml } from "./ui.js?v=5.94";
+import { isVisible } from "./limits.js?v=5.94";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=5.94";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=5.94";
+import { renderRichText } from "./rich-text.js?v=5.94";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.94";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=5.94";
+import { wireLinks } from "./ui-helpers.js?v=5.94";
+import { renderSjangerhimmel } from "./constellation.js?v=5.94";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=5.94";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=5.94";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -137,6 +138,10 @@ function renderHistorie(genre, { fraSnapshot = false } = {}) {
   const modal = document.getElementById("modal-historier");
   modal.querySelectorAll(".hist-chip").forEach((b) =>
     b.classList.toggle("active", b.dataset.story === genre));
+  // «Vis oversikt» (v5.94) følger historien som vises; bare synlig i
+  // visningsmodus (CSS).
+  const oversiktKnapp = document.getElementById("hist-oversikt");
+  if (oversiktKnapp) oversiktKnapp.textContent = `Vis oversikt over ${genre}`;
 
   // Sjangerfamilien som varmestriper, én rad per sjanger under metasjangeren
   // (v5.16). Her lå tidligere en proporsjonal tidslinje over startårene, men
@@ -208,6 +213,13 @@ export function openHistorier(genre) {
   }).join("");
   chips.querySelectorAll(".hist-chip").forEach((b) =>
     b.addEventListener("click", () => renderHistorie(b.dataset.story)));
+  // Oversikten åpnes OPPÅ historien, så ← fører tilbake hit. Knappen står i
+  // den faste markupen og kobles bare én gang.
+  const oversiktKnapp = document.getElementById("hist-oversikt");
+  if (oversiktKnapp && !oversiktKnapp.dataset.koblet) {
+    oversiktKnapp.dataset.koblet = "1";
+    oversiktKnapp.addEventListener("click", () => { if (currentStoryGenre) openMetaOversikt(currentStoryGenre); });
+  }
   const valgt = typeof genre === "string" ? genre
     : (rekkefolge.includes(currentStoryGenre) ? currentStoryGenre : rekkefolge[0]);
   renderHistorie(valgt);

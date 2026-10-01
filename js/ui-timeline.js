@@ -7,14 +7,14 @@
 //  fordi genealogy.js ikke importerer denne modulen.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=5.93";
-import { formatInfoText } from "./ui-helpers.js?v=5.93";
-import { DECADES } from "./limits.js?v=5.93";
-import { GENEALOGY } from "./genre-model.js?v=5.93";
+import { escapeHtml } from "./util.js?v=5.94";
+import { formatInfoText } from "./ui-helpers.js?v=5.94";
+import { DECADES } from "./limits.js?v=5.94";
+import { GENEALOGY } from "./genre-model.js?v=5.94";
 // Epoken bor i genreDescriptions fra v4.64. Vi går til den rene oppslags-
 // modulen, ikke til genealogy.js: den importerer denne veien rundt ellers.
-import { resolveDescAny } from "./genre-descriptions.js?v=5.93";
-import { isHendelse } from "./ui-tech.js?v=5.93";
+import { resolveDescAny } from "./genre-descriptions.js?v=5.94";
+import { isHendelse } from "./ui-tech.js?v=5.94";
 
 // Tiårsvelgeren (klikkbar tidslinje-stripe): delt av studentenes tiårsvisning
 // (explore-decade.js), lærerens tiårsmodal (teacher-content.js) og kartet, så flatene
@@ -316,6 +316,12 @@ function nodeYear(n, e) {
 // epoken er upresis, ville tallet både sett feil ut og kunne havnet til høyre
 // for et høyere tall etter avstamnings-låsingen under. Mangler friteksten,
 // brukes årstallet, og ellers tiåret.
+// Årstallet over for én node (metasjanger-oversikten, v5.94: forbindelsene
+// til andre familier i tidsrekkefølge, også røttene uten activeFrom).
+export function nodeStartAar(n, genreDescs) {
+  return nodeYear(n, nodeEpoke(n, genreDescs));
+}
+
 function nodeLabel(n, e) {
   const era = String(e?.era || "").trim();
   if (era) return era;

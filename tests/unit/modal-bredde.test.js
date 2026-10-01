@@ -68,3 +68,14 @@ test("rammen og tekstgrensen, og presentasjonen holdes utenfor tekstgrensen", ()
   assert.match(css, /body:not\(\.presentasjon\) \.modal\.modal-innhold :is\(p, \.rt, \.info-text\) \{ max-width: 68ch; \}/,
     "lesbar linjelengde i appen; presentasjonen har sine egne 80ch");
 });
+
+// v5.94: metasjanger-oversikten ble lagt i markupen uten å bli registrert, og
+// da hadde ← ingen lytter. Hver modal i den delte markupen må stå i wireModals.
+test("alle modalene i den delte markupen er registrert (← og ✕ virker)", () => {
+  const ider = [...les("js/explore-modals.js").matchAll(/class="modal-backdrop"[^>]*\bid="([^"]+)"/g)].map((m) => m[1]);
+  const reg = les("js/explore.js");
+  const start = reg.indexOf("function wireModals()");
+  const liste = reg.slice(start, reg.indexOf("setupModal(id)", start));
+  assert.ok(ider.length > 20, "fant modalene i markupen");
+  for (const id of ider) assert.ok(liste.includes(`"${id}"`), `#${id} mangler i wireModals`);
+});
