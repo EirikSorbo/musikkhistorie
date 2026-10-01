@@ -3024,12 +3024,12 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 .ga-kort:hover .ga-navn, .ga-kort:focus-visible .ga-navn { color: var(--accent-2); text-decoration: underline; }
 .ga-kort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 10px; }
 /* På lerretet følger bildestørrelsen detaljnivået (v6.00; antallet fra
-   v6.02, brukerønske 2026-10-02): 5 bilder i bredden på nivå 1, 8 på nivå 2,
+   v6.03, brukerønske 2026-10-02): 6 bilder i bredden på nivå 1, 8 på nivå 2,
    10 på nivå 3. Navnene følger bildestørrelsen. */
-body.presentasjon[data-pres-nivaa="1"] .ga-rutenett { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.6rem 1.4rem; }
+body.presentasjon[data-pres-nivaa="1"] .ga-rutenett { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.5rem 1.3rem; }
 body.presentasjon[data-pres-nivaa="2"] .ga-rutenett { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 body.presentasjon[data-pres-nivaa="3"] .ga-rutenett { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 1.1rem 0.9rem; }
-body.presentasjon[data-pres-nivaa="1"] .ga-navn { font-size: 1.1rem; }
+body.presentasjon[data-pres-nivaa="1"] .ga-navn { font-size: 1.05rem; }
 body.presentasjon[data-pres-nivaa="3"] .ga-navn { font-size: 0.85rem; }
 /* Huben på lerretet (v5.96): med Visning-kortet er det elleve kort i DOM-en,
    så fire- og ti-reglene treffer ikke lenger. De synlige kortene deler bredden

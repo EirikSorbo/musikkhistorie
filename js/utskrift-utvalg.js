@@ -24,9 +24,9 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=6.02";
-import { isVisible } from "./limits.js?v=6.02";
-import { escapeHtml } from "./util.js?v=6.02";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js?v=6.03";
+import { isVisible } from "./limits.js?v=6.03";
+import { escapeHtml } from "./util.js?v=6.03";
 
 const NOKKEL = "pensum-utskrift";
 export const UTSKRIFT_HENDELSE = "pensum:utskrift-endret";
