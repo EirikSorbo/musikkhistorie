@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=5.99";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.99";
-import { punkterHtml } from "./punkter.js?v=5.99";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.99";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.99";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.99";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.00";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.00";
+import { punkterHtml } from "./punkter.js?v=6.00";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.00";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=6.00";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.00";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.99";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.99";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.99";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.99";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.99";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.99";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.99";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.99";
+} from "./ui-helpers.js?v=6.00";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.00";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.00";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.00";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.00";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.00";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.00";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.00";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -642,7 +642,21 @@ export function openPlaylistModal(fullName, node, artists) {
   const { total, html, ider } = buildPlaylistHtml(node, artists);
   document.getElementById("pl-title").textContent = `Spilleliste: ${fullName} (${total})`;
   document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
+  kobleSpillelisteRader();
   modalOpen(document.getElementById("modal-spilleliste"));
+}
+
+// Hele raden spiller eksempelet (v6.00), som hele raden åpner artisten i
+// artistlista: et klikk utenfor lenka og sjangermerket går til lenka, der
+// spilleren fanger det (yt-spiller.js). Koblet én gang på den faste kroppen.
+function kobleSpillelisteRader() {
+  const body = document.getElementById("pl-body");
+  if (!body || body.dataset.radKoblet) return;
+  body.dataset.radKoblet = "1";
+  body.addEventListener("click", (e) => {
+    if (e.target.closest("a, button")) return;
+    e.target.closest(".pl-item")?.querySelector("a")?.click();
+  });
 }
 
 // «Spill alle på YouTube» (v5.74): én lenke som spiller alle videoene i lista
@@ -706,7 +720,9 @@ function playlistRows(list, sj = null) {
       const video = ytMaal(m.url)?.video;
       if (video) ider.push(video);
       const yInfo = musicExampleLabel(m);
-      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a> <span class="muted">· ${escapeHtml(a.name)}</span> ${rowTag(m)}</li>`);
+      // Tittel og år til venstre, artist og sjanger til høyre (v6.00,
+      // brukerønske 2026-10-01), som navn og år i artistlista.
+      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span> ${rowTag(m)}</span></li>`);
     });
     return rows;
   });
@@ -737,5 +753,6 @@ export function openArtistsPlaylistModal(title, list) {
   const { total, html, ider } = playlistRows([...(list || [])].sort(byInfluenceThenName));
   document.getElementById("pl-title").textContent = `${title} (${total})`;
   document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
+  kobleSpillelisteRader();
   modalOpen(document.getElementById("modal-spilleliste"));
 }

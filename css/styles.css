@@ -1685,19 +1685,29 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 #modal-artistliste .result-meta { justify-content: flex-end; }
 #modal-artistliste .result-work { font-style: normal; }
 /* Listevinduene (v5.99, brukerønske 2026-10-01): artistlista og spillelista
-   er en tredjedel smalere enn de andre innholdskortene (660 mot 1000 px), og
-   spillelista har samme rene stil som artistlista: grå linjer mellom
-   radene, normal vekt, dempet farge. All informasjonen står: tittel med år,
-   artist og sjanger. Visningsmodus har sine egne bredder. */
-body:not(.presentasjon) :is(#modal-artistliste, #modal-spilleliste) > .modal { max-width: 660px; }
+   er en tredjedel smalere enn de andre innholdskortene (41.25rem, 660 px i
+   appen), også i visningsmodus fra v6.00, der bredden vokser med teksten.
+   Spillelista har samme rene stil som artistlista: grå linjer mellom
+   radene, normal vekt, dempet farge; tittel og år til venstre, artist og
+   sjanger til høyre, og hele raden markeres og kan klikkes. All
+   informasjonen står. */
+:is(#modal-artistliste, #modal-spilleliste) > .modal { max-width: 41.25rem; }
 #modal-spilleliste .pl-list { margin: 0; padding: 0; list-style: none; }
 #modal-spilleliste .pl-item {
+  display: flex; align-items: baseline; gap: 1rem;
   padding: 0.55rem 0.25rem; border-bottom: 1px solid var(--line);
-  font-size: 0.95rem; line-height: 1.45;
+  font-size: 0.95rem; line-height: 1.45; cursor: pointer;
 }
 #modal-spilleliste .pl-item:last-child { border-bottom: 0; }
-#modal-spilleliste .pl-item a { font-weight: 400; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
-#modal-spilleliste .pl-item a:hover, #modal-spilleliste .pl-item a:focus-visible { color: var(--accent-2); text-decoration: underline; }
+#modal-spilleliste .pl-item:hover { background: var(--surface-2); }
+#modal-spilleliste .pl-item a { font-weight: 400; text-decoration: none; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
+#modal-spilleliste .pl-item:hover a, #modal-spilleliste .pl-item a:focus-visible { color: var(--accent-2); }
+#modal-spilleliste .pl-hoyre {
+  margin-left: auto; flex-shrink: 0; max-width: 45%;
+  display: flex; align-items: baseline; justify-content: flex-end; flex-wrap: wrap; gap: 0 0.4rem; text-align: right;
+}
+#modal-spilleliste .pl-artist { color: var(--muted); }
+#modal-spilleliste .tag.tag-pl { margin-left: 0; }
 
 /* ----- Spotlight (forside) ----- */
 .spotlight-grid {
@@ -3013,6 +3023,13 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 .ga-navn { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.3; color: var(--text); }
 .ga-kort:hover .ga-navn, .ga-kort:focus-visible .ga-navn { color: var(--accent-2); text-decoration: underline; }
 .ga-kort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 10px; }
+/* På lerretet følger bildestørrelsen detaljnivået (v6.00, brukerønske
+   2026-10-01): 4 bilder i bredden på nivå 1, 6 på nivå 2, 8 på nivå 3. */
+body.presentasjon[data-pres-nivaa="1"] .ga-rutenett { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.8rem 1.6rem; }
+body.presentasjon[data-pres-nivaa="2"] .ga-rutenett { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.5rem 1.3rem; }
+body.presentasjon[data-pres-nivaa="3"] .ga-rutenett { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+body.presentasjon[data-pres-nivaa="1"] .ga-navn { font-size: 1.15rem; }
+body.presentasjon[data-pres-nivaa="2"] .ga-navn { font-size: 1.05rem; }
 /* Huben på lerretet (v5.96): med Visning-kortet er det elleve kort i DOM-en,
    så fire- og ti-reglene treffer ikke lenger. De synlige kortene deler bredden
    i stedet (skjulte kort tar ingen plass i griden). */

@@ -19,12 +19,12 @@
 //  explore-context importerer feature-modulene tilbake, og GENEALOGY byttes ut
 //  ved hver ombygging av treet.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=5.99";
-import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=5.99";
-import { storyOrder } from "./story-format.js?v=5.99";
-import { eraYears } from "./genealogy.js?v=5.99";
-import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=5.99";
-import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=5.99";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.00";
+import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=6.00";
+import { storyOrder } from "./story-format.js?v=6.00";
+import { eraYears } from "./genealogy.js?v=6.00";
+import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=6.00";
+import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=6.00";
 
 // Hvilken metagruppe som står åpen (navnet), «__ingen» når brukeren har lukket
 // alle, null ved frisk åpning (da åpnes den første).

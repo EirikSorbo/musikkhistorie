@@ -30,11 +30,11 @@
 //  betingelse for den; nå er den alltid på, så betingelsene er borte.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=5.99";
-import { byggVisVerdi, parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=5.99";
-import { modalOpen, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.99";
-import { getState } from "./explore-context.js?v=5.99";
-import { safeUrl } from "./util.js?v=5.99";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "./presentasjon-modell.js?v=6.00";
+import { byggVisVerdi, parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=6.00";
+import { modalOpen, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=6.00";
+import { getState } from "./explore-context.js?v=6.00";
+import { safeUrl } from "./util.js?v=6.00";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på
 // YouTube» når tiden endres. `kø` (v5.74) er videoene som spilles etter den
