@@ -79,6 +79,9 @@ if (typeof document !== "undefined") {
 // er skjult av metasjangerhistorier-flagget over, og Røtter/Om historie/
 // bruksveiledningen holdes ute av søket (js/search.js) med de samme flaggene.
 export const SKJUL_I_HUBEN = {
+  // Spesialsidene for visningsmodus (v5.96): aldri for studentene. Kortet
+  // finnes bare på lerretet, der lærerøkta viser det (presentasjon.js).
+  "sb-visning":     true,
   "sb-om-historie": true,
   "sb-rotter":      true,
   "sb-historier":   true,

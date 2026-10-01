@@ -17,10 +17,10 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.95";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.95";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.95";
-import { escapeHtml } from "./util.js?v=5.95";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=5.96";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=5.96";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=5.96";
+import { escapeHtml } from "./util.js?v=5.96";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -38,6 +38,7 @@ export const TYPE_LABEL = {
   kobling: "Sjangerkobling",
   podkast: "Podkast",
   oversikt: "Oversikt",
+  galleri: "Artistgalleri",
 };
 
 // Overskriften over en gruppe treff.
@@ -56,13 +57,14 @@ export const TYPE_FLERTALL = {
   kobling: "Sjangerkoblinger",
   podkast: "Podkaster",
   oversikt: "Oversikter",
+  galleri: "Artistgallerier",
 };
 
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
   "artist", "sjanger", "rot", "undersjanger", "tech", "hendelse",
-  "historie", "oversikt", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
+  "historie", "oversikt", "galleri", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
 ];
 
 const SIDE_TITTEL = { rotter: "Røtter før 1910", omHistorie: "Om historie", appGuide: "Slik bruker du appen" };
@@ -167,6 +169,11 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
     for (const meta of storyOrder(genreDescs)) {
       ut.push(post("oversikt", meta, `Oversikt over ${meta}`, "Visningsmodus",
         [meta, "oversikt metasjanger"], { hva: "oversikt", id: meta }));
+      // Artistgalleriene (v5.96), én per sjanger i de aktive familiene.
+      for (const n of GENEALOGY.filter((x) => x.g === meta)) {
+        ut.push(post("galleri", n.l, `Artistgalleri: ${n.f || n.l}`, `Visningsmodus · ${meta}`,
+          [n.l, n.f, "galleri bilder"], { hva: "galleri", id: n.l }));
+      }
     }
   }
 

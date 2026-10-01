@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.95";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=5.95";
+import { metaRader } from "../../js/ui-helpers.js?v=5.96";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=5.96";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -453,7 +453,8 @@ test("medStoppSattInn: setter inn på plass, rører ikke inndata, kaster for ukj
 test("«Legg til her»: knappen kun for lærerøkter, lagring på ferske planer, lokal kopi først", () => {
   const spiller = kilde("presentasjon.js");
   assert.match(spiller, /knapp\.hidden = !\(erLaerer && plan\);/, "skjult uten lærerøkt og plan");
-  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); \}\);/);
+  // v5.96: lærerøkta styrer også Visning-kortet i huben (oppdaterHubKort).
+  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); oppdaterHubKort\(\); \}\);/);
   assert.match(spiller, /const indeks = innsettingsIndeks\(stoppIdx, plan\.stopp\.length\);/);
   assert.match(spiller, /const stopp = \{ vis, nivaa \};/, "stoppet lagres med detaljnivået som vises");
   assert.match(spiller, /plan = await settInnStopp\(planId, indeks, stopp\);/);
@@ -790,7 +791,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.95";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.96";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

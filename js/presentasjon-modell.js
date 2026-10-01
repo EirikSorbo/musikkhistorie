@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.95";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.96";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -471,6 +471,8 @@ function oversiktPunkt(m, oppslag) {
         : { kat: "oversikter", tekst: "Sjangerhistoriene" };
     case "oversikt":
       return { kat: "oversikter", tekst: `Oversikt over ${m.id || "metasjangeren"}` };
+    case "galleri":
+      return { kat: "oversikter", tekst: `Artistgalleri: ${m.id || "sjangeren"}` };
     case "kobling": {
       const [fra, til] = String(m.id || "").split("__");
       const navn = (id) => oppslag.nodeNavn?.(id) || id || "?";

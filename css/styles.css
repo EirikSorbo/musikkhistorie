@@ -2950,6 +2950,45 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 .mo-aar { font-size: 0.85em; color: var(--muted); }
 .mo-eks-artist { display: block; font-size: 0.82rem; color: var(--muted); }
 .mo-eksempler .pl-alle { margin: 0 0 0.6rem; }
+
+/* Visning (v5.96): samlesiden for spesialsidene, åpnet fra Visning-kortet i
+   Det store bildet på lerretet. Knappene bærer metasjangerens farge. */
+.vs-knapper { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 0.4rem; }
+.vs-knapp {
+  border-color: color-mix(in srgb, var(--vs-farge, var(--line-strong)) 45%, white);
+  color: color-mix(in srgb, var(--vs-farge, var(--text)) 70%, black);
+}
+.vs-knapp:hover { background: color-mix(in srgb, var(--vs-farge, var(--line)) 10%, white); }
+.vs-galleri-head { margin-top: 1.8rem; }
+.vs-gruppe-navn {
+  margin: 1rem 0 0.45rem; font-size: 0.9rem; font-weight: 600;
+  color: color-mix(in srgb, var(--vs-farge, var(--text)) 70%, black);
+}
+/* Artistgalleriet (v5.96): bildene i like rammer (4:5, ansiktet høyt i
+   utsnittet), navnet under, ingen kreditering. Et bilde åpner artistkortet. */
+.ga-rutenett {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 1.3rem 1.1rem;
+}
+.ga-kort {
+  display: block; width: 100%; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; text-align: center; cursor: pointer;
+}
+.ga-bilde { display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 10px; background: var(--surface-2); }
+.ga-bilde img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
+.ga-tom {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  font-size: 2rem; font-weight: 600; color: var(--muted-2);
+}
+.ga-navn { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.3; color: var(--text); }
+.ga-kort:hover .ga-navn, .ga-kort:focus-visible .ga-navn { color: var(--accent-2); text-decoration: underline; }
+.ga-kort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 10px; }
+/* Galleri-knappen på sjangerkortet hører til lerretet. */
+body:not(.presentasjon) .gx-galleri-btn { display: none; }
+/* Huben på lerretet (v5.96): med Visning-kortet er det elleve kort i DOM-en,
+   så fire- og ti-reglene treffer ikke lenger. De synlige kortene deler bredden
+   i stedet (skjulte kort tar ingen plass i griden). */
+body.presentasjon #modal-store-bildet .dash-grid { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
 body.presentasjon[data-pres-nivaa="2"] #modal-detail .artist-image img,
 body.presentasjon[data-pres-nivaa="2"] #modal-artist-detail .artist-image img {
   max-height: 60vh;

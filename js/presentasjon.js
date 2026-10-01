@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.95";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK } from "./presentasjon-modell.js?v=5.95";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.95";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.95";
-import { GENEALOGY } from "./genre-model.js?v=5.95";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.95";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.95";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.95";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.95";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.95";
-import { getState } from "./explore-context.js?v=5.95";
-import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.95";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.95";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.95";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.96";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK } from "./presentasjon-modell.js?v=5.96";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.96";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.96";
+import { GENEALOGY } from "./genre-model.js?v=5.96";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.96";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.96";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.96";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.96";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.96";
+import { getState } from "./explore-context.js?v=5.96";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.96";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.96";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.96";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -220,7 +220,11 @@ function oppdaterHubKort() {
   const sb = document.getElementById("modal-store-bildet");
   if (!sb) return;
   sb.querySelectorAll(".dash-card").forEach((kort) => {
-    if (kort.id in SKJUL_I_HUBEN) kort.hidden = !!SKJUL_I_HUBEN[kort.id];
+    if (!(kort.id in SKJUL_I_HUBEN)) return;
+    // Visning-kortet (v5.96) er lærerens: på lerretet vises det i lærerøkt,
+    // ellers bare med QA-bryteren, som de andre skjulte kortene.
+    const laererKort = kort.id === "sb-visning" && erLaerer;
+    kort.hidden = !!SKJUL_I_HUBEN[kort.id] && !laererKort;
   });
 }
 
@@ -1149,7 +1153,7 @@ export function initPresentasjon() {
   });
   // Lærerøkta følger innloggingen også i fri visning (v5.82): «Navn fra
   // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
-  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); });
+  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;

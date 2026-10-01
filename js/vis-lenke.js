@@ -29,8 +29,9 @@ export const VIS_TYPER = new Set([
   // YouTube-ID-er er kolonfrie, så de passer i vis-formatet. Varmekartet kan
   // også bære en metasjanger som id («varmekart:Country») fra samme versjon.
   "yt",
-  // Oversikten over en metasjanger (v5.94): bare for visningsmodus.
-  "oversikt",
+  // Oversikten over en metasjanger (v5.94) og artistgalleriet for en
+  // sjanger (v5.96): bare for visningsmodus.
+  "oversikt", "galleri",
 ]);
 
 // «artist:abc123» → { hva: "artist", id: "abc123" }. Ukjent type → null, så

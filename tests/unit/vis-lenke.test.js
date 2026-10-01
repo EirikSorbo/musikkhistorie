@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { VIS_TYPER, parseVisVerdi, byggVisVerdi, erSkrivefelt, erSokHurtigtast } from "../../js/vis-lenke.js?v=5.95";
+import { VIS_TYPER, parseVisVerdi, byggVisVerdi, erSkrivefelt, erSokHurtigtast } from "../../js/vis-lenke.js?v=5.96";
 
 // Rundtur: alt «Kopier lenke» kan bygge, må parseren lese tilbake identisk —
 // ellers kopierer læreren en lenke som åpner noe annet (eller ingenting).

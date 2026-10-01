@@ -12,18 +12,18 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=5.95";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.95";
-import { renderRichText } from "./rich-text.js?v=5.95";
-import { punkterHtml } from "./punkter.js?v=5.95";
-import { escapeHtml, buildKilderList } from "./util.js?v=5.95";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.95";
-import { modalOpen } from "./ui-modal.js?v=5.95";
-import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.95";
-import { artistsInGenre } from "./limits.js?v=5.95";
-import { wireProposeFoot } from "./ui-edit.js?v=5.95";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.95";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.95";
+import { wireAllLinks } from "./linkify.js?v=5.96";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.96";
+import { renderRichText } from "./rich-text.js?v=5.96";
+import { punkterHtml } from "./punkter.js?v=5.96";
+import { escapeHtml, buildKilderList } from "./util.js?v=5.96";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=5.96";
+import { modalOpen } from "./ui-modal.js?v=5.96";
+import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=5.96";
+import { artistsInGenre } from "./limits.js?v=5.96";
+import { wireProposeFoot } from "./ui-edit.js?v=5.96";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=5.96";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=5.96";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -156,7 +156,7 @@ export function refreshSjangerInfo(freshOpts) {
 // allerede åpen modal. Egen parameter, IKKE i opts: opts lagres i openSjanger
 // og ville smittet alle senere omtegninger.
 export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onShowGallery, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -203,6 +203,8 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
     (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
     (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Tidslinje</button>` : "",
+    // Artistgalleriet (v5.96): bare på lerretet (CSS skjuler knappen i appen).
+    (n.g && onShowGallery) ? `<button type="button" class="btn ghost small gx-galleri-btn">Galleri</button>` : "",
   ].filter(Boolean).join(" ");
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
@@ -241,6 +243,8 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   if (bp) bp.addEventListener("click", () => onShowPlaylist({ label: n.l, fullName: n.f, node: n }));
   const bt = mBody.querySelector(".gx-timeline-btn");
   if (bt) bt.addEventListener("click", () => onShowTimeline({ label: n.l }));
+  const bg = mBody.querySelector(".gx-galleri-btn");
+  if (bg) bg.addEventListener("click", () => onShowGallery({ label: n.l }));
   // Rediger (lærer): n.l er doc-ID-en i genreDescriptions — samme ID som
   // «Foreslå endring» under bruker, så begge veier treffer samme dokument.
   renderGenreEditBtn(root, onEdit ? () => onEdit(n.l, "main") : null);

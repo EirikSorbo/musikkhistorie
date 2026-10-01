@@ -13,11 +13,11 @@
 //  kall: treet og vokabularet er live bindings.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.95";
-import { parseVisVerdi } from "./vis-lenke.js?v=5.95";
-import { lytteeksempelNavn } from "./presentasjon-modell.js?v=5.95";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.95";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.95";
+import { getState } from "./explore-context.js?v=5.96";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.96";
+import { lytteeksempelNavn } from "./presentasjon-modell.js?v=5.96";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=5.96";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=5.96";
 
 export const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -27,7 +27,7 @@ export const TYPE_NAVN = {
   himmel: "Sjangerhimmel", referanser: "Referanser",
   "store-bildet": "Det store bildet", podkaster: "Podkaster",
   teknologi: "Teknologi", slektstre: "Slektstre", yt: "Lytteeksempel",
-  oversikt: "Oversikt",
+  oversikt: "Oversikt", galleri: "Galleri",
 };
 
 export const DOD = "finnes ikke lenger";
@@ -63,6 +63,8 @@ export function stoppEtikett(stopp) {
       return ut(m.id, GENEALOGY_META_GENRES.includes(m.id) ? {} : { feil: DOD });
     case "oversikt":
       return ut(m.id, GENEALOGY_META_GENRES.includes(m.id) ? {} : { feil: DOD });
+    case "galleri":
+      return ut(m.id, GENEALOGY.some((n) => n.l === m.id) ? {} : { feil: DOD });
     case "varmekart":
       if (!m.id) return ut(type);
       return ut(m.id, GENEALOGY_META_GENRES.includes(m.id) ? {} : { feil: DOD });

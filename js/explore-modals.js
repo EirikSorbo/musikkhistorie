@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.95";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.95";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=5.96";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=5.96";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -269,6 +269,15 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div class="dash-grid">
+      <!-- Visning (v5.96, brukerønske 2026-10-01): spesialsidene for
+           visningsmodus. Bare på lerretet, og bare for læreren (explore.js
+           fjerner kortet utenfor visningen; SKJUL_I_HUBEN og lærerøkta i
+           presentasjon.js styrer det på lerretet). -->
+      <button class="dash-card" id="sb-visning">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 8.5v5l4-2.5z"/></svg>
+        <span class="dash-title">Visning</span>
+        <span class="dash-desc">Spesialsider for visningsmodus</span>
+      </button>
       <button class="dash-card" id="sb-om-historie">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#4d7c0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M8 2v4l4 4 4-4V2"/><path d="M8 22v-4l4-4 4 4v4"/></svg>
         <span class="dash-title">Om historie</span>
@@ -417,6 +426,30 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="mo-body" class="mo-body"></div>
+  </div>
+</div>
+
+<!-- Visning (v5.96): samlesiden for spesialsidene til visningsmodus, åpnet fra
+     Visning-kortet i Det store bildet. Tegnes av explore-visningssider.js. -->
+<div class="modal-backdrop" id="modal-visningssider">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Visning</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="vs-body" class="vs-body"></div>
+  </div>
+</div>
+
+<!-- Artistgalleri for én sjanger (v5.96): bildene med navn under, til
+     visningsmodus (galleri:<sjanger>). Tegnes av explore-visningssider.js. -->
+<div class="modal-backdrop" id="modal-galleri">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="ga-tittel">Artistgalleri</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="ga-body" class="ga-body"></div>
   </div>
 </div>
 `;

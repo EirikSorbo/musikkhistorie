@@ -1,7 +1,7 @@
 // Metasjanger-oversikten i visningsmodus (v5.94, brukerønske 2026-10-01).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js?v=5.95";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js?v=5.96";
 
 const art = (id, name, metaGenre, mainGenre, extra = {}) =>
   ({ id, name, metaGenre, mainGenre, status: "active", ...extra });
@@ -78,4 +78,29 @@ test("tidsrom: tidligste startår, og «i dag» når en periode er åpen", () =>
   assert.equal(tidsrom([{ status: "ok", from: 1954, to: 1975 }, { status: "ok", from: 1965, to: 1985 }]), "1954–1985");
   assert.equal(tidsrom([{ status: "ok", from: 1900, to: null }, { status: "mangler" }]), "1900–i dag");
   assert.equal(tidsrom([{ status: "mangler" }]), null);
+});
+
+// --- Visning-kortet og artistgalleriet (v5.96, brukerønske 2026-10-01) ------------
+import { readFileSync } from "node:fs";
+import { VIS_TYPER } from "../../js/vis-lenke.js?v=5.96";
+const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+
+test("artistgalleriet: samme artister som «Artister»-knappen, stopp i kjøreplaner, knapp bare på lerretet", () => {
+  assert.ok(VIS_TYPER.has("galleri") && VIS_TYPER.has("oversikt"));
+  const vs = kilde("js/explore-visningssider.js");
+  assert.match(vs, /const artister = artistsInGenre\(getState\(\)\.artists, sjanger\);/);
+  assert.doesNotMatch(vs, /imageCredit|fmtCredit/, "ingen kreditering i galleriet");
+  assert.match(kilde("js/explore-apne.js"), /case "galleri": return openArtistGalleri\(apne\.id\);/);
+  assert.match(kilde("js/genealogy.js"), /\(n\.g && onShowGallery\) \? `<button type="button" class="btn ghost small gx-galleri-btn">Galleri<\/button>` : ""/);
+  assert.match(kilde("css/styles.css"), /body:not\(\.presentasjon\) \.gx-galleri-btn \{ display: none; \}/);
+  // Galleriene og oversiktene står bare i Visning-editorens søk.
+  const sok = kilde("js/search.js");
+  assert.match(sok, /if \(visningsflater\) \{[\s\S]*post\("galleri", n\.l,/);
+  assert.match(kilde("js/visning.js"), /visningsflater: true/);
+});
+
+test("Visning-kortet i Det store bildet: bare på lerretet, bare for læreren", () => {
+  assert.match(kilde("js/explore.js"), /if \(!erPresentasjon\(\)\) sbModal\.querySelector\("#sb-visning"\)\?\.remove\(\);/);
+  assert.match(kilde("js/feature-flags.js"), /"sb-visning":\s+true,/);
+  assert.match(kilde("js/presentasjon.js"), /const laererKort = kort\.id === "sb-visning" && erLaerer;/);
 });
