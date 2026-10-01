@@ -9,8 +9,8 @@
 //  `familie` er familiens tre-sjangre (etikettene) i tidsrekkefølge, slik
 //  genreFamilyNodes gir dem. Grupperingen følger den rekkefølgen.
 // ============================================================================
-import { isVisible, byInfluenceThenName } from "./limits.js?v=6.01";
-import { ytMaal } from "./presentasjon-modell.js?v=6.01";
+import { isVisible, byInfluenceThenName } from "./limits.js?v=6.02";
+import { ytMaal } from "./presentasjon-modell.js?v=6.02";
 
 const lav = (s) => String(s ?? "").toLowerCase();
 

@@ -14,15 +14,15 @@
 //  Utvalget og grupperingen bor i metaoversikt-modell.js (testet); her tegnes
 //  og kobles det.
 // ============================================================================
-import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.01";
-import { safeUrl } from "./util.js?v=6.01";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.01";
-import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.01";
-import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.01";
-import { wireAllLinks } from "./linkify.js?v=6.01";
-import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.01";
-import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.01";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom } from "./metaoversikt-modell.js?v=6.01";
+import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.02";
+import { safeUrl } from "./util.js?v=6.02";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.02";
+import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.02";
+import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.02";
+import { wireAllLinks } from "./linkify.js?v=6.02";
+import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.02";
+import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.02";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom } from "./metaoversikt-modell.js?v=6.02";
 
 const flertall = (n, en, fler) => `${n} ${n === 1 ? en : fler}`;
 
