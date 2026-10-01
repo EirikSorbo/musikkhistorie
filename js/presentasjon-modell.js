@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=5.94";
+import { parseVisVerdi } from "./vis-lenke.js?v=5.95";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -648,6 +648,52 @@ export function samleVentende(sendt, merke) {
 }
 
 // ----------------------------------------------------------------------------
+//  Sidehistorikken (v5.95, brukerønske 2026-10-01): ← og → i visningsmodus
+//  går til forrige og neste side som er vist, som nettleserens tilbake og
+//  fram. En «side» er målet (vis-verdien) til kortet som står øverst. Rene
+//  funksjoner; presentasjon.js registrerer sidene og åpner målene.
+//  Tilstanden er { liste, idx }: sidene i rekkefølge og hvor man står.
+// ----------------------------------------------------------------------------
+export const HISTORIKK_MAKS = 100;
+export const TOM_HISTORIKK = Object.freeze({ liste: [], idx: -1 });
+
+// Teller som en side? Ikke tomt lerret, og ikke lytteeksempelet: spilleren
+// ligger oppå et kort og endrer målet sitt når køen går videre.
+export function erHistorikkSide(vis) {
+  return typeof vis === "string" && vis !== "" && !vis.startsWith("yt:");
+}
+
+// En side vises. Samme side som nå: ingenting. Siden rett bak eller rett
+// foran (← på kortet lukker det øverste og viser det under, eller kortet
+// åpnes igjen): flytt dit og behold resten. Ellers: ny side, og det som lå
+// foran forkastes, som i nettleseren.
+export function historikkBesok(h, vis) {
+  if (!erHistorikkSide(vis)) return h;
+  const { liste, idx } = h || TOM_HISTORIKK;
+  if (liste[idx] === vis) return h;
+  if (idx > 0 && liste[idx - 1] === vis) return { liste, idx: idx - 1 };
+  if (idx + 1 < liste.length && liste[idx + 1] === vis) return { liste, idx: idx + 1 };
+  const ny = [...liste.slice(0, idx + 1), vis].slice(-HISTORIKK_MAKS);
+  return { liste: ny, idx: ny.length - 1 };
+}
+
+// Ett steg tilbake (-1) eller fram (+1): ny tilstand og siden som skal
+// åpnes, eller null ved enden.
+export function historikkSteg(h, retning) {
+  const { liste, idx } = h || TOM_HISTORIKK;
+  const ny = idx + retning;
+  if (ny < 0 || ny >= liste.length) return null;
+  return { h: { liste, idx: ny }, vis: liste[ny] };
+}
+
+// Lest tilbake fra sessionStorage: alt som ikke ser riktig ut, blir tomt.
+export function normaliserHistorikk(raa) {
+  const liste = Array.isArray(raa?.liste) ? raa.liste.filter(erHistorikkSide).slice(-HISTORIKK_MAKS) : [];
+  const idx = Number.isInteger(raa?.idx) ? Math.min(Math.max(raa.idx, -1), liste.length - 1) : liste.length - 1;
+  return { liste, idx: liste.length ? Math.max(idx, 0) : -1 };
+}
+
+// ----------------------------------------------------------------------------
 //  Hurtigtaster (v5.38, brukerens utvalg 2026-09-18). Tastekartet er rene
 //  funksjoner, så testene kan låse det: tastetrykk + situasjon inn,
 //  handlingens navn ut (eller null). Vaktene bor HER, så ingen tast kan
@@ -666,12 +712,17 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   if (plan && k === "PageDown") return "neste";
   if (plan && k === "PageUp") return "forrige";
   if (iSkrivefelt) return null;
+  // Pilene (v5.95, brukerønske 2026-10-01): opp og ned blar i kjøreplanens
+  // stopp, venstre og høyre i sidene som er vist (som nettleserens tilbake
+  // og fram), også i fri visning. Uten plan scroller opp og ned som før.
   if (plan) {
-    if (k === "ArrowRight") return "neste";
-    if (k === "ArrowLeft") return "forrige";
+    if (k === "ArrowUp") return "neste";
+    if (k === "ArrowDown") return "forrige";
     if (k === "Home") return "oversikt";
     if (k === "End") return "oppsummering";
   }
+  if (k === "ArrowLeft") return "sideTilbake";
+  if (k === "ArrowRight") return "sideFram";
   if (k === "1" || k === "2" || k === "3") return `nivaa${k}`;
   // Av/på-tastene skal ikke blinke fram og tilbake når de holdes inne.
   if (e.repeat) return null;
@@ -709,14 +760,16 @@ export function samleTast(e, { iSkrivefelt = false } = {}) {
 // en kjøreplan spilles; `laerer`: raden vises bare i lærerøkter.
 export const PRES_TASTER = [
   { gruppe: "Kjøreplan", plan: true, rader: [
-    { taster: ["→", "PageDown"], hva: "Neste stopp" },
-    { taster: ["←", "PageUp"], hva: "Forrige stopp" },
+    { taster: ["↑", "PageDown"], hva: "Neste stopp" },
+    { taster: ["↓", "PageUp"], hva: "Forrige stopp" },
     { taster: ["Home"], hva: "Til oversikten" },
     { taster: ["End"], hva: "Til oppsummeringen" },
     { taster: ["T"], hva: "Tilbake til stoppet etter en avstikker" },
     { taster: ["+"], hva: "Legg kortet du viser inn i kjøreplanen her", laerer: true },
   ] },
   { gruppe: "Visning", rader: [
+    { taster: ["←"], hva: "Forrige side du har vist" },
+    { taster: ["→"], hva: "Neste side du har vist (etter ←)" },
     { taster: ["1", "2", "3"], hva: "Detaljnivå" },
     { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
     { taster: ["F"], hva: "Fullskjerm av og på" },

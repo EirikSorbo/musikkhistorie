@@ -14,17 +14,17 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=5.94";
-import { modalOpen } from "./ui.js?v=5.94";
-import { renderPendingEditsList } from "./teacher-review.js?v=5.94";
-import { openDetail } from "./teacher-artists.js?v=5.94";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=5.94";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=5.94";
-import { storyOrder } from "./story-format.js?v=5.94";
-import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=5.94";
-import { escapeHtml, pct } from "./ui-helpers.js?v=5.94";
-import { deleteTimeforslag } from "./store.js?v=5.94";
-import { askChoice } from "./ui-modal.js?v=5.94";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=5.95";
+import { modalOpen } from "./ui.js?v=5.95";
+import { renderPendingEditsList } from "./teacher-review.js?v=5.95";
+import { openDetail } from "./teacher-artists.js?v=5.95";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=5.95";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=5.95";
+import { storyOrder } from "./story-format.js?v=5.95";
+import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=5.95";
+import { escapeHtml, pct } from "./ui-helpers.js?v=5.95";
+import { deleteTimeforslag } from "./store.js?v=5.95";
+import { askChoice } from "./ui-modal.js?v=5.95";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,

@@ -10,12 +10,17 @@ const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "ut
 
 test("funn 7: et stoppbytte pauser lyd og avbrytes når et kort nekter å lukkes", () => {
   const p = kilde("presentasjon.js");
-  const ga = p.slice(p.indexOf("function gaTilStopp("), p.indexOf("function lagrePosisjon("));
-  assert.match(ga, /document\.querySelectorAll\("\.modal-backdrop\.open audio"\)\.forEach\(\(a\) => \{ try \{ a\.pause\(\); \} catch \(e\) \{\} \}\);/);
+  // Lukkingen bor i lukkAlleKort fra v5.95 (delt med sidehistorikken, ← →).
+  const lukk = p.slice(p.indexOf("function lukkAlleKort("), p.indexOf("let historikk = TOM_HISTORIKK;"));
+  assert.match(lukk, /document\.querySelectorAll\("\.modal-backdrop\.open audio"\)\.forEach\(\(a\) => \{ try \{ a\.pause\(\); \} catch \(e\) \{\} \}\);/);
   // Ovenfra og ned, og stopp ved første nekt (kontrollrunden for v5.48).
-  assert.match(ga, /for \(let top = topOpenModal\(\), n = 0; top && n < 50; top = topOpenModal\(\), n\+\+\) \{\n\s*modalClose\(top\);\n\s*if \(top\.classList\.contains\("open"\)\) return;\n\s*\}\n\s*\n\s*stoppIdx = p\.pos;/,
+  assert.match(lukk, /for \(let top = topOpenModal\(\), n = 0; top && n < 50; top = topOpenModal\(\), n\+\+\) \{\n\s*modalClose\(top\);\n\s*if \(top\.classList\.contains\("open"\)\) return false;\n\s*\}\n\s*return true;/);
+  assert.doesNotMatch(lukk, /querySelectorAll\("\.modal-backdrop\.open"\)\.forEach\(\(m\) => modalClose\(m\)\)/, "ikke i dokumentrekkefølge");
+  const ga = p.slice(p.indexOf("function gaTilStopp("), p.indexOf("function lukkAlleKort("));
+  assert.match(ga, /if \(!lukkAlleKort\(\)\) return;\n\s*\n\s*stoppIdx = p\.pos;/,
     "posisjonen settes først når alle kortene faktisk er lukket");
-  assert.doesNotMatch(ga, /querySelectorAll\("\.modal-backdrop\.open"\)\.forEach\(\(m\) => modalClose\(m\)\)/, "ikke i dokumentrekkefølge");
+  const side = p.slice(p.indexOf("function gaISideHistorikk("), p.indexOf("let hoppOverSlektstre"));
+  assert.match(side, /if \(!steg \|\| !lukkAlleKort\(\)\) return;/, "← og → avbrytes også ved nekt");
 });
 
 test("funn 12: tilbake i samme plan beholder posisjonen, og slektstre-stoppet hopper ikke tilbake", () => {

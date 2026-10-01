@@ -1,7 +1,7 @@
 // Metasjanger-oversikten i visningsmodus (v5.94, brukerønske 2026-10-01).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js?v=5.94";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js?v=5.95";
 
 const art = (id, name, metaGenre, mainGenre, extra = {}) =>
   ({ id, name, metaGenre, mainGenre, status: "active", ...extra });

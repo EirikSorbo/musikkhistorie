@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=5.94";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER } from "../../js/presentasjon-modell.js?v=5.94";
+import { metaRader } from "../../js/ui-helpers.js?v=5.95";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=5.95";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -475,10 +475,11 @@ test("presTast: kjøreplan-tastene virker bare når en plan spilles", () => {
   assert.equal(presTast(tast("t"), medPlan), "tilStoppet");
   assert.equal(presTast(tast("T"), medPlan), "tilStoppet");
   assert.equal(presTast(tast("+"), medPlan), "leggTil");
-  assert.equal(presTast(tast("ArrowRight"), medPlan), "neste");
-  assert.equal(presTast(tast("ArrowLeft"), medPlan), "forrige");
-  for (const k of ["Home", "End", "t", "+", "ArrowRight", "PageDown"]) {
-    assert.equal(presTast(tast(k), { plan: false }), null, `${k} uten plan`);
+  // v5.95 (brukerønske 2026-10-01): opp og ned blar i stoppene.
+  assert.equal(presTast(tast("ArrowUp"), medPlan), "neste");
+  assert.equal(presTast(tast("ArrowDown"), medPlan), "forrige");
+  for (const k of ["Home", "End", "t", "+", "ArrowUp", "ArrowDown", "PageDown"]) {
+    assert.equal(presTast(tast(k), { plan: false }), null, `${k} uten plan (opp og ned scroller)`);
   }
 });
 
@@ -510,7 +511,8 @@ test("presTast: aldri i skrivefelt eller med modifikator, unntatt klikkernes Pag
 test("presTast: av/på-tastene reagerer ikke på auto-gjentak, blaingen gjør det", () => {
   const holdt = (k) => presTast(tast(k, { repeat: true }), { plan: true });
   for (const k of ["f", "a", "b", ".", "?", "t", "+", "n"]) assert.equal(holdt(k), null, k);
-  assert.equal(holdt("ArrowRight"), "neste");
+  assert.equal(holdt("ArrowUp"), "neste");
+  assert.equal(holdt("ArrowLeft"), "sideTilbake");
   assert.equal(holdt("2"), "nivaa2");
 });
 
@@ -579,7 +581,7 @@ test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
   // Søket (S) og lytteeksempelet (L) virker i hele appen (vis-lenke og
   // yt-spiller), Esc i modalene; resten skal presTast kjenne.
   const andreSteder = new Set(["S", "L", "Esc"]);
-  const navn = { "→": "ArrowRight", "←": "ArrowLeft", "Mellomrom": " " };
+  const navn = { "→": "ArrowRight", "←": "ArrowLeft", "↑": "ArrowUp", "↓": "ArrowDown", "Mellomrom": " " };
   for (const g of PRES_TASTER) {
     for (const r of g.rader) {
       for (const t of r.taster) {
@@ -788,7 +790,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.94";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=5.95";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);
@@ -876,4 +878,46 @@ test("spilleren fanger YouTube-lenkene i hele appen, med reserve for sperrede vi
   assert.match(spiller, /if \(e\.key !== "l" && e\.key !== "L"\) return;\n\s*if \(erSkrivefelt\(document\.activeElement\)\) return;/);
   assert.match(spiller, /if \(m\?\.hva !== "artist"\) return;/);
   assert.match(spiller, /const eks = \(a\?\.musicExamples \|\| \[\]\)\.find\(\(x\) => safeUrl\(x\?\.url\)\);/, "det første eksempelet med gyldig lenke");
+});
+
+// --- Sidehistorikken (v5.95, brukerønske 2026-10-01) ----------------------------
+
+test("presTast: ← og → går i sidehistorikken, i fri visning og med plan", () => {
+  for (const o of [{}, { plan: true }]) {
+    assert.equal(presTast(tast("ArrowLeft"), o), "sideTilbake");
+    assert.equal(presTast(tast("ArrowRight"), o), "sideFram");
+  }
+  assert.equal(presTast(tast("ArrowLeft"), { iSkrivefelt: true }), null, "aldri i skrivefelt");
+  assert.equal(presTast(tast("ArrowRight", { metaKey: true })), null, "Cmd+→ tilhører nettleseren");
+});
+
+test("historikkBesok og historikkSteg: som nettleserens tilbake og fram", () => {
+  let h = TOM_HISTORIKK;
+  for (const v of ["artist:a", "sjanger:Soul", "artist:b"]) h = historikkBesok(h, v);
+  assert.deepEqual(h, { liste: ["artist:a", "sjanger:Soul", "artist:b"], idx: 2 });
+  assert.equal(historikkBesok(h, "artist:b"), h, "samme side: ingenting");
+  assert.equal(historikkBesok(h, ""), h, "tomt lerret er ingen side");
+  assert.equal(historikkBesok(h, "yt:abcdefghijk"), h, "lytteeksempelet er ingen side");
+  // ← på kortet lukker det øverste og viser siden bak: et steg tilbake.
+  const bak = historikkBesok(h, "sjanger:Soul");
+  assert.deepEqual(bak, { liste: h.liste, idx: 1 });
+  // Pil: ett steg tilbake og fram, null ved endene.
+  const s1 = historikkSteg(h, -1);
+  assert.deepEqual(s1, { h: { liste: h.liste, idx: 1 }, vis: "sjanger:Soul" });
+  assert.equal(historikkSteg(h, 1), null, "ingenting foran");
+  assert.equal(historikkSteg({ liste: ["a:1"], idx: 0 }, -1), null, "ingenting bak");
+  // Ny side etter tilbake: det som lå foran forkastes.
+  const ny = historikkBesok(s1.h, "tiår:1960");
+  assert.deepEqual(ny, { liste: ["artist:a", "sjanger:Soul", "tiår:1960"], idx: 2 });
+  // Taket.
+  let lang = TOM_HISTORIKK;
+  for (let i = 0; i < HISTORIKK_MAKS + 5; i++) lang = historikkBesok(lang, `artist:${i}`);
+  assert.equal(lang.liste.length, HISTORIKK_MAKS);
+  assert.equal(lang.liste[0], "artist:5");
+});
+
+test("normaliserHistorikk: tåler tull fra sessionStorage", () => {
+  assert.deepEqual(normaliserHistorikk(null), { liste: [], idx: -1 });
+  assert.deepEqual(normaliserHistorikk({ liste: ["artist:a", "", 7, "yt:x", "sjanger:B"], idx: 9 }), { liste: ["artist:a", "sjanger:B"], idx: 1 });
+  assert.deepEqual(normaliserHistorikk({ liste: ["artist:a"], idx: "x" }), { liste: ["artist:a"], idx: 0 });
 });

@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.94";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl } from "./presentasjon-modell.js?v=5.94";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.94";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.94";
-import { GENEALOGY } from "./genre-model.js?v=5.94";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.94";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.94";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.94";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.94";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.94";
-import { getState } from "./explore-context.js?v=5.94";
-import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.94";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.94";
-import { stoppEtikett } from "./stopp-etikett.js?v=5.94";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.95";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK } from "./presentasjon-modell.js?v=5.95";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=5.95";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js?v=5.95";
+import { GENEALOGY } from "./genre-model.js?v=5.95";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=5.95";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=5.95";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=5.95";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=5.95";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=5.95";
+import { getState } from "./explore-context.js?v=5.95";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "./store.js?v=5.95";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=5.95";
+import { stoppEtikett } from "./stopp-etikett.js?v=5.95";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -64,6 +64,8 @@ const LAGRING = {
   klokke: "pensumPresKlokke",
   // Menyen nede til høyre skjult med M (v5.93); følger visningen videre.
   menySkjult: "pensumPresMenySkjult",
+  // Sidene som er vist, for ← og → (v5.95); følger visningen over sidebytter.
+  historikk: "pensumPresHistorikk",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -295,20 +297,8 @@ function gaTilStopp(i) {
   if (!plan || !plan.stopp.length) return;
   const p = planPosisjon(i, plan.stopp.length);
 
-  // Lyd som spiller i et åpent kort (en podkastepisode) stoppes før byttet:
-  // podkastkortets «stopp eller fortsett?»-vakt avviste ellers lukkingen, og
-  // spørsmålet havnet skjult under neste stopp mens lyden gikk videre
-  // (audit v5.42 funn 7). YouTube-spilleren river iframen selv.
-  document.querySelectorAll(".modal-backdrop.open audio").forEach((a) => { try { a.pause(); } catch (e) {} });
-  // Ovenfra og ned. Nekter et kort å lukkes (en ulagret kladd i kjøreplan-
-  // editoren), avbrytes byttet: posisjonen står, og kortene under blir
-  // liggende urørt (i dokumentrekkefølge ble et lytteeksempel under
-  // editoren revet før vetoet; kontrollrunden for v5.48).
-  // (Taket på 50 er et vern mot et kort som åpner et nytt ved lukking.)
-  for (let top = topOpenModal(), n = 0; top && n < 50; top = topOpenModal(), n++) {
-    modalClose(top);
-    if (top.classList.contains("open")) return;
-  }
+  // Lukk alt først (lyd stoppes, et kort som nekter, avbryter byttet).
+  if (!lukkAlleKort()) return;
 
   stoppIdx = p.pos;
   lagrePosisjon();
@@ -331,6 +321,66 @@ function gaTilStopp(i) {
   oppdaterTeller();
   oppdaterLeggTil();
   forhaandslast(stoppIdx + 1);
+}
+
+// Lukker alt som står åpent før et bytte (stopp eller side i historikken).
+// false når et kort nekter å lukkes: da avbrytes byttet.
+function lukkAlleKort() {
+  // Lyd som spiller i et åpent kort (en podkastepisode) stoppes før byttet:
+  // podkastkortets «stopp eller fortsett?»-vakt avviste ellers lukkingen, og
+  // spørsmålet havnet skjult under neste stopp mens lyden gikk videre
+  // (audit v5.42 funn 7). YouTube-spilleren river iframen selv.
+  document.querySelectorAll(".modal-backdrop.open audio").forEach((a) => { try { a.pause(); } catch (e) {} });
+  // Ovenfra og ned. Nekter et kort å lukkes (en ulagret kladd i kjøreplan-
+  // editoren), avbrytes byttet: posisjonen står, og kortene under blir
+  // liggende urørt (i dokumentrekkefølge ble et lytteeksempel under
+  // editoren revet før vetoet; kontrollrunden for v5.48).
+  // (Taket på 50 er et vern mot et kort som åpner et nytt ved lukking.)
+  for (let top = topOpenModal(), n = 0; top && n < 50; top = topOpenModal(), n++) {
+    modalClose(top);
+    if (top.classList.contains("open")) return false;
+  }
+  return true;
+}
+
+// ----------------------------------------------------------------------------
+//  Sidehistorikken (v5.95, brukerønske 2026-10-01): ← og → går til forrige
+//  og neste side som er vist, i fri visning og i en kjøreplan. Logikken er
+//  historikkBesok/historikkSteg i modellen (testet). Her registreres sidene
+//  (målet til kortet øverst, når det endres) og målene åpnes. Slektstreet er
+//  en egen side uten kort, så tre.html melder seg selv ved oppstart.
+// ----------------------------------------------------------------------------
+
+let historikk = TOM_HISTORIKK;
+// Målet ← eller → er på vei til: mens det åpnes, er ikke mellomtilstandene
+// (alt lukket) nye besøk. Ryddes når målet står øverst, eller etter en stund
+// (et mål som ikke finnes lenger, åpnes aldri).
+let ventMaal = null;
+let ventTimer = null;
+
+function lagreHistorikk() { skriv(LAGRING.historikk, JSON.stringify(historikk)); }
+
+function registrerSide(vis = toppMaal()) {
+  if (!erHistorikkSide(vis)) return;
+  if (ventMaal) {
+    if (vis === ventMaal) { ventMaal = null; return; }
+    ventMaal = null;
+  }
+  const ny = historikkBesok(historikk, vis);
+  if (ny === historikk) return;
+  historikk = ny;
+  lagreHistorikk();
+}
+
+function gaISideHistorikk(retning) {
+  const steg = historikkSteg(historikk, retning);
+  if (!steg || !lukkAlleKort()) return;
+  historikk = steg.h;
+  lagreHistorikk();
+  ventMaal = steg.vis;
+  clearTimeout(ventTimer);
+  ventTimer = setTimeout(() => { ventMaal = null; }, 4000);
+  apneVisNaarKlart(parseVisVerdi(steg.vis));
 }
 
 // Satt når sida er nådd med nettleserens tilbake/fram (se over).
@@ -557,6 +607,8 @@ function wireTaster() {
       case "hjelp": return vekslHjelp();
       case "timeliste": return vekslTimeliste();
       case "meny": return settMenySkjult(!document.body.classList.contains("pres-meny-skjult"));
+      case "sideTilbake": return gaISideHistorikk(-1);
+      case "sideFram": return gaISideHistorikk(1);
       case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
     }
@@ -567,7 +619,7 @@ function wireTaster() {
   // fasen stopper tastetrykket før sidenes egne Esc-lyttere ser det.
   document.addEventListener("keydown", (e) => {
     if (!erSvart() || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (!["b", "B", ".", "Escape", "ArrowRight", "ArrowLeft", "PageDown", "PageUp", " "].includes(e.key)) return;
+    if (!["b", "B", ".", "Escape", "ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "PageDown", "PageUp", " "].includes(e.key)) return;
     e.preventDefault();
     e.stopPropagation();
     vekslSvart();
@@ -747,9 +799,9 @@ function byggBar() {
   bar.id = "pres-bar";
   bar.innerHTML = `
     <span class="pres-plan" id="pres-plan" hidden role="group" aria-label="Kjøreplan">
-      <button type="button" class="pres-knapp" id="pres-forrige" title="Forrige stopp (PageUp / ←)" aria-label="Forrige stopp">‹</button>
+      <button type="button" class="pres-knapp" id="pres-forrige" title="Forrige stopp (PageUp / ↓)" aria-label="Forrige stopp">‹</button>
       <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet (T)">…</button>
-      <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / →)" aria-label="Neste stopp">›</button>
+      <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / ↑)" aria-label="Neste stopp">›</button>
       <button type="button" class="pres-knapp pres-leggtil" id="pres-leggtil" hidden aria-label="Legg til i kjøreplanen her">${IKON.pluss}</button>
       <span class="pres-neste" id="pres-neste" hidden></span>
     </span>
@@ -1112,6 +1164,16 @@ export function initPresentasjon() {
   }
   if (qaPaa()) settQA(true); else oppdaterHubKort();
   observerModaler();
+  // Sidehistorikken (v5.95): fra sessionStorage, så den følger visningen over
+  // sidebytter; tre.html melder slektstreet som side. Kortenes mål følges med
+  // samme vakt som «Legg til her»: åpne, lukke, heve og bytte mål.
+  try { historikk = normaliserHistorikk(JSON.parse(les(LAGRING.historikk) || "null")); } catch (e) { historikk = TOM_HISTORIKK; }
+  if (/(^|\/)tre\.html$/.test(window.location.pathname)) registrerSide("slektstre");
+  if ("MutationObserver" in window) {
+    new MutationObserver((endringer) => {
+      if (endringer.some((m) => m.target.classList?.contains("modal-backdrop"))) registrerSide();
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "style", "data-vis"] });
+  }
   brukNivaa();
   // Content kan alt ligge i state (lokal cache): prøv med en gang, ellers
   // tar sidenes content-hooks det når snapshotet lander.

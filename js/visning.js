@@ -29,20 +29,20 @@
 //  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=5.94";
-import { escapeHtml } from "./util.js?v=5.94";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.94";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.94";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.94";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.94";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.94";
-import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=5.94";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.94";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.94";
-import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.94";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.94";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.94";
-import { apneMaal } from "./explore-apne.js?v=5.94";
+import { getState } from "./explore-context.js?v=5.95";
+import { escapeHtml } from "./util.js?v=5.95";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=5.95";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=5.95";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=5.95";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=5.95";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=5.95";
+import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=5.95";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=5.95";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=5.95";
+import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=5.95";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=5.95";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=5.95";
+import { apneMaal } from "./explore-apne.js?v=5.95";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;

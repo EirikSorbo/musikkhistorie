@@ -2917,7 +2917,7 @@ body:not(.presentasjon) .hist-oversikt-rad { display: none; }
 body.presentasjon #modal-meta-oversikt > .modal { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 body.presentasjon .mo-body {
   flex: 1; min-height: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 15rem) minmax(0, 22rem); gap: 0 2.4rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 15rem) minmax(0, 18rem); gap: 0 2.4rem;
 }
 body.presentasjon .mo-kol { min-height: 0; max-height: none; overflow-y: auto; }
 body.presentasjon :is(.mo-artister, .mo-eksempler) {
@@ -2931,15 +2931,21 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 }
 .mo-hoved > :not(.mo-tall) + .mo-head { margin-top: 1.6rem; }
 .mo-antall { margin-left: 0.35em; font-weight: 500; letter-spacing: 0; color: var(--muted); }
-/* Sjangertitlene står fast øverst i spalta mens man ruller gjennom gruppa. */
+/* Sjangertitlene står fast øverst i spalta mens man ruller gjennom gruppa,
+   store og mørke nok til å skille gruppene på lerretet (v5.95). */
 .mo-gruppe {
-  position: sticky; top: 0; z-index: 1; margin: 0.9rem 0 0.3rem; padding: 0.15rem 0;
-  background: var(--surface); font-size: 0.78rem; font-weight: 600; color: var(--muted);
+  position: sticky; top: 0; z-index: 1; margin: 1rem 0 0.35rem; padding: 0.2rem 0;
+  background: var(--surface); font-size: 0.9rem; font-weight: 600; color: var(--text);
 }
 .mo-kol > .mo-head + .mo-gruppe, .mo-kol > .pl-alle + .mo-gruppe { margin-top: 0.2rem; }
 .mo-liste { list-style: none; margin: 0; padding: 0; }
+/* Titlene som artistnavnene (.sj-artist): samme størrelse og farge, ikke
+   fete (v5.95, brukerønske 2026-10-01). */
 .mo-eks { margin: 0 0 0.5rem; line-height: 1.35; }
-.mo-eks-lenke { color: var(--text); font-weight: 500; text-decoration: none; }
+.mo-eks-lenke {
+  font-size: 0.95rem; font-weight: 400; text-decoration: none;
+  color: color-mix(in srgb, var(--text) 50%, var(--muted));
+}
 .mo-eks-lenke:hover, .mo-eks-lenke:focus-visible { color: var(--accent-2); text-decoration: underline; }
 .mo-aar { font-size: 0.85em; color: var(--muted); }
 .mo-eks-artist { display: block; font-size: 0.82rem; color: var(--muted); }
