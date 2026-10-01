@@ -2983,8 +2983,6 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 .ga-navn { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.3; color: var(--text); }
 .ga-kort:hover .ga-navn, .ga-kort:focus-visible .ga-navn { color: var(--accent-2); text-decoration: underline; }
 .ga-kort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 10px; }
-/* Galleri-knappen på sjangerkortet hører til lerretet. */
-body:not(.presentasjon) .gx-galleri-btn { display: none; }
 /* Huben på lerretet (v5.96): med Visning-kortet er det elleve kort i DOM-en,
    så fire- og ti-reglene treffer ikke lenger. De synlige kortene deler bredden
    i stedet (skjulte kort tar ingen plass i griden). */

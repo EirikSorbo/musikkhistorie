@@ -5,20 +5,20 @@
 //  lerretet, bare for læreren) som samler sidene som er laget for visning:
 //   - oversikten over hver aktiv metasjanger (explore-metaoversikt.js)
 //   - artistgalleriet for hver sjanger: alle artistbildene med navnet under,
-//     uten kreditering. Åpnes også med «Galleri» på sjangerkortet på lerretet,
-//     og kan stå som stopp i en kjøreplan (galleri:<sjanger>).
+//     uten kreditering. Åpnes også med «Galleri» på sjangerkortet (i appen
+//     også, fra v5.97), og kan stå som stopp i en kjøreplan (galleri:<sjanger>).
 //  Galleriet viser de samme artistene som «Artister»-knappen og navnelista på
 //  sjangerkortet (artistsInGenre), i samme rekkefølge.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=5.96";
-import { imgTag, wireRelated } from "./ui-helpers.js?v=5.96";
-import { safeUrl } from "./util.js?v=5.96";
-import { artistsInGenre } from "./limits.js?v=5.96";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=5.96";
-import { genreFamilyNodes } from "./ui-timeline.js?v=5.96";
-import { storyOrder } from "./story-format.js?v=5.96";
-import { getState, buildLinkCtx } from "./explore-context.js?v=5.96";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=5.96";
+import { escapeHtml, modalOpen } from "./ui.js?v=5.97";
+import { imgTag, wireRelated } from "./ui-helpers.js?v=5.97";
+import { safeUrl } from "./util.js?v=5.97";
+import { artistsInGenre } from "./limits.js?v=5.97";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=5.97";
+import { genreFamilyNodes } from "./ui-timeline.js?v=5.97";
+import { storyOrder } from "./story-format.js?v=5.97";
+import { getState, buildLinkCtx } from "./explore-context.js?v=5.97";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=5.97";
 
 const metaFarge = (meta) => META_GENRE_COLOR[meta] || FAMILIES.gray?.stroke || "#9bada1";
 const fulltNavn = (etikett) => GENEALOGY.find((n) => n.l === etikett)?.f || etikett;
