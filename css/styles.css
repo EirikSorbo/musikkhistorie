@@ -1669,6 +1669,22 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .result-arrow { color: var(--accent); font-size: 1.1rem; margin-left: auto; flex-shrink: 0; }
 .result-work { font-size: 0.78rem; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
 
+/* Artistlista bak «Artister» (v5.98, brukerønske 2026-10-01): en ren liste
+   uten kort per artist, bare en diskret strek mellom radene, navnet i normal
+   vekt og dempet farge, årene til høyre. Gjelder hele listevinduet (sjangre,
+   instrumenter og lærerens oversikt); .result-row ellers er urørt. */
+#modal-artistliste .result-list { gap: 0; }
+#modal-artistliste .result-row {
+  background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  padding: 0.55rem 0.25rem; font-size: 0.95rem;
+}
+#modal-artistliste .result-row:last-child { border-bottom: 0; }
+#modal-artistliste .result-row:hover { background: var(--surface-2); transform: none; }
+#modal-artistliste .result-name { min-width: 0; font-weight: 400; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
+#modal-artistliste .result-row:hover .result-name { color: var(--accent-2); }
+#modal-artistliste .result-meta { justify-content: flex-end; }
+#modal-artistliste .result-work { font-style: normal; }
+
 /* ----- Spotlight (forside) ----- */
 .spotlight-grid {
   display: block;

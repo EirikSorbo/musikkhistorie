@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=5.97";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.97";
-import { punkterHtml } from "./punkter.js?v=5.97";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.97";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.97";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.97";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=5.98";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=5.98";
+import { punkterHtml } from "./punkter.js?v=5.98";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=5.98";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=5.98";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=5.98";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=5.97";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.97";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.97";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.97";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.97";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.97";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.97";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.97";
+} from "./ui-helpers.js?v=5.98";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=5.98";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=5.98";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=5.98";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=5.98";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=5.98";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=5.98";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=5.98";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -579,11 +579,11 @@ function buildArtistListRows(list) {
     const years = a.influenceStart
       ? `${a.influenceStart}${a.influenceEnd ? "–" + a.influenceEnd : ""}`
       : "";
-    const tags = genreTags(a, { withInstrument: true });
+    // Bare navn og år (v5.98, brukerønske 2026-10-01): sjanger og instrument
+    // står på artistkortet, ikke i lista.
     return `<div class="result-row" data-artist-id="${escapeHtml(a.id)}" tabindex="0" role="button">
       <span class="result-name result-link">${escapeHtml(a.name)}</span>
       <span class="result-meta">
-        ${tags}
         ${years ? `<span class="result-work">${years}</span>` : ""}
       </span>
       ${kortUtskriftHtml(a)}${kortPlussHtml(a)}

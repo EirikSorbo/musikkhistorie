@@ -8,18 +8,18 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.97";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.97";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.97";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.97";
-import { openTechDetail } from "./explore-tech.js?v=5.97";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.97";
-import { openTidslinje } from "./explore-tidslinje.js?v=5.97";
-import { openArtistGalleri } from "./explore-visningssider.js?v=5.97";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=5.97";
-import { renderReferanser } from "./explore-referanser.js?v=5.97";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.97";
-import { setHeatData } from "./heat-strip.js?v=5.97";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=5.98";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=5.98";
+import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=5.98";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=5.98";
+import { openTechDetail } from "./explore-tech.js?v=5.98";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=5.98";
+import { openTidslinje } from "./explore-tidslinje.js?v=5.98";
+import { openArtistGalleri } from "./explore-visningssider.js?v=5.98";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=5.98";
+import { renderReferanser } from "./explore-referanser.js?v=5.98";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=5.98";
+import { setHeatData } from "./heat-strip.js?v=5.98";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
