@@ -52,12 +52,19 @@ function adresseMedVis(vis) {
 
 function histApnet(el) {
   if (!histPaa() || !el.dataset.vis) return;
-  if (histStabel.includes(el)) {
+  const i = histStabel.indexOf(el);
+  if (i !== -1) {
     // Samme kort med nytt innhold (f.eks. en sjanger fra et sjangerkort):
-    // adressen følger, uten ny oppføring.
-    if (histStabel[histStabel.length - 1] === el) {
-      window.history.replaceState(window.history.state, "", adresseMedVis(el.dataset.vis));
+    // adressen følger, uten ny oppføring. Ligger kortet lenger ned (en
+    // sjangerboble på et artistkort som står over sjangerkortet), heves det
+    // også i stabelen, så den følger det som faktisk ligger øverst. Før
+    // v6.23 ble det bare hevet på skjermen, og popstate tolket det som et
+    // skjema over kortet: tilbakeknappen gjorde ingenting (Fable F1).
+    if (i !== histStabel.length - 1) {
+      histStabel.splice(i, 1);
+      histStabel.push(el);
     }
+    window.history.replaceState(window.history.state, "", adresseMedVis(el.dataset.vis));
     return;
   }
   histStabel.push(el);
@@ -103,6 +110,14 @@ if (IS_BROWSER) {
         window.history.pushState({ pensumModal: top.id || true }, "", adresseMedVis(top.dataset.vis));
         return;
       }
+      // Oppføringen vi landet på kan tilhøre et kort som siden ble hevet og
+      // har byttet plass i stabelen (histApnet): adressen følger kortet som
+      // nå ligger øverst.
+      const nyTopp = histStabel[histStabel.length - 1];
+      if (nyTopp?.dataset.vis) {
+        window.history.replaceState(window.history.state, "", adresseMedVis(nyTopp.dataset.vis));
+        return;
+      }
     }
     // Tilbake på sidens første oppføring: ingen ?vis= som peker på et lukket kort.
     if (!e.state?.pensumModal && new URL(window.location.href).searchParams.has("vis")) {
@@ -122,6 +137,46 @@ if (IS_BROWSER) {
   }
 }
 
+// Sjangerkortet som sidepanel på slektstresiden (S8, brede skjermer): treet
+// til venstre skal kunne brukes mens panelet står, så panelet er ikke modalt
+// for skjermlesere (aria-modal) og har ingen Tab-felle (v6.23, Fable).
+function erSidepanel(el) {
+  return IS_BROWSER && el?.id === "modal-sjanger"
+    && document.body.classList.contains("tre-side")
+    && !document.body.classList.contains("presentasjon")
+    && !!window.matchMedia?.("(min-width: 1100px)").matches;
+}
+
+// Piltastene i en fanerad (ARIA-mønsteret for faner, v6.23): venstre/høyre
+// går til forrige/neste fane og velger den, Home/End til første/siste. Bare
+// den valgte fanen er i Tab-rekkefølgen (tabindex settes der fanene tegnes).
+export function kobleFanePiler(rad, velger = '[role="tab"]') {
+  if (!rad || rad.dataset.pilerKoblet) return;
+  rad.dataset.pilerKoblet = "1";
+  rad.addEventListener("keydown", (e) => {
+    const faner = [...rad.querySelectorAll(velger)].filter((f) => !f.hidden);
+    const i = faner.indexOf(document.activeElement);
+    if (i === -1) return;
+    const ny = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: faner.length - 1 }[e.key];
+    if (ny === undefined) return;
+    e.preventDefault();
+    const fane = faner[(ny + faner.length) % faner.length];
+    fane.focus();
+    fane.click();
+  });
+}
+
+// En fanerad som rulles sidelengs (smale skjermer): den valgte fanen rulles
+// inn i synsfeltet, bare vannrett, så kortet ikke hopper (v6.23).
+export function visValgtFane(rad) {
+  const aktiv = rad?.querySelector(".active");
+  if (!aktiv || rad.scrollWidth <= rad.clientWidth) return;
+  const r = rad.getBoundingClientRect(), a = aktiv.getBoundingClientRect();
+  if (a.left < r.left || a.right > r.right) {
+    rad.scrollLeft += a.left - r.left - (r.width - a.width) / 2;
+  }
+}
+
 export function topOpenModal() {
   const open = [...document.querySelectorAll(".modal-backdrop.open")];
   if (!open.length) return null;
@@ -138,12 +193,20 @@ export function topOpenModal() {
 //  plass: samme oppføring i historikken (adressen byttes, ← går dit fanene ble
 //  åpnet fra), fokus tilbake til samme utløser når vinduet lukkes, og ingen
 //  inngangsanimasjon. `apne` er kortets vanlige åpner, så innholdet tegnes
-//  som før. Står målet allerede åpent lenger ned i stabelen, lukkes bare det
-//  øverste, så det samme kortet aldri ligger to steder.
+//  som før. Står målet allerede åpent lenger ned i stabelen, lukkes alt som
+//  ligger over det, og målet tegnes på nytt, så det samme kortet aldri ligger
+//  to steder. Før v6.23 ble bare det øverste lukket, og et sjangerkort som lå
+//  imellom kom til syne i stedet for målet (Fable F3).
 let byttUt = null;
 export function modalBytt(fra, til, apne) {
   if (!fra?.classList.contains("open")) { apne(); return; }
-  if (til && til !== fra && til.classList.contains("open")) { modalClose(fra); return; }
+  if (til && til !== fra && til.classList.contains("open")) {
+    const z = parseInt(til.style.zIndex) || 0;
+    lukkFlere([...document.querySelectorAll(".modal-backdrop.open")]
+      .filter((m) => (parseInt(m.style.zIndex) || 0) > z));
+    apne();
+    return;
+  }
   byttUt = fra;
   try { apne(); } finally { byttUt = null; }
 }
@@ -163,7 +226,7 @@ export function modalOpen(el) {
   const dialog = el.querySelector(".modal");
   if (dialog) {
     dialog.setAttribute("role", "dialog");
-    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-modal", erSidepanel(el) ? "false" : "true");
     const h = el.querySelector(".modal-head h2");
     if (h) {
       if (!h.id) h.id = (el.id || "modal") + "-label";
@@ -222,13 +285,14 @@ export function modalCloseTop() {
   if (top) modalClose(top);
 }
 
-// «Lukk alle»: historikken går tilbake i ett hopp for alle kortene som hadde
-// en oppføring (flere history.back() etter hverandre er ikke pålitelig).
-function modalCloseAll() {
+// Lukker flere kort på én gang, og historikken går tilbake i ett hopp for
+// alle kortene som hadde en oppføring (flere history.back() etter hverandre
+// er ikke pålitelig). Brukes av «Lukk alle» og av modalBytt.
+function lukkFlere(kort) {
   const forHist = histStabel.length;
   histFraPop = true;
   try {
-    document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+    kort.forEach((m) => modalClose(m));
   } finally { histFraPop = false; }
   const igjen = histStabel.length;
   const steg = forHist - igjen;
@@ -238,11 +302,16 @@ function modalCloseAll() {
   }
 }
 
+// «Lukk alle».
+function modalCloseAll() {
+  lukkFlere([...document.querySelectorAll(".modal-backdrop.open")]);
+}
+
 // Fokusfelle: Tab sirkulerer inne i den øverste åpne modalen.
 if (IS_BROWSER) document.addEventListener("keydown", (e) => {
   if (e.key !== "Tab") return;
   const top = topOpenModal();
-  if (!top) return;
+  if (!top || erSidepanel(top)) return;
   const foc = focusables(top);
   if (!foc.length) return;
   const first = foc[0], last = foc[foc.length - 1];

@@ -4,10 +4,11 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=6.22";
-import { fmtCredit, linkDesc, wireLinks, wireRelated, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=6.22";
-import { medSelv, nevnerNavn } from "./linkify.js?v=6.22";
-import { punkterHtml } from "./punkter.js?v=6.22";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=6.23";
+import { fmtCredit, linkDesc, wireLinks, wireRelated, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=6.23";
+import { medSelv, nevnerNavn } from "./linkify.js?v=6.23";
+import { punkterHtml } from "./punkter.js?v=6.23";
+import { isVisible } from "./limits.js?v=6.23";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin). `bredde` er
 // thumbnail-bredden: detaljkortet på lerretet (presentasjon, v5.36) viser
@@ -106,7 +107,7 @@ export function renderTechDetail(el, t, lc) {
 // kortene lenket hit, men kortet viste ikke veien tilbake.
 function artisterSomNevnerHtml(t, lc) {
   const liste = (lc?.artists || [])
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && nevnerNavn(a.description, t.name))
+    .filter((a) => isVisible(a) && nevnerNavn(a.description, t.name))
     .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   if (!liste.length) return "";
   return `<div class="related"><h4 class="related-head">Artister som nevner den</h4><div class="related-list">${

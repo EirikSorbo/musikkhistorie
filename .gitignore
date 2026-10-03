@@ -14,3 +14,6 @@ git ignore/
 
 # Test-avhengigheter (regeltester)
 node_modules/
+
+# Obsidian-oppsettet (editor-tilstand, ble committet ved et uhell i v6.12)
+.obsidian/

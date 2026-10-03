@@ -8,22 +8,21 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.22";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.22";
-import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.22";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.22";
-import { openTechDetail } from "./explore-tech.js?v=6.22";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.22";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.22";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.22";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=6.22";
-import { renderReferanser } from "./explore-referanser.js?v=6.22";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.22";
-import { setHeatData } from "./heat-strip.js?v=6.22";
-import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.22";
-import { openInstrumenter } from "./explore-instrument.js?v=6.22";
-import { openSubgenreList } from "./explore-sjanger.js?v=6.22";
-import { topOpenModal } from "./ui-modal.js?v=6.22";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.23";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.23";
+import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.23";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.23";
+import { openTechDetail } from "./explore-tech.js?v=6.23";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.23";
+import { openTidslinje, tidslinjeHarSjanger } from "./explore-tidslinje.js?v=6.23";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.23";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=6.23";
+import { renderReferanser } from "./explore-referanser.js?v=6.23";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.23";
+import { setHeatData } from "./heat-strip.js?v=6.23";
+import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.23";
+import { openInstrumenter } from "./explore-instrument.js?v=6.23";
+import { tegnSjangre } from "./explore-sjanger.js?v=6.23";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -86,6 +85,8 @@ export function sjangerOpts() {
     // Tidslinjen åpnes OPPÅ sjanger-popupen (modaler stables), fokusert på
     // denne sjangerens seksjon — ← går tilbake til popupen.
     onShowTimeline: ({ label }) => openTidslinje({ genre: label }),
+    // Knappen vises bare når sjangeren har en seksjon i tidslinja (Fable F8).
+    harTidslinje: tidslinjeHarSjanger,
     // Artistgalleriet (v5.96), oppå sjangerkortet, i appen og på lerretet.
     onShowGallery: ({ label }) => openArtistGalleri(label),
     // «Vis i slektstreet» (v6.08, S8): på slektstresiden sentrerer treet seg
@@ -139,11 +140,10 @@ export function showArtistsForInstrument(instrument) {
 // egen samling — content-snapshotet fyrer ikke når de endres.)
 export function genreDescsChanged() {
   refreshSjangerInfo(sjangerOpts());
-  // Sjangre-vinduet viser periodene fra beskrivelsene (v6.11).
-  // Bare når det står øverst: openSubgenreList hever vinduet, og et
-  // sjangerkort oppå skal ikke havne under.
-  const sl = document.getElementById("modal-subgenre-list");
-  if (sl?.classList.contains("open") && topOpenModal() === sl) openSubgenreList();
+  // Sjangre-vinduet viser periodene fra beskrivelsene (v6.11). Bare
+  // innholdet tegnes (v6.23): vinduet heves ikke og fokuset flyttes ikke,
+  // så det kan tegnes også når et sjangerkort ligger oppå.
+  if (document.getElementById("modal-subgenre-list")?.classList.contains("open")) tegnSjangre();
   // Sjangerperioder (v5.20) leser årstallene fra beskrivelsene: står figuren
   // åpen, skal en rettet periode synes med én gang.
   if (document.getElementById("modal-sjangerperioder")?.classList.contains("open")) renderSjangerperioderBody();
@@ -228,8 +228,16 @@ export function metaGroupHeadHtml({ prefix, meta, gColor, open, groupIdx, count,
 // av den delegerte [data-meta-oversikt]-lytteren i explore.js. Metasjangre
 // som ikke finnes i treet (f.eks. «Andre») får ingen lenke.
 export function metaOversiktLenkeHtml(meta) {
+  const knapp = metaOversiktKnappHtml(meta, { klasse: "meta-oversikt-lenke" });
+  return knapp ? `<div class="meta-oversikt-rad">${knapp}</div>` : "";
+}
+
+// Selve lenkeknappen, delt med familiehodene i Sjangre (v6.23): samme regel
+// for hvilke metasjangre som har en oversikt. `kort` gir bare «Oversikt ›»,
+// der navnet står rett ved siden av (familiehodet i en smal spalte).
+export function metaOversiktKnappHtml(meta, { kort = false, klasse = "meta-oversikt-lenke" } = {}) {
   if (!GENEALOGY_META_GENRES.includes(meta)) return "";
-  return `<div class="meta-oversikt-rad"><button type="button" class="meta-oversikt-lenke" data-meta-oversikt="${escapeHtml(meta)}">Oversikt over ${escapeHtml(meta)} <span aria-hidden="true">›</span></button></div>`;
+  return `<button type="button" class="${klasse}" data-meta-oversikt="${escapeHtml(meta)}">${kort ? "Oversikt" : `Oversikt over ${escapeHtml(meta)}`} <span aria-hidden="true">›</span></button>`;
 }
 
 // Delt akkordeon-klikklogikk: én gruppe åpen om gangen (klikk på åpen gruppe

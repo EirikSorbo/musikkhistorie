@@ -14,18 +14,29 @@
 //  oversiktskort (planOversikt, testet), hvert kort åpnes oppå, og alle
 //  lytteeksemplene fra timen kan spilles som én spilleliste.
 // ============================================================================
-import { escapeHtml, modalOpen, openEksemplerSpilleliste } from "./ui.js?v=6.22";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.22";
-import { GENEALOGY } from "./genre-model.js?v=6.22";
-import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "./presentasjon-modell.js?v=6.22";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.22";
-import { opts, getState } from "./explore-context.js?v=6.22";
-import { apneMaal } from "./explore-apne.js?v=6.22";
-import { leggTilLyttBolk } from "./explore-lytt.js?v=6.22";
+import { escapeHtml, modalOpen, openEksemplerSpilleliste } from "./ui.js?v=6.23";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.23";
+import { GENEALOGY } from "./genre-model.js?v=6.23";
+import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "./presentasjon-modell.js?v=6.23";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.23";
+import { opts, getState } from "./explore-context.js?v=6.23";
+import { apneMaal } from "./explore-apne.js?v=6.23";
+import { leggTilLyttBolk } from "./explore-lytt.js?v=6.23";
 
 // Læreren (lærersiden) ser alltid timene; studentene når bryteren er på.
 export function fraTimeneSynlig() {
-  return !SKJUL_I_STUDENTVISNING.fraTimene || !!opts.onStoryEdit;
+  return !SKJUL_I_STUDENTVISNING.fraTimene || !!opts?.onStoryEdit;
+}
+
+// En time åpnes for studentene bare når den er delt og bryteren er på
+// (v6.23, Fable F6). Før åpnet en ?vis=time:-lenke hvilken som helst
+// kjøreplan, også med «Fra timene» av. Læreren (lærersiden, eller innlogget
+// på forsiden, body.laerer-okt fra plan-meny.js) åpner alle.
+export function timeTilgjengelig(plan) {
+  if (!plan) return false;
+  const laerer = !!opts?.onStoryEdit
+    || (typeof document !== "undefined" && document.body.classList.contains("laerer-okt"));
+  return laerer || (plan.delt === true && fraTimeneSynlig());
 }
 
 export function delteTimerNaa() {
@@ -69,7 +80,7 @@ export function openTime(planId) {
   if (!modal) return;
   const s = getState();
   const plan = normaliserPlaner(s.content?.presentasjoner?.planer)[planId];
-  if (!plan) return;
+  if (!timeTilgjengelig(plan)) return;
   modal.dataset.vis = `time:${planId}`;
   document.getElementById("tm-tittel").textContent = plan.tittel;
   const grupper = planOversikt(plan.stopp, {

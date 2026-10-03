@@ -6,23 +6,23 @@
 //  artistene og lytteeksemplene, gruppert per sjanger i familien, står i hver
 //  sin rullbare spalte som fyller høyden, med «Spill alle» over eksemplene.
 //
-//  Bare for visningsmodus: inngangen er «Vis oversikt» i Sjangerhistoriene
-//  (knappen vises bare på lerretet, og historiene er skjult for studentene),
-//  og siden kan stå som stopp i en kjøreplan (vis-verdien «oversikt:<navn>»,
-//  som Visning-editoren finner i søket). Ikke i heftet og ikke i appens søk.
+//  Først bare for visningsmodus; fra v6.05 (S2) metasjangerens side for alle.
+//  Inngangene: «Oversikt ›» i Sjangre, metasjangermerket på artist- og
+//  sjangerkortene, «Vis oversikt» i Sjangerhistoriene, appens søk (v6.15), og
+//  som stopp i en kjøreplan (vis-verdien «oversikt:<navn>»). Ikke i heftet.
 //
 //  Utvalget og grupperingen bor i metaoversikt-modell.js (testet); her tegnes
 //  og kobles det.
 // ============================================================================
-import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.22";
-import { safeUrl } from "./util.js?v=6.22";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.22";
-import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.22";
-import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.22";
-import { wireAllLinks } from "./linkify.js?v=6.22";
-import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.22";
-import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.22";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser } from "./metaoversikt-modell.js?v=6.22";
+import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.23";
+import { safeUrl } from "./util.js?v=6.23";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.23";
+import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.23";
+import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.23";
+import { wireAllLinks } from "./linkify.js?v=6.23";
+import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.23";
+import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.23";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser } from "./metaoversikt-modell.js?v=6.23";
 
 // Sjangernavnene i forbindelsene: samme lenke som sjangrene i slektskapet på
 // sjangerkortet (genealogy.js) og i beskrivelsene (linkify.js).
@@ -85,7 +85,7 @@ function tegnMetaOversikt(meta, modal) {
     </section>
     <section class="mo-kol mo-eksempler" aria-label="Lytteeksempler">
       <h3 class="mo-head">Lytteeksempler <span class="mo-antall">${eks.antall}</span></h3>
-      ${spillAlleHtml(eks.ider)}
+      ${spillAlleHtml(eks.rader)}
       ${eksemplerHtml}
     </section>`;
 

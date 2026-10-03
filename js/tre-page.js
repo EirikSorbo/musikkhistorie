@@ -14,22 +14,22 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=6.22";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.22";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.22";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.22";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.22";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.22";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.22";
-import { initPlanMeny } from "./plan-meny.js?v=6.22";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.22";
-import { initYtSpiller } from "./yt-spiller.js?v=6.22";
-import { initVisning, visningTikk } from "./visning.js?v=6.22";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.22";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.22";
-import { provVisMaal } from "./explore-apne.js?v=6.22";
-import { fetchPendingEdits } from "./store.js?v=6.22";
-import { openProposalEditor } from "./proposals.js?v=6.22";
+import { initExplore } from "./explore.js?v=6.23";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.23";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.23";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.23";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.23";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.23";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.23";
+import { initPlanMeny } from "./plan-meny.js?v=6.23";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.23";
+import { initYtSpiller } from "./yt-spiller.js?v=6.23";
+import { initVisning, visningTikk } from "./visning.js?v=6.23";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.23";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.23";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.23";
+import { fetchPendingEdits } from "./store.js?v=6.23";
+import { openProposalEditor } from "./proposals.js?v=6.23";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -210,12 +210,15 @@ export function initTrePage({ render }) {
       onGenreDescs: () => { explore.genreDescsChanged?.(); provVisMaal(); visningTikk(); },
       // Artistene teller på «Alle artister (n)» i Instrumenter-kortet.
       // presPlanTikk: kjøreplanens oversiktskort viser artist- og kortnavn.
-      onArtists: () => { explore.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
-      onDecades: () => provVisMaal(),
-      onTech: () => { explore.renderInstrumenter?.(); explore.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
+      onArtists: () => { explore.renderInstrumenter?.(); explore.refreshDecadeView?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
+      onDecades: () => { explore.refreshDecadeView?.(); provVisMaal(); },
+      onTech: () => { explore.renderInstrumenter?.(); explore.refreshTeknologi?.(); explore.refreshDecadeView?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
       onEdgeDescs: () => provVisMaal(),
       onPodcasts: () => explore.renderInstrumenter?.(),
     });
+    // ?vis= (v6.23): kortene skriver adressen sin her også (ui-modal.js), så
+    // en oppdatering skal åpne kortet igjen, som på forsiden og lærersiden.
+    lesVisFraUrl();
   });
 
   return { state, explore, api };

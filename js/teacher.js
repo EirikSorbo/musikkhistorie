@@ -15,15 +15,16 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=6.22";
-import { subscribeSharedData } from "./shared-data.js?v=6.22";
-import { onGenreModelChanged } from "./genre-model.js?v=6.22";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=6.22";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.22";
-import { initExplore } from "./explore.js?v=6.22";
+} from "./store.js?v=6.23";
+import { subscribeSharedData } from "./shared-data.js?v=6.23";
+import { onGenreModelChanged } from "./genre-model.js?v=6.23";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=6.23";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.23";
+import { initExplore } from "./explore.js?v=6.23";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.23";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=6.22";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=6.22";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=6.23";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=6.23";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -42,18 +43,18 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=6.22";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=6.22";
-import { initVisning, visningTikk } from "./visning.js?v=6.22";
-import { initPlanMeny } from "./plan-meny.js?v=6.22";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.22";
-import { initYtSpiller } from "./yt-spiller.js?v=6.22";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.22";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.22";
-import { renderDesk } from "./teacher-desk.js?v=6.22";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=6.22";
-import { setupFormatBars } from "./format-bar.js?v=6.22";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=6.22";
+} from "./teacher-content.js?v=6.23";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=6.23";
+import { initVisning, visningTikk } from "./visning.js?v=6.23";
+import { initPlanMeny } from "./plan-meny.js?v=6.23";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.23";
+import { initYtSpiller } from "./yt-spiller.js?v=6.23";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.23";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.23";
+import { renderDesk } from "./teacher-desk.js?v=6.23";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=6.23";
+import { setupFormatBars } from "./format-bar.js?v=6.23";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=6.23";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -273,12 +274,15 @@ function startAppInner() {
       refreshDesk();
       // «Alle artister (n)» i Instrumenter-kortet telles av artistene.
       ctx.explore?.renderInstrumenter?.();
+      // Et åpent tiårsvindu (Musikk-fanen bygges av artistene).
+      ctx.explore?.refreshDecadeView?.();
       // En åpen kjøreplan-kladd med «laster …»-stopp (audit v5.42 funn 8).
       visningTikk();
+      provVisMaal();
     },
     // genreDescsChanged: et åpent sjangerkort viser fersk beskrivelse med én
     // gang (beskrivelsene bor i egen samling — content-snapshotet dekker dem ikke).
-    onGenreDescs: () => { refreshDesk(); ctx.explore?.genreDescsChanged?.(); visningTikk(); },
+    onGenreDescs: () => { refreshDesk(); ctx.explore?.genreDescsChanged?.(); visningTikk(); provVisMaal(); },
     onContent: () => {
       // Åpne innholdsvisninger (sider/varmekart/instrumentsammendrag)
       // re-rendres så import/redigering slår gjennom umiddelbart.
@@ -290,8 +294,14 @@ function startAppInner() {
       // redigering).
       visningTikk();
       samleTikk();
+      provVisMaal();
     },
     onPodcasts: () => { renderPodkastAdmin(); ctx.explore?.renderInstrumenter?.(); },
+    // Tiårstekstene (v6.23, Fable F2): «Rediger» i tiårsfanene lagrer oppå
+    // tiårsvinduet, som skal vise den nye teksten når læreren går tilbake.
+    onDecades: () => { ctx.explore?.refreshDecadeView?.(); provVisMaal(); },
+    // ?vis=-lenker til en sjangerkobling venter på koblingstekstene.
+    onEdgeDescs: () => provVisMaal(),
     // Åpne teknologi-visninger (admin-lista, innovasjonskortet og en åpen
     // Instrumenter-fane) tegnes på nytt, så lagring slår gjennom umiddelbart.
     onTech: () => {
@@ -300,8 +310,10 @@ function startAppInner() {
       ctx.explore?.refreshTechDetail?.();
       ctx.explore?.refreshTeknologi?.();
       ctx.explore?.renderInstrumenter?.();
+      ctx.explore?.refreshDecadeView?.();
       refreshDesk();
       visningTikk();
+      provVisMaal();
     },
   });
   subscribeTeacherChecks((checks) => { state.teacherChecks = checks; state.teacherChecksLoaded = true; refreshDesk(); });
@@ -313,6 +325,11 @@ function startAppInner() {
   // Tegn Skrivebordet med en gang (tomt/nullstilt) så panelet ikke står blankt
   // før første snapshot lander.
   refreshDesk();
+
+  // ?vis= (v6.23, Fable F11): lærersiden skriver kortets adresse ved hver
+  // åpning (ui-modal.js), og en oppdatering skal åpne kortet igjen, som på
+  // forsiden. Ruteren venter på dataene (provVisMaal i hookene over).
+  lesVisFraUrl();
 
   // (Oppstarts-vedlikeholdet er borte: de ni engangsmigreringene ble fjernet i
   // v4.19, og felt-oppryddingen i genreDescriptions i v4.23 — se store.js.)

@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js; sjangervokabularet fra genre-model.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.22";
-import { isVisible } from "./limits.js?v=6.22";
-import { META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO, FAMILIES, canonMainGenre } from "./genre-model.js?v=6.22";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=6.22";
-import { imgTag, safeUrl } from "./ui-helpers.js?v=6.22";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.22";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.23";
+import { isVisible } from "./limits.js?v=6.23";
+import { META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO, FAMILIES, canonMainGenre } from "./genre-model.js?v=6.23";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=6.23";
+import { imgTag, safeUrl } from "./ui-helpers.js?v=6.23";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.23";
 
 // ----------------------------------------------------------------------------
 //  Artisttidslinje: når var artistene aktive? Pakket bane-tidslinje gruppert
@@ -73,6 +73,28 @@ function showTidTip(bar, artist) {
   tidTip = tip;
 }
 
+// Seksjonene en artist får i tidslinja (v6.11, brukervalg 2026-10-03): bare
+// metasjangerens egne sjangre. En artist med sjangre fra andre familier står
+// bare under sine egne, og en artist med BARE fremmede sjangre tas ut (tom
+// liste). Artister uten noen tre-sjanger samles i «Uten sjanger i treet».
+// Delt av openTidslinje og tidslinjeHarSjanger, så de aldri kan være uenige.
+const UTEN = " uten";  // seksjonsnøkkel for artister uten tre-sjanger; kolliderer aldri med sjangernavn
+function seksjonsNokler(a) {
+  const meta = a.metaGenre || "Andre";
+  const genres = [...new Set((a.mainGenre || []).map((g) => canonMainGenre(g)).filter(Boolean))];
+  const egne = genres.filter((g) => MAIN_GENRE_INFO[g]?.meta === meta);
+  return egne.length ? egne : genres.length ? [] : [UTEN];
+}
+
+// Har tidslinja en seksjon for sjangeren? Sjangerkortet viser knappen
+// «Artisttidslinje» bare da (v6.23, Fable F8): Rock'n'roll hører til Rock,
+// som ikke har egne artister, og knappen åpnet en tidslinje uten sjangeren.
+export function tidslinjeHarSjanger(label) {
+  const g = canonMainGenre(label) || label;
+  const naa = new Date().getFullYear();
+  return getState().artists.some((a) => isVisible(a)
+    && seksjonsNokler(a).includes(g) && resolveSpan(a, naa));
+}
 
 export function openTidslinje(focus = {}) {
   const modal = document.getElementById("modal-tidslinje");
@@ -87,27 +109,16 @@ export function openTidslinje(focus = {}) {
   // strukturgjennomgangen S5), ikke familien til sjangrene de er tagget med.
   // Da teller tidslinja det samme som metasjanger-oversikten og filtrene: før
   // sto Jazz med 96 artister her og 94 der. Inni gruppa får artisten én
-  // seksjon per tre-sjanger hen er tagget med: metasjangerens egne sjangre
-  // først, så sjangre fra andre familier (rock'n'roll-artistene står under
-  // R&B, Country og Gospel), og til slutt de uten tre-sjanger. ALLE synlige
-  // artister med startår er med; en metasjanger uten egne artister (Rock)
-  // får ingen gruppe her, men står i alt som tegnes av treet.
-  const UTEN = " uten";  // seksjonsnøkkel for artister uten tre-sjanger; kolliderer aldri med sjangernavn
+  // seksjon per egen tre-sjanger (seksjonsNokler), og de uten tre-sjanger
+  // står sist. En metasjanger uten egne artister (Rock) får ingen gruppe her,
+  // men står i alt som tegnes av treet.
   const groups = new Map();   // metasjanger → Map(seksjonsnøkkel → blokker)
   const sectionsPerArtist = new Map();
   for (const a of active) {
     const span = resolveSpan(a, nowYear);
     if (!span) continue;
     const meta = a.metaGenre || "Andre";
-    const genres = [...new Set((a.mainGenre || [])
-      .map((g) => canonMainGenre(g))
-      .filter(Boolean))];
-    // Bare metasjangerens egne sjangre (v6.11, brukervalg 2026-10-03): en
-    // artist med sjangre fra andre familier står bare under sine egne, og en
-    // artist med BARE fremmede sjangre tas ut av tidslinja. Artister uten
-    // noen tre-sjanger samles i «Uten sjanger i treet».
-    const egne = genres.filter((g) => MAIN_GENRE_INFO[g]?.meta === meta);
-    const keys = egne.length ? egne : genres.length ? [] : [UTEN];
+    const keys = seksjonsNokler(a);
     if (!keys.length) continue;
     if (!groups.has(meta)) groups.set(meta, new Map());
     const secs = groups.get(meta);
@@ -126,19 +137,12 @@ export function openTidslinje(focus = {}) {
 
   // Metasjangrene i appens ene rekkefølge (META_GENRE_ORDER); ukjente bakerst.
   const metaOrder = [...META_GENRE_ORDER, ...[...groups.keys()].filter((m) => !META_GENRE_ORDER.includes(m))];
-  const metaRang = (key) => {
-    const i = META_GENRE_ORDER.indexOf(MAIN_GENRE_INFO[key]?.meta);
-    return i < 0 ? 99 : i;
-  };
-  // Seksjonene i én gruppe: egne sjangre, så fremmede sjangre (i metasjanger-
-  // rekkefølgen), så «uten sjanger i treet»; innenfor hver bolk etter første
-  // startår.
-  const ordneSeksjoner = (meta, secs) => {
+  // Seksjonene i én gruppe: sjangrene etter første startår, «uten sjanger i
+  // treet» sist. (Fremmede sjangre har ingen seksjon etter v6.11.)
+  const ordneSeksjoner = (secs) => {
     const earliest = (k) => Math.min(...secs.get(k).map((i) => i.span.start));
-    const bolk = (k) => (k === UTEN ? 2 : MAIN_GENRE_INFO[k]?.meta === meta ? 0 : 1);
     return [...secs.keys()].sort((a, b) =>
-      bolk(a) - bolk(b) || (bolk(a) === 1 ? metaRang(a) - metaRang(b) : 0)
-      || earliest(a) - earliest(b) || a.localeCompare(b, "no"));
+      (a === UTEN) - (b === UTEN) || earliest(a) - earliest(b) || a.localeCompare(b, "no"));
   };
 
   // Felles tidsakse over alt innhold, i hele tiår.
@@ -173,7 +177,7 @@ export function openTidslinje(focus = {}) {
   for (const meta of metaOrder) {
     const secs = groups.get(meta);
     if (!secs) continue;
-    const keys = ordneSeksjoner(meta, secs);
+    const keys = ordneSeksjoner(secs);
     const gColor = META_GENRE_COLOR[meta] || groupColor(keys.filter((k) => k !== UTEN));
     const open = focusMeta ? meta === focusMeta : groupIdx === 0;
     const artistCount = new Set([...secs.values()].flat().map((i) => i.id)).size;

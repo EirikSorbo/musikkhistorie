@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.22";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.22";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.23";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.23";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -28,9 +28,6 @@ export const MODAL_HTML = `
       ${TECH_CATEGORY_TABS.map((c) => `<button class="btn ghost small tech-tab" data-tech-cat="${escapeHtml(c.value)}">${escapeHtml(c.label)}</button>`).join("")}
       <div id="tek-admin-extra" class="tech-tabs-extra"></div>
     </div>
-    <!-- Tiårsfilteret (v6.05, K6): «Alle innovasjonskortene fra 1950-tallet»
-         i tiårsvinduet åpner lista filtrert, med vei til alle. -->
-    <div id="tech-tiar-linje" class="tech-tiar-linje" hidden></div>
     <div id="tech-list" class="tech-grid"></div>
   </div>
 </div>
@@ -52,8 +49,10 @@ export const MODAL_HTML = `
          to var de lette å gå glipp av. Knappen fylles av renderPodkastInngang
          og åpner podkastvinduet under. -->
     <div id="instr-podkast-inngang" class="instr-podkast-inngang"></div>
-    <div class="instr-chips" id="instr-chips"></div>
-    <!-- Arbeidsforklaringen står UNDER instrumentknappene (brukervalg
+    <!-- Instrumentene som faner (v6.23, brukervalg 2026-10-03), samme fanerad
+         som Tiår og Sjangre; før blå knapper i to rader. -->
+    <div class="dv-faner instr-faner" id="instr-faner" role="tablist" aria-label="Instrument"></div>
+    <!-- Arbeidsforklaringen står UNDER instrumentfanene (brukervalg
          2026-09-01): den hører til arbeidet med det valgte instrumentet, ikke
          til selve valget. LUKKET som standard — den er en oppskrift man slår
          opp i, ikke noe man skal lese hver gang. -->
@@ -67,7 +66,7 @@ export const MODAL_HTML = `
         <li><strong>Artistene.</strong> Sjekk at de viktigste utøverne på instrumentet ligger i appen, og legg til dem som mangler. Knappen heter «Legg til artist».</li>
       </ol>
     </details>
-    <div id="instr-body"></div>
+    <div id="instr-body" role="tabpanel" aria-label="Valgt instrument"></div>
   </div>
 </div>
 
@@ -118,8 +117,8 @@ export const MODAL_HTML = `
 <!-- Tiår (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S1): ett vindu
      for et tiår, med tidslinje-stripa som tiårsvelger og tre faner under den:
      Teknologi, Samfunn og Musikk. Tiåret står når fanen byttes, og fanen står
-     når tiåret byttes. Hver fane har tekst (eller sjangrene) til venstre og det
-     som hører til i en smal høyrespalte (D2). Tegnes av explore-decade.js. -->
+     når tiåret byttes. Teknologi og Samfunn i full bredde, Musikk i tre
+     kolonner (v6.11). Tegnes av explore-decade.js. -->
 <div class="modal-backdrop" id="modal-decade-view">
   <div class="modal modal-innhold">
     <div class="modal-head">
@@ -129,24 +128,24 @@ export const MODAL_HTML = `
     <div class="decade-ribbon" id="dv-ribbon"></div>
     <h3 class="dv-decade" id="dv-decade"></h3>
     <div class="dv-faner" role="tablist" aria-label="Perspektiv">
-      <button type="button" class="dv-fane" role="tab" data-dv-fane="tech">Teknologi</button>
-      <button type="button" class="dv-fane" role="tab" data-dv-fane="society">Samfunn</button>
-      <button type="button" class="dv-fane" role="tab" data-dv-fane="musikk">Musikk</button>
+      <button type="button" class="dv-fane" role="tab" id="dv-fane-tech" aria-controls="dv-tech-section" data-dv-fane="tech" data-tekst="Teknologi">Teknologi</button>
+      <button type="button" class="dv-fane" role="tab" id="dv-fane-society" aria-controls="dv-society-section" data-dv-fane="society" data-tekst="Samfunn">Samfunn</button>
+      <button type="button" class="dv-fane" role="tab" id="dv-fane-musikk" aria-controls="dv-musikk-section" data-dv-fane="musikk" data-tekst="Musikk">Musikk</button>
     </div>
     <!-- Teknologi og Samfunn i full bredde, kildene nederst (v6.11,
          brukervalg 2026-10-03); Musikk i tre like brede kolonner. -->
-    <div class="dv-panel" id="dv-tech-section" role="tabpanel">
+    <div class="dv-panel" id="dv-tech-section" role="tabpanel" aria-labelledby="dv-fane-tech">
       <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
       <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
       <div class="dv-handling" id="dv-tech-handling"></div>
       <div id="dv-kilder-tech"></div>
     </div>
-    <div class="dv-panel" id="dv-society-section" role="tabpanel">
+    <div class="dv-panel" id="dv-society-section" role="tabpanel" aria-labelledby="dv-fane-society">
       <div id="dv-society" class="info-text" data-sekt="tekst"></div>
       <div class="dv-handling" id="dv-society-handling"></div>
       <div id="dv-kilder-society"></div>
     </div>
-    <div class="dv-panel dv-musikk" id="dv-musikk-section" role="tabpanel">
+    <div class="dv-panel dv-musikk" id="dv-musikk-section" role="tabpanel" aria-labelledby="dv-fane-musikk">
       <div class="dv-kol" id="dv-musikk-sjangre" data-sekt="musikk"></div>
       <div class="dv-kol" id="dv-musikk-artister" data-sekt="musikk"></div>
       <div class="dv-kol" id="dv-musikk-lytt" data-sekt="musikk"></div>
@@ -453,7 +452,7 @@ ${TECH_DETAIL_MODAL_HTML}
     </div>
     <p class="muted hist-intro">Fortellinger som til sammen dekker hele pensumet. Trykk på navnene underveis for å åpne artistkortene.</p>
     <div class="hist-chips" id="hist-chips"></div>
-    <!-- Oversikten over metasjangeren (v5.94): bare i visningsmodus (CSS). -->
+    <!-- Oversikten over metasjangeren (v5.94; i appen også fra v6.05, S2). -->
     <div class="hist-oversikt-rad"><button type="button" class="btn ghost small" id="hist-oversikt">Vis oversikt</button></div>
     <!-- Sjangerfamilien som varmestriper (v5.16): én rad per sjanger under
          metasjangeren, samme rad som i varmekartet. Her lå først den
@@ -464,9 +463,10 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
-<!-- Oversikt over en metasjanger (v5.94, brukerønske 2026-10-01): bare i
-     visningsmodus, åpnes fra Sjangerhistoriene eller som stopp i en
-     kjøreplan (oversikt:<metasjanger>). Tegnes av explore-metaoversikt.js. -->
+<!-- Oversikt over en metasjanger (v5.94, brukerønske 2026-10-01; for alle
+     fra v6.05, S2): åpnes fra Sjangre («Oversikt ›»), metasjangermerket på
+     kortene, Sjangerhistoriene, søket (v6.15) og som stopp i en kjøreplan
+     (oversikt:<metasjanger>). Tegnes av explore-metaoversikt.js. -->
 <div class="modal-backdrop" id="modal-meta-oversikt">
   <div class="modal modal-innhold meta-oversikt">
     <div class="modal-head">

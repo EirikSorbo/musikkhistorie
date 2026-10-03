@@ -5,24 +5,24 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=6.22";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=6.22";
-import { resolveMainDesc } from "./genealogy.js?v=6.22";
-import { dropboxDirectUrl } from "./util.js?v=6.22";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=6.22";
-import { storyFor, pageFor } from "./story-format.js?v=6.22";
-import { renderRichText } from "./rich-text.js?v=6.22";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=6.22";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=6.22";
-import { resolveDesc } from "./genre-descriptions.js?v=6.22";
-import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.22";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=6.22";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.22";
+import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=6.23";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=6.23";
+import { resolveMainDesc } from "./genealogy.js?v=6.23";
+import { dropboxDirectUrl } from "./util.js?v=6.23";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=6.23";
+import { storyFor, pageFor } from "./story-format.js?v=6.23";
+import { renderRichText } from "./rich-text.js?v=6.23";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=6.23";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=6.23";
+import { resolveDesc } from "./genre-descriptions.js?v=6.23";
+import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.23";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=6.23";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.23";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=6.22";
-import { $ } from "./shared.js?v=6.22";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=6.22";
+import { wireAllLinks } from "./linkify.js?v=6.23";
+import { $ } from "./shared.js?v=6.23";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=6.23";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -68,9 +68,9 @@ export function openSingleDecadeModal(decadeId, mode) {
   const heading = $("#ds-decade");
   if (heading) heading.textContent = `${d}-tallet`;
 
-  // Teknologi har samme ekstra inngang til alle innovasjonskortene som
-  // studentvisningen (explore-decade.js: #dv-extra). Læreren får den samme
-  // kortlista — «Rediger kort» inne i den fører videre til admin-lista.
+  // Teknologi har en ekstra inngang til alle innovasjonskortene. Læreren får
+  // samme kortliste som studentene (openTeknologi), og «Rediger kort» inne i
+  // den fører videre til admin-lista.
   const extra = $("#ds-extra");
   if (extra) {
     if (isSociety) {

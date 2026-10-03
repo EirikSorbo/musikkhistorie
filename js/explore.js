@@ -5,26 +5,26 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.22";
-import { modalBytt } from "./ui-modal.js?v=6.22";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.22";
-import { MODAL_HTML } from "./explore-modals.js?v=6.22";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.22";
-import { openVarmekart } from "./explore-varmekart.js?v=6.22";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.22";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.22";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.22";
-import { openDecadeList, openDecade } from "./explore-decade.js?v=6.22";
-import { openLytt } from "./explore-lytt.js?v=6.22";
-import { openTime } from "./explore-timer.js?v=6.22";
-import { openReferanser } from "./explore-referanser.js?v=6.22";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.22";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.22";
-import { openVisningssider } from "./explore-visningssider.js?v=6.22";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.22";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.22";
-import { openSok, wireSok } from "./explore-search.js?v=6.22";
-import { erPresentasjon } from "./presentasjon.js?v=6.22";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.23";
+import { modalBytt, visValgtFane } from "./ui-modal.js?v=6.23";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.23";
+import { MODAL_HTML } from "./explore-modals.js?v=6.23";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.23";
+import { openVarmekart } from "./explore-varmekart.js?v=6.23";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.23";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.23";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.23";
+import { openDecadeList, openDecade, refreshDecadeView } from "./explore-decade.js?v=6.23";
+import { openLytt } from "./explore-lytt.js?v=6.23";
+import { openTime } from "./explore-timer.js?v=6.23";
+import { openReferanser } from "./explore-referanser.js?v=6.23";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.23";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.23";
+import { openVisningssider } from "./explore-visningssider.js?v=6.23";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.23";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.23";
+import { openSok, wireSok } from "./explore-search.js?v=6.23";
+import { erPresentasjon } from "./presentasjon.js?v=6.23";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -104,8 +104,10 @@ function wireModals() {
   document.querySelectorAll("[data-sj-faner]").forEach((rad) => {
     const her = rad.dataset.sjFaner;
     const vindu = rad.closest(".modal-backdrop");
-    rad.innerHTML = `<div class="sj-fanerad" role="tablist" aria-label="Sjangre">${SJ_FANER.map((f) =>
-      `<button type="button" class="dv-fane${f.id === her ? " active" : ""}" role="tab" aria-selected="${f.id === her}" data-sj-fane="${f.id}" data-tekst="${f.navn}">${f.navn}</button>`).join("")}</div>
+    // Ikke role="tablist" (v6.23, Fable): hver «fane» er et eget kort, så
+    // raden er en gruppe navigasjonsknapper, og den aktive er aria-current.
+    rad.innerHTML = `<div class="sj-fanerad" role="group" aria-label="Sjangre">${SJ_FANER.map((f) =>
+      `<button type="button" class="dv-fane${f.id === her ? " active" : ""}"${f.id === her ? ' aria-current="page"' : ""} data-sj-fane="${f.id}" data-tekst="${f.navn}">${f.navn}</button>`).join("")}</div>
       <div class="sj-fane-knapper">
         ${opts.onSlektstre ? `<button type="button" class="btn ghost small" data-sj-slektstre>Slektstre</button>` : ""}
         <button type="button" class="btn ghost small" data-sj-historier${visHistorier() ? "" : " hidden"}>Sjangerhistorier</button>
@@ -115,8 +117,10 @@ function wireModals() {
       if (!f || f.id === her) return;
       const til = document.getElementById(f.modal);
       modalBytt(vindu, til, f.apne);
-      // Tastaturet blir stående på fanene, ikke på ←-knappen i det nye kortet.
+      // Tastaturet blir stående på fanene, ikke på ←-knappen i det nye kortet,
+      // og på smale skjermer rulles den valgte fanen inn i raden.
       til?.querySelector(`[data-sj-fane="${f.id}"]`)?.focus();
+      visValgtFane(til?.querySelector(".sj-fanerad"));
     }));
     rad.querySelector("[data-sj-slektstre]")?.addEventListener("click", () => opts.onSlektstre());
     rad.querySelector("[data-sj-historier]").addEventListener("click", () => openHistorier());
@@ -252,6 +256,7 @@ export function initExplore(options) {
   return {
     openSok,
     openDecadeList,
+    refreshDecadeView,
     openLytt,
     openTime,
     openSubgenreList,

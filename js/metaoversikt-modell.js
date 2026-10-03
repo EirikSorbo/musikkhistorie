@@ -9,8 +9,8 @@
 //  `familie` er familiens tre-sjangre (etikettene) i tidsrekkefølge, slik
 //  genreFamilyNodes gir dem. Grupperingen følger den rekkefølgen.
 // ============================================================================
-import { isVisible, byInfluenceThenName } from "./limits.js?v=6.22";
-import { ytMaal } from "./presentasjon-modell.js?v=6.22";
+import { isVisible, byInfluenceThenName } from "./limits.js?v=6.23";
+import { ytMaal } from "./presentasjon-modell.js?v=6.23";
 
 const lav = (s) => String(s ?? "").toLowerCase();
 
@@ -49,10 +49,13 @@ export function artisterGruppert(meta, artists, familie) {
 // sjangeren som tre-sjanger eller undersjanger, og et eksempel er med når det
 // er merket med akkurat den sjangeren, eller er umerket. Et eksempel står
 // bare én gang, under den første sjangeren i tidsrekkefølgen som tar det.
-// `ider` er YouTube-ID-ene i rekkefølge, til «Spill alle».
+// `ider` er YouTube-ID-ene i rekkefølge. `rader` er video-ID-en for hver rad
+// i lista (null for rader uten video), til «Spill alle», som viser radnumrene
+// (spillAlleHtml i ui.js, v6.23).
 export function lytteeksemplerGruppert(artists, familie) {
   const sett = new Set();
   const ider = [];
+  const rader = [];
   const synlige = (artists || []).filter((a) => a && isVisible(a)).sort(byInfluenceThenName);
   const grupper = familie.map((f) => {
     const sj = lav(f);
@@ -67,6 +70,7 @@ export function lytteeksemplerGruppert(artists, familie) {
         sett.add(nokkel);
         const video = ytMaal(m.url)?.video || null;
         if (video) ider.push(video);
+        rader.push(video);
         eksempler.push({
           tittel: m.label || m.url, url: m.url, year: m.year || null,
           performanceYear: m.performanceYear || null,
@@ -76,7 +80,7 @@ export function lytteeksemplerGruppert(artists, familie) {
     }
     return { sjanger: f, eksempler };
   }).filter((g) => g.eksempler.length);
-  return { grupper, ider, antall: sett.size };
+  return { grupper, ider, rader, antall: sett.size };
 }
 
 // Forbindelsene til resten av treet: sjangrene utenfor familien som noen i

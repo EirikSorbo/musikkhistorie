@@ -2,9 +2,11 @@
 //  MIDLERTIDIGE BRYTERE — skjuler funksjoner i STUDENTVISNINGEN
 // ----------------------------------------------------------------------------
 //  Satt opp 2026-08-26, rett før lansering, fordi innholdet bak disse ennå
-//  ikke er kvalitetssikret. INGEN kode er fjernet: hver funksjon ligger intakt
-//  og slås på igjen ved å sette flagget under til false. Dette er det ENESTE
-//  stedet som må endres for å få dem tilbake.
+//  ikke er kvalitetssikret. INGEN kode er fjernet: hver funksjon ligger intakt.
+//  Fra v6.10 slås de av og på i appen («Synlig for studentene» på
+//  Skrivebordet, dokumentet content/synlighet); verdiene her er standarden for
+//  nøklene dokumentet ikke har. Panelet lagrer bare nøklene det har en bryter
+//  for (v6.23), så for de andre gjelder verdiene her fortsatt.
 //
 //  LÆRERSIDEN ER ALDRI PÅVIRKET. Læreren skal nettopp kunne se og sjekke
 //  innholdet mens studentene ikke ser det, så hvert bruksted spør både om
@@ -15,8 +17,8 @@
 //                          på forsiden (js/ui.js, js/landing.js)
 //    koblingsbeskrivelser  strekene i slektstreet blir ikke klikkbare
 //                          (js/genealogy-bundled.js, js/genealogy.js)
-//    metasjangerhistorier  «Metasjangre»-knappen i sjangermodalen
-//                          (js/explore.js)
+//    metasjangerhistorier  «Sjangerhistorier»-knappen ved Sjangre-fanene
+//                          og hubkortet (js/explore.js)
 //    storeBildet           hele hubkortet på forsiden (js/landing.js).
 //                          STÅR PÅ IGJEN fra 2026-09-10: studentene skal inn i
 //                          huben, men bare til de tre visualiseringene. Hvilke
@@ -63,7 +65,7 @@ export const SKJUL_I_STUDENTVISNING = {
 // visualiseringene: tidslinje, slektstre og varmekart. Sjangerperioder kom til som
 // fjerde synlige kort i v5.20 (brukervalg). Resten står skjult til
 // innholdet er kvalitetssikret, og slippes inn ett og ett ved å sette flagget
-// til false. Læreren ser alltid alle ni.
+// til false. Læreren ser alltid alle.
 //
 // Nøkkelen er kortets id i markupen (js/explore-modals.js), så et navnebytte
 // der ikke kan gjøre et flagg til en stille no-op. En enhetstest sjekker at
@@ -111,7 +113,8 @@ const STANDARD = {
 };
 const SPEIL = "pensum-synlighet";
 
-// Fletter et dokument inn i standarden. Ren funksjon (testet).
+// Fletter et dokument inn i standarden. Ren funksjon (testet i
+// feature-flags.test.js).
 export function synlighetVerdier(doc) {
   const ut = { student: { ...STANDARD.student }, hub: { ...STANDARD.hub }, punkter: STANDARD.punkter };
   if (!doc || typeof doc !== "object") return ut;
@@ -146,7 +149,10 @@ export function brukSynlighet(doc) {
   const ny = synlighetVerdier(doc);
   const endret = JSON.stringify(ny) !== JSON.stringify(grunn);
   grunn = ny;
-  try { localStorage.setItem(SPEIL, JSON.stringify(ny)); } catch (e) { /* privat modus */ }
+  // Speilet skrives bare når noe er endret (ikke ved hvert content-snapshot).
+  if (endret) {
+    try { localStorage.setItem(SPEIL, JSON.stringify(ny)); } catch (e) { /* privat modus */ }
+  }
   brukPaaObjektene();
   if (endret && typeof document !== "undefined") document.dispatchEvent(new CustomEvent("pensum:synlighet"));
 }

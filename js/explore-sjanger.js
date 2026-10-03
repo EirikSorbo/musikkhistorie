@@ -1,14 +1,15 @@
 // ============================================================================
-//  SJANGER-LISTER & INFO
+//  SJANGRE OG UNDERSJANGRE
 // ----------------------------------------------------------------------------
-//  Sjangre-/undersjangre-vinduene og sjanger-info-modalen (lærer-oversikten).
-//  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
+//  Familiekortene i Sjangre- og Undersjangre-fanene (v6.05/v6.12), og
+//  sjanger-info-modalen som lærer-oversikten bruker. Flyttet ut av explore.js
+//  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.22";
-import { isVisible } from "./limits.js?v=6.22";
-import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.22";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.22";
-import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.22";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.23";
+import { isVisible } from "./limits.js?v=6.23";
+import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.23";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.23";
+import { opts, getState, injectTeacherRow, metaOversiktKnappHtml } from "./explore-context.js?v=6.23";
 
 // Sjangre-vinduet (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S6):
 // sjangrene gruppert per metasjanger, i appens ene rekkefølge, og innenfor
@@ -62,13 +63,21 @@ function familieHode(meta) {
   return `<div class="sj-fam-hode">
     <span class="sj-fam-prikk" aria-hidden="true"></span>
     <h3 class="sj-fam-navn">${escapeHtml(meta)}</h3>
-    ${META_GENRE_ORDER.includes(meta) ? `<button type="button" class="sj-fam-lenke" data-meta-oversikt="${escapeHtml(meta)}">Oversikt <span aria-hidden="true">›</span></button>` : ""}
+    ${metaOversiktKnappHtml(meta, { kort: true, klasse: "sj-fam-lenke" })}
   </div>`;
 }
 
 export function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
+  tegnSjangre();
+  modalOpen(modal);
+}
+
+// Bare innholdet, uten å åpne eller heve vinduet: brukes når beskrivelsene
+// (årstallene) lander mens vinduet står åpent. Gjennom modalOpen flyttet en
+// slik omtegning tastaturfokuset til ←-knappen (v6.23, Fable F10).
+export function tegnSjangre() {
   const checked = (opts.getCheckedState ? opts.getCheckedState() : null)?.genres || [];
   const familier = familierData();
   const familieHtml = (f) => `<section class="sj-familie" style="--fam:${escapeHtml(f.farge)}">
@@ -86,7 +95,6 @@ export function openSubgenreList() {
     ? `<div class="sj-spalter">${iSpalter(familier, (f) => f.noder.length)
         .map((sp) => `<div class="sj-spalte">${sp.map(familieHtml).join("")}</div>`).join("")}</div>`
     : `<p class="muted">Ingen sjangre registrert ennå.</p>`;
-  modalOpen(modal);
 }
 
 // Undersjangrene: de frie taggene fra artistene. Hver tagg hører til den

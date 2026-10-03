@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.22";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.22";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.22";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice } from "./ui-modal.js?v=6.22";
-import { GENEALOGY } from "./genre-model.js?v=6.22";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.22";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.22";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.22";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.22";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.22";
-import { getState } from "./explore-context.js?v=6.22";
-import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.22";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.22";
-import { stoppEtikett } from "./stopp-etikett.js?v=6.22";
+import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.23";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.23";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.23";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice } from "./ui-modal.js?v=6.23";
+import { GENEALOGY } from "./genre-model.js?v=6.23";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.23";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.23";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.23";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.23";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.23";
+import { getState } from "./explore-context.js?v=6.23";
+import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.23";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.23";
+import { stoppEtikett } from "./stopp-etikett.js?v=6.23";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -367,11 +367,15 @@ function lagreHistorikk() { skriv(LAGRING.historikk, JSON.stringify(historikk));
 
 // Timeloggen (v6.10, U1): hvert mål som vises, også lytteeksemplene, i den
 // rekkefølgen det ble vist. Samme mål to ganger på rad teller én gang.
+// Siste mål i loggen, så de mange attributt-endringene på samme kort ikke
+// leser og tolker hele loggen hver gang (v6.23, Fable).
+let sistLogget = null;
 function loggTime(vis) {
-  if (typeof vis !== "string" || !vis) return;
+  if (typeof vis !== "string" || !vis || vis === sistLogget) return;
   let logg = [];
   try { logg = JSON.parse(les(LAGRING.timelogg) || "[]"); } catch (e) { logg = []; }
   if (!Array.isArray(logg)) logg = [];
+  sistLogget = vis;
   if (logg[logg.length - 1] === vis) return;
   logg.push(vis);
   skriv(LAGRING.timelogg, JSON.stringify(logg));
@@ -968,7 +972,11 @@ export async function avsluttPresentasjon() {
       const idag = new Date();
       const dato = `${idag.getFullYear()}-${String(idag.getMonth() + 1).padStart(2, "0")}-${String(idag.getDate()).padStart(2, "0")}`;
       const forslag = `Time ${idag.toLocaleDateString("nb-NO", { day: "numeric", month: "long" })}`;
-      const tittel = (window.prompt("Tittel på timen", forslag) ?? "").trim() || forslag;
+      // Avbryt i tittelspørsmålet lagrer ingenting, og visningen står åpen
+      // (som ved lagringsfeil), så læreren kan velge på nytt (v6.23, Fable F9).
+      const svar = window.prompt("Tittel på timen", forslag);
+      if (svar === null) return;
+      const tittel = svar.trim() || forslag;
       try {
         await savePlan(nyPlanId(), { tittel, laget: idag.toISOString(), dato, stopp });
       } catch (err) {
@@ -978,6 +986,7 @@ export async function avsluttPresentasjon() {
     }
   }
   for (const k of Object.values(LAGRING)) { try { sessionStorage.removeItem(k); } catch (e) {} }
+  sistLogget = null;
   // Full sidelast: nullstiller også flaggmutasjonene fra QA-bryteren.
   window.location.href = "index.html";
 }

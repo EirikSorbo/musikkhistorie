@@ -1,27 +1,27 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.22";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.22";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.22";
-import { onGenreModelChanged } from "./genre-model.js?v=6.22";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.22";
-import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.22";
-import { imgTag } from "./ui-helpers.js?v=6.22";
-import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.22";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.22";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.22";
-import { initExplore } from "./explore.js?v=6.22";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.22";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.22";
-import { initPlanMeny } from "./plan-meny.js?v=6.22";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.22";
-import { initYtSpiller } from "./yt-spiller.js?v=6.22";
-import { initVisning, visningTikk } from "./visning.js?v=6.22";
-import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.22";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.22";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.22";
-import { askChoice } from "./ui-modal.js?v=6.22";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.22";
-import { currentEntityValues } from "./entity-values.js?v=6.22";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.22";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.23";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.23";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.23";
+import { onGenreModelChanged } from "./genre-model.js?v=6.23";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.23";
+import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.23";
+import { imgTag } from "./ui-helpers.js?v=6.23";
+import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.23";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.23";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.23";
+import { initExplore } from "./explore.js?v=6.23";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.23";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.23";
+import { initPlanMeny } from "./plan-meny.js?v=6.23";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.23";
+import { initYtSpiller } from "./yt-spiller.js?v=6.23";
+import { initVisning, visningTikk } from "./visning.js?v=6.23";
+import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.23";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.23";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.23";
+import { askChoice } from "./ui-modal.js?v=6.23";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.23";
+import { currentEntityValues } from "./entity-values.js?v=6.23";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.23";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -212,9 +212,9 @@ function setupExplore() {
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
   const btnInstrumenter = document.getElementById("btn-instrumenter");
   if (btnInstrumenter) btnInstrumenter.addEventListener("click", explore.openInstrumenter);
-  // MIDLERTIDIG (feature-flags.js): hele hubkortet skjules. Det som må være
-  // tilgjengelig derfra, nås fortsatt andre steder: Tidslinje har eget kort på
-  // forsiden, og Varmekart ligger i knapperaden i sjangermodalen.
+  // MIDLERTIDIG (feature-flags.js, storeBildet): hubkortet kan skjules for
+  // studentene. Det står åpent siden 2026-09-10; hvilke kort de ser inne i
+  // huben, styres av SKJUL_I_HUBEN.
   const btnStoreBildet = document.getElementById("btn-store-bildet");
   if (btnStoreBildet) {
     // NB: hidden-attributtet duger ikke her. .dash-card setter display i CSS,
@@ -786,6 +786,8 @@ function init() {
       // så en åpen fane må tegnes på nytt når artistene lander. Uten dette blir
       // tallet stående med cachens verdi mens lista viser den ferske.
       explore?.renderInstrumenter?.();
+      // Et åpent tiårsvindu (Musikk-fanen bygges av artistene).
+      explore?.refreshDecadeView?.();
       // Utenom throttlingen: deep-linkene skal åpnes straks data finnes
       // (no-op når det ikke venter noen). provVisMaal er ?vis=-ruteren.
       applyPendingDeepLink();
@@ -811,15 +813,16 @@ function init() {
     // refreshTeknologi + provVisMaal (audit v5.42 funn 18): en åpen
     // teknologiliste og en ventende ?vis=tech/teknologi/tiår:…:tech-lenke skal
     // følge tech-snapshotet, ikke vente på at noe annet lander.
-    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); explore?.refreshTeknologi?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
+    onTech: () => { applyArtistSnapshot(); explore?.renderInstrumenter?.(); explore?.refreshTeknologi?.(); explore?.refreshDecadeView?.(); provVisMaal(); presPlanTikk(); visningTikk(); },
     // En ventende ?vis=kobling-lenke venter på koblingstekstene.
     onEdgeDescs: () => provVisMaal(),
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
     // tegnes på nytt her også.
     onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); samleTikk(); visningTikk(); renderFraTimene(); },
-    // Tiårstekstene: en ?vis=tiår-lenke venter på at de har landet.
-    onDecades: () => provVisMaal(),
+    // Tiårstekstene: en ?vis=tiår-lenke venter på at de har landet, og et
+    // åpent tiårsvindu skal vise den ferske teksten.
+    onDecades: () => { explore?.refreshDecadeView?.(); provVisMaal(); },
     // En åpen Podkaster-fane skal vise nye episoder uten å lukkes/åpnes.
     onPodcasts: () => explore?.renderInstrumenter?.(),
   });

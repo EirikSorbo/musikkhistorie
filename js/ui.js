@@ -10,14 +10,14 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.22";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.22";
-import { punkterHtml } from "./punkter.js?v=6.22";
-import { medSelv } from "./linkify.js?v=6.22";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.22";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.22";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.22";
-import { safeUrl } from "./util.js?v=6.22";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.23";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.23";
+import { punkterHtml } from "./punkter.js?v=6.23";
+import { medSelv } from "./linkify.js?v=6.23";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.23";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.23";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.23";
+import { safeUrl } from "./util.js?v=6.23";
 import {
   escapeHtml,
   linkDesc,
@@ -40,14 +40,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.22";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.22";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.22";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.22";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.22";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.22";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.22";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.22";
+} from "./ui-helpers.js?v=6.23";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.23";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.23";
+import { ytMaal, ytSpillelisteUrl, ytSpillelisteIder } from "./presentasjon-modell.js?v=6.23";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.23";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.23";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.23";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.23";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -679,14 +679,20 @@ function kobleSpillelisteRader() {
 // (v6.21, brukervalg 2026-10-03). Knappene har farge (.pl-alle i CSS), så de
 // skiller seg fra lista rett under. Teksten er bare «På YouTube (1–50)» fra
 // v6.22 (brukervalg): antallet står allerede i overskriften over.
-export function spillAlleHtml(ider) {
-  const lenker = ytSpillelisteUrl(ider);
-  if (!lenker.length || (ider || []).length < 2) return "";
-  let fra = 1;
+//
+// `rader` er video-ID-en for HVER rad i lista under, med null der raden ikke
+// er en YouTube-video. Spennet er radnumrene (v6.23, Fable F5): før talte det
+// videoene, så en liste på 63 rader med én lenke til en annen side fikk
+// «(51–62)», og studenten så ut til å mangle et eksempel. En video som står
+// på to rader, spilles én gang (første rad).
+export function spillAlleHtml(rader) {
+  const forsteRad = new Map();
+  (rader || []).forEach((id, i) => { if (id && !forsteRad.has(id)) forsteRad.set(id, i + 1); });
+  const lenker = ytSpillelisteUrl([...forsteRad.keys()]);
+  if (!lenker.length || forsteRad.size < 2) return "";
   return `<p class="pl-alle">${lenker.map((url) => {
-    const n = (new URL(url).searchParams.get("video_ids") || "").split(",").filter(Boolean).length;
-    const spenn = `${fra}–${fra + n - 1}`;
-    fra += n;
+    const del = ytSpillelisteIder(url) || [];
+    const spenn = `${forsteRad.get(del[0])}–${forsteRad.get(del[del.length - 1])}`;
     return `<a class="btn small" href="${escapeHtml(url)}" target="_blank" rel="noopener">På YouTube (${spenn})</a>`;
   }).join(" ")}</p>`;
 }
@@ -738,7 +744,8 @@ function playlistRows(list, sj = null) {
 // Radene for en liste av { a: artist, m: lytteeksempel } (v6.05: delt av
 // sjanger- og metasjanger-listene over og tiårslistene under, U7/K1).
 function eksempelRader(par, tomTekst) {
-  // Video-ID-ene i lista, i samme rekkefølge som radene, til «Spill alle».
+  // Video-ID-en for hver rad (null for rader uten video), til «Spill alle»,
+  // som bruker radnumrene i spennet (spillAlleHtml).
   const ider = [];
   const items = par.map(({ a, m }) => {
     // Tagget rad viser eksempelets EGEN sjanger (én boble); utagget viser
@@ -747,7 +754,7 @@ function eksempelRader(par, tomTekst) {
       ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(m.genre)}">${escapeHtml(m.genre)}</button>`
       : genreTags(a, { withSub: false, extraClass: "tag-pl" });
     const video = ytMaal(m.url)?.video;
-    if (video) ider.push(video);
+    ider.push(video || null);
     const yInfo = musicExampleLabel(m);
     // Tittel og år til venstre, artist og sjanger til høyre (v6.00,
     // brukerønske 2026-10-01), som navn og år i artistlista.

@@ -6,17 +6,17 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js?v=6.22";
-import { isVisible } from "./limits.js?v=6.22";
-import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=6.22";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=6.22";
-import { renderRichText } from "./rich-text.js?v=6.22";
-import { genreFamilyNodes } from "./ui-timeline.js?v=6.22";
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=6.22";
-import { wireLinks } from "./ui-helpers.js?v=6.22";
-import { renderSjangerhimmel } from "./constellation.js?v=6.22";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=6.22";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.22";
+import { modalOpen, escapeHtml } from "./ui.js?v=6.23";
+import { isVisible } from "./limits.js?v=6.23";
+import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js?v=6.23";
+import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js?v=6.23";
+import { renderRichText } from "./rich-text.js?v=6.23";
+import { genreFamilyNodes } from "./ui-timeline.js?v=6.23";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=6.23";
+import { wireLinks } from "./ui-helpers.js?v=6.23";
+import { renderSjangerhimmel } from "./constellation.js?v=6.23";
+import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js?v=6.23";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.23";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter
 // bak ett dashbordkort, uten at de flyttes fra innholdsmodalene sine.
@@ -138,8 +138,8 @@ function renderHistorie(genre, { fraSnapshot = false } = {}) {
   const modal = document.getElementById("modal-historier");
   modal.querySelectorAll(".hist-chip").forEach((b) =>
     b.classList.toggle("active", b.dataset.story === genre));
-  // «Vis oversikt» (v5.94) følger historien som vises; bare synlig i
-  // visningsmodus (CSS).
+  // «Vis oversikt» (v5.94) følger historien som vises (i appen også fra
+  // v6.05, S2).
   const oversiktKnapp = document.getElementById("hist-oversikt");
   if (oversiktKnapp) oversiktKnapp.textContent = `Vis oversikt over ${genre}`;
 

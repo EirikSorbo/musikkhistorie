@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { wrapSelection, prefixLines } from "../../js/format-bar.js?v=6.22";
+import { wrapSelection, prefixLines } from "../../js/format-bar.js?v=6.23";
 
 // Minimal textarea-atrapp: setRangeText-semantikken formatlinja bruker.
 function fakeTa(value, s, e, maxlength = 4000) {

@@ -10,21 +10,24 @@
 //  To regler: tiåret står når fanen byttes, og fanen står når tiåret byttes
 //  (så man kan lese teknologien gjennom tiårene med forrige/neste).
 //
-//  Hver fane har teksten (eller sjangrene) til venstre og det som hører til i
-//  en smal høyrespalte (D2): innovasjonskortene fra tiåret, kildene, eller
-//  artistene og lytteeksemplene. data-sekt-merkene (markupen i
-//  explore-modals.js) styrer detaljnivået i presentasjonsvisningen.
+//  Teknologi og Samfunn står i full bredde med kildene skjult (v6.11 og
+//  v6.18, brukervalg 2026-10-03); Musikk har tre kolonner: toneangivende
+//  sjangre, artistene som kom til, og lytteeksemplene. Kortet har alltid full
+//  høyde, og første gang i økta åpnes 1960-tallet (v6.13, v6.20).
+//  data-sekt-merkene (markupen i explore-modals.js) styrer detaljnivået i
+//  presentasjonsvisningen.
 // ============================================================================
 import { modalOpen, renderDecadeRibbon, buildKilderList, buildTechTimeline, formatInfoText, escapeHtml,
-  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.22";
-import { ytMaal } from "./presentasjon-modell.js?v=6.22";
-import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.22";
-import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.22";
-import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.22";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.22";
-import { openTechDetail } from "./explore-tech.js?v=6.22";
-import { openVarmekart } from "./explore-varmekart.js?v=6.22";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.22";
+  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.23";
+import { ytMaal } from "./presentasjon-modell.js?v=6.23";
+import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.23";
+import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.23";
+import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.23";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.23";
+import { openTechDetail } from "./explore-tech.js?v=6.23";
+import { openVarmekart } from "./explore-varmekart.js?v=6.23";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.23";
+import { kobleFanePiler } from "./ui-modal.js?v=6.23";
 
 // Fanene i brukerens rekkefølge. Nøklene tech/society er de gamle modusene, så
 // lenker og kjøreplanstopp som «tiår:1950:tech» virker som før.
@@ -59,10 +62,21 @@ function openDecadeView(decadeId) {
   modalOpen(modal);
 }
 
+// Et åpent tiårsvindu tegnes på nytt når dataene det bygges av endres:
+// tiårstekstene (lærerens «Rediger» lagrer oppå vinduet), innovasjonskortene
+// (teknologitidslinja) og artistene (Musikk-fanen). No-op når vinduet er
+// lukket, så sidene kan kalle den fra ethvert snapshot (v6.23, Fable F2).
+export function refreshDecadeView() {
+  const modal = document.getElementById("modal-decade-view");
+  if (!modal?.classList.contains("open") || currentDecade == null) return;
+  renderDecadeView(currentDecade);
+}
+
 // Faneknappene står i den faste markupen, så de kobles én gang.
 function kobleFaner(modal) {
   if (modal.dataset.fanerKoblet) return;
   modal.dataset.fanerKoblet = "1";
+  kobleFanePiler(modal.querySelector(".dv-faner"));
   modal.querySelectorAll("[data-dv-fane]").forEach((b) =>
     b.addEventListener("click", () => {
       contextMode = b.dataset.dvFane;
@@ -94,6 +108,7 @@ function renderDecadeView(decadeId) {
     const paa = b.dataset.dvFane === contextMode;
     b.classList.toggle("active", paa);
     b.setAttribute("aria-selected", paa ? "true" : "false");
+    b.tabIndex = paa ? 0 : -1;
   });
   for (const f of FANER) {
     const panel = document.getElementById(`dv-${f}-section`);
@@ -224,7 +239,7 @@ function tegnMusikk(d, s, lc) {
   const lyttEl = document.getElementById("dv-musikk-lytt");
   lyttEl.innerHTML = `<h4 class="related-head">Lytt (${par.length})</h4>`
     + (par.length
-      ? spillAlleHtml(par.map(({ m }) => ytMaal(m.url)?.video).filter(Boolean))
+      ? spillAlleHtml(par.map(({ m }) => ytMaal(m.url)?.video || null))
         + `<ul class="pl-list dv-pl">${par.map(({ a, m, y }) => `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")} <span class="pl-aar">(${y})</span></a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`).join("")}</ul>`
       : `<p class="muted dv-tom">Ingen lytteeksempler fra dette tiåret ennå.</p>`);
 }

@@ -12,19 +12,19 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks, medSelv } from "./linkify.js?v=6.22";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.22";
-import { renderRichText } from "./rich-text.js?v=6.22";
-import { punkterHtml } from "./punkter.js?v=6.22";
-import { escapeHtml, buildKilderList } from "./util.js?v=6.22";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.22";
-import { modalOpen } from "./ui-modal.js?v=6.22";
-import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.22";
-import { artistsInGenre } from "./limits.js?v=6.22";
-import { wireProposeFoot } from "./ui-edit.js?v=6.22";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.22";
-import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.22";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.22";
+import { wireAllLinks, medSelv } from "./linkify.js?v=6.23";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.23";
+import { renderRichText } from "./rich-text.js?v=6.23";
+import { punkterHtml } from "./punkter.js?v=6.23";
+import { escapeHtml, buildKilderList } from "./util.js?v=6.23";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.23";
+import { modalOpen } from "./ui-modal.js?v=6.23";
+import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.23";
+import { artistsInGenre } from "./limits.js?v=6.23";
+import { wireProposeFoot } from "./ui-edit.js?v=6.23";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.23";
+import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.23";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.23";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -157,7 +157,7 @@ export function refreshSjangerInfo(freshOpts) {
 // allerede åpen modal. Egen parameter, IKKE i opts: opts lagres i openSjanger
 // og ville smittet alle senere omtegninger.
 export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, onShowGallery, onVisITre, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, harTidslinje, onShowGallery, onVisITre, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -213,7 +213,8 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   const btnArea = [
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
     (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
-    (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Artisttidslinje</button>` : "",
+    // Bare når tidslinja har en seksjon for sjangeren (harTidslinje, v6.23).
+    (n.g && onShowTimeline && (!harTidslinje || harTidslinje(n.l))) ? `<button type="button" class="btn ghost small gx-timeline-btn">Artisttidslinje</button>` : "",
     // Artistgalleriet (v5.96; i appen også fra v5.97, brukerønske 2026-10-01).
     (n.g && onShowGallery) ? `<button type="button" class="btn ghost small gx-galleri-btn">Galleri</button>` : "",
     // «Vis i slektstreet» (v6.08, S8): fra kortet tilbake til sjangerens plass.

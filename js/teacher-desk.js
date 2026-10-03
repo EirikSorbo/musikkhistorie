@@ -14,18 +14,18 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=6.22";
-import { modalOpen } from "./ui.js?v=6.22";
-import { renderPendingEditsList } from "./teacher-review.js?v=6.22";
-import { openDetail } from "./teacher-artists.js?v=6.22";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=6.22";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=6.22";
-import { storyOrder } from "./story-format.js?v=6.22";
-import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=6.22";
-import { escapeHtml, pct } from "./ui-helpers.js?v=6.22";
-import { deleteTimeforslag, savePage } from "./store.js?v=6.22";
-import { synlighetVerdier } from "./feature-flags.js?v=6.22";
-import { askChoice } from "./ui-modal.js?v=6.22";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=6.23";
+import { modalOpen } from "./ui.js?v=6.23";
+import { renderPendingEditsList } from "./teacher-review.js?v=6.23";
+import { openDetail } from "./teacher-artists.js?v=6.23";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=6.23";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=6.23";
+import { storyOrder } from "./story-format.js?v=6.23";
+import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=6.23";
+import { escapeHtml, pct } from "./ui-helpers.js?v=6.23";
+import { deleteTimeforslag, savePage } from "./store.js?v=6.23";
+import { synlighetVerdier } from "./feature-flags.js?v=6.23";
+import { askChoice } from "./ui-modal.js?v=6.23";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -272,6 +272,14 @@ const SYNLIGHET_RADER = [
   { id: "punkter", navn: "Oppsummeringspunktene på kortene (ellers bare i visningen)", punkter: true },
 ];
 
+// Nøklene panelet har en bryter for. Bare de lagres (v6.23, Fable F12):
+// før skrev første lagring HELE standardobjektet, også nøklene uten bryter
+// (storeBildet, de åpne hubkortene), og da slo en senere endring av
+// standarden i feature-flags.js aldri gjennom for dem. savePage overskriver
+// dokumentet, så gamle nøkler uten bryter forsvinner ved neste lagring.
+const PANEL_STUDENT = [...new Set(SYNLIGHET_RADER.flatMap((r) => r.student || []))];
+const PANEL_HUB = [...new Set(SYNLIGHET_RADER.flatMap((r) => r.hub || []))];
+
 function synligNaa(v, rad) {
   if (rad.punkter) return !v.punkter;
   return [...(rad.student || []).map((k) => !v.student[k]), ...(rad.hub || []).map((k) => !v.hub[k])].every(Boolean);
@@ -295,9 +303,14 @@ async function endreSynlighet(id, synlig, boks) {
   if (rad.punkter) v.punkter = !synlig;
   (rad.student || []).forEach((k) => { v.student[k] = !synlig; });
   (rad.hub || []).forEach((k) => { v.hub[k] = !synlig; });
+  const lagre = {
+    student: Object.fromEntries(PANEL_STUDENT.map((k) => [k, v.student[k]])),
+    hub: Object.fromEntries(PANEL_HUB.map((k) => [k, v.hub[k]])),
+    punkter: v.punkter,
+  };
   boks.disabled = true;
   try {
-    await savePage("synlighet", v);
+    await savePage("synlighet", lagre);
   } catch (e) {
     boks.checked = !synlig;
     alert(`Fikk ikke lagret (${e?.message || e}).`);
@@ -372,7 +385,8 @@ function openItem(key, id) {
     }
     // Åpner lærerens tiårsmodal rett på det aktuelle tiåret (før: generell
     // tiårsliste som ignorerte hvilken rad man klikket). Samfunn og teknologi
-    // er egne kort med hver sin sjekk-liste — åpne modalen i riktig modus.
+    // har hver sin sjekk-liste (to faner i samme tiårskort) — åpne modalen i
+    // riktig modus.
     case "decades":
       openSingleDecadeModal(id, "society");
       break;

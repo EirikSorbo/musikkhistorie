@@ -10,12 +10,12 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml } from "./ui.js?v=6.22";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.22";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=6.22";
-import { getState } from "./explore-context.js?v=6.22";
-import { apneMaal } from "./explore-apne.js?v=6.22";
-import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=6.22";
+import { modalOpen, escapeHtml } from "./ui.js?v=6.23";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.23";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=6.23";
+import { getState } from "./explore-context.js?v=6.23";
+import { apneMaal } from "./explore-apne.js?v=6.23";
+import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=6.23";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
@@ -29,6 +29,12 @@ const PER_GRUPPE = 6;
 // når søket åpnes igjen.
 let indeksCache = null;
 let indeksAvtrykk = "";
+// Bryterne kan slås av og på mens siden står åpen (v6.10, U4). Avtrykket
+// over teller bare dokumenter, så en endret bryter ville gitt samme gamle
+// indeks til siden ble lastet på nytt (v6.23, Fable F4).
+if (typeof document !== "undefined") {
+  document.addEventListener("pensum:synlighet", () => { indeksCache = null; });
+}
 
 function hentIndeks(s, { tvingNy = false } = {}) {
   const avtrykk = [

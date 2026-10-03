@@ -16,15 +16,16 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.22";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.22";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.22";
-import { pageFor } from "./story-format.js?v=6.22";
-import { renderRichText } from "./rich-text.js?v=6.22";
-import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.22";
-import { META_GENRE_COLOR } from "./genre-model.js?v=6.22";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.22";
-import { openTechDetail } from "./explore-tech.js?v=6.22";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.23";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.23";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.23";
+import { pageFor } from "./story-format.js?v=6.23";
+import { renderRichText } from "./rich-text.js?v=6.23";
+import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.23";
+import { META_GENRE_COLOR } from "./genre-model.js?v=6.23";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.23";
+import { kobleFanePiler, visValgtFane } from "./ui-modal.js?v=6.23";
+import { openTechDetail } from "./explore-tech.js?v=6.23";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -74,17 +75,19 @@ function renderPodkastInngang() {
   el.querySelector("button").addEventListener("click", () => openPodkaster());
 }
 
-function renderChips() {
-  const chips = document.getElementById("instr-chips");
-  if (!chips || chips.dataset.filled) return;
-  // Alle knappene har samme blå (brukervalg 2026-09-01) — fargen ligger i CSS,
-  // ikke per knapp. Se .instr-chip i styles.css.
-  chips.innerHTML = INSTRUMENT_TIMELINE_GROUPS.map((g) =>
-    `<button type="button" class="btn ghost small instr-chip" data-instr="${escapeHtml(g)}">${escapeHtml(g)}</button>`
+// Instrumentene som faner (v6.23, brukervalg 2026-10-03), samme fanerad som
+// Tiår og Sjangre. Før var de blå knapper i to rader à fire (v5.x), som
+// gjorde det samme som fanene andre steder, men så annerledes ut.
+function renderFaner() {
+  const rad = document.getElementById("instr-faner");
+  if (!rad || rad.dataset.filled) return;
+  rad.innerHTML = INSTRUMENT_TIMELINE_GROUPS.map((g) =>
+    `<button type="button" class="dv-fane" role="tab" aria-selected="false" aria-controls="instr-body" tabindex="-1" data-instr="${escapeHtml(g)}" data-tekst="${escapeHtml(g)}">${escapeHtml(g)}</button>`
   ).join("");
-  chips.querySelectorAll(".instr-chip").forEach((b) =>
+  rad.querySelectorAll("[data-instr]").forEach((b) =>
     b.addEventListener("click", () => renderGroup(b.dataset.instr, true)));
-  chips.dataset.filled = "1";
+  kobleFanePiler(rad);
+  rad.dataset.filled = "1";
 }
 
 // Én tidslinje trenger minst to punkter for å gi mening. Med ett kort vises det
@@ -129,8 +132,13 @@ function renderGroup(group, tvunget = false) {
   if (!tvunget && signatur === sisteSignatur && body.childElementCount) return;
   sisteSignatur = signatur;
 
-  document.querySelectorAll("#instr-chips .instr-chip").forEach((b) =>
-    b.classList.toggle("active", b.dataset.instr === group));
+  document.querySelectorAll("#instr-faner [data-instr]").forEach((b) => {
+    const paa = b.dataset.instr === group;
+    b.classList.toggle("active", paa);
+    b.setAttribute("aria-selected", paa ? "true" : "false");
+    b.tabIndex = paa ? 0 : -1;
+  });
+  visValgtFane(document.getElementById("instr-faner"));
 
   const s = getState();
   const items = instrumentInnovations(s.techItems, group);
@@ -313,7 +321,7 @@ function openTechListModal(group, items) {
 
 function renderUtvikling(tvunget = false) {
   renderPodkastInngang();
-  renderChips();
+  renderFaner();
   renderGroup(currentGroup || INSTRUMENT_TIMELINE_GROUPS[0], tvunget);
 }
 
@@ -344,6 +352,8 @@ export function openInstrumenter(group) {
   // dette ga lukk og åpne samme gamle tegning.
   renderUtvikling(true);
   modalOpen(modal);
+  // Først nå har raden bredde (kortet var lukket under tegningen).
+  visValgtFane(document.getElementById("instr-faner"));
 }
 
 // Podkastene i eget vindu (v5.07). Lå tidligere som fane nummer to i
