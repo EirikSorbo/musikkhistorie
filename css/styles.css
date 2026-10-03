@@ -2988,9 +2988,16 @@ body.presentasjon .pres-sjanger-hoyre:not(:has(> [data-sekt]:not([hidden]))) { d
 }
 .mo-artister, .mo-eksempler { max-height: 60vh; overflow-y: auto; }
 body.presentasjon #modal-meta-oversikt > .modal { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+/* Én rad som er nøyaktig like høy som kortet, og spaltene strekt til den:
+   da ruller hver spalte selv når artistene eller lytteeksemplene er flere enn
+   det er plass til. Uten dette arvet lerretet appens align-items: start
+   (v6.06, regelen for brede skjermer lenger ned), spaltene vokste forbi
+   kanten, og overflow: hidden på kortet gjorde at ingenting kunne rulles
+   (rettet v6.17, brukerfunn 2026-10-03). */
 body.presentasjon .mo-body {
   flex: 1; min-height: 0;
   grid-template-columns: minmax(0, 1fr) minmax(0, 15rem) minmax(0, 18rem); gap: 0 2.4rem;
+  grid-template-rows: minmax(0, 1fr); align-items: stretch;
 }
 body.presentasjon .mo-kol { min-height: 0; max-height: none; overflow-y: auto; }
 body.presentasjon :is(.mo-artister, .mo-eksempler) {
