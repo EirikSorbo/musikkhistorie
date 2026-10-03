@@ -8,20 +8,20 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.08";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.08";
-import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.08";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.08";
-import { openTechDetail } from "./explore-tech.js?v=6.08";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.08";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.08";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.08";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=6.08";
-import { renderReferanser } from "./explore-referanser.js?v=6.08";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.08";
-import { setHeatData } from "./heat-strip.js?v=6.08";
-import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.08";
-import { openInstrumenter } from "./explore-instrument.js?v=6.08";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.09";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.09";
+import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.09";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.09";
+import { openTechDetail } from "./explore-tech.js?v=6.09";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.09";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.09";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.09";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=6.09";
+import { renderReferanser } from "./explore-referanser.js?v=6.09";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.09";
+import { setHeatData } from "./heat-strip.js?v=6.09";
+import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.09";
+import { openInstrumenter } from "./explore-instrument.js?v=6.09";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }

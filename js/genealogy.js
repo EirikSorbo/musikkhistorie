@@ -12,19 +12,19 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks, medSelv } from "./linkify.js?v=6.08";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.08";
-import { renderRichText } from "./rich-text.js?v=6.08";
-import { punkterHtml } from "./punkter.js?v=6.08";
-import { escapeHtml, buildKilderList } from "./util.js?v=6.08";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.08";
-import { modalOpen } from "./ui-modal.js?v=6.08";
-import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.08";
-import { artistsInGenre } from "./limits.js?v=6.08";
-import { wireProposeFoot } from "./ui-edit.js?v=6.08";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.08";
-import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.08";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.08";
+import { wireAllLinks, medSelv } from "./linkify.js?v=6.09";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.09";
+import { renderRichText } from "./rich-text.js?v=6.09";
+import { punkterHtml } from "./punkter.js?v=6.09";
+import { escapeHtml, buildKilderList } from "./util.js?v=6.09";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.09";
+import { modalOpen } from "./ui-modal.js?v=6.09";
+import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.09";
+import { artistsInGenre } from "./limits.js?v=6.09";
+import { wireProposeFoot } from "./ui-edit.js?v=6.09";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.09";
+import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.09";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.09";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -183,8 +183,18 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
       ? `<a class="genre-link" data-genre="${escapeHtml(node.l)}" tabindex="0" role="button">${navn}</a>`
       : navn;
   };
-  const inf = n.p.map((p) => sjLenke(map[p], p)).join(", ");
-  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => sjLenke(x)).join(", ");
+  // «Les om koblingen» ved hvert navn (v6.08, strukturgjennomgangen K2):
+  // koblingsteksten mellom de to sjangrene, uten å måtte treffe båndet i
+  // treet. Følger samme bryter som koblingstekstene (feature-flags.js): skjult
+  // for studentene til brukeren har godkjent alle koblingene, alltid synlig
+  // for læreren (onEdit). Bare der koblingen faktisk finnes i treet.
+  const visKoblinger = !SKJUL_I_STUDENTVISNING.koblingsbeskrivelser || !!onEdit;
+  const KOBLING_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1 1"/><path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1-1"/></svg>';
+  const koblingKnapp = (fra, til) => (visKoblinger && map[fra] && map[til] && edgeExists(edgeKey(fra, til)))
+    ? ` <button type="button" class="gx-kobling-lenke" data-kobling-fra="${escapeHtml(fra)}" data-kobling-til="${escapeHtml(til)}" title="Les om koblingen ${escapeHtml(map[fra].l)} → ${escapeHtml(map[til].l)}" aria-label="Les om koblingen ${escapeHtml(map[fra].l)} til ${escapeHtml(map[til].l)}">${KOBLING_SVG}</button>`
+    : "";
+  const inf = n.p.map((p) => sjLenke(map[p], p) + koblingKnapp(p, n.id)).join(", ");
+  const grewInto = GENEALOGY.filter((x) => x.p.includes(n.id)).map((x) => sjLenke(x) + koblingKnapp(n.id, x.id)).join(", ");
   const reactAgainst = (n.rx || []).map((p) => sjLenke(map[p], p));
   const reactedBy = GENEALOGY.filter((x) => (x.rx || []).includes(n.id)).map((x) => sjLenke(x));
   const relasjoner = [
@@ -257,6 +267,8 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   if (bg) bg.addEventListener("click", () => onShowGallery({ label: n.l }));
   const btre = mBody.querySelector(".gx-tre-btn");
   if (btre) btre.addEventListener("click", () => onVisITre(n.l));
+  mBody.querySelectorAll(".gx-kobling-lenke").forEach((b) =>
+    b.addEventListener("click", () => showEdgeInfo(b.dataset.koblingFra, b.dataset.koblingTil, opts)));
   // Rediger (lærer): n.l er doc-ID-en i genreDescriptions — samme ID som
   // «Foreslå endring» under bruker, så begge veier treffer samme dokument.
   renderGenreEditBtn(root, onEdit ? () => onEdit(n.l, "main") : null);

@@ -3766,3 +3766,9 @@ body.presentasjon .meta-merke { display: none; }
   body.tre-side:not(.presentasjon) #modal-sjanger .pres-sjanger-hoyre { margin-top: 1rem; }
   body.tre-side:not(.presentasjon) #modal-sjanger .sj-artister-liste { columns: 2; column-gap: 1rem; }
 }
+/* «Les om koblingen» ved navnene i slektskapslinjene (v6.08, K2). */
+.gx-kobling-lenke {
+  display: inline-flex; vertical-align: -2px; padding: 1px 2px; border: 0; border-radius: 4px;
+  background: none; cursor: pointer; color: var(--muted-2);
+}
+.gx-kobling-lenke:hover, .gx-kobling-lenke:focus-visible { color: var(--accent-2); background: var(--surface-2); }
