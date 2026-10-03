@@ -3772,3 +3772,22 @@ body.presentasjon .meta-merke { display: none; }
   background: none; cursor: pointer; color: var(--muted-2);
 }
 .gx-kobling-lenke:hover, .gx-kobling-lenke:focus-visible { color: var(--accent-2); background: var(--surface-2); }
+
+/* ===========================================================================
+   Strukturgjennomgangen 3.10, runde 5 (v6.10)
+   =========================================================================== */
+/* «Del med studentene» per plan i Visning-vinduet (U1). */
+.vis-del { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+/* «Fra timene» på forsiden (U1). */
+.fra-timene-liste { display: flex; flex-direction: column; }
+.fra-timene-liste .sj-rad { padding: 6px 4px; }
+/* «Synlig for studentene» på Skrivebordet (U4). */
+.desk-synlighet { margin-top: 16px; border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; background: #fff; }
+.desk-synlighet > summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+.desk-synlighet-hint { margin: 8px 0; font-size: 0.82rem; }
+.desk-synlighet-liste { columns: 2 18rem; column-gap: 20px; }
+.desk-synlighet-rad { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.86rem; break-inside: avoid; }
+/* Lærersidens områder (U5): Undervisning og Innhold side om side. */
+.laerer-omrader { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 18px 28px; }
+.laerer-omrade .section-label { margin-top: 0; }
+.laerer-knapper { display: flex; flex-wrap: wrap; gap: 8px; }

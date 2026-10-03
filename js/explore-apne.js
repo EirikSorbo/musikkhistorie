@@ -11,25 +11,26 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=6.09";
-import { showSubsjangerInfo } from "./ui.js?v=6.09";
-import { showEdgeInfo } from "./genealogy.js?v=6.09";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.09";
-import { openDecade } from "./explore-decade.js?v=6.09";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=6.09";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=6.09";
-import { openVarmekart } from "./explore-varmekart.js?v=6.09";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.09";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.09";
-import { openReferanser } from "./explore-referanser.js?v=6.09";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.09";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.09";
-import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=6.09";
-import { apneYtSpiller } from "./yt-spiller.js?v=6.09";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.09";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.09";
-import { openLytt } from "./explore-lytt.js?v=6.09";
-import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js?v=6.09";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=6.10";
+import { showSubsjangerInfo } from "./ui.js?v=6.10";
+import { showEdgeInfo } from "./genealogy.js?v=6.10";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.10";
+import { openDecade } from "./explore-decade.js?v=6.10";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=6.10";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=6.10";
+import { openVarmekart } from "./explore-varmekart.js?v=6.10";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.10";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.10";
+import { openReferanser } from "./explore-referanser.js?v=6.10";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.10";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.10";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=6.10";
+import { apneYtSpiller } from "./yt-spiller.js?v=6.10";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.10";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.10";
+import { openLytt } from "./explore-lytt.js?v=6.10";
+import { openTime } from "./explore-timer.js?v=6.10";
+import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js?v=6.10";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -98,6 +99,7 @@ export function apneMaal(apne) {
     case "undersjangre": return openUndersjangre();
     // Artister-vinduet bor på forsiden (landing.js), som gir åpneren.
     case "artister": return void opts.onOpenArtister?.();
+    case "time": return openTime(apne.id);
   }
 }
 
@@ -126,6 +128,9 @@ function klarFor(apne, s) {
     // Sjangre/Undersjangre/Artister (v6.08) tegnes av treet og artistene.
     case "lytt": case "sjangre": case "undersjangre": case "artister":
       return isGenreModelReady() && s.artistsLoaded ? "klar" : "vent";
+    // En time (v6.10): planene i content og artistene (navn og lytteeksempler).
+    case "time":
+      return s.contentLoaded && s.artistsLoaded && isGenreModelReady() ? "klar" : "vent";
     // Oversikten tegnes av treet, periodene (genreDescriptions) og artistene.
     case "oversikt":
       return isGenreModelReady() && s.artistsLoaded && s.genreDescsLoaded ? "klar" : "vent";

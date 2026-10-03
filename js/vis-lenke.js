@@ -35,6 +35,8 @@ export const VIS_TYPER = new Set([
   // Lytt-vinduet med spillelistene (v6.07, U7), og vinduene som fikk egen
   // adresse for tilbakeknappen (v6.08, S7).
   "lytt", "sjangre", "undersjangre", "artister",
+  // En delt time (v6.10, U1): «time:<planId>».
+  "time",
 ]);
 
 // «artist:abc123» → { hva: "artist", id: "abc123" }. Ukjent type → null, så

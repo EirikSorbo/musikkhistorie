@@ -29,20 +29,20 @@
 //  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=6.09";
-import { escapeHtml } from "./util.js?v=6.09";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=6.09";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=6.09";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=6.09";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=6.09";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=6.09";
-import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=6.09";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=6.09";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=6.09";
-import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=6.09";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=6.09";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.09";
-import { apneMaal } from "./explore-apne.js?v=6.09";
+import { getState } from "./explore-context.js?v=6.10";
+import { escapeHtml } from "./util.js?v=6.10";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=6.10";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=6.10";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=6.10";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=6.10";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=6.10";
+import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=6.10";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=6.10";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=6.10";
+import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=6.10";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=6.10";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.10";
+import { apneMaal } from "./explore-apne.js?v=6.10";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -168,6 +168,8 @@ function renderListe() {
   el.innerHTML = `
     ${planer.length ? planer.map(([id, p]) => {
       const merker = [`${p.stopp.length} stopp`];
+      // En time (v6.10, U1) har en dato; den står først.
+      if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
       const dode = dataKlar ? dodeStopp(p) : 0;
       return `
       <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
@@ -184,6 +186,7 @@ function renderListe() {
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Ta opp alt du åpner som stopp, til du trykker Ferdig">Ta opp</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
           <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
+          <label class="vis-del" title="Vis planen for studentene under «Fra timene» på forsiden og i Lytt"><input type="checkbox" data-pres-del="${escapeHtml(id)}"${p.delt ? " checked" : ""}> Del med studentene</label>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
       </div>`;
@@ -526,6 +529,17 @@ function koblVindu(m) {
       if (!p) return;
       kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })) };
       renderKladd();
+      return;
+    }
+    // «Del med studentene» (v6.10, U1): merge på planer.<id>.delt, så resten
+    // av planen står urørt. «Fra timene» vises for studentene først når
+    // bryteren «Fra timene» er slått på (Skrivebordet, Synlig for studentene).
+    const del = hit("[data-pres-del]");
+    if (del) {
+      savePlan(del.dataset.presDel, { delt: del.checked }).catch((err) => {
+        del.checked = !del.checked;
+        alert(`Fikk ikke lagret (${err?.message || err}).`);
+      });
       return;
     }
     // Dupliser (v5.44, forslag 1 i audit v5.42): en kopi med alle stoppene,

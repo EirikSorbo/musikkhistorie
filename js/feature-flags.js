@@ -44,9 +44,6 @@
 // vanlig visning også. Virker via klassen «skjul-punkter» på <html>
 // (css/styles.css), så ingen renderer trenger å vite om det.
 export const PUNKTER_BARE_I_PRESENTASJON = true;
-if (typeof document !== "undefined") {
-  document.documentElement.classList.toggle("skjul-punkter", PUNKTER_BARE_I_PRESENTASJON);
-}
 
 export const SKJUL_I_STUDENTVISNING = {
   viktighetsgrad:       true,
@@ -56,12 +53,10 @@ export const SKJUL_I_STUDENTVISNING = {
   horEtter:             true,
   utskrift:             true,
   merking:              true,
+  // «Fra timene» (v6.10, U1): timene læreren deler, på forsiden og i Lytt.
+  // Skjult til læreren slår det på (brukervalg 2026-10-03).
+  fraTimene:            true,
 };
-// Utskrift-flagget virker via en klasse på <html> (css/styles.css), som
-// punktene over: da trenger ingen av de fire sidene å vite om det.
-if (typeof document !== "undefined") {
-  document.documentElement.classList.toggle("skjul-utskrift", SKJUL_I_STUDENTVISNING.utskrift);
-}
 
 // Kortene INNE i «Det store bildet» (js/explore.js). Huben ble åpnet for
 // studentene 2026-09-10, men brukeren ville bare slippe til de tre
@@ -93,3 +88,84 @@ export const SKJUL_I_HUBEN = {
   "sb-referanser":  true,
   "sb-guide":       true,
 };
+
+// ============================================================================
+//  BRYTERNE I DATABASEN (v6.10, strukturgjennomgangen U4)
+// ----------------------------------------------------------------------------
+//  Verdiene over er STANDARDEN. Læreren slår av og på fra Skrivebordet
+//  («Synlig for studentene»), som skriver content/synlighet:
+//    { student: { <flagg>: bool }, hub: { <kort-id>: bool }, punkter: bool }
+//  true betyr skjult, som over. Ukjente nøkler ignoreres; mangler dokumentet,
+//  gjelder standarden. Siste kjente verdier speiles i localStorage, så siden
+//  ikke viser og så skjuler noe mens innholdet lastes.
+//
+//  Objektene over MUTERES (alle bruksstedene leser dem ved tegning), og
+//  hendelsen «pensum:synlighet» sendes, så de som bygde noe ved oppstart
+//  (hubkortene, prioritetsfilteret) kan følge med uten sidelast.
+//  Presentasjonens QA-bryter overstyrer for økta (settSynlighetOverstyrt).
+// ============================================================================
+const STANDARD = {
+  student: { ...SKJUL_I_STUDENTVISNING },
+  hub: { ...SKJUL_I_HUBEN },
+  punkter: PUNKTER_BARE_I_PRESENTASJON,
+};
+const SPEIL = "pensum-synlighet";
+
+// Fletter et dokument inn i standarden. Ren funksjon (testet).
+export function synlighetVerdier(doc) {
+  const ut = { student: { ...STANDARD.student }, hub: { ...STANDARD.hub }, punkter: STANDARD.punkter };
+  if (!doc || typeof doc !== "object") return ut;
+  for (const k of Object.keys(ut.student)) if (typeof doc.student?.[k] === "boolean") ut.student[k] = doc.student[k];
+  for (const k of Object.keys(ut.hub)) if (typeof doc.hub?.[k] === "boolean") ut.hub[k] = doc.hub[k];
+  if (typeof doc.punkter === "boolean") ut.punkter = doc.punkter;
+  return ut;
+}
+
+let grunn = synlighetVerdier(null);
+let overstyrt = false;
+
+function brukKlasser() {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("skjul-punkter", grunn.punkter);
+  document.documentElement.classList.toggle("skjul-utskrift", SKJUL_I_STUDENTVISNING.utskrift);
+}
+
+function brukPaaObjektene() {
+  if (!overstyrt) {
+    Object.assign(SKJUL_I_STUDENTVISNING, grunn.student);
+    Object.assign(SKJUL_I_HUBEN, grunn.hub);
+  }
+  brukKlasser();
+}
+
+// Verdiene slik læreren har satt dem (eller standarden), uten QA-overstyring.
+export function synlighetGrunn() { return grunn; }
+
+// Kalles av datalaget (shared-data.js) ved hvert innholds-snapshot.
+export function brukSynlighet(doc) {
+  const ny = synlighetVerdier(doc);
+  const endret = JSON.stringify(ny) !== JSON.stringify(grunn);
+  grunn = ny;
+  try { localStorage.setItem(SPEIL, JSON.stringify(ny)); } catch (e) { /* privat modus */ }
+  brukPaaObjektene();
+  if (endret && typeof document !== "undefined") document.dispatchEvent(new CustomEvent("pensum:synlighet"));
+}
+
+// Presentasjonens QA-bryter: på = alt synlig for økta; av = lærerens verdier.
+export function settSynlighetOverstyrt(paa) {
+  overstyrt = !!paa;
+  if (overstyrt) {
+    for (const k of Object.keys(SKJUL_I_STUDENTVISNING)) SKJUL_I_STUDENTVISNING[k] = false;
+    for (const k of Object.keys(SKJUL_I_HUBEN)) SKJUL_I_HUBEN[k] = false;
+  }
+  brukPaaObjektene();
+}
+
+// Ved oppstart: siste kjente verdier fra speilet, så standarden aldri blinker
+// fram når læreren har slått noe på.
+if (typeof document !== "undefined") {
+  let speil = null;
+  try { speil = JSON.parse(localStorage.getItem(SPEIL) || "null"); } catch (e) { speil = null; }
+  grunn = synlighetVerdier(speil);
+  brukPaaObjektene();
+}

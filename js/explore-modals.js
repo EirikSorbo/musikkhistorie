@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.09";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.09";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.10";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.10";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -164,7 +164,18 @@ export const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Lytt (v6.05, strukturgjennomgangen U7): spillelister per metasjanger og
+<!-- En time fra «Fra timene» (v6.10, U1). Tegnes av explore-timer.js. -->
+<div class="modal-backdrop" id="modal-time">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="tm-tittel">Time</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="tm-body"></div>
+  </div>
+</div>
+
+<!-- Lytt (v6.07, strukturgjennomgangen U7): spillelister per metasjanger og
      per tiår, og senere per time («Fra timene», U1). Tegnes av explore-lytt.js. -->
 <div class="modal-backdrop" id="modal-lytt" data-vis="lytt">
   <div class="modal modal-innhold">

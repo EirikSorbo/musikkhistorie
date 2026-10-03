@@ -1,25 +1,26 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.09";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.09";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.09";
-import { onGenreModelChanged } from "./genre-model.js?v=6.09";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.09";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.09";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.09";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.09";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.09";
-import { initExplore } from "./explore.js?v=6.09";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.09";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.09";
-import { initPlanMeny } from "./plan-meny.js?v=6.09";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.09";
-import { initYtSpiller } from "./yt-spiller.js?v=6.09";
-import { initVisning, visningTikk } from "./visning.js?v=6.09";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.09";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.09";
-import { askChoice } from "./ui-modal.js?v=6.09";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.09";
-import { currentEntityValues } from "./entity-values.js?v=6.09";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.09";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.10";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.10";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.10";
+import { onGenreModelChanged } from "./genre-model.js?v=6.10";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.10";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.10";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.10";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.10";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.10";
+import { initExplore } from "./explore.js?v=6.10";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.10";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.10";
+import { initPlanMeny } from "./plan-meny.js?v=6.10";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.10";
+import { initYtSpiller } from "./yt-spiller.js?v=6.10";
+import { initVisning, visningTikk } from "./visning.js?v=6.10";
+import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.10";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.10";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.10";
+import { askChoice } from "./ui-modal.js?v=6.10";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.10";
+import { currentEntityValues } from "./entity-values.js?v=6.10";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.10";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -116,6 +117,17 @@ function openDetail(artist) {
   modalOpen(detailModal);
 }
 
+// «Fra timene» på forsiden (v6.10, U1): de delte timene, nyeste først.
+// Skjult til bryteren er på, og når ingen timer er delt.
+function renderFraTimene() {
+  const seksjon = document.getElementById("fra-timene-section");
+  const liste = document.getElementById("fra-timene-liste");
+  if (!seksjon || !liste || !explore) return;
+  const timer = fraTimeneSynlig() ? delteTimerNaa() : [];
+  seksjon.hidden = !timer.length;
+  liste.innerHTML = fraTimeneRaderHtml(timer);
+}
+
 function setupProposeButtons() {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-propose-type]");
@@ -166,6 +178,10 @@ function setupExplore() {
   // Tiår (v6.07, S1) åpner tiårsvinduet der man slapp; Lytt (U7) spillelistene.
   document.getElementById("btn-tiar")?.addEventListener("click", () => explore.openDecadeList());
   document.getElementById("btn-lytt")?.addEventListener("click", () => explore.openLytt());
+  document.getElementById("fra-timene-liste")?.addEventListener("click", (e) => {
+    const rad = e.target.closest("[data-time-id]");
+    if (rad) explore.openTime(rad.dataset.timeId);
+  });
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
   const btnInstrumenter = document.getElementById("btn-instrumenter");
@@ -188,7 +204,15 @@ function setupExplore() {
   // prioritetsmerket på kortene.
   const prioBar = document.getElementById("sp-prio-bar");
   // Samme grunn som over: .priority-filter-bar har display: flex.
-  if (prioBar && SKJUL_I_STUDENTVISNING.viktighetsgrad) prioBar.style.display = "none";
+  const oppdaterPrioBar = () => { if (prioBar) prioBar.style.display = SKJUL_I_STUDENTVISNING.viktighetsgrad ? "none" : ""; };
+  oppdaterPrioBar();
+  // Bryterne kan endres mens siden står åpen (v6.10, U4): filteret, kortene
+  // (prioritetsmerket, merkeknappen) og «Fra timene» følger med.
+  document.addEventListener("pensum:synlighet", () => {
+    oppdaterPrioBar();
+    renderArtistViewsIfVisible();
+    renderFraTimene();
+  });
 
   const btnArtister = document.getElementById("btn-artister");
   if (btnArtister) btnArtister.addEventListener("click", openArtistModal);
@@ -755,7 +779,7 @@ function init() {
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
     // tegnes på nytt her også.
-    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); samleTikk(); visningTikk(); },
+    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); samleTikk(); visningTikk(); renderFraTimene(); },
     // Tiårstekstene: en ?vis=tiår-lenke venter på at de har landet.
     onDecades: () => provVisMaal(),
     // En åpen Podkaster-fane skal vise nye episoder uten å lukkes/åpnes.

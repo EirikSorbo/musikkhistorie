@@ -2,12 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/punkter.js?v=6.09";
-import { normalizeArtist, buildArtistDoc } from "../../js/artist-normalize.js?v=6.09";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=6.09";
-import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/artist-schema.js?v=6.09";
-import { resolveDesc } from "../../js/genre-descriptions.js?v=6.09";
-import { validateArtistsForImport } from "../../js/import-format.js?v=6.09";
+import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/punkter.js?v=6.10";
+import { normalizeArtist, buildArtistDoc } from "../../js/artist-normalize.js?v=6.10";
+import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js?v=6.10";
+import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/artist-schema.js?v=6.10";
+import { resolveDesc } from "../../js/genre-descriptions.js?v=6.10";
+import { validateArtistsForImport } from "../../js/import-format.js?v=6.10";
 
 // Oppsummeringspunktene (v5.50): 3–5 punkter per beskrivelse på artist-,
 // sjanger- (main) og teknologikortet. Bare læreren skriver dem.
@@ -116,7 +116,7 @@ test("oppsettet: editorfelt, kort og skjuling utenfor presentasjonen", () => {
   assert.match(les("js/genealogy.js"), /sekt\("punkter", punkterHtml\(resolved\.punkter, (lc|lcSelv)\)\)/);
   assert.match(les("js/ui-tech.js"), /sekt\("punkter", punkterHtml\(t\.punkter, (lc|medSelv\(lc, \{ tech: t\.id \}\))\)\)/);
   assert.match(les("js/feature-flags.js"), /export const PUNKTER_BARE_I_PRESENTASJON = true;/);
-  assert.match(les("js/feature-flags.js"), /classList\.toggle\("skjul-punkter", PUNKTER_BARE_I_PRESENTASJON\)/);
+  assert.match(les("js/feature-flags.js"), /classList\.toggle\("skjul-punkter", grunn\.punkter\)/);
   assert.match(les("css/styles.css"), /html\.skjul-punkter body:not\(\.presentasjon\) \[data-sekt="punkter"\] \{ display: none !important; \}/);
   // Editorene lagrer via de delte hjelperne.
   assert.match(les("js/teacher-artists.js"), /punkter: +lesPunktfelt\(\$\("#ed-punkter"\)\)/);
@@ -139,7 +139,7 @@ test("undersjanger- og koblingskortet har ingen nivåmerker: alt vises fra nivå
 });
 
 test("delposter (v5.51): navn + punkter er en delpost, et ekte kort er det ikke", async () => {
-  const { erDelpost } = await import("../../js/import-format.js?v=6.09");
+  const { erDelpost } = await import("../../js/import-format.js?v=6.10");
   assert.equal(erDelpost({ name: "X", punkter: ["a", "b", "c"] }), true);
   assert.equal(erDelpost({ name: "X", metaGenre: "", description: "  " }), true);
   assert.equal(erDelpost({ name: "X", metaGenre: "Jazz" }), false);

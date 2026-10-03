@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=6.09";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.10";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -275,6 +275,10 @@ export function normaliserPlaner(raa) {
       laget: typeof plan.laget === "string" ? plan.laget : "",
       stopp,
     };
+    // En TIME (v6.10, U1): en plan med dato for timen, og delt = vist for
+    // studentene under «Fra timene». Bare gyldige verdier følger med.
+    if (typeof plan.dato === "string" && /^\d{4}-\d{2}-\d{2}$/.test(plan.dato)) ut[id].dato = plan.dato;
+    if (plan.delt === true) ut[id].delt = true;
     // Samleøktenes merker (v5.43): { <øktId>: løpenummer }, se brukSamleOps.
     if (plan.samle && typeof plan.samle === "object" && !Array.isArray(plan.samle)) {
       const merker = Object.fromEntries(Object.entries(plan.samle).filter(([, n]) => Number.isInteger(n) && n > 0));
@@ -824,4 +828,29 @@ export function sjangerPlassering(sekt) {
   if (sekt === "stripe" || sekt === "era") return "topp";
   if (sekt === "artister") return "hoyre";
   return "venstre";
+}
+
+// ---------------------------------------------------------------------------
+//  TIMENE (v6.10, strukturgjennomgangen U1)
+// ---------------------------------------------------------------------------
+// Det læreren viste i en visning, i rekkefølge, som stopp i en time. Hvert mål
+// én gang (første gang det ble vist), INGEN grense på antallet (brukerkrav
+// 2026-10-03: en time kan fort passere 30 kort). Ugyldige verdier faller bort.
+export function timeStopp(logg) {
+  const sett = new Set();
+  const ut = [];
+  for (const vis of Array.isArray(logg) ? logg : []) {
+    if (typeof vis !== "string" || !parseVisVerdi(vis) || sett.has(vis)) continue;
+    sett.add(vis);
+    ut.push({ vis });
+  }
+  return ut;
+}
+
+// De delte timene, nyeste først (dato, så laget), for «Fra timene».
+export function delteTimer(planer) {
+  return Object.entries(planer || {})
+    .filter(([, p]) => p && p.delt === true && Array.isArray(p.stopp) && p.stopp.length)
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => String(b.dato || "").localeCompare(String(a.dato || "")) || String(b.laget || "").localeCompare(String(a.laget || "")));
 }

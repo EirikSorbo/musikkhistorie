@@ -14,17 +14,18 @@
 //  ikke stabler lyttere. Åpne/lukkede lister overlever re-render via openPanels.
 // ============================================================================
 
-import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=6.09";
-import { modalOpen } from "./ui.js?v=6.09";
-import { renderPendingEditsList } from "./teacher-review.js?v=6.09";
-import { openDetail } from "./teacher-artists.js?v=6.09";
-import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=6.09";
-import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=6.09";
-import { storyOrder } from "./story-format.js?v=6.09";
-import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=6.09";
-import { escapeHtml, pct } from "./ui-helpers.js?v=6.09";
-import { deleteTimeforslag } from "./store.js?v=6.09";
-import { askChoice } from "./ui-modal.js?v=6.09";
+import { state, ctx, renderList, setContentCheck } from "./teacher-state.js?v=6.10";
+import { modalOpen } from "./ui.js?v=6.10";
+import { renderPendingEditsList } from "./teacher-review.js?v=6.10";
+import { openDetail } from "./teacher-artists.js?v=6.10";
+import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js?v=6.10";
+import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js?v=6.10";
+import { storyOrder } from "./story-format.js?v=6.10";
+import { DECADES, isVisible, erTilModerasjon } from "./limits.js?v=6.10";
+import { escapeHtml, pct } from "./ui-helpers.js?v=6.10";
+import { deleteTimeforslag, savePage } from "./store.js?v=6.10";
+import { synlighetVerdier } from "./feature-flags.js?v=6.10";
+import { askChoice } from "./ui-modal.js?v=6.10";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -191,6 +192,7 @@ export function renderDesk(el) {
     ${inboxHtml}
     ${timeforslagHtml()}
     <div class="desk-grid">${cats.map(catCard).join("")}</div>
+    ${synlighetHtml()}
   `;
 
   el.onclick = (e) => {
@@ -212,6 +214,15 @@ export function renderDesk(el) {
 
     const uncheckBtn = hit("[data-desk-uncheck]");
     if (uncheckBtn) return checkItem(uncheckBtn.dataset.deskUncheck, uncheckBtn.dataset.id, false);
+
+    const sum = hit(".desk-synlighet > summary");
+    if (sum) {
+      const d = sum.parentElement;
+      setTimeout(() => (d.open ? openPanels.add("synlighet") : openPanels.delete("synlighet")));
+      return;
+    }
+    const syn = hit("[data-synlig]");
+    if (syn && syn.matches("input")) return endreSynlighet(syn.dataset.synlig, syn.checked, syn);
 
     const slett = hit("[data-desk-time-slett]");
     if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
@@ -236,6 +247,63 @@ export function renderDesk(el) {
         break;
     }
   };
+}
+
+// ---------------------------------------------------------------------------
+//  SYNLIG FOR STUDENTENE (v6.10, strukturgjennomgangen U4)
+// ---------------------------------------------------------------------------
+//  Bryterne som før sto i js/feature-flags.js, nå i content/synlighet, så et
+//  kort kan slippes fri uten kodeendring. Hver rad er én bryter for brukeren,
+//  selv når den styrer flere flagg (sjangerhistoriene har to innganger, som
+//  MÅ følge hverandre). Avhuket = synlig for studentene.
+const SYNLIGHET_RADER = [
+  { id: "historier", navn: "Sjangerhistoriene", student: ["metasjangerhistorier"], hub: ["sb-historier"] },
+  { id: "koblinger", navn: "Koblingstekstene (i slektstreet og på sjangerkortet)", student: ["koblingsbeskrivelser"] },
+  { id: "horEtter", navn: "«Hør etter» på sjangerkortene", student: ["horEtter"] },
+  { id: "viktighet", navn: "Viktighetsgraden", student: ["viktighetsgrad"] },
+  { id: "fraTimene", navn: "«Fra timene» (delte timer på forsiden og i Lytt)", student: ["fraTimene"] },
+  { id: "omHistorie", navn: "Om historie", hub: ["sb-om-historie"] },
+  { id: "rotter", navn: "Røtter", hub: ["sb-rotter"] },
+  { id: "himmel", navn: "Sjangerhimmelen", hub: ["sb-himmel"] },
+  { id: "referanser", navn: "Referanser", hub: ["sb-referanser"] },
+  { id: "guide", navn: "Slik bruker du appen", hub: ["sb-guide"] },
+  { id: "utskrift", navn: "Utskrift", student: ["utskrift"] },
+  { id: "merking", navn: "Merking (stemming)", student: ["merking"] },
+  { id: "punkter", navn: "Oppsummeringspunktene på kortene (ellers bare i visningen)", punkter: true },
+];
+
+function synligNaa(v, rad) {
+  if (rad.punkter) return !v.punkter;
+  return [...(rad.student || []).map((k) => !v.student[k]), ...(rad.hub || []).map((k) => !v.hub[k])].every(Boolean);
+}
+
+function synlighetHtml() {
+  const v = synlighetVerdier(state.content?.synlighet);
+  // Åpen/lukket overlever omtegningen (hvert innholds-snapshot tegner på nytt).
+  return `<details class="desk-synlighet"${openPanels.has("synlighet") ? " open" : ""}>
+    <summary>Synlig for studentene</summary>
+    <p class="muted desk-synlighet-hint">Avhuket er synlig for studentene. Du ser alltid alt selv.</p>
+    <div class="desk-synlighet-liste">${SYNLIGHET_RADER.map((r) => `<label class="desk-synlighet-rad">
+      <input type="checkbox" data-synlig="${r.id}"${synligNaa(v, r) ? " checked" : ""}> ${escapeHtml(r.navn)}</label>`).join("")}</div>
+  </details>`;
+}
+
+async function endreSynlighet(id, synlig, boks) {
+  const rad = SYNLIGHET_RADER.find((r) => r.id === id);
+  if (!rad) return;
+  const v = synlighetVerdier(state.content?.synlighet);
+  if (rad.punkter) v.punkter = !synlig;
+  (rad.student || []).forEach((k) => { v.student[k] = !synlig; });
+  (rad.hub || []).forEach((k) => { v.hub[k] = !synlig; });
+  boks.disabled = true;
+  try {
+    await savePage("synlighet", v);
+  } catch (e) {
+    boks.checked = !synlig;
+    alert(`Fikk ikke lagret (${e?.message || e}).`);
+  } finally {
+    boks.disabled = false;
+  }
 }
 
 // Navn fra timen (v5.82): lærerens notater fra visningen (tasten L), til

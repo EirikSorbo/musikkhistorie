@@ -36,8 +36,9 @@ import {
   subscribeContent,
   subscribeDecades,
   subscribePodcasts,
-} from "./store.js?v=6.09";
-import { applyGenealogyDoc } from "./genre-model.js?v=6.09";
+} from "./store.js?v=6.10";
+import { applyGenealogyDoc } from "./genre-model.js?v=6.10";
+import { brukSynlighet } from "./feature-flags.js?v=6.10";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan
@@ -119,6 +120,8 @@ export function subscribeSharedData(state, hooks = {}) {
     // snapshotet — ingen egen lytter, ingen ekstra lesinger. Modellen bygges
     // FØR sidens hook kalles, så alt som tegnes i hooken ser ferskt vokabular.
     applyGenealogyDoc(state.content.genealogy);
+    // Bryterne for hva studentene ser (v6.10, U4): content/synlighet.
+    brukSynlighet(state.content.synlighet);
     onContent?.(state.content);
   });
 

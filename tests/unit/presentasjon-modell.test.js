@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=6.09";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=6.09";
+import { metaRader } from "../../js/ui-helpers.js?v=6.10";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=6.10";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -642,7 +642,8 @@ test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort si
   assert.match(css, /\.ai-track \{[^}]*height: 0\.75rem;/);
   // «Rediger pensumet»: kortene side om side, ikke én kolonne.
   assert.match(css, /\.dash-grid--smale \{ grid-template-columns: repeat\(auto-fill, minmax\(150px, 240px\)\);/);
-  assert.match(readFileSync(new URL("../../teacher.html", import.meta.url), "utf8"), /class="dash-grid dash-grid--smale"/);
+  // v6.10 (U5): «Rediger pensumet» er én knapp, ikke et rutenett med ett kort.
+  assert.match(readFileSync(new URL("../../teacher.html", import.meta.url), "utf8"), /id="btn-t-sjangertre">Sjangertre-editor/);
   // Lytteeksempler i kinovisning som standard i presentasjonen; egen
   // fullskjerm bare når siden ikke alt er i fullskjerm, og den forlates ved lukking.
   const spiller = kilde("yt-spiller.js");
@@ -790,13 +791,13 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
   const spiller = kilde("presentasjon.js");
   assert.match(spiller, /\} else \{\n(\s*\/\/[^\n]*\n)*\s*for \(const k of \[LAGRING\.plan, LAGRING\.stopp\]\) \{ try \{ sessionStorage\.removeItem\(k\); \} catch \(e\) \{\} \}/);
   assert.match(spiller, /export function aktivPlanId\(\)/);
-  assert.match(spiller, /export function avsluttPresentasjon\(\)/);
+  assert.match(spiller, /export (async )?function avsluttPresentasjon\(\)/);   // async fra v6.10 («Lagre som time»)
 });
 
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=6.09";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=6.10";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);
