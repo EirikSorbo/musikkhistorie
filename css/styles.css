@@ -1686,18 +1686,19 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 /* Artistlista bak «Artister» (v5.98, brukerønske 2026-10-01): en ren liste
    uten kort per artist, bare en diskret strek mellom radene, navnet i normal
    vekt og dempet farge, årene til høyre. Gjelder hele listevinduet (sjangre,
-   instrumenter og lærerens oversikt); .result-row ellers er urørt. */
-#modal-artistliste .result-list { gap: 0; }
-#modal-artistliste .result-row {
+   instrumenter og lærerens oversikt) og fra v6.19 «Liste» i artistsøket
+   (#filter-results); .result-row ellers er urørt. */
+:is(#modal-artistliste, #filter-results) .result-list, #filter-results.result-list { gap: 0; }
+:is(#modal-artistliste, #filter-results) .result-row {
   background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
   padding: 0.55rem 0.25rem; font-size: 0.95rem;
 }
-#modal-artistliste .result-row:last-child { border-bottom: 0; }
-#modal-artistliste .result-row:hover { background: var(--surface-2); transform: none; }
-#modal-artistliste .result-name { min-width: 0; font-weight: 400; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
-#modal-artistliste .result-row:hover .result-name { color: var(--accent-2); }
-#modal-artistliste .result-meta { justify-content: flex-end; }
-#modal-artistliste .result-work { font-style: normal; }
+:is(#modal-artistliste, #filter-results) .result-row:last-child { border-bottom: 0; }
+:is(#modal-artistliste, #filter-results) .result-row:hover { background: var(--surface-2); transform: none; }
+:is(#modal-artistliste, #filter-results) .result-name { min-width: 0; font-weight: 400; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
+:is(#modal-artistliste, #filter-results) .result-row:hover .result-name { color: var(--accent-2); }
+:is(#modal-artistliste, #filter-results) .result-meta { justify-content: flex-end; }
+:is(#modal-artistliste, #filter-results) .result-work { font-style: normal; }
 /* Listevinduene (v5.99, brukerønske 2026-10-01): artistlista og spillelista
    er en tredjedel smalere enn de andre innholdskortene (41.25rem, 660 px i
    appen), også i visningsmodus fra v6.00, der bredden vokser med teksten.
@@ -1739,6 +1740,21 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   justify-content: flex-end;
   margin: 10px 0 4px;
 }
+/* Visningsvelgeren i artistsøket (v6.19): tre sammenhengende valg, det
+   valgte trykket inn. Samme høyde og rundhet som .btn.small. */
+.vis-velger {
+  display: inline-flex; gap: 2px; padding: 2px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+}
+.vis-velger button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+  border: 0; border-radius: 8px; background: none; cursor: pointer;
+  font: inherit; font-size: 0.82rem; color: var(--muted);
+}
+.vis-velger button:hover { color: var(--text); }
+.vis-velger button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.vis-velger button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.vis-velger svg { width: 14px; height: 14px; flex: none; }
 .filter-bar input,
 .filter-bar select { padding: 8px 11px; font-size: 0.88rem; }
 /* Student «Finn artister»: handlingsknappene på egen rad under tittelen,

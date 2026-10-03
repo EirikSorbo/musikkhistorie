@@ -5,11 +5,11 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=6.18";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=6.18";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=6.18";
-import { currentEntityValues } from "./entity-values.js?v=6.18";
-import { erTilModerasjon } from "./limits.js?v=6.18";
+import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=6.19";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=6.19";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=6.19";
+import { currentEntityValues } from "./entity-values.js?v=6.19";
+import { erTilModerasjon } from "./limits.js?v=6.19";
 
 // Dagens verdier bor i den delte modulen (studentens retur-editor leser de
 // samme): her bindes bare lærersidens state.

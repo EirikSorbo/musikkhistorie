@@ -1,27 +1,27 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.18";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.18";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.18";
-import { onGenreModelChanged } from "./genre-model.js?v=6.18";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.18";
-import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.18";
-import { imgTag } from "./ui-helpers.js?v=6.18";
-import { renderSpotlightCards, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.18";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.18";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.18";
-import { initExplore } from "./explore.js?v=6.18";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.18";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.18";
-import { initPlanMeny } from "./plan-meny.js?v=6.18";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.18";
-import { initYtSpiller } from "./yt-spiller.js?v=6.18";
-import { initVisning, visningTikk } from "./visning.js?v=6.18";
-import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.18";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.18";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.18";
-import { askChoice } from "./ui-modal.js?v=6.18";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.18";
-import { currentEntityValues } from "./entity-values.js?v=6.18";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.18";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.19";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.19";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.19";
+import { onGenreModelChanged } from "./genre-model.js?v=6.19";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.19";
+import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.19";
+import { imgTag } from "./ui-helpers.js?v=6.19";
+import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.19";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.19";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.19";
+import { initExplore } from "./explore.js?v=6.19";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.19";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.19";
+import { initPlanMeny } from "./plan-meny.js?v=6.19";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.19";
+import { initYtSpiller } from "./yt-spiller.js?v=6.19";
+import { initVisning, visningTikk } from "./visning.js?v=6.19";
+import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.19";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.19";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.19";
+import { askChoice } from "./ui-modal.js?v=6.19";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.19";
+import { currentEntityValues } from "./entity-values.js?v=6.19";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.19";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -88,9 +88,10 @@ const handlers = {
 
 let explore = null;
 
-// Visningsmodus for filtertreff: galleri (standard fra v6.11, brukervalg
-// 2026-10-03; fra v6.05 til v6.10 en navneliste) eller artistkort («Vis
-// kort»). Nullstilles ikke, huskes til sidelast.
+// Visningsmodus for filtertreff: "galleri" (standard fra v6.11, brukervalg
+// 2026-10-03), "liste" (navnelista, tilbake som valg i v6.19) eller "kort"
+// (artistkortene). Nullstilles ikke, huskes til sidelast.
+const FILTER_VISNINGER = ["galleri", "liste", "kort"];
 let filterView = "galleri";
 
 // Galleriet (v6.11): bilde, navn, sjanger, undersjanger, instrument og
@@ -379,14 +380,16 @@ function renderFilterResults() {
   const el = document.getElementById("filter-results");
   if (!el) return;
 
-  // Uten søk og filter: bare dagens artist. Med: kompakt navneliste, med
-  // mindre «Vis kort» er valgt (da står kortene under for visningen).
+  // Uten søk og filter: bare dagens artist. Med: galleriet eller lista her,
+  // eller ingenting når «Kort» er valgt (da står kortene under, #artist-list).
+  // Lista setter sin egen klasse på beholderen; de andre visningene tar den bort.
+  el.className = "";
   if (!hasFilters()) {
     renderDagensIArtister(el);
     return;
   }
   delete el.dataset.dagensSig;
-  if (filterView !== "galleri") {
+  if (filterView === "kort") {
     el.innerHTML = "";
     return;
   }
@@ -397,7 +400,8 @@ function renderFilterResults() {
 
   // Kronologisk, som kortene (renderArtists sorterer filtrerte treff slik).
   pool.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
-  el.innerHTML = artistGalleriHtml(pool);
+  if (filterView === "liste") renderResultList(el, pool, openDetail);
+  else el.innerHTML = artistGalleriHtml(pool);
 }
 
 // ----------------------------------------------------------------------------
@@ -408,11 +412,11 @@ function renderList() {
   if (!state.artists.length && !state.artistsLoaded) return;
   const el = $("#artist-list");
   if (!el) return;
-  // Kortene vises bare når søk eller filter er aktivt OG «Vis kort» er valgt
+  // Kortene vises bare når søk eller filter er aktivt OG «Kort» er valgt
   // (v6.05, D3). Ellers står #filter-results for visningen: dagens artist uten
   // filter, navnelista med. Forrige kortrunde kan ha en scroll-lytter for
   // stegvis bygging; den må bort sammen med kortene.
-  if (!hasFilters() || filterView === "galleri") {
+  if (!hasFilters() || filterView !== "kort") {
     if (el._listOnScroll) {
       document.removeEventListener("scroll", el._listOnScroll, true);
       el._listOnScroll = null;
@@ -423,13 +427,14 @@ function renderList() {
   renderArtists(el, { ...state, handlers, linkCtx: explore.buildLinkCtx() });
 }
 
-// «Vis liste» / «Vis kort»-knappen: kun synlig når filter er aktivt.
+// Visningsvelgeren (Galleri, Liste, Kort): kun synlig når søk eller filter
+// er aktivt; det valgte står trykket inn.
 function updateViewToggle() {
-  const btn = document.getElementById("sp-view-toggle");
-  if (!btn) return;
-  if (!hasFilters()) { btn.style.display = "none"; return; }
-  btn.style.display = "";
-  btn.textContent = filterView === "galleri" ? "Vis kort" : "Vis galleri";
+  const gruppe = document.getElementById("sp-view-toggle");
+  if (!gruppe) return;
+  gruppe.hidden = !hasFilters();
+  gruppe.querySelectorAll("[data-treffvisning]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.treffvisning === filterView)));
 }
 
 // Forslag-lista og filterresultatene bor begge inne i #modal-artister. Å bygge
@@ -484,10 +489,11 @@ function setupFilters() {
   const rerender = () => renderArtistViews();
   const rerenderDebounced = debounce(rerender, 200);
 
-  // «Vis liste» / «Vis kort» bytter mellom kompakt navneliste og artistkort.
-  const viewBtn = document.getElementById("sp-view-toggle");
-  if (viewBtn) viewBtn.addEventListener("click", () => {
-    filterView = filterView === "galleri" ? "kort" : "galleri";
+  // Visningsvelgeren: galleri, navneliste eller artistkort.
+  document.getElementById("sp-view-toggle")?.addEventListener("click", (e) => {
+    const valg = e.target.closest("[data-treffvisning]")?.dataset.treffvisning;
+    if (!FILTER_VISNINGER.includes(valg) || valg === filterView) return;
+    filterView = valg;
     renderArtistViews();
   });
   // Eksplisitt kobling element → filternøkkel: filterArtists leser mainGenre/
