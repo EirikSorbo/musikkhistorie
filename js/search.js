@@ -2,8 +2,9 @@
 //  SØK — én indeks over alt innholdet i appen
 // ----------------------------------------------------------------------------
 //  Bygger en flat liste over ALT som er skrevet i pensumet — artister, sjangre,
-//  undersjangre, sjangerhistorier, innovasjonskort, tiårstekster, innholdssider,
-//  instrumentsammendrag, sjangerkoblinger og podkaster — og rangerer treff i
+//  undersjangre, sjangerhistorier, metasjanger-oversikter, innovasjonskort,
+//  tiårstekster, innholdssider, instrumentsammendrag, sjangerkoblinger og
+//  podkaster — og rangerer treff i
 //  den. Hver post bærer med seg hvordan den åpnes (`apne`), så visningen bare
 //  sender payloaden videre til ruteren i explore-search.js. Samme grep som
 //  Referanser-kortet bruker for sine `opphav`.
@@ -17,10 +18,10 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=6.14";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=6.14";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=6.14";
-import { escapeHtml } from "./util.js?v=6.14";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=6.15";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=6.15";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=6.15";
+import { escapeHtml } from "./util.js?v=6.15";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -37,7 +38,7 @@ export const TYPE_LABEL = {
   instrument: "Instrument",
   kobling: "Sjangerkobling",
   podkast: "Podkast",
-  oversikt: "Oversikt",
+  oversikt: "Metasjanger",
   galleri: "Artistgalleri",
 };
 
@@ -56,15 +57,15 @@ export const TYPE_FLERTALL = {
   instrument: "Instrumenter",
   kobling: "Sjangerkoblinger",
   podkast: "Podkaster",
-  oversikt: "Oversikter",
+  oversikt: "Metasjangre",
   galleri: "Artistgallerier",
 };
 
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
-  "artist", "sjanger", "rot", "undersjanger", "tech", "hendelse",
-  "historie", "oversikt", "galleri", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
+  "artist", "oversikt", "sjanger", "rot", "undersjanger", "tech", "hendelse",
+  "historie", "galleri", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
 ];
 
 const SIDE_TITTEL = { rotter: "Røtter før 1910", omHistorie: "Om historie", appGuide: "Slik bruker du appen" };
@@ -163,13 +164,27 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
   }
 
   // --- Metasjanger-oversiktene (v5.94) ---------------------------------------
-  // Bare for visningsmodus: Visning-editoren ber om dem (visningsflater), så
-  // de kan legges inn som stopp i en kjøreplan. Appens eget søk viser dem ikke.
+  // Søkbare for alle fra v6.15 (brukervalg 2026-10-03): oversikten er
+  // metasjangerens egen side (S2, åpen for studentene), og uten den ga et søk
+  // på «Klubbmusikk» ingenting om metasjangeren. Før sto de bare i Visning-
+  // editorens søk (visningsflater), som stopp i en kjøreplan.
+  // Teksten (og utdraget i treffet) er familiens sjangre, så et søk på en
+  // sjanger også viser hvilken metasjanger den hører til.
+  for (const meta of storyOrder(genreDescs)) {
+    const sjangre = GENEALOGY.filter((n) => n.g === meta).map((n) => n.f || n.l);
+    const liste = sjangre.length > 1 ? `${sjangre.slice(0, -1).join(", ")} og ${sjangre[sjangre.length - 1]}` : sjangre.join("");
+    // Tittelen er navnet alene: et søk på «Jazz» skal gi metasjangeren og
+    // sjangeren med samme navn som de to første gruppene, ikke metasjangeren
+    // bak undersjangre og artister. Ved likt poeng står metasjangeren først
+    // (TYPE_ORDER): oversikten samler hele familien.
+    ut.push(post("oversikt", meta, meta, "Oversikt over metasjangeren",
+      [`Metasjanger${liste ? ` med ${sjangre.length === 1 ? "sjangeren" : "sjangrene"} ${liste}` : ""}`],
+      { hva: "oversikt", id: meta }));
+  }
   if (visningsflater) {
     for (const meta of storyOrder(genreDescs)) {
-      ut.push(post("oversikt", meta, `Oversikt over ${meta}`, "Visningsmodus",
-        [meta, "oversikt metasjanger"], { hva: "oversikt", id: meta }));
-      // Artistgalleriene (v5.96), én per sjanger i de aktive familiene.
+      // Artistgalleriene (v5.96), én per sjanger i de aktive familiene. Bare
+      // for visningsmodus.
       for (const n of GENEALOGY.filter((x) => x.g === meta)) {
         ut.push(post("galleri", n.l, `Artistgalleri: ${n.f || n.l}`, `Visningsmodus · ${meta}`,
           [n.l, n.f, "galleri bilder"], { hva: "galleri", id: n.l }));

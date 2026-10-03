@@ -3,7 +3,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { byggIndeks, sok, utdrag, marker, normaliser, delOppSok } from "../../js/search.js?v=6.14";
+import { byggIndeks, sok, utdrag, marker, normaliser, delOppSok } from "../../js/search.js?v=6.15";
 
 const STATE = {
   isTeacher: false,
@@ -103,6 +103,23 @@ test("et synlig hub-kort gjør siden søkbar igjen", () => {
   const bareRotter = { "sb-om-historie": true, "sb-guide": true };
   const t = typer(byggIndeks(STATE, { erLærer: false, skjul, skjulHub: bareRotter }));
   assert.equal(t.side, 1, "Røtter er åpen og skal finnes i søket");
+});
+
+// v6.15 (brukervalg 2026-10-03): metasjanger-oversiktene er søkbare for alle,
+// ikke bare i Visning-editoren. Artistgalleriene er fortsatt bare der.
+test("metasjangrene finnes i søket, også for studenten", () => {
+  const skjul = { metasjangerhistorier: true, koblingsbeskrivelser: true };
+  const indeks = byggIndeks(STATE, { erLærer: false, skjul });
+  const t = typer(indeks);
+  assert.ok(t.oversikt >= 9, "én oversikt per metasjanger");
+  assert.equal(t.galleri, undefined, "galleriene bare i Visning-editoren");
+  assert.ok(typer(byggIndeks(STATE, { erLærer: false, skjul, visningsflater: true })).galleri > 0);
+  const res = sok(indeks, "klubbmusikk");
+  assert.equal(res.grupper[0].type, "oversikt");
+  assert.deepEqual(res.grupper[0].treff[0].apne, { hva: "oversikt", id: "Klubbmusikk" });
+  // Samme navn som en sjanger: de to er de to første gruppene.
+  const jazz = sok(indeks, "jazz");
+  assert.deepEqual(jazz.grupper.slice(0, 2).map((g) => g.type).sort(), ["oversikt", "sjanger"]);
 });
 
 test("artisten finnes på alt som står på kortet", () => {
