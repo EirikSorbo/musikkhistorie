@@ -1,9 +1,9 @@
 import { SEED_GENRE_DESCS } from "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY } from "../../js/genre-model.js?v=6.12";
-import { storyOrder, STORY_SKJULT } from "../../js/story-format.js?v=6.12";
-import { periodGroups, periodAxis, pctAv, periodColor, periodSignatur, PERIOD_COLORS, familieNyanse } from "../../js/genre-periods.js?v=6.12";
+import { GENEALOGY } from "../../js/genre-model.js?v=6.13";
+import { storyOrder, STORY_SKJULT } from "../../js/story-format.js?v=6.13";
+import { periodGroups, periodAxis, pctAv, periodColor, periodSignatur, PERIOD_COLORS, familieNyanse } from "../../js/genre-periods.js?v=6.13";
 
 // «Sjangerperioder» (v5.20) skal være DYNAMISK: sjangrene fra treet, årstallene
 // fra beskrivelsene, metasjangrene fra de synlige historiene. Testene låser

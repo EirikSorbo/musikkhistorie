@@ -5,26 +5,26 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.12";
-import { modalBytt } from "./ui-modal.js?v=6.12";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.12";
-import { MODAL_HTML } from "./explore-modals.js?v=6.12";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.12";
-import { openVarmekart } from "./explore-varmekart.js?v=6.12";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.12";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.12";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.12";
-import { openDecadeList, openDecade } from "./explore-decade.js?v=6.12";
-import { openLytt } from "./explore-lytt.js?v=6.12";
-import { openTime } from "./explore-timer.js?v=6.12";
-import { openReferanser } from "./explore-referanser.js?v=6.12";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.12";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.12";
-import { openVisningssider } from "./explore-visningssider.js?v=6.12";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.12";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.12";
-import { openSok, wireSok } from "./explore-search.js?v=6.12";
-import { erPresentasjon } from "./presentasjon.js?v=6.12";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.13";
+import { modalBytt } from "./ui-modal.js?v=6.13";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.13";
+import { MODAL_HTML } from "./explore-modals.js?v=6.13";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.13";
+import { openVarmekart } from "./explore-varmekart.js?v=6.13";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.13";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.13";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.13";
+import { openDecadeList, openDecade } from "./explore-decade.js?v=6.13";
+import { openLytt } from "./explore-lytt.js?v=6.13";
+import { openTime } from "./explore-timer.js?v=6.13";
+import { openReferanser } from "./explore-referanser.js?v=6.13";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.13";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.13";
+import { openVisningssider } from "./explore-visningssider.js?v=6.13";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.13";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.13";
+import { openSok, wireSok } from "./explore-search.js?v=6.13";
+import { erPresentasjon } from "./presentasjon.js?v=6.13";
 
 function injectModals() {
   const wrap = document.createElement("div");

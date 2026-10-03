@@ -3787,6 +3787,16 @@ body.presentasjon .meta-merke { display: none; }
    =========================================================================== */
 /* Tiårsfanene: Teknologi og Samfunn i full bredde, kildene nederst. */
 .dv-panel { display: block; }
+/* v6.12 (brukervalg 2026-10-03): teksten bruker hele bredden (den felles
+   grensen på 68ch ga samme smale spalte som før), og kortet har alltid full
+   høyde, så tiårsstripa øverst og «forrige/neste» nederst står på samme sted
+   uansett hvor mye tiåret har. Tomrom under korte tiår er greit. Ikke i
+   presentasjonen, som har sin egen linjelengde og høyde. */
+body:not(.presentasjon) #modal-decade-view .dv-panel :is(p, .rt, .info-text) { max-width: none; }
+body:not(.presentasjon) #modal-decade-view > .modal { height: 85vh; display: flex; flex-direction: column; }
+body:not(.presentasjon) #modal-decade-view > .modal > * { flex-shrink: 0; }
+body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-top: 16px; }
+@media (max-width: 640px) { body:not(.presentasjon) #modal-decade-view > .modal { height: 92vh; } }
 .dv-panel .kilder { margin-top: 1.2rem; }
 /* Musikk-fanen: tre like brede kolonner (sjangre, artister, lytt). */
 .dv-panel.dv-musikk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1.8rem; align-items: start; }
@@ -3813,25 +3823,25 @@ body.presentasjon .meta-merke { display: none; }
 .dv-kol .pl-alle { margin: 0 0 6px; }
 .dv-musikk .dv-sjanger { font-size: 0.86rem; }
 .dv-musikk .dv-varme { width: 44px; }
-/* Artistgalleriet ved søk og filter (v6.11): fire i bredden på laptop, tre på
-   nettbrett, to på mobil. */
-.ar-galleri { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
-@media (max-width: 900px) { .ar-galleri { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 600px) { .ar-galleri { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; } }
+/* Artistgalleriet ved søk og filter (v6.11; v6.12 brukervalg 2026-10-03:
+   mindre bilder, åtte i bredden på laptop, seks på nettbrett, tre på mobil). */
+.ar-galleri { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 14px 10px; }
+@media (max-width: 900px) { .ar-galleri { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .ar-galleri { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; } }
 .ar-kort {
-  display: flex; flex-direction: column; gap: 2px; padding: 0; border: 0; background: none;
+  display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: 0; border: 0; background: none;
   cursor: pointer; text-align: left; font: inherit; color: var(--text);
 }
 .ar-bilde {
-  display: block; aspect-ratio: 1 / 1; margin-bottom: 6px; overflow: hidden;
-  border-radius: 10px; background: var(--surface-2);
+  display: block; aspect-ratio: 1 / 1; margin-bottom: 5px; overflow: hidden;
+  border-radius: 8px; background: var(--surface-2);
 }
 .ar-bilde img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; transition: transform 0.2s ease; }
 .ar-kort:hover .ar-bilde img, .ar-kort:focus-visible .ar-bilde img { transform: scale(1.03); }
-.ar-initialer { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 600; color: var(--muted-2); }
-.ar-navn { font-weight: 600; font-size: 0.92rem; line-height: 1.3; }
+.ar-initialer { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; color: var(--muted-2); }
+.ar-navn { font-weight: 600; font-size: 0.8rem; line-height: 1.25; overflow-wrap: anywhere; }
 .ar-kort:hover .ar-navn { color: var(--accent-2); }
-.ar-linje { font-size: 0.78rem; line-height: 1.35; color: var(--muted); }
+.ar-linje { font-size: 0.7rem; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
 .ar-sjanger { color: color-mix(in srgb, var(--accent-2) 70%, var(--muted)); }
 /* Lytt (v6.11): tre kolonner side om side; «Fra timene» brytes under. */
 .lytt-bolker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
