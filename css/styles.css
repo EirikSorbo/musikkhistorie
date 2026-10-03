@@ -163,7 +163,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
 .btn.ghost:hover { color: var(--text); }
 .btn.small { padding: 6px 11px; font-size: 0.82rem; border-radius: 9px; }
-/* .compact: for knapperader med tre like brede knapper (f.eks. Undersjangere/
+/* .compact: for knapperader med tre like brede knapper (f.eks. Undersjangre/
    Tidslinje/Varmekart i sjanger-kortet) — mindre padding/tekst og min-width:0
    så de tre får plass på smale skjermer (iPhone) uten at siste går ut. */
 .btn.compact { padding: 9px 8px; font-size: 0.86rem; min-width: 0; white-space: nowrap; }
@@ -917,9 +917,18 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .rt ul, .rt ol { margin: 0 0 8px; padding-left: 20px; }
 /* Siste blokk skal ikke skyve på det som kommer under (kilder, knapper). */
 .story-body > :last-child, .rt > :last-child { margin-bottom: 0; }
-/* [tekst](url)-lenker i historier/sider (f.eks. «Hør:»-lenkene) */
-.story-body a, .rt a[href] { color: var(--accent); font-weight: 500; text-decoration: none; }
-.story-body a:hover, .rt a[href]:hover { text-decoration: underline; }
+/* [tekst](url)-lenker i historier/sider (f.eks. «Hør:»-lenkene). Bare ekte
+   lenker (href): artist-, sjanger- og teknologilenkene fra linkify har ingen
+   href, og skal ha samme farger her som på kortene (v6.05, D4). Før ble alt i
+   historiene og instrumentsammendragene grønt. */
+.story-body a[href], .rt a[href] { color: var(--accent); font-weight: 500; text-decoration: none; }
+.story-body a[href]:hover, .rt a[href]:hover { text-decoration: underline; }
+/* Lytteeksempler får en liten avspillingstrekant foran (v6.05, D4), så de
+   skilles fra sjangerlenkene, som også er grønne. Tegnet i CSS, ikke emoji. */
+a.lytt-lenke::before {
+  content: ""; display: inline-block; width: 0.55em; height: 0.62em; margin-right: 0.32em;
+  background: currentColor; clip-path: polygon(0 0, 100% 50%, 0 100%); vertical-align: 0;
+}
 .story-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .story-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 #se-text { width: 100%; min-height: 420px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; line-height: 1.55; }
@@ -932,6 +941,11 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 
 .kilder { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 .kilde-detalj { color: var(--muted); }
+/* Kildelenkene i én dempet stil overalt (v6.05, D1): før sto de i
+   nettleserens standardblå på kortene og grønt i instrumentsammendragene.
+   div.kilder gir nok vekt til å slå .rt/.story-body-lenkene. */
+div.kilder a[href] { color: var(--muted); font-weight: 400; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
+div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentColor; }
 .kilder ul { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 
 /* ----- Referanser: kildene appen bygger på, samlet (explore-referanser.js) ---
@@ -2902,6 +2916,17 @@ body.presentasjon .pres-artist-hoyre .related-chip { font-size: 0.95rem; }
    artistene i sjangeren som navneliste til høyre. Uten synlig navneliste
    (nivå 1, en sjanger uten artister, eller slått av i tannhjulet) får
    venstre spalte hele bredden. */
+/* I appen (v6.05, K4): samme spalter, men en smal høyrespalte og tettere
+   luft. Presentasjonsreglene under overstyrer på lerretet. På mobil havner
+   lista under teksten, i to kolonner. */
+.pres-sjanger-spalter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(9rem, 13rem); gap: 0 2rem; align-items: start; margin-top: 0.4rem; }
+.pres-sjanger-spalter:not(:has(> .pres-sjanger-hoyre > [data-sekt]:not([hidden]))) { grid-template-columns: minmax(0, 1fr); }
+.pres-sjanger-hoyre:not(:has(> [data-sekt]:not([hidden]))) { display: none; }
+@media (max-width: 640px) {
+  .pres-sjanger-spalter { grid-template-columns: minmax(0, 1fr); }
+  .pres-sjanger-hoyre { margin-top: 1rem; }
+  .sj-artister-liste { columns: 2; column-gap: 1rem; }
+}
 body.presentasjon .pres-sjanger-spalter {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24%);
   gap: 0 3rem; align-items: first baseline; margin-top: 1.6rem;
@@ -2929,8 +2954,8 @@ body.presentasjon .pres-sjanger-hoyre:not(:has(> [data-sekt]:not([hidden]))) { d
    størrelsen får 18 navn (Swing, Pop) plass i én kolonne uten rulling på
    lerretene høydene ellers er målt mot, 1920×1080 og 1280×800 (også
    1512×982); på 1280×720 ruller de to lengste listene 67 px (målt v5.91).
-   I appen er knappen «Artister» inngangen, og lista står ikke der. */
-body:not(.presentasjon) #modal-sjanger [data-sekt="artister"] { display: none !important; }
+   Fra v6.05 står lista i appen også (strukturgjennomgangen K4), i en smalere
+   spalte (reglene for .pres-sjanger-spalter rett over denne kommentaren). */
 .sj-artister {
   border-left: 2px solid color-mix(in srgb, var(--sj-farge, var(--line-strong)) 35%, white);
   padding: 0.15rem 0 0.15rem 1.6rem;

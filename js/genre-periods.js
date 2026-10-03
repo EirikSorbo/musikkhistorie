@@ -8,14 +8,14 @@
 //
 //  Alt er AVLEDET, ingenting lagres, så figuren følger pensumet av seg selv:
 //   - metasjangrene: kalleren sender storyOrder(genreDescs), som følger
-//     navnebytter i treet og holder STORY_SKJULT (Pop, Rock) utenfor
+//     navnebytter i treet og holder eventuelle STORY_SKJULT utenfor
 //   - sjangrene: nodene i treet med n.g === metasjangeren
 //   - årstallene: activeFrom/activeTo på main-nivået i genreDescriptions, med
 //     SAMME oppslag som sjangerkortet (resolveDescAny med [n.l, n.f]), så
 //     figuren og kortet aldri kan vise ulike perioder for samme sjanger
 // ============================================================================
 
-import { resolveDescAny } from "./genre-descriptions.js?v=6.04";
+import { resolveDescAny } from "./genre-descriptions.js?v=6.05";
 
 // tab10-paletten (samme som diagrammet brukeren likte) pluss to ekstra.
 export const PERIOD_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",

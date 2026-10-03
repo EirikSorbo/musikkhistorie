@@ -10,15 +10,15 @@
 //  Galleriet viser de samme artistene som «Artister»-knappen og navnelista på
 //  sjangerkortet (artistsInGenre), i samme rekkefølge.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.04";
-import { imgTag, wireRelated } from "./ui-helpers.js?v=6.04";
-import { safeUrl } from "./util.js?v=6.04";
-import { artistsInGenre } from "./limits.js?v=6.04";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.04";
-import { genreFamilyNodes } from "./ui-timeline.js?v=6.04";
-import { storyOrder } from "./story-format.js?v=6.04";
-import { getState, buildLinkCtx } from "./explore-context.js?v=6.04";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.04";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.05";
+import { imgTag, wireRelated } from "./ui-helpers.js?v=6.05";
+import { safeUrl } from "./util.js?v=6.05";
+import { artistsInGenre } from "./limits.js?v=6.05";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.05";
+import { genreFamilyNodes } from "./ui-timeline.js?v=6.05";
+import { storyOrder } from "./story-format.js?v=6.05";
+import { getState, buildLinkCtx } from "./explore-context.js?v=6.05";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.05";
 
 const metaFarge = (meta) => META_GENRE_COLOR[meta] || FAMILIES.gray?.stroke || "#9bada1";
 const fulltNavn = (etikett) => GENEALOGY.find((n) => n.l === etikett)?.f || etikett;

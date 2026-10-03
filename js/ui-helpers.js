@@ -9,13 +9,13 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=6.04";
-import { wireAllLinks } from "./linkify.js?v=6.04";
-import { renderRichText, renderInline } from "./rich-text.js?v=6.04";
-import { GENDERS } from "./limits.js?v=6.04";
-import { askChoice, modalClose } from "./ui-modal.js?v=6.04";
-import { lesPunkter, punkterTilTekst, punktVarsel } from "./punkter.js?v=6.04";
-export { artistStripHtml } from "./artist-strip.js?v=6.04";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=6.05";
+import { wireAllLinks, nevnteArtister } from "./linkify.js?v=6.05";
+import { renderRichText, renderInline } from "./rich-text.js?v=6.05";
+import { GENDERS } from "./limits.js?v=6.05";
+import { askChoice, modalClose } from "./ui-modal.js?v=6.05";
+import { lesPunkter, punkterTilTekst, punktVarsel } from "./punkter.js?v=6.05";
+export { artistStripHtml } from "./artist-strip.js?v=6.05";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -416,20 +416,50 @@ export function musicExamplesHtml(a) {
   return items.map((m) => {
     const label = escapeHtml(m.label || "Lytt");
     const url = escapeHtml(safeUrl(m.url));
-    return `<a href="${url}" target="_blank" rel="noopener">${label}</a>${musicExampleLabel(m)}`;
+    return `<a class="lytt-lenke" href="${url}" target="_blank" rel="noopener">${label}</a>${musicExampleLabel(m)}`;
   }).join(", ");
 }
 
-// Beslektede artister — utledet naboliste for «oppdag ny musikk». Rangerer
-// andre synlige artister på musikalsk slektskap (delte sjangre/undersjangre,
-// samme metasjanger som lett bonus) med nærhet i tid som tiebreaker. Krever
-// minst én delt sjanger eller undersjanger, så lista aldri blir tilfeldig.
-function relatedArtists(artist, all, { limit = 5 } = {}) {
+// Hvem nevner hvem i beskrivelsene, med lenkingens treffregler. Memoisert på
+// artistlista: et nytt snapshot er en ny liste, så indeksen bygges på nytt
+// når dataene endres, og ellers bare én gang (det koster en gjennomgang av
+// alle beskrivelsene).
+const _omtaler = new WeakMap();
+function omtaleIndeks(all) {
+  let idx = _omtaler.get(all);
+  if (idx) return idx;
+  const ctx = { artists: all };
+  const nevner = new Map(), nevntAv = new Map();
+  const legg = (kart, nokkel, id) => { if (!kart.has(nokkel)) kart.set(nokkel, new Set()); kart.get(nokkel).add(id); };
+  for (const b of all) {
+    if (!b?.description) continue;
+    for (const id of nevnteArtister(b.description, ctx)) {
+      if (id === b.id) continue;
+      legg(nevner, b.id, id);
+      legg(nevntAv, id, b.id);
+    }
+  }
+  idx = { nevner, nevntAv };
+  _omtaler.set(all, idx);
+  return idx;
+}
+
+// Beslektede artister — utledet naboliste for «oppdag ny musikk». Rangeringen
+// (v6.05, strukturgjennomgangen K3): først artistene som nevnes i denne
+// artistens beskrivelse, så de som nevner denne artisten, så delte tre-
+// sjangre, så delte undersjangre, med samme metasjanger som lett bonus og
+// nærhet i tid som tiebreaker. Før veide de frie undersjangertaggene tyngst,
+// så Charlie Parker fikk fem Kansas City-navn og ingen av Gillespie, Monk og
+// Davis. Krever minst én slik forbindelse, så lista aldri blir tilfeldig.
+export function relatedArtists(artist, all, { limit = 5 } = {}) {
   if (!artist || !Array.isArray(all)) return [];
   const sub = new Set(Array.isArray(artist.subGenre) ? artist.subGenre : []);
   const main = new Set(Array.isArray(artist.mainGenre) ? artist.mainGenre : []);
   const meta = artist.metaGenre || null;
   const start = artist.influenceStart || null;
+  const { nevner, nevntAv } = omtaleIndeks(all);
+  const nevnes = nevner.get(artist.id) || new Set();
+  const nevnesAv = nevntAv.get(artist.id) || new Set();
 
   const scored = [];
   for (const b of all) {
@@ -440,7 +470,8 @@ function relatedArtists(artist, all, { limit = 5 } = {}) {
     const bMain = Array.isArray(b.mainGenre) ? b.mainGenre : [];
     const subShared = bSub.filter((s) => sub.has(s)).length;
     const mainShared = bMain.filter((s) => main.has(s)).length;
-    let score = subShared * 5 + mainShared * 3;
+    let score = (nevnes.has(b.id) ? 10 : 0) + (nevnesAv.has(b.id) ? 6 : 0)
+      + mainShared * 4 + subShared * 2;
     if (meta && b.metaGenre === meta) score += 1;      // svak metasjanger-fallback
     if (!score) continue;                              // må dele minst metasjanger
     const diff = start && b.influenceStart ? Math.abs(start - b.influenceStart) : null;

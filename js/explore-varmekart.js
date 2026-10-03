@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.04";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=6.04";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=6.04";
-import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=6.04";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.05";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO } from "./genre-model.js?v=6.05";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=6.05";
+import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=6.05";
 // Aksen, radene og lærerens nivåvelger er delt med sjangerhistoriene (v5.16).
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=6.04";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=6.05";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -71,7 +71,6 @@ export function renderVarmekartBody() {
   // Metaorden er den pedagogiske (META_GENRE_ORDER) — samme rekkefølge som
   // artistenes tidslinje, så de to flatene leses likt; evt. ukjente legges sist.
   const metaOrder = [...META_GENRE_ORDER, ...[...groups.keys()].filter((m) => !META_GENRE_ORDER.includes(m))];
-  const usedFams = new Set();
 
   let groupIdx = 0;
   for (const meta of metaOrder) {
@@ -84,12 +83,11 @@ export function renderVarmekartBody() {
     // Gruppeoverskrift: klikkbar akkordeon-bryter — caret + farget prikk + navn + antall.
     rader += metaGroupHeadHtml({
       prefix: "vk", meta, gColor, open, groupIdx,
-      count: `${labels.length} sjanger${labels.length === 1 ? "" : "e"}`,
+      count: `${labels.length} sjang${labels.length === 1 ? "er" : "re"}`,
       metaAttr: ` data-vk-meta="${escapeHtml(meta)}"`,
     });
     groupIdx++;
 
-    labels.forEach((sj) => usedFams.add(MAIN_GENRE_INFO[sj]?.fam));
     rader += `<div class="vk-group-rows" style="display:${open ? "block" : "none"}">`;
     rader += heatRowsHtml(labels, {
       heat, meta,
@@ -111,13 +109,15 @@ export function renderVarmekartBody() {
   html += `<span style="margin-left:14px;display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:10px;border-radius:5px;background:${HEAT_NODATA};border:1px dashed var(--line-strong)"></span>ingen data ennå</span>`;
   html += `</div>`;
 
-  // Forklaring 2: fargene = slektstreets familier (kun de som faktisk vises).
-  const famLegend = Object.entries(FAMILIES)
-    .filter(([k]) => usedFams.has(k))
-    .map(([, v]) => `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:3px;border-radius:2px;background:${v.stroke}"></span>${escapeHtml(v.label)}</span>`)
+  // Forklaring 2: fargene, med metasjangrenes navn (v6.05, strukturgjennom-
+  // gangen D7). Her sto før slektstreets familienavn («R&B / soul / funk»,
+  // «Disco / electronica», «Røtter»), som ikke stemte med gruppene over.
+  const metaLegend = metaOrder
+    .filter((m) => (groups.get(m) || []).length)
+    .map((m) => `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:3px;border-radius:2px;background:${META_GENRE_COLOR[m] || groupColor(groups.get(m))}"></span>${escapeHtml(m)}</span>`)
     .join("");
   html += `<div style="display:flex;align-items:center;gap:14px;margin-top:8px;font-size:0.78rem;color:var(--muted);flex-wrap:wrap">`;
-  html += `<span>Fargene følger slektstreet:</span>${famLegend}`;
+  html += `<span>Fargene følger metasjangrene:</span>${metaLegend}`;
   html += `</div>`;
 
   body.innerHTML = html;

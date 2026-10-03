@@ -13,47 +13,41 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=6.04";
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=6.05";
 
-// Den KURATERTE historie-rekkefølgen (struktur, ikke innhold): de sju
-// metasjangrene som utgjør MUR114-pensumet. Pop og Rock står i treet for å
-// vise at «noe finnes der», men er utenfor pensumet — se STORY_SKJULT under.
+// Metasjangrenes rekkefølge (struktur, ikke innhold). ÉN rekkefølge i hele
+// appen fra v6.05 (brukervalg 2026-10-03, strukturgjennomgangen S4): den
+// samme som treets META_GENRE_ORDER, som tidslinja, varmekartet og filtrene
+// alltid har brukt. Før sto historiene, periodene og visningssidene i en egen
+// rekkefølge (Blues, Country, Gospel, Jazz …), så de to gruppene av flater
+// leste ulikt.
 //
-// Hip-hop står etter R&B fordi den ble skilt ut derfra (v3.88) og fortsatt
-// leses best i forlengelsen av soul og funk.
+// Lista er bare RESERVEN før treet er lastet; storyOrder() under følger treet.
 //
 // En knapp står også når historien MANGLER: appen viser hull i innholdet i
 // stedet for å skjule dem, og lærer-oversikten teller dem som manglende.
-//
-// Visningene leser storyOrder() UNDER, ikke denne lista direkte: etiketten er
-// identitet også her (en åttende flate ved metasjanger-navnebytte), og uten
-// avledningen ville et navnebytte i tre-editoren gjort historien usynlig i
-// huben mens migreringen meldte at «historien følger med».
-export const STORY_ORDER = ["Blues", "Country", "Gospel", "Jazz", "R&B", "Hip-hop", "Klubbmusikk"];
+export const STORY_ORDER = ["Blues", "Jazz", "R&B", "Hip-hop", "Klubbmusikk", "Gospel", "Country", "Pop", "Rock"];
 
-// Metasjangre som SKAL HA en historie liggende uten å vises (brukervalg
-// 2026-08-22). Pop og Rock står i treet for å vise at «noe finnes der», men er
-// utenfor MUR114-pensumet. Tekstene er skrevet og blir liggende i Firestore
-// (`story` på deres genreDescriptions-dokument) til de eventuelt tas i bruk —
-// de følger med i eksporten som alt annet innhold, så ingenting går tapt.
-//
-// MERK: så lenge de står her, kan de heller ikke redigeres i appen (historie-
-// editoren nås fra knappene). Skal de fram igjen: fjern navnet herfra.
-export const STORY_SKJULT = ["Pop", "Rock"];
+// Metasjangre som skal ha en historie liggende uten å vises. TOM fra v6.05:
+// Pop og Rock var holdt utenfor (brukervalg 2026-08-22), men skal nå vises
+// overalt (brukervalg 2026-10-03). Mekanismen står igjen, så et navn kan
+// legges inn her igjen uten kodeendring andre steder (migreringen og heftet
+// leser lista).
+export const STORY_SKJULT = [];
 
-// Historie-knappene slik de skal vises NÅ:
-//   · den kuraterte rekkefølgen, men uten navn som verken finnes som
-//     metasjanger lenger eller har en historie (etterlatt av et navnebytte)
-//   · pluss metasjangre som HAR en historie uten å stå i lista (det nye navnet
-//     etter et navnebytte) — de legges bakerst i pedagogisk rekkefølge
-//   · minus STORY_SKJULT, som bevisst holdes utenfor visningen
-// Er treet ikke lastet ennå, vises den kuraterte lista som før.
+// Historie-knappene (og periodene, visningssidene og heftets metasjangre)
+// slik de skal vises NÅ:
+//   · treets metasjangre i META_GENRE_ORDER
+//   · pluss navn fra reservelista som har en historie uten å være metasjanger
+//     lenger (etterlatt av et navnebytte), bakerst
+//   · minus STORY_SKJULT
+// Er treet ikke lastet ennå, vises reservelista.
 export function storyOrder(genreDescs = {}) {
   const skjult = (g) => STORY_SKJULT.includes(g);
   const metas = GENEALOGY_META_GENRES;
   if (!metas.length) return STORY_ORDER.filter((g) => !skjult(g));
-  const ut = STORY_ORDER.filter((g) => !skjult(g) && (metas.includes(g) || storyFor(g, genreDescs)));
-  for (const g of META_GENRE_ORDER) {
+  const ut = META_GENRE_ORDER.filter((g) => !skjult(g));
+  for (const g of STORY_ORDER) {
     if (!ut.includes(g) && !skjult(g) && storyFor(g, genreDescs)) ut.push(g);
   }
   return ut;

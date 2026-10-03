@@ -4,8 +4,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contentGaps } from "../../js/ui-dashboard.js?v=6.04";
-import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=6.04";
+import { contentGaps } from "../../js/ui-dashboard.js?v=6.05";
+import { GENEALOGY_EDGES, edgeKey } from "../../js/genre-model.js?v=6.05";
 
 const artist = (o) => ({
   status: "active", priority: 0, mainGenre: [], subGenre: [],
@@ -48,10 +48,10 @@ test("contentGaps: sider telles kun når innhold er lastet", () => {
 });
 
 test("contentGaps: sjangerhistorie regnes som skrevet når story.body finnes", () => {
-  // Sju historier siden v3.88 (Hip-hop skilt ut fra R&B).
-  assert.equal(contentGaps({ artists: [], genreDescs: {} }).stories.length, 7);
+  // Ni historier fra v6.05: alle metasjangrene, også Pop og Rock (S4).
+  assert.equal(contentGaps({ artists: [], genreDescs: {} }).stories.length, 9);
   const one = contentGaps({ artists: [], genreDescs: { Blues: { story: { body: "s" } } } });
-  assert.equal(one.stories.length, 6);
+  assert.equal(one.stories.length, 8);
   assert.ok(!one.stories.includes("Blues"));
 });
 
@@ -110,7 +110,7 @@ test("contentGaps: total er summen av alle bøtter", () => {
 // (gammelt funn 8), betyr «dokumentet finnes» ikke lenger «teksten finnes».
 // Oversikten skal telle tekstløse sider som hull, ikke grønnmerke dem.
 test("side med kilder men uten tekst teller som hull", async () => {
-  const { contentGaps } = await import("../../js/ui-dashboard.js?v=6.04");
+  const { contentGaps } = await import("../../js/ui-dashboard.js?v=6.05");
   const content = { rotter: { body: "", kilder: [{ text: "SNL" }] }, omHistorie: { body: "Tekst." } };
   const g = contentGaps({ artists: [], genreDescs: {}, content, contentLoaded: true });
   assert.deepEqual(g.pages, ["rotter"], "kilder alene er ikke innhold");

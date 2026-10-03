@@ -12,18 +12,19 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks } from "./linkify.js?v=6.04";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.04";
-import { renderRichText } from "./rich-text.js?v=6.04";
-import { punkterHtml } from "./punkter.js?v=6.04";
-import { escapeHtml, buildKilderList } from "./util.js?v=6.04";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.04";
-import { modalOpen } from "./ui-modal.js?v=6.04";
-import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=6.04";
-import { artistsInGenre } from "./limits.js?v=6.04";
-import { wireProposeFoot } from "./ui-edit.js?v=6.04";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.04";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.04";
+import { wireAllLinks, medSelv } from "./linkify.js?v=6.05";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.05";
+import { renderRichText } from "./rich-text.js?v=6.05";
+import { punkterHtml } from "./punkter.js?v=6.05";
+import { escapeHtml, buildKilderList } from "./util.js?v=6.05";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.05";
+import { modalOpen } from "./ui-modal.js?v=6.05";
+import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=6.05";
+import { artistsInGenre } from "./limits.js?v=6.05";
+import { wireProposeFoot } from "./ui-edit.js?v=6.05";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.05";
+import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.05";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.05";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -202,12 +203,14 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   const btnArea = [
     (n.g && onShowArtists) ? `<button type="button" class="btn ghost small gx-artists-btn">Artister</button>` : "",
     (n.g && onShowPlaylist) ? `<button type="button" class="btn ghost small gx-playlist-btn">Spilleliste</button>` : "",
-    (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Tidslinje</button>` : "",
+    (n.g && onShowTimeline) ? `<button type="button" class="btn ghost small gx-timeline-btn">Artisttidslinje</button>` : "",
     // Artistgalleriet (v5.96; i appen også fra v5.97, brukerønske 2026-10-01).
     (n.g && onShowGallery) ? `<button type="button" class="btn ghost small gx-galleri-btn">Galleri</button>` : "",
   ].filter(Boolean).join(" ");
 
   const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  // Kortets egen sjanger lenkes ikke i teksten (v6.05, K7).
+  const lcSelv = medSelv(lc, { genre: [n.l, n.f] });
   // Artistene i sjangeren som navneliste (v5.89, brukerønske 2026-09-29):
   // samme utvalg og rekkefølge som «Artister»-knappen under (artistsInGenre),
   // bare navnet. Vises bare på lerretet, i en egen spalte til høyre for
@@ -228,13 +231,17 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   mBody.innerHTML = `
     ${sekt("stripe", heatStripBlock(n))}
     ${sekt("era", `<p class="gx-era">${escapeHtml(eraLine(resolved))}</p>`)}
-    ${sekt("punkter", punkterHtml(resolved.punkter, lc))}
-    ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lc) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
+    ${sekt("punkter", punkterHtml(resolved.punkter, lcSelv))}
+    ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lcSelv) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
     ${sekt("lytt", (onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : "")}
     ${sekt("relasjoner", relasjoner)}
     ${sekt("artister", artisterHtml)}
     ${sekt("kilder", kilderHtml)}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
+  // Spaltene (tekst til venstre, artistene til høyre) også i appen (v6.05,
+  // strukturgjennomgangen K4): før sto lista bare på lerretet, og en tredel av
+  // kortet sto tom. Samme oppsett som presentasjonen, så de aldri spriker.
+  ordneSjangerLerret(modal);
   wireAllLinks(mBody, lc);
   wireRelated(mBody, lc);
   const b = mBody.querySelector(".gx-artists-btn");

@@ -9,9 +9,9 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, heltPensum,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE, ROTTER,
-} from "../../js/utskrift-modell.js?v=6.04";
-import { isVisible } from "../../js/limits.js?v=6.04";
-import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=6.04";
+} from "../../js/utskrift-modell.js?v=6.05";
+import { isVisible } from "../../js/limits.js?v=6.05";
+import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js?v=6.05";
 
 const NAA = 2026;
 
@@ -20,7 +20,7 @@ const ARTISTER = [
     birthYear: 1894, deathYear: 1937, influenceStart: 1923, influenceEnd: 1933, recordLabel: "Columbia", geography: "New York",
     mainGenre: ["Blues"], subGenre: ["Classic blues"], description: "Empress of the Blues.",
     keyWorks: [{ title: "St. Louis Blues", year: 1925 }, { title: "Downhearted Blues", year: 1923 }],
-    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=6.04rd9IaA_uJI", year: 1925 }],
+    musicExamples: [{ label: "St. Louis Blues", url: "https://www.youtube.com/watch?v=6.05rd9IaA_uJI", year: 1925 }],
     kilder: [{ text: "Encyclopædia Britannica.", url: "https://www.britannica.com/biography/Bessie-Smith" }],
     imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d0/Bessie.jpg", imageCredit: "Foto: Wikimedia" },
   { id: "robert", name: "Robert Johnson", status: "active", priority: 3, metaGenre: "Blues", instrument: "Gitar",
@@ -439,9 +439,9 @@ test("heltPensum: metasjangrene i pensumet, røttene, aktive innovasjoner og skr
   const alt = heltPensum(DATA);
   const metaer = alt.filter((v) => v.startsWith("metasjanger:")).map((v) => v.slice(12));
   assert.ok(metaer.includes("Blues") && metaer.includes("Jazz"), "pensummetasjangrene er med");
-  assert.equal(metaer.includes("Pop"), false, "Pop og Rock er utenfor pensumet (STORY_SKJULT)");
-  assert.equal(metaer.includes("Rock"), false);
-  assert.equal(metaer[0], "Blues", "den kuraterte rekkefølgen");
+  // Pop og Rock vises overalt fra v6.05 (brukervalg 2026-10-03), også i heftet.
+  assert.ok(metaer.includes("Pop") && metaer.includes("Rock"), "Pop og Rock er med");
+  assert.equal(metaer[0], "Blues", "appens ene rekkefølge");
   for (const m of metaer) assert.ok(GENEALOGY_META_GENRES.includes(m), m);
   for (const n of GENEALOGY_ROOT_GENRES) assert.ok(alt.includes(`sjanger:${n.l}`), `roten ${n.l}`);
   assert.deepEqual(alt.filter((v) => v.startsWith("tech:")), ["tech:elgitar", "tech:ror", "tech:transistor", "tech:hendelse"], "ventende kort er ikke med");
@@ -500,8 +500,8 @@ test("tittel: bare tiår, bare innovasjoner, ellers «Pensumutdrag»", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: koblingstekster, sideanslag, kjøreplan av heftet, små hefter
 // ---------------------------------------------------------------------------
-import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift-modell.js?v=6.04";
-import { GENEALOGY, edgeKey } from "../../js/genre-model.js?v=6.04";
+import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift-modell.js?v=6.05";
+import { GENEALOGY, edgeKey } from "../../js/genre-model.js?v=6.05";
 
 test("koblingstekster: av som standard, med for læreren når valget er på, aldri for studenter mens flagget står", () => {
   assert.equal(STANDARD_DELER["sjanger.koblinger"], false, "et tillegg læreren velger til");
@@ -554,10 +554,10 @@ test("lytteliste bærer YouTube-ID-en til «Spill hele lista»", () => {
   assert.deepEqual(m.lytteliste.map((l) => l.video), ["GtDlZdhHRCI", "-SBmury81Ws"]);
 });
 
-test("pensumMetasjangre: den kuraterte rekkefølgen uten Pop og Rock, delt av «Velg alt» og hurtigvalgene", () => {
+test("pensumMetasjangre: appens rekkefølge med Pop og Rock, delt av «Velg alt» og hurtigvalgene", () => {
   const metaer = pensumMetasjangre();
   assert.ok(metaer.includes("Blues"));
-  assert.ok(!metaer.includes("Pop") && !metaer.includes("Rock"));
+  assert.ok(metaer.includes("Pop") && metaer.includes("Rock"), "Pop og Rock vises overalt fra v6.05");
   assert.equal(new Set(metaer).size, metaer.length);
   for (const m of metaer) assert.ok(heltPensum(DATA).includes(`metasjanger:${m}`));
 });

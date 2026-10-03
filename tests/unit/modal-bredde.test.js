@@ -21,7 +21,7 @@ function modalKlasser(src, id) {
 }
 
 const INNHOLDSKORT = {
-  "index.html": ["modal-artister", "modal-dagens-navn", "modal-detail"],
+  "index.html": ["modal-artister", "modal-detail"],
   "tre.html": ["modal-artist-detail"],
   "teacher.html": ["modal-detail"],
   "js/explore-modals.js": [

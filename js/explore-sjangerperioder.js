@@ -19,12 +19,12 @@
 //  explore-context importerer feature-modulene tilbake, og GENEALOGY byttes ut
 //  ved hver ombygging av treet.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.04";
-import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=6.04";
-import { storyOrder } from "./story-format.js?v=6.04";
-import { eraYears } from "./genealogy.js?v=6.04";
-import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=6.04";
-import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=6.04";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.05";
+import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=6.05";
+import { storyOrder } from "./story-format.js?v=6.05";
+import { eraYears } from "./genealogy.js?v=6.05";
+import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=6.05";
+import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=6.05";
 
 // Hvilken metagruppe som står åpen (navnet), «__ingen» når brukeren har lukket
 // alle, null ved frisk åpning (da åpnes den første).
@@ -110,7 +110,7 @@ function figurHtml(groups, axis, naa) {
     const open = spOpenMeta === "__ingen" ? false : (spOpenMeta && finnes) ? g.meta === spOpenMeta : gi === 0;
     html += metaGroupHeadHtml({
       prefix: "sp", meta: g.meta, gColor: groupColor(g.rows.map((r) => r.genre)), open, groupIdx: gi,
-      count: `${g.rows.length} sjanger${g.rows.length === 1 ? "" : "e"}`,
+      count: `${g.rows.length} sjang${g.rows.length === 1 ? "er" : "re"}`,
       metaAttr: ` data-sp-meta="${escapeHtml(g.meta)}"`,
     });
     html += `<div class="sp-group-rows" style="display:${open ? "block" : "none"}">`;

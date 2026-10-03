@@ -1,8 +1,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=6.04";
-import { rebuild } from "../../js/genre-model.js?v=6.04";
+import { storyFor, pageFor, stripGenrePath, STORY_ORDER, STORY_SKJULT, storyOrder } from "../../js/story-format.js?v=6.05";
+import { rebuild, META_GENRE_ORDER } from "../../js/genre-model.js?v=6.05";
 import { SEED_DOC } from "../helpers/seed-model.js";
 
 test("storyFor: null når ingen tekst er lagret (ingen fallback)", () => {
@@ -37,24 +37,19 @@ test("pageFor: kilder følger med, og er alltid en liste", () => {
   assert.deepEqual(pageFor("x", { x: { body: "T.", kilder: "ikke en liste" } }).kilder, []);
 });
 
-test("STORY_ORDER er de sju historiene i fast rekkefølge", () => {
-  // Hip-hop kom til i v3.88 da den ble skilt ut som egen metasjanger fra R&B,
-  // og står rett etter R&B fordi den leses i forlengelsen av soul og funk.
-  assert.deepEqual(STORY_ORDER, ["Blues", "Country", "Gospel", "Jazz", "R&B", "Hip-hop", "Klubbmusikk"]);
+test("STORY_ORDER er appens ene metasjanger-rekkefølge, med Pop og Rock", () => {
+  // Brukervalg 2026-10-03 (S4): samme rekkefølge overalt, og Pop og Rock vises.
+  assert.deepEqual(STORY_ORDER, ["Blues", "Jazz", "R&B", "Hip-hop", "Klubbmusikk", "Gospel", "Country", "Pop", "Rock"]);
+  assert.deepEqual(STORY_SKJULT, []);
 });
 
 // --- storyOrder: hvilke historie-knapper som faktisk vises ------------------
 
-test("storyOrder viser den kuraterte lista, ikke de skjulte", () => {
-  // Pop og Rock HAR historier i basen (brukervalg: de skal ligge, ikke vises).
-  const descs = Object.fromEntries(
-    [...STORY_ORDER, ...STORY_SKJULT].map((g) => [g, { story: { body: "tekst" } }]));
+test("storyOrder følger treets META_GENRE_ORDER, også for metasjangre uten historie", () => {
+  const descs = { Pop: { story: { body: "tekst" } } };
   const vist = storyOrder(descs);
-  assert.deepEqual(vist, STORY_ORDER, "kun de kuraterte sju");
-  for (const g of STORY_SKJULT) assert.ok(!vist.includes(g), `${g} skal ikke vises`);
-  // Teksten skal fortsatt være LESBAR for den som slår opp direkte — det er
-  // bare knappen som er borte, ikke dataene.
-  assert.ok(storyFor("Pop", descs), "historien skal ligge urørt i basen");
+  assert.deepEqual(vist, META_GENRE_ORDER, "alle metasjangrene i treets rekkefølge");
+  assert.ok(vist.includes("Pop") && vist.includes("Rock"), "Pop og Rock vises");
 });
 
 test("storyOrder henter opp en historie som har fått nytt metasjanger-navn", () => {

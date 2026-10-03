@@ -4,11 +4,11 @@
 //  Sjangre-/undersjangre-listene og sjanger-info-modalen (lærer-oversikten).
 //  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.04";
-import { isVisible } from "./limits.js?v=6.04";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, canonMainGenre } from "./genre-model.js?v=6.04";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.04";
-import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.04";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.05";
+import { isVisible } from "./limits.js?v=6.05";
+import { isMainGenre, GENEALOGY_MAIN_GENRES, canonMainGenre } from "./genre-model.js?v=6.05";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.05";
+import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.05";
 
 export function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
@@ -35,13 +35,13 @@ export function openSubgenreList() {
         const empty = !withArtists.has(s);
         return `<button class="tag tag-sjanger ${checkedMainGenres.includes(s) ? "is-checked" : ""}${empty ? " is-empty" : ""}" data-sjanger="${escapeHtml(s)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(s)}</button>`;
       }).join("")
-    : `<p class="muted">Ingen sjangere registrert ennå.</p>`;
+    : `<p class="muted">Ingen sjangre registrert ennå.</p>`;
 
   modalOpen(modal);
 }
 
 // Undersjangre: frie tags fra artistene, i egen modal oppå Sjangre-modalen
-// (før en fane i samme modal — nå en egen inngang via «Undersjangere»-knappen).
+// (før en fane i samme modal — nå en egen inngang via «Undersjangre»-knappen).
 export function openUndersjangre() {
   const modal = document.getElementById("modal-undersjangre");
   if (!modal) return;

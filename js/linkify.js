@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from "./util.js?v=6.04";
+import { escapeHtml as esc } from "./util.js?v=6.05";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
@@ -30,16 +30,30 @@ function prepareTargets(ctx) {
   return prep;
 }
 
+// Kortets EGEN ting skal ikke lenkes i kortets tekst (v6.05, strukturgjennom-
+// gangen K7): Bebop-kortet lenket ordet «bebop» til seg selv, og Grandmaster
+// Flash-kortet navnet hans tre ganger. medSelv legger kortet ved konteksten
+// UTEN å miste mellomlageret over: _base peker på den opprinnelige
+// konteksten, som prepareTargets er memoisert på. self: { artist: id,
+// tech: id, genre: navn eller [etikett, fullt navn] }.
+export function medSelv(ctx, self) {
+  return { ...(ctx || {}), self, _base: ctx?._base || ctx || {} };
+}
+
 export function linkifyAll(text, ctx = {}) {
   if (!text) return esc(text);
   const escaped = esc(text);
   const markers = [];
   const lower = escaped.toLowerCase();
 
-  const { artists, techItems, genres } = prepareTargets(ctx);
-  for (const a of artists) findMatches(lower, escaped, a.nameEsc, a.id, "artist", markers);
-  for (const t of techItems) findMatches(lower, escaped, t.nameEsc, t.id, "tech", markers);
-  for (const g of genres) findMatches(lower, escaped, g.nameEsc, g.id, "genre", markers);
+  const { artists, techItems, genres } = prepareTargets(ctx._base || ctx);
+  // Egne treff blir «self»-markører: de lenkes ikke, men holder plassen sin,
+  // så et kortere navn aldri kan lenkes midt inni kortets eget navn.
+  const self = ctx.self || {};
+  const selvSjangre = new Set([].concat(self.genre || []));
+  for (const a of artists) findMatches(lower, escaped, a.nameEsc, a.id, a.id === self.artist ? "self" : "artist", markers);
+  for (const t of techItems) findMatches(lower, escaped, t.nameEsc, t.id, t.id === self.tech ? "self" : "tech", markers);
+  for (const g of genres) findMatches(lower, escaped, g.nameEsc, g.id, selvSjangre.has(g.id) ? "self" : "genre", markers);
 
   if (!markers.length) return escaped;
   markers.sort((a, b) => a.start - b.start);
@@ -49,7 +63,9 @@ export function linkifyAll(text, ctx = {}) {
     result += escaped.slice(last, m.start);
     // tabindex + role: ankere UTEN href står utenfor tab-rekkefølgen, så uten
     // disse var alle klikkbare navn i løpende tekst mus/berøring-only.
-    if (m.type === "artist") {
+    if (m.type === "self") {
+      result += m.original;
+    } else if (m.type === "artist") {
       result += `<a class="artist-link" data-artist-id="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
     } else if (m.type === "tech") {
       result += `<a class="tech-link" data-tech-id="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
@@ -60,6 +76,18 @@ export function linkifyAll(text, ctx = {}) {
   }
   result += escaped.slice(last);
   return result;
+}
+
+// Artistene en tekst nevner, som id-er, med NØYAKTIG samme treffregler som
+// lenkingen over (v6.05, K3: «Beslektede artister» bruker dem). ctx trenger
+// bare { artists }.
+export function nevnteArtister(text, ctx = {}) {
+  if (!text) return [];
+  const escaped = esc(text);
+  const lower = escaped.toLowerCase();
+  const markers = [];
+  for (const a of prepareTargets(ctx._base || ctx).artists) findMatches(lower, escaped, a.nameEsc, a.id, "artist", markers);
+  return [...new Set(markers.map((m) => m.id))];
 }
 
 function isWordChar(ch) {

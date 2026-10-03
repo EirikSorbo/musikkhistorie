@@ -17,10 +17,10 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=6.04";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=6.04";
-import { storyOrder, storyFor, pageFor } from "./story-format.js?v=6.04";
-import { escapeHtml } from "./util.js?v=6.04";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js?v=6.05";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "./genre-model.js?v=6.05";
+import { storyOrder, storyFor, pageFor } from "./story-format.js?v=6.05";
+import { escapeHtml } from "./util.js?v=6.05";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {

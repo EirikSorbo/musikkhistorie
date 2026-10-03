@@ -1,25 +1,25 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.04";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.04";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.04";
-import { onGenreModelChanged } from "./genre-model.js?v=6.04";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.04";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.04";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.04";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.04";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.04";
-import { initExplore } from "./explore.js?v=6.04";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.04";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.04";
-import { initPlanMeny } from "./plan-meny.js?v=6.04";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.04";
-import { initYtSpiller } from "./yt-spiller.js?v=6.04";
-import { initVisning, visningTikk } from "./visning.js?v=6.04";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.04";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.04";
-import { askChoice } from "./ui-modal.js?v=6.04";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.04";
-import { currentEntityValues } from "./entity-values.js?v=6.04";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.04";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.05";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.05";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.05";
+import { onGenreModelChanged } from "./genre-model.js?v=6.05";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.05";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.05";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.05";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.05";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.05";
+import { initExplore } from "./explore.js?v=6.05";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.05";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.05";
+import { initPlanMeny } from "./plan-meny.js?v=6.05";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.05";
+import { initYtSpiller } from "./yt-spiller.js?v=6.05";
+import { initVisning, visningTikk } from "./visning.js?v=6.05";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.05";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.05";
+import { askChoice } from "./ui-modal.js?v=6.05";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.05";
+import { currentEntityValues } from "./entity-values.js?v=6.05";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.05";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -86,9 +86,10 @@ const handlers = {
 
 let explore = null;
 
-// Visningsmodus for filtertreff: artistkort (standard, kronologisk) eller
-// kompakt navneliste («Vis liste»). Nullstilles ikke — huskes til sidelast.
-let filterView = "cards";
+// Visningsmodus for filtertreff: kompakt navneliste (standard fra v6.05,
+// brukervalg 2026-10-03, D3) eller artistkort («Vis kort»). Nullstilles ikke,
+// huskes til sidelast.
+let filterView = "list";
 
 function openDetail(artist) {
   $("#detail-name").textContent = artist.name;
@@ -188,9 +189,6 @@ function setupExplore() {
   // Samme grunn som over: .priority-filter-bar har display: flex.
   if (prioBar && SKJUL_I_STUDENTVISNING.viktighetsgrad) prioBar.style.display = "none";
 
-  const btnDagens = document.getElementById("btn-dagens-navn");
-  if (btnDagens) btnDagens.addEventListener("click", openDagensNavn);
-
   const btnArtister = document.getElementById("btn-artister");
   if (btnArtister) btnArtister.addEventListener("click", openArtistModal);
 
@@ -199,7 +197,6 @@ function setupExplore() {
   if (btnTidslinje) btnTidslinje.addEventListener("click", () => explore.openTidslinje());
 
   setupModal("modal-artister");
-  setupModal("modal-dagens-navn");
   // Forslags-modalen åpnes fra proposals.js, som ikke kobler lukking selv.
   // Uten dette blir «← Tilbake» (satt av initModalHeaders) en død knapp og
   // bakgrunnsklikk lukker ikke. setupModal er ikke idempotent — kall det KUN
@@ -256,11 +253,6 @@ function setupDetailModal() {
   });
 }
 
-function openDagensNavn() {
-  renderDagensModal();
-  modalOpen(document.getElementById("modal-dagens-navn"));
-}
-
 // ----------------------------------------------------------------------------
 //  Spotlight / listevisning
 // ----------------------------------------------------------------------------
@@ -270,7 +262,7 @@ function hasFilters() {
 }
 
 // Dagens artist: én fast tilfeldig trukket artist per sidelast, vist BÅDE i
-// seksjonen under dashbordet og i modalen fra «Finn artister» (samme
+// seksjonen under dashbordet og i «Artister» når søk og filtre er tomme (samme
 // trekning; «Ny artist» trekker på nytt begge steder).
 let dagensArtistId = null;
 
@@ -311,28 +303,25 @@ function renderDagensSection() {
   el.dataset.dagensSig = sig;
 }
 
-// Modalen (åpnes fra «Finn artister»).
-function renderDagensModal() {
-  if (!state.artists.length && !state.artistsLoaded) return;
-  const el = $("#spotlight");
-  if (!el) return;
+// «Artister» uten søk og filter (v6.05, brukervalg 2026-10-03, D3): bare
+// dagens artist, med «Ny artist». Før sto alle ~280 kortene her i tilfeldig
+// rekkefølge, og «Dagens artist» lå bak en egen knapp og et eget vindu.
+function renderDagensIArtister(el) {
   const artist = dagensArtist();
   if (!artist) {
     el.innerHTML = `<p class="muted empty">${state.artistsLoaded ? "Ingen artister ennå." : "Laster forslag …"}</p>`;
     delete el.dataset.dagensSig;
     return;
   }
-  // Samme vakt som renderDagensSection: unngå å bygge kortet (og bildet) på nytt
+  // Samme vakt som renderDagensSection: ikke bygg kortet (og bildet) på nytt
   // når verken artist eller tech-lenker har endret seg.
   const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
   if (el.dataset.dagensSig === sig) return;
-  renderSpotlightCards(el, [artist], explore.buildLinkCtx());
+  el.innerHTML = `<div class="dagens-head"><p class="section-label" style="margin:0">Dagens artist</p>
+    <button type="button" class="btn ghost small" data-dagens-ny>Ny artist</button></div>
+    <div class="spotlight-grid" data-dagens-kort></div>`;
+  renderSpotlightCards(el.querySelector("[data-dagens-kort]"), [artist], explore.buildLinkCtx());
   el.dataset.dagensSig = sig;
-}
-
-function isDagensModalOpen() {
-  const m = document.getElementById("modal-dagens-navn");
-  return !!m && m.classList.contains("open");
 }
 
 function renderFilterResults() {
@@ -340,10 +329,14 @@ function renderFilterResults() {
   const el = document.getElementById("filter-results");
   if (!el) return;
 
-  // Kompakt navneliste vises KUN når filter er aktivt OG bruker valgte «Vis
-  // liste». Ellers (ingen filter, eller kort-visning) er den tom — kortene
-  // under står da for visningen.
-  if (!hasFilters() || filterView !== "list") {
+  // Uten søk og filter: bare dagens artist. Med: kompakt navneliste, med
+  // mindre «Vis kort» er valgt (da står kortene under for visningen).
+  if (!hasFilters()) {
+    renderDagensIArtister(el);
+    return;
+  }
+  delete el.dataset.dagensSig;
+  if (filterView !== "list") {
     el.innerHTML = "";
     return;
   }
@@ -363,10 +356,15 @@ function renderList() {
   if (!state.artists.length && !state.artistsLoaded) return;
   const el = $("#artist-list");
   if (!el) return;
-  // Kortene skjules KUN når bruker har valgt kompakt liste (og filter er aktivt)
-  // — da står #filter-results for visningen. Ellers vises artistkortene, både
-  // uten filter og som standard MED filter (kronologisk sortert i renderArtists).
-  if (hasFilters() && filterView === "list") {
+  // Kortene vises bare når søk eller filter er aktivt OG «Vis kort» er valgt
+  // (v6.05, D3). Ellers står #filter-results for visningen: dagens artist uten
+  // filter, navnelista med. Forrige kortrunde kan ha en scroll-lytter for
+  // stegvis bygging; den må bort sammen med kortene.
+  if (!hasFilters() || filterView === "list") {
+    if (el._listOnScroll) {
+      document.removeEventListener("scroll", el._listOnScroll, true);
+      el._listOnScroll = null;
+    }
     el.innerHTML = "";
     return;
   }
@@ -468,8 +466,10 @@ function setupFilters() {
   });
   // «Vis ny artist» (seksjonen på forsiden) og «Ny artist» (modalen) deler
   // trekningen, så begge visningene alltid viser samme artist.
-  $("#sp-shuffle").addEventListener("click", shuffleDagens);
   document.getElementById("btn-dagens-ny")?.addEventListener("click", shuffleDagens);
+  document.getElementById("filter-results")?.addEventListener("click", (e) => {
+    if (e.target.closest("[data-dagens-ny]")) shuffleDagens();
+  });
 }
 
 function shuffleDagens() {
@@ -481,7 +481,7 @@ function shuffleDagens() {
     pick = pool[Math.floor(Math.random() * pool.length)];
   }
   dagensArtistId = pick.id;
-  renderDagensModal();
+  if (isArtistModalOpen()) renderFilterResults();
   renderDagensSection();
 }
 
@@ -709,7 +709,6 @@ function init() {
   const applyArtistSnapshot = throttle(() => {
     renderArtistViewsIfVisible();
     renderDagensSection();
-    if (isDagensModalOpen()) renderDagensModal();
   }, 400);
   // Én rute inn for alle de delte samlingene (js/shared-data.js). Merk: ikke noe
   // pendingEdits-abonnement — studentsiden trenger bare pending-status idet

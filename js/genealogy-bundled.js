@@ -18,11 +18,11 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=6.04";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.04";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=6.04";
-import { attachCamera } from "./gx-camera.js?v=6.04";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=6.04";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=6.05";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.05";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=6.05";
+import { attachCamera } from "./gx-camera.js?v=6.05";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=6.05";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)
@@ -470,7 +470,10 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
       `<div class="gx-leg"><span class="gxb-sw-band"></span>bånd i barnets farge: foreldrene er likestilte</div>` +
       `<div class="gx-leg"><span class="gx-sw-line"></span>motreaksjon</div>` +
       `<div class="gx-leg"><span class="gxb-sw-knot"></span>knutepunkt: to eller flere foreldre møtes</div>` +
-      `<div class="gx-leg gx-leg-hint">klikk på et bånd for å lese om koblingen</div>`;
+      // Hintet bare der båndene faktisk kan åpnes (v6.05, D8a): for studentene
+      // er koblingstekstene skjult (kanApneKobling over), og der lovet hintet
+      // noe et klikk ikke ga.
+      (kanApneKobling ? `<div class="gx-leg gx-leg-hint">klikk på et bånd for å lese om koblingen</div>` : "");
   }
 
   reset();

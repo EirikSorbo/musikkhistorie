@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.04";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.04";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.05";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.05";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -200,7 +200,7 @@ export const MODAL_HTML = `
 <div class="modal-backdrop" id="modal-tidslinje" data-vis="tidslinje">
   <div class="modal modal-innhold">
     <div class="modal-head">
-      <h2>Tidslinje: når var artistene aktive?</h2>
+      <h2>Artisttidslinje</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode, gruppert etter metasjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
@@ -208,7 +208,7 @@ export const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Sjangere-liste -->
+<!-- Sjangre-liste -->
 <div class="modal-backdrop" id="modal-subgenre-list">
   <div class="modal modal-innhold">
     <div class="modal-head">
@@ -295,7 +295,7 @@ ${TECH_DETAIL_MODAL_HTML}
       </button>
       <button class="dash-card" id="sb-tidslinje">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
-        <span class="dash-title">Tidslinje</span>
+        <span class="dash-title">Artisttidslinje</span>
         <span class="dash-desc">Artistenes aktive år visualisert</span>
       </button>
       <button class="dash-card" id="sb-slektstre">

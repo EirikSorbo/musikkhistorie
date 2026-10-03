@@ -5,22 +5,22 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.04";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.04";
-import { MODAL_HTML } from "./explore-modals.js?v=6.04";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.04";
-import { openVarmekart } from "./explore-varmekart.js?v=6.04";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.04";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.04";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.04";
-import { openDecadeList } from "./explore-decade.js?v=6.04";
-import { openReferanser } from "./explore-referanser.js?v=6.04";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.04";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.04";
-import { openVisningssider } from "./explore-visningssider.js?v=6.04";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.04";
-import { openSok, wireSok } from "./explore-search.js?v=6.04";
-import { erPresentasjon } from "./presentasjon.js?v=6.04";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.05";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.05";
+import { MODAL_HTML } from "./explore-modals.js?v=6.05";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.05";
+import { openVarmekart } from "./explore-varmekart.js?v=6.05";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.05";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.05";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.05";
+import { openDecadeList } from "./explore-decade.js?v=6.05";
+import { openReferanser } from "./explore-referanser.js?v=6.05";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.05";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.05";
+import { openVisningssider } from "./explore-visningssider.js?v=6.05";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.05";
+import { openSok, wireSok } from "./explore-search.js?v=6.05";
+import { erPresentasjon } from "./presentasjon.js?v=6.05";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -84,13 +84,13 @@ function wireModals() {
 
   const slExtra = document.getElementById("sl-extra");
   if (slExtra) {
-    // Øverste rad (grønn): Sjangertre + Metasjangere deler bredden likt — de to
-    // strukturelle inngangene til sjangersystemet. Nederste rad: Undersjangere
+    // Øverste rad (grønn): Slektstre + Metasjangre deler bredden likt — de to
+    // strukturelle inngangene til sjangersystemet. Nederste rad: Undersjangre
     // → chip-lista, Tidslinje og Varmekart — de tre deler bredden likt.
     let btns = "";
     btns += `<div style="display:flex;gap:10px;margin-bottom:10px">`;
     if (opts.onSlektstre) {
-      btns += `<button class="btn primary" id="btn-slektstre" style="flex:1">Sjangertre</button>`;
+      btns += `<button class="btn primary" id="btn-slektstre" style="flex:1">Slektstre</button>`;
     }
     // MIDLERTIDIG (feature-flags.js): historiene er ikke kvalitetssikret, og
     // dette er DEN ANDRE inngangen til dem ved siden av «Det store bildet».
@@ -98,12 +98,12 @@ function wireModals() {
     // åpne. Lærersiden gir onEdit og beholder knappen.
     const visHistorier = !SKJUL_I_STUDENTVISNING.metasjangerhistorier || !!opts.onStoryEdit;
     if (visHistorier) {
-      btns += `<button class="btn primary" id="btn-metasjangere" style="flex:1">Metasjangere</button>`;
+      btns += `<button class="btn primary" id="btn-metasjangere" style="flex:1">Metasjangre</button>`;
     }
     btns += `</div>`;
     btns += `<div style="display:flex;gap:8px;margin-bottom:14px">`;
-    btns += `<button class="btn ghost compact" id="btn-undersjangere" style="flex:1">Undersjangere</button>`;
-    btns += `<button class="btn ghost compact" id="btn-tidslinje" style="flex:1">Tidslinje</button>`;
+    btns += `<button class="btn ghost compact" id="btn-undersjangere" style="flex:1">Undersjangre</button>`;
+    btns += `<button class="btn ghost compact" id="btn-tidslinje" style="flex:1">Artisttidslinje</button>`;
     btns += `<button class="btn ghost compact" id="btn-varmekart" style="flex:1">Varmekart</button>`;
     btns += `</div>`;
     slExtra.innerHTML = btns;

@@ -25,18 +25,18 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=6.04";
-import { escapeHtml, kanoniskJson } from "./util.js?v=6.04";
-import { modalOpen, modalClose } from "./ui.js?v=6.04";
-import { state } from "./teacher-state.js?v=6.04";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=6.04";
-import { validateTree } from "./genre-validate.js?v=6.04";
+import { $ } from "./shared.js?v=6.05";
+import { escapeHtml, kanoniskJson } from "./util.js?v=6.05";
+import { modalOpen, modalClose } from "./ui.js?v=6.05";
+import { state } from "./teacher-state.js?v=6.05";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=6.05";
+import { validateTree } from "./genre-validate.js?v=6.05";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup, heatOrphanKeys,
   planEdgeCleanup, edgeOrphanKeys,
-} from "./genre-migrate.js?v=6.04";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=6.04";
+} from "./genre-migrate.js?v=6.05";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=6.05";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -60,7 +60,7 @@ export const GENRE_ADMIN_HTML = `
 <div class="modal-backdrop" id="modal-genre-admin">
   <div class="modal modal-wide">
     <div class="modal-head">
-      <h2>Sjangertreet</h2>
+      <h2>Sjangertre-editor</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <p class="muted" style="margin:0 0 12px">

@@ -10,12 +10,13 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.04";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.04";
-import { punkterHtml } from "./punkter.js?v=6.04";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.04";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=6.04";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.04";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.05";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.05";
+import { punkterHtml } from "./punkter.js?v=6.05";
+import { medSelv } from "./linkify.js?v=6.05";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.05";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=6.05";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.05";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +39,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.04";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.04";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.04";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.04";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.04";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.04";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.04";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.04";
+} from "./ui-helpers.js?v=6.05";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.05";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.05";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.05";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.05";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.05";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.05";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.05";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -165,8 +166,8 @@ export function renderArtistDetail(el, artist, lc) {
     ${sekt("bilde", artistImage(a, true))}
     ${sekt("fakta", factsLines(a))}
     ${sekt("tags", `<div class="meta" style="margin-bottom:12px">${metaRader(a)}</div>`)}
-    ${sekt("punkter", punkterHtml(a.punkter, lc))}
-    ${sekt("beskrivelse", a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : "")}
+    ${sekt("punkter", punkterHtml(a.punkter, medSelv(lc, { artist: a.id })))}
+    ${sekt("beskrivelse", a.description ? `<div class="desc rt">${linkDesc(a.description, medSelv(lc, { artist: a.id }))}</div>` : "")}
     ${sekt("verk", worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : "")}
     ${sekt("lytte", examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : "")}
     ${sekt("kilder", kilderHtml(a.kilder))}
@@ -228,7 +229,7 @@ function spotlightCard(a, lc) {
         </div>
         ${artistStripHtml(a)}
       </header>
-      ${a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : ""}
+      ${a.description ? `<div class="desc rt">${linkDesc(a.description, medSelv(lc, { artist: a.id }))}</div>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
@@ -468,7 +469,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
         </div>
       </header>
 
-      ${a.description ? `<div class="desc rt">${linkDesc(a.description, linkCtx)}</div>` : ""}
+      ${a.description ? `<div class="desc rt">${linkDesc(a.description, medSelv(linkCtx, { artist: a.id }))}</div>` : ""}
       ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
       ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
       ${kilderHtml(a.kilder)}
@@ -556,7 +557,7 @@ function showGenreLevelInfo(label, level, opts = {}) {
   mTitle.textContent = label;
   mBody.innerHTML = `
     ${seeGenreBtn}
-    <div class="gx-desc rt">${resolved.description ? linkDesc(resolved.description, lc) : `<span class="gx-missing">${missingDesc(level)}</span>`}</div>
+    <div class="gx-desc rt">${resolved.description ? linkDesc(resolved.description, medSelv(lc, { genre: label })) : `<span class="gx-missing">${missingDesc(level)}</span>`}</div>
     ${buildKilderList(resolved.kilder, "Kilder")}
     ${btnArea ? `<div style="margin-top:10px;display:flex;gap:8px">${btnArea}</div>` : ""}`;
   wireLinks(mBody, lc);
@@ -726,7 +727,7 @@ function playlistRows(list, sj = null) {
       const yInfo = musicExampleLabel(m);
       // Tittel og år til venstre, artist og sjanger til høyre (v6.00,
       // brukerønske 2026-10-01), som navn og år i artistlista.
-      rows.push(`<li class="pl-item"><a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span> ${rowTag(m)}</span></li>`);
+      rows.push(`<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span> ${rowTag(m)}</span></li>`);
     });
     return rows;
   });
