@@ -10,14 +10,14 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.20";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.20";
-import { punkterHtml } from "./punkter.js?v=6.20";
-import { medSelv } from "./linkify.js?v=6.20";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.20";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.20";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.20";
-import { safeUrl } from "./util.js?v=6.20";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.21";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.21";
+import { punkterHtml } from "./punkter.js?v=6.21";
+import { medSelv } from "./linkify.js?v=6.21";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.21";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.21";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.21";
+import { safeUrl } from "./util.js?v=6.21";
 import {
   escapeHtml,
   linkDesc,
@@ -40,14 +40,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.20";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.20";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.20";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.20";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.20";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.20";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.20";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.20";
+} from "./ui-helpers.js?v=6.21";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.21";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.21";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.21";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.21";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.21";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.21";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.21";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -674,12 +674,21 @@ function kobleSpillelisteRader() {
 // etter hverandre (watch_videos, se ytSpillelisteUrl). Bare når det er minst to
 // YouTube-videoer; søkelenker og andre verter har ingen ID og telles ikke.
 // Over 50 videoer blir det flere lenker («del 1», «del 2»).
+// Er lista lengre enn YouTube tar i én kø, deles den, og hver knapp sier
+// hvilke eksempler den spiller («1–50», «51–62»), ikke «del 1 av 2»
+// (v6.21, brukervalg 2026-10-03). Knappene har farge (.pl-alle i CSS), så de
+// skiller seg fra lista rett under.
 export function spillAlleHtml(ider) {
   const lenker = ytSpillelisteUrl(ider);
   if (!lenker.length || (ider || []).length < 2) return "";
   const antall = new Set(ider).size;
-  return `<p class="pl-alle">${lenker.map((url, i) =>
-    `<a class="btn ghost small" href="${escapeHtml(url)}" target="_blank" rel="noopener">Spill alle ${antall} på YouTube${lenker.length > 1 ? ` (del ${i + 1} av ${lenker.length})` : ""}</a>`).join(" ")}</p>`;
+  let fra = 1;
+  return `<p class="pl-alle">${lenker.map((url) => {
+    const n = (new URL(url).searchParams.get("video_ids") || "").split(",").filter(Boolean).length;
+    const spenn = `${fra}–${fra + n - 1}`;
+    fra += n;
+    return `<a class="btn small" href="${escapeHtml(url)}" target="_blank" rel="noopener">Spill alle ${antall} på YouTube${lenker.length > 1 ? ` (${spenn})` : ""}</a>`;
+  }).join(" ")}</p>`;
 }
 
 // Bygger HTML for spilleliste-popup: KUN lytteeksempler (musicExamples) — de

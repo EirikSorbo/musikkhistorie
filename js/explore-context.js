@@ -8,22 +8,22 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.20";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.20";
-import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.20";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.20";
-import { openTechDetail } from "./explore-tech.js?v=6.20";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.20";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.20";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.20";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=6.20";
-import { renderReferanser } from "./explore-referanser.js?v=6.20";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.20";
-import { setHeatData } from "./heat-strip.js?v=6.20";
-import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.20";
-import { openInstrumenter } from "./explore-instrument.js?v=6.20";
-import { openSubgenreList } from "./explore-sjanger.js?v=6.20";
-import { topOpenModal } from "./ui-modal.js?v=6.20";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.21";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.21";
+import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.21";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.21";
+import { openTechDetail } from "./explore-tech.js?v=6.21";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.21";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.21";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.21";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=6.21";
+import { renderReferanser } from "./explore-referanser.js?v=6.21";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.21";
+import { setHeatData } from "./heat-strip.js?v=6.21";
+import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.21";
+import { openInstrumenter } from "./explore-instrument.js?v=6.21";
+import { openSubgenreList } from "./explore-sjanger.js?v=6.21";
+import { topOpenModal } from "./ui-modal.js?v=6.21";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }

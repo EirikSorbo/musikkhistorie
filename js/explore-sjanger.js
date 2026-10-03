@@ -4,11 +4,11 @@
 //  Sjangre-/undersjangre-vinduene og sjanger-info-modalen (lærer-oversikten).
 //  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.20";
-import { isVisible } from "./limits.js?v=6.20";
-import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.20";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.20";
-import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.20";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.21";
+import { isVisible } from "./limits.js?v=6.21";
+import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.21";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.21";
+import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.21";
 
 // Sjangre-vinduet (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S6):
 // sjangrene gruppert per metasjanger, i appens ene rekkefølge, og innenfor

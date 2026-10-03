@@ -16,15 +16,15 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.20";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.20";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.20";
-import { pageFor } from "./story-format.js?v=6.20";
-import { renderRichText } from "./rich-text.js?v=6.20";
-import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.20";
-import { META_GENRE_COLOR } from "./genre-model.js?v=6.20";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.20";
-import { openTechDetail } from "./explore-tech.js?v=6.20";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.21";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.21";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.21";
+import { pageFor } from "./story-format.js?v=6.21";
+import { renderRichText } from "./rich-text.js?v=6.21";
+import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.21";
+import { META_GENRE_COLOR } from "./genre-model.js?v=6.21";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.21";
+import { openTechDetail } from "./explore-tech.js?v=6.21";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.

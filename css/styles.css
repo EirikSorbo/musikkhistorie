@@ -3425,6 +3425,17 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .pres-adm-treff-merke { color: var(--accent-2); font-weight: 600; font-size: 0.8rem; white-space: nowrap; }
 /* «Spill alle på YouTube» øverst i spillelistene (v5.74). */
 .pl-alle { margin: 0 0 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+/* «Spill alle på YouTube» med farge (v6.21, brukervalg 2026-10-03), så
+   knappene skiller seg fra lista rett under: lys grønn flate, grønn tekst. */
+.pl-alle .btn {
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  border-color: color-mix(in srgb, var(--accent) 40%, white);
+  color: color-mix(in srgb, var(--accent-2) 80%, black); font-weight: 600;
+}
+.pl-alle .btn:hover, .pl-alle .btn:focus-visible {
+  background: color-mix(in srgb, var(--accent) 22%, white);
+  border-color: var(--accent);
+}
 
 /* Visning-vinduet bak presentasjonsikonet (v5.41, js/visning.js). Et
    verktøy, ikke et lysbilde: modal-verktoy holder det i vanlig bredde også
