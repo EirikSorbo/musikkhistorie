@@ -3833,8 +3833,13 @@ body:not(.presentasjon) #modal-decade-view > .modal > * { flex-shrink: 0; }
 body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-top: 16px; }
 @media (max-width: 640px) { body:not(.presentasjon) #modal-decade-view > .modal { height: 92vh; } }
 .dv-panel .kilder { margin-top: 1.2rem; }
-/* Musikk-fanen: tre like brede kolonner (sjangre, artister, lytt). */
-.dv-panel.dv-musikk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1.8rem; align-items: start; }
+/* Kildene i Teknologi og Samfunn er skjult (v6.18, brukervalg 2026-10-03).
+   De tegnes fortsatt (explore-decade.js), så de kan slås på igjen her. */
+#dv-kilder-tech, #dv-kilder-society { display: none; }
+/* Musikk-fanen: tre kolonner (sjangre, artister, lytt). Fra v6.18
+   (brukervalg 2026-10-03) er lytteeksemplene bredest: titlene og artistene
+   står på samme rad og trengte plassen mer enn de to andre. */
+.dv-panel.dv-musikk { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 1.5fr); gap: 0 1.5rem; align-items: start; }
 @media (max-width: 760px) {
   .dv-panel.dv-musikk { grid-template-columns: minmax(0, 1fr); }
   .dv-kol + .dv-kol { margin-top: 1.4rem; }

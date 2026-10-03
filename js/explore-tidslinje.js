@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js; sjangervokabularet fra genre-model.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.17";
-import { isVisible } from "./limits.js?v=6.17";
-import { META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO, FAMILIES, canonMainGenre } from "./genre-model.js?v=6.17";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=6.17";
-import { imgTag, safeUrl } from "./ui-helpers.js?v=6.17";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.17";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.18";
+import { isVisible } from "./limits.js?v=6.18";
+import { META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO, FAMILIES, canonMainGenre } from "./genre-model.js?v=6.18";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=6.18";
+import { imgTag, safeUrl } from "./ui-helpers.js?v=6.18";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.18";
 
 // ----------------------------------------------------------------------------
 //  Artisttidslinje: når var artistene aktive? Pakket bane-tidslinje gruppert

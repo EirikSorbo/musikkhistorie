@@ -16,11 +16,11 @@
 //  og delt av editorene, normaliseringen av artister og sjangeroppslaget.
 // ============================================================================
 
-import { renderInline } from "./rich-text.js?v=6.17";
+import { renderInline } from "./rich-text.js?v=6.18";
 // Bryteren som skjuler punktene utenfor presentasjonen setter en klasse på
 // <html> når modulen lastes. Importen her sørger for at den er lastet på HVER
 // side som kan tegne punkter, også sider som ellers ikke bruker flaggene.
-import "./feature-flags.js?v=6.17";
+import "./feature-flags.js?v=6.18";
 
 // Anbefalt antall (brukerens «3–5 punkter»). Editoren varsler utenfor
 // spennet, men lagrer likevel: et kort under arbeid kan ha to.
