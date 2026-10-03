@@ -2424,16 +2424,17 @@ body.is-teacher #gate { display: none; }
 }
 
 /* Artistkortets egen tidslinje: innflytelsesperioden på samme tiårsrekke som
-   artistenes tidslinje. Ligger under faktalinjene på ALLE artistkort
-   (factsLines), uansett hvor kortet åpnes fra.
+   artistenes tidslinje. På listekortene og dagens artist ligger den under
+   faktalinjene. I detaljkortet står den øverst (v6.04, renderArtistDetail).
 
    clear:right, ikke bare en egen blokkontekst: artistbildet er float:right, og
    en stripe som la seg ved siden av bildet ble kortere på noen kort enn på
    andre. Da måler ikke to kort det samme, og det er nettopp sammenligningen
-   stripa er til for. Nå står den alltid i full kortbredde, under bildet.
-   Med 180 px-bildet var bildet stort sett slutt etter boblene; med 240 px i
-   det brede kortet (v5.86) rekker det lenger ned, og stripa venter på det
-   (ca. 180 px luft under boblene, målt som median over 16 artister).
+   stripa er til for. Nå står den alltid i full kortbredde. På listekortene
+   står den under bildet. I detaljkortet gjorde den også det fram til v6.04,
+   men med 240 px-bildet i det brede kortet (v5.86) ga ventingen ca. 180 px
+   tomrom under boblene (median over 16 artister). Der står stripa derfor
+   først, før bildet, og teksten flyter ved siden av bildet.
    display:flow-root blir stående som vern mot at en blokk med bakgrunn
    sklir inn under et flytende bilde.
 
@@ -2449,6 +2450,13 @@ body.is-teacher #gate { display: none; }
   padding: 0 0.875rem;
   margin: 7px 0 12px;
 }
+/* Detaljkortet (v6.04): stripa rett under hodet, og luft under den før bildet
+   og faktalinjene, som begynner på samme linje. På lerretet flyttes stripa ut
+   av kroppen (pres-artist.js), så regelen gjelder bare appen. */
+:is(#detail-body, #ad-body) > [data-sekt="stripe"] > .ai-strip { margin: 0 0 20px; }
+/* Beslektede artister står under bildet, så skillelinja aldri går inn under
+   det når teksten er kortere enn bildet. */
+body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
 /* Høyden følger skriften (em), ikke piksler (v5.39): med fast høyde på 13 px
    vokste årstallene ut av raden og ned i sporet så snart teksten ble
    forstørret (A+/A++ i presentasjonen). Sporet og polstringen følger rot-

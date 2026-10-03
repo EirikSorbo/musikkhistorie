@@ -10,12 +10,12 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.03";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.03";
-import { punkterHtml } from "./punkter.js?v=6.03";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.03";
-import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=6.03";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.03";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.04";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.04";
+import { punkterHtml } from "./punkter.js?v=6.04";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.04";
+import { GENEALOGY_MAIN_GENRES, findTreeGenreNode } from "./genre-model.js?v=6.04";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.04";
 import {
   escapeHtml,
   linkDesc,
@@ -38,14 +38,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.03";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.03";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.03";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.03";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.03";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.03";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.03";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.03";
+} from "./ui-helpers.js?v=6.04";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.04";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.04";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.04";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.04";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.04";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.04";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.04";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -156,11 +156,15 @@ export function renderArtistDetail(el, artist, lc) {
 
   // data-sekt-merkene styrer detaljnivået i presentasjonsvisningen (v5.24)
   // og er inerte ellers — se js/presentasjon-modell.js.
+  // Tidslinja står først (v6.04), over hele bredden som på lerretet. Sto den
+  // under boblene, måtte den vente til bildet var slutt (clear:right), og det
+  // ga et tomt felt under boblene. Nå flyter faktalinjene og teksten ved siden
+  // av bildet, og stripa står på samme sted på hvert kort.
   el.innerHTML = `
+    ${sekt("stripe", artistStripHtml(a))}
     ${sekt("bilde", artistImage(a, true))}
     ${sekt("fakta", factsLines(a))}
     ${sekt("tags", `<div class="meta" style="margin-bottom:12px">${metaRader(a)}</div>`)}
-    ${sekt("stripe", artistStripHtml(a))}
     ${sekt("punkter", punkterHtml(a.punkter, lc))}
     ${sekt("beskrivelse", a.description ? `<div class="desc rt">${linkDesc(a.description, lc)}</div>` : "")}
     ${sekt("verk", worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : "")}

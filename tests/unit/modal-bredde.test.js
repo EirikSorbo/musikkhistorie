@@ -79,3 +79,17 @@ test("alle modalene i den delte markupen er registrert (← og ✕ virker)", () 
   assert.ok(ider.length > 20, "fant modalene i markupen");
   for (const id of ider) assert.ok(liste.includes(`"${id}"`), `#${id} mangler i wireModals`);
 });
+
+// v6.04: i det brede kortet ventet tidslinja på at 240 px-bildet var slutt
+// (clear:right), og det ga et tomrom under boblene. Stripa står nå først i
+// artistkortet, og teksten flyter ved siden av bildet. Beslektede artister
+// venter på bildet, så skillelinja ikke går inn under det.
+test("artistkortet: tidslinja først, så bildet, og beslektede under bildet", () => {
+  const ui = les("js/ui.js");
+  const start = ui.indexOf("export function renderArtistDetail");
+  const kropp = ui.slice(start, ui.indexOf("wireLinks(el, lc);", start));
+  const sekter = [...kropp.matchAll(/sekt\("([a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(sekter.slice(0, 3), ["stripe", "bilde", "fakta"]);
+  const css = les("css/styles.css");
+  assert.match(css, /body:not\(\.presentasjon\) :is\(#detail-body, #ad-body\) \.related \{ clear: right; \}/);
+});

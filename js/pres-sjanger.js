@@ -19,7 +19,7 @@
 //  presentasjon.js (brukNivaaPaa) og er inert ellers.
 // ============================================================================
 
-import { sjangerPlassering } from "./presentasjon-modell.js?v=6.03";
+import { sjangerPlassering } from "./presentasjon-modell.js?v=6.04";
 
 // Bygger spaltene. Idempotent: står oppsettet alt, gjøres ingenting — modalens
 // observatør kaller oss igjen etter våre egne flyttinger.
