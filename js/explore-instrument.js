@@ -16,16 +16,16 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.23";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.23";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.23";
-import { pageFor } from "./story-format.js?v=6.23";
-import { renderRichText } from "./rich-text.js?v=6.23";
-import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.23";
-import { META_GENRE_COLOR } from "./genre-model.js?v=6.23";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.23";
-import { kobleFanePiler, visValgtFane } from "./ui-modal.js?v=6.23";
-import { openTechDetail } from "./explore-tech.js?v=6.23";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.24";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.24";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.24";
+import { pageFor } from "./story-format.js?v=6.24";
+import { renderRichText } from "./rich-text.js?v=6.24";
+import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.24";
+import { META_GENRE_COLOR } from "./genre-model.js?v=6.24";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.24";
+import { kobleFanePiler, visValgtFane } from "./ui-modal.js?v=6.24";
+import { openTechDetail } from "./explore-tech.js?v=6.24";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.

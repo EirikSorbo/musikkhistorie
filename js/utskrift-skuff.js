@@ -19,13 +19,13 @@
 //  som etikettene trenger). Skjemasiden har ikonet som vanlig lenke.
 // ============================================================================
 
-import { lesUtvalg, lagreUtvalg, fjern, toem, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=6.23";
-import { utvidUtvalg, parseUtskriftVis, SIDER_I_HEFTET, TYPE_ETIKETT } from "./utskrift-modell.js?v=6.23";
-import { stoppEtikett } from "./stopp-etikett.js?v=6.23";
-import { getState } from "./explore-context.js?v=6.23";
-import { isVisible } from "./limits.js?v=6.23";
-import { escapeHtml } from "./util.js?v=6.23";
-import { askChoice } from "./ui-modal.js?v=6.23";
+import { lesUtvalg, lagreUtvalg, fjern, toem, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js?v=6.24";
+import { utvidUtvalg, parseUtskriftVis, SIDER_I_HEFTET, TYPE_ETIKETT } from "./utskrift-modell.js?v=6.24";
+import { stoppEtikett } from "./stopp-etikett.js?v=6.24";
+import { getState } from "./explore-context.js?v=6.24";
+import { isVisible } from "./limits.js?v=6.24";
+import { escapeHtml } from "./util.js?v=6.24";
+import { askChoice } from "./ui-modal.js?v=6.24";
 
 const ID = "utskrift-skuff";
 const GREP_SVG = '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true"><circle cx="3" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="3" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="3" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/></svg>';

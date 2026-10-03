@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.23";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.23";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.23";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice } from "./ui-modal.js?v=6.23";
-import { GENEALOGY } from "./genre-model.js?v=6.23";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.23";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.23";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.23";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.23";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.23";
-import { getState } from "./explore-context.js?v=6.23";
-import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.23";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.23";
-import { stoppEtikett } from "./stopp-etikett.js?v=6.23";
+import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.24";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.24";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.24";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice } from "./ui-modal.js?v=6.24";
+import { GENEALOGY } from "./genre-model.js?v=6.24";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.24";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.24";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.24";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.24";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.24";
+import { getState } from "./explore-context.js?v=6.24";
+import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.24";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.24";
+import { stoppEtikett } from "./stopp-etikett.js?v=6.24";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -956,10 +956,21 @@ export async function avsluttPresentasjon() {
   let logg = [];
   try { logg = JSON.parse(les(LAGRING.timelogg) || "[]"); } catch (e) { logg = []; }
   const stopp = timeStopp(logg);
-  if (erLaerer && stopp.length && !aktivPlanId()) {
+  // «Lagre som time» tilbys også etter en kjøreplan (v6.24, brukervalg
+  // 2026-10-04, etter Fable-gjennomgangen). Timen blir en EGEN plan med dagens
+  // dato og det som faktisk ble vist, også avstikkerne utenom planen, og
+  // kjøreplanen står urørt til neste gang. Før ble læreren bare spurt i fri
+  // visning, og en delt kjøreplan sto uten dato og uten avstikkerne.
+  const pid = aktivPlanId();
+  const kjoreplan = pid
+    ? (plan || normaliserPlaner(getState().content?.presentasjoner?.planer)[pid] || null)
+    : null;
+  if (erLaerer && stopp.length) {
     const valg = await askChoice({
       title: "Lagre det du viste som en time?",
-      text: `${stopp.length} kort og lytteeksempler ble vist. En time kan deles med studentene under «Fra timene» (Visning-vinduet).`,
+      text: kjoreplan
+        ? `${stopp.length} kort og lytteeksempler ble vist, også det du åpnet utenom kjøreplanen. Timen lagres for seg med dagens dato, og kjøreplanen «${kjoreplan.tittel}» endres ikke. En time kan deles med studentene under «Fra timene» (Visning-vinduet).`
+        : `${stopp.length} kort og lytteeksempler ble vist. En time kan deles med studentene under «Fra timene» (Visning-vinduet).`,
       buttons: [
         { label: "Lagre som time", value: "lagre", className: "primary" },
         { label: "Avslutt uten å lagre", value: "nei" },
@@ -971,7 +982,10 @@ export async function avsluttPresentasjon() {
     if (valg === "lagre") {
       const idag = new Date();
       const dato = `${idag.getFullYear()}-${String(idag.getMonth() + 1).padStart(2, "0")}-${String(idag.getDate()).padStart(2, "0")}`;
-      const forslag = `Time ${idag.toLocaleDateString("nb-NO", { day: "numeric", month: "long" })}`;
+      // Etter en kjøreplan foreslås planens tittel; datoen står ved timen.
+      const forslag = kjoreplan && kjoreplan.tittel !== "(uten tittel)"
+        ? kjoreplan.tittel
+        : `Time ${idag.toLocaleDateString("nb-NO", { day: "numeric", month: "long" })}`;
       // Avbryt i tittelspørsmålet lagrer ingenting, og visningen står åpen
       // (som ved lagringsfeil), så læreren kan velge på nytt (v6.23, Fable F9).
       const svar = window.prompt("Tittel på timen", forslag);

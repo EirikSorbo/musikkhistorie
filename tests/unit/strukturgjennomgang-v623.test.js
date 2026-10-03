@@ -4,11 +4,11 @@ import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js?v=6.23";
-import { tiarEksempler, spillAlleHtml } from "../../js/ui.js?v=6.23";
-import { iSpalter } from "../../js/explore-sjanger.js?v=6.23";
-import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js?v=6.23";
-import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js?v=6.23";
+import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js?v=6.24";
+import { tiarEksempler, spillAlleHtml } from "../../js/ui.js?v=6.24";
+import { iSpalter } from "../../js/explore-sjanger.js?v=6.24";
+import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js?v=6.24";
+import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js?v=6.24";
 
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
@@ -124,4 +124,17 @@ test("modalBytt lukker alt over målet når målet alt står åpent lenger ned",
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
   assert.match(kropp, /lukkFlere\(/);
   assert.match(kropp, /> z\)\);\s*apne\(\);/);
+});
+
+// v6.24 (brukervalg 2026-10-04): «Lagre som time» tilbys også etter en
+// kjøreplan. Timen blir en egen plan (nyPlanId) med dagens dato, og
+// kjøreplanen endres ikke. Før gjaldt spørsmålet bare fri visning.
+test("Avslutt tilbyr «Lagre som time» også etter en kjøreplan, som en egen plan", () => {
+  const src = kilde("js/presentasjon.js");
+  const start = src.indexOf("export async function avsluttPresentasjon");
+  const kropp = src.slice(start, src.indexOf("\n}\n", start));
+  assert.match(kropp, /if \(erLaerer && stopp\.length\) \{/);
+  assert.doesNotMatch(kropp, /!aktivPlanId\(\)/);
+  assert.match(kropp, /savePlan\(nyPlanId\(\), \{ tittel, laget: idag\.toISOString\(\), dato, stopp \}\)/);
+  assert.match(kropp, /kjoreplan\.tittel/);
 });
