@@ -4,28 +4,44 @@
 //  Sjangre-/undersjangre-vinduene og sjanger-info-modalen (lærer-oversikten).
 //  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.11";
-import { isVisible } from "./limits.js?v=6.11";
-import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.11";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.11";
-import { familieNyanse } from "./genre-periods.js?v=6.11";
-import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.11";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.12";
+import { isVisible } from "./limits.js?v=6.12";
+import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.12";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.12";
+import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.12";
 
 // Sjangre-vinduet (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S6):
 // sjangrene gruppert per metasjanger, i appens ene rekkefølge, og innenfor
-// hver familie i tidsrekkefølge med en liten periodestolpe i nyanser av
-// familiefargen (D6). Før sto 43 like grønne bobler i alfabetisk rekkefølge,
-// og familiene og fargene, som bærer resten av appen, var borte akkurat der.
-// Metasjangerens navn fører til oversikten over den (S2).
+// hver familie i tidsrekkefølge. Før sto 43 like grønne bobler i alfabetisk
+// rekkefølge, og familiene og fargene, som bærer resten av appen, var borte
+// akkurat der. «Oversikt» fører til metasjangerens oversikt (S2).
+//
+// v6.12 (brukervalg 2026-10-03): årstallene høyrejustert i stedet for
+// periodestolpen, ingen tall i familiehodet, og faste spalter (SPALTER).
 //
 // Radene bærer data-sjanger, så den delegerte lytteren i explore.js åpner
 // sjangerkortet (samme rute som sjangerboblene på kortene).
-const AKSE_FRA = 1900;
+
+// Familiene i fire faste spalter, lest nedover og så bortover. Nettleserens
+// egen fordeling la Pop og Rock under Country; brukeren ville ha Pop under
+// Gospel. En metasjanger som ikke står her (en ny i treet), legges i den
+// spalten som har færrest rader, så den aldri forsvinner.
+const SPALTER = [["Blues", "Jazz"], ["R&B", "Hip-hop"], ["Klubbmusikk", "Gospel", "Pop"], ["Country", "Rock"]];
+
+export function iSpalter(grupper, antallRader) {
+  const spalter = SPALTER.map((navn) => navn.map((m) => grupper.find((g) => g.meta === m)).filter(Boolean));
+  const plassert = new Set(SPALTER.flat());
+  const hoyde = (sp) => sp.reduce((sum, g) => sum + 2 + antallRader(g), 0);
+  for (const g of grupper) {
+    if (plassert.has(g.meta)) continue;
+    spalter.reduce((min, sp) => (hoyde(sp) < hoyde(min) ? sp : min)).push(g);
+  }
+  return spalter;
+}
 
 function familierData() {
   const s = getState();
   const active = s.artists.filter(isVisible);
-  const naa = new Date().getFullYear();
   // Sjangre med minst én artist (tre-taggene, kanonisert som før).
   const medArtister = new Set(active.flatMap((a) => (a.mainGenre || [])
     .filter(isMainGenre).map((x) => canonMainGenre(x) || x)));
@@ -36,22 +52,18 @@ function familierData() {
       const til = Number.isInteger(r.activeTo) ? r.activeTo : null;
       return { n, fra, til, treIdx };
     }).sort((a, b) => (a.fra ?? 9999) - (b.fra ?? 9999) || (a.til ?? 9999) - (b.til ?? 9999) || a.n.r - b.n.r || a.treIdx - b.treIdx);
-    return {
-      meta, farge: META_GENRE_COLOR[meta] || "#9bada1", noder,
-      artister: active.filter((a) => a.metaGenre === meta).length,
-      medArtister, naa,
-    };
+    return { meta, farge: META_GENRE_COLOR[meta] || "#9bada1", noder, medArtister };
   }).filter((f) => f.noder.length);
 }
 
-function stolpeHtml(x, farge, i, n, naa) {
-  if (x.fra === null) return `<span class="sj-spor" aria-hidden="true"></span>`;
-  const spenn = naa - AKSE_FRA;
-  const fra = Math.max(x.fra, AKSE_FRA);
-  const til = Math.min(x.til ?? naa, naa);
-  const venstre = Math.max(0, (fra - AKSE_FRA) / spenn * 100);
-  const bredde = Math.max(2, (til - fra) / spenn * 100);
-  return `<span class="sj-spor" aria-hidden="true"><i style="left:${venstre.toFixed(1)}%;width:${Math.min(bredde, 100 - venstre).toFixed(1)}%;background:${familieNyanse(farge, i, n)}"></i></span>`;
+// Familiehodet: fargeprikk, navn og «Oversikt ›» på samme rad. Lenken bare
+// for metasjangrene i treet (undersjangrenes «Andre» har ingen oversikt).
+function familieHode(meta) {
+  return `<div class="sj-fam-hode">
+    <span class="sj-fam-prikk" aria-hidden="true"></span>
+    <h3 class="sj-fam-navn">${escapeHtml(meta)}</h3>
+    ${META_GENRE_ORDER.includes(meta) ? `<button type="button" class="sj-fam-lenke" data-meta-oversikt="${escapeHtml(meta)}">Oversikt <span aria-hidden="true">›</span></button>` : ""}
+  </div>`;
 }
 
 export function openSubgenreList() {
@@ -59,28 +71,21 @@ export function openSubgenreList() {
   if (!modal) return;
   const checked = (opts.getCheckedState ? opts.getCheckedState() : null)?.genres || [];
   const familier = familierData();
+  const familieHtml = (f) => `<section class="sj-familie" style="--fam:${escapeHtml(f.farge)}">
+      ${familieHode(f.meta)}
+      ${f.noder.map((x) => {
+        const tom = !f.medArtister.has(x.n.l);
+        const aar = x.fra === null ? "" : `${x.fra}–${x.til ?? "i dag"}`;
+        return `<button type="button" class="sj-rad${tom ? " is-empty" : ""}${checked.includes(x.n.l) ? " is-checked" : ""}" data-sjanger="${escapeHtml(x.n.l)}"${tom ? ' title="Ingen artister ennå"' : ""}>
+          <span class="sj-rad-navn">${escapeHtml(x.n.f || x.n.l)}</span>${aar ? `<span class="sj-rad-aar">${aar}</span>` : ""}
+        </button>`;
+      }).join("")}
+    </section>`;
   const el = document.getElementById("sl-chips");
   el.innerHTML = familier.length
-    ? `<div class="sj-familier">${familier.map((f) => `<section class="sj-familie" style="--fam:${escapeHtml(f.farge)}">
-        <div class="sj-fam-hode">
-          <span class="sj-fam-prikk" aria-hidden="true"></span>
-          <h3 class="sj-fam-navn">${escapeHtml(f.meta)}</h3>
-          <span class="sj-fam-tall">${f.noder.length} sjang${f.noder.length === 1 ? "er" : "re"} · ${f.artister} artist${f.artister === 1 ? "" : "er"}</span>
-          <button type="button" class="sj-fam-lenke" data-meta-oversikt="${escapeHtml(f.meta)}">Oversikt <span aria-hidden="true">›</span></button>
-        </div>
-        ${f.noder.map((x, i) => {
-          const tom = !f.medArtister.has(x.n.l);
-          const aar = x.fra === null ? "" : `${x.fra}–${x.til ?? "i dag"}`;
-          return `<button type="button" class="sj-rad${tom ? " is-empty" : ""}${checked.includes(x.n.l) ? " is-checked" : ""}" data-sjanger="${escapeHtml(x.n.l)}"${tom ? ' title="Ingen artister ennå"' : ""}>
-            <span class="sj-rad-navn">${escapeHtml(x.n.f || x.n.l)}${aar ? `<span class="sj-rad-aar">${aar}</span>` : ""}</span>
-            ${stolpeHtml(x, f.farge, i, f.noder.length, f.naa)}
-          </button>`;
-        }).join("")}
-      </section>`).join("")}</div>`
+    ? `<div class="sj-spalter">${iSpalter(familier, (f) => f.noder.length)
+        .map((sp) => `<div class="sj-spalte">${sp.map(familieHtml).join("")}</div>`).join("")}</div>`
     : `<p class="muted">Ingen sjangre registrert ennå.</p>`;
-  // Antallet undersjangre på knappen (den ble bygd før dataene landet).
-  const ub = document.getElementById("btn-undersjangere");
-  if (ub) ub.textContent = `Undersjangre (${undersjangre().length})`;
   modalOpen(modal);
 }
 
@@ -116,11 +121,7 @@ export function openUndersjangre() {
     .filter((g) => g.tagger.length);
   ulEl.innerHTML = grupper.length
     ? `<div class="sj-familier">${grupper.map((g) => `<section class="sj-familie" style="--fam:${escapeHtml(g.farge)}">
-        <div class="sj-fam-hode">
-          <span class="sj-fam-prikk" aria-hidden="true"></span>
-          <h3 class="sj-fam-navn">${escapeHtml(g.meta)}</h3>
-          <span class="sj-fam-tall">${g.tagger.length}</span>
-        </div>
+        ${familieHode(g.meta)}
         ${g.tagger.map((u) => `<button type="button" class="sj-rad${checked.includes(u.navn) ? " is-checked" : ""}" data-under="${escapeHtml(u.navn)}">
           <span class="sj-rad-navn">${escapeHtml(u.navn)}</span><span class="sj-rad-aar">${u.antall}</span>
         </button>`).join("")}

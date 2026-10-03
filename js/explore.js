@@ -5,25 +5,26 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.11";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.11";
-import { MODAL_HTML } from "./explore-modals.js?v=6.11";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.11";
-import { openVarmekart } from "./explore-varmekart.js?v=6.11";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.11";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.11";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.11";
-import { openDecadeList, openDecade } from "./explore-decade.js?v=6.11";
-import { openLytt } from "./explore-lytt.js?v=6.11";
-import { openTime } from "./explore-timer.js?v=6.11";
-import { openReferanser } from "./explore-referanser.js?v=6.11";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.11";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.11";
-import { openVisningssider } from "./explore-visningssider.js?v=6.11";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.11";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.11";
-import { openSok, wireSok } from "./explore-search.js?v=6.11";
-import { erPresentasjon } from "./presentasjon.js?v=6.11";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.12";
+import { modalBytt } from "./ui-modal.js?v=6.12";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.12";
+import { MODAL_HTML } from "./explore-modals.js?v=6.12";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.12";
+import { openVarmekart } from "./explore-varmekart.js?v=6.12";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.12";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.12";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.12";
+import { openDecadeList, openDecade } from "./explore-decade.js?v=6.12";
+import { openLytt } from "./explore-lytt.js?v=6.12";
+import { openTime } from "./explore-timer.js?v=6.12";
+import { openReferanser } from "./explore-referanser.js?v=6.12";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.12";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.12";
+import { openVisningssider } from "./explore-visningssider.js?v=6.12";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.12";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.12";
+import { openSok, wireSok } from "./explore-search.js?v=6.12";
+import { erPresentasjon } from "./presentasjon.js?v=6.12";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -85,35 +86,45 @@ function wireModals() {
     else rotterTre.style.display = "none";
   }
 
-  const slExtra = document.getElementById("sl-extra");
-  if (slExtra) {
-    // Inngangene til visualiseringene over sjangrene, som én rolig rad over
-    // familiekortene (v6.05, S6). «Sjangerhistorier» følger det midlertidige
-    // flagget: skjules knappen her, må hubkortet skjules samtidig, ellers er
-    // historiene fortsatt åpne. Lærersiden gir onStoryEdit og beholder den.
-    const visHistorier = !SKJUL_I_STUDENTVISNING.metasjangerhistorier || !!opts.onStoryEdit;
-    const knapp = (id, tekst) => `<button type="button" class="btn ghost small" id="${id}">${tekst}</button>`;
-    slExtra.innerHTML = `<div class="sj-nav">${[
-      opts.onSlektstre ? knapp("btn-slektstre", "Slektstre") : "",
-      knapp("btn-sjangerperioder", "Sjangerperioder"),
-      knapp("btn-varmekart", "Varmekart"),
-      knapp("btn-tidslinje", "Artisttidslinje"),
-      knapp("btn-metasjangere", "Sjangerhistorier"),
-      knapp("btn-undersjangere", "Undersjangre"),
-    ].join("")}</div>`;
-    const histKnapp = slExtra.querySelector("#btn-metasjangere");
-    histKnapp.hidden = !visHistorier;
-    histKnapp.addEventListener("click", () => openHistorier());
-    // Bryteren kan endres mens siden står åpen (v6.10, U4).
-    document.addEventListener("pensum:synlighet", () => {
-      histKnapp.hidden = SKJUL_I_STUDENTVISNING.metasjangerhistorier && !opts.onStoryEdit;
-    });
-    slExtra.querySelector("#btn-undersjangere").addEventListener("click", openUndersjangre);
-    slExtra.querySelector("#btn-slektstre")?.addEventListener("click", () => opts.onSlektstre());
-    slExtra.querySelector("#btn-sjangerperioder").addEventListener("click", openSjangerperioder);
-    slExtra.querySelector("#btn-varmekart").addEventListener("click", () => openVarmekart());
-    slExtra.querySelector("#btn-tidslinje").addEventListener("click", () => openTidslinje());
-  }
+  // Sjangre-fanene (v6.12, brukervalg 2026-10-03): de fem kortene om sjangrene
+  // står som faner i samme vindu, med Sjangre først. Hvert kort beholder sin
+  // egen adresse og åpner, så huben, tiårene og kjøreplanene åpner dem som
+  // før, nå med fanene over. Slektstreet (egen side) og Sjangerhistorier
+  // (flagget) er knapper til høyre, ikke faner. Skjules «Sjangerhistorier»
+  // her, må hubkortet skjules samtidig, ellers er historiene fortsatt åpne.
+  // Lærersiden gir onStoryEdit og beholder den.
+  const SJ_FANER = [
+    { id: "sjangre", navn: "Sjangre", modal: "modal-subgenre-list", apne: () => openSubgenreList() },
+    { id: "sjangerperioder", navn: "Sjangerperioder", modal: "modal-sjangerperioder", apne: () => openSjangerperioder() },
+    { id: "varmekart", navn: "Varmekart", modal: "modal-varmekart", apne: () => openVarmekart() },
+    { id: "tidslinje", navn: "Artisttidslinje", modal: "modal-tidslinje", apne: () => openTidslinje() },
+    { id: "undersjangre", navn: "Undersjangre", modal: "modal-undersjangre", apne: () => openUndersjangre() },
+  ];
+  const visHistorier = () => !SKJUL_I_STUDENTVISNING.metasjangerhistorier || !!opts.onStoryEdit;
+  document.querySelectorAll("[data-sj-faner]").forEach((rad) => {
+    const her = rad.dataset.sjFaner;
+    const vindu = rad.closest(".modal-backdrop");
+    rad.innerHTML = `<div class="sj-fanerad" role="tablist" aria-label="Sjangre">${SJ_FANER.map((f) =>
+      `<button type="button" class="dv-fane${f.id === her ? " active" : ""}" role="tab" aria-selected="${f.id === her}" data-sj-fane="${f.id}" data-tekst="${f.navn}">${f.navn}</button>`).join("")}</div>
+      <div class="sj-fane-knapper">
+        ${opts.onSlektstre ? `<button type="button" class="btn ghost small" data-sj-slektstre>Slektstre</button>` : ""}
+        <button type="button" class="btn ghost small" data-sj-historier${visHistorier() ? "" : " hidden"}>Sjangerhistorier</button>
+      </div>`;
+    rad.querySelectorAll("[data-sj-fane]").forEach((b) => b.addEventListener("click", () => {
+      const f = SJ_FANER.find((x) => x.id === b.dataset.sjFane);
+      if (!f || f.id === her) return;
+      const til = document.getElementById(f.modal);
+      modalBytt(vindu, til, f.apne);
+      // Tastaturet blir stående på fanene, ikke på ←-knappen i det nye kortet.
+      til?.querySelector(`[data-sj-fane="${f.id}"]`)?.focus();
+    }));
+    rad.querySelector("[data-sj-slektstre]")?.addEventListener("click", () => opts.onSlektstre());
+    rad.querySelector("[data-sj-historier]").addEventListener("click", () => openHistorier());
+  });
+  // Bryteren kan endres mens siden står åpen (v6.10, U4).
+  document.addEventListener("pensum:synlighet", () => {
+    document.querySelectorAll("[data-sj-historier]").forEach((b) => { b.hidden = !visHistorier(); });
+  });
 
   // «Det store bildet»-hub: mål-modalene åpnes OPPÅ huben (modaler stables),
   // så ← i undermodalen går naturlig tilbake hit. Slektstreet bor på egen side

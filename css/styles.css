@@ -3586,8 +3586,6 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
    Strukturgjennomgangen 3.10, runde 2 (v6.06)
    =========================================================================== */
 
-/* Sjangre-vinduet (S6): én rolig rad med innganger, så familiekortene. */
-.sj-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
 /* Familiekortene i spalter (som en innholdsfortegnelse): korte og lange
    familier pakkes tett uten hull, og leses nedover og så bortover. */
 .sj-familier { columns: 3 17rem; column-gap: 12px; }
@@ -3615,10 +3613,6 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
 .sj-rad.is-empty .sj-rad-navn { color: var(--muted); }
 /* Læreren ser hvilke sjangre som er sjekket (som de grønne boblene før). */
 .sj-rad.is-checked .sj-rad-navn::after { content: " ✓"; color: var(--accent); }
-/* Periodestolpen: 1900 til i dag, i en nyanse av familiefargen (D6). */
-.sj-spor { position: relative; flex: none; width: 72px; height: 6px; border-radius: 3px; background: var(--surface-2); }
-.sj-spor i { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
-#modal-undersjangre .sj-rad-aar { margin-left: auto; }
 
 /* Lenken til metasjangerens oversikt øverst i en åpen gruppe (S2). */
 .meta-oversikt-rad { display: flex; justify-content: flex-end; margin: -2px 0 6px; }
@@ -3843,16 +3837,48 @@ body.presentasjon .meta-merke { display: none; }
 .lytt-bolker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
 @media (max-width: 760px) { .lytt-bolker { grid-template-columns: minmax(0, 1fr); } }
 .lytt-bolker .sj-familie { margin: 0; }
-/* Sjangre og Undersjangre komprimert (v6.11, brukervalg 2026-10-03): fire
-   spalter og tettere rader, så Sjangre får plass uten rulling på laptop. */
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-nav { margin-bottom: 10px; }
+/* Sjangre og Undersjangre (v6.11, justert v6.12, brukervalg 2026-10-03):
+   tette spalter, litt større tekst enn i v6.11, familiehodet på én rad med
+   «Oversikt» til høyre, og årstallene (antallet i Undersjangre) høyrejustert.
+   Sjangre har faste spalter (.sj-spalter, Pop under Gospel); Undersjangre
+   fordeles av nettleseren, fordi Jazz alene er lengre enn tre av de andre. */
 :is(#modal-subgenre-list, #modal-undersjangre) .sj-familier { columns: 4 12.5rem; column-gap: 10px; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-familie { padding: 6px 10px 4px; margin-bottom: 9px; border-radius: 12px; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-hode { gap: 6px; margin-bottom: 1px; flex-wrap: wrap; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-navn { font-size: 0.9rem; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-tall { font-size: 0.7rem; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-lenke { font-size: 0.72rem; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-rad { padding: 1px 4px; gap: 6px; font-size: 0.8rem; line-height: 1.35; }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-rad-aar { font-size: 0.68rem; margin-left: 4px; }
-#modal-subgenre-list .sj-spor { width: 34px; height: 5px; }
-#modal-undersjangre .modal > p.muted { margin-bottom: 10px !important; font-size: 0.84rem !important; }
+.sj-spalter { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.sj-spalte { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.sj-spalte .sj-familie { margin: 0; }
+@media (max-width: 900px) { .sj-spalter { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .sj-spalter { grid-template-columns: minmax(0, 1fr); } }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-familie { padding: 7px 10px 5px; margin-bottom: 9px; border-radius: 12px; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-hode { gap: 7px; margin-bottom: 2px; flex-wrap: nowrap; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-navn { font-size: 1rem; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-lenke { font-size: 0.8rem; white-space: nowrap; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-rad { padding: 1px 4px; gap: 8px; font-size: 0.88rem; line-height: 1.4; align-items: baseline; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-rad-aar { font-size: 0.76rem; margin-left: auto; padding-left: 4px; font-variant-numeric: tabular-nums; }
+#modal-undersjangre .modal > p.muted { margin-bottom: 10px !important; font-size: 0.86rem !important; }
+
+/* Sjangre-fanene (v6.12, brukervalg 2026-10-03): fem kort med samme fanerad.
+   Fanene som i tiårsvinduet; Slektstre (og Sjangerhistorier) er knapper til
+   høyre. På smale skjermer rulles fanene sidelengs, og knappene står over. */
+.sj-faner { display: flex; align-items: flex-end; gap: 12px; border-bottom: 1px solid var(--line); margin: -4px 0 14px; }
+.sj-fanerad { display: flex; gap: 20px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.sj-fanerad::-webkit-scrollbar { display: none; }
+.sj-fanerad .dv-fane { flex: none; white-space: nowrap; margin-bottom: 0; }
+/* Den aktive fanen er halvfet; bredden holdes av en usynlig halvfet kopi, så
+   fanene ikke flytter seg sidelengs ved bytte. */
+.sj-fanerad .dv-fane { display: inline-flex; flex-direction: column; align-items: center; }
+.sj-fanerad .dv-fane::after { content: attr(data-tekst); height: 0; overflow: hidden; visibility: hidden; font-weight: 600; }
+.sj-fane-knapper { display: flex; gap: 6px; flex: none; padding-bottom: 6px; }
+.sj-fanevindu > p.muted { margin-top: 0; }
+@media (max-width: 640px) {
+  .sj-faner { flex-direction: column-reverse; align-items: stretch; gap: 4px; }
+  .sj-fane-knapper { justify-content: flex-end; padding-bottom: 0; }
+  .sj-fane-knapper:not(:has(> :not([hidden]))) { display: none; }
+}
+/* Toppen av kortet står fast når fanen byttes (kortene har ulik høyde), og
+   det nye kortet kommer uten inngangsanimasjon (modalBytt i ui-modal.js). */
+body:not(.presentasjon) .modal-backdrop:has(> .sj-fanevindu) { align-items: flex-start; }
+body:not(.presentasjon) .modal-backdrop > .modal.sj-fanevindu { margin-top: calc(7.5vh - 20px); }
+@media (max-width: 640px) {
+  body:not(.presentasjon) .modal-backdrop > .modal.sj-fanevindu { margin-top: calc(4vh - 10px); }
+}
+.modal-backdrop.modal-bytt > .modal { animation: none; }

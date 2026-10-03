@@ -16,15 +16,15 @@
 //  explore-modals.js) styrer detaljnivået i presentasjonsvisningen.
 // ============================================================================
 import { modalOpen, renderDecadeRibbon, buildKilderList, buildTechTimeline, formatInfoText, escapeHtml,
-  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.11";
-import { ytMaal } from "./presentasjon-modell.js?v=6.11";
-import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.11";
-import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.11";
-import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.11";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.11";
-import { openTechDetail } from "./explore-tech.js?v=6.11";
-import { openVarmekart } from "./explore-varmekart.js?v=6.11";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.11";
+  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.12";
+import { ytMaal } from "./presentasjon-modell.js?v=6.12";
+import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.12";
+import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.12";
+import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.12";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.12";
+import { openTechDetail } from "./explore-tech.js?v=6.12";
+import { openVarmekart } from "./explore-varmekart.js?v=6.12";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.12";
 
 // Fanene i brukerens rekkefølge. Nøklene tech/society er de gamle modusene, så
 // lenker og kjøreplanstopp som «tiår:1950:tech» virker som før.

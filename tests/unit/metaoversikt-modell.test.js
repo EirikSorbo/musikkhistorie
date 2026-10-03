@@ -1,7 +1,7 @@
 // Metasjanger-oversikten i visningsmodus (v5.94, brukerønske 2026-10-01).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js?v=6.11";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js?v=6.12";
 
 const art = (id, name, metaGenre, mainGenre, extra = {}) =>
   ({ id, name, metaGenre, mainGenre, status: "active", ...extra });
@@ -82,7 +82,7 @@ test("tidsrom: tidligste startår, og «i dag» når en periode er åpen", () =>
 
 // --- Visning-kortet og artistgalleriet (v5.96, brukerønske 2026-10-01) ------------
 import { readFileSync } from "node:fs";
-import { VIS_TYPER } from "../../js/vis-lenke.js?v=6.11";
+import { VIS_TYPER } from "../../js/vis-lenke.js?v=6.12";
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 
 test("artistgalleriet: samme artister som «Artister»-knappen, stopp i kjøreplaner, knapp på sjangerkortet", () => {

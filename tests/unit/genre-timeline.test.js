@@ -1,9 +1,9 @@
 import { SEED_GENRE_DESCS } from "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { genreFamilyNodes } from "../../js/ui-timeline.js?v=6.11";
-import { GENEALOGY } from "../../js/genre-model.js?v=6.11";
-import { STORY_ORDER } from "../../js/story-format.js?v=6.11";
+import { genreFamilyNodes } from "../../js/ui-timeline.js?v=6.12";
+import { GENEALOGY } from "../../js/genre-model.js?v=6.12";
+import { STORY_ORDER } from "../../js/story-format.js?v=6.12";
 
 // Sjangerfamilien over hver historie utledes av treet. Poenget med å generere
 // den er at nye noder dukker opp av seg selv — testene under låser nettopp det.

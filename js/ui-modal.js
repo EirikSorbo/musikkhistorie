@@ -129,7 +129,36 @@ export function topOpenModal() {
   return open[open.length - 1];
 }
 
+// ---------------------------------------------------------------------------
+//  FANER SOM ER EGNE KORT (v6.12, brukervalg 2026-10-03)
+// ---------------------------------------------------------------------------
+//  Sjangre, Sjangerperioder, Varmekart, Artisttidslinje og Undersjangre er
+//  egne kort (egne adresser, egne innganger i huben og fra tiårene), men står
+//  som faner i samme vindu. Et fanebytte setter det nye kortet på det gamles
+//  plass: samme oppføring i historikken (adressen byttes, ← går dit fanene ble
+//  åpnet fra), fokus tilbake til samme utløser når vinduet lukkes, og ingen
+//  inngangsanimasjon. `apne` er kortets vanlige åpner, så innholdet tegnes
+//  som før. Står målet allerede åpent lenger ned i stabelen, lukkes bare det
+//  øverste, så det samme kortet aldri ligger to steder.
+let byttUt = null;
+export function modalBytt(fra, til, apne) {
+  if (!fra?.classList.contains("open")) { apne(); return; }
+  if (til && til !== fra && til.classList.contains("open")) { modalClose(fra); return; }
+  byttUt = fra;
+  try { apne(); } finally { byttUt = null; }
+}
+
 export function modalOpen(el) {
+  const ut = byttUt && byttUt !== el && byttUt.classList.contains("open") ? byttUt : null;
+  byttUt = null;
+  el.classList.toggle("modal-bytt", !!ut);
+  if (ut) {
+    el._restoreFocus = ut._restoreFocus;
+    ut._restoreFocus = null;
+    ut.classList.remove("open");
+    const i = histStabel.indexOf(ut);
+    if (i !== -1) histStabel[i] = el;   // histApnet under bytter adressen
+  }
   el.style.zIndex = ++window._modalZ;
   const dialog = el.querySelector(".modal");
   if (dialog) {
@@ -147,7 +176,7 @@ export function modalOpen(el) {
   // chip inne i detaljmodalen → openDetail på nytt), ville dette ellers pekt på
   // et element inne i modalen som re-renderingen straks fjerner, og den
   // opprinnelige utløseren utenfor mister fokusrestaureringen.
-  if (!el.classList.contains("open")) el._restoreFocus = document.activeElement;
+  if (!el.classList.contains("open") && !ut) el._restoreFocus = document.activeElement;
   // «Kopier lenke» (v5.22) vises bare når backdropen bærer et mål: åpnerne
   // setter data-vis for dynamiske mål (artist, tiår, …) rett før modalOpen,
   // markupen for de statiske (varmekart, sidene, …).

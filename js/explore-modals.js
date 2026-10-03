@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.11";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.11";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.12";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.12";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -181,13 +181,18 @@ export const MODAL_HTML = `
   </div>
 </div>
 
+<!-- Sjangre-fanene (v6.12, brukervalg 2026-10-03): Sjangre, Sjangerperioder,
+     Varmekart, Artisttidslinje og Undersjangre er fem egne kort med samme
+     overskrift og samme fanerad (.sj-faner, tegnes i explore.js). Et fane-
+     klikk bytter kortet på stedet (modalBytt i ui-modal.js). -->
 <!-- Varmekart: metasjanger × tiår -->
 <div class="modal-backdrop" id="modal-varmekart" data-vis="varmekart">
-  <div class="modal modal-innhold">
+  <div class="modal modal-innhold sj-fanevindu">
     <div class="modal-head">
-      <h2>Tyngdepunkt gjennom tiårene</h2>
+      <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div class="sj-faner" data-sj-faner="varmekart"></div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår, gruppert etter metasjanger. Mørkere = mer toneangivende.</p>
     <div id="vk-body"></div>
   </div>
@@ -199,11 +204,12 @@ export const MODAL_HTML = `
      slektstreet, så figuren følger endringer uten at noe må vedlikeholdes.
      Tegnes av js/explore-sjangerperioder.js. -->
 <div class="modal-backdrop" id="modal-sjangerperioder" data-vis="sjangerperioder">
-  <div class="modal modal-innhold">
+  <div class="modal modal-innhold sj-fanevindu">
     <div class="modal-head">
-      <h2>Sjangerperioder</h2>
+      <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div class="sj-faner" data-sj-faner="sjangerperioder"></div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Når sjangrene var aktive, gruppert etter metasjanger. Trykk på en sjanger for å åpne sjangerkortet.</p>
     <div id="sp-body"></div>
   </div>
@@ -237,11 +243,12 @@ export const MODAL_HTML = `
 
 <!-- Tidslinje: når var artistene aktive, gruppert per sjanger -->
 <div class="modal-backdrop" id="modal-tidslinje" data-vis="tidslinje">
-  <div class="modal modal-innhold">
+  <div class="modal modal-innhold sj-fanevindu">
     <div class="modal-head">
-      <h2>Artisttidslinje</h2>
+      <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div class="sj-faner" data-sj-faner="tidslinje"></div>
     <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode, gruppert etter metasjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
     <div id="tid-body"></div>
   </div>
@@ -249,25 +256,26 @@ export const MODAL_HTML = `
 
 <!-- Sjangre-liste -->
 <div class="modal-backdrop" id="modal-subgenre-list" data-vis="sjangre">
-  <div class="modal modal-innhold">
+  <div class="modal modal-innhold sj-fanevindu">
     <div class="modal-head">
       <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <div id="sl-extra"></div>
+    <div class="sj-faner" data-sj-faner="sjangre"></div>
     <!-- Familiekortene (v6.05, S6): én per metasjanger, sjangrene i tids-
          rekkefølge. Tegnes av openSubgenreList (explore-sjanger.js). -->
     <div id="sl-chips"></div>
   </div>
 </div>
 
-<!-- Undersjangre (åpnes fra Sjangre-modalen, oppå den) -->
+<!-- Undersjangre (en av Sjangre-fanene) -->
 <div class="modal-backdrop" id="modal-undersjangre" data-vis="undersjangre">
-  <div class="modal modal-innhold">
+  <div class="modal modal-innhold sj-fanevindu">
     <div class="modal-head">
-      <h2>Undersjangre</h2>
+      <h2>Sjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <div class="sj-faner" data-sj-faner="undersjangre"></div>
     <p class="muted" style="margin-bottom:14px;font-size:0.9rem">De frie taggene på artistkortene, under metasjangeren flest av artistene hører til. Tallet er antall artister.</p>
     <div id="ul-chips"></div>
   </div>

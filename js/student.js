@@ -8,19 +8,19 @@ import {
   fetchArtist,
   resubmitArtist,
   subscribeContent,
-} from "./store.js?v=6.11";
-import { loadArtists } from "./artist-cache.js?v=6.11";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=6.11";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=6.11";
-import { fillSelect, escapeHtml } from "./ui.js?v=6.11";
-import { TREG_SENDING_MELDING } from "./util.js?v=6.11";
-import { renderRichText } from "./rich-text.js?v=6.11";
-import { pageFor } from "./story-format.js?v=6.11";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.11";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.11";
-import { setupFormatBars } from "./format-bar.js?v=6.11";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.11";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.11";
+} from "./store.js?v=6.12";
+import { loadArtists } from "./artist-cache.js?v=6.12";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=6.12";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=6.12";
+import { fillSelect, escapeHtml } from "./ui.js?v=6.12";
+import { TREG_SENDING_MELDING } from "./util.js?v=6.12";
+import { renderRichText } from "./rich-text.js?v=6.12";
+import { pageFor } from "./story-format.js?v=6.12";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.12";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.12";
+import { setupFormatBars } from "./format-bar.js?v=6.12";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.12";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.12";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
