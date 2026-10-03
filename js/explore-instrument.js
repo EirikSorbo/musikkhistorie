@@ -16,15 +16,15 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.21";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.21";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.21";
-import { pageFor } from "./story-format.js?v=6.21";
-import { renderRichText } from "./rich-text.js?v=6.21";
-import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.21";
-import { META_GENRE_COLOR } from "./genre-model.js?v=6.21";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.21";
-import { openTechDetail } from "./explore-tech.js?v=6.21";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.22";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.22";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.22";
+import { pageFor } from "./story-format.js?v=6.22";
+import { renderRichText } from "./rich-text.js?v=6.22";
+import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.22";
+import { META_GENRE_COLOR } from "./genre-model.js?v=6.22";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.22";
+import { openTechDetail } from "./explore-tech.js?v=6.22";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -142,8 +142,9 @@ function renderGroup(group, tvunget = false) {
   // under overskriften, så de ikke forsvinner under en lang tekst.
   // Høyrespalta: artistene som spiller instrumentet, alfabetisk, med sjanger
   // og en prikk i metasjangerens farge (før v6.16: nyvinningene, som også
-  // står på tidslinja rett under). Spalta er like høy som teksten og ruller
-  // selv (CSS), så 96 vokalister ikke skyver tidslinja langt ned.
+  // står på tidslinja rett under). Spalta er like høy som teksten, og lista
+  // i den følger med når man ruller og ruller selv (CSS), så 96 vokalister
+  // ikke skyver tidslinja langt ned.
   const artister = artistsInInstrumentGroup(s.artists, group);
   const alfabetisk = [...artister].sort((a, b) => (a.name || "").localeCompare(b.name || "", "no"));
   const artistRad = (a) => {
@@ -167,8 +168,10 @@ function renderGroup(group, tvunget = false) {
         <div class="instr-sum-body story-body"></div>
       </div>
       ${alfabetisk.length ? `<aside class="instr-side" aria-label="Artister">
-        <h4 class="related-head">Artister <span class="instr-side-tall">${alfabetisk.length}</span></h4>
-        <ul class="instr-artister">${alfabetisk.map(artistRad).join("")}</ul>
+        <div class="instr-side-ramme">
+          <h4 class="related-head">Artister <span class="instr-side-tall">${alfabetisk.length}</span></h4>
+          <ul class="instr-artister">${alfabetisk.map(artistRad).join("")}</ul>
+        </div>
       </aside>` : ""}
     </div>
     <div class="instr-tl">${timelineHtml(group, items)}</div>

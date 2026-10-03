@@ -10,14 +10,14 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.21";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.21";
-import { punkterHtml } from "./punkter.js?v=6.21";
-import { medSelv } from "./linkify.js?v=6.21";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.21";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.21";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.21";
-import { safeUrl } from "./util.js?v=6.21";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.22";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.22";
+import { punkterHtml } from "./punkter.js?v=6.22";
+import { medSelv } from "./linkify.js?v=6.22";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.22";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.22";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.22";
+import { safeUrl } from "./util.js?v=6.22";
 import {
   escapeHtml,
   linkDesc,
@@ -40,14 +40,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.21";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.21";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.21";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.21";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.21";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.21";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.21";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.21";
+} from "./ui-helpers.js?v=6.22";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.22";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.22";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.22";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.22";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.22";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.22";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.22";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -677,17 +677,17 @@ function kobleSpillelisteRader() {
 // Er lista lengre enn YouTube tar i én kø, deles den, og hver knapp sier
 // hvilke eksempler den spiller («1–50», «51–62»), ikke «del 1 av 2»
 // (v6.21, brukervalg 2026-10-03). Knappene har farge (.pl-alle i CSS), så de
-// skiller seg fra lista rett under.
+// skiller seg fra lista rett under. Teksten er bare «På YouTube (1–50)» fra
+// v6.22 (brukervalg): antallet står allerede i overskriften over.
 export function spillAlleHtml(ider) {
   const lenker = ytSpillelisteUrl(ider);
   if (!lenker.length || (ider || []).length < 2) return "";
-  const antall = new Set(ider).size;
   let fra = 1;
   return `<p class="pl-alle">${lenker.map((url) => {
     const n = (new URL(url).searchParams.get("video_ids") || "").split(",").filter(Boolean).length;
     const spenn = `${fra}–${fra + n - 1}`;
     fra += n;
-    return `<a class="btn small" href="${escapeHtml(url)}" target="_blank" rel="noopener">Spill alle ${antall} på YouTube${lenker.length > 1 ? ` (${spenn})` : ""}</a>`;
+    return `<a class="btn small" href="${escapeHtml(url)}" target="_blank" rel="noopener">På YouTube (${spenn})</a>`;
   }).join(" ")}</p>`;
 }
 

@@ -11,26 +11,26 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=6.21";
-import { showSubsjangerInfo } from "./ui.js?v=6.21";
-import { showEdgeInfo } from "./genealogy.js?v=6.21";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.21";
-import { openDecade } from "./explore-decade.js?v=6.21";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=6.21";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=6.21";
-import { openVarmekart } from "./explore-varmekart.js?v=6.21";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.21";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.21";
-import { openReferanser } from "./explore-referanser.js?v=6.21";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.21";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.21";
-import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=6.21";
-import { apneYtSpiller } from "./yt-spiller.js?v=6.21";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.21";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.21";
-import { openLytt } from "./explore-lytt.js?v=6.21";
-import { openTime } from "./explore-timer.js?v=6.21";
-import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js?v=6.21";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=6.22";
+import { showSubsjangerInfo } from "./ui.js?v=6.22";
+import { showEdgeInfo } from "./genealogy.js?v=6.22";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.22";
+import { openDecade } from "./explore-decade.js?v=6.22";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=6.22";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=6.22";
+import { openVarmekart } from "./explore-varmekart.js?v=6.22";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.22";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.22";
+import { openReferanser } from "./explore-referanser.js?v=6.22";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.22";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.22";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=6.22";
+import { apneYtSpiller } from "./yt-spiller.js?v=6.22";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.22";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.22";
+import { openLytt } from "./explore-lytt.js?v=6.22";
+import { openTime } from "./explore-timer.js?v=6.22";
+import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js?v=6.22";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».

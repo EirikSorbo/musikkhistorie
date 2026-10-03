@@ -14,15 +14,15 @@
 //  Utvalget og grupperingen bor i metaoversikt-modell.js (testet); her tegnes
 //  og kobles det.
 // ============================================================================
-import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.21";
-import { safeUrl } from "./util.js?v=6.21";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.21";
-import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.21";
-import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.21";
-import { wireAllLinks } from "./linkify.js?v=6.21";
-import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.21";
-import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.21";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser } from "./metaoversikt-modell.js?v=6.21";
+import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.22";
+import { safeUrl } from "./util.js?v=6.22";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.22";
+import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.22";
+import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.22";
+import { wireAllLinks } from "./linkify.js?v=6.22";
+import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.22";
+import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.22";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser } from "./metaoversikt-modell.js?v=6.22";
 
 // Sjangernavnene i forbindelsene: samme lenke som sjangrene i slektskapet på
 // sjangerkortet (genealogy.js) og i beskrivelsene (linkify.js).

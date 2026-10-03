@@ -1,9 +1,9 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=6.21";
-import { resolveMainDesc } from "../../js/genealogy.js?v=6.21";
-import { GENEALOGY } from "../../js/genre-model.js?v=6.21";
+import { resolveDesc, resolveDescAny, missingDesc } from "../../js/genre-descriptions.js?v=6.22";
+import { resolveMainDesc } from "../../js/genealogy.js?v=6.22";
+import { GENEALOGY } from "../../js/genre-model.js?v=6.22";
 
 const descs = {
   Blues: {
@@ -104,7 +104,7 @@ test("ugyldige årstall forkastes: 0 og streng er ikke årstall", () => {
 });
 
 test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-epoken", async () => {
-  const { eraText } = await import("../../js/genealogy.js?v=6.21");
+  const { eraText } = await import("../../js/genealogy.js?v=6.22");
   // Alt leses nå fra ÉN kilde (genreDescriptions). Fram til v4.64 kom friteksten
   // fra treets node, og da kunne kortet og tidslinjen vise ulik epoke.
   // «ca.» står én gang og gjelder hele perioden (v4.86) — aldri foran «i dag».
@@ -116,7 +116,7 @@ test("eraText: årstall vinner, tomt sluttår blir «i dag», ellers fritekst-ep
 });
 
 test("eraLine: sjangerkortet viser årstallene OG epoke-friteksten", async () => {
-  const { eraLine } = await import("../../js/genealogy.js?v=6.21");
+  const { eraLine } = await import("../../js/genealogy.js?v=6.22");
   // Friteksten er ikke fallback her — den står som egen setning etter årstallene.
   assert.equal(
     eraLine({ activeFrom: 1945, activeTo: 1960, era: "midten av 1940-tallet" }),
@@ -187,7 +187,7 @@ test("activeToUgyldig skiller et korrupt sluttår fra et tomt", () => {
 });
 
 // --- Fritekst-epoken som bare gjentar årstallene (v5.74) -------------------
-import { epokeFritekst } from "../../js/genre-descriptions.js?v=6.21";
+import { epokeFritekst } from "../../js/genre-descriptions.js?v=6.22";
 
 test("epokeFritekst: utelates når den gjentar årstallene, ellers som før", () => {
   assert.equal(epokeFritekst({ activeFrom: 1900, activeTo: null, era: "ca. 1900" }), "");

@@ -3765,11 +3765,19 @@ body.presentasjon .meta-merke { display: none; }
 .instr-topp:not(:has(.instr-side)) { grid-template-columns: minmax(0, 1fr); }
 .instr-side {
   border-left: 2px solid var(--line); padding-left: 1.2rem;
-  contain: size; min-height: 20rem; display: flex; flex-direction: column;
+  contain: size; min-height: 20rem;
 }
-.instr-side .related-head { flex: none; }
+/* Lista følger med når kortet rulles (sticky), og er aldri høyere enn det
+   som får plass i vinduet: på en lang tekst var spalta høyere enn skjermen,
+   og bunnen av lista lå under kanten (v6.22, brukerfunn på Mac). Rullingen
+   går videre til kortet når lista er nede (ingen overscroll-behavior). */
+.instr-side-ramme {
+  position: sticky; top: 0.5rem; display: flex; flex-direction: column;
+  max-height: min(100%, calc(85vh - 5rem));
+}
+.instr-side-ramme .related-head { flex: none; }
 .instr-side-tall { margin-left: 4px; font-weight: 500; color: var(--muted-2, var(--muted)); }
-.instr-artister { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 0 6px 0 0; list-style: none; }
+.instr-artister { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0; padding: 0 6px 0 0; list-style: none; }
 .instr-artist {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; width: 100%;
   padding: 3px 4px; margin: 0 -4px; border: 0; border-radius: 6px; background: none;
