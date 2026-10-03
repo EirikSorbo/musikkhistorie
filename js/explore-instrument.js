@@ -16,14 +16,15 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.15";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.15";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.15";
-import { pageFor } from "./story-format.js?v=6.15";
-import { renderRichText } from "./rich-text.js?v=6.15";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.15";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.15";
-import { openTechDetail } from "./explore-tech.js?v=6.15";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.16";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.16";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.16";
+import { pageFor } from "./story-format.js?v=6.16";
+import { renderRichText } from "./rich-text.js?v=6.16";
+import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.16";
+import { META_GENRE_COLOR } from "./genre-model.js?v=6.16";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.16";
+import { openTechDetail } from "./explore-tech.js?v=6.16";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -116,7 +117,9 @@ function renderGroup(group, tvunget = false) {
   const s0 = getState();
   const signatur = JSON.stringify([
     group,
-    artistsInInstrumentGroup(s0.artists, group).length,
+    // Artistlista i høyrespalta viser navn og sjanger (v6.16), så de står i
+    // signaturen, ikke bare antallet.
+    artistsInInstrumentGroup(s0.artists, group).map((a) => [a.id, a.name, a.metaGenre, a.mainGenre]),
     // adoptedLabel og korttype (v5.35, audit-funn 33): tidslinja viser begge,
     // så en rettet «Tatt i bruk»-tekst eller et typebytte ble stående gammel.
     instrumentInnovations(s0.techItems, group).map((t) => [t.id, t.name, t.adoptedYear, t.adoptedLabel, t.type]),
@@ -134,29 +137,42 @@ function renderGroup(group, tvunget = false) {
   const pageId = instrumentPageId(group);
   const page = pageFor(pageId, s.content);
 
-  // Rekkefølge: sammendrag → knapper → tidslinje. Teksten er inngangen til
-  // instrumentet; tidslinjen står nederst som oppslagsverk.
-  // Høyrespalta (v6.07, D2): nyvinningene for instrumentet som en kort liste
-  // ved siden av teksten, der det før sto tomt. Tidslinja under er den samme
-  // listen på en tidsakse.
-  const sideliste = [...items].sort((a, b) => (a.adoptedYear || a.inventedYear || 0) - (b.adoptedYear || b.inventedYear || 0));
+  // Rekkefølge (v6.16, brukervalg 2026-10-03): overskrift → knapper →
+  // sammendrag med artistene i høyrespalta → tidslinje → kilder. Knappene står
+  // under overskriften, så de ikke forsvinner under en lang tekst.
+  // Høyrespalta: artistene som spiller instrumentet, alfabetisk, med sjanger
+  // og en prikk i metasjangerens farge (før v6.16: nyvinningene, som også
+  // står på tidslinja rett under). Spalta er like høy som teksten og ruller
+  // selv (CSS), så 96 vokalister ikke skyver tidslinja langt ned.
+  const artister = artistsInInstrumentGroup(s.artists, group);
+  const alfabetisk = [...artister].sort((a, b) => (a.name || "").localeCompare(b.name || "", "no"));
+  const artistRad = (a) => {
+    const sjangre = (a.mainGenre || []).filter(Boolean);
+    const sjanger = sjangre.length ? sjangre.join(", ") : (a.metaGenre || "");
+    const farge = META_GENRE_COLOR[a.metaGenre];
+    return `<li><button type="button" class="instr-artist" data-related-id="${escapeHtml(String(a.id))}">
+      <span class="instr-artist-navn">${escapeHtml(a.name || "(uten navn)")}</span>
+      ${sjanger ? `<span class="instr-artist-sjanger"${farge ? ` style="--fam:${escapeHtml(farge)}"` : ""}>${escapeHtml(sjanger)}</span>` : ""}
+    </button></li>`;
+  };
   body.innerHTML = `
+    <div class="instr-sum-head">
+      <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`)}</h3>
+      <div class="spacer"></div>
+      <div class="instr-sum-actions"></div>
+    </div>
+    <div class="instr-knapper"></div>
     <div class="instr-topp">
       <div class="instr-sum">
-        <div class="instr-sum-head">
-          <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`)}</h3>
-          <div class="spacer"></div>
-          <div class="instr-sum-actions"></div>
-        </div>
         <div class="instr-sum-body story-body"></div>
       </div>
-      ${sideliste.length ? `<aside class="instr-side">
-        <h4 class="related-head">Nyvinninger</h4>
-        <ul class="dv-liste">${sideliste.map((t) => `<li><button type="button" class="dv-rad" data-instr-tech="${escapeHtml(t.id)}">${escapeHtml(t.name)}${(t.adoptedYear || t.inventedYear) ? `<span class="dv-sub">${escapeHtml(String(t.adoptedYear || t.inventedYear))}</span>` : ""}</button></li>`).join("")}</ul>
+      ${alfabetisk.length ? `<aside class="instr-side" aria-label="Artister">
+        <h4 class="related-head">Artister <span class="instr-side-tall">${alfabetisk.length}</span></h4>
+        <ul class="instr-artister">${alfabetisk.map(artistRad).join("")}</ul>
       </aside>` : ""}
     </div>
-    <div class="instr-foot"></div>
-    <div class="instr-tl">${timelineHtml(group, items)}</div>`;
+    <div class="instr-tl">${timelineHtml(group, items)}</div>
+    <div class="instr-kilder"></div>`;
 
   // Sammendraget: teksten bor i Firestore, INGEN reservetekst i koden — mangler
   // den, sies det tydelig ifra (samme regel som resten av innholdet i appen).
@@ -167,9 +183,11 @@ function renderGroup(group, tvunget = false) {
   const sum = body.querySelector(".instr-sum-body");
   const lc = buildLinkCtx();
   const harTekst = !!page?.body?.trim();
+  // Kildene står helt nederst, under tidslinja (v6.16), i samme form som på
+  // sjangerkortene.
+  body.querySelector(".instr-kilder").innerHTML = page ? buildKilderList(page.kilder, "Kilder") : "";
   if (harTekst) {
-    // Kildene står under teksten, i samme form som på sjangerkortene.
-    sum.innerHTML = renderRichText(page.body, lc) + buildKilderList(page.kilder, "Kilder");
+    sum.innerHTML = renderRichText(page.body, lc);
     wireLinks(sum, lc);
   } else {
     // Teksten peker på HVEM som skriver den, ikke bare at den mangler —
@@ -178,8 +196,7 @@ function renderGroup(group, tvunget = false) {
       ? `<p class="instr-sum-hint">Teksten skrives av gruppen som lager ` +
         `<button type="button" class="sh-linkbtn" id="instr-til-podkast">podkast</button>` +
         ` om instrumentets utvikling.</p>`
-      : `<p class="gx-missing">Laster innhold …</p>`)
-      + (page ? buildKilderList(page.kilder, "Kilder") : "");
+      : `<p class="gx-missing">Laster innhold …</p>`);
     sum.querySelector("#instr-til-podkast")?.addEventListener("click", () => openPodkaster());
   }
 
@@ -198,10 +215,10 @@ function renderGroup(group, tvunget = false) {
     }));
   }
 
-  // Knapperad nederst: nytt innovasjonskort + ny artist. Lærer får sitt eget
-  // skjema (onTechEdit med instrumentet ferdig valgt) i stedet for forslagsflyten
-  // — å «foreslå» til seg selv gir ingen mening.
-  const foot = body.querySelector(".instr-foot");
+  // Knapperaden under overskriften: nytt innovasjonskort + ny artist. Lærer
+  // får sitt eget skjema (onTechEdit med instrumentet ferdig valgt) i stedet
+  // for forslagsflyten — å «foreslå» til seg selv gir ingen mening.
+  const foot = body.querySelector(".instr-knapper");
   const knapper = [];
 
   // Raden har to halvdeler: SE hva som finnes til venstre, LEGG TIL til høyre.
@@ -215,7 +232,6 @@ function renderGroup(group, tvunget = false) {
   // kunne vise en gammel beskrivelse etter at læreren godkjente en rettelse,
   // og prefylle «Foreslå endring» med den. Tallet i etiketten er trygt: det
   // står i signaturen.
-  const artister = artistsInInstrumentGroup(s.artists, group);
   knapper.push({
     side: "venstre",
     tekst: `Alle artister (${artister.length})`,
@@ -258,10 +274,14 @@ function renderGroup(group, tvunget = false) {
     .map(([k, i]) => knappHtml(k, i))
     .join("");
   foot.innerHTML =
-    `<div class="instr-foot-gruppe">${gruppe("venstre")}</div>` +
-    `<div class="instr-foot-gruppe">${gruppe("høyre")}</div>`;
+    `<div class="instr-knappegruppe">${gruppe("venstre")}</div>` +
+    `<div class="instr-knappegruppe">${gruppe("høyre")}</div>`;
   foot.querySelectorAll("[data-k]").forEach((b) =>
     b.addEventListener("click", () => knapper[+b.dataset.k].gjør()));
+
+  // Artistene i høyrespalta åpner artistkortet oppå (samme kobling som de
+  // beslektede artistene på artistkortet).
+  wireRelated(body, lc);
 
   // Punkt på tidslinjen (og enkeltkort-lenka) åpner innovasjonskortet OPPÅ
   // seksjonen — samme mønster som tiårsvisningens teknologitidslinje.

@@ -15,7 +15,7 @@
 //     figuren og kortet aldri kan vise ulike perioder for samme sjanger
 // ============================================================================
 
-import { resolveDescAny } from "./genre-descriptions.js?v=6.15";
+import { resolveDescAny } from "./genre-descriptions.js?v=6.16";
 
 // tab10-paletten (samme som diagrammet brukeren likte) pluss to ekstra.
 export const PERIOD_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
