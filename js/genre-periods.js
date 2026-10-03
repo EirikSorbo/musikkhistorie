@@ -15,7 +15,7 @@
 //     figuren og kortet aldri kan vise ulike perioder for samme sjanger
 // ============================================================================
 
-import { resolveDescAny } from "./genre-descriptions.js?v=6.05";
+import { resolveDescAny } from "./genre-descriptions.js?v=6.06";
 
 // tab10-paletten (samme som diagrammet brukeren likte) pluss to ekstra.
 export const PERIOD_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
@@ -57,10 +57,26 @@ function statusFor(from, to, sluttUgyldig, naa) {
   return "ok";
 }
 
+// Nyanse nummer i av n av en familiefarge (v6.05, brukervalg 2026-10-03,
+// strukturgjennomgangen D6): fra full farge (den eldste sjangeren) til 45 %
+// lysere (den yngste), blandet mot hvitt. Stolpene i én gruppe leses da som
+// én familie i appens farger; med tab10-paletten fikk Swing Countrys oransje
+// og Bebop Gospels grønne. Alltid 6-sifret hex (toningen legger til alfa).
+// Uten gyldig grunnfarge: paletten som før.
+export function familieNyanse(hex, i, n) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ""));
+  if (!m) return periodColor(i);
+  const andel = n > 1 ? 1 - 0.45 * (i / (n - 1)) : 1;
+  const kanal = (k) => Math.round(parseInt(m[1].slice(k, k + 2), 16) * andel + 255 * (1 - andel));
+  return "#" + [0, 2, 4].map((k) => kanal(k).toString(16).padStart(2, "0")).join("");
+}
+
 // Én gruppe per metasjanger, i rekkefølgen kalleren gir. Rader med gyldige
 // årstall kommer kronologisk: startår, så sluttår (åpen slutt, «i dag», etter
 // lukkede med samme start), så treets rekkefølge. Hullene legges nederst.
-export function periodGroups(metas, genreDescs = {}, genealogy = [], naa = new Date().getFullYear()) {
+// `fargeFor(meta)` (valgfri) gir familiefargen; da får stolpene nyanser av
+// den (familieNyanse), ellers hver sin palettfarge.
+export function periodGroups(metas, genreDescs = {}, genealogy = [], naa = new Date().getFullYear(), fargeFor = null) {
   return (metas || []).map((meta) => {
     const rows = genealogy
       .filter((n) => n.g === meta)
@@ -81,7 +97,8 @@ export function periodGroups(metas, genreDescs = {}, genealogy = [], naa = new D
       .sort((a, b) => a.from - b.from
         || (a.to ?? Infinity) - (b.to ?? Infinity)
         || a.treeIdx - b.treeIdx);
-    medAar.forEach((r, i) => { r.color = periodColor(i); });
+    const grunn = fargeFor ? fargeFor(meta) : null;
+    medAar.forEach((r, i) => { r.color = grunn ? familieNyanse(grunn, i, medAar.length) : periodColor(i); });
     return { meta, rows: [...medAar, ...rows.filter((r) => r.status !== "ok")] };
   }).filter((g) => g.rows.length);
 }

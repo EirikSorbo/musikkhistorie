@@ -1,9 +1,9 @@
 import { SEED_GENRE_DESCS } from "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY } from "../../js/genre-model.js?v=6.05";
-import { storyOrder, STORY_SKJULT } from "../../js/story-format.js?v=6.05";
-import { periodGroups, periodAxis, pctAv, periodColor, periodSignatur, PERIOD_COLORS } from "../../js/genre-periods.js?v=6.05";
+import { GENEALOGY } from "../../js/genre-model.js?v=6.06";
+import { storyOrder, STORY_SKJULT } from "../../js/story-format.js?v=6.06";
+import { periodGroups, periodAxis, pctAv, periodColor, periodSignatur, PERIOD_COLORS, familieNyanse } from "../../js/genre-periods.js?v=6.06";
 
 // «Sjangerperioder» (v5.20) skal være DYNAMISK: sjangrene fra treet, årstallene
 // fra beskrivelsene, metasjangrene fra de synlige historiene. Testene låser
@@ -152,4 +152,22 @@ test("sjangerperioder kobles til snapshotene, huben og lasteflagget", async () =
   assert.match(les("js/shared-data.js"), /genreDescsLoaded/, "figuren må kunne skille «laster» fra «tomt»");
   assert.match(les("js/explore.js"), /paaKort\("sb-sjangerperioder", openSjangerperioder\)/);
   assert.match(les("js/explore.js"), /"modal-sjangerperioder"/, "modalen må kobles (lukking, bakgrunnsklikk)");
+});
+
+// --- v6.05: nyanser av familiefargen (D6) ----------------------------------
+
+test("familieNyanse: full farge først, lysere mot slutten, alltid 6-sifret hex", () => {
+  assert.equal(familieNyanse("#7c3aed", 0, 5), "#7c3aed");
+  const siste = familieNyanse("#7c3aed", 4, 5);
+  assert.match(siste, /^#[0-9a-f]{6}$/);
+  assert.ok(parseInt(siste.slice(1, 3), 16) > 0x7c, "blandet mot hvitt");
+  assert.equal(familieNyanse("#7c3aed", 0, 1), "#7c3aed", "én sjanger: full farge");
+  assert.equal(familieNyanse("ikke-farge", 2, 5), periodColor(2), "ugyldig farge: paletten");
+});
+
+test("periodGroups med fargeFor gir nyanser av familiefargen i tidsrekkefølge", () => {
+  const descs = { "Jazz": periode(1900, 1935), "Swing": periode(1935, 1945) };
+  const tre = [{ id: "j", l: "Jazz", g: "Jazz", p: [], r: 2 }, { id: "s", l: "Swing", g: "Jazz", p: [], r: 4 }];
+  const [g] = periodGroups(["Jazz"], descs, tre, NAA, () => "#7c3aed");
+  assert.deepEqual(g.rows.map((r) => r.color), [familieNyanse("#7c3aed", 0, 2), familieNyanse("#7c3aed", 1, 2)]);
 });

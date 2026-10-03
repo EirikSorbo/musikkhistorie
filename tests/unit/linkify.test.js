@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { linkifyAll, medSelv, nevnteArtister } from "../../js/linkify.js?v=6.05";
-import { relatedArtists } from "../../js/ui-helpers.js?v=6.05";
+import { linkifyAll, medSelv, nevnteArtister } from "../../js/linkify.js?v=6.06";
+import { relatedArtists } from "../../js/ui-helpers.js?v=6.06";
 
 const artists = [
   { id: "a1", name: "Muddy Waters", status: "active" },

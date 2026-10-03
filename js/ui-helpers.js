@@ -9,13 +9,13 @@
 //  Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=6.05";
-import { wireAllLinks, nevnteArtister } from "./linkify.js?v=6.05";
-import { renderRichText, renderInline } from "./rich-text.js?v=6.05";
-import { GENDERS } from "./limits.js?v=6.05";
-import { askChoice, modalClose } from "./ui-modal.js?v=6.05";
-import { lesPunkter, punkterTilTekst, punktVarsel } from "./punkter.js?v=6.05";
-export { artistStripHtml } from "./artist-strip.js?v=6.05";
+import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js?v=6.06";
+import { wireAllLinks, nevnteArtister } from "./linkify.js?v=6.06";
+import { renderRichText, renderInline } from "./rich-text.js?v=6.06";
+import { GENDERS } from "./limits.js?v=6.06";
+import { askChoice, modalClose } from "./ui-modal.js?v=6.06";
+import { lesPunkter, punkterTilTekst, punktVarsel } from "./punkter.js?v=6.06";
+export { artistStripHtml } from "./artist-strip.js?v=6.06";
 
 export { escapeHtml, buildKilderList, safeUrl };
 
@@ -487,6 +487,15 @@ export function relatedArtists(artist, all, { limit = 5 } = {}) {
 
 // Ferdig «Beslektede artister»-blokk (delt av detaljkort og spotlight-/dagens-
 // kort). Tom streng når ingen slektninger finnes. Krever lc.artists (full liste).
+// Metasjangeren som et lite merke øverst på artist- og sjangerkortet (v6.05,
+// strukturgjennomgangen K5): før var den bare en farge på stripa. Merket fører
+// til oversikten over metasjangeren (delegert lytter i explore.js). Kalleren
+// gir fargen og sender bare metasjangre som finnes i treet.
+export function metaMerkeHtml(meta, farge) {
+  if (!meta) return "";
+  return `<div class="meta-merke"><button type="button" class="meta-merke-knapp" data-meta-oversikt="${escapeHtml(meta)}" title="Oversikt over ${escapeHtml(meta)}" style="--fam:${escapeHtml(farge || "#9bada1")}">${escapeHtml(meta)}</button></div>`;
+}
+
 export function relatedArtistsHtml(a, lc, { limit = 5 } = {}) {
   const related = relatedArtists(a, lc?.artists || [], { limit });
   if (!related.length) return "";

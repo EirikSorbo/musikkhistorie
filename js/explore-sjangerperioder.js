@@ -19,12 +19,15 @@
 //  explore-context importerer feature-modulene tilbake, og GENEALOGY byttes ut
 //  ved hver ombygging av treet.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.05";
-import { GENEALOGY, onGenreModelChanged } from "./genre-model.js?v=6.05";
-import { storyOrder } from "./story-format.js?v=6.05";
-import { eraYears } from "./genealogy.js?v=6.05";
-import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick } from "./explore-context.js?v=6.05";
-import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=6.05";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.06";
+import { GENEALOGY, META_GENRE_COLOR, onGenreModelChanged } from "./genre-model.js?v=6.06";
+import { storyOrder } from "./story-format.js?v=6.06";
+import { eraYears } from "./genealogy.js?v=6.06";
+import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, metaOversiktLenkeHtml } from "./explore-context.js?v=6.06";
+
+// Familiefargen til stolpenes nyanser (D6, v6.05).
+const familieFarge = (meta) => META_GENRE_COLOR[meta];
+import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=6.06";
 
 // Hvilken metagruppe som står åpen (navnet), «__ingen» når brukeren har lukket
 // alle, null ved frisk åpning (da åpnes den første).
@@ -91,7 +94,7 @@ function akseHtml(axis) {
 export function periodeFigurForMeta(meta) {
   const s = getState();
   const naa = new Date().getFullYear();
-  const groups = periodGroups([meta], s.genreDescs || {}, GENEALOGY, naa);
+  const groups = periodGroups([meta], s.genreDescs || {}, GENEALOGY, naa, familieFarge);
   const g = groups[0];
   if (!g || !g.rows.length) return { html: "", rader: [] };
   const axis = periodAxis(groups, naa);
@@ -109,11 +112,11 @@ function figurHtml(groups, axis, naa) {
   groups.forEach((g, gi) => {
     const open = spOpenMeta === "__ingen" ? false : (spOpenMeta && finnes) ? g.meta === spOpenMeta : gi === 0;
     html += metaGroupHeadHtml({
-      prefix: "sp", meta: g.meta, gColor: groupColor(g.rows.map((r) => r.genre)), open, groupIdx: gi,
+      prefix: "sp", meta: g.meta, gColor: META_GENRE_COLOR[g.meta] || groupColor(g.rows.map((r) => r.genre)), open, groupIdx: gi,
       count: `${g.rows.length} sjang${g.rows.length === 1 ? "er" : "re"}`,
       metaAttr: ` data-sp-meta="${escapeHtml(g.meta)}"`,
     });
-    html += `<div class="sp-group-rows" style="display:${open ? "block" : "none"}">`;
+    html += `<div class="sp-group-rows" style="display:${open ? "block" : "none"}">${metaOversiktLenkeHtml(g.meta)}`;
     html += `<div class="sp-scroll"><div class="sp-figur"><div class="sp-rader">${streker}`;
     html += g.rows.map((r) => (r.status === "ok" ? stolpeHtml(r, axis, naa) : hullHtml(r))).join("");
     html += `</div>${akse}</div></div>`;
@@ -139,7 +142,7 @@ function beregn() {
   if (s.genreDescsLoaded === false) return tilstand("Laster sjangrene …");
   const naa = new Date().getFullYear();
   const genreDescs = s.genreDescs || {};
-  const groups = periodGroups(storyOrder(genreDescs), genreDescs, GENEALOGY, naa);
+  const groups = periodGroups(storyOrder(genreDescs), genreDescs, GENEALOGY, naa, familieFarge);
   if (!groups.length) return tilstand("Ingen sjangre å vise ennå.");
   const axis = periodAxis(groups, naa);
   return { html: figurHtml(groups, axis, naa), signatur: periodSignatur(groups, axis), figur: true };

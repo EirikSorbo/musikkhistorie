@@ -12,19 +12,19 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks, medSelv } from "./linkify.js?v=6.05";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.05";
-import { renderRichText } from "./rich-text.js?v=6.05";
-import { punkterHtml } from "./punkter.js?v=6.05";
-import { escapeHtml, buildKilderList } from "./util.js?v=6.05";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.05";
-import { modalOpen } from "./ui-modal.js?v=6.05";
-import { renderGenreEditBtn, sekt, wireRelated } from "./ui-helpers.js?v=6.05";
-import { artistsInGenre } from "./limits.js?v=6.05";
-import { wireProposeFoot } from "./ui-edit.js?v=6.05";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.05";
-import { GENEALOGY, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.05";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.05";
+import { wireAllLinks, medSelv } from "./linkify.js?v=6.06";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.06";
+import { renderRichText } from "./rich-text.js?v=6.06";
+import { punkterHtml } from "./punkter.js?v=6.06";
+import { escapeHtml, buildKilderList } from "./util.js?v=6.06";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.06";
+import { modalOpen } from "./ui-modal.js?v=6.06";
+import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.06";
+import { artistsInGenre } from "./limits.js?v=6.06";
+import { wireProposeFoot } from "./ui-edit.js?v=6.06";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.06";
+import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.06";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.06";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js
@@ -229,6 +229,7 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   // data-sekt-merkene styrer detaljnivået i presentasjonsvisningen (v5.24).
   // Knapperaden (Artister/Spilleliste/Tidslinje) er navigasjon og står alltid.
   mBody.innerHTML = `
+    ${n.g ? metaMerkeHtml(n.g, META_GENRE_COLOR[n.g]) : ""}
     ${sekt("stripe", heatStripBlock(n))}
     ${sekt("era", `<p class="gx-era">${escapeHtml(eraLine(resolved))}</p>`)}
     ${sekt("punkter", punkterHtml(resolved.punkter, lcSelv))}

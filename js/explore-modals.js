@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.05";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.05";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.06";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.06";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -216,8 +216,9 @@ export const MODAL_HTML = `
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="sl-extra"></div>
-    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en sjanger for å lese beskrivelsen.</p>
-    <div id="sl-chips" class="subgenre-tag-list"></div>
+    <!-- Familiekortene (v6.05, S6): én per metasjanger, sjangrene i tids-
+         rekkefølge. Tegnes av openSubgenreList (explore-sjanger.js). -->
+    <div id="sl-chips"></div>
   </div>
 </div>
 
@@ -228,8 +229,8 @@ export const MODAL_HTML = `
       <h2>Undersjangre</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">Trykk på en undersjanger for å lese beskrivelsen.</p>
-    <div id="ul-chips" class="subgenre-tag-list"></div>
+    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">De frie taggene på artistkortene, under metasjangeren flest av artistene hører til. Tallet er antall artister.</p>
+    <div id="ul-chips"></div>
   </div>
 </div>
 

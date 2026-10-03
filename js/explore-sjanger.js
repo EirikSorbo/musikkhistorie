@@ -1,61 +1,130 @@
 // ============================================================================
 //  SJANGER-LISTER & INFO
 // ----------------------------------------------------------------------------
-//  Sjangre-/undersjangre-listene og sjanger-info-modalen (lærer-oversikten).
+//  Sjangre-/undersjangre-vinduene og sjanger-info-modalen (lærer-oversikten).
 //  Flyttet ut av explore.js (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.05";
-import { isVisible } from "./limits.js?v=6.05";
-import { isMainGenre, GENEALOGY_MAIN_GENRES, canonMainGenre } from "./genre-model.js?v=6.05";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.05";
-import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.05";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.06";
+import { isVisible } from "./limits.js?v=6.06";
+import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.06";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.06";
+import { familieNyanse } from "./genre-periods.js?v=6.06";
+import { opts, getState, injectTeacherRow } from "./explore-context.js?v=6.06";
+
+// Sjangre-vinduet (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S6):
+// sjangrene gruppert per metasjanger, i appens ene rekkefølge, og innenfor
+// hver familie i tidsrekkefølge med en liten periodestolpe i nyanser av
+// familiefargen (D6). Før sto 43 like grønne bobler i alfabetisk rekkefølge,
+// og familiene og fargene, som bærer resten av appen, var borte akkurat der.
+// Metasjangerens navn fører til oversikten over den (S2).
+//
+// Radene bærer data-sjanger, så den delegerte lytteren i explore.js åpner
+// sjangerkortet (samme rute som sjangerboblene på kortene).
+const AKSE_FRA = 1900;
+
+function familierData() {
+  const s = getState();
+  const active = s.artists.filter(isVisible);
+  const naa = new Date().getFullYear();
+  // Sjangre med minst én artist (tre-taggene, kanonisert som før).
+  const medArtister = new Set(active.flatMap((a) => (a.mainGenre || [])
+    .filter(isMainGenre).map((x) => canonMainGenre(x) || x)));
+  return META_GENRE_ORDER.map((meta) => {
+    const noder = GENEALOGY.filter((n) => n.g === meta).map((n, treIdx) => {
+      const r = resolveDescAny(s.genreDescs || {}, [n.l, n.f], "main");
+      const fra = Number.isInteger(r.activeFrom) ? r.activeFrom : null;
+      const til = Number.isInteger(r.activeTo) ? r.activeTo : null;
+      return { n, fra, til, treIdx };
+    }).sort((a, b) => (a.fra ?? 9999) - (b.fra ?? 9999) || (a.til ?? 9999) - (b.til ?? 9999) || a.n.r - b.n.r || a.treIdx - b.treIdx);
+    return {
+      meta, farge: META_GENRE_COLOR[meta] || "#9bada1", noder,
+      artister: active.filter((a) => a.metaGenre === meta).length,
+      medArtister, naa,
+    };
+  }).filter((f) => f.noder.length);
+}
+
+function stolpeHtml(x, farge, i, n, naa) {
+  if (x.fra === null) return `<span class="sj-spor" aria-hidden="true"></span>`;
+  const spenn = naa - AKSE_FRA;
+  const fra = Math.max(x.fra, AKSE_FRA);
+  const til = Math.min(x.til ?? naa, naa);
+  const venstre = Math.max(0, (fra - AKSE_FRA) / spenn * 100);
+  const bredde = Math.max(2, (til - fra) / spenn * 100);
+  return `<span class="sj-spor" aria-hidden="true"><i style="left:${venstre.toFixed(1)}%;width:${Math.min(bredde, 100 - venstre).toFixed(1)}%;background:${familieNyanse(farge, i, n)}"></i></span>`;
+}
 
 export function openSubgenreList() {
   const modal = document.getElementById("modal-subgenre-list");
   if (!modal) return;
-  const s = getState();
-  const active = s.artists.filter(isVisible);
-  const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
-
-  // Tre-drevet: alle sjangre fra treet vises alltid. De artist-taggede er en
-  // delmengde (isMainGenre), men tas med for sikkerhets skyld. Kanoniser til
-  // treets stavemåte, ellers gir en fritekst-tagg som «blues» både en ekstra
-  // chip OG at offisielle «Blues» feilaktig vises som tom.
-  const withArtists = new Set(
-    active.flatMap(a => (a.mainGenre || [])
-      .filter(isMainGenre)
-      .map(s => canonMainGenre(s) || s))
-  );
-  const sjangre = [...new Set([...GENEALOGY_MAIN_GENRES, ...withArtists])]
-    .sort((a, b) => a.localeCompare(b, "no"));
-  const slEl = document.getElementById("sl-chips");
-  const checkedMainGenres = checkedState?.genres || [];
-  slEl.innerHTML = sjangre.length
-    ? sjangre.map((s) => {
-        const empty = !withArtists.has(s);
-        return `<button class="tag tag-sjanger ${checkedMainGenres.includes(s) ? "is-checked" : ""}${empty ? " is-empty" : ""}" data-sjanger="${escapeHtml(s)}"${empty ? ' title="Ingen artister ennå"' : ""}>${escapeHtml(s)}</button>`;
-      }).join("")
+  const checked = (opts.getCheckedState ? opts.getCheckedState() : null)?.genres || [];
+  const familier = familierData();
+  const el = document.getElementById("sl-chips");
+  el.innerHTML = familier.length
+    ? `<div class="sj-familier">${familier.map((f) => `<section class="sj-familie" style="--fam:${escapeHtml(f.farge)}">
+        <div class="sj-fam-hode">
+          <span class="sj-fam-prikk" aria-hidden="true"></span>
+          <h3 class="sj-fam-navn">${escapeHtml(f.meta)}</h3>
+          <span class="sj-fam-tall">${f.noder.length} sjang${f.noder.length === 1 ? "er" : "re"} · ${f.artister} artist${f.artister === 1 ? "" : "er"}</span>
+          <button type="button" class="sj-fam-lenke" data-meta-oversikt="${escapeHtml(f.meta)}">Oversikt <span aria-hidden="true">›</span></button>
+        </div>
+        ${f.noder.map((x, i) => {
+          const tom = !f.medArtister.has(x.n.l);
+          const aar = x.fra === null ? "" : `${x.fra}–${x.til ?? "i dag"}`;
+          return `<button type="button" class="sj-rad${tom ? " is-empty" : ""}${checked.includes(x.n.l) ? " is-checked" : ""}" data-sjanger="${escapeHtml(x.n.l)}"${tom ? ' title="Ingen artister ennå"' : ""}>
+            <span class="sj-rad-navn">${escapeHtml(x.n.f || x.n.l)}${aar ? `<span class="sj-rad-aar">${aar}</span>` : ""}</span>
+            ${stolpeHtml(x, f.farge, i, f.noder.length, f.naa)}
+          </button>`;
+        }).join("")}
+      </section>`).join("")}</div>`
     : `<p class="muted">Ingen sjangre registrert ennå.</p>`;
-
+  // Antallet undersjangre på knappen (den ble bygd før dataene landet).
+  const ub = document.getElementById("btn-undersjangere");
+  if (ub) ub.textContent = `Undersjangre (${undersjangre().length})`;
   modalOpen(modal);
 }
 
-// Undersjangre: frie tags fra artistene, i egen modal oppå Sjangre-modalen
-// (før en fane i samme modal — nå en egen inngang via «Undersjangre»-knappen).
+// Undersjangrene: de frie taggene fra artistene. Hver tagg hører til den
+// metasjangeren flest av artistene som bærer den har, så de kan stå i samme
+// familiekort og farger som sjangrene (v6.05, S6).
+function undersjangre() {
+  const active = getState().artists.filter(isVisible);
+  const tellinger = new Map();
+  for (const a of active) {
+    const tagger = new Set([...(a.mainGenre || []).filter((x) => !isMainGenre(x)), ...(a.subGenre || [])]);
+    for (const t of tagger) {
+      if (!tellinger.has(t)) tellinger.set(t, new Map());
+      const m = tellinger.get(t);
+      m.set(a.metaGenre || "Andre", (m.get(a.metaGenre || "Andre") || 0) + 1);
+    }
+  }
+  return [...tellinger].map(([navn, m]) => {
+    const [meta] = [...m].sort((x, y) => y[1] - x[1] || META_GENRE_ORDER.indexOf(x[0]) - META_GENRE_ORDER.indexOf(y[0]))[0];
+    return { navn, meta, antall: [...m.values()].reduce((s, v) => s + v, 0) };
+  });
+}
+
 export function openUndersjangre() {
   const modal = document.getElementById("modal-undersjangre");
   if (!modal) return;
-  const s = getState();
-  const active = s.artists.filter(isVisible);
-  const checkedState = opts.getCheckedState ? opts.getCheckedState() : null;
-  const under = [...new Set(active.flatMap(a => [
-    ...(a.mainGenre || []).filter(x => !isMainGenre(x)),
-    ...(a.subGenre || []),
-  ]))].sort((a, b) => a.localeCompare(b, "no"));
+  const checked = (opts.getCheckedState ? opts.getCheckedState() : null)?.subgenres || [];
+  const alle = undersjangre();
+  const metas = [...META_GENRE_ORDER, ...new Set(alle.map((u) => u.meta).filter((m) => !META_GENRE_ORDER.includes(m)))];
   const ulEl = document.getElementById("ul-chips");
-  const checkedSubs = checkedState?.subgenres || [];
-  ulEl.innerHTML = under.length
-    ? under.map((u) => `<button class="tag tag-under ${checkedSubs.includes(u) ? "is-checked" : ""}" data-under="${escapeHtml(u)}">${escapeHtml(u)}</button>`).join("")
+  const grupper = metas.map((meta) => ({ meta, farge: META_GENRE_COLOR[meta] || "#9bada1",
+    tagger: alle.filter((u) => u.meta === meta).sort((a, b) => a.navn.localeCompare(b.navn, "no")) }))
+    .filter((g) => g.tagger.length);
+  ulEl.innerHTML = grupper.length
+    ? `<div class="sj-familier">${grupper.map((g) => `<section class="sj-familie" style="--fam:${escapeHtml(g.farge)}">
+        <div class="sj-fam-hode">
+          <span class="sj-fam-prikk" aria-hidden="true"></span>
+          <h3 class="sj-fam-navn">${escapeHtml(g.meta)}</h3>
+          <span class="sj-fam-tall">${g.tagger.length}</span>
+        </div>
+        ${g.tagger.map((u) => `<button type="button" class="sj-rad${checked.includes(u.navn) ? " is-checked" : ""}" data-under="${escapeHtml(u.navn)}">
+          <span class="sj-rad-navn">${escapeHtml(u.navn)}</span><span class="sj-rad-aar">${u.antall}</span>
+        </button>`).join("")}
+      </section>`).join("")}</div>`
     : `<p class="muted">Ingen undersjangre registrert ennå.</p>`;
 
   modalOpen(modal);

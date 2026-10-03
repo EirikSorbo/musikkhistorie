@@ -8,18 +8,18 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.05";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.05";
-import { MAIN_GENRE_INFO, FAMILIES } from "./genre-model.js?v=6.05";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.05";
-import { openTechDetail } from "./explore-tech.js?v=6.05";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.05";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.05";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.05";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=6.05";
-import { renderReferanser } from "./explore-referanser.js?v=6.05";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.05";
-import { setHeatData } from "./heat-strip.js?v=6.05";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.06";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.06";
+import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.06";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.06";
+import { openTechDetail } from "./explore-tech.js?v=6.06";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.06";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.06";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.06";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=6.06";
+import { renderReferanser } from "./explore-referanser.js?v=6.06";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.06";
+import { setHeatData } from "./heat-strip.js?v=6.06";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -199,6 +199,16 @@ export function metaGroupHeadHtml({ prefix, meta, gColor, open, groupIdx, count,
   h += `<span style="font-size:0.72rem;color:var(--muted)">${count}</span>`;
   h += `</button>`;
   return h;
+}
+
+// Lenken til metasjangerens oversikt (v6.05, strukturgjennomgangen S2), øverst
+// i en åpen gruppe i tidslinja, varmekartet og periodene. Ikke i gruppehodet:
+// det er selv en knapp, og en knapp kan ikke ligge i en knapp. Klikket fanges
+// av den delegerte [data-meta-oversikt]-lytteren i explore.js. Metasjangre
+// som ikke finnes i treet (f.eks. «Andre») får ingen lenke.
+export function metaOversiktLenkeHtml(meta) {
+  if (!GENEALOGY_META_GENRES.includes(meta)) return "";
+  return `<div class="meta-oversikt-rad"><button type="button" class="meta-oversikt-lenke" data-meta-oversikt="${escapeHtml(meta)}">Oversikt over ${escapeHtml(meta)} <span aria-hidden="true">›</span></button></div>`;
 }
 
 // Delt akkordeon-klikklogikk: én gruppe åpen om gangen (klikk på åpen gruppe

@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.05";
-import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO } from "./genre-model.js?v=6.05";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion } from "./explore-context.js?v=6.05";
-import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=6.05";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.06";
+import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO } from "./genre-model.js?v=6.06";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.06";
+import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js?v=6.06";
 // Aksen, radene og lærerens nivåvelger er delt med sjangerhistoriene (v5.16).
-import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=6.05";
+import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js?v=6.06";
 
 // Varmekart: mainGenre (rad) × tiår (kolonne). Radene hentes dynamisk fra
 // treet (GENEALOGY_MAIN_GENRES) — nye sjangre dukker opp automatisk.
@@ -88,7 +88,7 @@ export function renderVarmekartBody() {
     });
     groupIdx++;
 
-    rader += `<div class="vk-group-rows" style="display:${open ? "block" : "none"}">`;
+    rader += `<div class="vk-group-rows" style="display:${open ? "block" : "none"}">${metaOversiktLenkeHtml(meta)}`;
     rader += heatRowsHtml(labels, {
       heat, meta,
       colorFor: (sj) => MAIN_GENRE_INFO[sj]?.color || gColor,
