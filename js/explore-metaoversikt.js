@@ -14,17 +14,15 @@
 //  Utvalget og grupperingen bor i metaoversikt-modell.js (testet); her tegnes
 //  og kobles det.
 // ============================================================================
-import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.13";
-import { safeUrl } from "./util.js?v=6.13";
-import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.13";
-import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.13";
-import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.13";
-import { wireAllLinks } from "./linkify.js?v=6.13";
-import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.13";
-import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.13";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom } from "./metaoversikt-modell.js?v=6.13";
-
-const flertall = (n, en, fler) => `${n} ${n === 1 ? en : fler}`;
+import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js?v=6.14";
+import { safeUrl } from "./util.js?v=6.14";
+import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.14";
+import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js?v=6.14";
+import { musicExampleLabel, wireRelated } from "./ui-helpers.js?v=6.14";
+import { wireAllLinks } from "./linkify.js?v=6.14";
+import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js?v=6.14";
+import { periodeFigurForMeta } from "./explore-sjangerperioder.js?v=6.14";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser } from "./metaoversikt-modell.js?v=6.14";
 
 // Sjangernavnene i forbindelsene: samme lenke som sjangrene i slektskapet på
 // sjangerkortet (genealogy.js) og i beskrivelsene (linkify.js).
@@ -52,13 +50,6 @@ function tegnMetaOversikt(meta, modal) {
   const { fra, til } = forbindelser(meta, GENEALOGY, (n) => nodeStartAar(n, s.genreDescs));
   const figur = periodeFigurForMeta(meta);
   const antallArt = artGr.reduce((sum, g) => sum + g.artister.length, 0);
-  const rom = tidsrom(figur.rader);
-  const tall = [
-    flertall(antallArt, "artist", "artister"),
-    flertall(eks.antall, "lytteeksempel", "lytteeksempler"),
-    flertall(familie.length, "sjanger", "sjangre"),
-    rom ? `ca. ${rom}` : "",
-  ].filter(Boolean).join(" · ");
 
   const artisterHtml = artGr.length
     ? artGr.map((g) => `<h4 class="mo-gruppe">${escapeHtml(fulltNavn(g.sjanger))}</h4>
@@ -82,7 +73,6 @@ function tegnMetaOversikt(meta, modal) {
   body.style.setProperty("--mo-farge", META_GENRE_COLOR[meta] || FAMILIES.gray?.stroke || "#9bada1");
   body.innerHTML = `
     <div class="mo-kol mo-hoved">
-      <p class="mo-tall">${escapeHtml(tall)}</p>
       <h3 class="mo-head">Sjangerperioder</h3>
       ${figur.html || `<p class="gx-missing">Ingen perioder å vise ennå.</p>`}
       ${fra.length || til.length ? `<h3 class="mo-head">Forbindelser</h3>

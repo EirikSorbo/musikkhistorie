@@ -1,27 +1,27 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.13";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.13";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.13";
-import { onGenreModelChanged } from "./genre-model.js?v=6.13";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.13";
-import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.13";
-import { imgTag } from "./ui-helpers.js?v=6.13";
-import { renderSpotlightCards, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.13";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.13";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.13";
-import { initExplore } from "./explore.js?v=6.13";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.13";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.13";
-import { initPlanMeny } from "./plan-meny.js?v=6.13";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.13";
-import { initYtSpiller } from "./yt-spiller.js?v=6.13";
-import { initVisning, visningTikk } from "./visning.js?v=6.13";
-import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.13";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.13";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.13";
-import { askChoice } from "./ui-modal.js?v=6.13";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.13";
-import { currentEntityValues } from "./entity-values.js?v=6.13";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.13";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.14";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.14";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.14";
+import { onGenreModelChanged } from "./genre-model.js?v=6.14";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.14";
+import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.14";
+import { imgTag } from "./ui-helpers.js?v=6.14";
+import { renderSpotlightCards, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.14";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.14";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.14";
+import { initExplore } from "./explore.js?v=6.14";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.14";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.14";
+import { initPlanMeny } from "./plan-meny.js?v=6.14";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.14";
+import { initYtSpiller } from "./yt-spiller.js?v=6.14";
+import { initVisning, visningTikk } from "./visning.js?v=6.14";
+import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.14";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.14";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.14";
+import { askChoice } from "./ui-modal.js?v=6.14";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.14";
+import { currentEntityValues } from "./entity-values.js?v=6.14";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.14";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -94,7 +94,7 @@ let explore = null;
 let filterView = "galleri";
 
 // Galleriet (v6.11): bilde, navn, sjanger, undersjanger, instrument og
-// levetid, åtte i bredden på laptop fra v6.12 (CSS .ar-galleri). Hele kortet åpner
+// levetid, sju i bredden på laptop fra v6.14 (CSS .ar-galleri). Hele kortet åpner
 // artistkortet.
 function levetid(a) {
   if (a.birthYear && a.deathYear) return `${a.birthYear}–${a.deathYear}`;
