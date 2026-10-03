@@ -10,10 +10,10 @@
 //  Spillelistene fra timene (U1) kommer som en tredje bolk når de finnes.
 //  «Sentrale verk» er bevisst IKKE med ennå (brukervalg 2026-10-03).
 // ============================================================================
-import { escapeHtml, modalOpen, countArtistExamples, openArtistsPlaylistModal, tiarEksempler, openEksemplerSpilleliste } from "./ui.js?v=6.10";
-import { DECADES, isVisible } from "./limits.js?v=6.10";
-import { META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.10";
-import { getState } from "./explore-context.js?v=6.10";
+import { escapeHtml, modalOpen, countArtistExamples, openArtistsPlaylistModal, tiarEksempler, openEksemplerSpilleliste, countPlaylistExamples, openPlaylistModal } from "./ui.js?v=6.11";
+import { DECADES, isVisible } from "./limits.js?v=6.11";
+import { META_GENRE_ORDER, META_GENRE_COLOR, GENEALOGY, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.11";
+import { getState } from "./explore-context.js?v=6.11";
 
 // Ekstra bolker (U1: «Fra timene») kan legges inn utenfra uten at denne
 // modulen kjenner datakilden. Hver leverandør gir { tittel, rader: [{ navn,
@@ -48,6 +48,15 @@ function tegnLytt() {
   }).filter((x) => x.antall);
   metaRader.forEach((x) => handlinger.set(`meta:${x.meta}`, () => openArtistsPlaylistModal(`Spilleliste: ${x.meta}`, x.liste)));
 
+  // Sjangrene (v6.11, brukervalg 2026-10-03): alle tre-sjangre med minst ett
+  // eksempel, alfabetisk, med samme spilleliste som «Spilleliste» på
+  // sjangerkortet.
+  const sjangerRader = GENEALOGY.filter((n) => n.g)
+    .map((n) => ({ n, navn: n.f || n.l, antall: countPlaylistExamples(s.artists, n.l) }))
+    .filter((x) => x.antall)
+    .sort((a, b) => a.navn.localeCompare(b.navn, "no"));
+  sjangerRader.forEach((x) => handlinger.set(`sjanger:${x.n.l}`, () => openPlaylistModal(x.navn, x.n, s.artists)));
+
   const tiarRader = DECADES.map((d) => ({ d, par: tiarEksempler(synlige, d) })).filter((x) => x.par.length);
   tiarRader.forEach((x) => handlinger.set(`tiar:${x.d}`, () => openEksemplerSpilleliste(`Spilleliste: ${x.d}-tallet`, x.par)));
 
@@ -56,11 +65,13 @@ function tegnLytt() {
   ekstra.forEach((b, bi) => b.rader.forEach((r, ri) => handlinger.set(`ekstra:${bi}:${ri}`, r.aapne)));
 
   const bolk = (tittel, rader) => `<section class="sj-familie"><div class="sj-fam-hode"><h3 class="sj-fam-navn">${escapeHtml(tittel)}</h3></div>${rader}</section>`;
+  // Tre kolonner (v6.11): metasjanger, sjanger, tiår. «Fra timene» (U1)
+  // kommer som en fjerde bolk under når den finnes.
   body.innerHTML = metaRader.length || tiarRader.length || ekstra.length
-    ? `<div class="sj-familier lytt-bolker">${
-        ekstra.map((b, bi) => bolk(b.tittel, b.rader.map((r, ri) => radHtml(`ekstra:${bi}:${ri}`, r.navn, r.antall))).join("")).join("")
-      }${bolk("Per metasjanger", metaRader.map((x) => radHtml(`meta:${x.meta}`, x.meta, x.antall, META_GENRE_COLOR[x.meta])).join(""))
-      }${bolk("Per tiår", tiarRader.map((x) => radHtml(`tiar:${x.d}`, `${x.d}-tallet`, x.par.length)).join(""))}</div>`
+    ? `<div class="lytt-bolker">${bolk("Per metasjanger", metaRader.map((x) => radHtml(`meta:${x.meta}`, x.meta, x.antall, META_GENRE_COLOR[x.meta])).join(""))
+      }${bolk("Per sjanger", sjangerRader.map((x) => radHtml(`sjanger:${x.n.l}`, x.navn, x.antall, MAIN_GENRE_INFO[x.n.l]?.color || nodeColor(x.n))).join(""))
+      }${bolk("Per tiår", tiarRader.map((x) => radHtml(`tiar:${x.d}`, `${x.d}-tallet`, x.par.length)).join(""))
+      }${ekstra.map((b, bi) => bolk(b.tittel, b.rader.map((r, ri) => radHtml(`ekstra:${bi}:${ri}`, r.navn, r.antall)).join(""))).join("")}</div>`
     : `<p class="muted">Ingen lytteeksempler ennå.</p>`;
   body.querySelectorAll("[data-lytt]").forEach((b) =>
     b.addEventListener("click", () => handlinger.get(b.dataset.lytt)?.()));

@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.10";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.10";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.11";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.11";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -133,29 +133,23 @@ export const MODAL_HTML = `
       <button type="button" class="dv-fane" role="tab" data-dv-fane="society">Samfunn</button>
       <button type="button" class="dv-fane" role="tab" data-dv-fane="musikk">Musikk</button>
     </div>
+    <!-- Teknologi og Samfunn i full bredde, kildene nederst (v6.11,
+         brukervalg 2026-10-03); Musikk i tre like brede kolonner. -->
     <div class="dv-panel" id="dv-tech-section" role="tabpanel">
-      <div class="dv-hoved">
-        <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
-        <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
-        <div class="dv-handling" id="dv-tech-handling"></div>
-      </div>
-      <aside class="dv-side">
-        <div id="dv-innovasjoner" data-sekt="innovasjoner"></div>
-        <div id="dv-kilder-tech"></div>
-      </aside>
+      <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
+      <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
+      <div class="dv-handling" id="dv-tech-handling"></div>
+      <div id="dv-kilder-tech"></div>
     </div>
     <div class="dv-panel" id="dv-society-section" role="tabpanel">
-      <div class="dv-hoved">
-        <div id="dv-society" class="info-text" data-sekt="tekst"></div>
-        <div class="dv-handling" id="dv-society-handling"></div>
-      </div>
-      <aside class="dv-side">
-        <div id="dv-kilder-society"></div>
-      </aside>
+      <div id="dv-society" class="info-text" data-sekt="tekst"></div>
+      <div class="dv-handling" id="dv-society-handling"></div>
+      <div id="dv-kilder-society"></div>
     </div>
-    <div class="dv-panel" id="dv-musikk-section" role="tabpanel">
-      <div class="dv-hoved" id="dv-musikk-sjangre" data-sekt="musikk"></div>
-      <aside class="dv-side" id="dv-musikk-side" data-sekt="musikk"></aside>
+    <div class="dv-panel dv-musikk" id="dv-musikk-section" role="tabpanel">
+      <div class="dv-kol" id="dv-musikk-sjangre" data-sekt="musikk"></div>
+      <div class="dv-kol" id="dv-musikk-artister" data-sekt="musikk"></div>
+      <div class="dv-kol" id="dv-musikk-lytt" data-sekt="musikk"></div>
     </div>
     <div class="dv-nav">
       <button class="btn ghost small" id="dv-prev"></button>

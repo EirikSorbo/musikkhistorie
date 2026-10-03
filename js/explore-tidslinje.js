@@ -5,12 +5,12 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js; sjangervokabularet fra genre-model.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.10";
-import { isVisible } from "./limits.js?v=6.10";
-import { META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO, FAMILIES, canonMainGenre } from "./genre-model.js?v=6.10";
-import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=6.10";
-import { imgTag, safeUrl } from "./ui-helpers.js?v=6.10";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.10";
+import { escapeHtml, modalOpen } from "./ui.js?v=6.11";
+import { isVisible } from "./limits.js?v=6.11";
+import { META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO, FAMILIES, canonMainGenre } from "./genre-model.js?v=6.11";
+import { resolveSpan, packLanes, timelineBounds } from "./timeline-lanes.js?v=6.11";
+import { imgTag, safeUrl } from "./ui-helpers.js?v=6.11";
+import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js?v=6.11";
 
 // ----------------------------------------------------------------------------
 //  Artisttidslinje: når var artistene aktive? Pakket bane-tidslinje gruppert
@@ -102,7 +102,13 @@ export function openTidslinje(focus = {}) {
     const genres = [...new Set((a.mainGenre || [])
       .map((g) => canonMainGenre(g))
       .filter(Boolean))];
-    const keys = genres.length ? genres : [UTEN];
+    // Bare metasjangerens egne sjangre (v6.11, brukervalg 2026-10-03): en
+    // artist med sjangre fra andre familier står bare under sine egne, og en
+    // artist med BARE fremmede sjangre tas ut av tidslinja. Artister uten
+    // noen tre-sjanger samles i «Uten sjanger i treet».
+    const egne = genres.filter((g) => MAIN_GENRE_INFO[g]?.meta === meta);
+    const keys = egne.length ? egne : genres.length ? [] : [UTEN];
+    if (!keys.length) continue;
     if (!groups.has(meta)) groups.set(meta, new Map());
     const secs = groups.get(meta);
     for (const key of keys) {

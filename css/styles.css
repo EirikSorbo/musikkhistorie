@@ -923,12 +923,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
    historiene og instrumentsammendragene grønt. */
 .story-body a[href], .rt a[href] { color: var(--accent); font-weight: 500; text-decoration: none; }
 .story-body a[href]:hover, .rt a[href]:hover { text-decoration: underline; }
-/* Lytteeksempler får en liten avspillingstrekant foran (v6.05, D4), så de
-   skilles fra sjangerlenkene, som også er grønne. Tegnet i CSS, ikke emoji. */
-a.lytt-lenke::before {
-  content: ""; display: inline-block; width: 0.55em; height: 0.62em; margin-right: 0.32em;
-  background: currentColor; clip-path: polygon(0 0, 100% 50%, 0 100%); vertical-align: 0;
-}
+/* Avspillingstrekanten foran lytteeksemplene (v6.05) er fjernet igjen i
+   v6.11 (brukervalg 2026-10-03). Klassen lytt-lenke står igjen som krok. */
 .story-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .story-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 #se-text { width: 100%; min-height: 420px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; line-height: 1.55; }
@@ -3740,7 +3736,7 @@ body.presentasjon .meta-merke { display: none; }
 }
 
 /* Lytt (U7): to bolker side om side, radene som i Sjangre. */
-.lytt-bolker { columns: 2 16rem; }
+
 .lytt-rad .sj-fam-prikk { margin-right: 2px; }
 .lytt-rad .sj-rad-aar { margin-left: auto; }
 
@@ -3791,3 +3787,72 @@ body.presentasjon .meta-merke { display: none; }
 .laerer-omrader { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 18px 28px; }
 .laerer-omrade .section-label { margin-top: 0; }
 .laerer-knapper { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ===========================================================================
+   v6.11 (brukervalg 2026-10-03)
+   =========================================================================== */
+/* Tiårsfanene: Teknologi og Samfunn i full bredde, kildene nederst. */
+.dv-panel { display: block; }
+.dv-panel .kilder { margin-top: 1.2rem; }
+/* Musikk-fanen: tre like brede kolonner (sjangre, artister, lytt). */
+.dv-panel.dv-musikk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1.8rem; align-items: start; }
+@media (max-width: 760px) {
+  .dv-panel.dv-musikk { grid-template-columns: minmax(0, 1fr); }
+  .dv-kol + .dv-kol { margin-top: 1.4rem; }
+}
+/* Artist- og lyttelistene i spillelistenes stil: grå strek mellom radene,
+   dempet tekst, navn/tittel til venstre og år/artist til høyre. */
+.dv-pl { margin: 0 0 8px; padding: 0; list-style: none; }
+.dv-pl .pl-item {
+  display: flex; align-items: baseline; gap: 0.8rem;
+  padding: 0.42rem 0.2rem; border-bottom: 1px solid var(--line); line-height: 1.4; font-size: 0.88rem;
+}
+.dv-pl .pl-item:last-child { border-bottom: 0; }
+.dv-pl .pl-item:hover { background: var(--surface-2); }
+.dv-pl .pl-item a, .dv-pl .dv-artist {
+  font-weight: 400; text-decoration: none; text-align: left;
+  color: color-mix(in srgb, var(--text) 50%, var(--muted));
+}
+.dv-pl .pl-item a:hover, .dv-pl .dv-artist:hover, .dv-pl .dv-artist:focus-visible { color: var(--accent-2); text-decoration: none; }
+.dv-pl .pl-aar { color: var(--muted); font-size: 0.85em; }
+.dv-pl .pl-hoyre { margin-left: auto; flex-shrink: 0; max-width: 45%; text-align: right; font-size: 0.8rem; color: var(--muted); }
+.dv-kol .pl-alle { margin: 0 0 6px; }
+.dv-musikk .dv-sjanger { font-size: 0.86rem; }
+.dv-musikk .dv-varme { width: 44px; }
+/* Artistgalleriet ved søk og filter (v6.11): fire i bredden på laptop, tre på
+   nettbrett, to på mobil. */
+.ar-galleri { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+@media (max-width: 900px) { .ar-galleri { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .ar-galleri { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; } }
+.ar-kort {
+  display: flex; flex-direction: column; gap: 2px; padding: 0; border: 0; background: none;
+  cursor: pointer; text-align: left; font: inherit; color: var(--text);
+}
+.ar-bilde {
+  display: block; aspect-ratio: 1 / 1; margin-bottom: 6px; overflow: hidden;
+  border-radius: 10px; background: var(--surface-2);
+}
+.ar-bilde img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; transition: transform 0.2s ease; }
+.ar-kort:hover .ar-bilde img, .ar-kort:focus-visible .ar-bilde img { transform: scale(1.03); }
+.ar-initialer { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 600; color: var(--muted-2); }
+.ar-navn { font-weight: 600; font-size: 0.92rem; line-height: 1.3; }
+.ar-kort:hover .ar-navn { color: var(--accent-2); }
+.ar-linje { font-size: 0.78rem; line-height: 1.35; color: var(--muted); }
+.ar-sjanger { color: color-mix(in srgb, var(--accent-2) 70%, var(--muted)); }
+/* Lytt (v6.11): tre kolonner side om side; «Fra timene» brytes under. */
+.lytt-bolker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@media (max-width: 760px) { .lytt-bolker { grid-template-columns: minmax(0, 1fr); } }
+.lytt-bolker .sj-familie { margin: 0; }
+/* Sjangre og Undersjangre komprimert (v6.11, brukervalg 2026-10-03): fire
+   spalter og tettere rader, så Sjangre får plass uten rulling på laptop. */
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-nav { margin-bottom: 10px; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-familier { columns: 4 12.5rem; column-gap: 10px; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-familie { padding: 6px 10px 4px; margin-bottom: 9px; border-radius: 12px; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-hode { gap: 6px; margin-bottom: 1px; flex-wrap: wrap; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-navn { font-size: 0.9rem; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-tall { font-size: 0.7rem; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-lenke { font-size: 0.72rem; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-rad { padding: 1px 4px; gap: 6px; font-size: 0.8rem; line-height: 1.35; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-rad-aar { font-size: 0.68rem; margin-left: 4px; }
+#modal-subgenre-list .sj-spor { width: 34px; height: 5px; }
+#modal-undersjangre .modal > p.muted { margin-bottom: 10px !important; font-size: 0.84rem !important; }

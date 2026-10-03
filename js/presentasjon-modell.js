@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=6.10";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.11";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -52,7 +52,6 @@ export const FLATER = {
     { id: "tekst", navn: "Teksten" },
     { id: "tidslinje", navn: "Tidslinjen" },
     { id: "musikk", navn: "Musikken (sjangre, artister, lytting)" },
-    { id: "innovasjoner", navn: "Innovasjonskortene" },
   ],
   historie: [
     { id: "striper", navn: "Varmestriper" },
@@ -93,7 +92,7 @@ export const NIVAA_SEKT = {
   // Tiårstekstene ER poengene man snakker til, så de står fra nivå 1.
   tiår: {
     1: ["tekst", "tidslinje", "musikk"],
-    2: ["tekst", "tidslinje", "musikk", "innovasjoner"],
+    2: ["tekst", "tidslinje", "musikk"],
   },
   historie: {
     1: ["striper"],

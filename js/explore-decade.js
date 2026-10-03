@@ -16,14 +16,15 @@
 //  explore-modals.js) styrer detaljnivået i presentasjonsvisningen.
 // ============================================================================
 import { modalOpen, renderDecadeRibbon, buildKilderList, buildTechTimeline, formatInfoText, escapeHtml,
-  openArtistListModal, tiarEksempler, openEksemplerSpilleliste } from "./ui.js?v=6.10";
-import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.10";
-import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.10";
-import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.10";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.10";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.10";
-import { openVarmekart } from "./explore-varmekart.js?v=6.10";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.10";
+  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.11";
+import { ytMaal } from "./presentasjon-modell.js?v=6.11";
+import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.11";
+import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.11";
+import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.11";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.11";
+import { openTechDetail } from "./explore-tech.js?v=6.11";
+import { openVarmekart } from "./explore-varmekart.js?v=6.11";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.11";
 
 // Fanene i brukerens rekkefølge. Nøklene tech/society er de gamle modusene, så
 // lenker og kjøreplanstopp som «tiår:1950:tech» virker som før.
@@ -159,18 +160,6 @@ function tegnTeknologi(d, desc, s, lc) {
   tegnTekst(document.getElementById("dv-tech"), desc.tech, lc);
   tegnHandling(document.getElementById("dv-tech-handling"), d, "tech", desc);
 
-  // Innovasjonskortene fra tiåret, med vei til lista filtrert på tiåret (K6:
-  // før åpnet «Vis teknologi-kort» alle kortene, fra 1877 og utover).
-  const kort = (s.techItems || [])
-    .filter((t) => (t.status || "active") === "active" && t.decade === String(d))
-    .sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0) || String(a.name).localeCompare(String(b.name), "no"));
-  const side = document.getElementById("dv-innovasjoner");
-  side.innerHTML = `<h4 class="related-head">Innovasjonskort fra tiåret</h4>` + (kort.length
-    ? `<ul class="dv-liste">${kort.map((t) => `<li><button type="button" class="dv-rad" data-tech-id="${escapeHtml(t.id)}">${escapeHtml(t.name)}${t.adoptedYear ? `<span class="dv-sub">${escapeHtml(String(t.adoptedYear))}</span>` : ""}</button></li>`).join("")}</ul>`
-    : `<p class="muted dv-tom">Ingen innovasjonskort fra dette tiåret ennå.</p>`)
-    + `<button type="button" class="dv-lenke" data-dv-alle-tech>${kort.length ? "Se dem som kort" : "Alle innovasjonskortene"} <span aria-hidden="true">›</span></button>`;
-  side.querySelectorAll("[data-tech-id]").forEach((el) => el.addEventListener("click", () => aapneTech(el.dataset.techId)));
-  side.querySelector("[data-dv-alle-tech]").onclick = () => openTeknologi("", kort.length ? { tiar: d } : {});
   document.getElementById("dv-kilder-tech").innerHTML = buildKilderList(desc.kilder, "Kilder");
 }
 
@@ -185,7 +174,6 @@ function tegnSamfunn(d, desc, lc) {
 // lytteeksemplene fra tiåret.
 function tegnMusikk(d, s, lc) {
   const venstre = document.getElementById("dv-musikk-sjangre");
-  const hoyre = document.getElementById("dv-musikk-side");
   const heat = getHeatData();
   const idx = DECADES.indexOf(d);
   const rang = (m) => { const i = META_GENRE_ORDER.indexOf(m); return i < 0 ? 99 : i; };
@@ -215,21 +203,26 @@ function tegnMusikk(d, s, lc) {
   const aktive = filterArtists(synlige, { search: "", mainGenre: "", metaGenre: "", instrument: "", decade: String(d), priority: 0 })
     .sort(byInfluenceThenName);
   const nye = synlige.filter((a) => a.influenceStart >= d && a.influenceStart <= d + 9).sort(byInfluenceThenName);
-  const VIS_NYE = 10;
   const par = tiarEksempler(synlige, d);
-  hoyre.innerHTML = `<h4 class="related-head">Kom til på ${d}-tallet (${nye.length})</h4>`
+  const aar = (a) => [a.influenceStart, a.influenceEnd].filter(Boolean).join("–");
+
+  // Artistene og lytteeksemplene som lister i samme stil som spillelistene
+  // (v6.11, brukervalg 2026-10-03): navn eller tittel til venstre, årstall
+  // eller artist til høyre, en tynn strek mellom radene.
+  const artisterEl = document.getElementById("dv-musikk-artister");
+  artisterEl.innerHTML = `<h4 class="related-head">Kom til på ${d}-tallet (${nye.length})</h4>`
     + (nye.length
-      ? `<p class="dv-navneliste">${nye.slice(0, VIS_NYE).map((a) => `<button type="button" class="dv-artist" data-related-id="${escapeHtml(String(a.id))}">${escapeHtml(a.name)}</button>`).join(", ")}${nye.length > VIS_NYE ? ` <span class="dv-sub">og ${nye.length - VIS_NYE} til</span>` : ""}</p>`
+      ? `<ul class="pl-list dv-pl">${nye.map((a) => `<li class="pl-item"><button type="button" class="dv-artist" data-related-id="${escapeHtml(String(a.id))}">${escapeHtml(a.name)}</button><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(aar(a))}</span></span></li>`).join("")}</ul>`
       : `<p class="muted dv-tom">Ingen nye artister dette tiåret.</p>`)
-    + (aktive.length ? `<button type="button" class="dv-lenke" data-dv-aktive>Alle ${aktive.length} som var aktive <span aria-hidden="true">›</span></button>` : "")
-    + `<h4 class="related-head dv-lytt-head">Lytt (${par.length})</h4>`
-    + (par.length
-      ? `<ul class="dv-liste">${par.slice(0, 4).map(({ a, m, y }) => `<li><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}</a><span class="dv-sub">${escapeHtml(a.name)}, ${y}</span></li>`).join("")}</ul>
-         <button type="button" class="dv-lenke" data-dv-spilleliste>Hele spillelista <span aria-hidden="true">›</span></button>`
-      : `<p class="muted dv-tom">Ingen lytteeksempler fra dette tiåret ennå.</p>`);
-  wireRelated(hoyre, lc);
-  const alleAktive = hoyre.querySelector("[data-dv-aktive]");
+    + (aktive.length ? `<button type="button" class="dv-lenke" data-dv-aktive>Alle ${aktive.length} som var aktive <span aria-hidden="true">›</span></button>` : "");
+  wireRelated(artisterEl, lc);
+  const alleAktive = artisterEl.querySelector("[data-dv-aktive]");
   if (alleAktive) alleAktive.onclick = () => openArtistListModal(`Aktive på ${d}-tallet`, aktive, opts.onArtistClick, "Ingen artister ennå.");
-  const spl = hoyre.querySelector("[data-dv-spilleliste]");
-  if (spl) spl.onclick = () => openEksemplerSpilleliste(`Spilleliste: ${d}-tallet`, par);
+
+  const lyttEl = document.getElementById("dv-musikk-lytt");
+  lyttEl.innerHTML = `<h4 class="related-head">Lytt (${par.length})</h4>`
+    + (par.length
+      ? spillAlleHtml(par.map(({ m }) => ytMaal(m.url)?.video).filter(Boolean))
+        + `<ul class="pl-list dv-pl">${par.map(({ a, m, y }) => `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")} <span class="pl-aar">(${y})</span></a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`).join("")}</ul>`
+      : `<p class="muted dv-tom">Ingen lytteeksempler fra dette tiåret ennå.</p>`);
 }
