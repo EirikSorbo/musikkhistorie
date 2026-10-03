@@ -12,19 +12,19 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks, medSelv } from "./linkify.js?v=6.06";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.06";
-import { renderRichText } from "./rich-text.js?v=6.06";
-import { punkterHtml } from "./punkter.js?v=6.06";
-import { escapeHtml, buildKilderList } from "./util.js?v=6.06";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.06";
-import { modalOpen } from "./ui-modal.js?v=6.06";
-import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.06";
-import { artistsInGenre } from "./limits.js?v=6.06";
-import { wireProposeFoot } from "./ui-edit.js?v=6.06";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.06";
-import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.06";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.06";
+import { wireAllLinks, medSelv } from "./linkify.js?v=6.07";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.07";
+import { renderRichText } from "./rich-text.js?v=6.07";
+import { punkterHtml } from "./punkter.js?v=6.07";
+import { escapeHtml, buildKilderList } from "./util.js?v=6.07";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.07";
+import { modalOpen } from "./ui-modal.js?v=6.07";
+import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.07";
+import { artistsInGenre } from "./limits.js?v=6.07";
+import { wireProposeFoot } from "./ui-edit.js?v=6.07";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.07";
+import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.07";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.07";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js

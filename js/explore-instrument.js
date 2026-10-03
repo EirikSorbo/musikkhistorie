@@ -16,14 +16,14 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.06";
-import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.06";
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.06";
-import { pageFor } from "./story-format.js?v=6.06";
-import { renderRichText } from "./rich-text.js?v=6.06";
-import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.06";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.06";
-import { openTechDetail } from "./explore-tech.js?v=6.06";
+import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js?v=6.07";
+import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js?v=6.07";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js?v=6.07";
+import { pageFor } from "./story-format.js?v=6.07";
+import { renderRichText } from "./rich-text.js?v=6.07";
+import { wireLinks, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js?v=6.07";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.07";
+import { openTechDetail } from "./explore-tech.js?v=6.07";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører
 // hjemme under «Instrumenter og lydutstyr», så ingen trenger å velge den selv.
@@ -136,14 +136,24 @@ function renderGroup(group, tvunget = false) {
 
   // Rekkefølge: sammendrag → knapper → tidslinje. Teksten er inngangen til
   // instrumentet; tidslinjen står nederst som oppslagsverk.
+  // Høyrespalta (v6.07, D2): nyvinningene for instrumentet som en kort liste
+  // ved siden av teksten, der det før sto tomt. Tidslinja under er den samme
+  // listen på en tidsakse.
+  const sideliste = [...items].sort((a, b) => (a.adoptedYear || a.inventedYear || 0) - (b.adoptedYear || b.inventedYear || 0));
   body.innerHTML = `
-    <div class="instr-sum">
-      <div class="instr-sum-head">
-        <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`)}</h3>
-        <div class="spacer"></div>
-        <div class="instr-sum-actions"></div>
+    <div class="instr-topp">
+      <div class="instr-sum">
+        <div class="instr-sum-head">
+          <h3>${escapeHtml(INSTRUMENT_TITLE[group] || `Utviklingen av ${group}`)}</h3>
+          <div class="spacer"></div>
+          <div class="instr-sum-actions"></div>
+        </div>
+        <div class="instr-sum-body story-body"></div>
       </div>
-      <div class="instr-sum-body story-body"></div>
+      ${sideliste.length ? `<aside class="instr-side">
+        <h4 class="related-head">Nyvinninger</h4>
+        <ul class="dv-liste">${sideliste.map((t) => `<li><button type="button" class="dv-rad" data-instr-tech="${escapeHtml(t.id)}">${escapeHtml(t.name)}${(t.adoptedYear || t.inventedYear) ? `<span class="dv-sub">${escapeHtml(String(t.adoptedYear || t.inventedYear))}</span>` : ""}</button></li>`).join("")}</ul>
+      </aside>` : ""}
     </div>
     <div class="instr-foot"></div>
     <div class="instr-tl">${timelineHtml(group, items)}</div>`;

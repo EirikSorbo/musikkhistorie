@@ -15,17 +15,17 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=6.06";
-import { subscribeSharedData } from "./shared-data.js?v=6.06";
-import { onGenreModelChanged } from "./genre-model.js?v=6.06";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=6.06";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.06";
-import { initExplore } from "./explore.js?v=6.06";
+} from "./store.js?v=6.07";
+import { subscribeSharedData } from "./shared-data.js?v=6.07";
+import { onGenreModelChanged } from "./genre-model.js?v=6.07";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=6.07";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.07";
+import { initExplore } from "./explore.js?v=6.07";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=6.06";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=6.06";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=6.07";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=6.07";
 import {
-  openDecadeAdmin,
+  openSingleDecadeModal,
   openSingleSubgenreModal,
   setupDecadeSingleSave,
   setupSubgenreSingleSave,
@@ -42,18 +42,18 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=6.06";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=6.06";
-import { initVisning, visningTikk } from "./visning.js?v=6.06";
-import { initPlanMeny } from "./plan-meny.js?v=6.06";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.06";
-import { initYtSpiller } from "./yt-spiller.js?v=6.06";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.06";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.06";
-import { renderDesk } from "./teacher-desk.js?v=6.06";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=6.06";
-import { setupFormatBars } from "./format-bar.js?v=6.06";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=6.06";
+} from "./teacher-content.js?v=6.07";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=6.07";
+import { initVisning, visningTikk } from "./visning.js?v=6.07";
+import { initPlanMeny } from "./plan-meny.js?v=6.07";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.07";
+import { initYtSpiller } from "./yt-spiller.js?v=6.07";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.07";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.07";
+import { renderDesk } from "./teacher-desk.js?v=6.07";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=6.07";
+import { setupFormatBars } from "./format-bar.js?v=6.07";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=6.07";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -179,6 +179,9 @@ function startAppInner() {
     onMainGenreCheck: (genre) => addMainGenreCheckToggle(genre),
     getCheckedState: () => state.teacherChecks,
     onTechAdmin: () => openTechAdmin(),
+    // Tiårsvinduets fanene (v6.07): Rediger åpner lærerens tiårsmodal på
+    // samme tiår og samme tekst (samfunn eller teknologi).
+    onDecadeEdit: (decade, mode) => openSingleDecadeModal(decade, mode),
     // Sjekk-knapp i detaljvisningene (sjanger, historie, røtter, innovasjonskort).
     onCheck: (category, id, on) => setContentCheck(category, id, on),
     onTechEdit: (t, preset) => openTechEditor(t, preset),
@@ -204,10 +207,11 @@ function startAppInner() {
   initUtskriftValg({ hentData: () => state });
   initUtskriftSkuff();
 
-  // Tiårskortene åpner lærerens tiårsmodal (samme tidslinje-stripe som
-  // studentsiden, pluss sjekk/rediger) — ikke explore-visningen.
-  $("#btn-t-society")?.addEventListener("click", () => openDecadeAdmin("society"));
-  $("#btn-t-tech")?.addEventListener("click", () => openDecadeAdmin("tech"));
+  // Tiår-kortet (v6.07, S1) åpner det samme tiårsvinduet som studentene ser;
+  // «Rediger» i fanene fører til lærerens tiårsmodal (onDecadeEdit over).
+  // Lytt (U7) åpner spillelistene.
+  $("#btn-t-tiar")?.addEventListener("click", () => ctx.explore.openDecadeList());
+  $("#btn-t-lytt")?.addEventListener("click", () => ctx.explore.openLytt());
   // Tidslinje-inngang fra artistlistas filterrad (samme delte modal som fra
   // Sjangre-modalen — én implementasjon i explore-tidslinje.js).
   const btnTid = document.getElementById("btn-tidslinje-artister");

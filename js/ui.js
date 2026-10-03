@@ -10,13 +10,14 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.06";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.06";
-import { punkterHtml } from "./punkter.js?v=6.06";
-import { medSelv } from "./linkify.js?v=6.06";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.06";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.06";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.06";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.07";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.07";
+import { punkterHtml } from "./punkter.js?v=6.07";
+import { medSelv } from "./linkify.js?v=6.07";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.07";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.07";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.07";
+import { safeUrl } from "./util.js?v=6.07";
 import {
   escapeHtml,
   linkDesc,
@@ -39,14 +40,14 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.06";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.06";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.06";
-import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.06";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.06";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.06";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.06";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.06";
+} from "./ui-helpers.js?v=6.07";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.07";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.07";
+import { ytMaal, ytSpillelisteUrl } from "./presentasjon-modell.js?v=6.07";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.07";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.07";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.07";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.07";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -621,13 +622,16 @@ export function artistsInInstrumentGroup(artists, group) {
 }
 
 // Fyller og åpner artistliste-popupen (#modal-artistliste). Delt av forsiden og slektstre-siden.
-export function openArtistListModal(title, list, onArtistClick, emptyText = "Ingen forslag ennå.") {
+// `lenke` (valgfri, v6.07): { tekst, onClick } gir en lenke over lista, f.eks.
+// fra artistene på et instrument til instrumentets egen side (K6).
+export function openArtistListModal(title, list, onArtistClick, emptyText = "Ingen forslag ennå.", { lenke = null } = {}) {
   document.getElementById("al-title").textContent = `${title} (${list.length})`;
   const body = document.getElementById("al-body");
+  const lenkeHtml = lenke ? `<p class="al-lenke-rad"><button type="button" class="dv-lenke" data-al-lenke>${escapeHtml(lenke.tekst)} <span aria-hidden="true">›</span></button></p>` : "";
   if (!list.length) {
-    body.innerHTML = `<p class="muted empty">${escapeHtml(emptyText)}</p>`;
+    body.innerHTML = lenkeHtml + `<p class="muted empty">${escapeHtml(emptyText)}</p>`;
   } else {
-    body.innerHTML = `<div class="result-list">${buildArtistListRows(list)}</div>`;
+    body.innerHTML = lenkeHtml + `<div class="result-list">${buildArtistListRows(list)}</div>`;
     body.querySelectorAll(".result-row[data-artist-id]").forEach((row) => {
       const open = () => {
         const a = list.find((x) => x.id === row.dataset.artistId);
@@ -640,6 +644,7 @@ export function openArtistListModal(title, list, onArtistClick, emptyText = "Ing
       });
     });
   }
+  if (lenke) body.querySelector("[data-al-lenke]").onclick = lenke.onClick;
   modalOpen(document.getElementById("modal-artistliste"));
 }
 
@@ -707,35 +712,69 @@ function playlistRows(list, sj = null) {
   const exOk = (m) => !sj || !m.genre || String(m.genre).toLowerCase() === sj;
 
   const seen = new Set();
+  const par = [];
+  for (const a of list) {
+    const nameLow = a.name.toLowerCase();
+    for (const m of (a.musicExamples || [])) {
+      if (!exOk(m)) continue;
+      const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      par.push({ a, m });
+    }
+  }
+  return eksempelRader(par, "Ingen musikkeksempler registrert for denne sjangeren ennå.");
+}
+
+// Radene for en liste av { a: artist, m: lytteeksempel } (v6.05: delt av
+// sjanger- og metasjanger-listene over og tiårslistene under, U7/K1).
+function eksempelRader(par, tomTekst) {
   // Video-ID-ene i lista, i samme rekkefølge som radene, til «Spill alle».
   const ider = [];
-  const items = list.flatMap((a) => {
-    const rows = [];
-    const nameLow = a.name.toLowerCase();
-    const sjangerTag = genreTags(a, { withSub: false, extraClass: "tag-pl" });
+  const items = par.map(({ a, m }) => {
     // Tagget rad viser eksempelets EGEN sjanger (én boble); utagget viser
     // artistens sjangre.
-    const rowTag = (m) => m.genre
+    const rowTag = m.genre
       ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(m.genre)}">${escapeHtml(m.genre)}</button>`
-      : sjangerTag;
-    (a.musicExamples || []).forEach((m) => {
-      if (!exOk(m)) return;
-      const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      const video = ytMaal(m.url)?.video;
-      if (video) ider.push(video);
-      const yInfo = musicExampleLabel(m);
-      // Tittel og år til venstre, artist og sjanger til høyre (v6.00,
-      // brukerønske 2026-10-01), som navn og år i artistlista.
-      rows.push(`<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span> ${rowTag(m)}</span></li>`);
-    });
-    return rows;
+      : genreTags(a, { withSub: false, extraClass: "tag-pl" });
+    const video = ytMaal(m.url)?.video;
+    if (video) ider.push(video);
+    const yInfo = musicExampleLabel(m);
+    // Tittel og år til venstre, artist og sjanger til høyre (v6.00,
+    // brukerønske 2026-10-01), som navn og år i artistlista.
+    return `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span> ${rowTag}</span></li>`;
   });
+  if (!items.length) return { total: 0, html: `<p class="muted empty">${escapeHtml(tomTekst)}</p>`, ider: [] };
+  return { total: items.length, html: `<ul class="pl-list">${items.join("")}</ul>`, ider };
+}
 
-  const total = items.length;
-  if (!total) return { total: 0, html: `<p class="muted empty">Ingen musikkeksempler registrert for denne sjangeren ennå.</p>`, ider: [] };
-  return { total, html: `<ul class="pl-list">${items.join("")}</ul>`, ider };
+// Lytteeksemplene fra ett tiår (v6.05, K1 og U7): innspillingsåret, eller
+// framføringsåret når bare det er satt, innenfor tiåret. Sortert på år, så
+// navn. Bare eksempler med lenke, og hvert eksempel én gang.
+export function tiarEksempler(artists, decade) {
+  const fra = Number(decade), til = fra + 9;
+  const seen = new Set();
+  const par = [];
+  for (const a of (artists || []).filter(isVisible)) {
+    for (const m of (a.musicExamples || [])) {
+      const y = Number(m.year || m.performanceYear) || null;
+      if (!y || y < fra || y > til || !safeUrl(m.url)) continue;
+      const key = `${a.name.toLowerCase()}|${(m.label || m.url).toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      par.push({ a, m, y });
+    }
+  }
+  return par.sort((x, z) => x.y - z.y || x.a.name.localeCompare(z.a.name, "no"));
+}
+
+// Spilleliste-popupen for et ferdig utvalg eksempler (tiårene).
+export function openEksemplerSpilleliste(title, par) {
+  const { total, html, ider } = eksempelRader(par || [], "Ingen lytteeksempler ennå.");
+  document.getElementById("pl-title").textContent = `${title} (${total})`;
+  document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
+  kobleSpillelisteRader();
+  modalOpen(document.getElementById("modal-spilleliste"));
 }
 
 // Antall lytteeksempler i en sjangers spilleliste — SAMME logikk som popupen

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { metaRader } from "../../js/ui-helpers.js?v=6.06";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=6.06";
+import { metaRader } from "../../js/ui-helpers.js?v=6.07";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/presentasjon-modell.js?v=6.07";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
 // pedagogiske valg, ikke implementasjonsdetaljer: et uskyldig «rydd opp i
@@ -355,11 +355,12 @@ test("planOversikt: grupperer etter kategori i fast rekkefølge, ikke etter plan
 });
 
 test("planOversikt: alfabetisk innenfor kategorien, tiårene i tidsrekkefølge", () => {
-  const g = planOversikt(vis("artist:a2", "artist:a1", "artist:a3", "tiår:1970", "tiår:1950:tech", "tiår:1950"), { artister });
+  const g = planOversikt(vis("artist:a2", "artist:a1", "artist:a3", "tiår:1970", "tiår:1950:musikk", "tiår:1950:tech", "tiår:1950"), { artister });
   assert.deepEqual(g[0].punkter.map((p) => p.tekst), ["Aretha Franklin", "Chuck Berry", "Elvis Presley"]);
   const tiaar = g.find((k) => k.id === "tiaar").punkter;
   assert.deepEqual(tiaar.map((p) => `${p.tekst} ${p.detalj}`),
-    ["1950-tallet samfunn", "1950-tallet teknologi", "1970-tallet samfunn"]);
+    // Fanerekkefølgen innenfor tiåret (v6.07): teknologi, samfunn, musikk.
+    ["1950-tallet teknologi", "1950-tallet samfunn", "1950-tallet musikk", "1970-tallet samfunn"]);
   assert.ok(tiaar.every((p) => !("sort" in p)), "sorteringsnøkkelen lekker ikke ut");
 });
 
@@ -793,7 +794,7 @@ test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: spillelister av flere videoer, og «husk visningen på dette stoppet»
 // ---------------------------------------------------------------------------
-import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=6.06";
+import { ytSpillelisteUrl, YT_LISTE_MAKS, medStoppOppdatert, ytSpillelisteIder, finnLytteeksempel } from "../../js/presentasjon-modell.js?v=6.07";
 
 test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", () => {
   assert.equal(YT_LISTE_MAKS, 50);

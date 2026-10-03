@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from "./util.js?v=6.06";
+import { escapeHtml as esc } from "./util.js?v=6.07";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
@@ -88,6 +88,16 @@ export function nevnteArtister(text, ctx = {}) {
   const markers = [];
   for (const a of prepareTargets(ctx._base || ctx).artists) findMatches(lower, escaped, a.nameEsc, a.id, "artist", markers);
   return [...new Set(markers.map((m) => m.id))];
+}
+
+// Nevner teksten navnet (samme treffregler som lenkingen)? Brukt av
+// innovasjonskortet for «Artister som nevner den» (v6.07, K6).
+export function nevnerNavn(text, navn) {
+  if (!text || !navn) return false;
+  const escaped = esc(text);
+  const markers = [];
+  findMatches(escaped.toLowerCase(), escaped, esc(navn), "x", "x", markers);
+  return markers.length > 0;
 }
 
 function isWordChar(ch) {

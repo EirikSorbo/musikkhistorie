@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.06";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.06";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.07";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.07";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -28,6 +28,9 @@ export const MODAL_HTML = `
       ${TECH_CATEGORY_TABS.map((c) => `<button class="btn ghost small tech-tab" data-tech-cat="${escapeHtml(c.value)}">${escapeHtml(c.label)}</button>`).join("")}
       <div id="tek-admin-extra" class="tech-tabs-extra"></div>
     </div>
+    <!-- Tiårsfilteret (v6.05, K6): «Alle innovasjonskortene fra 1950-tallet»
+         i tiårsvinduet åpner lista filtrert, med vei til alle. -->
+    <div id="tech-tiar-linje" class="tech-tiar-linje" hidden></div>
     <div id="tech-list" class="tech-grid"></div>
   </div>
 </div>
@@ -112,33 +115,64 @@ export const MODAL_HTML = `
   </div>
 </div>
 
-<!-- Enkelt tiår (les) — tidslinje-stripa øverst er selve tiårsvelgeren -->
+<!-- Tiår (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S1): ett vindu
+     for et tiår, med tidslinje-stripa som tiårsvelger og tre faner under den:
+     Teknologi, Samfunn og Musikk. Tiåret står når fanen byttes, og fanen står
+     når tiåret byttes. Hver fane har tekst (eller sjangrene) til venstre og det
+     som hører til i en smal høyrespalte (D2). Tegnes av explore-decade.js. -->
 <div class="modal-backdrop" id="modal-decade-view">
   <div class="modal modal-innhold">
     <div class="modal-head">
-      <h2 id="dv-title"></h2>
+      <h2 id="dv-title">Tiår</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <!-- Inngangen til teknologikortene står ØVERST, over tidslinje-stripa. -->
-    <div id="dv-extra"></div>
     <div class="decade-ribbon" id="dv-ribbon"></div>
     <h3 class="dv-decade" id="dv-decade"></h3>
-    <div class="info-section" id="dv-society-section">
-      <h4 class="info-label">Samfunnsutvikling</h4>
-      <div id="dv-society" class="info-text" data-sekt="tekst"></div>
-      <button class="btn ghost small" id="dv-society-propose" style="display:none;margin-left:6px">Foreslå endring</button>
+    <div class="dv-faner" role="tablist" aria-label="Perspektiv">
+      <button type="button" class="dv-fane" role="tab" data-dv-fane="tech">Teknologi</button>
+      <button type="button" class="dv-fane" role="tab" data-dv-fane="society">Samfunn</button>
+      <button type="button" class="dv-fane" role="tab" data-dv-fane="musikk">Musikk</button>
     </div>
-    <div class="info-section" id="dv-tech-section">
-      <h4 class="info-label">Teknologiutvikling</h4>
-      <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
-      <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
-      <button class="btn ghost small" id="dv-tech-propose" style="display:none;margin-left:6px">Foreslå endring</button>
+    <div class="dv-panel" id="dv-tech-section" role="tabpanel">
+      <div class="dv-hoved">
+        <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
+        <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
+        <div class="dv-handling" id="dv-tech-handling"></div>
+      </div>
+      <aside class="dv-side">
+        <div id="dv-innovasjoner" data-sekt="innovasjoner"></div>
+        <div id="dv-kilder-tech"></div>
+      </aside>
     </div>
-    <div id="dv-kilder"></div>
+    <div class="dv-panel" id="dv-society-section" role="tabpanel">
+      <div class="dv-hoved">
+        <div id="dv-society" class="info-text" data-sekt="tekst"></div>
+        <div class="dv-handling" id="dv-society-handling"></div>
+      </div>
+      <aside class="dv-side">
+        <div id="dv-kilder-society"></div>
+      </aside>
+    </div>
+    <div class="dv-panel" id="dv-musikk-section" role="tabpanel">
+      <div class="dv-hoved" id="dv-musikk-sjangre" data-sekt="musikk"></div>
+      <aside class="dv-side" id="dv-musikk-side" data-sekt="musikk"></aside>
+    </div>
     <div class="dv-nav">
       <button class="btn ghost small" id="dv-prev"></button>
       <button class="btn ghost small" id="dv-next"></button>
     </div>
+  </div>
+</div>
+
+<!-- Lytt (v6.05, strukturgjennomgangen U7): spillelister per metasjanger og
+     per tiår, og senere per time («Fra timene», U1). Tegnes av explore-lytt.js. -->
+<div class="modal-backdrop" id="modal-lytt" data-vis="lytt">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Lytt</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="lytt-body"></div>
   </div>
 </div>
 

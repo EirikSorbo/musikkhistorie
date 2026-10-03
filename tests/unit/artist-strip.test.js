@@ -1,8 +1,8 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artistStripHtml, spanText } from "../../js/artist-strip.js?v=6.06";
-import { rebuild } from "../../js/genre-model.js?v=6.06";
+import { artistStripHtml, spanText } from "../../js/artist-strip.js?v=6.07";
+import { rebuild } from "../../js/genre-model.js?v=6.07";
 
 // Artistkortets stripe plasserer innflytelsesperioden på en FAST akse:
 // 1900–2030, altså 130 år. Prosentene under er regnet for hånd derfra, så en
@@ -21,12 +21,13 @@ test("perioden plasseres på året sitt, ikke i en tiårsbolk", () => {
 
 test("aksen skriver annethvert tiår, sentrert på sitt eget år", () => {
   const html = artistStripHtml({ metaGenre: "Blues", influenceStart: 1950 }, { nowYear: NÅ });
-  const aar = [...html.matchAll(/<span style="left:[\d.]+%">(\d{4})<\/span>/g)].map((m) => m[1]);
+  // Årstallet er en knapp til tiårsvinduet (v6.07, K1), inni posisjonsspennet.
+  const aar = [...html.matchAll(/<span style="left:[\d.]+%"><button type="button" class="tiar-lenke" data-tiar="(\d{4})"/g)].map((m) => m[1]);
   assert.deepEqual(aar, ["1900", "1920", "1940", "1960", "1980", "2000", "2020"]);
   // Første årstall står på 0 %, ikke midt i en bolk: det er forskjellen fra
   // varmestripas akse, og grunnen til at den ikke kunne gjenbrukes her.
-  assert.match(html, /<span style="left:0\.00%">1900<\/span>/);
-  assert.match(html, new RegExp(`<span style="left:${pst(1980)}%">1980</span>`));
+  assert.match(html, /<span style="left:0\.00%"><button[^>]*>1900<\/button><\/span>/);
+  assert.match(html, new RegExp(`<span style="left:${pst(1980)}%"><button[^>]*>1980</button></span>`));
 });
 
 test("åpent sluttår løper til i dag og tegnes med flat høyrekant", () => {

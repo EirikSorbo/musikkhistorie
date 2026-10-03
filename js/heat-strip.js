@@ -9,8 +9,8 @@
 //  stedet for å slås opp i MAIN_GENRE_INFO her.
 // ============================================================================
 
-import { DECADES } from "./limits.js?v=6.06";
-import { escapeHtml } from "./util.js?v=6.06";
+import { DECADES } from "./limits.js?v=6.07";
+import { escapeHtml } from "./util.js?v=6.07";
 
 const HEAT_DECADES = DECADES;
 const HEAT_SEG = 100 / DECADES.length;   // ett tiårs bredde i prosent
@@ -107,7 +107,8 @@ export function heatStripHtml(color, vals, cell = null) {
 // sitt eget spor i stedet for å skyve på de andre.
 export function heatAxisHtml() {
   return `<div class="hs-axis" style="grid-template-columns:repeat(${HEAT_DECADES.length},minmax(0,1fr))">` +
-    HEAT_DECADES.map((d) => `<div>${d}</div>`).join("") + `</div>`;
+    // Tiårene er lenker til tiårsvinduets Musikk-fane (v6.07, K1).
+    HEAT_DECADES.map((d) => `<div><button type="button" class="tiar-lenke" data-tiar="${d}" aria-label="${d}-tallet">${d}</button></div>`).join("") + `</div>`;
 }
 
 // ---------------------------------------------------------------------------

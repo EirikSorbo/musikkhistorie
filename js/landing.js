@@ -1,25 +1,25 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.06";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.06";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.06";
-import { onGenreModelChanged } from "./genre-model.js?v=6.06";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.06";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.06";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.06";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.06";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.06";
-import { initExplore } from "./explore.js?v=6.06";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.06";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.06";
-import { initPlanMeny } from "./plan-meny.js?v=6.06";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.06";
-import { initYtSpiller } from "./yt-spiller.js?v=6.06";
-import { initVisning, visningTikk } from "./visning.js?v=6.06";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.06";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.06";
-import { askChoice } from "./ui-modal.js?v=6.06";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.06";
-import { currentEntityValues } from "./entity-values.js?v=6.06";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.06";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.07";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.07";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.07";
+import { onGenreModelChanged } from "./genre-model.js?v=6.07";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.07";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.07";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.07";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.07";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.07";
+import { initExplore } from "./explore.js?v=6.07";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.07";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.07";
+import { initPlanMeny } from "./plan-meny.js?v=6.07";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.07";
+import { initYtSpiller } from "./yt-spiller.js?v=6.07";
+import { initVisning, visningTikk } from "./visning.js?v=6.07";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.07";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.07";
+import { askChoice } from "./ui-modal.js?v=6.07";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.07";
+import { currentEntityValues } from "./entity-values.js?v=6.07";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.07";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -161,10 +161,9 @@ function setupExplore() {
     hasPendingEdit,
   });
 
-  const btnSociety = document.getElementById("btn-society");
-  if (btnSociety) btnSociety.addEventListener("click", () => explore.openDecadeList("society"));
-  const btnTech = document.getElementById("btn-tech");
-  if (btnTech) btnTech.addEventListener("click", () => explore.openDecadeList("tech"));
+  // Tiår (v6.07, S1) åpner tiårsvinduet der man slapp; Lytt (U7) spillelistene.
+  document.getElementById("btn-tiar")?.addEventListener("click", () => explore.openDecadeList());
+  document.getElementById("btn-lytt")?.addEventListener("click", () => explore.openLytt());
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
   const btnInstrumenter = document.getElementById("btn-instrumenter");

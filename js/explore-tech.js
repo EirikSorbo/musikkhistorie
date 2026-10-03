@@ -4,8 +4,8 @@
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=6.06";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=6.06";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=6.07";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=6.07";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
@@ -67,7 +67,13 @@ export function refreshTechDetail() {
 
 // `category` åpner seksjonen med den fanen alt valgt — brukt av kategori-lenka
 // på innovasjonskortene. Uten argument vises alle kortene, som før.
-export function openTeknologi(category = "") {
+// Tiårsfilteret (v6.07, K6): «Se dem som kort» i tiårsvinduet viser bare
+// tiårets innovasjonskort, med en linje over lista som sier det og fører til
+// alle. Gjelder til lista åpnes uten filter igjen.
+let tiarFilter = null;
+
+export function openTeknologi(category = "", { tiar = null } = {}) {
+  tiarFilter = Number.isFinite(Number(tiar)) && tiar !== null ? Number(tiar) : null;
   renderTeknologiList(category);
   const modal = document.getElementById("modal-teknologi");
   modal.querySelectorAll(".tech-tab").forEach(b =>
@@ -79,7 +85,16 @@ export function renderTeknologiList(category) {
   const el = document.getElementById("tech-list");
   if (!el) return;
   const s = getState();
-  renderTechList(el, s.techItems, category || "", buildLinkCtx());
+  const items = tiarFilter === null ? s.techItems : (s.techItems || []).filter((t) => t.decade === String(tiarFilter));
+  renderTechList(el, items, category || "", buildLinkCtx());
+  const linje = document.getElementById("tech-tiar-linje");
+  if (linje) {
+    linje.hidden = tiarFilter === null;
+    linje.innerHTML = tiarFilter === null ? ""
+      : `Viser innovasjonskortene fra ${tiarFilter}-tallet. <button type="button" class="dv-lenke">Vis alle <span aria-hidden="true">›</span></button>`;
+    const alle = linje.querySelector("button");
+    if (alle) alle.onclick = () => { tiarFilter = null; renderTeknologiList(category); };
+  }
   // Valgt kategori hører med i lenka og i et stopp (audit v5.42 funn 16);
   // apneMaal forstår «teknologi:<kategori>».
   const modal = document.getElementById("modal-teknologi");

@@ -8,18 +8,20 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.06";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.06";
-import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.06";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.06";
-import { openTechDetail } from "./explore-tech.js?v=6.06";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.06";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.06";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.06";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=6.06";
-import { renderReferanser } from "./explore-referanser.js?v=6.06";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.06";
-import { setHeatData } from "./heat-strip.js?v=6.06";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.07";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.07";
+import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.07";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.07";
+import { openTechDetail } from "./explore-tech.js?v=6.07";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.07";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.07";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.07";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=6.07";
+import { renderReferanser } from "./explore-referanser.js?v=6.07";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.07";
+import { setHeatData } from "./heat-strip.js?v=6.07";
+import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.07";
+import { openInstrumenter } from "./explore-instrument.js?v=6.07";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -113,8 +115,15 @@ export function showArtistsForSjanger({ label }) {
   openArtistListModal(label, artistsInGenre(getState().artists, label), opts.onArtistClick, "Ingen forslag i denne sjangeren ennå.");
 }
 
+// Med vei til instrumentets egen side når instrumentet hører til en gruppe
+// som har en (v6.07, K6): «Saksofon» fører til Soloinstrument, «Banjo» til
+// Gitar. «Annet» har ingen side.
 export function showArtistsForInstrument(instrument) {
-  openArtistListModal(instrument, artistsByInstrument(getState().artists, instrument), opts.onArtistClick, "Ingen forslag med dette instrumentet ennå.");
+  const gruppe = Object.entries(INSTRUMENT_GROUPS).find(([, liste]) => liste.includes(instrument))?.[0];
+  const lenke = gruppe && INSTRUMENT_TIMELINE_GROUPS.includes(gruppe)
+    ? { tekst: INSTRUMENT_TITLE[gruppe] || gruppe, onClick: () => openInstrumenter(gruppe) }
+    : null;
+  openArtistListModal(instrument, artistsByInstrument(getState().artists, instrument), opts.onArtistClick, "Ingen forslag med dette instrumentet ennå.", { lenke });
 }
 
 // Kalles av sidene når genreDescriptions-snapshotet endres: et åpent

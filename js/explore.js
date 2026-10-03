@@ -5,23 +5,24 @@
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.06";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.06";
-import { MODAL_HTML } from "./explore-modals.js?v=6.06";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.06";
-import { openVarmekart } from "./explore-varmekart.js?v=6.06";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.06";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.06";
-import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.06";
-import { openDecadeList } from "./explore-decade.js?v=6.06";
-import { openReferanser } from "./explore-referanser.js?v=6.06";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.06";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.06";
-import { openVisningssider } from "./explore-visningssider.js?v=6.06";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.06";
-import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.06";
-import { openSok, wireSok } from "./explore-search.js?v=6.06";
-import { erPresentasjon } from "./presentasjon.js?v=6.06";
+import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js?v=6.07";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.07";
+import { MODAL_HTML } from "./explore-modals.js?v=6.07";
+import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js?v=6.07";
+import { openVarmekart } from "./explore-varmekart.js?v=6.07";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.07";
+import { openTidslinje, hideTidTip } from "./explore-tidslinje.js?v=6.07";
+import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js?v=6.07";
+import { openDecadeList, openDecade } from "./explore-decade.js?v=6.07";
+import { openLytt } from "./explore-lytt.js?v=6.07";
+import { openReferanser } from "./explore-referanser.js?v=6.07";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js?v=6.07";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js?v=6.07";
+import { openVisningssider } from "./explore-visningssider.js?v=6.07";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.07";
+import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js?v=6.07";
+import { openSok, wireSok } from "./explore-search.js?v=6.07";
+import { erPresentasjon } from "./presentasjon.js?v=6.07";
 
 function injectModals() {
   const wrap = document.createElement("div");
@@ -39,7 +40,7 @@ function wireModals() {
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier",
    "modal-meta-oversikt", "modal-visningssider", "modal-galleri",
-   "modal-instr-tech", "modal-podkaster", "modal-sok"].forEach((id) => setupModal(id));
+   "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt"].forEach((id) => setupModal(id));
 
   // Søkefeltet i Utforsk-kortet står i sidenes egen markup med faste ID-er, så
   // forsiden og lærersiden får søket av samme kode uten å wire noe selv.
@@ -182,6 +183,14 @@ function wireModals() {
     // Metasjangerens oversikt (v6.05, S2): fra familiekortene i Sjangre,
     // gruppene i tidslinja/varmekartet/periodene og merket øverst på
     // artist- og sjangerkortet (K5).
+    // Et tiår på tidsstripene (artistkortet, sjangerkortet): tiårsvinduet på
+    // Musikk-fanen (v6.07, K1).
+    const tiarBtn = e.target.closest("[data-tiar]");
+    if (tiarBtn) {
+      e.preventDefault();
+      openDecade(Number(tiarBtn.dataset.tiar), "musikk");
+      return;
+    }
     const metaBtn = e.target.closest("[data-meta-oversikt]");
     if (metaBtn) {
       e.preventDefault();
@@ -221,6 +230,7 @@ export function initExplore(options) {
   return {
     openSok,
     openDecadeList,
+    openLytt,
     openSubgenreList,
     openTidslinje,
     openStoreBildet,

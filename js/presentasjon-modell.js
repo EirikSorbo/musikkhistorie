@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=6.06";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.07";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -43,10 +43,16 @@ export const FLATER = {
     { id: "fakta", navn: "Fakta (årstall)" },
     { id: "punkter", navn: "Oppsummering i punkter" },
     { id: "beskrivelse", navn: "Beskrivelse" },
+    // v6.07 (K6): artistene som nevner innovasjonen.
+    { id: "artister", navn: "Artister som nevner den" },
   ],
+  // Tiårsvinduet med faner (v6.07, S1): musikkfanens sjangre og artister, og
+  // teknologifanens liste over innovasjonskortene i høyrespalta.
   tiår: [
     { id: "tekst", navn: "Teksten" },
     { id: "tidslinje", navn: "Tidslinjen" },
+    { id: "musikk", navn: "Musikken (sjangre, artister, lytting)" },
+    { id: "innovasjoner", navn: "Innovasjonskortene" },
   ],
   historie: [
     { id: "striper", navn: "Varmestriper" },
@@ -86,8 +92,8 @@ export const NIVAA_SEKT = {
   },
   // Tiårstekstene ER poengene man snakker til, så de står fra nivå 1.
   tiår: {
-    1: ["tekst", "tidslinje"],
-    2: ["tekst", "tidslinje"],
+    1: ["tekst", "tidslinje", "musikk"],
+    2: ["tekst", "tidslinje", "musikk", "innovasjoner"],
   },
   historie: {
     1: ["striper"],
@@ -479,12 +485,13 @@ function oversiktPunkt(m, oppslag) {
       return { kat: "sjangre", tekst: `${navn(fra)} → ${navn(til)}` };
     }
     case "tiår": {
-      const tech = m.modus === "tech";
+      // Fanene (v6.07): teknologi, samfunn, musikk. Uten modus = samfunn.
+      const fane = m.modus === "tech" ? "teknologi" : m.modus === "musikk" ? "musikk" : "samfunn";
       const aar = Number(m.id);
       return {
-        kat: "tiaar", tekst: `${m.id}-tallet`, detalj: tech ? "teknologi" : "samfunn",
-        // Tiårene i tidsrekkefølge, samfunn før teknologi innenfor samme tiår.
-        sort: (Number.isFinite(aar) ? aar : 9999) * 2 + (tech ? 1 : 0),
+        kat: "tiaar", tekst: `${m.id}-tallet`, detalj: fane,
+        // Tiårene i tidsrekkefølge, og fanene i fanerekkefølgen innenfor tiåret.
+        sort: (Number.isFinite(aar) ? aar : 9999) * 3 + ({ teknologi: 0, samfunn: 1, musikk: 2 })[fane],
       };
     }
     case "tech": {
@@ -516,7 +523,7 @@ export function planOversikt(stopp, oppslag = {}) {
     const m = parseVisVerdi(s?.vis);
     if (!m) return;
     // Tiårets samfunnsvisning har to skrivemåter (uten modus og «society»).
-    const modus = m.hva === "tiår" ? (m.modus === "tech" ? "tech" : "") : (m.modus || "");
+    const modus = m.hva === "tiår" ? (["tech", "musikk"].includes(m.modus) ? m.modus : "") : (m.modus || "");
     const nokkel = [m.hva, m.id || "", modus, m.ekstra || ""].join(":");
     if (sett.has(nokkel)) return;
     const p = oversiktPunkt(m, oppslag);

@@ -21,10 +21,10 @@
 //  så ui-helpers.js kan importere den uten import-sykel.
 // ============================================================================
 
-import { DECADES } from "./limits.js?v=6.06";
-import { resolveSpan } from "./timeline-lanes.js?v=6.06";
-import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.06";
-import { escapeHtml } from "./util.js?v=6.06";
+import { DECADES } from "./limits.js?v=6.07";
+import { resolveSpan } from "./timeline-lanes.js?v=6.07";
+import { META_GENRE_COLOR, FAMILIES } from "./genre-model.js?v=6.07";
+import { escapeHtml } from "./util.js?v=6.07";
 
 const Y0 = DECADES[0];                          // aksens første år (1900)
 const Y1 = DECADES[DECADES.length - 1] + 10;    // aksens siste år (2030)
@@ -61,7 +61,9 @@ export function spanText(span) {
 function axisHtml() {
   return `<div class="ai-axis">` + DECADES
     .map((d, i) => (i % LABEL_STEP === 0
-      ? `<span style="left:${pctOf(d).toFixed(2)}%">${d}</span>` : ""))
+      // Tiåret er en lenke til tiårsvinduets Musikk-fane (v6.07, K1); den
+      // delegerte lytteren i explore.js fanger data-tiar.
+      ? `<span style="left:${pctOf(d).toFixed(2)}%"><button type="button" class="tiar-lenke" data-tiar="${d}" aria-label="${d}-tallet">${d}</button></span>` : ""))
     .join("") + `</div>`;
 }
 
@@ -86,7 +88,9 @@ export function artistStripHtml(artist, { nowYear = new Date().getFullYear() } =
     .filter(Boolean).join(" ");
   const txt = spanText(span);
 
-  return `<div class="ai-strip" role="img" aria-label="Aktiv ${escapeHtml(txt)}">` +
+  // role="group", ikke "img": tiårene på aksen er knapper (v6.07), og en
+  // img-rolle gjør innholdet presentasjonelt for skjermlesere.
+  return `<div class="ai-strip" role="group" aria-label="Aktiv ${escapeHtml(txt)}">` +
     axisHtml() +
     `<div class="ai-track" title="Aktiv ${escapeHtml(txt)}">` +
     `<div class="${cls}" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;` +

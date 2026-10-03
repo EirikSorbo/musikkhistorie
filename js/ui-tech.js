@@ -4,10 +4,10 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=6.06";
-import { fmtCredit, linkDesc, wireLinks, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=6.06";
-import { medSelv } from "./linkify.js?v=6.06";
-import { punkterHtml } from "./punkter.js?v=6.06";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=6.07";
+import { fmtCredit, linkDesc, wireLinks, wireRelated, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=6.07";
+import { medSelv, nevnerNavn } from "./linkify.js?v=6.07";
+import { punkterHtml } from "./punkter.js?v=6.07";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin). `bredde` er
 // thumbnail-bredden: detaljkortet på lerretet (presentasjon, v5.36) viser
@@ -96,6 +96,19 @@ export function renderTechDetail(el, t, lc) {
   el.innerHTML = sekt("bilde", img) + sekt("fakta", techFactsLines(t))
     + sekt("punkter", punkterHtml(t.punkter, medSelv(lc, { tech: t.id })))
     + sekt("beskrivelse", t.description ? `<div class="rt">${linkDesc(t.description, medSelv(lc, { tech: t.id }))}</div>` : "")
+    + sekt("artister", artisterSomNevnerHtml(t, lc))
     + sekt("kilder", buildKilderList(t.kilder, "Kilder"));
   wireLinks(el, lc);
+  wireRelated(el, lc);
+}
+
+// Artistene som nevner innovasjonen i beskrivelsen sin (v6.07, K6): artist-
+// kortene lenket hit, men kortet viste ikke veien tilbake.
+function artisterSomNevnerHtml(t, lc) {
+  const liste = (lc?.artists || [])
+    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && nevnerNavn(a.description, t.name))
+    .sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
+  if (!liste.length) return "";
+  return `<div class="related"><h4 class="related-head">Artister som nevner den</h4><div class="related-list">${
+    liste.map((a) => `<button type="button" class="related-chip" data-related-id="${escapeHtml(String(a.id))}">${escapeHtml(a.name)}</button>`).join("")}</div></div>`;
 }

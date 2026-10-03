@@ -25,18 +25,18 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=6.06";
-import { escapeHtml, kanoniskJson } from "./util.js?v=6.06";
-import { modalOpen, modalClose } from "./ui.js?v=6.06";
-import { state } from "./teacher-state.js?v=6.06";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=6.06";
-import { validateTree } from "./genre-validate.js?v=6.06";
+import { $ } from "./shared.js?v=6.07";
+import { escapeHtml, kanoniskJson } from "./util.js?v=6.07";
+import { modalOpen, modalClose } from "./ui.js?v=6.07";
+import { state } from "./teacher-state.js?v=6.07";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=6.07";
+import { validateTree } from "./genre-validate.js?v=6.07";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup, heatOrphanKeys,
   planEdgeCleanup, edgeOrphanKeys,
-} from "./genre-migrate.js?v=6.06";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=6.06";
+} from "./genre-migrate.js?v=6.07";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=6.07";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.

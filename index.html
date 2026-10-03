@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=6.06" />
-  <script src="js/gate.js?v=6.06"></script>
+  <link rel="stylesheet" href="css/styles.css?v=6.07" />
+  <script src="js/gate.js?v=6.07"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -70,20 +70,23 @@
           <span class="dash-title">Sjangre</span>
           <span class="dash-desc">Alle sjangre fra røtter til i dag</span>
         </button>
-        <button class="dash-card" id="btn-tech">
-          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path d="M8 7h8M8 11h6"/></svg>
-          <span class="dash-title">Teknologi</span>
-          <span class="dash-desc">Teknologiutvikling tiår for tiår</span>
-        </button>
-        <button class="dash-card" id="btn-society">
-          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
-          <span class="dash-title">Samfunn</span>
-          <span class="dash-desc">Samfunnsutvikling tiår for tiår</span>
+        <!-- Tiår (v6.07, S1): Teknologi og Samfunn ble ett kort, med fanene
+             Teknologi, Samfunn og Musikk i tiårsvinduet. -->
+        <button class="dash-card" id="btn-tiar">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span class="dash-title">Tiår</span>
+          <span class="dash-desc">Teknologi, samfunn og musikk tiår for tiår</span>
         </button>
         <button class="dash-card" id="btn-instrumenter">
           <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="17" r="3"/><path d="M10 17V5l10-2v12"/><circle cx="17" cy="15" r="3"/><path d="M10 9l10-2"/></svg>
           <span class="dash-title">Instrumenter</span>
           <span class="dash-desc">Instrumentenes utvikling</span>
+        </button>
+        <!-- Lytt (v6.07, U7): spillelistene per metasjanger og per tiår. -->
+        <button class="dash-card" id="btn-lytt">
+          <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+          <span class="dash-title">Lytt</span>
+          <span class="dash-desc">Spillelister per metasjanger og tiår</span>
         </button>
       </div>
       <!-- Søk i alt innholdet. BEVISST ikke et <form>: lærersiden wirer først
@@ -192,7 +195,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=6.06"></script>
-  <script type="module" src="js/landing.js?v=6.06"></script>
+  <script src="js/load-guard.js?v=6.07"></script>
+  <script type="module" src="js/landing.js?v=6.07"></script>
 </body>
 </html>
