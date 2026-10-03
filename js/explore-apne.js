@@ -11,24 +11,25 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=6.07";
-import { showSubsjangerInfo } from "./ui.js?v=6.07";
-import { showEdgeInfo } from "./genealogy.js?v=6.07";
-import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.07";
-import { openDecade } from "./explore-decade.js?v=6.07";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=6.07";
-import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=6.07";
-import { openVarmekart } from "./explore-varmekart.js?v=6.07";
-import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.07";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.07";
-import { openReferanser } from "./explore-referanser.js?v=6.07";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.07";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.07";
-import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=6.07";
-import { apneYtSpiller } from "./yt-spiller.js?v=6.07";
-import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.07";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.07";
-import { openLytt } from "./explore-lytt.js?v=6.07";
+import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js?v=6.08";
+import { showSubsjangerInfo } from "./ui.js?v=6.08";
+import { showEdgeInfo } from "./genealogy.js?v=6.08";
+import { openTechDetail, openTeknologi } from "./explore-tech.js?v=6.08";
+import { openDecade } from "./explore-decade.js?v=6.08";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js?v=6.08";
+import { openInstrumenter, openPodkaster } from "./explore-instrument.js?v=6.08";
+import { openVarmekart } from "./explore-varmekart.js?v=6.08";
+import { openSjangerperioder } from "./explore-sjangerperioder.js?v=6.08";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.08";
+import { openReferanser } from "./explore-referanser.js?v=6.08";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.08";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.08";
+import { ytWatchUrl, lytteeksempelNavn } from "./presentasjon-modell.js?v=6.08";
+import { apneYtSpiller } from "./yt-spiller.js?v=6.08";
+import { openMetaOversikt } from "./explore-metaoversikt.js?v=6.08";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.08";
+import { openLytt } from "./explore-lytt.js?v=6.08";
+import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js?v=6.08";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -93,6 +94,10 @@ export function apneMaal(apne) {
     // og lærersiden navigerer, tre-siden gir ingen — vi ER der).
     case "slektstre": return void opts.onSlektstre?.();
     case "lytt": return openLytt();
+    case "sjangre": return openSubgenreList();
+    case "undersjangre": return openUndersjangre();
+    // Artister-vinduet bor på forsiden (landing.js), som gir åpneren.
+    case "artister": return void opts.onOpenArtister?.();
   }
 }
 
@@ -117,8 +122,9 @@ function klarFor(apne, s) {
       return isGenreModelReady() && s.edgeDescsLoaded && s.genreDescsLoaded ? "klar" : "vent";
     case "himmel": case "tidslinje":
       return isGenreModelReady() && s.artistsLoaded ? "klar" : "vent";
-    // Lytt-vinduet (v6.07) teller artistenes eksempler per metasjanger.
-    case "lytt":
+    // Lytt-vinduet (v6.07) teller artistenes eksempler per metasjanger, og
+    // Sjangre/Undersjangre/Artister (v6.08) tegnes av treet og artistene.
+    case "lytt": case "sjangre": case "undersjangre": case "artister":
       return isGenreModelReady() && s.artistsLoaded ? "klar" : "vent";
     // Oversikten tegnes av treet, periodene (genreDescriptions) og artistene.
     case "oversikt":

@@ -32,8 +32,9 @@ export const VIS_TYPER = new Set([
   // Oversikten over en metasjanger (v5.94) og artistgalleriet for en
   // sjanger (v5.96): bare for visningsmodus.
   "oversikt", "galleri",
-  // Lytt-vinduet med spillelistene (v6.07, U7).
-  "lytt",
+  // Lytt-vinduet med spillelistene (v6.07, U7), og vinduene som fikk egen
+  // adresse for tilbakeknappen (v6.08, S7).
+  "lytt", "sjangre", "undersjangre", "artister",
 ]);
 
 // «artist:abc123» → { hva: "artist", id: "abc123" }. Ukjent type → null, så

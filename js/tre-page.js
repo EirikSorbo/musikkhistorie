@@ -14,20 +14,22 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=6.07";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.07";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.07";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.07";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.07";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.07";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.07";
-import { initPlanMeny } from "./plan-meny.js?v=6.07";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.07";
-import { initYtSpiller } from "./yt-spiller.js?v=6.07";
-import { initVisning, visningTikk } from "./visning.js?v=6.07";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.07";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.07";
-import { provVisMaal } from "./explore-apne.js?v=6.07";
+import { initExplore } from "./explore.js?v=6.08";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.08";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.08";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.08";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.08";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.08";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.08";
+import { initPlanMeny } from "./plan-meny.js?v=6.08";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.08";
+import { initYtSpiller } from "./yt-spiller.js?v=6.08";
+import { initVisning, visningTikk } from "./visning.js?v=6.08";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.08";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.08";
+import { provVisMaal } from "./explore-apne.js?v=6.08";
+import { fetchPendingEdits } from "./store.js?v=6.08";
+import { openProposalEditor } from "./proposals.js?v=6.08";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -53,12 +55,37 @@ export function initTrePage({ render }) {
   // setter opp alle modalene og registrerer klikkdelegeringen ÉN gang.
   // onSlektstre utelates med vilje: vi ER i treet, og både hub-knappen og
   // «Sjangertre»-knappen skjuler seg selv når handleren mangler.
+  // «Foreslå endring» på sjangerkortet også her (v6.08, S8). Samme sperre som
+  // forsiden (openProposalEditorGuarded i landing.js): én ventende endring per
+  // kort, hentet fersk idet skjemaet åpnes.
+  async function foreslaa(cfg) {
+    try {
+      const ventende = await fetchPendingEdits();
+      if (ventende.some((p) => p.entityType === cfg.entityType && String(p.entityId) === String(cfg.entityId))) {
+        alert("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
+        return;
+      }
+    } catch (err) {
+      console.warn("Kunne ikke sjekke ventende endringsforslag:", err?.message || err);
+    }
+    openProposalEditor(cfg);
+  }
+
   const explore = initExplore({
     getState: () => state,
     onArtistClick: openArtistDetail,
+    onProposeEdit: foreslaa,
+    // «Vis i slektstreet» på sjangerkortet: vi ER i treet, så det sentreres på
+    // sjangeren mens kortet står i sidepanelet (v6.08, S8).
+    onVisITre: (label) => api?.fokuser?.(label),
   });
 
+  // Sjangerkortet som sidepanel på brede skjermer (v6.08, S8; CSS), så treet
+  // man nettopp så på, står igjen til venstre.
+  document.body.classList.add("tre-side");
+
   setupModal("modal-artist-detail");
+  setupModal("modal-proposal");
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") modalCloseTop(); });
   // Presentasjonsmodusen følger med fra forsiden via sessionStorage (v5.24),
   // så hoppet hit beholder verktøylinja og nivåene. No-op når den er av.
@@ -84,6 +111,13 @@ export function initTrePage({ render }) {
   // ville blitt stående til neste sidelast. Derfor venter vi på at scenen
   // faktisk får en størrelse.
   const stageEl = document.getElementById("gx-stage");
+  let fokusFraUrl = null;
+  try { fokusFraUrl = new URLSearchParams(window.location.search).get("fokus"); } catch (e) { /* aldri velte sidelasten */ }
+  if (fokusFraUrl && stageEl) {
+    const slipp = () => { fokusFraUrl = null; };
+    stageEl.addEventListener("pointerdown", slipp, { once: true });
+    stageEl.addEventListener("wheel", slipp, { once: true, passive: true });
+  }
   let lastStageW = 0;
 
   // Tegner kartet. Krever BÅDE at scenen har en bredde OG at sjangertreet har
@@ -95,6 +129,11 @@ export function initTrePage({ render }) {
     api?.destroy?.();                     // rydder kameraets window-lyttere
     api = render({ root: document, getOpts: sjangerOpts });
     api?.fit();
+    // tre.html?fokus=<sjanger> (v6.08, S8): fra «Vis i slektstreet» på et
+    // sjangerkort på de andre sidene. Treet tegnes på nytt når dataene lander
+    // (cache, så Firestore), så fokuset legges på igjen ved hver tegning til
+    // brukeren selv tar i treet.
+    if (fokusFraUrl) api?.fokuser?.(fokusFraUrl);
     lastStageW = stageEl.clientWidth;
     visTreMangler(false);
     return true;

@@ -8,13 +8,13 @@
 //  og enhetstestbar. collectRows leser DOM.
 // ============================================================================
 
-import { escapeHtml } from "./util.js?v=6.07";
+import { escapeHtml } from "./util.js?v=6.08";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "./kilder.js?v=6.07";
+import { KILDE_KATEGORIER } from "./kilder.js?v=6.08";
 // Starttiden (v5.88) bor i lenka; hjelperne er rene og deles med spilleren.
-import { ytMaal, parseTid, medStarttid, starttidTekst } from "./presentasjon-modell.js?v=6.07";
+import { ytMaal, parseTid, medStarttid, starttidTekst } from "./presentasjon-modell.js?v=6.08";
 
 // Feltspesifikasjon: { key (objektnøkkel), cls (input-klasse), type, ph,
 // label (aria-label for skjermlesere), title?,

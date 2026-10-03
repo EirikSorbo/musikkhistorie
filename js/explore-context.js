@@ -8,20 +8,20 @@
 //  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
 //  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.07";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.07";
-import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.07";
-import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.07";
-import { openTechDetail } from "./explore-tech.js?v=6.07";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.07";
-import { openTidslinje } from "./explore-tidslinje.js?v=6.07";
-import { openArtistGalleri } from "./explore-visningssider.js?v=6.07";
-import { renderVarmekartBody } from "./explore-varmekart.js?v=6.07";
-import { renderReferanser } from "./explore-referanser.js?v=6.07";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.07";
-import { setHeatData } from "./heat-strip.js?v=6.07";
-import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.07";
-import { openInstrumenter } from "./explore-instrument.js?v=6.07";
+import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js?v=6.08";
+import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js?v=6.08";
+import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.08";
+import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js?v=6.08";
+import { openTechDetail } from "./explore-tech.js?v=6.08";
+import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js?v=6.08";
+import { openTidslinje } from "./explore-tidslinje.js?v=6.08";
+import { openArtistGalleri } from "./explore-visningssider.js?v=6.08";
+import { renderVarmekartBody } from "./explore-varmekart.js?v=6.08";
+import { renderReferanser } from "./explore-referanser.js?v=6.08";
+import { renderSjangerperioderBody } from "./explore-sjangerperioder.js?v=6.08";
+import { setHeatData } from "./heat-strip.js?v=6.08";
+import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js?v=6.08";
+import { openInstrumenter } from "./explore-instrument.js?v=6.08";
 
 export let opts = null;
 export function setOpts(o) { opts = o; }
@@ -86,6 +86,11 @@ export function sjangerOpts() {
     onShowTimeline: ({ label }) => openTidslinje({ genre: label }),
     // Artistgalleriet (v5.96), oppå sjangerkortet, i appen og på lerretet.
     onShowGallery: ({ label }) => openArtistGalleri(label),
+    // «Vis i slektstreet» (v6.08, S8): på slektstresiden sentrerer treet seg
+    // på sjangeren (onVisITre fra tre-page.js); på de andre sidene går det til
+    // tre.html?fokus=<sjanger>.
+    onVisITre: opts.onVisITre
+      || (opts.onSlektstre ? (label) => { window.location.href = `tre.html?fokus=${encodeURIComponent(label)}`; } : undefined),
     onEdit: opts.onSubgenreEdit ? (label, level) => {
       modalClose(document.getElementById("modal-sjanger"));
       opts.onSubgenreEdit(label, level);

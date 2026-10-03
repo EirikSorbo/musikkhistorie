@@ -10,12 +10,12 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml } from "./ui.js?v=6.07";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.07";
-import { byggIndeks, sok, utdrag, marker } from "./search.js?v=6.07";
-import { getState } from "./explore-context.js?v=6.07";
-import { apneMaal } from "./explore-apne.js?v=6.07";
-import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=6.07";
+import { modalOpen, escapeHtml } from "./ui.js?v=6.08";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.08";
+import { byggIndeks, sok, utdrag, marker } from "./search.js?v=6.08";
+import { getState } from "./explore-context.js?v=6.08";
+import { apneMaal } from "./explore-apne.js?v=6.08";
+import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js?v=6.08";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
 // lite nok til at fem grupper får plass på skjermen samtidig.
@@ -74,6 +74,16 @@ export function openSok(query = "") {
 // Kalles fra explore.js ved oppstart. Feltet i Utforsk-kortet (samme markup på
 // forsiden og lærersiden) er inngangen; modalens eget felt søker videre.
 export function wireSok() {
+  // Søkeikonet i toppmenyen (v6.08, K8): på sider med søket åpnes det her og
+  // nå; på sidene uten (forslagsskjemaet, utskriften) går lenka til forsiden
+  // med ?sok=1, som åpner søket der.
+  document.addEventListener("click", (e) => {
+    const ikon = e.target.closest("[data-sok]");
+    if (!ikon || !document.getElementById("modal-sok")) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    openSok();
+  });
   const start = document.getElementById("sok-start");
   if (start) {
     const gaa = () => openSok(start.value);

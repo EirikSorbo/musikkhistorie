@@ -1,25 +1,25 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.07";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.07";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.07";
-import { onGenreModelChanged } from "./genre-model.js?v=6.07";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.07";
-import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.07";
-import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.07";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.07";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.07";
-import { initExplore } from "./explore.js?v=6.07";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.07";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.07";
-import { initPlanMeny } from "./plan-meny.js?v=6.07";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.07";
-import { initYtSpiller } from "./yt-spiller.js?v=6.07";
-import { initVisning, visningTikk } from "./visning.js?v=6.07";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.07";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.07";
-import { askChoice } from "./ui-modal.js?v=6.07";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.07";
-import { currentEntityValues } from "./entity-values.js?v=6.07";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.07";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.08";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.08";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.08";
+import { onGenreModelChanged } from "./genre-model.js?v=6.08";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.08";
+import { debounce, throttle, harSendtInn, normaliserReturKode } from "./util.js?v=6.08";
+import { renderSpotlightCards, renderResultList, renderArtistDetail, renderArtists, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.08";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.08";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.08";
+import { initExplore } from "./explore.js?v=6.08";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.08";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.08";
+import { initPlanMeny } from "./plan-meny.js?v=6.08";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.08";
+import { initYtSpiller } from "./yt-spiller.js?v=6.08";
+import { initVisning, visningTikk } from "./visning.js?v=6.08";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.08";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.08";
+import { askChoice } from "./ui-modal.js?v=6.08";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.08";
+import { currentEntityValues } from "./entity-values.js?v=6.08";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.08";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -158,6 +158,8 @@ function setupExplore() {
     // preset settes av Instrumenter-seksjonen ({ instrument, category }), så
     // skjemaet åpner riktig utfylt. Teknologiseksjonen sender ingenting.
     onProposeNewTech: (preset) => openNewTechProposal(preset),
+    // ?vis=artister (v6.08, S7): Artister-vinduet bor her, ikke i utforsk-laget.
+    onOpenArtister: () => openArtistModal(),
     hasPendingEdit,
   });
 
@@ -768,6 +770,15 @@ function init() {
   applyIncomingFilter();
   // ?vis=-lenkene (v5.22): generisk dyp lenke til alt søket kan åpne.
   lesVisFraUrl();
+  // ?sok=1 (v6.08, K8): søkeikonet på sidene uten søk lenker hit.
+  try {
+    const u = new URL(window.location.href);
+    if (u.searchParams.has("sok")) {
+      u.searchParams.delete("sok");
+      window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
+      explore.openSok();
+    }
+  } catch (e) { /* en dyp lenke skal aldri velte sidelasten */ }
 }
 
 // Rollevelger — kjører først når klassepassordet er godtatt (js/gate.js), så

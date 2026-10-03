@@ -25,6 +25,103 @@ function focusables(backdrop) {
 // Øverste åpne modal (høyest z-index), eller null. Eksportert (v5.38) for
 // presentasjonens «Legg til her» og samleøktas +-tast: begge trenger målet
 // til kortet som ligger øverst.
+// ---------------------------------------------------------------------------
+//  ADRESSE OG TILBAKEKNAPP (v6.08, strukturgjennomgangen S7)
+// ---------------------------------------------------------------------------
+//  Et kort med mål (data-vis) får sin egen oppføring i nettleserens historikk,
+//  med ?vis=<mål> i adressen. Tilbakeknappen (og sveipet på mobil) lukker da
+//  det øverste kortet i stedet for å forlate appen, en oppdatering åpner
+//  kortet igjen (ruteren i explore-apne.js leser ?vis=), og adressen kan
+//  deles. Bare kort med data-vis: skjemaer og redigering har ingen adresse,
+//  og tilbakeknappen lukker aldri et halvskrevet skjema (oppføringen legges
+//  tilbake). Av i presentasjonsvisningen, som styrer adressen selv.
+const histStabel = [];   // backdrops med egen oppføring, nederst først
+let histIgnorer = 0;     // popstate-hendelser vi selv utløste (back/go)
+let histFraPop = false;  // lukking fra tilbakeknappen: ikke rør historikken
+
+function histPaa() {
+  return IS_BROWSER && !!window.history?.pushState && !document.body.classList.contains("presentasjon");
+}
+
+function adresseMedVis(vis) {
+  const u = new URL(window.location.href);
+  if (vis) u.searchParams.set("vis", vis);
+  else u.searchParams.delete("vis");
+  return u.pathname + u.search + u.hash;
+}
+
+function histApnet(el) {
+  if (!histPaa() || !el.dataset.vis) return;
+  if (histStabel.includes(el)) {
+    // Samme kort med nytt innhold (f.eks. en sjanger fra et sjangerkort):
+    // adressen følger, uten ny oppføring.
+    if (histStabel[histStabel.length - 1] === el) {
+      window.history.replaceState(window.history.state, "", adresseMedVis(el.dataset.vis));
+    }
+    return;
+  }
+  histStabel.push(el);
+  window.history.pushState({ pensumModal: el.id || true }, "", adresseMedVis(el.dataset.vis));
+}
+
+// Kalles når et kort faktisk er lukket. Lukket brukeren det (✕, ←, Escape,
+// bakgrunnen), går historikken ett steg tilbake så den følger stabelen.
+function histLukket(el) {
+  const i = histStabel.indexOf(el);
+  if (i === -1) return;
+  histStabel.splice(i, 1);
+  if (!histFraPop && histPaa()) {
+    histIgnorer++;
+    window.history.back();
+  }
+}
+
+if (IS_BROWSER) {
+  window.addEventListener("popstate", (e) => {
+    if (histIgnorer > 0) {
+      histIgnorer--;
+      // Alle kortene er lukket og vi står på sidens første oppføring: ingen
+      // ?vis= som peker på et lukket kort.
+      if (!histStabel.length && !e.state?.pensumModal && new URL(window.location.href).searchParams.has("vis")) {
+        window.history.replaceState(window.history.state, "", adresseMedVis(null));
+      }
+      return;
+    }
+    const top = histStabel[histStabel.length - 1];
+    if (top) {
+      const overst = topOpenModal();
+      // Et skjema (uten adresse) ligger over kortet: legg oppføringen tilbake.
+      if (overst && overst !== top) {
+        window.history.pushState({ pensumModal: top.id || true }, "", adresseMedVis(top.dataset.vis));
+        return;
+      }
+      histFraPop = true;
+      try { modalClose(top); } finally { histFraPop = false; }
+      // Lukkingen ble avbrutt (_beforeClose, f.eks. «spør først»): kortet står,
+      // så oppføringen må tilbake.
+      if (top.classList.contains("open")) {
+        window.history.pushState({ pensumModal: top.id || true }, "", adresseMedVis(top.dataset.vis));
+        return;
+      }
+    }
+    // Tilbake på sidens første oppføring: ingen ?vis= som peker på et lukket kort.
+    if (!e.state?.pensumModal && new URL(window.location.href).searchParams.has("vis")) {
+      window.history.replaceState(window.history.state, "", adresseMedVis(null));
+    }
+  });
+  // Målet kan skifte mens kortet står åpent (tiårsfanene, stripa, varmekartets
+  // metasjanger): adressen følger det øverste kortet.
+  if ("MutationObserver" in window) {
+    new MutationObserver((recs) => {
+      const top = histStabel[histStabel.length - 1];
+      if (!top || !histPaa() || !top.dataset.vis) return;
+      if (recs.some((r) => r.target === top)) {
+        window.history.replaceState(window.history.state, "", adresseMedVis(top.dataset.vis));
+      }
+    }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["data-vis"] });
+  }
+}
+
 export function topOpenModal() {
   const open = [...document.querySelectorAll(".modal-backdrop.open")];
   if (!open.length) return null;
@@ -69,6 +166,7 @@ export function modalOpen(el) {
   // plussknapp (plukk, også på modaler laget etter øktstart, som spilleren).
   if (el.dataset.vis) modalApnetProvider?.(el.dataset.vis, el);
   el.classList.add("open");
+  histApnet(el);
   (focusables(el)[0] || dialog)?.focus();
 }
 
@@ -83,6 +181,7 @@ export function modalClose(el) {
   el._skipBeforeClose = false;
   if (!hopp && typeof el._beforeClose === "function" && el._beforeClose() === false) return;
   el.classList.remove("open");
+  histLukket(el);
   if (el._restoreFocus && document.contains(el._restoreFocus)) {
     el._restoreFocus.focus();
   }
@@ -94,8 +193,20 @@ export function modalCloseTop() {
   if (top) modalClose(top);
 }
 
+// «Lukk alle»: historikken går tilbake i ett hopp for alle kortene som hadde
+// en oppføring (flere history.back() etter hverandre er ikke pålitelig).
 function modalCloseAll() {
-  document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+  const forHist = histStabel.length;
+  histFraPop = true;
+  try {
+    document.querySelectorAll(".modal-backdrop.open").forEach((m) => modalClose(m));
+  } finally { histFraPop = false; }
+  const igjen = histStabel.length;
+  const steg = forHist - igjen;
+  if (steg > 0 && histPaa()) {
+    histIgnorer++;
+    window.history.go(-steg);
+  }
 }
 
 // Fokusfelle: Tab sirkulerer inne i den øverste åpne modalen.

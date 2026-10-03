@@ -3549,6 +3549,9 @@ body:has(#samle-bar) #aktiv-plan-pille { bottom: 64px; }
    kortene i utvalget. «Ta med i utskriften»-knappen står i kortenes
    tittellinje, foran samleøktas plussknapp og lenkeknappen. */
 body.role-student .nav .nav-icon.nav-utskrift { display: inline-flex; }
+/* Søkeikonet (v6.08, K8) står for alle, også studentene og på mobil, der
+   tasten S ikke finnes. */
+body.role-student .nav .nav-icon.nav-sok { display: inline-flex; }
 /* MIDLERTIDIG (js/feature-flags.js, utskrift): hele funksjonen er skjult for
    studentrollen inntil videre. Læreren (ingen role-student) ser alt. */
 html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-med, .kort-utskrift, #btn-utskrift-liste, [data-pres-utskrift]) { display: none !important; }
@@ -3740,3 +3743,26 @@ body.presentasjon .meta-merke { display: none; }
 .lytt-bolker { columns: 2 16rem; }
 .lytt-rad .sj-fam-prikk { margin-right: 2px; }
 .lytt-rad .sj-rad-aar { margin-left: auto; }
+
+/* ===========================================================================
+   Strukturgjennomgangen 3.10, runde 4 (v6.08)
+   =========================================================================== */
+
+/* Slektstresiden (S8): sjangerkortet som sidepanel på brede skjermer, så
+   treet står igjen til venstre og kan klikkes videre i. Bakgrunnen slipper
+   gjennom klikk; panelet lukkes med ← og ✕. Ikke i presentasjonen, der kortet
+   skal fylle lerretet. */
+@media (min-width: 1100px) {
+  body.tre-side:not(.presentasjon) #modal-sjanger {
+    background: transparent; backdrop-filter: none; pointer-events: none;
+    justify-content: flex-end; align-items: stretch; padding: 0;
+  }
+  body.tre-side:not(.presentasjon) #modal-sjanger > .modal {
+    pointer-events: auto; width: min(460px, 36vw); max-width: none; height: 100vh; max-height: 100vh;
+    margin: 0; border-radius: 0; overflow-y: auto; box-shadow: -10px 0 30px rgba(20, 21, 42, 0.12);
+  }
+  /* I det smale panelet står artistlista under teksten. */
+  body.tre-side:not(.presentasjon) #modal-sjanger .pres-sjanger-spalter { grid-template-columns: minmax(0, 1fr); }
+  body.tre-side:not(.presentasjon) #modal-sjanger .pres-sjanger-hoyre { margin-top: 1rem; }
+  body.tre-side:not(.presentasjon) #modal-sjanger .sj-artister-liste { columns: 2; column-gap: 1rem; }
+}

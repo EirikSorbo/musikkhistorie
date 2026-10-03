@@ -146,9 +146,20 @@ export function attachCamera({
 
   apply();
 
+  // Sentrer på et punkt i kartets egne koordinater (v6.08, S8: tre.html?fokus=
+  // og «Vis i slektstreet»). Zoomer inn til minst `skala`, aldri ut.
+  function centerOn(x, y, skala = 1) {
+    const sw = stage.clientWidth || 760, sh = stage.clientHeight || 440;
+    sc = Math.max(minScale, Math.min(maxScale, Math.max(sc, skala)));
+    tx = sw / 2 - x * sc;
+    ty = sh / 2 - y * sc;
+    apply();
+  }
+
   return {
     fit,
     zoom,
+    centerOn,
     // Kobler fra ALT kameraet har bundet. Kall FØR en ny render på samme scene.
     // Rydder også pekertilstanden, så et halvferdig drag ikke overlever inn i
     // det nye kameraet.

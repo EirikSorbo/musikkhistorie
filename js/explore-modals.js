@@ -7,8 +7,8 @@
 //  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
 //  ui-modal-fragments.js, akkurat som før.
 // ============================================================================
-import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.07";
-import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.07";
+import { escapeHtml, TECH_CATEGORY_TABS } from "./ui.js?v=6.08";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "./ui-modal-fragments.js?v=6.08";
 // Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
 // Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
 // metasjangre — Pop og Rock har bevisst ingen egen fortelling.
@@ -243,7 +243,7 @@ export const MODAL_HTML = `
 </div>
 
 <!-- Sjangre-liste -->
-<div class="modal-backdrop" id="modal-subgenre-list">
+<div class="modal-backdrop" id="modal-subgenre-list" data-vis="sjangre">
   <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Sjangre</h2>
@@ -257,7 +257,7 @@ export const MODAL_HTML = `
 </div>
 
 <!-- Undersjangre (åpnes fra Sjangre-modalen, oppå den) -->
-<div class="modal-backdrop" id="modal-undersjangre">
+<div class="modal-backdrop" id="modal-undersjangre" data-vis="undersjangre">
   <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Undersjangre</h2>

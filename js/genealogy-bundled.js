@@ -18,11 +18,11 @@
 //  strekspråket er nytt, så visningen kan byttes uten å røre innholdet.
 // ============================================================================
 
-import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=6.07";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.07";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=6.07";
-import { attachCamera } from "./gx-camera.js?v=6.07";
-import { LAYOUT_WIDTH } from "./genre-layout.js?v=6.07";
+import { showSjangerInfo, showEdgeInfo } from "./genealogy.js?v=6.08";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.08";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js?v=6.08";
+import { attachCamera } from "./gx-camera.js?v=6.08";
+import { LAYOUT_WIDTH } from "./genre-layout.js?v=6.08";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const W = LAYOUT_WIDTH;    // logisk kartbredde = layoutens (kameraet skalerer til scenen)
@@ -477,5 +477,16 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   }
 
   reset();
-  return { fit: camera.fit, destroy: camera.destroy };
+  // Fokus på én sjanger (v6.08, S8): slekta lyser og kartet sentreres på
+  // pillen. Står til man klikker på tom flate (reset), som et touch-valg.
+  function fokuser(label) {
+    const n = nodes.find((x) => x.l === label || x.f === label);
+    if (!n || n._x == null) return false;
+    selectedId = n.id;
+    light(n.id);
+    camera.centerOn(n._x, n._y, 1.05);   // _x og _y er pillens sentrum
+    return true;
+  }
+
+  return { fit: camera.fit, destroy: camera.destroy, fokuser };
 }

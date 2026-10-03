@@ -12,7 +12,7 @@
 //  test låser at de to sidene stemmer overens.
 // ============================================================================
 
-import { parseVisVerdi } from "./vis-lenke.js?v=6.07";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.08";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -448,6 +448,8 @@ const VISNING_NAVN = {
   himmel: "Sjangerhimmelen", referanser: "Referansene",
   "store-bildet": "Det store bildet", slektstre: "Slektstreet",
   podkaster: "Podkastene",
+  // Vinduene med egen adresse fra v6.08 (S7).
+  sjangre: "Sjangrene", undersjangre: "Undersjangrene", artister: "Artistene", lytt: "Lytt",
 };
 const SIDE_NAVN = { omHistorie: "Om historie", rotter: "Røtter før 1910" };
 

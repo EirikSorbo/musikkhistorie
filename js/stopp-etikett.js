@@ -13,11 +13,11 @@
 //  kall: treet og vokabularet er live bindings.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=6.07";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.07";
-import { lytteeksempelNavn } from "./presentasjon-modell.js?v=6.07";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=6.07";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=6.07";
+import { getState } from "./explore-context.js?v=6.08";
+import { parseVisVerdi } from "./vis-lenke.js?v=6.08";
+import { lytteeksempelNavn } from "./presentasjon-modell.js?v=6.08";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=6.08";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=6.08";
 
 export const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -28,6 +28,7 @@ export const TYPE_NAVN = {
   "store-bildet": "Det store bildet", podkaster: "Podkaster",
   teknologi: "Teknologi", slektstre: "Slektstre", yt: "Lytteeksempel",
   oversikt: "Oversikt", galleri: "Galleri",
+  sjangre: "Sjangre", undersjangre: "Undersjangre", artister: "Artister", lytt: "Lytt",
 };
 
 export const DOD = "finnes ikke lenger";
