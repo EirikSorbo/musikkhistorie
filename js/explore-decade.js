@@ -16,15 +16,15 @@
 //  explore-modals.js) styrer detaljnivået i presentasjonsvisningen.
 // ============================================================================
 import { modalOpen, renderDecadeRibbon, buildKilderList, buildTechTimeline, formatInfoText, escapeHtml,
-  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.19";
-import { ytMaal } from "./presentasjon-modell.js?v=6.19";
-import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.19";
-import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.19";
-import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.19";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.19";
-import { openTechDetail } from "./explore-tech.js?v=6.19";
-import { openVarmekart } from "./explore-varmekart.js?v=6.19";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.19";
+  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.20";
+import { ytMaal } from "./presentasjon-modell.js?v=6.20";
+import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.20";
+import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.20";
+import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.20";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.20";
+import { openTechDetail } from "./explore-tech.js?v=6.20";
+import { openVarmekart } from "./explore-varmekart.js?v=6.20";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.20";
 
 // Fanene i brukerens rekkefølge. Nøklene tech/society er de gamle modusene, så
 // lenker og kjøreplanstopp som «tiår:1950:tech» virker som før.
@@ -32,14 +32,16 @@ const FANER = ["tech", "society", "musikk"];
 const erFane = (m) => FANER.includes(m);
 
 // Valgt fane og sist viste tiår huskes innen økten, så «lukk og åpne igjen»
-// fortsetter der man slapp. Første gang: den første fanen.
+// fortsetter der man slapp. Første gang: den første fanen og 1960-tallet
+// (v6.20, brukervalg 2026-10-03; før det første tiåret, 1900).
 let contextMode = FANER[0];
 let currentDecade = null;
+const STANDARD_TIAR = DECADES.includes(1960) ? 1960 : DECADES[0];
 
 // Fra Tiår-kortet: der man slapp (eller den gitte fanen).
 export function openDecadeList(mode) {
   if (erFane(mode)) contextMode = mode;
-  openDecadeView(currentDecade ?? DECADES[0]);
+  openDecadeView(currentDecade ?? STANDARD_TIAR);
 }
 
 // Åpner ET bestemt tiår. Uten modus betyr en gammel lenke samfunnsfanen
@@ -64,7 +66,7 @@ function kobleFaner(modal) {
   modal.querySelectorAll("[data-dv-fane]").forEach((b) =>
     b.addEventListener("click", () => {
       contextMode = b.dataset.dvFane;
-      renderDecadeView(currentDecade ?? DECADES[0]);
+      renderDecadeView(currentDecade ?? STANDARD_TIAR);
     }));
 }
 

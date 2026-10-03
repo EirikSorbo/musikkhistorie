@@ -4,10 +4,10 @@
 //  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
 // ============================================================================
 
-import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=6.19";
-import { fmtCredit, linkDesc, wireLinks, wireRelated, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=6.19";
-import { medSelv, nevnerNavn } from "./linkify.js?v=6.19";
-import { punkterHtml } from "./punkter.js?v=6.19";
+import { escapeHtml, safeUrl, buildKilderList } from "./util.js?v=6.20";
+import { fmtCredit, linkDesc, wireLinks, wireRelated, imgTag, techFactsLines, sekt } from "./ui-helpers.js?v=6.20";
+import { medSelv, nevnerNavn } from "./linkify.js?v=6.20";
+import { punkterHtml } from "./punkter.js?v=6.20";
 
 // Delt bilde-snutt for teknologikort (liste, detalj og admin). `bredde` er
 // thumbnail-bredden: detaljkortet på lerretet (presentasjon, v5.36) viser

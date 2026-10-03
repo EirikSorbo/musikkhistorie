@@ -3854,11 +3854,19 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 #dv-kilder-tech, #dv-kilder-society { display: none; }
 /* Musikk-fanen: tre kolonner (sjangre, artister, lytt). Fra v6.18
    (brukervalg 2026-10-03) er lytteeksemplene bredest: titlene og artistene
-   står på samme rad og trengte plassen mer enn de to andre. */
-.dv-panel.dv-musikk { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 1.5fr); gap: 0 1.5rem; align-items: start; }
+   står på samme rad og trengte plassen mer enn de to andre. v6.20: litt
+   smalere igjen, og en tynn loddrett strek mellom kolonnene (midt i
+   mellomrommet: polstring på hver side av streken). */
+.dv-panel.dv-musikk { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.3fr); gap: 0; align-items: start; }
+.dv-panel.dv-musikk > .dv-kol { padding: 0 1.1rem; }
+.dv-panel.dv-musikk > .dv-kol:first-child { padding-left: 0; }
+.dv-panel.dv-musikk > .dv-kol:last-child { padding-right: 0; }
+.dv-panel.dv-musikk > .dv-kol + .dv-kol { border-left: 1px solid var(--line); }
 @media (max-width: 760px) {
   .dv-panel.dv-musikk { grid-template-columns: minmax(0, 1fr); }
   .dv-kol + .dv-kol { margin-top: 1.4rem; }
+  .dv-panel.dv-musikk > .dv-kol { padding: 0; }
+  .dv-panel.dv-musikk > .dv-kol + .dv-kol { border-left: 0; border-top: 1px solid var(--line); padding-top: 1.1rem; }
 }
 /* Artist- og lyttelistene i spillelistenes stil: grå strek mellom radene,
    dempet tekst, navn/tittel til venstre og år/artist til høyre. */
