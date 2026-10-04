@@ -864,48 +864,20 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
 .rotter-links { display: flex; gap: 10px; margin-bottom: 18px; }
 .rotter-links .btn { flex: 1; }
 
-/* Sjangerhistorier — seks fortellinger i Det store bildet + lærer-editor.
-   Knappene ligger i et grid med like brede kolonner, så de seks til sammen
-   dekker hele bredden av kortet, og bærer metasjangerens farge fra slektstreet
-   (--hist-color settes per knapp i explore.js). */
-.hist-intro { margin-bottom: 12px; font-size: 0.9rem; }
-/* Sju historier på fire kolonner (4 + 3). Seks kolonner klemte «Klubbmusikk»
-   til ellipse allerede før den sjuende kom til; fire gir god plass til alle. */
-.hist-chips {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  margin-bottom: 14px;
-}
-/* Selektorene tar med .btn: ellers vinner `.btn.ghost { background }` (to
-   klasser) over en ren .hist-chip-regel, og den lyse fargen slår aldri gjennom. */
-.hist-chip.btn {
-  width: 100%;
-  padding-left: 4px;
-  padding-right: 4px;
-  font-size: 0.78rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--hist-color, var(--text));
-  /* Uvalgt: en lys tone av sjangerens egen farge, så alle seks er fargekodet
-     hele tiden — ikke bare den som er valgt. */
-  background: color-mix(in srgb, var(--hist-color, var(--line)) 14%, #fff);
-  border-color: color-mix(in srgb, var(--hist-color, var(--line)) 45%, transparent);
-}
-.hist-chip.btn:hover {
-  background: color-mix(in srgb, var(--hist-color, var(--line)) 24%, #fff);
-  border-color: var(--hist-color, var(--line));
-}
-.hist-chip.btn.active {
-  background: var(--hist-color, var(--accent));
-  border-color: var(--hist-color, var(--accent));
-  color: #fff;
-}
-/* Fire kolonner blir for trangt på telefon — tre rader à tre (siste alene). */
-@media (max-width: 640px) {
-  .hist-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
+/* Sjangerhistorier i Det store bildet + lærer-editor. Metasjangrene som
+   faner fra v6.34 (brukervalg 2026-10-04), samme fanerad som Tiår, Sjangre og
+   Instrumenter. Fargen fra slektstreet (--hist-color, satt per fane i
+   explore-innhold.js) gir prikken foran navnet og understreken på den valgte.
+   På smale skjermer rulles raden sidelengs. */
+.hist-faner { gap: 18px; margin: 0 0 14px; overflow-x: auto; scrollbar-width: none; }
+.hist-faner::-webkit-scrollbar { display: none; }
+.hist-faner .dv-fane { flex: none; white-space: nowrap; margin-bottom: 0; }
+.hist-faner .dv-fane.active { border-bottom-color: var(--hist-color, var(--accent)); }
+.hist-fane-navn { display: inline-flex; align-items: center; gap: 6px; }
+.hist-prikk { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--hist-color, var(--line)); }
+/* Den usynlige halvfete kopien (som holder bredden) må også ha plass til
+   prikken, ellers flytter fanene seg når en blir valgt. */
+.hist-faner .dv-fane[data-tekst]::after { padding-left: 14px; }
 /* Formatert tekst (markdown-light fra js/rich-text.js). `.story-body` er
    historiene og innholdssidene; `.rt` er de vanlige beskrivelsene (artist,
    sjanger, kobling, innovasjon). Begge får samme typografi, for det er samme
@@ -1459,7 +1431,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 
 /* ----- Instrumenter: fane per gruppe, én tidslinje + sammendrag om gangen -----
    Fanene har samme rolle som sjangerhistorienes chips: alle tidslinjene under
-   hverandre ble uoversiktlig. Åtte kolonner, samme rytme som .hist-chips. */
+   hverandre ble uoversiktlig. Åtte kolonner. */
 /* Skjult for øyet, lest av skjermlesere. Brukt til modaltitler som er erstattet
    av faner — uten den mister modalen sitt tilgjengelige navn. */
 .sr-only {

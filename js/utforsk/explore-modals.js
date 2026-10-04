@@ -451,8 +451,10 @@ ${TECH_DETAIL_MODAL_HTML}
       <div id="hist-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="muted hist-intro">Fortellinger som til sammen dekker hele pensumet. Trykk på navnene underveis for å åpne artistkortene.</p>
-    <div class="hist-chips" id="hist-chips"></div>
+    <!-- Metasjangrene som faner (v6.34, brukervalg 2026-10-04), som ellers i
+         appen; prikken og understreken bærer metasjangerens farge. Før fargede
+         knapper i et rutenett, med en innledning over som er fjernet. -->
+    <div class="dv-faner hist-faner" id="hist-faner" role="tablist" aria-label="Metasjanger"></div>
     <!-- Oversikten over metasjangeren (v5.94; i appen også fra v6.05, S2). -->
     <div class="hist-oversikt-rad"><button type="button" class="btn ghost small" id="hist-oversikt">Vis oversikt</button></div>
     <!-- Sjangerfamilien som varmestriper (v5.16): én rad per sjanger under

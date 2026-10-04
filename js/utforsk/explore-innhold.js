@@ -6,7 +6,7 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen } from "../ui/ui-modal.js";
+import { modalOpen, kobleFanePiler, visValgtFane } from "../ui/ui-modal.js";
 import { escapeHtml } from "../felles/util.js";
 import { isVisible } from "../felles/limits.js";
 import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "../sjangre/genre-model.js";
@@ -138,8 +138,13 @@ function renderHistorie(genre, { fraSnapshot = false } = {}) {
   const vis = genre ? `historie:${genre}` : "historie";
   if (histModal && histModal.dataset.vis !== vis) histModal.dataset.vis = vis;
   const modal = document.getElementById("modal-historier");
-  modal.querySelectorAll(".hist-chip").forEach((b) =>
-    b.classList.toggle("active", b.dataset.story === genre));
+  modal.querySelectorAll("#hist-faner [data-story]").forEach((b) => {
+    const paa = b.dataset.story === genre;
+    b.classList.toggle("active", paa);
+    b.setAttribute("aria-selected", paa ? "true" : "false");
+    b.tabIndex = paa ? 0 : -1;
+  });
+  visValgtFane(document.getElementById("hist-faner"));
   // «Vis oversikt» (v5.94) følger historien som vises (i appen også fra
   // v6.05, S2).
   const oversiktKnapp = document.getElementById("hist-oversikt");
@@ -199,22 +204,23 @@ function renderHistorie(genre, { fraSnapshot = false } = {}) {
 export function openHistorier(genre) {
   const modal = document.getElementById("modal-historier");
   if (!modal) return;
-  const chips = document.getElementById("hist-chips");
+  const faner = document.getElementById("hist-faner");
   // Bygges ved HVER åpning (billig — en håndfull knapper): både lista
   // (storyOrder følger navnebytter i treet) og fargene (META_GENRE_COLOR er en
   // live binding som byttes ved hvert rebuild) skal være ferske. En engangs-
   // bygging med dataset.filled frøs grå farger fra før treet hadde landet.
   const rekkefolge = storyOrder(getState().genreDescs);
+  // Faner (v6.34, brukervalg 2026-10-04), som Tiår, Sjangre og Instrumenter.
   // Hver metasjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
-  // så knappene, treet, varmekartet og himmelen snakker samme fargespråk.
-  // --hist-color settes per knapp; CSS bruker den til kant, tekst og fyll når
-  // knappen er aktiv. Knappene ligger i et grid med like kolonner (se CSS).
-  chips.innerHTML = rekkefolge.map((g) => {
+  // så fanene, treet, varmekartet og himmelen snakker samme fargespråk:
+  // --hist-color gir prikken foran navnet og understreken på den valgte.
+  faner.innerHTML = rekkefolge.map((g) => {
     const color = META_GENRE_COLOR[g] || FAMILIES.gray?.stroke || "#9bada1";
-    return `<button type="button" class="btn ghost small hist-chip" data-story="${escapeHtml(g)}" style="--hist-color:${color}">${escapeHtml(g)}</button>`;
+    return `<button type="button" class="dv-fane hist-fane" role="tab" aria-selected="false" tabindex="-1" data-story="${escapeHtml(g)}" data-tekst="${escapeHtml(g)}" style="--hist-color:${color}"><span class="hist-fane-navn"><i class="hist-prikk" aria-hidden="true"></i>${escapeHtml(g)}</span></button>`;
   }).join("");
-  chips.querySelectorAll(".hist-chip").forEach((b) =>
+  faner.querySelectorAll("[data-story]").forEach((b) =>
     b.addEventListener("click", () => renderHistorie(b.dataset.story)));
+  kobleFanePiler(faner);
   // Oversikten åpnes OPPÅ historien, så ← fører tilbake hit. Knappen står i
   // den faste markupen og kobles bare én gang.
   const oversiktKnapp = document.getElementById("hist-oversikt");
