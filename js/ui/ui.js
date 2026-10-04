@@ -796,9 +796,11 @@ function eksempelRader(par, tomTekst) {
     const video = ytMaal(m.url)?.video;
     ider.push(video || null);
     const yInfo = musicExampleLabel(m);
-    // Tittel og år til venstre, artist og sjanger til høyre (v6.00,
-    // brukerønske 2026-10-01), som navn og år i artistlista.
-    return `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span> ${rowTag}</span></li>`;
+    // Tittel og år til venstre, sjanger og artist til høyre (v6.00,
+    // brukerønske 2026-10-01), som navn og år i artistlista. Sjangerboblen
+    // står foran artistnavnet fra v6.35 (brukervalg 2026-10-04), så navnene
+    // står på linje helt til høyre.
+    return `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre">${rowTag} <span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`;
   });
   if (!items.length) return { total: 0, html: `<p class="muted empty">${escapeHtml(tomTekst)}</p>`, ider: [] };
   return { total: items.length, html: `<ul class="pl-list">${items.join("")}</ul>`, ider };
