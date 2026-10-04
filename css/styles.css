@@ -747,6 +747,9 @@ textarea { resize: vertical; }
   gap: 18px;
   margin-top: 18px;
 }
+/* Galleriet i lærerlista (v6.26) har sitt eget rutenett (.ar-galleri): i
+   kortenes kolonner ble det stående i én av dem, halv bredde. */
+.artist-list.artist-list--galleri { display: block; }
 .card {
   position: relative;
   background: var(--surface);

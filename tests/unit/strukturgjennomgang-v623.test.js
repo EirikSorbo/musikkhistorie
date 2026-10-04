@@ -4,11 +4,11 @@ import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js?v=6.26";
-import { tiarEksempler, spillAlleHtml, artistGalleriHtml } from "../../js/ui.js?v=6.26";
-import { iSpalter } from "../../js/explore-sjanger.js?v=6.26";
-import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js?v=6.26";
-import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js?v=6.26";
+import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js?v=6.27";
+import { tiarEksempler, spillAlleHtml, artistGalleriHtml } from "../../js/ui.js?v=6.27";
+import { iSpalter } from "../../js/explore-sjanger.js?v=6.27";
+import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js?v=6.27";
+import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js?v=6.27";
 
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
