@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildArtistDoc } from "../../js/artist-normalize.js";
-import { ARTIST_FIELDS } from "../../js/artist-schema.js";
+import { buildArtistDoc } from "../../js/data/artist-normalize.js";
+import { ARTIST_FIELDS } from "../../js/data/artist-schema.js";
 
 test("alle skjemafelter finnes i dokumentet, tomme felter får tom-verdi", () => {
   const doc = buildArtistDoc({ name: "X" });

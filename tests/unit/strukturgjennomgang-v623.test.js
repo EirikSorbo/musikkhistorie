@@ -4,11 +4,11 @@ import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js";
-import { tiarEksempler, spillAlleHtml, artistGalleriHtml } from "../../js/ui.js";
-import { iSpalter } from "../../js/explore-sjanger.js";
-import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js";
-import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js";
+import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/visning/presentasjon-modell.js";
+import { tiarEksempler, spillAlleHtml, artistGalleriHtml } from "../../js/ui/ui.js";
+import { iSpalter } from "../../js/utforsk/explore-sjanger.js";
+import { timeEksempler, timeTilgjengelig } from "../../js/utforsk/explore-timer.js";
+import { SKJUL_I_STUDENTVISNING } from "../../js/felles/feature-flags.js";
 
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
@@ -112,14 +112,14 @@ test("iSpalter: faste spalter med Pop under Gospel, og en ukjent metasjanger i d
 //  Tilbakeknappen og Sjangre-fanene (ui-modal.js, Fable F1 og F3)
 // ---------------------------------------------------------------------------
 test("histApnet hever et kort som alt ligger lenger ned, også i historikkstabelen", () => {
-  const src = kilde("js/ui-modal.js");
+  const src = kilde("js/ui/ui-modal.js");
   const start = src.indexOf("function histApnet");
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
   assert.match(kropp, /histStabel\.splice\(i, 1\);\s*histStabel\.push\(el\);/);
 });
 
 test("modalBytt lukker alt over målet når målet alt står åpent lenger ned", () => {
-  const src = kilde("js/ui-modal.js");
+  const src = kilde("js/ui/ui-modal.js");
   const start = src.indexOf("export function modalBytt");
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
   assert.match(kropp, /lukkFlere\(/);
@@ -130,7 +130,7 @@ test("modalBytt lukker alt over målet når målet alt står åpent lenger ned",
 // kjøreplan. Timen blir en egen plan (nyPlanId) med dagens dato, og
 // kjøreplanen endres ikke. Før gjaldt spørsmålet bare fri visning.
 test("Avslutt tilbyr «Lagre som time» også etter en kjøreplan, som en egen plan", () => {
-  const src = kilde("js/presentasjon.js");
+  const src = kilde("js/visning/presentasjon.js");
   const start = src.indexOf("export async function avsluttPresentasjon");
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
   assert.match(kropp, /if \(erLaerer && stopp\.length\) \{/);

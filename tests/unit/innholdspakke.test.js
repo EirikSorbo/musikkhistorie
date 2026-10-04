@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { STORY_ORDER } from "../../js/story-format.js";
-import { renderRichText } from "../../js/rich-text.js";
-import { GENEALOGY_MAIN_GENRES } from "../../js/genre-model.js";
+import { STORY_ORDER } from "../../js/felles/story-format.js";
+import { renderRichText } from "../../js/felles/rich-text.js";
+import { GENEALOGY_MAIN_GENRES } from "../../js/sjangre/genre-model.js";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
 let pakke = null;

@@ -2,9 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   INSTRUMENT_GROUPS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, instrumentsInUse,
-} from "../../js/limits.js";
-import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui-timeline.js";
-import { PROPOSABLE_KEYS } from "../../js/proposal-fields.js";
+} from "../../js/felles/limits.js";
+import { instrumentInnovations, buildInstrumentTimeline } from "../../js/ui/ui-timeline.js";
+import { PROPOSABLE_KEYS } from "../../js/forslag/proposal-fields.js";
+import { lesJs } from "../helpers/js-filer.js";
 
 // To nivåer, som metaGenre over mainGenre: artistkortet beholder det PRESISE
 // instrumentet, tidslinjene ligger på GRUPPEN.
@@ -89,7 +90,7 @@ test("instrument og kilder er foreslåbare felter", () => {
 // --- Sammendragssiden per instrumentgruppe -----------------------------------
 
 test("instrumentPageId gir lovlige, stabile Firestore-ID-er", async () => {
-  const { instrumentPageId } = await import("../../js/limits.js");
+  const { instrumentPageId } = await import("../../js/felles/limits.js");
   assert.equal(instrumentPageId("Gitar"), "instrument-gitar");
   assert.equal(instrumentPageId("Låtskriving"), "instrument-latskriving");
   assert.equal(instrumentPageId("Produksjon"), "instrument-produksjon");
@@ -112,7 +113,7 @@ test("«instrument» er en komplett forslagstype", async () => {
   assert.deepEqual(PROPOSABLE_KEYS.instrument, ["body", "kilder"]);
   const rules = fs.readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8");
   assert.match(rules, /entityType in \[[^\]]*"instrument"/, "firestore.rules mangler typen");
-  const store = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
+  const store = fs.readFileSync(new URL("../../js/data/store.js", import.meta.url), "utf8");
   assert.match(store, /case "instrument":/, "pendingEditTargetRef mangler typen");
   // entityId er student-skrevet og MÅ valideres mot instrumentgruppene her —
   // uvalidert kunne et forslag fått lærerens godkjenning til å skrive til en
@@ -124,7 +125,7 @@ test("«instrument» er en komplett forslagstype", async () => {
 // --- Korttype: innovasjon vs. hendelse ---------------------------------------
 
 test("kort uten type ER en innovasjon — de 66 gamle trengte ingen migrering", async () => {
-  const { techType, isHendelse } = await import("../../js/ui-tech.js");
+  const { techType, isHendelse } = await import("../../js/ui/ui-tech.js");
   assert.equal(techType({ name: "Elektrisk gitar" }), "innovasjon");
   assert.equal(techType({ type: "" }), "innovasjon");
   assert.equal(techType({ type: "innovasjon" }), "innovasjon");
@@ -136,7 +137,7 @@ test("kort uten type ER en innovasjon — de 66 gamle trengte ingen migrering", 
 });
 
 test("begge typer havner på instrumenttidslinjen, kun hendelser merkes", async () => {
-  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js");
+  const { buildInstrumentTimeline } = await import("../../js/ui/ui-timeline.js");
   const kort = [
     { id: "a", name: "Elektrisk gitar", adoptedYear: 1938, instrument: "Gitar", status: "active" },
     { id: "b", name: "Charlie Christian som soloinstrument", adoptedYear: 1939, instrument: "Gitar", status: "active", type: "hendelse" },
@@ -148,7 +149,7 @@ test("begge typer havner på instrumenttidslinjen, kun hendelser merkes", async 
 });
 
 test("tegnforklaringen vises IKKE når bare én type finnes", async () => {
-  const { buildInstrumentTimeline } = await import("../../js/ui-timeline.js");
+  const { buildInstrumentTimeline } = await import("../../js/ui/ui-timeline.js");
   const bare = (type) => [1938, 1952].map((y, i) => ({
     id: "x" + i, name: "Kort " + i, adoptedYear: y, instrument: "Gitar", status: "active", ...(type ? { type } : {}),
   }));
@@ -157,7 +158,7 @@ test("tegnforklaringen vises IKKE når bare én type finnes", async () => {
 });
 
 test("hendelseskort vises ikke i Teknologi-seksjonen", async () => {
-  const { renderTechList } = await import("../../js/ui-tech.js");
+  const { renderTechList } = await import("../../js/ui/ui-tech.js");
   const el = { innerHTML: "" };
   const kort = [
     { id: "a", name: "Vinylplata", category: "Opptak og avspilling" },
@@ -214,8 +215,7 @@ test("instrumentsInUse tåler tom og manglende artistliste", () => {
 });
 
 test("skjemaene beholder HELE vokabularet — ellers låses ubrukte instrumenter ute", async () => {
-  const fs = await import("node:fs");
-  const les = (f) => fs.readFileSync(new URL("../../js/" + f, import.meta.url), "utf8");
+  const les = (f) => lesJs(f);
   // Innsending (student) og redigering (lærer) SETTER instrument: hele lista.
   assert.match(les("student.js"), /fillSelect\(\$\("#in-instrument"\), INSTRUMENTS/);
   // Lærerens select går via settSelectMedVern (v5.35, audit-funn 19), som

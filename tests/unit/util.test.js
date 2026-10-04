@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/util.js";
+import { escapeHtml, safeUrl, throttle, wikimediaThumb, WIKI_THUMB_WIDTHS, dropboxDirectUrl, kanoniskJson } from "../../js/felles/util.js";
+import { lesJs, jsFiler } from "../helpers/js-filer.js";
 
 test("escapeHtml escaper alle spesialtegn", () => {
   assert.equal(
@@ -134,7 +135,7 @@ test("throttle: kjører umiddelbart, slår sammen storm, kjører siste på slutt
 // lærer. Kildesjekk: teksten bygges i en DOM-lytter og kan ikke enhetstestes.
 test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
   const fs = await import("node:fs");
-  const src = fs.readFileSync(new URL("../../js/shared.js", import.meta.url), "utf8");
+  const src = fs.readFileSync(new URL("../../js/data/shared.js", import.meta.url), "utf8");
   for (const kode of ["resource-exhausted", "permission-denied", "unavailable"]) {
     assert.ok(src.includes(`"${kode}"`) || src.includes(`${kode}:`),
       `mangler egen tekst for ${kode}`);
@@ -158,7 +159,7 @@ test("feilbanneret skiller mellom Firestore-feilkodene", async () => {
 // lengde, alfabet uten forvekslbare tegn, og romslig normalisering av input.
 test("genererReturKode: lengde, alfabet og normalisering", async () => {
   const { genererReturKode, normaliserReturKode, RETUR_KODE_ALFABET, RETUR_KODE_LENGDE }
-    = await import("../../js/util.js");
+    = await import("../../js/felles/util.js");
   for (let i = 0; i < 50; i++) {
     const k = genererReturKode();
     assert.equal(k.length, RETUR_KODE_LENGDE);
@@ -175,9 +176,8 @@ test("genererReturKode: lengde, alfabet og normalisering", async () => {
 // husregelen. Meldingen for treg innsending er nå ÉN delt konstant — lås at
 // den er tankestrek-fri og faktisk brukes alle tre stedene.
 test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
-  const { TREG_SENDING_MELDING } = await import("../../js/util.js");
-  const fs = await import("node:fs");
-  const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+  const { TREG_SENDING_MELDING } = await import("../../js/felles/util.js");
+  const les = (f) => lesJs(f);
   assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
   assert.ok(TREG_SENDING_MELDING.includes("Ikke send inn på nytt"));
   // Bruken, ikke bare importen (audit v5.42 funn 22).
@@ -193,7 +193,7 @@ test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
 // opp returer (tre serverlesinger per last) var utestet. Stubber localStorage
 // — også den kastende varianten (styrte skoleprofiler).
 test("merkHarSendtInn/harSendtInn: normalvei og kastende localStorage", async () => {
-  const { merkHarSendtInn, harSendtInn } = await import("../../js/util.js");
+  const { merkHarSendtInn, harSendtInn } = await import("../../js/felles/util.js");
   const lager = new Map();
   globalThis.localStorage = {
     setItem: (k, v) => lager.set(k, String(v)),
@@ -254,11 +254,12 @@ test("tankestrek-skannet ser tekst i flerlinjede maler, men ikke kommentarer", (
 });
 
 test("ingen tekst i js/ har tankestrek med mellomrom (« — »)", async () => {
-  const fs = await import("node:fs");
-  const mappe = new URL("../../js/", import.meta.url);
+  // Alle mappene under js/ (fra v6.30), ikke bare sidefilene på toppnivå.
+  const filer = jsFiler();
+  assert.ok(filer.length > 80, `leste bare ${filer.length} filer`);
   const funn = [];
-  for (const f of fs.readdirSync(mappe).filter((x) => x.endsWith(".js"))) {
-    for (const linje of tankestreker(fs.readFileSync(new URL(f, mappe), "utf8"))) funn.push(`${f}: ${linje}`);
+  for (const f of filer) {
+    for (const linje of tankestreker(lesJs(f))) funn.push(`${f}: ${linje}`);
   }
   assert.deepEqual(funn, []);
 });

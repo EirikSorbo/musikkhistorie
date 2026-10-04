@@ -4,7 +4,7 @@
 #  Setter appens VERSION fra js/version.js på det sidene laster:
 #    · ?v= på <script src> og <link href> til js/ og css/ i *.html
 #    · importkartet i *.html (tools/importkart.js), som gir hver modul ?v=.
-#  Importlinjene i js/*.js står UTEN versjon (fra v6.28) og røres ikke her.
+#  Importlinjene i js/ står UTEN versjon (fra v6.28) og røres ikke her.
 #
 #  Bruk:  bump VERSION i js/version.js  →  kjør ./bump.sh
 # ---------------------------------------------------------------------------

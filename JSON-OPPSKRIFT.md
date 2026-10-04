@@ -41,7 +41,7 @@ Eksport-/importformat for hele datagrunnlaget. Filen ligger på rota og oppdater
 | `referanser` | objekt | Frittstående referanser (erstattes i sin helhet ved import). |
 | `genealogy` | objekt | HELE sjangertreet (`content/genealogy`). Valideres (genre-validate) og ERSTATTES i sin helhet ved import. |
 
-Konfig-samlingen er borte (v3.68): tiår og instrumenter er konstanter i `js/limits.js`, og sjangervokabularet kommer fra `genealogy` over.
+Konfig-samlingen er borte (v3.68): tiår og instrumenter er konstanter i `js/felles/limits.js`, og sjangervokabularet kommer fra `genealogy` over.
 
 ---
 
@@ -95,7 +95,7 @@ Konfig-samlingen er borte (v3.68): tiår og instrumenter er konstanter i `js/lim
 | `deathYear` | number \| null | | 4-sifret årstall. |
 | `gender` | string | ✓ | Én av: `"kvinne"`, `"mann"`, `"annet"`, `"ukjent"`. |
 | `metaGenre` | string | ✓ | **Metasjanger.** Én av treets metasjangre (i dag: Blues, Jazz, R&B, Hip-hop, Klubbmusikk, Gospel, Country, Pop, Rock — fasiten er `metaGenres` i treet, som læreren kan endre). |
-| `instrument` | string | ✓ | Må matche én verdi i `INSTRUMENTS` (js/limits.js — to-nivås vokabular, eks. Vokal, Gitar, Tangenter, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Produksjon, Annet). |
+| `instrument` | string | ✓ | Må matche én verdi i `INSTRUMENTS` (js/felles/limits.js — to-nivås vokabular, eks. Vokal, Gitar, Tangenter, Bass, Trommer/perkusjon, Saksofon, Trompet, Strykeinstrumenter, Produksjon, Annet). |
 | `mainGenre` | array av strings | | **Sjangre fra slektstreet.** Strengene må matche en node-label i treet (46 sjangre i dag; fasiten er `nodes[].l` i `genealogy`). NB nyere navn: Hillbilly (før Country-noden), Electric blues (før Chicago blues), House & techno, Trance & DnB, Early hip-hop (70/80-tallet) og Hip-hop (gullalderen). |
 | `subGenre` | array av strings | | **Frie tags.** Hva som helst (Delta blues, Akustisk blues, New Orleans-jazz, …). Brukes til søk og filter. |
 | `influenceStart` | number | ✓ | Året kunstneren begynte å påvirke. Styrer tiår-tilhørighet. |
@@ -139,7 +139,7 @@ Konfig-samlingen er borte (v3.68): tiår og instrumenter er konstanter i `js/lim
 | `forfatter` | | Forfatter/artikkelforfatter. Vises i parentes etter tittelen, utenfor lenken. |
 | `year` | | Publiseringsår (tall). Vises sammen med forfatteren. |
 | `url` | | Klikkbar lenke. Hvis satt: hele teksten blir lenke. |
-| `kategori` | | Styrer hvilken seksjon kilden havner i i Referanser-kortet. Gyldige verdier står i `KILDE_KATEGORIER` (`js/kilder.js`): `Bøker`, `Podkaster`, `Videoer`, `Nettsteder`. Mangler feltet, eller står det noe annet, havner kilden under «Ukategorisert» nederst i kortet — synlig, ikke skjult. (`Tidsskrifter` fra v4.39 leses som `Nettsteder`.) |
+| `kategori` | | Styrer hvilken seksjon kilden havner i i Referanser-kortet. Gyldige verdier står i `KILDE_KATEGORIER` (`js/felles/kilder.js`): `Bøker`, `Podkaster`, `Videoer`, `Nettsteder`. Mangler feltet, eller står det noe annet, havner kilden under «Ukategorisert» nederst i kortet — synlig, ikke skjult. (`Tidsskrifter` fra v4.39 leses som `Nettsteder`.) |
 
 Referanser-kortet har én seksjon per kategori. Kun `Nettsteder` grupperes på
 nettsted (`snl.no` → Store norske leksikon), og der utledes artikkeltittelen fra

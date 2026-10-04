@@ -1,26 +1,26 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js";
-import { onGenreModelChanged } from "./genre-model.js";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js";
-import { debounce, throttle, harSendtInn, normaliserReturKode, escapeHtml } from "./util.js";
-import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, artistGalleriHtml, fillSelect } from "./ui.js";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js";
-import { initExplore } from "./explore.js";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js";
-import { initPlanMeny } from "./plan-meny.js";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js";
-import { initYtSpiller } from "./yt-spiller.js";
-import { initVisning, visningTikk } from "./visning.js";
-import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js";
-import { initUtskriftSkuff } from "./utskrift-skuff.js";
-import { askChoice, melding, modalOpen, modalCloseTop, setupModal } from "./ui-modal.js";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js";
-import { currentEntityValues } from "./entity-values.js";
-import { loadArtists, saveArtists } from "./artist-cache.js";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./data/store.js";
+import { subscribeSharedData, sharedStateDefaults } from "./data/shared-data.js";
+import { SKJUL_I_STUDENTVISNING } from "./felles/feature-flags.js";
+import { onGenreModelChanged } from "./sjangre/genre-model.js";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./felles/limits.js";
+import { debounce, throttle, harSendtInn, normaliserReturKode, escapeHtml } from "./felles/util.js";
+import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, artistGalleriHtml, fillSelect } from "./ui/ui.js";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./sjangre/genre-model.js";
+import { initExplore } from "./utforsk/explore.js";
+import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
+import { initPresentasjon, presPlanTikk } from "./visning/presentasjon.js";
+import { initPlanMeny } from "./visning/plan-meny.js";
+import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
+import { initYtSpiller } from "./ui/yt-spiller.js";
+import { initVisning, visningTikk } from "./visning/visning.js";
+import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./utforsk/explore-timer.js";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift/utskrift-utvalg.js";
+import { initUtskriftSkuff } from "./utskrift/utskrift-skuff.js";
+import { askChoice, melding, modalOpen, modalCloseTop, setupModal } from "./ui/ui-modal.js";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./forslag/proposals.js";
+import { currentEntityValues } from "./forslag/entity-values.js";
+import { loadArtists, saveArtists } from "./data/artist-cache.js";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -751,7 +751,7 @@ function init() {
     renderArtistViewsIfVisible();
     renderDagensSection();
   }, 400);
-  // Én rute inn for alle de delte samlingene (js/shared-data.js). Merk: ikke noe
+  // Én rute inn for alle de delte samlingene (js/data/shared-data.js). Merk: ikke noe
   // pendingEdits-abonnement — studentsiden trenger bare pending-status idet
   // forslags-editoren åpnes (openProposalEditorGuarded).
   subscribeSharedData(state, {

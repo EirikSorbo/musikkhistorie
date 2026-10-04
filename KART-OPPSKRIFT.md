@@ -28,21 +28,21 @@ git show c02ecb6:js/geo-places.js    > js/geo-places.js
 git show c02ecb6:tests/unit/geo-places.test.js > tests/unit/geo-places.test.js
 ```
 
-Modalens markup ligger i samme commit i `js/explore-modals.js` (søk etter
+Modalens markup ligger i samme commit i `js/utforsk/explore-modals.js` (søk etter
 `modal-kart`), og hub-kortet like nedenfor (`sb-kart`).
 
 ## Slik kobles den inn igjen
 
-1. **Modal-markup** i `js/explore-modals.js`: `<div class="modal-backdrop" id="modal-kart">`
+1. **Modal-markup** i `js/utforsk/explore-modals.js`: `<div class="modal-backdrop" id="modal-kart">`
    med `#kart-decades` (tiårsstripe), `#kart-abroad` (chips), `#kart-unplaced-row`
    og `#kart-svg`. Chips og opptelling står OVER kartet med vilje: under det havnet
    de under skjermkanten på mobil.
 2. **Hub-kort** i samme fil: en `.dash-card` med id `sb-kart`, stedsnål-ikon
    (`stroke="#0d9488"`), tittel «Kart» og undertekst «Musikkens geografi gjennom
    ulike tiår».
-3. **Wiring** i `js/explore.js`: importer `openKart`, legg `"modal-kart"` i lista i
+3. **Wiring** i `js/utforsk/explore.js`: importer `openKart`, legg `"modal-kart"` i lista i
    `wireModals()`, og koble `#sb-kart` til `openKart`.
-4. **Tiårsstripa** i `js/ui-timeline.js`: kartet var eneste bruker av
+4. **Tiårsstripa** i `js/ui/ui-timeline.js`: kartet var eneste bruker av
    «Alle»-prikken. Den ble fjernet sammen med kartet, så `renderDecadeRibbon` må
    få tilbake `{ all = false, allLabel = "Alle" }`, `--dr-line-start`-variabelen
    og `dr-all`-knappen (se commit `c02ecb6`), pluss `.dr-all`-reglene i

@@ -14,7 +14,7 @@ To store ting, i rekkefølge:
 
 **A. Én delt datarot (v4.47).** Forsiden, lærersiden og slektstresiden koblet opp de
 samme komponentene hver for seg, fra hver sin datarot. Det ga feil som «samme kort,
-ulikt innhold avhengig av inngang». Nå går alt gjennom `js/shared-data.js`.
+ulikt innhold avhengig av inngang». Nå går alt gjennom `js/data/shared-data.js`.
 
 **B. Sjangertreet er flyttet fra kode til Firestore, i fire faser.** Målet var at
 læreren skal kunne opprette, endre og slette sjangre uten utvikler. Alle fire faser er
@@ -22,7 +22,7 @@ ferdige, pushet og live.
 
 | Fase | Versjon | Hva |
 |---|---|---|
-| 0 | v4.48 | Avledningene samlet i `js/genre-model.js`; rådata skilt ut som frø |
+| 0 | v4.48 | Avledningene samlet i `js/sjangre/genre-model.js`; rådata skilt ut som frø |
 | 1 | v4.51 | Treet leses fra `content/genealogy` i Firestore; ingen kopi i koden |
 | 2 | v4.58 | Bundlede bånd ER treet; kolonnene regnes ut; `cx` slettet |
 | 3 | v4.60 | Lærer-editor med migreringsplan og blokkert sletting |
@@ -40,37 +40,37 @@ content/genealogy   ← HELE sjangertreet, ett dokument, version 2
   { version, nodes[], metaGenres[], families{}, metaOrderHint[] }
 ```
 
-- **`js/shared-data.js`** — ENESTE vei til de syv delte samlingene (artists,
+- **`js/data/shared-data.js`** — ENESTE vei til de syv delte samlingene (artists,
   genreDescs, edgeDescs, tech, content, decades, podcasts). Alle sider kaller
   `sharedStateDefaults()` + `subscribeSharedData(state, hooks)`. Treet rir på det
   eksisterende `content`-abonnementet, så det koster null ekstra lesinger.
-- **`js/genealogy-data.js`** — FRØET. Brukes kun av seed-generatoren og testene.
+- **`js/sjangre/genealogy-data.js`** — FRØET. Brukes kun av seed-generatoren og testene.
   **Ingen runtime-modul importerer den** — appen har med vilje ingen kopi av
   pensumet i koden.
-- **`js/genre-model.js`** — alle avledninger (vokabular, kanter, farger, tiårsakse).
+- **`js/sjangre/genre-model.js`** — alle avledninger (vokabular, kanter, farger, tiårsakse).
   Eksportene er `let` som `rebuild()` tilordner på nytt; ES-modulenes live bindings
   gjør at ~20 lesere ser ferske verdier. **Fang aldri en avledet verdi i en
   modulnivå-konstant** — det er den vanligste feilen i denne kodebasen.
-- **`js/genre-validate.js`** — sykler, duplikater, manglende foreldre, «/» i etikett.
+- **`js/sjangre/genre-validate.js`** — sykler, duplikater, manglende foreldre, «/» i etikett.
   Importen avviser et ugyldig tre i stedet for å skrive det.
 
 ### Visningen
 
-- **`js/genre-layout.js`** — regner ut x fra metasjangerens `column`, slektskapet og
+- **`js/sjangre/genre-layout.js`** — regner ut x fra metasjangerens `column`, slektskapet og
   plassbehov. Erstattet de håndsatte `cx`-koordinatene.
-- **`js/genealogy-bundled.js`** — slektstreet (bundlede bånd). Foreldrene til en
+- **`js/sjangre/genealogy-bundled.js`** — slektstreet (bundlede bånd). Foreldrene til en
   sjanger samles i ett bånd i BARNETS farge, så en sammensmeltning leser som
   likestilte foreldre.
-- **`js/gx-camera.js`** — panorering/zoom/pinch, delt.
-- **`js/genealogy.js`** — nå KUN sjanger- og koblingskortene (popupene). Det gamle
+- **`js/sjangre/gx-camera.js`** — panorering/zoom/pinch, delt.
+- **`js/sjangre/genealogy.js`** — nå KUN sjanger- og koblingskortene (popupene). Det gamle
   pakkede kartet er slettet.
-- **`js/constellation.js`** — Sjangerhimmelen, deler nå treets utregnede layout.
+- **`js/sjangre/constellation.js`** — Sjangerhimmelen, deler nå treets utregnede layout.
 - **`js/tre-page.js`** — delt oppstart for slektstresiden.
 
 ### Lærer-editoren
 
-- **`js/teacher-genres.js`** — UI (liste, skjema, plan-dialog).
-- **`js/genre-migrate.js`** — REN planlegger. Skriver ingenting, returnerer en plan.
+- **`js/laerer/teacher-genres.js`** — UI (liste, skjema, plan-dialog).
+- **`js/sjangre/genre-migrate.js`** — REN planlegger. Skriver ingenting, returnerer en plan.
 - **`store.js: runMigrationPlan(ops)`** — utfører planen i ÉN atomisk batch.
 
 ---
@@ -121,7 +121,7 @@ slektskapet, med liste over hva som må ryddes først.
    fletter rad for rad, så en re-import av den fila ville lagt dem inn igjen.
    Ta en fersk eksport hvis du vil ha en backup som speiler det rene kartet.
 4. ~~**Pop- og Rock-historiene.**~~ AVKLART 22.08: de skal IKKE vises, men
-   teksten skal ligge. `STORY_SKJULT` i js/story-format.js holder dem utenfor
+   teksten skal ligge. `STORY_SKJULT` i js/felles/story-format.js holder dem utenfor
    visningen og lærer-tellingen (v4.68); tekstene (5403 og 6340 tegn) ligger
    urørt i Firestore og følger med i eksporten. MERK: de kan heller ikke
    redigeres i appen mens de er skjult — historie-editoren nås fra knappene.

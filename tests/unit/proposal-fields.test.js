@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/proposal-fields.js";
+import { PROPOSABLE_KEYS, proposableKeysFor } from "../../js/forslag/proposal-fields.js";
+import { lesJs } from "../helpers/js-filer.js";
 
 // Privilegie-/systemfelter som ALDRI skal kunne skrives via et endringsforslag.
 const FORBIDDEN = ["status", "priority", "votedUpBy", "teacherChecked", "proposedBy", "removedBy", "addedYear", "createdAt"];
@@ -54,7 +55,7 @@ test("proposableKeysFor gir tom liste for ukjent entityType", () => {
 // låser kilden — samme grep som instrument-groups.test.js bruker.
 test("navnet er påkrevd i alle tre studentflatene", async () => {
   const fs = await import("node:fs");
-  const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+  const les = (f) => lesJs(f);
 
   // 1) Nytt artistforslag (student.html)
   const student = les("student.js");
@@ -76,7 +77,7 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
 
   // Datalaget beholder BEVISST sin fallback: gamle og importerte rader har
   // «Anonym» lagret, og de skal fortsatt vises.
-  const store = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
+  const store = fs.readFileSync(new URL("../../js/data/store.js", import.meta.url), "utf8");
   assert.match(store, /proposedBy \|\| "Anonym"/,
     "store.js skal beholde fallbacken for eldre data");
 });
@@ -85,12 +86,12 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
 // forsvinner ved godkjenning (som ERSTATTER, ikke fletter). Har den ikke med
 // et foreslåbart felt, står det «(tom)» der det finnes data. Dette har skjedd
 // to ganger: kilder på subgenre, så era og instrumentkilder. Kildesjekk, siden
-// currentEntityValues (js/entity-values.js, delt av lærerens diff og
+// currentEntityValues (js/forslag/entity-values.js, delt av lærerens diff og
 // studentens retur-editor fra v5.13) leser sidens state og trekker inn
 // Firestore-avhengigheter som ikke kan lastes i Node.
 test("currentEntityValues dekker alle foreslåbare felter", async () => {
   const fs = await import("node:fs");
-  const src = fs.readFileSync(new URL("../../js/entity-values.js", import.meta.url), "utf8");
+  const src = fs.readFileSync(new URL("../../js/forslag/entity-values.js", import.meta.url), "utf8");
   const grener = {
     subgenre: ["description", "kilder", "activeFrom", "activeTo", "era"],
     instrument: ["body", "kilder"],
@@ -120,7 +121,7 @@ test("currentEntityValues dekker alle foreslåbare felter", async () => {
 test("skjemaets tegntak er strengere enn regelens", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const proposals = les("js/proposals.js");
+  const proposals = les("js/forslag/proposals.js");
   const teacher = les("teacher.html");
   const rules = les("firestore.rules");
 
@@ -163,7 +164,7 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
 // feil) i begge flytene sjekker den.
 test("proposals.js: åpningsteller vokter alle innsendings-fortsettelser", async () => {
   const fs = await import("node:fs");
-  const src = fs.readFileSync(new URL("../../js/proposals.js", import.meta.url), "utf8");
+  const src = fs.readFileSync(new URL("../../js/forslag/proposals.js", import.meta.url), "utf8");
   assert.equal((src.match(/const gen = \+\+apneGen;/g) || []).length, 2,
     "begge åpningene skal bumpe apneGen");
   assert.equal((src.match(/if \(gen !== apneGen\) return;/g) || []).length, 6,
@@ -182,7 +183,7 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
 
   // Studentenes tech-filter skal være en TILLATliste — en nektliste mot
   // «pending» lekket enhver ny status.
-  assert.match(les("js/shared-data.js"), /\(t\.status \|\| "active"\) === "active"/,
+  assert.match(les("js/data/shared-data.js"), /\(t\.status \|\| "active"\) === "active"/,
     "shared-data må filtrere med tillatliste");
 
   // Alle tre samlingene må ha retur-grenen i reglene, med kode som bevis.
@@ -208,7 +209,7 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
     assert.ok(create[1].includes('"ownerUid"'), `${samling}: ownerUid må stå i create-hvitelisten`);
   }
   // Artists-create-hvitelisten må dekke HELE skjemaet — parse den faktiske lista.
-  const { ARTIST_FIELDS } = await import("../../js/artist-schema.js");
+  const { ARTIST_FIELDS } = await import("../../js/data/artist-schema.js");
   const lister = [...rules.matchAll(/hasOnly\(\[([\s\S]*?)\]\)/g)]
     .map((m) => [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]));
   const artistCreate = lister.find((l) => l.includes("votedUpBy") && l.includes("addedYear"));
@@ -218,12 +219,12 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
   }
 
   // Alle tre innsendingsstiene stempler eier-uid.
-  const store = les("js/store.js");
+  const store = les("js/data/store.js");
   assert.equal((store.match(/ownerUid: auth\.currentUser\?\.uid \|\| ""/g) || []).length, 3,
     "addArtist, addTechProposal og addPendingEdit må alle stemple ownerUid");
 
   // Eksporten bærer returfeltene, ellers er ikke backupen tapsfri.
-  const schema = les("js/artist-schema.js");
+  const schema = les("js/data/artist-schema.js");
   for (const f of ["teacherFeedback", "returKode", "studentComment", "ownerUid"]) {
     assert.ok(schema.includes(`"${f}"`), `ARTIST_EXPORT_FIELDS mangler ${f}`);
   }
@@ -236,7 +237,7 @@ test("returflyten: lekkasjefilter, regler, stempling og eksport henger sammen", 
 // Firebase fra CDN og ikke kan lastes i Node.
 test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
   const fs = await import("node:fs");
-  const src = fs.readFileSync(new URL("../../js/store.js", import.meta.url), "utf8");
+  const src = fs.readFileSync(new URL("../../js/data/store.js", import.meta.url), "utf8");
   const i = src.indexOf("function signInAnonymouslyOnce()");
   const j = src.indexOf("\n}", i);
   assert.ok(i > -1 && j > i, "fant ikke signInAnonymouslyOnce");
@@ -255,10 +256,10 @@ test("anonym innlogging kan aldri overskrive en innlogget lærer", async () => {
 test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/feature-flags.js");
+  const { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING } = await import("../../js/felles/feature-flags.js");
 
   // Kortene i huben: markupen ligger mellom «modal-store-bildet» og modalen etter.
-  const markup = les("js/explore-modals.js");
+  const markup = les("js/utforsk/explore-modals.js");
   const fra = markup.indexOf('id="modal-store-bildet"');
   const til = markup.indexOf("modal-backdrop", fra + 40);
   const ider = [...markup.slice(fra, til).matchAll(/id="(sb-[a-z-]+)"/g)].map((m) => m[1]);
@@ -310,24 +311,23 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
   assert.match(html, /<details[^>]*id="skrivehjelp"[^>]*hidden/, "veiledningen starter skjult");
   assert.match(html, /id="retur-comment-felt"[^>]*hidden/, "kommentarfeltet starter skjult");
 
-  assert.match(les("js/teacher-content.js"), /skriveveiledning:\s*"Slik skriver du beskrivelsen"/);
-  const dash = les("js/ui-dashboard.js");
+  assert.match(les("js/laerer/teacher-content.js"), /skriveveiledning:\s*"Slik skriver du beskrivelsen"/);
+  const dash = les("js/ui/ui-dashboard.js");
   assert.ok(dash.includes('pageItem("Skriveveiledning", '),
     "læreren må nå siden fra «Innhold som mangler»");
   assert.match(dash, /return onEditPage\?\.\(id\)/, "ukjente sider skal gå til editoren");
-  assert.match(les("js/teacher-artists.js"), /onEditPage:\s*\(id\)\s*=>\s*openPageEditor\(id\)/);
+  assert.match(les("js/laerer/teacher-artists.js"), /onEditPage:\s*\(id\)\s*=>\s*openPageEditor\(id\)/);
 });
 
 
 // Audit v5.19 funn 40: de seks returfeltnavnene sto håndskrevet tre steder.
 // Nå er RETUR_FELTER (artist-schema.js) én kilde — lås at alle tre bruker den.
 test("RETUR_FELTER er én kilde: eksport, buildArtistDoc og ryddReturfelter", async () => {
-  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/artist-schema.js");
+  const { RETUR_FELTER, ARTIST_EXPORT_FIELDS } = await import("../../js/data/artist-schema.js");
   assert.deepEqual(RETUR_FELTER, ["teacherFeedback", "returKode", "studentComment", "innsendtKode", "returnedAt"]);
   for (const f of RETUR_FELTER) assert.ok(ARTIST_EXPORT_FIELDS.includes(f), `eksporten mangler ${f}`);
   assert.ok(ARTIST_EXPORT_FIELDS.includes("ownerUid"));
-  const fs = await import("node:fs");
-  const les = (f) => fs.readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+  const les = (f) => lesJs(f);
   assert.match(les("store.js"), /RETUR_FELTER\.map\(\(f\) => \[f, deleteField\(\)\]\)/,
     "ryddReturfelter skal bygges av lista, ikke stave navnene");
   assert.match(les("artist-normalize.js"), /\["ownerUid", \.\.\.RETUR_FELTER\]/,
@@ -355,7 +355,7 @@ test("funn 48: pendingEdits-reglene, PROPOSABLE_KEYS og FIELD_SPECS har de samme
   for (const k of iRegel) assert.ok(vaktet.has(k), `${k} mangler typevakt i pendingEdits`);
 
   // FIELD_SPECS (skjemaet) har nøyaktig de foreslåbare feltene for hver type.
-  const proposals = les("js/proposals.js");
+  const proposals = les("js/forslag/proposals.js");
   const specs = proposals.slice(proposals.indexOf("FIELD_SPECS = {"));
   for (const type of ["tech", "subgenre", "instrument", "decade-society", "decade-tech"]) {
     const navn = type.includes("-") ? `"${type}"` : type;

@@ -3,10 +3,10 @@
 // Rene tester der koden kan kjøres i Node, ellers kildelåser.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js";
+import { normalizeImportFile, CONTENT_KEYS } from "../../js/data/import-format.js";
+import { lesJs } from "../helpers/js-filer.js";
 
-const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+const kilde = (f) => lesJs(f);
 
 test("funn 5: kjøreplanene er med i eksporten og slipper gjennom importens hviteliste", () => {
   assert.ok(CONTENT_KEYS.includes("presentasjoner"), "en fil med bare planer er en gyldig innholdsfil");

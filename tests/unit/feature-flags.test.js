@@ -5,7 +5,7 @@ import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { synlighetVerdier, SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "../../js/feature-flags.js";
+import { synlighetVerdier, SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "../../js/felles/feature-flags.js";
 
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 
@@ -38,7 +38,7 @@ test("synlighetVerdier: kjente boolske nøkler overstyrer, resten følger standa
 // standarden i koden fortsatt gjelder for resten (storeBildet, de åpne
 // hubkortene). Før skrev første lagring hele standardobjektet.
 test("bryterpanelet lagrer bare nøklene det har en bryter for", () => {
-  const src = kilde("js/teacher-desk.js");
+  const src = kilde("js/laerer/teacher-desk.js");
   const start = src.indexOf("async function endreSynlighet");
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
   assert.match(kropp, /PANEL_STUDENT\.map/);

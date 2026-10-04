@@ -22,7 +22,7 @@ test("reglene: timeforslag er bare lærerens, med hviteliste og tak", () => {
 });
 
 test("lagringen: store.js har abonnement, ny post og sletting, og posten kuttes til takene", () => {
-  const s = les("js/store.js");
+  const s = les("js/data/store.js");
   assert.match(s, /const timeforslagCol = collection\(db, "timeforslag"\);/);
   assert.match(s, /export function subscribeTimeforslag\(callback\)/);
   assert.match(s, /export async function addTimeforslag\(\{ artist, student = "", kontekst = "" \}\)/);
@@ -32,7 +32,7 @@ test("lagringen: store.js har abonnement, ny post og sletting, og posten kuttes 
 });
 
 test("visningen: L åpner panelet bare for læreren, med kontekst, Enter-lagring og angre", () => {
-  const p = les("js/presentasjon.js");
+  const p = les("js/visning/presentasjon.js");
   assert.match(p, /case "timeliste": return vekslTimeliste\(\);/);
   assert.match(p, /function vekslTimeliste\(\) \{\n\s*if \(!erLaerer\) return;/);
   // Lærerflagget settes også i fri visning (uten plan), ikke bare inne i if (planId).
@@ -49,8 +49,8 @@ test("visningen: L åpner panelet bare for læreren, med kontekst, Enter-lagring
 
 test("lærersiden: abonnementet og bolken på Skrivebordet, med Foreslå og Fjern", () => {
   assert.match(les("js/teacher.js"), /subscribeTimeforslag\(\(liste\) => \{ state\.timeforslag = liste; state\.timeforslagLoaded = true; refreshDesk\(\); \}\);/);
-  assert.match(les("js/teacher-state.js"), /timeforslag: \[\],\n\s*timeforslagLoaded: false,/);
-  const d = les("js/teacher-desk.js");
+  assert.match(les("js/laerer/teacher-state.js"), /timeforslag: \[\],\n\s*timeforslagLoaded: false,/);
+  const d = les("js/laerer/teacher-desk.js");
   assert.match(d, /\$\{timeforslagHtml\(\)\}/);
   assert.match(d, /href="student\.html\?navn=\$\{encodeURIComponent\(p\.artist \|\| ""\)\}"/);
   assert.match(d, /data-desk-time-slett="\$\{escapeHtml\(p\.id\)\}"/);

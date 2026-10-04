@@ -1,9 +1,9 @@
 import { SEED_GENRE_DESCS } from "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY } from "../../js/genre-model.js";
-import { storyOrder, STORY_SKJULT } from "../../js/story-format.js";
-import { periodGroups, periodAxis, pctAv, periodColor, periodSignatur, PERIOD_COLORS, familieNyanse } from "../../js/genre-periods.js";
+import { GENEALOGY } from "../../js/sjangre/genre-model.js";
+import { storyOrder, STORY_SKJULT } from "../../js/felles/story-format.js";
+import { periodGroups, periodAxis, pctAv, periodColor, periodSignatur, PERIOD_COLORS, familieNyanse } from "../../js/sjangre/genre-periods.js";
 
 // «Sjangerperioder» (v5.20) skal være DYNAMISK: sjangrene fra treet, årstallene
 // fra beskrivelsene, metasjangrene fra de synlige historiene. Testene låser
@@ -143,16 +143,16 @@ test("sjangerperioder kobles til snapshotene, huben og lasteflagget", async () =
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
   // Oppfriskingen bor i explore.js fra v6.29 (før explore-context.js).
-  const ctx = les("js/explore.js");
+  const ctx = les("js/utforsk/explore.js");
   const kropp = (navn) => { const i = ctx.indexOf(`export function ${navn}()`); assert.ok(i > -1, navn); return ctx.slice(i, ctx.indexOf("\n}", i)); };
   assert.match(kropp("genreDescsChanged"), /renderSjangerperioderBody\(\)/, "nye årstall");
   assert.match(kropp("contentChanged"), /renderSjangerperioderBody\(\)/, "treet lastet eller mangler");
-  const vis = les("js/explore-sjangerperioder.js");
+  const vis = les("js/utforsk/explore-sjangerperioder.js");
   assert.match(vis, /onGenreModelChanged\(/, "endret tre");
   assert.match(vis, /pctAv\(axis, r\.to \+ 1\)/, "sluttåret er inklusivt");
-  assert.match(les("js/shared-data.js"), /genreDescsLoaded/, "figuren må kunne skille «laster» fra «tomt»");
-  assert.match(les("js/explore.js"), /paaKort\("sb-sjangerperioder", openSjangerperioder\)/);
-  assert.match(les("js/explore.js"), /"modal-sjangerperioder"/, "modalen må kobles (lukking, bakgrunnsklikk)");
+  assert.match(les("js/data/shared-data.js"), /genreDescsLoaded/, "figuren må kunne skille «laster» fra «tomt»");
+  assert.match(les("js/utforsk/explore.js"), /paaKort\("sb-sjangerperioder", openSjangerperioder\)/);
+  assert.match(les("js/utforsk/explore.js"), /"modal-sjangerperioder"/, "modalen må kobles (lukking, bakgrunnsklikk)");
 });
 
 // --- v6.05: nyanser av familiefargen (D6) ----------------------------------

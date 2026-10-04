@@ -25,15 +25,15 @@ for (const fil of ["js/teacher.js", "js/landing.js", "js/tre-page.js"]) {
 }
 
 test("app-state: getState kaster ikke før initExplore", () => {
-  assert.match(les("js/app-state.js"), /export function getState\(\) \{ return opts \? opts\.getState\(\) : \{\}; \}/);
+  assert.match(les("js/data/app-state.js"), /export function getState\(\) \{ return opts \? opts\.getState\(\) : \{\}; \}/);
 });
 
 // v5.53: plussknappen på artistkortene og -radene i listene (plukk-modus).
 test("artistlistene har plussknapp i plukk-modus, koblet via body.samler-plukk", () => {
-  const ui = les("js/ui.js");
+  const ui = les("js/ui/ui.js");
   assert.match(ui, /export function kortPlussHtml\(a\) \{\n  if \(!a \|\| !isVisible\(a\)\) return "";/);
   assert.ok((ui.match(/\$\{kortPlussHtml\(a\)\}/g) || []).length >= 3, "kort, resultatrad og artistliste-rad");
-  const pi = les("js/plan-innsamling.js");
+  const pi = les("js/visning/plan-innsamling.js");
   assert.match(pi, /document\.body\.classList\.toggle\("samler-plukk", økt\.modus === "plukk"\)/);
   assert.match(pi, /document\.body\.classList\.remove\("samler-plukk"\)/);
   assert.match(pi, /closest\?\.\("\.kort-pluss"\)[^]*?leggTil\(b\.dataset\.vis, "plukk"\)/);
@@ -44,7 +44,7 @@ test("artistlistene har plussknapp i plukk-modus, koblet via body.samler-plukk",
 
 // v5.55 (brukerkrav 2026-09-25): ingenting øverst til venstre under visning.
 test("visningen blanker fanen og går i fullskjerm ved første handling, men respekterer et nei", () => {
-  const p = les("js/presentasjon.js");
+  const p = les("js/visning/presentasjon.js");
   assert.match(p, /document\.title = "\\u2800";/, "blank tittel som ikke trimmes bort");
   assert.match(p, /link\[rel~="icon"\][^]*?l\.href = TOMT_IKON/, "tomt fane-ikon");
   const init = p.slice(p.indexOf("export function initPresentasjon"));
@@ -57,7 +57,7 @@ test("visningen blanker fanen og går i fullskjerm ved første handling, men res
 // v5.81 (brukerbestilling 2026-09-28): «Vis»-knapp på artistkortene i fri
 // visning, og bredere kort i «Finn artister» under visning.
 test("fri visning: artistkortene har Vis-knapp som åpner artisten på lerretet, og bredere kort", () => {
-  const ui = les("js/ui.js");
+  const ui = les("js/ui/ui.js");
   assert.match(ui, /export function kortVisHtml\(a\) \{\n  if \(!a \|\| !isVisible\(a\)\) return "";/);
   assert.match(ui, /\$\{kortPlussHtml\(a\)\}\$\{kortVisHtml\(a\)\}<\/h3>/, "knappen står i kortets tittel, etter plussen");
   assert.match(les("js/landing.js"), /vis: \(id\) => \{[^]*?openDetail\(a\)/);

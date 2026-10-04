@@ -2,7 +2,7 @@
 import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY, GENEALOGY_ROOT_GENRES, GENEALOGY_MAIN_GENRES, rebuild } from "../../js/genre-model.js";
+import { GENEALOGY, GENEALOGY_ROOT_GENRES, GENEALOGY_MAIN_GENRES, rebuild } from "../../js/sjangre/genre-model.js";
 
 test("røttene er treets lag før sjangrene", () => {
   assert.deepEqual(GENEALOGY_ROOT_GENRES.map((n) => n.l), [

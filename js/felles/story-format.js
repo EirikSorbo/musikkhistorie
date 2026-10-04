@@ -1,0 +1,92 @@
+// ============================================================================
+//  SJANGERHISTORIER OG INNHOLDSSIDER — oppslag
+// ----------------------------------------------------------------------------
+//  Historiene og innholdssidene (Om historie, Røtter) skrives i samme
+//  markdown-light som resten av appens tekster. Selve formateringen bor i
+//  js/felles/rich-text.js (renderRichText) — den er delt med beskrivelsene, så
+//  historier og beskrivelser aldri får hver sin syntaks. Denne modulen holder
+//  bare på STRUKTUREN: hvilke historier som finnes og hvor tekstene hentes fra.
+//
+//  Det finnes BEVISST ingen standardtekster i koden (brukervalg): innholdet
+//  bor i Firestore (importert fra innholds-JSON eller skrevet i editoren), og
+//  mangler det, skal appen vise en tydelig «mangler tekst»-melding — aldri en
+//  utdatert reservetekst.
+// ============================================================================
+
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "../sjangre/genre-model.js";
+
+// Metasjangrenes rekkefølge (struktur, ikke innhold). ÉN rekkefølge i hele
+// appen fra v6.05 (brukervalg 2026-10-03, strukturgjennomgangen S4): den
+// samme som treets META_GENRE_ORDER, som tidslinja, varmekartet og filtrene
+// alltid har brukt. Før sto historiene, periodene og visningssidene i en egen
+// rekkefølge (Blues, Country, Gospel, Jazz …), så de to gruppene av flater
+// leste ulikt.
+//
+// Lista er bare RESERVEN før treet er lastet; storyOrder() under følger treet.
+//
+// En knapp står også når historien MANGLER: appen viser hull i innholdet i
+// stedet for å skjule dem, og lærer-oversikten teller dem som manglende.
+export const STORY_ORDER = ["Blues", "Jazz", "R&B", "Hip-hop", "Klubbmusikk", "Gospel", "Country", "Pop", "Rock"];
+
+// Metasjangre som skal ha en historie liggende uten å vises. TOM fra v6.05:
+// Pop og Rock var holdt utenfor (brukervalg 2026-08-22), men skal nå vises
+// overalt (brukervalg 2026-10-03). Mekanismen står igjen, så et navn kan
+// legges inn her igjen uten kodeendring andre steder (migreringen og heftet
+// leser lista).
+export const STORY_SKJULT = [];
+
+// Historie-knappene (og periodene, visningssidene og heftets metasjangre)
+// slik de skal vises NÅ:
+//   · treets metasjangre i META_GENRE_ORDER
+//   · pluss navn fra reservelista som har en historie uten å være metasjanger
+//     lenger (etterlatt av et navnebytte), bakerst
+//   · minus STORY_SKJULT
+// Er treet ikke lastet ennå, vises reservelista.
+export function storyOrder(genreDescs = {}) {
+  const skjult = (g) => STORY_SKJULT.includes(g);
+  const metas = GENEALOGY_META_GENRES;
+  if (!metas.length) return STORY_ORDER.filter((g) => !skjult(g));
+  const ut = META_GENRE_ORDER.filter((g) => !skjult(g));
+  for (const g of STORY_ORDER) {
+    if (!ut.includes(g) && !skjult(g) && storyFor(g, genreDescs)) ut.push(g);
+  }
+  return ut;
+}
+
+// Oppslaget: historien er den lærer-lagrede/importerte teksten på
+// genreDescriptions/<sjanger>.story.body — ingen fallback. Mangler den (eller
+// er tom), returneres null og visningen skal si tydelig ifra.
+export function storyFor(genre, genreDescs = {}) {
+  const body = genreDescs?.[genre]?.story?.body;
+  return typeof body === "string" && body.trim() ? { body } : null;
+}
+
+// Alle seks historiene åpner med en håndskrevet linje av formen
+//   *Sjangertre-løype: Work songs → Blues → Chicago blues → …*
+// Den er nå erstattet av varmestripene over historien (v5.16; først av en
+// generert sjangertidslinje), og fjernes her i stedet for i Firestore. Grunnen til at det gjøres i koden:
+// teksten ligger i innhold vi ikke skriver til, og en re-import av en eldre
+// backup ville ellers dratt linjen inn igjen. Tåler både «løype» og «loype»,
+// valgfri kursiv, og at linjen ikke står helt først.
+// `[^\n]*` MÅ være grådig: med lat kvantor stoppet den på kolonet og lot resten
+// av løypen stå igjen som brødtekst.
+const GENRE_PATH_LINE = /^[ \t]*\*?[ \t]*Sjangertre-l[øo]ype[ \t]*:[^\n]*\r?\n?/im;
+
+export function stripGenrePath(text) {
+  return typeof text === "string" ? text.replace(GENRE_PATH_LINE, "").replace(/^\s*\n/, "") : text;
+}
+
+// Samme oppslag for innholdssidene (content/<id>.body fra Firestore).
+export function pageFor(pageId, content = {}) {
+  const doc = content?.[pageId];
+  if (!doc) return null;
+  const body = typeof doc.body === "string" ? doc.body : "";
+  const kilder = Array.isArray(doc.kilder) ? doc.kilder : [];
+  // body ELLER kilder (v5.11). Kun-body-testen gjorde en side med godkjente
+  // kilder, men uten tekst, USYNLIG: den falt ut av eksporten, og neste gang
+  // læreren skrev teksten leste editoren null, fikk tom kildeliste, og savePage
+  // (uten merge) slettet kildene. Godkjenningskøen kan lage nettopp en slik
+  // side, siden hver rad i diffen godkjennes for seg.
+  if (!body.trim() && !kilder.length) return null;
+  return { body, kilder };
+}

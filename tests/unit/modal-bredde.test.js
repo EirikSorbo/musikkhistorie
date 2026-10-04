@@ -24,21 +24,21 @@ const INNHOLDSKORT = {
   "index.html": ["modal-artister", "modal-detail"],
   "tre.html": ["modal-artist-detail"],
   "teacher.html": ["modal-detail"],
-  "js/explore-modals.js": [
+  "js/utforsk/explore-modals.js": [
     "modal-teknologi", "modal-instrumenter", "modal-podkaster", "modal-instr-tech",
     "modal-decade-view", "modal-varmekart", "modal-sjangerperioder", "modal-sjangerhimmel",
     "modal-tidslinje", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
     "modal-store-bildet", "modal-referanser", "modal-app-guide", "modal-om-historie",
     "modal-rotter", "modal-historier",
   ],
-  "js/ui-modal-fragments.js": ["modal-sjanger", "modal-artistliste", "modal-spilleliste", "modal-tech-detail"],
+  "js/ui/ui-modal-fragments.js": ["modal-sjanger", "modal-artistliste", "modal-spilleliste", "modal-tech-detail"],
 };
 
 const BEHOLDER_BREDDEN = {
   "index.html": ["modal-proposal"],
-  "js/explore-modals.js": ["modal-sok", "modal-vk-edit"],
+  "js/utforsk/explore-modals.js": ["modal-sok", "modal-vk-edit"],
   "teacher.html": ["modal-edit", "modal-oversikt", "modal-retur"],
-  "js/teacher-genres.js": ["modal-genre-admin", "modal-genre-edit"],
+  "js/laerer/teacher-genres.js": ["modal-genre-admin", "modal-genre-edit"],
 };
 
 test("innholdskortene har den brede rammen", () => {
@@ -72,8 +72,8 @@ test("rammen og tekstgrensen, og presentasjonen holdes utenfor tekstgrensen", ()
 // v5.94: metasjanger-oversikten ble lagt i markupen uten å bli registrert, og
 // da hadde ← ingen lytter. Hver modal i den delte markupen må stå i wireModals.
 test("alle modalene i den delte markupen er registrert (← og ✕ virker)", () => {
-  const ider = [...les("js/explore-modals.js").matchAll(/class="modal-backdrop"[^>]*\bid="([^"]+)"/g)].map((m) => m[1]);
-  const reg = les("js/explore.js");
+  const ider = [...les("js/utforsk/explore-modals.js").matchAll(/class="modal-backdrop"[^>]*\bid="([^"]+)"/g)].map((m) => m[1]);
+  const reg = les("js/utforsk/explore.js");
   const start = reg.indexOf("function wireModals()");
   const liste = reg.slice(start, reg.indexOf("setupModal(id)", start));
   assert.ok(ider.length > 20, "fant modalene i markupen");
@@ -85,7 +85,7 @@ test("alle modalene i den delte markupen er registrert (← og ✕ virker)", () 
 // artistkortet, og teksten flyter ved siden av bildet. Beslektede artister
 // venter på bildet, så skillelinja ikke går inn under det.
 test("artistkortet: tidslinja først, så bildet, og beslektede under bildet", () => {
-  const ui = les("js/ui.js");
+  const ui = les("js/ui/ui.js");
   const start = ui.indexOf("export function renderArtistDetail");
   const kropp = ui.slice(start, ui.indexOf("wireLinks(el, lc);", start));
   const sekter = [...kropp.matchAll(/sekt\("([a-z]+)"/g)].map((m) => m[1]);

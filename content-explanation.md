@@ -279,4 +279,4 @@ Ikke gjør om igjen dette. Alt er avgjort av læreren og importert.
   Rhodes (1942) og Wurlitzer (1939).
 - **Fire sjangre uten lytteeksempel**: Rock, Pop, New jack swing og Cont. R&B.
 - **Fem funksjoner er midlertidig skjult** i elevvisningen fram til innholdet er
-  kvalitetssikret, styrt fra `js/feature-flags.js`. Se filas egen kommentar.
+  kvalitetssikret, styrt fra `js/felles/feature-flags.js`. Se filas egen kommentar.

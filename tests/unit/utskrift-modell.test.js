@@ -9,9 +9,9 @@ import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
   settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, heltPensum,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE, ROTTER,
-} from "../../js/utskrift-modell.js";
-import { isVisible } from "../../js/limits.js";
-import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/genre-model.js";
+} from "../../js/utskrift/utskrift-modell.js";
+import { isVisible } from "../../js/felles/limits.js";
+import { GENEALOGY_ROOT_GENRES, GENEALOGY_META_GENRES } from "../../js/sjangre/genre-model.js";
 
 const NAA = 2026;
 
@@ -500,8 +500,8 @@ test("tittel: bare tiår, bare innovasjoner, ellers «Pensumutdrag»", () => {
 // ---------------------------------------------------------------------------
 //  v5.74: koblingstekster, sideanslag, kjøreplan av heftet, små hefter
 // ---------------------------------------------------------------------------
-import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift-modell.js";
-import { GENEALOGY, edgeKey } from "../../js/genre-model.js";
+import { anslagSider, planFraModell, LITEN_GRENSE, pensumMetasjangre } from "../../js/utskrift/utskrift-modell.js";
+import { GENEALOGY, edgeKey } from "../../js/sjangre/genre-model.js";
 
 test("koblingstekster: av som standard, med for læreren når valget er på, aldri for studenter mens flagget står", () => {
   assert.equal(STANDARD_DELER["sjanger.koblinger"], false, "et tillegg læreren velger til");

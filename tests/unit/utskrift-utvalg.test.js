@@ -1,4 +1,4 @@
-// Utvalget i nettleseren (js/utskrift-utvalg.js): «Ta med»-knappens tilstand
+// Utvalget i nettleseren (js/utskrift/utskrift-utvalg.js): «Ta med»-knappens tilstand
 // og veksling. harMed må følge modellen (med = !bort.has): et valg som er
 // huket av i panelet står IKKE i heftet, og veksle skal komme ut av «ute»
 // igjen. Funnet i v5.69, da knappen kom på kortene i artistlistene: med
@@ -24,7 +24,7 @@ globalThis.document = {
 };
 
 const { harMed, veksle, leggTil, huk, lesUtvalg, toem, kortUtskriftHtml } =
-  await import("../../js/utskrift-utvalg.js");
+  await import("../../js/utskrift/utskrift-utvalg.js");
 
 test("et valg som er huket av i panelet står ikke i heftet", () => {
   toem();

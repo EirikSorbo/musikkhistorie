@@ -51,7 +51,7 @@ function byggMetaGenres({ GENEALOGY, FAMILIES, META_ORDER_HINT }) {
 // Noden slik den lagres. Utelater felter som er tomme, så dokumentet er lesbart
 // og lite. fam lagres KUN som unntak — noden arver ellers metasjangerens farge,
 // og en lærer som bytter farge på metasjangeren skal se hele familien følge
-// etter. cx er borte (x regnes ut av js/genre-layout.js), og era/t er borte
+// etter. cx er borte (x regnes ut av js/sjangre/genre-layout.js), og era/t er borte
 // (innhold, bor i genreDescriptions siden v4.64).
 function byggNode(n, metaGenres) {
   const ut = {

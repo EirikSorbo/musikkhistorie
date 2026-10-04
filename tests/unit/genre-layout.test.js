@@ -1,5 +1,5 @@
 // ============================================================================
-//  KOLONNEUTREGNINGEN (js/genre-layout.js)
+//  KOLONNEUTREGNINGEN (js/sjangre/genre-layout.js)
 // ----------------------------------------------------------------------------
 //  Layouten erstattet de håndsatte cx-koordinatene (fase 2) og deles av
 //  slektstreet og Sjangerhimmelen. En regresjon her (NaN, noder utenfor sonen,
@@ -8,9 +8,9 @@
 // ============================================================================
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js";
+import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../../js/sjangre/genealogy-data.js";
 import { byggGenealogyDoc } from "../../tools/build-genealogy-doc.js";
-import { computeColumns, LAYOUT_WIDTH } from "../../js/genre-layout.js";
+import { computeColumns, LAYOUT_WIDTH } from "../../js/sjangre/genre-layout.js";
 
 const doc = byggGenealogyDoc({ GENEALOGY: SEED_NODES, FAMILIES: SEED_FAMILIES, META_ORDER_HINT });
 const X = computeColumns(doc.nodes, doc.metaGenres, { width: LAYOUT_WIDTH });

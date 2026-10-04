@@ -16,9 +16,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeImportFile, decadeDoc } from "../../js/import-format.js";
-import { validateTree } from "../../js/genre-validate.js";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js";
+import { normalizeImportFile, decadeDoc } from "../../js/data/import-format.js";
+import { validateTree } from "../../js/sjangre/genre-validate.js";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/sjangre/genealogy-data.js";
 
 const HER = path.dirname(fileURLToPath(import.meta.url));
 const tre = () => ({ version: 1, nodes: GENEALOGY, families: FAMILIES, metaOrderHint: META_ORDER_HINT });
@@ -130,7 +130,7 @@ test("decadeDoc uten partial er UENDRET — eksporten skal ha full form", () => 
 // Flyten leser DOM og kan ikke enhetstestes, så vi låser kilden.
 test("importen venter på flettedialogen før resten skrives", async () => {
   const fs = await import("node:fs");
-  const src = fs.readFileSync(new URL("../../js/teacher-import.js", import.meta.url), "utf8");
+  const src = fs.readFileSync(new URL("../../js/laerer/teacher-import.js", import.meta.url), "utf8");
   assert.match(src, /function ventPaMerge\(\)/, "løftet mangler");
   assert.match(src, /const fullfort = await handleMergeFile\(/,
     "resultatet av flettingen må fanges");

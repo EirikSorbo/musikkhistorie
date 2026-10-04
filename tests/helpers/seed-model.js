@@ -1,12 +1,12 @@
 // ============================================================================
 //  TESTHJELPER — fyller sjangermodellen
 // ----------------------------------------------------------------------------
-//  Fra v4.49 kommer treet fra Firestore, så js/genre-model.js starter TOM. I
+//  Fra v4.49 kommer treet fra Firestore, så js/sjangre/genre-model.js starter TOM. I
 //  node finnes verken database eller localStorage, og en test som leser
 //  GENEALOGY ville derfor sett et tomt tre.
 //
 //  Importer denne fila FØR resten (bare for sideeffekten), så bygges modellen
-//  fra frøet i js/genealogy-data.js:
+//  fra frøet i js/sjangre/genealogy-data.js:
 //
 //      import "../helpers/seed-model.js";
 //
@@ -25,8 +25,8 @@
 //  alle importer uten ?v= (versjonen settes i importkartet i HTML-sidene), og
 //  tools/check-versjon.sh avviser en import med ?v=.
 // ============================================================================
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/genealogy-data.js";
-import { rebuild } from "../../js/genre-model.js";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../../js/sjangre/genealogy-data.js";
+import { rebuild } from "../../js/sjangre/genre-model.js";
 import { byggGenealogyDoc } from "../../tools/build-genealogy-doc.js";
 
 export const SEED_DOC = byggGenealogyDoc({ GENEALOGY, FAMILIES, META_ORDER_HINT });

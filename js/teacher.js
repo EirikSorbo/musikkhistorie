@@ -15,16 +15,16 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js";
-import { subscribeSharedData } from "./shared-data.js";
-import { onGenreModelChanged } from "./genre-model.js";
+} from "./data/store.js";
+import { subscribeSharedData } from "./data/shared-data.js";
+import { onGenreModelChanged } from "./sjangre/genre-model.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js";
-import { initExplore } from "./explore.js";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
+import { initExplore } from "./utforsk/explore.js";
+import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./laerer/teacher-state.js";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./laerer/teacher-artists.js";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -43,19 +43,19 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js";
-import { initVisning, visningTikk } from "./visning.js";
-import { initPlanMeny } from "./plan-meny.js";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js";
-import { initYtSpiller } from "./yt-spiller.js";
-import { initUtskriftValg } from "./utskrift-utvalg.js";
-import { initUtskriftSkuff } from "./utskrift-skuff.js";
-import { renderDesk } from "./teacher-desk.js";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js";
-import { setupFormatBars } from "./format-bar.js";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js";
-import { melding, bekreft } from "./ui-modal.js";
+} from "./laerer/teacher-content.js";
+import { renderPendingEditsList, setupPendingEditsUi } from "./laerer/teacher-review.js";
+import { initVisning, visningTikk } from "./visning/visning.js";
+import { initPlanMeny } from "./visning/plan-meny.js";
+import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
+import { initYtSpiller } from "./ui/yt-spiller.js";
+import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
+import { initUtskriftSkuff } from "./utskrift/utskrift-skuff.js";
+import { renderDesk } from "./laerer/teacher-desk.js";
+import { setupDataButtons, setupImportChoice } from "./laerer/teacher-import.js";
+import { setupFormatBars } from "./ui/format-bar.js";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./laerer/teacher-genres.js";
+import { melding, bekreft } from "./ui/ui-modal.js";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -262,7 +262,7 @@ function startAppInner() {
   wireFirestoreErrorBanner();
 
   refreshControls();
-  // Én rute inn for de syv delte samlingene (js/shared-data.js), samme som
+  // Én rute inn for de syv delte samlingene (js/data/shared-data.js), samme som
   // forsiden og slektstresidene. keepPendingTech: lærersiden er stedet
   // innovasjonskort GODKJENNES, så den må se dem som venter — den eneste
   // tillatte forskjellen mellom sidene.

@@ -1,7 +1,7 @@
 // Metasjanger-oversikten i visningsmodus (v5.94, brukerønske 2026-10-01).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/metaoversikt-modell.js";
+import { artisterGruppert, lytteeksemplerGruppert, forbindelser, tidsrom, ANDRE } from "../../js/utforsk/metaoversikt-modell.js";
 
 const art = (id, name, metaGenre, mainGenre, extra = {}) =>
   ({ id, name, metaGenre, mainGenre, status: "active", ...extra });
@@ -82,26 +82,26 @@ test("tidsrom: tidligste startår, og «i dag» når en periode er åpen", () =>
 
 // --- Visning-kortet og artistgalleriet (v5.96, brukerønske 2026-10-01) ------------
 import { readFileSync } from "node:fs";
-import { VIS_TYPER } from "../../js/vis-lenke.js";
+import { VIS_TYPER } from "../../js/felles/vis-lenke.js";
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 
 test("artistgalleriet: samme artister som «Artister»-knappen, stopp i kjøreplaner, knapp på sjangerkortet", () => {
   assert.ok(VIS_TYPER.has("galleri") && VIS_TYPER.has("oversikt"));
-  const vs = kilde("js/explore-visningssider.js");
+  const vs = kilde("js/utforsk/explore-visningssider.js");
   assert.match(vs, /const artister = artistsInGenre\(getState\(\)\.artists, sjanger\);/);
   assert.doesNotMatch(vs, /imageCredit|fmtCredit/, "ingen kreditering i galleriet");
-  assert.match(kilde("js/explore-apne.js"), /case "galleri": return openArtistGalleri\(apne\.id\);/);
-  assert.match(kilde("js/genealogy.js"), /\(n\.g && onShowGallery\) \? `<button type="button" class="btn ghost small gx-galleri-btn">Galleri<\/button>` : ""/);
+  assert.match(kilde("js/utforsk/explore-apne.js"), /case "galleri": return openArtistGalleri\(apne\.id\);/);
+  assert.match(kilde("js/sjangre/genealogy.js"), /\(n\.g && onShowGallery\) \? `<button type="button" class="btn ghost small gx-galleri-btn">Galleri<\/button>` : ""/);
   // v5.97 (brukerønske 2026-10-01): knappen står i appen også, som de andre.
   assert.doesNotMatch(kilde("css/styles.css"), /\.gx-galleri-btn \{ display: none/);
   // Galleriene og oversiktene står bare i Visning-editorens søk.
-  const sok = kilde("js/search.js");
+  const sok = kilde("js/felles/search.js");
   assert.match(sok, /if \(visningsflater\) \{[\s\S]*post\("galleri", n\.l,/);
-  assert.match(kilde("js/visning.js"), /visningsflater: true/);
+  assert.match(kilde("js/visning/visning.js"), /visningsflater: true/);
 });
 
 test("Visning-kortet i Det store bildet: bare på lerretet, bare for læreren", () => {
-  assert.match(kilde("js/explore.js"), /if \(!erPresentasjon\(\)\) sbModal\.querySelector\("#sb-visning"\)\?\.remove\(\);/);
-  assert.match(kilde("js/feature-flags.js"), /"sb-visning":\s+true,/);
-  assert.match(kilde("js/presentasjon.js"), /const laererKort = kort\.id === "sb-visning" && erLaerer;/);
+  assert.match(kilde("js/utforsk/explore.js"), /if \(!erPresentasjon\(\)\) sbModal\.querySelector\("#sb-visning"\)\?\.remove\(\);/);
+  assert.match(kilde("js/felles/feature-flags.js"), /"sb-visning":\s+true,/);
+  assert.match(kilde("js/visning/presentasjon.js"), /const laererKort = kort\.id === "sb-visning" && erLaerer;/);
 });

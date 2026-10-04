@@ -5,8 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { lesJs } from "../helpers/js-filer.js";
 
-const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+const kilde = (f) => lesJs(f);
 
 test("funn 7: et stoppbytte pauser lyd og avbrytes når et kort nekter å lukkes", () => {
   const p = kilde("presentasjon.js");
@@ -35,7 +36,7 @@ test("funn 12: tilbake i samme plan beholder posisjonen, og slektstre-stoppet ho
 });
 
 test("funn 8: editoren sjekker hvert mål mot det åpneren slår opp i, og venter på dataene", () => {
-  // Etikettene flyttet til js/stopp-etikett.js i v5.75 (delt med
+  // Etikettene flyttet til js/visning/stopp-etikett.js i v5.75 (delt med
   // verktøylinja i presentasjonen); reglene er de samme.
   const v = kilde("stopp-etikett.js");
   assert.match(v, /case "sjanger":\n\s*return ut\(m\.id, GENEALOGY\.some\(\(n\) => n\.l === m\.id \|\| n\.f === m\.id\) \? \{\} : \{ feil: DOD \}\);/,

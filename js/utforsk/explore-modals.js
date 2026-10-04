@@ -1,0 +1,504 @@
+// ============================================================================
+//  MODAL-MARKUP FOR UTFORSK-SIDENE
+// ----------------------------------------------------------------------------
+//  Den store markup-strengen for utforsk-modalene, flyttet ut av explore.js
+//  (v3.54) — samme mønster som ui-modal-fragments.js. injectModals() i
+//  explore.js bygger DOM-en fra MODAL_HTML. De fire delte fragmentene
+//  (artistliste, spilleliste, sjanger, teknologi-detalj) interpoleres inn fra
+//  ui-modal-fragments.js, akkurat som før.
+// ============================================================================
+import { escapeHtml } from "../felles/util.js";
+import { TECH_CATEGORY_TABS } from "../ui/ui-tech.js";
+import { SJANGER_MODAL_HTML, ARTISTLISTE_MODAL_HTML, SPILLELISTE_MODAL_HTML, TECH_DETAIL_MODAL_HTML } from "../ui/ui-modal-fragments.js";
+// Antall historier står i teksten og MÅ utledes: «seks» ble stående igjen da
+// Hip-hop ble egen metasjanger (v3.88). Merk at dette ikke er antall
+// metasjangre — Pop og Rock har bevisst ingen egen fortelling.
+
+export const MODAL_HTML = `
+<!-- Teknologi -->
+<div class="modal-backdrop" id="modal-teknologi" data-vis="teknologi">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Teknologiske innovasjoner</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <!-- Kategoriene i sin egen rekkefølge; «Foreslå ny» (student) / admin-
+         inngangen (lærer) ligger i SAMME rad, skjøvet helt til høyre. -->
+    <div class="tech-category-tabs">
+      <button class="btn ghost small tech-tab active" data-tech-cat="">Alle</button>
+      ${TECH_CATEGORY_TABS.map((c) => `<button class="btn ghost small tech-tab" data-tech-cat="${escapeHtml(c.value)}">${escapeHtml(c.label)}</button>`).join("")}
+      <div id="tek-admin-extra" class="tech-tabs-extra"></div>
+    </div>
+    <div id="tech-list" class="tech-grid"></div>
+  </div>
+</div>
+
+<!-- Instrumenter: én nyvinnings-tidslinje per instrumentgruppe, bygget av
+     innovasjonskortene som har instrument satt (se explore-instrument.js).
+     Innholdet skrives av studentene via «Foreslå nytt kort» i hver seksjon.
+     NB: markupen her er én stor template-literal — ingen backticks i teksten. -->
+<div class="modal-backdrop" id="modal-instrumenter">
+  <div class="modal modal-innhold">
+    <!-- Tittelen er tilbake i hodet (v5.07). Kortet hadde to faner her, men
+         podkastene har fått sitt eget vindu, og én fane er ingen fane. -->
+    <div class="modal-head">
+      <h2>Instrumenter</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <!-- Podkast-inngangen står ØVERST, over instrumentknappene (brukervalg
+         2026-09-01). Episodene er studentenes eget arbeid, og som fane nummer
+         to var de lette å gå glipp av. Knappen fylles av renderPodkastInngang
+         og åpner podkastvinduet under. -->
+    <div id="instr-podkast-inngang" class="instr-podkast-inngang"></div>
+    <!-- Instrumentene som faner (v6.23, brukervalg 2026-10-03), samme fanerad
+         som Tiår og Sjangre; før blå knapper i to rader. -->
+    <div class="dv-faner instr-faner" id="instr-faner" role="tablist" aria-label="Instrument"></div>
+    <!-- Arbeidsforklaringen står UNDER instrumentfanene (brukervalg
+         2026-09-01): den hører til arbeidet med det valgte instrumentet, ikke
+         til selve valget. LUKKET som standard — den er en oppskrift man slår
+         opp i, ikke noe man skal lese hver gang. -->
+    <details class="instr-guide">
+      <summary>Slik jobber dere med denne delen</summary>
+      <p>Hver gruppe har ansvar for sitt instrument. Fire ting skal på plass:</p>
+      <ol>
+        <li><strong>Podkasten.</strong> Send den ferdige episoden til Eirik på e-post, så legges den ut under «Hør podkastene».</li>
+        <li><strong>Sammendraget.</strong> Skriv teksten om instrumentets utvikling, og legg ved kildene dere har brukt. Knappen heter «Skriv sammendrag».</li>
+        <li><strong>Nyvinningene.</strong> Sørg for at sentrale teknologiske nyvinninger (eller sentrale måter å bruke instrumentet på) er med, slik at tidslinjen blir god. Knappen heter «Legg til nyvinning».</li>
+        <li><strong>Artistene.</strong> Sjekk at de viktigste utøverne på instrumentet ligger i appen, og legg til dem som mangler. Knappen heter «Legg til artist».</li>
+      </ol>
+    </details>
+    <div id="instr-body" role="tabpanel" aria-label="Valgt instrument"></div>
+  </div>
+</div>
+
+<!-- Podkastene: eget vindu (v5.07), åpnet fra «Hør podkastene» øverst i
+     Instrumenter-kortet. Lå tidligere som fane nummer to der inne — med
+     knappen på plass var fanen bare et ekstra lag rundt den samme lista. -->
+<div class="modal-backdrop" id="modal-podkaster" data-vis="podkaster">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Podkaster</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="podkast-extra" class="head-actions"></div>
+    <div id="podkast-list" class="podkast-list"></div>
+  </div>
+</div>
+
+<!-- Nyvinningene for ETT instrument, åpnet fra knapperaden i Instrumenter-
+     kortet. Samme kortmarkup som Teknologi-seksjonen, men uten kategorifaner
+     og MED hendelseskortene: lista skal svare til instrumentets tidslinje. -->
+<div class="modal-backdrop" id="modal-instr-tech">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="itl-title">Nyvinninger</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="itl-body" class="tech-grid"></div>
+  </div>
+</div>
+
+<!-- Søk i alt innholdet. Feltet i Utforsk-kortet (index.html/teacher.html)
+     er inngangen; her søkes det videre, med treff mens man skriver. -->
+<div class="modal-backdrop" id="modal-sok">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Søk</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <input type="search" id="sok-felt" class="sok-felt" autocomplete="off"
+      placeholder="Søk i artister, sjangre, tekster …" aria-label="Søk i alt innholdet">
+    <!-- role=status: treffantallet endrer seg mens man skriver, og en
+         skjermleserbruker fikk det ellers aldri lest opp. -->
+    <p class="muted sok-status" id="sok-status" role="status" aria-live="polite"></p>
+    <div id="sok-treff"></div>
+  </div>
+</div>
+
+<!-- Tiår (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S1): ett vindu
+     for et tiår, med tidslinje-stripa som tiårsvelger og tre faner under den:
+     Teknologi, Samfunn og Musikk. Tiåret står når fanen byttes, og fanen står
+     når tiåret byttes. Teknologi og Samfunn i full bredde, Musikk i tre
+     kolonner (v6.11). Tegnes av explore-decade.js. -->
+<div class="modal-backdrop" id="modal-decade-view">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="dv-title">Tiår</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="decade-ribbon" id="dv-ribbon"></div>
+    <h3 class="dv-decade" id="dv-decade"></h3>
+    <div class="dv-faner" role="tablist" aria-label="Perspektiv">
+      <button type="button" class="dv-fane" role="tab" id="dv-fane-tech" aria-controls="dv-tech-section" data-dv-fane="tech" data-tekst="Teknologi">Teknologi</button>
+      <button type="button" class="dv-fane" role="tab" id="dv-fane-society" aria-controls="dv-society-section" data-dv-fane="society" data-tekst="Samfunn">Samfunn</button>
+      <button type="button" class="dv-fane" role="tab" id="dv-fane-musikk" aria-controls="dv-musikk-section" data-dv-fane="musikk" data-tekst="Musikk">Musikk</button>
+    </div>
+    <!-- Teknologi og Samfunn i full bredde, kildene nederst (v6.11,
+         brukervalg 2026-10-03); Musikk i tre like brede kolonner. -->
+    <div class="dv-panel" id="dv-tech-section" role="tabpanel" aria-labelledby="dv-fane-tech">
+      <div id="dv-tech-timeline" data-sekt="tidslinje"></div>
+      <div id="dv-tech" class="info-text" data-sekt="tekst"></div>
+      <div class="dv-handling" id="dv-tech-handling"></div>
+      <div id="dv-kilder-tech"></div>
+    </div>
+    <div class="dv-panel" id="dv-society-section" role="tabpanel" aria-labelledby="dv-fane-society">
+      <div id="dv-society" class="info-text" data-sekt="tekst"></div>
+      <div class="dv-handling" id="dv-society-handling"></div>
+      <div id="dv-kilder-society"></div>
+    </div>
+    <div class="dv-panel dv-musikk" id="dv-musikk-section" role="tabpanel" aria-labelledby="dv-fane-musikk">
+      <div class="dv-kol" id="dv-musikk-sjangre" data-sekt="musikk"></div>
+      <div class="dv-kol" id="dv-musikk-artister" data-sekt="musikk"></div>
+      <div class="dv-kol" id="dv-musikk-lytt" data-sekt="musikk"></div>
+    </div>
+    <div class="dv-nav">
+      <button class="btn ghost small" id="dv-prev"></button>
+      <button class="btn ghost small" id="dv-next"></button>
+    </div>
+  </div>
+</div>
+
+<!-- En time fra «Fra timene» (v6.10, U1). Tegnes av explore-timer.js. -->
+<div class="modal-backdrop" id="modal-time">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="tm-tittel">Time</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="tm-body"></div>
+  </div>
+</div>
+
+<!-- Lytt (v6.07, strukturgjennomgangen U7): spillelister per metasjanger og
+     per tiår, og senere per time («Fra timene», U1). Tegnes av explore-lytt.js. -->
+<div class="modal-backdrop" id="modal-lytt" data-vis="lytt">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Lytt</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="lytt-body"></div>
+  </div>
+</div>
+
+<!-- Sjangre-fanene (v6.12, brukervalg 2026-10-03): Sjangre, Sjangerperioder,
+     Varmekart, Artisttidslinje og Undersjangre er fem egne kort med samme
+     overskrift og samme fanerad (.sj-faner, tegnes i explore.js). Et fane-
+     klikk bytter kortet på stedet (modalBytt i ui-modal.js). -->
+<!-- Varmekart: metasjanger × tiår -->
+<div class="modal-backdrop" id="modal-varmekart" data-vis="varmekart">
+  <div class="modal modal-innhold sj-fanevindu">
+    <div class="modal-head">
+      <h2>Sjangre</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="sj-faner" data-sj-faner="varmekart"></div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hvor sjangrenes tyngdepunkt lå, tiår for tiår, gruppert etter metasjanger. Mørkere = mer toneangivende.</p>
+    <div id="vk-body"></div>
+  </div>
+</div>
+
+<!-- Sjangerperioder (v5.20): når hver sjanger var aktiv, som liggende stolper
+     gruppert etter metasjanger. Årstallene er de samme som sjangerkortet viser
+     (activeFrom/activeTo i genreDescriptions) og sjangrene kommer fra
+     slektstreet, så figuren følger endringer uten at noe må vedlikeholdes.
+     Tegnes av js/utforsk/explore-sjangerperioder.js. -->
+<div class="modal-backdrop" id="modal-sjangerperioder" data-vis="sjangerperioder">
+  <div class="modal modal-innhold sj-fanevindu">
+    <div class="modal-head">
+      <h2>Sjangre</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="sj-faner" data-sj-faner="sjangerperioder"></div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Når sjangrene var aktive, gruppert etter metasjanger. Trykk på en sjanger for å åpne sjangerkortet.</p>
+    <div id="sp-body"></div>
+  </div>
+</div>
+
+<!-- Varmekart-redigering (lærer): klikk på en celle åpner nivåvelgeren -->
+<div class="modal-backdrop" id="modal-vk-edit">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <h2 id="vke-title"></h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:12px;font-size:0.86rem">Hvor toneangivende var sjangeren dette tiåret? 0 = ikke toneangivende, 5 = mest. «Ingen data» fjerner verdien.</p>
+    <div id="vke-buttons" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div id="vke-msg" class="form-msg" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- Sjangerhimmel: konstellasjonskart — artister som satellitter rundt
+     sjangrene sine; bro-artister spennes ut mellom klyngene (constellation.js) -->
+<div class="modal-backdrop" id="modal-sjangerhimmel" data-vis="himmel">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Sjangerhimmelen</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:10px;font-size:0.88rem">Sjangrene står i slektstreets rekkefølge. Klikk (eller trykk på) en stjerne, så spretter sjangerens artister frem, forbundet med stjernen. Hold musen over en prikk for navnet; klikk prikken for artistkortet. «Alle broer» viser artistene som hører til flere sjangre.</p>
+    <div id="sh-body"></div>
+  </div>
+</div>
+
+<!-- Tidslinje: når var artistene aktive, gruppert per sjanger -->
+<div class="modal-backdrop" id="modal-tidslinje" data-vis="tidslinje">
+  <div class="modal modal-innhold sj-fanevindu">
+    <div class="modal-head">
+      <h2>Sjangre</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="sj-faner" data-sj-faner="tidslinje"></div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.9rem">Hver blokk er en artists aktive periode, gruppert etter metasjanger. Flat høyrekant med › betyr at perioden pågår eller mangler sluttår. Trykk på en blokk for å åpne artistkortet.</p>
+    <div id="tid-body"></div>
+  </div>
+</div>
+
+<!-- Sjangre-liste -->
+<div class="modal-backdrop" id="modal-subgenre-list" data-vis="sjangre">
+  <div class="modal modal-innhold sj-fanevindu">
+    <div class="modal-head">
+      <h2>Sjangre</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="sj-faner" data-sj-faner="sjangre"></div>
+    <!-- Familiekortene (v6.05, S6): én per metasjanger, sjangrene i tids-
+         rekkefølge. Tegnes av openSubgenreList (explore-sjanger.js). -->
+    <div id="sl-chips"></div>
+  </div>
+</div>
+
+<!-- Undersjangre (en av Sjangre-fanene) -->
+<div class="modal-backdrop" id="modal-undersjangre" data-vis="undersjangre">
+  <div class="modal modal-innhold sj-fanevindu">
+    <div class="modal-head">
+      <h2>Sjangre</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="sj-faner" data-sj-faner="undersjangre"></div>
+    <p class="muted" style="margin-bottom:14px;font-size:0.9rem">De frie taggene på artistkortene, under metasjangeren flest av artistene hører til. Tallet er antall artister.</p>
+    <div id="ul-chips"></div>
+  </div>
+</div>
+
+<!-- Sjanger-info (nås fra lærer-oversiktens rader, f.eks. foreldreløse
+     undersjangre — via explore-API-ets openSubgenreInfo) -->
+<div class="modal-backdrop" id="modal-subgenre-info">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="sgi-title"></h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p id="sgi-desc"></p>
+    <div id="sgi-artists"></div>
+    <div id="sgi-extra"></div>
+  </div>
+</div>
+
+<!-- Artistliste, spilleliste, sjanger-beskrivelse og teknologi-detalj deles
+     med slektstresiden (tre.js) — markupen bor i ui-modal-fragments.js. -->
+${ARTISTLISTE_MODAL_HTML}
+
+${SPILLELISTE_MODAL_HTML}
+
+${SJANGER_MODAL_HTML}
+
+${TECH_DETAIL_MODAL_HTML}
+
+<!-- Det store bildet: samleinngang til alle tidslinjer og visuelle oversikter.
+     Målene bor fortsatt der de alltid har bodd (Artister, Sjangre, tiårene) —
+     dette er bare én ekstra dør inn, for den som tenker «vis meg helheten»
+     i stedet for «vis meg artister». Gjenbruker dash-kort-utseendet så
+     modalen leses som et mini-dashbord. -->
+<div class="modal-backdrop" id="modal-store-bildet" data-vis="store-bildet">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Det store bildet</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="dash-grid">
+      <!-- Visning (v5.96, brukerønske 2026-10-01): spesialsidene for
+           visningsmodus. Bare på lerretet, og bare for læreren (explore.js
+           fjerner kortet utenfor visningen; SKJUL_I_HUBEN og lærerøkta i
+           presentasjon.js styrer det på lerretet). -->
+      <button class="dash-card" id="sb-visning">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 8.5v5l4-2.5z"/></svg>
+        <span class="dash-title">Visning</span>
+        <span class="dash-desc">Spesialsider for visningsmodus</span>
+      </button>
+      <button class="dash-card" id="sb-om-historie">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#4d7c0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M8 2v4l4 4 4-4V2"/><path d="M8 22v-4l4-4 4 4v4"/></svg>
+        <span class="dash-title">Om historie</span>
+        <span class="dash-desc">Hvorfor musikkhistorie</span>
+      </button>
+      <button class="dash-card" id="sb-rotter">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c0 3-2.5 4.5-4 7"/><path d="M12 11c0 3 2.5 4.5 4 7"/><path d="M12 11v7"/><circle cx="12" cy="19.5" r="1.3"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>
+        <span class="dash-title">Røtter</span>
+        <span class="dash-desc">Opphavet før 1910</span>
+      </button>
+      <button class="dash-card" id="sb-historier">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span class="dash-title">Sjangerhistorier</span>
+        <span class="dash-desc">Én fortelling per metasjanger</span>
+      </button>
+      <button class="dash-card" id="sb-tidslinje">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
+        <span class="dash-title">Artisttidslinje</span>
+        <span class="dash-desc">Artistenes aktive år visualisert</span>
+      </button>
+      <button class="dash-card" id="sb-slektstre">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/><path d="M12 6v5M12 11c-4 0-7 3-7 7M12 11c4 0 7 3 7 7M12 11v7"/></svg>
+        <span class="dash-title">Slektstre</span>
+        <span class="dash-desc">Hvordan sjangrene henger sammen</span>
+      </button>
+      <button class="dash-card" id="sb-varmekart">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        <span class="dash-title">Varmekart</span>
+        <span class="dash-desc">Hvor toneangivende sjangrene var i ulike tiår</span>
+      </button>
+      <button class="dash-card" id="sb-sjangerperioder">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M4 16h7"/><path d="M8 11h8"/><path d="M13 6h7"/></svg>
+        <span class="dash-title">Sjangerperioder</span>
+        <span class="dash-desc">Når sjangrene var aktive</span>
+      </button>
+      <button class="dash-card" id="sb-himmel">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>
+        <span class="dash-title">Sjangerhimmel</span>
+        <span class="dash-desc">Artistene rundt sjangrene sine</span>
+      </button>
+      <button class="dash-card" id="sb-referanser">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/></svg>
+        <span class="dash-title">Referanser</span>
+        <span class="dash-desc">Kildene appen bygger på</span>
+      </button>
+      <button class="dash-card" id="sb-guide">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <span class="dash-title">Slik bruker du appen</span>
+        <span class="dash-desc">Kort om funksjonene og tanken bak</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Referanser: alle kildene appen bygger på, samlet og gruppert etter kategori
+     og hovedkilde. Innholdet er en AVLEDNING av dataene og bygges på nytt ved
+     hver åpning (explore-referanser.js) — ingen tekst å redigere, og derfor
+     heller ingen Rediger-knapp. -->
+<div class="modal-backdrop" id="modal-referanser" data-vis="referanser">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Referanser</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="ref-body"></div>
+  </div>
+</div>
+
+<!-- Slik bruker du appen: en kort bruksveiledning for studentene. Teksten bor i
+     Firestore (content/appGuide, markdown-light) og redigeres via samme
+     Rediger-knapp som Om historie/Røtter — ingen hardkodet tekst i koden.
+     Åpnes som siste kort i «Det store bildet». -->
+<div class="modal-backdrop" id="modal-app-guide" data-vis="side:guide">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Slik bruker du appen</h2>
+      <div id="app-guide-extra" class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="app-guide-body" class="story-body"></div>
+  </div>
+</div>
+
+<!-- Innholdssidene «Om historie» og «Røtter før 1910»: teksten bor i
+     Firestore (content/omHistorie og content/rotter, markdown-light) og
+     rendres ved hver åpning — ingen hardkodet tekst i koden. Foten er
+     navigasjon (kode), ikke innhold. -->
+<div class="modal-backdrop" id="modal-om-historie" data-vis="side:omHistorie">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Om historie</h2>
+      <div id="omh-extra" class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="om-historie-body" class="story-body"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-rotter" data-vis="side:rotter">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Røtter før 1910</h2>
+      <div id="rotter-extra" class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="rotter-links">
+      <button class="btn primary" id="rotter-tre">Se slektstreet</button>
+    </div>
+    <!-- Røttene som klikkbare bobler, rett under inngangen til treet: hvilke
+         de er, før teksten om dem. Fylles av openRotter (explore-innhold.js). -->
+    <div class="rotter-chips" id="rotter-chips"></div>
+    <div id="rotter-body" class="story-body"></div>
+  </div>
+</div>
+
+<!-- Sjangerhistorier: forfattede fortellinger (én per metasjanger) som
+     til sammen dekker pensumet. Én modal med sjanger-chips øverst — samme
+     leseflate uansett historie, og bytte skjer uten modal-stabling. -->
+<div class="modal-backdrop" id="modal-historier">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Sjangerhistorier</h2>
+      <div id="hist-extra" class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <p class="muted hist-intro">Fortellinger som til sammen dekker hele pensumet. Trykk på navnene underveis for å åpne artistkortene.</p>
+    <div class="hist-chips" id="hist-chips"></div>
+    <!-- Oversikten over metasjangeren (v5.94; i appen også fra v6.05, S2). -->
+    <div class="hist-oversikt-rad"><button type="button" class="btn ghost small" id="hist-oversikt">Vis oversikt</button></div>
+    <!-- Sjangerfamilien som varmestriper (v5.16): én rad per sjanger under
+         metasjangeren, samme rad som i varmekartet. Her lå først den
+         håndskrevne «Sjangertre-løype»-linjen i teksten, så en generert
+         tidslinje over startårene. -->
+    <div id="hist-tre" data-sekt="striper"></div>
+    <div id="hist-body" data-sekt="tekst" class="story-body"></div>
+  </div>
+</div>
+
+<!-- Oversikt over en metasjanger (v5.94, brukerønske 2026-10-01; for alle
+     fra v6.05, S2): åpnes fra Sjangre («Oversikt ›»), metasjangermerket på
+     kortene, Sjangerhistoriene, søket (v6.15) og som stopp i en kjøreplan
+     (oversikt:<metasjanger>). Tegnes av explore-metaoversikt.js. -->
+<div class="modal-backdrop" id="modal-meta-oversikt">
+  <div class="modal modal-innhold meta-oversikt">
+    <div class="modal-head">
+      <h2 id="mo-tittel">Oversikt</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="mo-body" class="mo-body"></div>
+  </div>
+</div>
+
+<!-- Visning (v5.96): samlesiden for spesialsidene til visningsmodus, åpnet fra
+     Visning-kortet i Det store bildet. Tegnes av explore-visningssider.js. -->
+<div class="modal-backdrop" id="modal-visningssider">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Visning</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="vs-body" class="vs-body"></div>
+  </div>
+</div>
+
+<!-- Artistgalleri for én sjanger (v5.96): bildene med navn under, til
+     visningsmodus (galleri:<sjanger>). Tegnes av explore-visningssider.js. -->
+<div class="modal-backdrop" id="modal-galleri">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="ga-tittel">Artistgalleri</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="ga-body" class="ga-body"></div>
+  </div>
+</div>
+`;

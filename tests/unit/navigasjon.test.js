@@ -9,26 +9,26 @@
 // ============================================================================
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { jsFiler, lesJs } from "../helpers/js-filer.js";
 
-const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const utenKommentarer = (s) => s.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
 
 test("alt som slås opp i nav, registreres i explore.js", () => {
-  const kall = utenKommentarer(les("js/explore.js")).match(/registrerNavigasjon\(\{([^}]*)\}\)/);
+  const kall = utenKommentarer(lesJs("explore.js")).match(/registrerNavigasjon\(\{([^}]*)\}\)/);
   assert.ok(kall, "explore.js kaller registrerNavigasjon({ … })");
   const registrert = new Set(kall[1].split(",").map((x) => x.trim()).filter(Boolean));
 
   const brukt = new Set();
-  for (const f of readdirSync(new URL("../../js/", import.meta.url)).filter((x) => x.endsWith(".js"))) {
-    for (const m of utenKommentarer(les(`js/${f}`)).matchAll(/(?<![\w$.])nav\.([A-Za-z0-9_$]+)/g)) brukt.add(m[1]);
+  for (const f of jsFiler()) {
+    for (const m of utenKommentarer(lesJs(f)).matchAll(/(?<![\w$.])nav\.([A-Za-z0-9_$]+)/g)) brukt.add(m[1]);
   }
   assert.ok(brukt.size >= 6, `fant nav-oppslagene (${[...brukt].join(", ")})`);
   assert.deepEqual([...brukt].filter((n) => !registrert.has(n)), [], "slås opp i nav, men registreres ikke i explore.js");
 });
 
 test("kjernen importerer ingen Utforsk-feature", () => {
-  const importer = [...utenKommentarer(les("js/explore-context.js")).matchAll(/from\s+["']\.\/([^"'?]+\.js)/g)].map((m) => m[1]);
-  assert.deepEqual(importer.filter((m) => /^explore-/.test(m)), [],
+  const importer = [...utenKommentarer(lesJs("explore-context.js")).matchAll(/from\s+["'](\.{1,2}\/[^"'?]+\.js)/g)].map((m) => m[1]);
+  assert.ok(importer.length >= 4, "fant importene");
+  assert.deepEqual(importer.filter((m) => /(^|\/)explore-/.test(m)), [],
     "explore-context.js skal slå opp i nav i stedet: featurene importerer kjernen, så en import tilbake lager en ring");
 });

@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 const ROT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-// Navn som ble fjernet i overgangen til js/genre-model.js (v4.48–4.50). Ingen
+// Navn som ble fjernet i overgangen til js/sjangre/genre-model.js (v4.48–4.50). Ingen
 // av dem skal finnes i kode lenger; treff i en kommentar er greit og markeres.
 const STANDARD = ["canonMain", "FAM_STROKE", "MAIN_GENRE_SET", "META_SET"];
 // (META_ORDER_HINT og nodeById står IKKE her: de finnes fortsatt lovlig —
@@ -27,17 +27,19 @@ const STANDARD = ["canonMain", "FAM_STROKE", "MAIN_GENRE_SET", "META_SET"];
 
 const navn = process.argv.slice(2).length ? process.argv.slice(2) : STANDARD;
 
+// Mappene leses med alle undermappene (modulene ligger i mapper under js/ fra
+// v6.30); vendor/ er tredjepartskode og hoppes over.
 const mapper = ["js", "tests/unit", "tests/helpers", "tests/rules", "tools"];
 const filer = [];
-for (const m of mapper) {
-  const d = path.join(ROT, m);
-  if (!fs.existsSync(d)) continue;
-  for (const f of fs.readdirSync(d)) {
-    if (!f.endsWith(".js")) continue;
-    if (m === "tools" && f === "find-stale-refs.js") continue;   // verktøyet nevner navnene selv
-    filer.push(path.join(m, f));
+const gaa = (rel) => {
+  for (const e of fs.readdirSync(path.join(ROT, rel), { withFileTypes: true })) {
+    if (e.name.startsWith(".") || e.name === "vendor") continue;
+    const sti = path.join(rel, e.name);
+    if (e.isDirectory()) gaa(sti);
+    else if (e.name.endsWith(".js") && sti !== path.join("tools", "find-stale-refs.js")) filer.push(sti);   // verktøyet nevner navnene selv
   }
-}
+};
+for (const m of mapper) if (fs.existsSync(path.join(ROT, m))) gaa(m);
 for (const f of fs.readdirSync(ROT)) if (f.endsWith(".html")) filer.push(f);
 
 let treff = 0, kodetreff = 0;

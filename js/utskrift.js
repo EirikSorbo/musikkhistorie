@@ -9,11 +9,11 @@
 //  best typografi, og alt innholdet ligger alt i minnet (subscribeSharedData),
 //  så heftet koster null ekstra lesinger.
 //
-//  Strukturen regnes ut av js/utskrift-modell.js (ren, testet); denne fila
+//  Strukturen regnes ut av js/utskrift/utskrift-modell.js (ren, testet); denne fila
 //  tegner den. Tekstene går gjennom den delte markdown-light-rendereren
 //  UTEN lenkekontekst: på papir skal artistnavn stå som tekst, ikke lenker.
 //
-//  Utvalget bor i localStorage (js/utskrift-utvalg.js). («Kopier lenke» og
+//  Utvalget bor i localStorage (js/utskrift/utskrift-utvalg.js). («Kopier lenke» og
 //  ?u=-lenkene fantes fra v5.56 til v5.64; brukeren trengte dem ikke.)
 //
 //  Siden laster ikke utforsk-laget (ingen modaler, ingen kort å åpne), så
@@ -21,24 +21,24 @@
 //  laget via explore-context.
 // ============================================================================
 
-import { sharedStateDefaults, subscribeSharedData } from "./shared-data.js";
-import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js";
-import { onAuthChange, savePlan } from "./store.js";
+import { sharedStateDefaults, subscribeSharedData } from "./data/shared-data.js";
+import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
+import { onAuthChange, savePlan } from "./data/store.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, synlighetGrunn } from "./feature-flags.js";
-import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift-modell.js";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js";
-import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./search.js";
-import { byggVisVerdi } from "./vis-lenke.js";
-import { renderRichText, renderInline } from "./rich-text.js";
-import { formatInfoText, musicExampleLabel } from "./ui-helpers.js";
-import { escapeHtml, wikimediaThumb } from "./util.js";
-import { heatColor, HEAT_NODATA } from "./heat-strip.js";
-import { artistStripHtml } from "./artist-strip.js";
-import { DECADES, isVisible } from "./limits.js";
-import { askChoice, kopierTilUtklipp, visLenke } from "./ui-modal.js";
-import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./genre-model.js";
-import { ytSpillelisteUrl, nyPlanId } from "./presentasjon-modell.js";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, synlighetGrunn } from "./felles/feature-flags.js";
+import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift/utskrift-modell.js";
+import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift/utskrift-utvalg.js";
+import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./felles/search.js";
+import { byggVisVerdi } from "./felles/vis-lenke.js";
+import { renderRichText, renderInline } from "./felles/rich-text.js";
+import { formatInfoText, musicExampleLabel } from "./ui/ui-helpers.js";
+import { escapeHtml, wikimediaThumb } from "./felles/util.js";
+import { heatColor, HEAT_NODATA } from "./sjangre/heat-strip.js";
+import { artistStripHtml } from "./ui/artist-strip.js";
+import { DECADES, isVisible } from "./felles/limits.js";
+import { askChoice, kopierTilUtklipp, visLenke } from "./ui/ui-modal.js";
+import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./sjangre/genre-model.js";
+import { ytSpillelisteUrl, nyPlanId } from "./visning/presentasjon-modell.js";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -437,7 +437,7 @@ function lyttHtml(liste, medNr) {
 }
 
 // Tidslinja for virketid (v5.60): appens egen innflytelseslinje
-// (js/artist-strip.js), så kortet og heftet leser samme akse og samme
+// (js/ui/artist-strip.js), så kortet og heftet leser samme akse og samme
 // spenn. Kortet bærer spennet, ikke artisten; linja bygges av det.
 function virketidHtml(k) {
   if (!k.span) return "";
@@ -1042,7 +1042,7 @@ function koble() {
 }
 
 function init() {
-  // MIDLERTIDIG (js/feature-flags.js, utskrift): skjult for studentrollen
+  // MIDLERTIDIG (js/felles/feature-flags.js, utskrift): skjult for studentrollen
   // inntil videre. Siden abonnerer da ikke på noe (null lesinger), og sier
   // hvorfor den er tom i stedet for å vise et halvt panel.
   if (SKJUL_I_STUDENTVISNING.utskrift && document.body.classList.contains("role-student")) {

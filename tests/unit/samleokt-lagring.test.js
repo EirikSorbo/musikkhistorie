@@ -4,9 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/presentasjon-modell.js";
+import { brukSamleOps, normaliserSamleOps, samleMerke, samleVentende, normaliserPlaner } from "../../js/visning/presentasjon-modell.js";
+import { lesJs } from "../helpers/js-filer.js";
 
-const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+const kilde = (f) => lesJs(f);
 const S = (...vis) => vis.map((v) => ({ vis: v }));
 const vis = (liste) => liste.map((s) => s.vis);
 

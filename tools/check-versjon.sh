@@ -19,8 +19,9 @@ cd "$(dirname "$0")/.."
 # -a overalt: tving tekst-tolkning. I C-locale kan BSD-grep ellers
 # feilklassifisere UTF-8-filer (›, ◆ osv.) som binære og skjule treffene.
 
-# Importer MED ?v= (statiske og dynamiske, i appen og i testene).
-medv=$(grep -naE "[\"'][.][.]?/[^\"'?]+[.]js[?]v=" js/*.js tests/*/*.js || true)
+# Importer MED ?v= (statiske og dynamiske, i appen og i testene), i alle
+# mappene under js/ (fra v6.30). -r med --include virker likt i BSD- og GNU-grep.
+medv=$(grep -rnaE --include='*.js' --exclude-dir=vendor "[\"'][.][.]?/[^\"'?]+[.]js[?]v=" js tests || true)
 if [ -n "$medv" ]; then
   echo "check-versjon: importer med ?v= (versjonen står i importkartet fra v6.28):"
   echo "$medv" | head -20

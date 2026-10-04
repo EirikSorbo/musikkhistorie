@@ -4,7 +4,7 @@
 // ----------------------------------------------------------------------------
 //  Appen har ingen bundler og ingen typesjekk, så en import av et symbol som
 //  ikke lenger eksporteres oppdages først som en hvit side i nettleseren. Denne
-//  sjekken leser alle js/*.js, finner hva hver fil importerer og eksporterer, og
+//  sjekken leser alle .js-filene under js/, finner hva hver fil importerer og eksporterer, og
 //  rapporterer:
 //    · BRUTT   — importert navn som kildemodulen ikke eksporterer
 //    · UBRUKT  — importert navn som ikke forekommer i filas kropp
@@ -14,7 +14,7 @@
 //    · FORELDRELØS — js-modul som verken importeres av noen eller lastes fra
 //      en HTML-side (død fil ingen verktøy ellers ser)
 //    · genealogy-data-REGELEN — ingen runtime-modul får importere frøet
-//      js/genealogy-data.js (appen skal ikke ha noen kopi av pensumet i koden;
+//      js/sjangre/genealogy-data.js (appen skal ikke ha noen kopi av pensumet i koden;
 //      kun tools/ og tests/ leser det)
 //    · IMPORTRING — filer som importerer hverandre i ring (fra v6.29)
 //    · VIDERESENDING — en modul som eksporterer noe den selv har importert
@@ -29,8 +29,26 @@ import { fileURLToPath } from "node:url";
 const ROT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const JS = path.join(ROT, "js");
 
-const filer = fs.readdirSync(JS).filter((f) => f.endsWith(".js"));
+// Alle .js-filene under js/, som stier relativt til js/ («utforsk/explore.js»).
+// Modulene ligger i mapper fra v6.30. vendor/ er tredjepartskode og holdes
+// utenfor.
+const filer = [];
+(function gaa(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.name.startsWith(".")) continue;
+    const sti = path.join(dir, e.name);
+    if (e.isDirectory()) { if (e.name !== "vendor") gaa(sti); }
+    else if (e.name.endsWith(".js")) filer.push(path.relative(JS, sti).split(path.sep).join("/"));
+  }
+})(JS);
+filer.sort();
 const kilde = Object.fromEntries(filer.map((f) => [f, fs.readFileSync(path.join(JS, f), "utf8")]));
+
+// Fila en relativ importsti peker på, som nøkkel i `kilde` («ui/ui-modal.js»).
+function losSti(fra, spec) {
+  const abs = path.resolve(path.dirname(path.join(JS, fra)), spec.split("?")[0]);
+  return path.relative(JS, abs).split(path.sep).join("/");
+}
 
 // Fjerner KOMMENTARER, men beholder strenger: modulstien i en import er en
 // streng, så blanker vi strenger her, forsvinner selve importen. (Det var
@@ -120,7 +138,7 @@ for (const f of filer) {
   for (const m of s.matchAll(IMPORT_RE)) {
     const spec = m[2];
     if (!spec.startsWith("./") && !spec.startsWith("../")) continue;   // eksterne (Firebase) hoppes over
-    const fil = path.basename(spec.split("?")[0]);
+    const fil = losSti(f, spec);
     if (!kilde[fil]) { ukjent.push(`${f} → ${spec}`); continue; }
     for (const del of m[1].split(",")) {
       const t = del.trim();
@@ -212,18 +230,20 @@ const skriv = (tittel, liste) => {
   liste.forEach((l) => console.log("  " + l));
 };
 
+// Filene en modul importerer (statisk, også `import "./x.js"` og
+// `export … from`), som nøkler i `kilde`.
+const importerFra = (f) => [...new Set(
+  [...utenKommentarer(kilde[f]).matchAll(/(?:from|import)\s+["'](\.{1,2}\/[^"'?]+\.js)/g)]
+    .map((m) => losSti(f, m[1])))];
+const erFroet = (f) => path.basename(f) === "genealogy-data.js";
+
 // genealogy-data-regelen: appen har MED VILJE ingen kopi av pensumet i koden.
-const dataImportorer = filer.filter((f) =>
-  f !== "genealogy-data.js" && /from\s+["']\.\/genealogy-data\.js/.test(utenKommentarer(kilde[f])));
+const dataImportorer = filer.filter((f) => !erFroet(f) && importerFra(f).some(erFroet));
 const regelbrudd = dataImportorer.map((f) =>
-  `${f}: importerer js/genealogy-data.js — frøet er KUN for tools/ og tests/`);
+  `${f}: importerer js/sjangre/genealogy-data.js — frøet er KUN for tools/ og tests/`);
 
 // Foreldreløse moduler: verken importert av en js-fil eller lastet fra HTML.
-const importerte = new Set();
-for (const f of filer) {
-  for (const m of utenKommentarer(kilde[f]).matchAll(/from\s+["']\.\/([^"'?]+\.js)/g)) importerte.add(m[1]);
-  for (const m of utenKommentarer(kilde[f]).matchAll(/import\s+["']\.\/([^"'?]+\.js)/g)) importerte.add(m[1]);
-}
+const importerte = new Set(filer.flatMap(importerFra));
 // Importkartet (tools/importkart.js) nevner ALLE modulene. Telles det med, ser
 // hver modul ut som om en side laster den, og vakta blir blind.
 let htmlKilde = "";
@@ -234,7 +254,7 @@ for (const h of fs.readdirSync(ROT).filter((x) => x.endsWith(".html"))) {
 const foreldrelose = filer.filter((f) =>
   !importerte.has(f) &&
   !htmlKilde.includes(`js/${f}`) &&
-  f !== "genealogy-data.js");           // frøet leses av tools/ og tests/, med vilje
+  !erFroet(f));                         // frøet leses av tools/ og tests/, med vilje
 
 // Importringer: A importerer B, som (via andre) importerer A. ES-moduler tåler
 // det så lenge ingen kode på toppnivå bruker noe fra ringen, men da kan én ny
@@ -242,9 +262,7 @@ const foreldrelose = filer.filter((f) =>
 // initialization»), og ingen fil i ringen kan forstås uten de andre. Til og med
 // v6.28 hang 13 Utforsk-filer i én ring. Tarjans algoritme finner de sterkt
 // sammenhengende komponentene; hver med mer enn én fil er en ring.
-const kanter = Object.fromEntries(filer.map((f) => [f, [...new Set(
-  [...utenKommentarer(kilde[f]).matchAll(/(?:from|import)\s+["']\.\/([^"'?]+\.js)/g)]
-    .map((m) => m[1]).filter((m) => kilde[m]))]]));
+const kanter = Object.fromEntries(filer.map((f) => [f, importerFra(f).filter((m) => kilde[m])]));
 const ringer = [];
 {
   let teller = 0;

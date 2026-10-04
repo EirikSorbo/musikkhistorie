@@ -14,12 +14,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../js/genealogy-data.js";
+import { GENEALOGY as SEED_NODES, FAMILIES as SEED_FAMILIES, META_ORDER_HINT } from "../js/sjangre/genealogy-data.js";
 import { byggGenealogyDoc } from "./build-genealogy-doc.js";
 import {
   rebuild, GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_ORDER,
   GENEALOGY_EDGES, MAIN_GENRE_INFO, META_GENRE_COLOR, isMainGenre, findTreeGenreNode,
-} from "../js/genre-model.js";
+} from "../js/sjangre/genre-model.js";
 
 const ROT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const UTFIL = path.join(ROT, "tests", "fixtures", "genre-model.json");

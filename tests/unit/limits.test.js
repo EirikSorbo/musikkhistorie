@@ -1,6 +1,5 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import {
   INSTRUMENTS,
   DECADES,
@@ -13,9 +12,10 @@ import {
   computeCounts,
   genderDistribution,
   filterArtists,
-} from "../../js/limits.js";
+} from "../../js/felles/limits.js";
+import { lesJs } from "../helpers/js-filer.js";
 
-const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
+const kilde = (f) => lesJs(f);
 
 test("erTilModerasjon: ventende og returnerte, ingenting annet", () => {
   assert.equal(erTilModerasjon({ status: "pending" }), true);

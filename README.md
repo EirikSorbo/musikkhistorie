@@ -54,7 +54,7 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   Skriverikonet i toppmenyen viser utvalget som en liste (ta ut, dra for
   rekkefølgen, tøm). Utvalget bor i nettleseren og kan sendes til en annen
   enhet som lenke eller QR-kode. (Midlertidig skjult for studentrollen,
-  bryteren `utskrift` i `js/feature-flags.js`.)
+  bryteren `utskrift` i `js/felles/feature-flags.js`.)
 - **Sanntid**: alle ser endringer umiddelbart (Firebase Firestore).
 - **Lærermodus** (Google-innlogging): Skrivebord med arbeidsflyt-innboks og
   sjekk-fremdrift per innholdskategori, Oversikt over pensumets form og hull,
@@ -143,8 +143,8 @@ sjangerhistorien), `edgeDescriptions` (koblingstekster, doc-ID `fra__til`),
 `content` (innholdssider + varmekart + **`content/genealogy` = hele
 sjangertreet**, ett dokument), `tech`, `podcasts` og `pendingEdits`. Alt
 pensuminnhold bor i Firestore — ingen fallback-tekster i koden, og heller ingen
-kopi av sjangertreet: `js/genre-model.js` leser `content/genealogy` og avleder
-vokabularet. Artistfeltene er definert i `js/artist-schema.js`. Bare forslag
+kopi av sjangertreet: `js/sjangre/genre-model.js` leser `content/genealogy` og avleder
+vokabularet. Artistfeltene er definert i `js/data/artist-schema.js`. Bare forslag
 med `status: "active"` som ikke er lærer-skjult (`priority: -1`) vises for
 studenter.
 
@@ -263,11 +263,11 @@ mest: bruk tre urelaterte ord, aldri et passord du bruker andre steder.
 ## Vokabular og strukturakser
 
 - **Sjangre og metasjangre** kommer fra sjangertreet i Firestore
-  (`content/genealogy`, avledet i `js/genre-model.js`) og redigeres av læreren
+  (`content/genealogy`, avledet i `js/sjangre/genre-model.js`) og redigeres av læreren
   i tre-editoren.
-- **Tiår** (1900–2020) er `DECADES`-konstanten i `js/limits.js`; treets egen
+- **Tiår** (1900–2020) er `DECADES`-konstanten i `js/felles/limits.js`; treets egen
   akse utvides av seg selv når en sjanger settes på en ny rad.
-- **Instrumenter** er `INSTRUMENT_GROUPS`/`INSTRUMENTS` i `js/limits.js`
+- **Instrumenter** er `INSTRUMENT_GROUPS`/`INSTRUMENTS` i `js/felles/limits.js`
   (fast liste i koden — styrer nedtrekksmenyene i forslagsskjema og filtre).
 
 ---

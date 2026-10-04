@@ -8,20 +8,20 @@ import {
   fetchArtist,
   resubmitArtist,
   subscribeContent,
-} from "./store.js";
-import { loadArtists } from "./artist-cache.js";
-import { GENDERS, INSTRUMENTS } from "./limits.js";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js";
-import { fillSelect } from "./ui.js";
-import { TREG_SENDING_MELDING, escapeHtml } from "./util.js";
-import { renderRichText } from "./rich-text.js";
-import { pageFor } from "./story-format.js";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js";
-import { setupFormatBars } from "./format-bar.js";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js";
-import { initUtskriftValg } from "./utskrift-utvalg.js";
-import { bekreft } from "./ui-modal.js";
+} from "./data/store.js";
+import { loadArtists } from "./data/artist-cache.js";
+import { GENDERS, INSTRUMENTS } from "./felles/limits.js";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./sjangre/genre-model.js";
+import { fillSelect } from "./ui/ui.js";
+import { TREG_SENDING_MELDING, escapeHtml } from "./felles/util.js";
+import { renderRichText } from "./felles/rich-text.js";
+import { pageFor } from "./felles/story-format.js";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./ui/row-editor.js";
+import { setupFormatBars } from "./ui/format-bar.js";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./sjangre/genre-picker.js";
+import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
+import { bekreft } from "./ui/ui-modal.js";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -128,7 +128,7 @@ function setupForm() {
     if (rowErr) return showMsg(msg, rowErr, "error");
 
     // Sjangrene trenger ingen skrivefeil-advarsel lenger: de VELGES fra
-    // slektstreet (js/genre-picker.js), så et navn utenfor treet kan ikke
+    // slektstreet (js/sjangre/genre-picker.js), så et navn utenfor treet kan ikke
     // oppstå her. Lærerens skjema har fortsatt advarselen — der kan gammel
     // data bære navn som er borte fra treet.
 

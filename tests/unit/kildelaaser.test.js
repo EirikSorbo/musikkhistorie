@@ -27,12 +27,12 @@ function kropp(src, signatur) {
 
 test("funn 8: en åpen sjangerhistorie tegnes på nytt av begge snapshotene", () => {
   // contentChanged og genreDescsChanged bor i explore.js fra v6.29.
-  const ctx = les("js/explore.js");
+  const ctx = les("js/utforsk/explore.js");
   assert.match(ctx, /import \{[^}]*\brefreshHistorie\b[^}]*\} from "\.\/explore-innhold\.js/,
     "refreshHistorie må importeres (uten importen: ReferenceError i hvert snapshot)");
   assert.equal(antall(ctx, /\bmodal-historier"\)[^;\n]*\) refreshHistorie\(\);/g), 2,
     "både contentChanged og genreDescsChanged skal kalle den bak isOpen-sjekken");
-  const inn = les("js/explore-innhold.js");
+  const inn = les("js/utforsk/explore-innhold.js");
   assert.match(inn, /export function refreshHistorie\(\) \{\n\s*if \(currentStoryGenre != null\) renderHistorie\(currentStoryGenre, \{ fraSnapshot: true \}\);/);
   // Audit v5.42 funn 14: bare ved endring, og aldri til toppen ved omtegning.
   assert.match(inn, /if \(fraSnapshot && sig === historieSignatur\) return;/);
@@ -47,7 +47,7 @@ test("funn 11: kodeoppslaget har in-flight-sperre og ignorerer auto-repeat", () 
 });
 
 test("funn 13: omtegning hever aldri sjangerkortet over modaler oppå det", () => {
-  const src = les("js/genealogy.js");
+  const src = les("js/sjangre/genealogy.js");
   assert.match(src, /showSjangerInfo\(openSjanger\.label, openSjanger\.opts, \{ reopen: false \}\)/);
   assert.match(src, /if \(reopen \|\| !modal\.classList\.contains\("open"\)\) modalOpen\(modal\);/);
 });
@@ -68,7 +68,7 @@ test("funn 18: slektstre-SVG-en skjuler ikke nodeknappene for skjermlesere", () 
 // --- Bolk E (v5.35) ----------------------------------------------------------
 
 test("funn 19: kjønn, metasjanger og instrument bevarer verdier utenfor vokabularet", () => {
-  const src = les("js/teacher-artists.js");
+  const src = les("js/laerer/teacher-artists.js");
   for (const id of ["ed-gender", "ed-metaGenre", "ed-instrument"]) {
     assert.match(src, new RegExp(`settSelectMedVern\\(\\$\\("#${id}"\\)`), `${id} må gå via vernet`);
   }
@@ -77,17 +77,17 @@ test("funn 19: kjønn, metasjanger og instrument bevarer verdier utenfor vokabul
 });
 
 test("funn 20: metasjanger-editoren gjenoppretter ikke en omdøpt eller slettet metasjanger", () => {
-  const src = kropp(les("js/teacher-genres.js"), "async function lagreMeta(");
+  const src = kropp(les("js/laerer/teacher-genres.js"), "async function lagreMeta(");
   assert.match(src, /if \(redigererMeta && !gammel\) \{/);
 });
 
 test("funn 21: lukketimerne på lærersiden huskes og avbrytes", () => {
-  for (const f of ["js/teacher-artists.js", "js/teacher-content.js"]) {
+  for (const f of ["js/laerer/teacher-artists.js", "js/laerer/teacher-content.js"]) {
     assert.doesNotMatch(les(f), /setTimeout\(\(\) => closeAdminModal\(/, `${f}: uavbrutt lukketimer`);
   }
-  assert.equal(antall(les("js/teacher-artists.js") + les("js/teacher-content.js"), /lukkEtter\("modal-/g), 5,
+  assert.equal(antall(les("js/laerer/teacher-artists.js") + les("js/laerer/teacher-content.js"), /lukkEtter\("modal-/g), 5,
     "artist, kobling, sjanger, innovasjonskort og tiår");
-  const state = les("js/teacher-state.js");
+  const state = les("js/laerer/teacher-state.js");
   assert.match(kropp(state, "export function openAdminModal("), /avbrytLukkEtter\(id\);/,
     "åpning av en modal skal rydde timeren dens sentralt");
   assert.match(kropp(state, "export function lukkEtter("), /avbrytLukkEtter\(id\);/,
@@ -95,8 +95,8 @@ test("funn 21: lukketimerne på lærersiden huskes og avbrytes", () => {
 });
 
 test("funn 22: navnebytte-planen bygges ikke fra et snapshot som ikke har tatt igjen lagringen", () => {
-  assert.match(kropp(les("js/store.js"), "export async function saveGenealogyTree("), /return updatedAt;/);
-  const src = les("js/teacher-genres.js");
+  assert.match(kropp(les("js/data/store.js"), "export async function saveGenealogyTree("), /return updatedAt;/);
+  const src = les("js/laerer/teacher-genres.js");
   assert.equal(antall(src, /stempel = await saveGenealogyTree\(nyttTre\);/g), 2);
   assert.equal(antall(src, /\(snap\?\.updatedAt \|\| ""\) >= stempel \? snap : nyttTre/g), 2,
     "både sjanger- og metasjanger-grenen");
@@ -105,12 +105,12 @@ test("funn 22: navnebytte-planen bygges ikke fra et snapshot som ikke har tatt i
 });
 
 test("funn 23: ferskhetssjekken sammenligner kanonisk JSON", () => {
-  const src = kropp(les("js/teacher-genres.js"), "async function utforPlan(");
+  const src = kropp(les("js/laerer/teacher-genres.js"), "async function utforPlan(");
   assert.match(src, /const utenTid = \(ops\) => kanoniskJson\(/);
 });
 
 test("funn 24 og 25: retur-innsending setter ikke flagget, og oppslaget går parallelt", () => {
-  const src = les("js/store.js");
+  const src = les("js/data/store.js");
   for (const f of ["resubmitArtist", "resubmitTech", "resubmitPendingEdit"]) {
     assert.doesNotMatch(kropp(src, `export async function ${f}(`), /merkHarSendtInn\(\);/,
       `${f}: flagget ga tre bortkastede lesinger per sidelast på en fremmed enhet`);
@@ -123,7 +123,7 @@ test("funn 24 og 25: retur-innsending setter ikke flagget, og oppslaget går par
 });
 
 test("funn 26: én eksportvakt dekker alle samlingene, også før de automatiske backupene", () => {
-  const src = les("js/teacher-import.js");
+  const src = les("js/laerer/teacher-import.js");
   const vakt = kropp(src, "async function kanEksportere(");
   for (const flagg of ["artistsLoaded", "contentLoaded", "genreDescsLoaded", "edgeDescsLoaded",
     "techLoaded", "decadesLoaded", "podcastsLoaded", "teacherChecksLoaded"]) {
@@ -135,7 +135,7 @@ test("funn 26: én eksportvakt dekker alle samlingene, også før de automatiske
     "manuell eksport, «Slett alt» og «Erstatt alle»");
   assert.equal(antall(src, /downloadJson\(buildExportData\(\)/g), 3,
     "ny eksportvei? Den må også gå via kanEksportere");
-  const shared = les("js/shared-data.js");
+  const shared = les("js/data/shared-data.js");
   for (const flagg of ["edgeDescsLoaded", "techLoaded", "decadesLoaded", "podcastsLoaded"]) {
     assert.match(shared, new RegExp(`${flagg}: false,`), `${flagg} mangler i standardverdiene`);
     assert.match(shared, new RegExp(`state\\.${flagg} = true;`), `${flagg} settes aldri`);
@@ -144,7 +144,7 @@ test("funn 26: én eksportvakt dekker alle samlingene, også før de automatiske
 });
 
 test("funn 28: «skriver til» vises bare der ID-en er et lesbart navn", () => {
-  const src = les("js/teacher-review.js");
+  const src = les("js/laerer/teacher-review.js");
   const liste = src.match(/const navnebasert = \[([^\]]*)\]/)?.[1] || "";
   for (const t of ["subgenre", "instrument", "decade-society", "decade-tech"]) {
     assert.ok(liste.includes(`"${t}"`), `${t} mangler`);
@@ -155,19 +155,19 @@ test("funn 28: «skriver til» vises bare der ID-en er et lesbart navn", () => {
 });
 
 test("funn 30: koblinger med kilder men uten tekst følger med i eksport og import", () => {
-  const src = les("js/teacher-import.js");
+  const src = les("js/laerer/teacher-import.js");
   assert.match(src, /\.filter\(\(\[, rest\]\) => rest\.description \|\| \(rest\.kilder \|\| \[\]\)\.length\)/);
   assert.match(src, /\.filter\(\(\[, data\]\) => data && \(data\.description \|\| \(data\.kilder \|\| \[\]\)\.length\)\)/);
 });
 
 test("funn 31: historiestripene bruker varmekartets tomhets-predikat", () => {
-  const src = les("js/explore-innhold.js");
+  const src = les("js/utforsk/explore-innhold.js");
   assert.match(src, /const hasData = !!heat && Object\.keys\(heat\)\.length > 0;/);
   assert.match(src, /: hasData \? heatBlockHtml\(/);
 });
 
 test("funn 33: instrumentkortet viser ferske lister", () => {
-  const src = les("js/explore-instrument.js");
+  const src = les("js/utforsk/explore-instrument.js");
   assert.match(src, /\[t\.id, t\.name, t\.adoptedYear, t\.adoptedLabel, t\.type\]/,
     "signaturen må dekke det tidslinja viser");
   assert.match(src, /openArtistListModal\(\n?\s*`Artister: \$\{group\}`, artistsInInstrumentGroup\(getState\(\)\.artists, group\)/,
@@ -179,7 +179,7 @@ test("funn 33: instrumentkortet viser ferske lister", () => {
 });
 
 test("funn 34: slektstreet dimmes bare ved tastaturfokus", () => {
-  const src = les("js/genealogy-bundled.js");
+  const src = les("js/sjangre/genealogy-bundled.js");
   assert.match(src, /g\.addEventListener\("focus", \(\) => \{ if \(g\.matches\(":focus-visible"\)\) light\(n\.id\); \}\);/);
   assert.doesNotMatch(src, /g\.addEventListener\("focus", \(\) => light\(n\.id\)\);/);
 });

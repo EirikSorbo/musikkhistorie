@@ -2,7 +2,7 @@
 // ============================================================================
 //  SEED-GENERATOR FOR SJANGERTREET
 // ----------------------------------------------------------------------------
-//  Bygger dokumentet content/genealogy fra frøet i js/genealogy-data.js og
+//  Bygger dokumentet content/genealogy fra frøet i js/sjangre/genealogy-data.js og
 //  skriver det som JSON. Fila importeres av læreren i Innholdspakke-flyten;
 //  agenter og skript skriver ALDRI til Firestore direkte.
 //
@@ -11,13 +11,13 @@
 //
 //  Formen MÅ være { formatVersion, genealogy: {...} } med genealogy på
 //  TOPPNIVÅ — importøren leser toppnøkler (se CONTENT_KEYS i
-//  js/teacher-import.js), ikke en content-innpakning.
+//  js/laerer/teacher-import.js), ikke en content-innpakning.
 // ============================================================================
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../js/genealogy-data.js";
-import { validateTree } from "../js/genre-validate.js";
+import { GENEALOGY, FAMILIES, META_ORDER_HINT } from "../js/sjangre/genealogy-data.js";
+import { validateTree } from "../js/sjangre/genre-validate.js";
 import { byggGenealogyDoc } from "./build-genealogy-doc.js";
 
 const ROT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -44,7 +44,7 @@ console.log(`  pedagogisk rekkefølge: ${tree.metaOrderHint.join(" · ")}`);
 console.log(`  kolonner (v→h):        ${[...tree.metaGenres].sort((a, b) => a.column - b.column).map((m) => m.name).join(" · ")}`);
 console.log(`  noder med egen farge:  ${tree.nodes.filter((n) => n.fam && n.g).map((n) => n.l).join(", ") || "ingen"}`);
 console.log("");
-console.log("  ADVARSEL: Fila bygges fra KODEFRØET (js/genealogy-data.js, treet");
+console.log("  ADVARSEL: Fila bygges fra KODEFRØET (js/sjangre/genealogy-data.js, treet");
 console.log("  slik det sto i v4.47). Har læreren endret treet i tre-editoren");
 console.log("  etterpå, vil en import av denne fila STILLE RULLE TILBAKE de");
 console.log("  endringene (importen erstatter hele content/genealogy). Ta en");
