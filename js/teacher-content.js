@@ -5,24 +5,25 @@
 //  administrasjon. Deler tilstand/eksplore via teacher-state.
 // ============================================================================
 
-import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=6.24";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=6.24";
-import { resolveMainDesc } from "./genealogy.js?v=6.24";
-import { dropboxDirectUrl } from "./util.js?v=6.24";
-import { GENEALOGY, edgeKey } from "./genre-model.js?v=6.24";
-import { storyFor, pageFor } from "./story-format.js?v=6.24";
-import { renderRichText } from "./rich-text.js?v=6.24";
-import { wrapSelection, prefixLines } from "./format-bar.js?v=6.24";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=6.24";
-import { resolveDesc } from "./genre-descriptions.js?v=6.24";
-import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.24";
-import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=6.24";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.24";
+import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js?v=6.25";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js?v=6.25";
+import { resolveMainDesc } from "./genealogy.js?v=6.25";
+import { dropboxDirectUrl } from "./util.js?v=6.25";
+import { GENEALOGY, edgeKey } from "./genre-model.js?v=6.25";
+import { storyFor, pageFor } from "./story-format.js?v=6.25";
+import { renderRichText } from "./rich-text.js?v=6.25";
+import { wrapSelection, prefixLines } from "./format-bar.js?v=6.25";
+import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js?v=6.25";
+import { resolveDesc } from "./genre-descriptions.js?v=6.25";
+import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.25";
+import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js?v=6.25";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.25";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
-import { wireAllLinks } from "./linkify.js?v=6.24";
-import { $ } from "./shared.js?v=6.24";
-import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=6.24";
+import { wireAllLinks } from "./linkify.js?v=6.25";
+import { $ } from "./shared.js?v=6.25";
+import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js?v=6.25";
+import { melding, bekreft } from "./ui-modal.js?v=6.25";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -83,9 +84,9 @@ export function openSingleDecadeModal(decadeId, mode) {
 
   // Samme tidslinje-stripe som studentvisningen. Bytte av tiår i redigerings-
   // modus varsler først — ulagrede endringer forkastes ved re-render.
-  renderDecadeRibbon($("#ds-ribbon"), d, (y) => {
+  renderDecadeRibbon($("#ds-ribbon"), d, async (y) => {
     const editing = $("#ds-edit").style.display !== "none";
-    if (editing && !confirm("Bytte tiår? Endringer som ikke er lagret, går tapt.")) return;
+    if (editing && !(await bekreft("Endringer som ikke er lagret, går tapt.", { tittel: "Bytte tiår?", ja: "Bytt tiår", farlig: true }))) return;
     openSingleDecadeModal(y, teacherContextMode);
   });
 
@@ -462,7 +463,7 @@ function renderTechAdmin() {
   el.querySelectorAll(".tech-del-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.closest("[data-tech-id]").dataset.techId;
-      if (confirm("Slette dette innovasjonskortet?")) await guardTeacherAction(deleteTech(id));
+      if (await bekreft("Kortet slettes for godt.", { tittel: "Slette dette innovasjonskortet?", ja: "Slett", farlig: true })) await guardTeacherAction(deleteTech(id));
     });
   });
 
@@ -628,7 +629,7 @@ export function renderPodkastAdmin() {
   });
   el.querySelectorAll("[data-pod-delete]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      if (!confirm("Slette denne episoden?")) return;
+      if (!(await bekreft("Episoden slettes for godt.", { tittel: "Slette denne episoden?", ja: "Slett", farlig: true }))) return;
       await guardTeacherAction(deletePodcast(btn.dataset.podDelete));
     });
   });
@@ -710,7 +711,7 @@ function referanseRader() {
 // Varmekartet har nøyaktig denne vakten av nøyaktig denne grunnen.
 function innholdKlart() {
   if (state.contentLoaded) return true;
-  alert("Innholdet laster fortsatt. Vent et øyeblikk og prøv igjen, ellers kan du komme til å overskrive tekst som ikke har rukket å vises.");
+  melding("Innholdet laster fortsatt. Vent et øyeblikk og prøv igjen, ellers kan du komme til å overskrive tekst som ikke har rukket å vises.");
   return false;
 }
 
@@ -831,7 +832,7 @@ export function openStoryEditor(genre) {
   // saveStoryBody bruker riktignok merge, så her holder det å hindre at
   // læreren skriver oppå en tekst hen ikke har fått se.
   if (!state.genreDescs || !Object.keys(state.genreDescs).length) {
-    alert("Sjangerbeskrivelsene laster fortsatt. Vent et øyeblikk og prøv igjen.");
+    melding("Sjangerbeskrivelsene laster fortsatt. Vent et øyeblikk og prøv igjen.");
     return;
   }
   openContentEditor({ type: "story", id: genre }, `historien om ${genre}`, storyFor(genre, state.genreDescs));
@@ -919,7 +920,7 @@ export function setupStoryEditor() {
   });
 
   $("#se-reset").addEventListener("click", async () => {
-    if (!confirm("Slette teksten? Den vises som manglende til ny tekst lagres eller importeres. Det finnes ingen reservetekst.")) return;
+    if (!(await bekreft("Den vises som manglende til ny tekst lagres eller importeres. Det finnes ingen reservetekst.", { tittel: "Slette teksten?", ja: "Slett", farlig: true }))) return;
     try {
       if (editorTarget.type === "story") await clearStory(editorTarget.id);
       else await deletePage(editorTarget.id);

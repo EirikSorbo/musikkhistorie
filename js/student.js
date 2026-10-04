@@ -8,19 +8,20 @@ import {
   fetchArtist,
   resubmitArtist,
   subscribeContent,
-} from "./store.js?v=6.24";
-import { loadArtists } from "./artist-cache.js?v=6.24";
-import { GENDERS, INSTRUMENTS } from "./limits.js?v=6.24";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=6.24";
-import { fillSelect, escapeHtml } from "./ui.js?v=6.24";
-import { TREG_SENDING_MELDING } from "./util.js?v=6.24";
-import { renderRichText } from "./rich-text.js?v=6.24";
-import { pageFor } from "./story-format.js?v=6.24";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.24";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.24";
-import { setupFormatBars } from "./format-bar.js?v=6.24";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.24";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.24";
+} from "./store.js?v=6.25";
+import { loadArtists } from "./artist-cache.js?v=6.25";
+import { GENDERS, INSTRUMENTS } from "./limits.js?v=6.25";
+import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js?v=6.25";
+import { fillSelect, escapeHtml } from "./ui.js?v=6.25";
+import { TREG_SENDING_MELDING } from "./util.js?v=6.25";
+import { renderRichText } from "./rich-text.js?v=6.25";
+import { pageFor } from "./story-format.js?v=6.25";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.25";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.25";
+import { setupFormatBars } from "./format-bar.js?v=6.25";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.25";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.25";
+import { bekreft } from "./ui-modal.js?v=6.25";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: sjangertreet kommer fra Firestore (v4.51),
@@ -145,7 +146,7 @@ function setupForm() {
     if (!returState.aktiv) {
       await ensureArtists();
       const dup = findDuplicate(candidate.name);
-      if (dup && !confirm(`«${candidate.name}» ser ut til å finnes fra før${dup.status === "pending" ? " (venter på godkjenning)" : ""}. Sende inn likevel?`)) {
+      if (dup && !(await bekreft(`«${candidate.name}» ser ut til å finnes fra før${dup.status === "pending" ? " (venter på godkjenning)" : ""}. Sende inn likevel?`, { ja: "Send inn likevel" }))) {
         return;
       }
     }

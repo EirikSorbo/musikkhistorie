@@ -27,13 +27,13 @@
 //  ikke utforsk-laget og har ingen lenkeknapper).
 // ============================================================================
 
-import { onAuthChange, savePlan } from "./store.js?v=6.24";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=6.24";
-import { getState } from "./explore-context.js?v=6.24";
-import { normaliserPlaner, nyPlanId, medStoppSattInn, medStoppOppdatert, samleTast } from "./presentasjon-modell.js?v=6.24";
-import { setLenkeMenyProvider, kopierVisLenke, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=6.24";
-import { erSkrivefelt } from "./vis-lenke.js?v=6.24";
-import { escapeHtml } from "./util.js?v=6.24";
+import { onAuthChange, savePlan } from "./store.js?v=6.25";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=6.25";
+import { getState } from "./explore-context.js?v=6.25";
+import { normaliserPlaner, nyPlanId, medStoppSattInn, medStoppOppdatert, samleTast } from "./presentasjon-modell.js?v=6.25";
+import { setLenkeMenyProvider, kopierVisLenke, topOpenModal, VISNING_SVG, melding, sporTekst } from "./ui-modal.js?v=6.25";
+import { erSkrivefelt } from "./vis-lenke.js?v=6.25";
+import { escapeHtml } from "./util.js?v=6.25";
 
 let erLaerer = false;
 let meny = null;   // én meny om gangen
@@ -184,14 +184,14 @@ let leggerTil = false;
 async function leggTilAktiv(vis, knapp) {
   const id = aktivPlan();
   if (!id || !vis || leggerTil) return;
-  if (!planeneLastet()) { alert("Kjøreplanene er ikke lastet ennå. Vent litt og prøv igjen."); return; }
+  if (!planeneLastet()) { melding("Kjøreplanene er ikke lastet ennå. Vent litt og prøv igjen."); return; }
   leggerTil = true;
   try {
     const plan = await skrivStopp(id, vis);
     kvitter(knapp, `Lagt til i «${plan.tittel}» (${plan.stopp.length} stopp)`);
     oppdaterAktiv();
   } catch (e) {
-    alert(`Fikk ikke lagret stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+    melding(`Fikk ikke lagret stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
   } finally {
     leggerTil = false;
   }
@@ -250,7 +250,7 @@ async function leggTil(planId, vis) {
   if (!planeneLastet()) { lukkMeny(); return; }
   let tittel = null;
   if (!planId) {
-    tittel = window.prompt("Navn på den nye kjøreplanen:", "");
+    tittel = await sporTekst("Navn på den nye kjøreplanen:", "", { ok: "Lag kjøreplan" });
     if (!tittel || !tittel.trim()) return;
     planId = nyPlanId();
   }
@@ -270,7 +270,7 @@ async function leggTil(planId, vis) {
     }
   } catch (e) {
     lukkMeny();
-    alert(`Fikk ikke lagret stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+    melding(`Fikk ikke lagret stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
   }
 }
 

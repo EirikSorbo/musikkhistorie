@@ -4,8 +4,8 @@
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=6.24";
-import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=6.24";
+import { renderTechDetail, renderTechList, modalOpen, modalClose } from "./ui.js?v=6.25";
+import { opts, getState, buildLinkCtx, injectTeacherRow } from "./explore-context.js?v=6.25";
 
 // Tegner innholdet i innovasjonskortet uten å åpne/heve modalen — delt av
 // openTechDetail og refreshTechDetail (som tegner kortet på nytt mens
@@ -28,7 +28,7 @@ function fillTechDetail(t) {
       id: t.id,
       // Kortet blir stående åpent — skjemaet kommer som popup oppå det.
       onEdit: opts.onTechEdit ? () => opts.onTechEdit(t) : null,
-      onDelete: opts.onTechDelete ? () => { if (opts.onTechDelete(t.id)) modalClose(modal); } : null,
+      onDelete: opts.onTechDelete ? async () => { if (await opts.onTechDelete(t.id)) modalClose(modal); } : null,
     });
   } else if (foot && btn && opts.onProposeEdit) {
     foot.style.display = "";

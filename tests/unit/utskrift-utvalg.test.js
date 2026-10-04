@@ -24,7 +24,7 @@ globalThis.document = {
 };
 
 const { harMed, veksle, leggTil, huk, lesUtvalg, toem, kortUtskriftHtml } =
-  await import("../../js/utskrift-utvalg.js?v=6.24");
+  await import("../../js/utskrift-utvalg.js?v=6.25");
 
 test("et valg som er huket av i panelet står ikke i heftet", () => {
   toem();

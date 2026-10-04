@@ -397,7 +397,7 @@ export async function kopierVisLenke(verdi) {
     await kopierTilUtklipp(url.href);
     return true;
   } catch (e) {
-    window.prompt("Kopier lenken:", url.href);
+    visLenke("Kopier lenken:", url.href);
     return false;
   }
 }
@@ -525,4 +525,127 @@ export function askChoice({ title, text = "", buttons = [], dismissValue = null 
     document.body.append(backdrop);
     modalOpen(backdrop);
   });
+}
+
+// ---------------------------------------------------------------------------
+//  APPENS EGNE MELDINGSBOKSER (v6.25, brukervalg 2026-10-04)
+// ---------------------------------------------------------------------------
+//  Erstatter nettleserens alert, confirm og prompt. De grå boksene kunne ikke
+//  styles, så «historieappen.no sier» over en grå boks brøt med resten av
+//  appen, og i fullskjerm (visningen på prosjektoren) oppførte de seg ulikt
+//  mellom nettleserne. Disse er vanlige kort i stabelen (som askChoice over):
+//  Escape og klikk på bakgrunnen avbryter, Enter velger hovedknappen.
+//
+//  Forskjellen fra nettleserens: de stopper ikke koden, men gir et løfte.
+//  Kallstedene venter derfor med await der svaret trengs (bekreft, sporTekst).
+//  Tekst med linjeskift (\n) vises med linjeskift.
+const FELT = Symbol("felt");
+
+function dialogBoks({ tittel = "", tekst = "", felt = null, knapper = [], avbrytVerdi = null }) {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    const dialog = document.createElement("div");
+    // modal-valg: presentasjonens brede kort (v5.36) gjelder ikke små dialoger.
+    dialog.className = "modal modal-valg modal-melding";
+    backdrop.append(dialog);
+
+    if (tittel) {
+      const head = document.createElement("div");
+      head.className = "modal-head";
+      const h = document.createElement("h2");
+      h.textContent = tittel;
+      head.append(h);
+      dialog.append(head);
+    } else {
+      dialog.setAttribute("aria-label", "Melding");
+    }
+    if (tekst) {
+      const p = document.createElement("p");
+      p.className = "melding-tekst";
+      p.textContent = tekst;
+      dialog.append(p);
+    }
+    let input = null;
+    if (felt) {
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "melding-felt";
+      input.value = felt.verdi || "";
+      if (felt.lesbar) input.readOnly = true;
+      if (tekst) input.setAttribute("aria-label", tekst);
+      dialog.append(input);
+    }
+
+    const foot = document.createElement("div");
+    foot.className = "modal-foot-right melding-knapper";
+    dialog.append(foot);
+
+    let ferdig = false;
+    const avslutt = (verdi) => {
+      if (ferdig) return;
+      ferdig = true;
+      backdrop._beforeClose = null;
+      backdrop._skipBeforeClose = true;
+      modalClose(backdrop);
+      backdrop.remove();
+      resolve(verdi === FELT ? input.value : verdi);
+    };
+
+    let hoved = null;
+    for (const k of knapper) {
+      const knapp = document.createElement("button");
+      knapp.type = "button";
+      knapp.className = `btn small ${k.klasse || "ghost"}`;
+      knapp.textContent = k.tekst;
+      knapp.addEventListener("click", () => avslutt(k.verdi));
+      foot.append(knapp);
+      if (k.hoved) hoved = knapp;
+    }
+    // Enter i feltet = hovedknappen (som OK i nettleserens prompt).
+    input?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); hoved?.click(); }
+    });
+
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) avslutt(avbrytVerdi); });
+    // Escape går via modalCloseTop → modalClose, altså gjennom kroken.
+    backdrop._beforeClose = () => { avslutt(avbrytVerdi); return false; };
+
+    document.body.append(backdrop);
+    modalOpen(backdrop);
+    // Fokus: feltet (med teksten merket), ellers hovedknappen. En farlig
+    // bekreftelse har ingen hovedknapp, så fokus står på «Avbryt» (første).
+    if (input) { input.focus(); input.select(); }
+    else hoved?.focus();
+  });
+}
+
+// alert: en melding med OK. Løftet løses når den er lukket.
+export function melding(tekst, { tittel = "" } = {}) {
+  return dialogBoks({ tittel, tekst,
+    knapper: [{ tekst: "OK", verdi: undefined, klasse: "primary", hoved: true }], avbrytVerdi: undefined });
+}
+
+// confirm: true for ja, false for nei/Escape/bakgrunnen. `farlig` gir en rød
+// ja-knapp, og fokus på «Avbryt», så Enter ikke sletter noe ved et uhell.
+export function bekreft(tekst, { tittel = "", ja = "OK", nei = "Avbryt", farlig = false } = {}) {
+  return dialogBoks({ tittel, tekst, avbrytVerdi: false, knapper: [
+    { tekst: nei, verdi: false, klasse: "ghost" },
+    { tekst: ja, verdi: true, klasse: farlig ? "danger" : "primary", hoved: !farlig },
+  ] });
+}
+
+// prompt: teksten i feltet, eller null ved Avbryt/Escape/bakgrunnen.
+export function sporTekst(tekst, verdi = "", { tittel = "", ok = "OK", avbryt = "Avbryt" } = {}) {
+  return dialogBoks({ tittel, tekst, felt: { verdi }, avbrytVerdi: null, knapper: [
+    { tekst: avbryt, verdi: null, klasse: "ghost" },
+    { tekst: ok, verdi: FELT, klasse: "primary", hoved: true },
+  ] });
+}
+
+// En lenke som må kopieres for hånd (utklippstavla er sperret): feltet er
+// skrivebeskyttet og merket, så Cmd/Ctrl+C holder.
+export function visLenke(tekst, url) {
+  return dialogBoks({ tekst, felt: { verdi: url, lesbar: true }, avbrytVerdi: undefined,
+    knapper: [{ tekst: "Lukk", verdi: undefined, klasse: "primary", hoved: true }] });
 }

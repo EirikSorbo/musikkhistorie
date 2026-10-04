@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js?v=6.24";
+import { normalizeImportFile, CONTENT_KEYS } from "../../js/import-format.js?v=6.25";
 
 const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
 
@@ -20,7 +20,8 @@ test("funn 5: kjøreplanene er med i eksporten og slipper gjennom importens hvit
   assert.match(imp, /\.map\(\(\[id, p\]\) => \[id, \{ tittel: p\.tittel, laget: p\.laget, stopp: p\.stopp \}\]\)/);
   // Importen fletter plan for plan, etter at læreren har sett lista.
   assert.match(imp, /async function importExtras\(\{[^}]*presentasjoner \}\)/);
-  assert.match(imp, /if \(window\.confirm\(`Kjøreplaner i fila:/);
+  // Fra v6.25 appens egen bekreftelse (bekreft), ikke nettleserens confirm.
+  assert.match(imp, /if \(await bekreft\(`\$\{vis\}[^`]*`, \{ tittel: "Kjøreplaner i fila"/);
   // Én skriving for alle planene (kontrollrunden for v5.45).
   assert.match(imp, /await savePlaner\(Object\.fromEntries\(\[\.\.\.nye, \.\.\.erstattes\]\)\);/);
   assert.match(kilde("store.js"), /export async function savePlaner\(planer\) \{\n\s*return setDoc\(presentasjonerRef\(\),\n\s*\{ planer, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}\);/);

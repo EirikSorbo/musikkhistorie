@@ -25,18 +25,19 @@
 //  foreldreløse.
 // ============================================================================
 
-import { $ } from "./shared.js?v=6.24";
-import { escapeHtml, kanoniskJson } from "./util.js?v=6.24";
-import { modalOpen, modalClose } from "./ui.js?v=6.24";
-import { state } from "./teacher-state.js?v=6.24";
-import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=6.24";
-import { validateTree } from "./genre-validate.js?v=6.24";
+import { $ } from "./shared.js?v=6.25";
+import { escapeHtml, kanoniskJson } from "./util.js?v=6.25";
+import { modalOpen, modalClose } from "./ui.js?v=6.25";
+import { state } from "./teacher-state.js?v=6.25";
+import { DECADE_ROWS, FAMILIES } from "./genre-model.js?v=6.25";
+import { validateTree } from "./genre-validate.js?v=6.25";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
   planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup, heatOrphanKeys,
   planEdgeCleanup, edgeOrphanKeys,
-} from "./genre-migrate.js?v=6.24";
-import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=6.24";
+} from "./genre-migrate.js?v=6.25";
+import { runMigrationPlan, saveGenealogyTree } from "./store.js?v=6.25";
+import { melding, bekreft } from "./ui-modal.js?v=6.25";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.
@@ -359,11 +360,12 @@ async function lagre() {
       const d = (state.edgeDescs?.[k]?.description || "").trim();
       return `  ${navn[fra] || fra} → ${navn[til] || til} (${d.length} tegn)`;
     }).join("\n");
-    if (!confirm(
+    if (!(await bekreft(
       `Denne endringen fjerner ${nyeForeldrelose.length} kobling(er) fra treet.\n\n` +
       `Koblingsbeskrivelsene blir liggende i basen, men slutter å vises noe sted:\n${liste}\n\n` +
-      `Teksten går ikke tapt, og du finner den igjen under «Rydd foreldreløse koblingsbeskrivelser». Fortsette?`
-    )) { msg.textContent = "Avbrutt. Ingenting er lagret."; return; }
+      `Teksten går ikke tapt, og du finner den igjen under «Rydd foreldreløse koblingsbeskrivelser». Fortsette?`,
+      { ja: "Fortsett" }
+    ))) { msg.textContent = "Avbrutt. Ingenting er lagret."; return; }
   }
 
   // guardTeacherAction FANGER feilen og returnerer normalt. Sto tre-lagringen,
@@ -494,7 +496,7 @@ async function utforPlan() {
     // Planen beholdes og dialogen står: læreren kan prøve «Utfør» igjen i
     // stedet for å bygge hele endringen opp på nytt (nettglipp, utlogget økt).
     console.error(err);
-    alert("Endringen ble IKKE skrevet: " + (err?.message || err) + "\nPlanen står, prøv «Utfør» igjen.");
+    melding("Endringen ble IKKE skrevet: " + (err?.message || err) + "\nPlanen står, prøv «Utfør» igjen.");
     knapp.disabled = false;
     knapp.textContent = "Utfør";
     return;

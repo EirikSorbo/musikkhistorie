@@ -15,16 +15,16 @@ import {
   onAuthChange,
   signInWithGoogle,
   signOutTeacher,
-} from "./store.js?v=6.24";
-import { subscribeSharedData } from "./shared-data.js?v=6.24";
-import { onGenreModelChanged } from "./genre-model.js?v=6.24";
-import { TEACHER_EMAILS } from "./firebase-config.js?v=6.24";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.24";
-import { initExplore } from "./explore.js?v=6.24";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.24";
+} from "./store.js?v=6.25";
+import { subscribeSharedData } from "./shared-data.js?v=6.25";
+import { onGenreModelChanged } from "./genre-model.js?v=6.25";
+import { TEACHER_EMAILS } from "./firebase-config.js?v=6.25";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.25";
+import { initExplore } from "./explore.js?v=6.25";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.25";
 
-import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=6.24";
-import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=6.24";
+import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./teacher-state.js?v=6.25";
+import { openDetail, addMainGenreCheckToggle, openOversikt, setupFilters, setupEditForm } from "./teacher-artists.js?v=6.25";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -43,18 +43,19 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
-} from "./teacher-content.js?v=6.24";
-import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=6.24";
-import { initVisning, visningTikk } from "./visning.js?v=6.24";
-import { initPlanMeny } from "./plan-meny.js?v=6.24";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.24";
-import { initYtSpiller } from "./yt-spiller.js?v=6.24";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.24";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.24";
-import { renderDesk } from "./teacher-desk.js?v=6.24";
-import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=6.24";
-import { setupFormatBars } from "./format-bar.js?v=6.24";
-import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=6.24";
+} from "./teacher-content.js?v=6.25";
+import { renderPendingEditsList, setupPendingEditsUi } from "./teacher-review.js?v=6.25";
+import { initVisning, visningTikk } from "./visning.js?v=6.25";
+import { initPlanMeny } from "./plan-meny.js?v=6.25";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.25";
+import { initYtSpiller } from "./yt-spiller.js?v=6.25";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.25";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.25";
+import { renderDesk } from "./teacher-desk.js?v=6.25";
+import { setupDataButtons, setupImportChoice } from "./teacher-import.js?v=6.25";
+import { setupFormatBars } from "./format-bar.js?v=6.25";
+import { GENRE_ADMIN_HTML, openGenreAdmin, setupGenreAdmin, refreshGenreAdmin } from "./teacher-genres.js?v=6.25";
+import { melding, bekreft } from "./ui-modal.js?v=6.25";
 
 // ----------------------------------------------------------------------------
 //  Innlogging
@@ -177,7 +178,7 @@ function startAppInner() {
     // celleverdi før innholdet er lastet.
     onHeatEdit: (genre, values) => {
       if (!state.contentLoaded) {
-        alert("Varmekartet er ikke ferdig innlastet ennå. Vent et øyeblikk og prøv igjen.");
+        melding("Varmekartet er ikke ferdig innlastet ennå. Vent et øyeblikk og prøv igjen.");
         return Promise.resolve();
       }
       return mergeVarmekartRows({ [genre]: values });
@@ -194,8 +195,10 @@ function startAppInner() {
     // Podkast-administrasjonen nås nå fra Podkaster-fanen under Instrumenter
     // (dashbordkortet er borte), så lærer fortsatt kan laste opp episoder.
     onPodkastAdmin: () => openPodkastAdmin(),
-    onTechDelete: (id) => {
-      if (!confirm("Slette dette innovasjonskortet?")) return false;
+    // Returnerer et løfte (v6.25): bekreftelsen er appens egen dialog, ikke
+    // nettleserens confirm, så svaret kommer etterpå. explore-tech venter.
+    onTechDelete: async (id) => {
+      if (!(await bekreft("Kortet slettes for godt.", { tittel: "Slette dette innovasjonskortet?", ja: "Slett", farlig: true }))) return false;
       guardTeacherAction(deleteTech(id));
       return true;
     },

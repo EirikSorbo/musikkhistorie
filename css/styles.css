@@ -3926,3 +3926,14 @@ body:not(.presentasjon) .modal-backdrop > .modal.sj-fanevindu { margin-top: calc
   body:not(.presentasjon) .modal-backdrop > .modal.sj-fanevindu { margin-top: calc(4vh - 10px); }
 }
 .modal-backdrop.modal-bytt > .modal { animation: none; }
+
+/* Appens egne meldingsbokser (v6.25, brukervalg 2026-10-04): erstatter
+   nettleserens alert/confirm/prompt (melding, bekreft, sporTekst og visLenke
+   i ui-modal.js). Smale som en dialog, tekst med linjeskift. */
+.modal.modal-melding { max-width: 440px; padding: 24px 24px 20px; }
+.modal-melding .modal-head { margin-bottom: 10px; }
+.modal-melding .modal-head h2 { font-size: 1.1rem; }
+.melding-tekst { margin: 0 0 4px; font-size: 0.92rem; line-height: 1.5; white-space: pre-line; color: var(--text); }
+.melding-felt { width: 100%; margin-top: 12px; padding: 9px 11px; font: inherit; font-size: 0.92rem; box-sizing: border-box; }
+.melding-felt[readonly] { background: var(--surface-2); }
+.melding-knapper { gap: 8px; margin-top: 18px; }

@@ -1,27 +1,27 @@
-import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.24";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.24";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.24";
-import { onGenreModelChanged } from "./genre-model.js?v=6.24";
-import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.24";
-import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.24";
-import { imgTag } from "./ui-helpers.js?v=6.24";
-import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.24";
-import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.24";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.24";
-import { initExplore } from "./explore.js?v=6.24";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.24";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.24";
-import { initPlanMeny } from "./plan-meny.js?v=6.24";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.24";
-import { initYtSpiller } from "./yt-spiller.js?v=6.24";
-import { initVisning, visningTikk } from "./visning.js?v=6.24";
-import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.24";
-import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.24";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.24";
-import { askChoice } from "./ui-modal.js?v=6.24";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.24";
-import { currentEntityValues } from "./entity-values.js?v=6.24";
-import { loadArtists, saveArtists } from "./artist-cache.js?v=6.24";
+import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./store.js?v=6.25";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.25";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.25";
+import { onGenreModelChanged } from "./genre-model.js?v=6.25";
+import { instrumentsInUse, DECADES, isVisible, filterArtists, hasActiveFilters } from "./limits.js?v=6.25";
+import { debounce, throttle, harSendtInn, normaliserReturKode, safeUrl } from "./util.js?v=6.25";
+import { imgTag } from "./ui-helpers.js?v=6.25";
+import { renderSpotlightCards, renderArtistDetail, renderArtists, renderResultList, fillSelect, modalOpen, modalCloseTop, setupModal, escapeHtml } from "./ui.js?v=6.25";
+import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js?v=6.25";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.25";
+import { initExplore } from "./explore.js?v=6.25";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.25";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.25";
+import { initPlanMeny } from "./plan-meny.js?v=6.25";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.25";
+import { initYtSpiller } from "./yt-spiller.js?v=6.25";
+import { initVisning, visningTikk } from "./visning.js?v=6.25";
+import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./explore-timer.js?v=6.25";
+import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift-utvalg.js?v=6.25";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.25";
+import { askChoice, melding } from "./ui-modal.js?v=6.25";
+import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./proposals.js?v=6.25";
+import { currentEntityValues } from "./entity-values.js?v=6.25";
+import { loadArtists, saveArtists } from "./artist-cache.js?v=6.25";
 
 const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -53,7 +53,7 @@ async function openProposalEditorGuarded(cfg) {
     console.warn("Kunne ikke sjekke ventende endringsforslag:", err?.message || err);
   }
   if (hasPendingEdit(cfg.entityType, cfg.entityId)) {
-    alert("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
+    melding("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
     return;
   }
   openProposalEditor(cfg);
@@ -63,7 +63,7 @@ async function openProposalEditorGuarded(cfg) {
 // ble registrert.
 const voteFailed = (err) => {
   console.error("Stemme feilet:", err);
-  alert("Kunne ikke registrere stemmen (" + (err?.message || err) + "). Prøv igjen.");
+  melding("Kunne ikke registrere stemmen (" + (err?.message || err) + "). Prøv igjen.");
 };
 // Hindrer at et dobbeltklikk sender to skrivinger på samme kort: den andre
 // ville vært en no-op (uid alt lagt til/fjernet) som reglene avviser, og gitt

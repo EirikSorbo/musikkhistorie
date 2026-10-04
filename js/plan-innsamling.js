@@ -28,14 +28,14 @@
 //  lærerøkt.
 // ============================================================================
 
-import { savePlan, onAuthChange } from "./store.js?v=6.24";
-import { getState } from "./explore-context.js?v=6.24";
-import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=6.24";
-import { setModalApnetProvider, topOpenModal, VISNING_SVG } from "./ui-modal.js?v=6.24";
-import { escapeHtml } from "./util.js?v=6.24";
-import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=6.24";
-import { aktivPlanId } from "./presentasjon.js?v=6.24";
-import { erLaererBruker } from "./plan-meny.js?v=6.24";
+import { savePlan, onAuthChange } from "./store.js?v=6.25";
+import { getState } from "./explore-context.js?v=6.25";
+import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js?v=6.25";
+import { setModalApnetProvider, topOpenModal, VISNING_SVG, melding } from "./ui-modal.js?v=6.25";
+import { escapeHtml } from "./util.js?v=6.25";
+import { parseVisVerdi, erSkrivefelt } from "./vis-lenke.js?v=6.25";
+import { aktivPlanId } from "./presentasjon.js?v=6.25";
+import { erLaererBruker } from "./plan-meny.js?v=6.25";
 
 const LAGRING = {
   plan: "pensumSamlePlan",
@@ -261,7 +261,7 @@ function skrivEnGang(ø) {
     // også over sidebytter (varslet følger med i USENDT).
     if (ø.avsluttet && !ø.varslet) {
       ø.varslet = true;
-      alert(`Fikk ikke lagret de siste stoppene i «${ø.tittel}» (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+      melding(`Fikk ikke lagret de siste stoppene i «${ø.tittel}» (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
     }
   }).finally(() => {
     lagreLokalt(ø);
@@ -280,7 +280,7 @@ function planSlettet(ø) {
   if (varAktiv) avsluttInnsamling({ lagre: false });
   ø.forkastet = true;
   ryddEtterslep(ø);
-  alert(varAktiv
+  melding(varAktiv
     ? `Kjøreplanen «${ø.tittel}» er slettet, så samleøkta er avsluttet.`
     : `Kjøreplanen «${ø.tittel}» er slettet, så de siste stoppene fra samleøkta ble ikke lagret.`);
 }

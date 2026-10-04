@@ -14,22 +14,23 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=6.24";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.24";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.24";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.24";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.24";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.24";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.24";
-import { initPlanMeny } from "./plan-meny.js?v=6.24";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.24";
-import { initYtSpiller } from "./yt-spiller.js?v=6.24";
-import { initVisning, visningTikk } from "./visning.js?v=6.24";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.24";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.24";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.24";
-import { fetchPendingEdits } from "./store.js?v=6.24";
-import { openProposalEditor } from "./proposals.js?v=6.24";
+import { initExplore } from "./explore.js?v=6.25";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.25";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.25";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.25";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.25";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.25";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.25";
+import { initPlanMeny } from "./plan-meny.js?v=6.25";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.25";
+import { initYtSpiller } from "./yt-spiller.js?v=6.25";
+import { initVisning, visningTikk } from "./visning.js?v=6.25";
+import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.25";
+import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.25";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.25";
+import { fetchPendingEdits } from "./store.js?v=6.25";
+import { openProposalEditor } from "./proposals.js?v=6.25";
+import { melding } from "./ui-modal.js?v=6.25";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:
@@ -62,7 +63,7 @@ export function initTrePage({ render }) {
     try {
       const ventende = await fetchPendingEdits();
       if (ventende.some((p) => p.entityType === cfg.entityType && String(p.entityId) === String(cfg.entityId))) {
-        alert("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
+        melding("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
         return;
       }
     } catch (err) {

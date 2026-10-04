@@ -29,20 +29,20 @@
 //  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=6.24";
-import { escapeHtml } from "./util.js?v=6.24";
-import { onAuthChange, savePlan, deletePlan } from "./store.js?v=6.24";
-import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=6.24";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=6.24";
-import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders } from "./ui-modal.js?v=6.24";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=6.24";
-import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=6.24";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=6.24";
-import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=6.24";
-import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=6.24";
-import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=6.24";
-import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.24";
-import { apneMaal } from "./explore-apne.js?v=6.24";
+import { getState } from "./explore-context.js?v=6.25";
+import { escapeHtml } from "./util.js?v=6.25";
+import { onAuthChange, savePlan, deletePlan } from "./store.js?v=6.25";
+import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js?v=6.25";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js?v=6.25";
+import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "./ui-modal.js?v=6.25";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js?v=6.25";
+import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js?v=6.25";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js?v=6.25";
+import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "./utskrift-utvalg.js?v=6.25";
+import { stoppEtikett, dodeStopp } from "./stopp-etikett.js?v=6.25";
+import { byggIndeks, sok, TYPE_LABEL } from "./search.js?v=6.25";
+import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js?v=6.25";
+import { apneMaal } from "./explore-apne.js?v=6.25";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -494,12 +494,25 @@ export function initVisning() {
 
 function koblVindu(m) {
 
-  // Ulagrede endringer skal ikke forsvinne på en bortkommen Escape.
+  // Ulagrede endringer skal ikke forsvinne på en bortkommen Escape. Fra
+  // v6.25 spør appens egen dialog (svaret kommer etterpå): lukkingen avbrytes
+  // først, og vinduet lukkes selv hvis læreren svarer ja (_skipBeforeClose).
+  let sporLukk = false;
   m._beforeClose = () => {
     if (!kladd) return true;
-    const ok = window.confirm("Du har ulagrede endringer i kjøreplanen. Lukke uten å lagre?");
-    if (ok) { kladd = null; renderKladd(); }
-    return ok;
+    if (!sporLukk) {
+      sporLukk = true;
+      bekreft("Endringene i kjøreplanen går tapt.", { tittel: "Lukke uten å lagre?", ja: "Lukk uten å lagre", farlig: true })
+        .then((ok) => {
+          sporLukk = false;
+          if (!ok) return;
+          kladd = null;
+          renderKladd();
+          m._skipBeforeClose = true;
+          modalClose(m);
+        });
+    }
+    return false;
   };
 
   m.addEventListener("click", async (e) => {
@@ -538,7 +551,7 @@ function koblVindu(m) {
     if (del) {
       savePlan(del.dataset.presDel, { delt: del.checked }).catch((err) => {
         del.checked = !del.checked;
-        alert(`Fikk ikke lagret (${err?.message || err}).`);
+        melding(`Fikk ikke lagret (${err?.message || err}).`);
       });
       return;
     }
@@ -568,7 +581,7 @@ function koblVindu(m) {
     // fra kortene har et dokument å gå til.
     if (hit("#pres-adm-ny-samle")) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
-      const tittel = window.prompt("Navn på den nye kjøreplanen:", "");
+      const tittel = await sporTekst("Navn på den nye kjøreplanen:", "", { ok: "Lag kjøreplan" });
       if (!tittel || !tittel.trim()) return;
       const id = nyPlanId();
       if (!(await vakt(savePlan(id, { tittel: tittel.trim().slice(0, 80), laget: new Date().toISOString(), stopp: [] })))) return;
@@ -613,7 +626,7 @@ function koblVindu(m) {
     if (slett) {
       const id = slett.dataset.presSlett;
       const p = planerNaa()[id];
-      if (!p || !window.confirm(`Slette kjøreplanen «${p.tittel}»? Dette kan ikke angres.`)) return;
+      if (!p || !(await bekreft("Dette kan ikke angres.", { tittel: `Slette kjøreplanen «${p.tittel}»?`, ja: "Slett", farlig: true }))) return;
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       // Samleøkter på planen (også avsluttede som ikke er kommet fram)
       // forkastes: ellers ville neste lagring laget planen på nytt.

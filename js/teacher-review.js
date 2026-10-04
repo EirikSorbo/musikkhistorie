@@ -5,11 +5,12 @@
 //  læreren godta/avvise enkeltfelter via diff-tabellen.
 // ============================================================================
 
-import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=6.24";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=6.24";
-import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=6.24";
-import { currentEntityValues } from "./entity-values.js?v=6.24";
-import { erTilModerasjon } from "./limits.js?v=6.24";
+import { state, ctx, guardTeacherAction } from "./teacher-state.js?v=6.25";
+import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js?v=6.25";
+import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js?v=6.25";
+import { currentEntityValues } from "./entity-values.js?v=6.25";
+import { erTilModerasjon } from "./limits.js?v=6.25";
+import { bekreft } from "./ui-modal.js?v=6.25";
 
 // Dagens verdier bor i den delte modulen (studentens retur-editor leser de
 // samme): her bindes bare lærersidens state.
@@ -134,7 +135,7 @@ export function setupPendingEditsUi() {
       }
       const rejBtn = e.target.closest('[data-action="reject-tech"]');
       if (rejBtn) {
-        if (confirm("Avvise (slette) dette innovasjonskortet?")) {
+        if (await bekreft("Kortet slettes.", { tittel: "Avvise dette innovasjonskortet?", ja: "Avvis", farlig: true })) {
           await guardTeacherAction(deleteTech(rejBtn.dataset.id));
         }
         return;
@@ -176,7 +177,7 @@ export function setupPendingEditsUi() {
 
   if (rejectAllBtn) rejectAllBtn.addEventListener("click", async () => {
     if (!activeEditId) return;
-    if (!confirm("Avvise hele dette forslaget uten å lagre noe?")) return;
+    if (!(await bekreft("Ingenting fra forslaget lagres.", { tittel: "Avvise hele forslaget?", ja: "Avvis", farlig: true }))) return;
     await guardTeacherAction(rejectPendingEdit(activeEditId));
     modalClose(diffModal);
     activeEditId = null;

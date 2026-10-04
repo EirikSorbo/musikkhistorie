@@ -4,17 +4,18 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=6.24";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=6.24";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=6.24";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=6.24";
-import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=6.24";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.24";
-import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=6.24";
-import { debounce } from "./util.js?v=6.24";
-import { $ } from "./shared.js?v=6.24";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.24";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.24";
+import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=6.25";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=6.25";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=6.25";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=6.25";
+import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=6.25";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.25";
+import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=6.25";
+import { debounce } from "./util.js?v=6.25";
+import { $ } from "./shared.js?v=6.25";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.25";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.25";
+import { melding, bekreft } from "./ui-modal.js?v=6.25";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore
@@ -81,7 +82,7 @@ export function addMainGenreCheckToggle(genre) {
     } catch (err) {
       console.error("Kunne ikke lagre avhukingen:", err);
       toggleCheckBtn(btn);
-      alert("Avhukingen ble ikke lagret (" + (err?.message || err) + "). Prøv igjen.");
+      melding("Avhukingen ble ikke lagret (" + (err?.message || err) + "). Prøv igjen.");
     }
   });
 }
@@ -268,10 +269,11 @@ export function setupEditForm() {
     // visningene. Advar (ikke blokker) før lagring, som før.
     const unknownGenres = fields.mainGenre.filter((g) => !isMainGenre(g));
     if (unknownGenres.length) {
-      const ok = confirm(
+      const ok = await bekreft(
         `Disse sjangrene finnes ikke i slektstreet: ${unknownGenres.join(", ")}.\n\n` +
         "De vil ikke vises i tre-visningene og kan bli behandlet som undersjangre. " +
-        "Sjekk for skrivefeil. Lagre likevel?"
+        "Sjekk for skrivefeil. Lagre likevel?",
+        { ja: "Lagre likevel" }
       );
       if (!ok) {
         msg.textContent = "Avbrutt. Ingen endringer lagret.";

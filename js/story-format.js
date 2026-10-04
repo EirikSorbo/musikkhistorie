@@ -13,7 +13,7 @@
 //  utdatert reservetekst.
 // ============================================================================
 
-import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=6.24";
+import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "./genre-model.js?v=6.25";
 
 // Metasjangrenes rekkefølge (struktur, ikke innhold). ÉN rekkefølge i hele
 // appen fra v6.05 (brukervalg 2026-10-03, strukturgjennomgangen S4): den

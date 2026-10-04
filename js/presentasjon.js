@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.24";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.24";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.24";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice } from "./ui-modal.js?v=6.24";
-import { GENEALOGY } from "./genre-model.js?v=6.24";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.24";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.24";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.24";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.24";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.24";
-import { getState } from "./explore-context.js?v=6.24";
-import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.24";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.24";
-import { stoppEtikett } from "./stopp-etikett.js?v=6.24";
+import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.25";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.25";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.25";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "./ui-modal.js?v=6.25";
+import { GENEALOGY } from "./genre-model.js?v=6.25";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.25";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.25";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.25";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.25";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.25";
+import { getState } from "./explore-context.js?v=6.25";
+import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.25";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.25";
+import { stoppEtikett } from "./stopp-etikett.js?v=6.25";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -494,7 +494,7 @@ async function leggTilHer() {
     oppdaterTeller();
     lagrer = false;
     oppdaterLeggTil();
-    alert(`Fikk ikke lagt til stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+    melding(`Fikk ikke lagt til stoppet (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
   }
 }
 
@@ -988,13 +988,13 @@ export async function avsluttPresentasjon() {
         : `Time ${idag.toLocaleDateString("nb-NO", { day: "numeric", month: "long" })}`;
       // Avbryt i tittelspørsmålet lagrer ingenting, og visningen står åpen
       // (som ved lagringsfeil), så læreren kan velge på nytt (v6.23, Fable F9).
-      const svar = window.prompt("Tittel på timen", forslag);
+      const svar = await sporTekst("Datoen lagres ved siden av tittelen.", forslag, { tittel: "Tittel på timen", ok: "Lagre timen" });
       if (svar === null) return;
       const tittel = svar.trim() || forslag;
       try {
         await savePlan(nyPlanId(), { tittel, laget: idag.toISOString(), dato, stopp });
       } catch (err) {
-        alert(`Fikk ikke lagret timen (${err?.message || err}). Visningen står åpen, så du kan prøve igjen.`);
+        melding(`Fikk ikke lagret timen (${err?.message || err}). Visningen står åpen, så du kan prøve igjen.`);
         return;
       }
     }
@@ -1121,7 +1121,7 @@ async function huskVisning() {
     if (knapp) knapp.textContent = "Husket";
   } catch (e) {
     if (knapp) knapp.textContent = "Husk visningen på dette stoppet";
-    alert(`Fikk ikke lagret visningen (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
+    melding(`Fikk ikke lagret visningen (${e?.message || e}). Er du logget inn som lærer i denne nettleseren?`);
   } finally {
     setTimeout(() => {
       if (knapp) { knapp.disabled = false; knapp.textContent = "Husk visningen på dette stoppet"; }

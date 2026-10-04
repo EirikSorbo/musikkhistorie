@@ -123,13 +123,14 @@ test("funn 24 og 25: retur-innsending setter ikke flagget, og oppslaget går par
 
 test("funn 26: én eksportvakt dekker alle samlingene, også før de automatiske backupene", () => {
   const src = les("js/teacher-import.js");
-  const vakt = kropp(src, "function kanEksportere(");
+  const vakt = kropp(src, "async function kanEksportere(");
   for (const flagg of ["artistsLoaded", "contentLoaded", "genreDescsLoaded", "edgeDescsLoaded",
     "techLoaded", "decadesLoaded", "podcastsLoaded", "teacherChecksLoaded"]) {
     assert.ok(vakt.includes(`state.${flagg}`), `vakten mangler ${flagg}`);
   }
-  assert.match(vakt, /return confirm\(/, "en nesten tom eksport (tom cache) må bekreftes");
-  assert.equal(antall(src, /if \(!kanEksportere\(\)\) return/g), 3,
+  // Fra v6.25 appens egen bekreftelse (bekreft), og vakten er async.
+  assert.match(vakt, /return bekreft\(/, "en nesten tom eksport (tom cache) må bekreftes");
+  assert.equal(antall(src, /if \(!\(await kanEksportere\(\)\)\) return/g), 3,
     "manuell eksport, «Slett alt» og «Erstatt alle»");
   assert.equal(antall(src, /downloadJson\(buildExportData\(\)/g), 3,
     "ny eksportvei? Den må også gå via kanEksportere");

@@ -5,7 +5,7 @@
 //  alt eller flette inn med konfliktløsing felt for felt.
 // ============================================================================
 
-import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=6.24";
+import { state, openAdminModal, closeAdminModal } from "./teacher-state.js?v=6.25";
 import {
   addArtistsBulk,
   deleteAllArtists,
@@ -20,15 +20,16 @@ import {
   updatePodcast,
   setTeacherChecks,
   savePlaner,
-} from "./store.js?v=6.24";
-import { normaliserPlaner } from "./presentasjon-modell.js?v=6.24";
-import { escapeHtml } from "./ui.js?v=6.24";
-import { $ } from "./shared.js?v=6.24";
-import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=6.24";
-import { validateTree } from "./genre-validate.js?v=6.24";
-import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=6.24";
-import { INSTRUMENTS } from "./limits.js?v=6.24";
-import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc, erDelpost } from "./import-format.js?v=6.24";
+} from "./store.js?v=6.25";
+import { normaliserPlaner } from "./presentasjon-modell.js?v=6.25";
+import { escapeHtml } from "./ui.js?v=6.25";
+import { $ } from "./shared.js?v=6.25";
+import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js?v=6.25";
+import { validateTree } from "./genre-validate.js?v=6.25";
+import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "./artist-schema.js?v=6.25";
+import { INSTRUMENTS } from "./limits.js?v=6.25";
+import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc, erDelpost } from "./import-format.js?v=6.25";
+import { melding, bekreft, sporTekst } from "./ui-modal.js?v=6.25";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -68,25 +69,26 @@ export function setupDataButtons() {
 
   $("#btn-nuke").addEventListener("click", async () => {
     // Backupen under må være komplett FØR slettingen går mot serveren.
-    if (!kanEksportere()) return;
-    if (!confirm("Er du HELT sikker? Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.")) return;
+    if (!(await kanEksportere())) return;
+    if (!(await bekreft("Dette sletter ALL artistdata permanent. Handlingen kan ikke angres.", { tittel: "Er du HELT sikker?", ja: "Gå videre", farlig: true }))) return;
     // Samme sikkerhetsnett som «Erstatt alle»: full backup lastes ned FØR
     // slettingen, og læreren må aktivt skrive SLETT for å bekrefte.
     downloadJson(buildExportData(), `musikkhistorie-BACKUP-${dateStamp()}.json`);
-    const svar = prompt(
+    const svar = await sporTekst(
       "En sikkerhetskopi skal nå ligge i Nedlastinger (musikkhistorie-BACKUP-…).\n\n" +
-      "Skriv SLETT for å bekrefte at all artistdata skal slettes permanent:"
+      "Skriv SLETT for å bekrefte at all artistdata skal slettes permanent:",
+      "", { tittel: "Slette all artistdata", ok: "Slett" }
     );
     if (svar === null) return;
     if (svar.trim().toUpperCase() !== "SLETT") {
-      alert("Sletting avbrutt. Du må skrive SLETT for å bekrefte.");
+      melding("Sletting avbrutt. Du må skrive SLETT for å bekrefte.");
       return;
     }
     try {
       await deleteAllArtists();
-      alert("All data er slettet.");
+      melding("All data er slettet.");
     } catch (err) {
-      alert("Feil ved sletting: " + err.message);
+      melding("Feil ved sletting: " + err.message);
     }
   });
 
@@ -244,7 +246,9 @@ function downloadJson(data, filename) {
 // skilles fra ekte data uten metadata-lyttere (includeMetadataChanges ville
 // gitt ekstra omtegninger på alle flater), så en nesten tom eksport må
 // bekreftes av læreren i stedet.
-function kanEksportere() {
+// Async fra v6.25: bekreftelsen er appens egen dialog, så svaret kommer
+// etterpå. Kallstedene venter (await).
+async function kanEksportere() {
   const mangler = [
     ["artistene", state.artistsLoaded],
     ["innholdet", state.contentLoaded],
@@ -256,17 +260,17 @@ function kanEksportere() {
     ["avkryssingene", state.teacherChecksLoaded],
   ].filter(([, lastet]) => !lastet).map(([navn]) => navn);
   if (mangler.length) {
-    alert(`Dataene er ikke ferdig lastet (${mangler.join(", ")}). Vent noen sekunder og prøv igjen, ellers blir sikkerhetskopien ufullstendig. Står det en feilmelding øverst på siden, må siden lastes på nytt først.`);
+    melding(`Dataene er ikke ferdig lastet (${mangler.join(", ")}). Vent noen sekunder og prøv igjen, ellers blir sikkerhetskopien ufullstendig. Står det en feilmelding øverst på siden, må siden lastes på nytt først.`);
     return false;
   }
   if (!state.artists.length || !state.content?.genealogy?.nodes?.length) {
-    return confirm("Sikkerhetskopien ser nesten tom ut (ingen artister eller intet sjangertre). Det skjer typisk når nettleseren er uten nett og bare har en tom lokal kopi. Vil du fortsette likevel?");
+    return bekreft("Den har ingen artister eller intet sjangertre. Det skjer typisk når nettleseren er uten nett og bare har en tom lokal kopi. Vil du fortsette likevel?", { tittel: "Sikkerhetskopien ser nesten tom ut", ja: "Fortsett likevel" });
   }
   return true;
 }
 
-function handleExport() {
-  if (!kanEksportere()) return;
+async function handleExport() {
+  if (!(await kanEksportere())) return;
   downloadJson(buildExportData(), `musikkhistorie-${dateStamp()}.json`);
 }
 
@@ -346,18 +350,18 @@ function importParts(data) {
 async function handleImportFile(file) {
   if (!file) return;
   let raw;
-  try { raw = JSON.parse(await file.text()); } catch { alert("Ugyldig JSON-fil."); return; }
+  try { raw = JSON.parse(await file.text()); } catch { melding("Ugyldig JSON-fil."); return; }
 
   const data = normalizeImportFile(raw);
   if (!data) {
-    alert("Ugyldig format. Filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
+    melding("Ugyldig format. Filen må være en artist-liste eller et objekt med innhold (artists, pages, varmekart …)."); return;
   }
 
   // Valider HELE artistlista før noe kan skrives/slettes. Slår feil her ⇒
   // ingenting røres, og «Erstatt alle» kan ikke slette dagens data og så
   // feile på en skjev fil.
   const { ok, errors } = validateArtistsForImport(data.artists);
-  if (!ok) { alert(formatImportErrors(errors)); return; }
+  if (!ok) { melding(formatImportErrors(errors)); return; }
 
   // Ikke-blokkerende advarsler: ukjente toppnøkler (feilstavet/nyere format som
   // ellers droppes stille) og sjangre som ikke finnes i slektstreet.
@@ -368,15 +372,15 @@ async function handleImportFile(file) {
   if (unknownGenres.length) warnings.push(`Sjangre som ikke finnes i slektstreet (vises ikke i tre-visningene): ${unknownGenres.slice(0, 15).join(", ")}${unknownGenres.length > 15 ? " …" : ""}.`);
   const unknownInstruments = collectUnknownInstruments(data.artists);
   if (unknownInstruments.length) warnings.push(`Instrumenter utenfor vokabularet (splitter filteret/statistikken): ${unknownInstruments.slice(0, 15).join(", ")}${unknownInstruments.length > 15 ? " …" : ""}.`);
-  if (warnings.length && !confirm(warnings.join("\n\n") + "\n\nSjekk for skrivefeil. Importere likevel?")) return;
+  if (warnings.length && !(await bekreft(warnings.join("\n\n") + "\n\nSjekk for skrivefeil. Importere likevel?", { tittel: "Advarsler i fila", ja: "Importer likevel" }))) return;
 
   const parts = importParts(data);
-  if (!parts.length) { alert("Fila inneholder ikke noe å importere."); return; }
+  if (!parts.length) { melding("Fila inneholder ikke noe å importere."); return; }
 
   // Ren innholdsfil (ingen artister): erstatt/flett-valget gjelder bare
   // artistlista — importer innholdet direkte etter én bekreftelse.
   if (!data.artists.length) {
-    if (!confirm(`Importere ${parts.join(", ")}?\n\nEksisterende innhold med samme navn overskrives.`)) return;
+    if (!(await bekreft("Eksisterende innhold med samme navn overskrives.", { tittel: `Importere ${parts.join(", ")}?`, ja: "Importer" }))) return;
     await importDescriptions(data);
     await importTechItems(data.tech);
     await importExtras(data);
@@ -431,7 +435,7 @@ export function setupImportChoice() {
       if (mergeCommitting) return;
       if (mergeHasUnsaved()) {
         mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;
-        alert("Flettingen ble avbrutt. Ingenting er lagret, heller ikke beskrivelser, teknologikort eller annet innhold i fila. Importer fila på nytt for å prøve igjen.");
+        melding("Flettingen ble avbrutt. Ingenting er lagret, heller ikke beskrivelser, teknologikort eller annet innhold i fila. Importer fila på nytt for å prøve igjen.");
       }
       meldMergeFerdig(false);
     }).observe(mergeModal, { attributes: true, attributeFilter: ["class"] });
@@ -478,9 +482,9 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
   catch (e) { fail += edgeEntries.length; console.error("Koblings-import feilet:", e); }
 
   if (fail > 0) {
-    alert(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions', 'edgeDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+    melding(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions', 'edgeDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
-    alert(`${ok} beskrivelse(r) importert.`);
+    melding(`${ok} beskrivelse(r) importert.`);
   }
 }
 
@@ -542,7 +546,7 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
     const feil = problemer.filter((x) => x.nivå === "feil");
     if (feil.length) {
       console.error("Sjangertre-import avvist:", feil);
-      alert("Sjangertreet i fila ble AVVIST og er ikke importert:\n\n· "
+      melding("Sjangertreet i fila ble AVVIST og er ikke importert:\n\n· "
         + feil.slice(0, 8).map((f) => f.melding).join("\n· ")
         + (feil.length > 8 ? `\n· … og ${feil.length - 8} til` : ""));
       failed.push("sjangertreet");
@@ -584,7 +588,7 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
         ...erstattes.map(([, p]) => `Erstatter: «${p.tittel}» (${p.stopp.length} stopp)`),
       ];
       const vis = linjer.slice(0, 15).join("\n") + (linjer.length > 15 ? `\n… og ${linjer.length - 15} til` : "");
-      if (window.confirm(`Kjøreplaner i fila:\n\n${vis}\n\nPlaner som ikke står i fila, blir liggende. Importere disse kjøreplanene?`)) {
+      if (await bekreft(`${vis}\n\nPlaner som ikke står i fila, blir liggende. Importere disse kjøreplanene?`, { tittel: "Kjøreplaner i fila", ja: "Importer" })) {
         try {
           // Én skriving for alle (kontrollrunden for v5.45): hver skriving i
           // content-samlingen koster én lesing per tilkoblet klient.
@@ -631,9 +635,9 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
   }
 
   if (failed.length) {
-    alert(`Kunne ikke importere ${failed.join(", ")}.\n\nSannsynlig årsak: Firestore-reglene er ikke publisert for 'content'-samlingen.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
+    melding(`Kunne ikke importere ${failed.join(", ")}.\n\nSannsynlig årsak: Firestore-reglene er ikke publisert for 'content'-samlingen.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (done.length) {
-    alert(`Importert: ${done.join(", ")}.`);
+    melding(`Importert: ${done.join(", ")}.`);
   }
 }
 
@@ -662,8 +666,8 @@ async function importTechItems(techArray) {
       console.error("Tech-import feilet for", jobs[i].name, r.reason);
     }
   });
-  if (fail) alert(`${fail} teknologikort kunne ikke lagres (se konsollen).`);
-  if (added || updated) alert(`Teknologi: ${added} nye, ${updated} oppdaterte.`);
+  if (fail) melding(`${fail} teknologikort kunne ikke lagres (se konsollen).`);
+  if (added || updated) melding(`Teknologi: ${added} nye, ${updated} oppdaterte.`);
 }
 
 // Erstatter hele artistsamlingen. Lista er allerede validert i
@@ -674,46 +678,48 @@ async function importTechItems(techArray) {
 async function handleReplace(data) {
   // Vent på snapshotene: uten dem bygges backupen fra en tom (eller halv)
   // state mens deleteAllArtists sletter det som faktisk ligger på serveren.
-  if (!kanEksportere()) return false;
+  if (!(await kanEksportere())) return false;
   const toAdd = data
     .filter((a) => a.name)
     .map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }));
   // Ikke la en tom eller feil fil tømme hele basen ved et uhell.
   if (!toAdd.length) {
-    alert("Filen inneholder ingen gyldige artister. «Erstatt alle» er avbrutt for å unngå å tømme databasen.");
+    melding("Filen inneholder ingen gyldige artister. «Erstatt alle» er avbrutt for å unngå å tømme databasen.");
     return false;
   }
   // En delfil (bare noen felt per artist, f.eks. oppsummeringspunkter) ville
   // erstattet hele basen med nesten tomme kort (v5.51).
   const delposter = toAdd.filter(erDelpost);
   if (delposter.length) {
-    alert(`${delposter.length} av ${toAdd.length} artister i fila mangler både metasjanger og beskrivelse, ` +
+    melding(`${delposter.length} av ${toAdd.length} artister i fila mangler både metasjanger og beskrivelse, ` +
       "så fila er en delfil (bare noen felt per artist).\n\n«Erstatt alle» er avbrutt: det ville slettet resten " +
       "av feltene på alle artistene. Bruk «Flett» for å legge feltene inn i artistene som finnes.");
     return false;
   }
-  if (!confirm(
+  if (!(await bekreft(
     `Dette sletter alle ${state.artists.length} eksisterende artister ` +
     `(inkludert stemmer og ventende forslag) og erstatter dem med ${toAdd.length} fra filen.\n\n` +
     `Åpne endringsforslag på artister overlever ikke. De får nye ID-er.\n` +
-    `En full sikkerhetskopi av dagens data lastes ned først.\n\nFortsette?`
-  )) return false;
+    `En full sikkerhetskopi av dagens data lastes ned først.\n\nFortsette?`,
+    { tittel: "Erstatte alle artister?", ja: "Fortsett", farlig: true }
+  ))) return false;
   // Last ned backupen og KREV at læreren bekrefter at fila faktisk kom før vi
   // sletter — en programmatisk nedlasting kan bli blokkert stille, og da skal
   // vi ikke slette noe.
   downloadJson(buildExportData(), `musikkhistorie-BACKUP-${dateStamp()}.json`);
-  if (!confirm(
+  if (!(await bekreft(
     "En sikkerhetskopi skal nå ligge i Nedlastinger (musikkhistorie-BACKUP-…).\n\n" +
-    "Bekreft at du finner filen der FØR vi sletter. Trykk Avbryt hvis den mangler."
-  )) return false;
+    "Bekreft at du finner filen der FØR vi sletter. Trykk Avbryt hvis den mangler.",
+    { tittel: "Finner du sikkerhetskopien?", ja: "Ja, slett og importer", farlig: true }
+  ))) return false;
   try {
     const deleted = await deleteAllArtists();
     const added = await addArtistsBulk(toAdd);
-    alert(`${deleted} slettet, ${added} importert.`);
+    melding(`${deleted} slettet, ${added} importert.`);
     return true;
   } catch (err) {
     console.error("Import feilet:", err);
-    alert("Import feilet: " + err.message +
+    melding("Import feilet: " + err.message +
       "\n\nBruk sikkerhetskopien fra Nedlastinger for å gjenopprette (Importer → Erstatt alle).");
     return false;
   }
@@ -761,7 +767,7 @@ async function handleMergeFile(data) {
   }
 
   if (uteliggere.length) {
-    alert(`${uteliggere.length} navn i fila finnes ikke blant artistene og har for lite innhold til å bli nye artister. ` +
+    melding(`${uteliggere.length} navn i fila finnes ikke blant artistene og har for lite innhold til å bli nye artister. ` +
       `De hoppes over:\n\n${uteliggere.slice(0, 20).join(", ")}${uteliggere.length > 20 ? " …" : ""}` +
       "\n\nSjekk stavemåten i fila. Resten importeres som vanlig.");
   }
@@ -771,7 +777,7 @@ async function handleMergeFile(data) {
   // Ingenting å flette på artistene betyr IKKE at fila er tom — resten av
   // innholdet skal fortsatt importeres, så dette teller som fullført.
   if (!mergeState.queue.length && !mergeState.newArtists.length) {
-    alert("Ingen endringer å flette inn."); return true;
+    melding("Ingen endringer å flette inn."); return true;
   }
   if (!hasConflicts) { await finishMerge(); return true; }
 
@@ -883,13 +889,13 @@ async function finishMerge() {
     const parts = [];
     if (added)   parts.push(`${added} nye artister lagt til`);
     if (updated) parts.push(`${updated} artister oppdatert`);
-    if (parts.length) alert(parts.join(", ") + ".");
+    if (parts.length) melding(parts.join(", ") + ".");
   } catch (err) {
     // Uten denne ville en skrivefeil midt i flettingen vært helt stille
     // (modalen er alt lukket, ingen success-alert kommer). Re-import av samme
     // fil er trygt: alt-lagte artister matches på navn og dupliseres ikke.
     console.error("Fletting feilet:", err);
-    alert("Flettingen feilet: " + err.message +
+    melding("Flettingen feilet: " + err.message +
       "\n\nNoen endringer kan være delvis lagret. Importer fila på nytt for å fullføre. Allerede lagrede artister dupliseres ikke.");
   } finally {
     mergeState.queue = []; mergeState.newArtists = []; mergeState.index = 0;

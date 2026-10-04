@@ -14,12 +14,13 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=6.24";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=6.24";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.24";
-import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=6.24";
-import { sharedStateDefaults } from "./shared-data.js?v=6.24";
-import { $ } from "./shared.js?v=6.24";
+} from "./store.js?v=6.25";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=6.25";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.25";
+import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=6.25";
+import { sharedStateDefaults } from "./shared-data.js?v=6.25";
+import { $ } from "./shared.js?v=6.25";
+import { melding, bekreft } from "./ui-modal.js?v=6.25";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -55,16 +56,16 @@ export const ctx = { explore: null, openEditModal: null };
 export function guardTeacherAction(promise) {
   return Promise.resolve(promise).catch((err) => {
     console.error("Lærerhandling feilet:", err);
-    alert("Handlingen ble ikke lagret (" + (err?.message || err) + "). Prøv igjen.");
+    melding("Handlingen ble ikke lagret (" + (err?.message || err) + "). Prøv igjen.");
   });
 }
 
 export const handlers = {
   approve:     (id) => guardTeacherAction(teacherApprove(id)),
-  reject:      (id) => { if (confirm("Avvise dette forslaget?")) guardTeacherAction(teacherReject(id)); },
+  reject:      async (id) => { if (await bekreft("", { tittel: "Avvise dette forslaget?", ja: "Avvis", farlig: true })) guardTeacherAction(teacherReject(id)); },
   remove:      (id) => guardTeacherAction(setArtistPriority(id, -1)),
   restore:     (id) => guardTeacherAction(setArtistPriority(id, 0)),
-  del:         (id) => { if (confirm("Slette dette forslaget permanent?")) guardTeacherAction(teacherDelete(id)); },
+  del:         async (id) => { if (await bekreft("Det kan ikke angres.", { tittel: "Slette dette forslaget permanent?", ja: "Slett", farlig: true })) guardTeacherAction(teacherDelete(id)); },
   edit:        (id) => ctx.openEditModal?.(id),
   sendBack:    (id) => ctx.openReturDialog?.("artist", id),
   priority3:   (id) => { const a = state.artists.find(x => x.id === id); guardTeacherAction(setArtistPriority(id, a?.priority === 3 ? 0 : 3)); },
