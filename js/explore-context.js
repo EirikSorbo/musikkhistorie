@@ -1,39 +1,32 @@
 // ============================================================================
-//  DELT KONTEKST FOR UTFORSK-MODULENE
+//  DELT KJERNE FOR UTFORSK-MODULENE
 // ----------------------------------------------------------------------------
-//  Utforsk-funksjonene deler én modulnivå-`opts` (satt av initExplore) og en
-//  håndfull hjelpere. Da explore.js ble delt opp (v3.54) flyttet den delte
-//  kjernen hit, så feature-modulene (varmekart, tidslinje, …) kan importere
-//  den. ES-modulers live bindings gjør at `opts` satt via setOpts sees av alle
-//  moduler: fang ALDRI opts i en modulnivå-konstant (den er null før setOpts) —
-//  les alltid opts.xxx ved kall-tid, slik koden alltid har gjort.
+//  Limet mellom Utforsk-funksjonene: lenkekonteksten (buildLinkCtx), sjanger-
+//  kortets opts (sjangerOpts), sjangerklikket, artistlistene for en sjanger
+//  eller et instrument og lærerens knapperad. Da explore.js ble delt opp
+//  (v3.54) flyttet den delte kjernen hit, så feature-modulene (varmekart,
+//  tidslinje, …) kan importere den.
+//
+//  Kjernen importerer INGEN Utforsk-feature (fra v6.29). Det den må åpne
+//  (tech-kortet, tidslinja, galleriet, instrumentsiden), slår den opp i `nav`
+//  ved kall-tid, og explore.js fyller nav idet modulen lastes. Før importerte
+//  kjernen featurene direkte, og fordi featurene importerer kjernen, hang 13
+//  filer i én importring. Samtidig flyttet tilstanden og sidens opts til
+//  app-state.js, meta-gruppehodene til ui-metagruppe.js og oppfriskingen av
+//  åpne vinduer (contentChanged, genreDescsChanged) til explore.js.
 // ============================================================================
-import { escapeHtml, modalClose, buildMainGenreList, openPlaylistModal, openArtistListModal, artistsInGenre, artistsByInstrument, showSubsjangerInfo } from "./ui.js";
-import { showSjangerInfo, refreshSjangerInfo } from "./genealogy.js";
-import { MAIN_GENRE_INFO, FAMILIES, GENEALOGY_META_GENRES } from "./genre-model.js";
+import { modalClose } from "./ui-modal.js";
+import { buildMainGenreList, openPlaylistModal, openArtistListModal, artistsByInstrument, showSubsjangerInfo } from "./ui.js";
+import { showSjangerInfo } from "./genealogy.js";
 import { teacherActionRow, wireTeacherRow } from "./ui-helpers.js";
-import { openTechDetail } from "./explore-tech.js";
-import { renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
-import { openTidslinje, tidslinjeHarSjanger } from "./explore-tidslinje.js";
-import { openArtistGalleri } from "./explore-visningssider.js";
-import { renderVarmekartBody } from "./explore-varmekart.js";
-import { renderReferanser } from "./explore-referanser.js";
-import { renderSjangerperioderBody } from "./explore-sjangerperioder.js";
-import { setHeatData } from "./heat-strip.js";
-import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE } from "./limits.js";
-import { openInstrumenter } from "./explore-instrument.js";
-import { tegnSjangre } from "./explore-sjanger.js";
+import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, artistsInGenre } from "./limits.js";
+import { opts, getState } from "./app-state.js";
 
-export let opts = null;
-export function setOpts(o) { opts = o; }
-
-// Før initExplore (opts === null) gir oppslaget et tomt state i stedet for å
-// kaste (v5.52): en samleøkt som gjenopprettes ved sidelasting tegnet linja
-// sin før lærersiden hadde kalt initExplore, og hele oppstarten døde med
-// «Cannot read properties of null (reading 'getState')». Tomt state betyr
-// «ikke lastet ennå» for alle leserne (contentLoaded er falsy), og neste
-// snapshot tegner på nytt med ekte data.
-export function getState() { return opts ? opts.getState() : {}; }
+// Funksjonene kjernen og featurene bruker for å åpne hverandre. explore.js
+// fyller dem (registrerNavigasjon) idet modulen lastes, altså før noen side har
+// rukket å tegne noe. Les nav.xxx ved kall-tid, aldri i en modulnivå-konstant.
+export const nav = {};
+export function registrerNavigasjon(funksjoner) { Object.assign(nav, funksjoner); }
 
 // Injiserer den delte lærer-knapperaden (Sjekk | Rediger · Slett) i en «extra»-
 // beholder i en detaljmodal. Gjør ingenting for studenter (opts.onCheck
@@ -59,7 +52,7 @@ export function buildLinkCtx() {
     techItems: s.techItems,
     genres: buildMainGenreList(s.artists),
     onArtistClick: opts.onArtistClick,
-    onTechClick: openTechDetail,
+    onTechClick: nav.openTechDetail,
     onMainGenreClick,
     isTeacher: !!s.isTeacher,
   };
@@ -78,17 +71,17 @@ export function sjangerOpts() {
     techItems: s.techItems,
     genres: buildMainGenreList(s.artists),
     onArtistClick: opts.onArtistClick,
-    onTechClick: openTechDetail,
+    onTechClick: nav.openTechDetail,
     onMainGenreClick,
     onShowArtists: showArtistsForSjanger,
     onShowPlaylist: showPlaylistForMainGenre,
     // Tidslinjen åpnes OPPÅ sjanger-popupen (modaler stables), fokusert på
     // denne sjangerens seksjon — ← går tilbake til popupen.
-    onShowTimeline: ({ label }) => openTidslinje({ genre: label }),
+    onShowTimeline: ({ label }) => nav.openTidslinje({ genre: label }),
     // Knappen vises bare når sjangeren har en seksjon i tidslinja (Fable F8).
-    harTidslinje: tidslinjeHarSjanger,
+    harTidslinje: nav.tidslinjeHarSjanger,
     // Artistgalleriet (v5.96), oppå sjangerkortet, i appen og på lerretet.
-    onShowGallery: ({ label }) => openArtistGalleri(label),
+    onShowGallery: ({ label }) => nav.openArtistGalleri(label),
     // «Vis i slektstreet» (v6.08, S8): på slektstresiden sentrerer treet seg
     // på sjangeren (onVisITre fra tre-page.js); på de andre sidene går det til
     // tre.html?fokus=<sjanger>.
@@ -129,134 +122,7 @@ export function showArtistsForSjanger({ label }) {
 export function showArtistsForInstrument(instrument) {
   const gruppe = Object.entries(INSTRUMENT_GROUPS).find(([, liste]) => liste.includes(instrument))?.[0];
   const lenke = gruppe && INSTRUMENT_TIMELINE_GROUPS.includes(gruppe)
-    ? { tekst: INSTRUMENT_TITLE[gruppe] || gruppe, onClick: () => openInstrumenter(gruppe) }
+    ? { tekst: INSTRUMENT_TITLE[gruppe] || gruppe, onClick: () => nav.openInstrumenter(gruppe) }
     : null;
   openArtistListModal(instrument, artistsByInstrument(getState().artists, instrument), opts.onArtistClick, "Ingen forslag med dette instrumentet ennå.", { lenke });
-}
-
-// Kalles av sidene når genreDescriptions-snapshotet endres: et åpent
-// sjangerkort skal vise den nye beskrivelsen med én gang, ikke først når
-// kortet lukkes og åpnes igjen. (Egen inngang fordi beskrivelsene bor i sin
-// egen samling — content-snapshotet fyrer ikke når de endres.)
-export function genreDescsChanged() {
-  refreshSjangerInfo(sjangerOpts());
-  // Sjangre-vinduet viser periodene fra beskrivelsene (v6.11). Bare
-  // innholdet tegnes (v6.23): vinduet heves ikke og fokuset flyttes ikke,
-  // så det kan tegnes også når et sjangerkort ligger oppå.
-  if (document.getElementById("modal-subgenre-list")?.classList.contains("open")) tegnSjangre();
-  // Sjangerperioder (v5.20) leser årstallene fra beskrivelsene: står figuren
-  // åpen, skal en rettet periode synes med én gang.
-  if (document.getElementById("modal-sjangerperioder")?.classList.contains("open")) renderSjangerperioderBody();
-  // Selve historieteksten bor i genreDescriptions (story-feltet) — en åpen
-  // historie skal vise lærerens lagring med én gang (audit-funn 8).
-  if (document.getElementById("modal-historier")?.classList.contains("open")) refreshHistorie();
-}
-
-// Kalles av sidene når content-snapshotet endres (import, redigering,
-// celleklikk): re-rendrer innholdsvisninger som står åpne, så endringen
-// slår gjennom uten å lukke/åpne modalen.
-export function contentChanged() {
-  // Varmenivåene legges igjen i heat-strip.js, der sjangerkortet (genealogy.js)
-  // henter dem. Kortet bygges et lag UNDER app-laget og kan ikke lese state
-  // herfra — explore-context importerer genealogy, så en import den andre veien
-  // ville lukket sirkelen. Dette er første og eneste snapshot-punktet, så linja
-  // på kortet er fersk fra første lasting og etter hver redigering.
-  setHeatData(getState().content?.varmekart?.heat || null);
-  // Står et sjangerkort åpent, tegnes det på nytt — da følger varmelinja med når
-  // læreren endrer nivåer, i stedet for å vise gamle tall til kortet lukkes.
-  // sjangerOpts() sendes med så omtegningen leser GJELDENDE state: de fangede
-  // opts fra åpningsøyeblikket pekte på utbyttede referanser og viste aldri en
-  // fersk beskrivelse.
-  refreshSjangerInfo(sjangerOpts());
-  const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
-  if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
-  if (isOpen("modal-rotter")) {
-    renderPage("rotter", "rotter-body", "rotter-extra");
-    // Rot-boblene bygges av sjangertreet, som lander ASYNKRONT. Sto kortet
-    // åpent da snapshotet kom, ble de stående tomme til det ble lukket og
-    // åpnet igjen.
-    renderRotterChips();
-  }
-  if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
-  if (isOpen("modal-varmekart")) renderVarmekartBody();
-  // Historien (v5.34, audit-funn 8): varmestripene over fortellingen leser
-  // samme heat-data som varmekartet, og lærerens celleklikk skal synes der
-  // også — kortet var den eneste innholdsvisningen uten snapshot-gren, så
-  // stripa og nivåvelgeren motsa hverandre etter lagring.
-  if (isOpen("modal-historier")) refreshHistorie();
-  // Sjangerperioder: treet kommer via content, og en figur som sto og ventet på
-  // det skal enten tegnes eller si at treet mangler. Tegner bare om ved endring.
-  if (isOpen("modal-sjangerperioder")) renderSjangerperioderBody();
-  // Frittstående referanser bor i content: lagrer læreren en ny, skal kortet
-  // vise den med én gang, ikke ved neste åpning.
-  if (isOpen("modal-referanser")) renderReferanser();
-}
-
-// ----------------------------------------------------------------------------
-//  Delt av varmekart + tidslinje (før duplisert i begge). Én kilde, så meta-
-//  akkordeonen og fargevalgene aldri driver fra hverandre.
-// ----------------------------------------------------------------------------
-
-// Representativ familiefarge for en gruppe = den hyppigste i gruppa.
-export const groupColor = (labels) => {
-  const tally = {};
-  for (const l of labels) { const c = MAIN_GENRE_INFO[l]?.color; if (c) tally[c] = (tally[c] || 0) + 1; }
-  return Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] || FAMILIES.gray?.stroke || "#9bada1";
-};
-
-// Gruppehode for meta-akkordeonen (varmekart + tidslinje): caret + farget prikk
-// + metanavn + en fritekst-telling. `prefix` gir klassenavnene (vk/tid),
-// `metaAttr` legger et evt. data-attributt på wrapperen (varmekartet bruker det
-// til å huske hvilken gruppe som står åpen). Åpner .${prefix}-group + knappen —
-// kalleren legger til .${prefix}-group-rows etterpå, som før.
-// `dot: false` dropper den fargede prikken (Referanser-kortet: der bærer
-// seksjonsoverskriften fargen, og en prikk per linje ble bare støy).
-export function metaGroupHeadHtml({ prefix, meta, gColor, open, groupIdx, count, metaAttr = "", dot = true }) {
-  let h = `<div class="${prefix}-group"${metaAttr}>`;
-  h += `<button type="button" class="${prefix}-group-head" aria-expanded="${open}" style="width:100%;display:flex;align-items:center;gap:9px;margin:${groupIdx === 0 ? "6px" : "10px"} 0 6px;padding:4px 0 5px;border:0;border-bottom:2px solid ${gColor}40;background:none;cursor:pointer;text-align:left">`;
-  h += `<span class="${prefix}-caret" style="flex:none;width:12px;font-size:0.7rem;color:var(--muted);transition:transform .15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>`;
-  if (dot) h += `<span style="width:12px;height:12px;border-radius:50%;background:${gColor};flex:none;box-shadow:0 0 0 3px ${gColor}22"></span>`;
-  h += `<span style="font-size:0.84rem;font-weight:700;color:var(--text)">${escapeHtml(meta)}</span>`;
-  h += `<span style="font-size:0.72rem;color:var(--muted)">${count}</span>`;
-  h += `</button>`;
-  return h;
-}
-
-// Lenken til metasjangerens oversikt (v6.05, strukturgjennomgangen S2), øverst
-// i en åpen gruppe i tidslinja, varmekartet og periodene. Ikke i gruppehodet:
-// det er selv en knapp, og en knapp kan ikke ligge i en knapp. Klikket fanges
-// av den delegerte [data-meta-oversikt]-lytteren i explore.js. Metasjangre
-// som ikke finnes i treet (f.eks. «Andre») får ingen lenke.
-export function metaOversiktLenkeHtml(meta) {
-  const knapp = metaOversiktKnappHtml(meta, { klasse: "meta-oversikt-lenke" });
-  return knapp ? `<div class="meta-oversikt-rad">${knapp}</div>` : "";
-}
-
-// Selve lenkeknappen, delt med familiehodene i Sjangre (v6.23): samme regel
-// for hvilke metasjangre som har en oversikt. `kort` gir bare «Oversikt ›»,
-// der navnet står rett ved siden av (familiehodet i en smal spalte).
-export function metaOversiktKnappHtml(meta, { kort = false, klasse = "meta-oversikt-lenke" } = {}) {
-  if (!GENEALOGY_META_GENRES.includes(meta)) return "";
-  return `<button type="button" class="${klasse}" data-meta-oversikt="${escapeHtml(meta)}">${kort ? "Oversikt" : `Oversikt over ${escapeHtml(meta)}`} <span aria-hidden="true">›</span></button>`;
-}
-
-// Delt akkordeon-klikklogikk: én gruppe åpen om gangen (klikk på åpen gruppe
-// lukker den). `onToggle(wasOpen, group)` kalles før omtegningen — varmekartet
-// bruker den til å huske åpen gruppe; tidslinjen dropper den.
-export function wireMetaAccordion(body, prefix, onToggle) {
-  body.querySelectorAll(`.${prefix}-group-head`).forEach((head) => {
-    head.addEventListener("click", () => {
-      const wasOpen = head.getAttribute("aria-expanded") === "true";
-      if (onToggle) onToggle(wasOpen, head.closest(`.${prefix}-group`));
-      body.querySelectorAll(`.${prefix}-group`).forEach((grp) => {
-        const h = grp.querySelector(`.${prefix}-group-head`);
-        const rows = grp.querySelector(`.${prefix}-group-rows`);
-        const isThis = h === head && !wasOpen;
-        h.setAttribute("aria-expanded", isThis ? "true" : "false");
-        const caret = h.querySelector(`.${prefix}-caret`);
-        if (caret) caret.style.transform = `rotate(${isThis ? 90 : 0}deg)`;
-        if (rows) rows.style.display = isThis ? "block" : "none";
-      });
-    });
-  });
 }

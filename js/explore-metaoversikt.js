@@ -14,13 +14,15 @@
 //  Utvalget og grupperingen bor i metaoversikt-modell.js (testet); her tegnes
 //  og kobles det.
 // ============================================================================
-import { escapeHtml, modalOpen, spillAlleHtml } from "./ui.js";
-import { safeUrl } from "./util.js";
+import { spillAlleHtml } from "./ui.js";
+import { modalOpen } from "./ui-modal.js";
+import { safeUrl, escapeHtml } from "./util.js";
 import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js";
 import { genreFamilyNodes, nodeStartAar } from "./ui-timeline.js";
 import { musicExampleLabel, wireRelated } from "./ui-helpers.js";
 import { wireAllLinks } from "./linkify.js";
-import { getState, buildLinkCtx, onMainGenreClick } from "./explore-context.js";
+import { buildLinkCtx, onMainGenreClick } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { periodeFigurForMeta } from "./explore-sjangerperioder.js";
 import { artisterGruppert, lytteeksemplerGruppert, forbindelser } from "./metaoversikt-modell.js";
 

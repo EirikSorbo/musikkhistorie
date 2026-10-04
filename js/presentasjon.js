@@ -34,7 +34,7 @@ import { ordneSjangerLerret } from "./pres-sjanger.js";
 import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js";
 import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js";
 import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js";
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js";
 import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";

@@ -22,7 +22,7 @@ import {
   savePlaner,
 } from "./store.js";
 import { normaliserPlaner } from "./presentasjon-modell.js";
-import { escapeHtml } from "./ui.js";
+import { escapeHtml } from "./util.js";
 import { $ } from "./shared.js";
 import { GENEALOGY_META_GENRES, isMainGenre } from "./genre-model.js";
 import { validateTree } from "./genre-validate.js";

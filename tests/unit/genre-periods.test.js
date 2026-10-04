@@ -142,7 +142,8 @@ test("signaturen endres bare når figuren endres, ikke når bare beskrivelsestek
 test("sjangerperioder kobles til snapshotene, huben og lasteflagget", async () => {
   const fs = await import("node:fs");
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
-  const ctx = les("js/explore-context.js");
+  // Oppfriskingen bor i explore.js fra v6.29 (før explore-context.js).
+  const ctx = les("js/explore.js");
   const kropp = (navn) => { const i = ctx.indexOf(`export function ${navn}()`); assert.ok(i > -1, navn); return ctx.slice(i, ctx.indexOf("\n}", i)); };
   assert.match(kropp("genreDescsChanged"), /renderSjangerperioderBody\(\)/, "nye årstall");
   assert.match(kropp("contentChanged"), /renderSjangerperioderBody\(\)/, "treet lastet eller mangler");

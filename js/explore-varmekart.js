@@ -5,9 +5,11 @@
 //  de-dupliserte hjelperne (groupColor, metaGroupHeadHtml, wireMetaAccordion)
 //  kommer fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js";
+import { escapeHtml } from "./util.js";
+import { modalOpen } from "./ui-modal.js";
 import { GENEALOGY_MAIN_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, MAIN_GENRE_INFO } from "./genre-model.js";
-import { opts, getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
+import { groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./ui-metagruppe.js";
 import { heatColor, heatRow, HEAT_NODATA } from "./heat-strip.js";
 // Aksen, radene og lærerens nivåvelger er delt med sjangerhistoriene (v5.16).
 import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js";

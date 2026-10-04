@@ -10,12 +10,15 @@
 //    · UBRUKT  — importert navn som ikke forekommer i filas kropp
 //    · UKJENT  — import av en lokal fil som ikke finnes
 //
-//  I tillegg to vakter:
+//  I tillegg fire vakter:
 //    · FORELDRELØS — js-modul som verken importeres av noen eller lastes fra
 //      en HTML-side (død fil ingen verktøy ellers ser)
 //    · genealogy-data-REGELEN — ingen runtime-modul får importere frøet
 //      js/genealogy-data.js (appen skal ikke ha noen kopi av pensumet i koden;
 //      kun tools/ og tests/ leser det)
+//    · IMPORTRING — filer som importerer hverandre i ring (fra v6.29)
+//    · VIDERESENDING — en modul som eksporterer noe den selv har importert
+//      (fra v6.29)
 //
 //  Kjør: node tools/check-imports.js      (exit 1 hvis noe er brutt)
 // ============================================================================
@@ -233,16 +236,76 @@ const foreldrelose = filer.filter((f) =>
   !htmlKilde.includes(`js/${f}`) &&
   f !== "genealogy-data.js");           // frøet leses av tools/ og tests/, med vilje
 
+// Importringer: A importerer B, som (via andre) importerer A. ES-moduler tåler
+// det så lenge ingen kode på toppnivå bruker noe fra ringen, men da kan én ny
+// linje på toppnivå stoppe oppstarten («Cannot access … before
+// initialization»), og ingen fil i ringen kan forstås uten de andre. Til og med
+// v6.28 hang 13 Utforsk-filer i én ring. Tarjans algoritme finner de sterkt
+// sammenhengende komponentene; hver med mer enn én fil er en ring.
+const kanter = Object.fromEntries(filer.map((f) => [f, [...new Set(
+  [...utenKommentarer(kilde[f]).matchAll(/(?:from|import)\s+["']\.\/([^"'?]+\.js)/g)]
+    .map((m) => m[1]).filter((m) => kilde[m]))]]));
+const ringer = [];
+{
+  let teller = 0;
+  const stabel = [], paaStabel = new Set(), indeks = {}, lav = {};
+  const besok = (v) => {
+    indeks[v] = lav[v] = teller++;
+    stabel.push(v); paaStabel.add(v);
+    for (const w of kanter[v]) {
+      if (indeks[w] === undefined) { besok(w); lav[v] = Math.min(lav[v], lav[w]); }
+      else if (paaStabel.has(w)) lav[v] = Math.min(lav[v], indeks[w]);
+    }
+    if (lav[v] !== indeks[v]) return;
+    const komp = [];
+    let w;
+    do { w = stabel.pop(); paaStabel.delete(w); komp.push(w); } while (w !== v);
+    if (komp.length > 1) ringer.push(komp.sort());
+  };
+  for (const f of filer) if (indeks[f] === undefined) besok(f);
+}
+
+// Videresending: en modul som eksporterer noe den selv har importert
+// (`export { x }` eller `export … from`). Kallerne henter da x via en
+// mellommann og drar med seg alt mellommannen importerer. Til og med v6.28
+// sendte ui.js videre 26 navn fra seks andre moduler. Importer fra modulen som
+// definerer navnet.
+const videresending = [];
+for (const f of filer) {
+  const s = utenKommentarer(kilde[f]);
+  const importertHer = new Set();
+  for (const m of s.matchAll(IMPORT_RE)) {
+    for (const del of m[1].split(",")) {
+      const t = del.trim(); if (!t) continue;
+      const [orig, alias] = t.split(/\s+as\s+/).map((x) => x.trim());
+      importertHer.add(alias || orig);
+    }
+  }
+  for (const m of s.matchAll(/export\s*\{([^}]*)\}\s*(from\s*["'][^"']+["'])?/g)) {
+    if (m[2]) { videresending.push(`${f}: ${m[0].replace(/\s+/g, " ")}`); continue; }
+    for (const del of m[1].split(",")) {
+      const lokal = del.trim().split(/\s+as\s+/)[0].trim();
+      if (importertHer.has(lokal)) videresending.push(`${f}: eksporterer «${lokal}», som den selv importerer`);
+    }
+  }
+  for (const m of s.matchAll(/export\s*\*\s*(?:as\s+[A-Za-z0-9_$]+\s*)?from\s*["'][^"']+["']/g)) {
+    videresending.push(`${f}: ${m[0]}`);
+  }
+}
+
 skriv("BRUTTE IMPORTER", brutt);
 skriv("UKJENTE MODULER", ukjent);
 skriv("UBRUKTE IMPORTER", ubrukt);
 skriv("REGELBRUDD (genealogy-data)", regelbrudd);
 skriv("FORELDRELØSE MODULER", foreldrelose.map((f) => `js/${f}: verken importert eller lastet fra HTML`));
+skriv("IMPORTRINGER", ringer.map((r) => `${r.length} filer: ${r.join(", ")}`));
+skriv("VIDERESENDING", videresending);
 
-if (!brutt.length && !ukjent.length && !ubrukt.length && !regelbrudd.length && !foreldrelose.length) {
+const feiler = brutt.length || ukjent.length || regelbrudd.length || foreldrelose.length || ringer.length || videresending.length;
+if (!feiler && !ubrukt.length) {
   console.log("Importgrafen er ren.");
 } else {
   console.log(`\n${filer.length} filer sjekket.`);
 }
 
-process.exit(brutt.length || ukjent.length || regelbrudd.length || foreldrelose.length ? 1 : 0);
+process.exit(feiler ? 1 : 0);

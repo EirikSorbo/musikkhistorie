@@ -14,13 +14,17 @@
 //  oversiktskort (planOversikt, testet), hvert kort åpnes oppå, og alle
 //  lytteeksemplene fra timen kan spilles som én spilleliste.
 // ============================================================================
-import { escapeHtml, modalOpen, openEksemplerSpilleliste } from "./ui.js";
+import { openEksemplerSpilleliste } from "./ui.js";
+import { escapeHtml } from "./util.js";
+import { modalOpen } from "./ui-modal.js";
 import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js";
 import { GENEALOGY } from "./genre-model.js";
 import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "./presentasjon-modell.js";
 import { parseVisVerdi } from "./vis-lenke.js";
-import { opts, getState } from "./explore-context.js";
-import { apneMaal } from "./explore-apne.js";
+import { opts, getState } from "./app-state.js";
+// Ruteren (explore-apne.js) nås gjennom nav: den importerer denne fila
+// (openTime, timeTilgjengelig), så en import tilbake ville gitt en importring.
+import { nav } from "./explore-context.js";
 import { leggTilLyttBolk } from "./explore-lytt.js";
 
 // Læreren (lærersiden) ser alltid timene; studentene når bryteren er på.
@@ -96,7 +100,7 @@ export function openTime(planId) {
         ${g.punkter.map((p) => `<button type="button" class="sj-rad" data-tm-vis="${escapeHtml(plan.stopp[p.stopp]?.vis || "")}"><span class="sj-rad-navn">${escapeHtml(p.tekst)}${p.detalj ? `<span class="sj-rad-aar">${escapeHtml(p.detalj)}</span>` : ""}</span></button>`).join("")}
       </section>`).join("")}</div>`;
   body.querySelector("[data-tm-spill]")?.addEventListener("click", () => openEksemplerSpilleliste(`Spilleliste: ${plan.tittel}`, par));
-  body.querySelectorAll("[data-tm-vis]").forEach((b) => b.addEventListener("click", () => apneMaal(parseVisVerdi(b.dataset.tmVis))));
+  body.querySelectorAll("[data-tm-vis]").forEach((b) => b.addEventListener("click", () => nav.apneMaal(parseVisVerdi(b.dataset.tmVis))));
   modalOpen(modal);
 }
 

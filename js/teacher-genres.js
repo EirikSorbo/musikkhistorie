@@ -27,7 +27,7 @@
 
 import { $ } from "./shared.js";
 import { escapeHtml, kanoniskJson } from "./util.js";
-import { modalOpen, modalClose } from "./ui.js";
+
 import { state } from "./teacher-state.js";
 import { DECADE_ROWS, FAMILIES } from "./genre-model.js";
 import { validateTree } from "./genre-validate.js";
@@ -37,7 +37,7 @@ import {
   planEdgeCleanup, edgeOrphanKeys,
 } from "./genre-migrate.js";
 import { runMigrationPlan, saveGenealogyTree } from "./store.js";
-import { melding, bekreft } from "./ui-modal.js";
+import { melding, bekreft, modalOpen, modalClose } from "./ui-modal.js";
 
 // Treet slik det ser ut nå. Leses fra det delte state-objektet, aldri fra en
 // lokal kopi — læreren kan ha to faner åpne.

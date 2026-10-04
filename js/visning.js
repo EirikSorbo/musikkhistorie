@@ -29,7 +29,7 @@
 //  js/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 // ============================================================================
 
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { escapeHtml } from "./util.js";
 import { onAuthChange, savePlan, deletePlan } from "./store.js";
 import { parseVisVerdi, byggVisVerdi } from "./vis-lenke.js";

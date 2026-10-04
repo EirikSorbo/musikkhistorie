@@ -18,7 +18,7 @@ import { initExplore } from "./explore.js";
 import { sjangerOpts, buildLinkCtx } from "./explore-context.js";
 import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js";
 import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js";
+import { renderArtistDetail } from "./ui.js";
 import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js";
 import { initPresentasjon, presPlanTikk } from "./presentasjon.js";
 import { initPlanMeny } from "./plan-meny.js";
@@ -30,7 +30,7 @@ import { initUtskriftSkuff } from "./utskrift-skuff.js";
 import { lesVisFraUrl, provVisMaal } from "./explore-apne.js";
 import { fetchPendingEdits } from "./store.js";
 import { openProposalEditor } from "./proposals.js";
-import { melding } from "./ui-modal.js";
+import { melding, setupModal, modalCloseTop, modalOpen } from "./ui-modal.js";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:

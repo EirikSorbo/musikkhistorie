@@ -33,7 +33,7 @@
 import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "./presentasjon-modell.js";
 import { byggVisVerdi, parseVisVerdi, erSkrivefelt } from "./vis-lenke.js";
 import { modalOpen, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js";
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { safeUrl } from "./util.js";
 
 // Gjeldende video i spilleren — grunnlaget for data-vis og for «Åpne på

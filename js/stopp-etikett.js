@@ -13,7 +13,7 @@
 //  kall: treet og vokabularet er live bindings.
 // ============================================================================
 
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { parseVisVerdi } from "./vis-lenke.js";
 import { lytteeksempelNavn } from "./presentasjon-modell.js";
 import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js";

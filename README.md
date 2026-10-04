@@ -110,12 +110,17 @@ js/
   linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
   rich-text.js / format-bar.js  Markdown-light i beskrivelser + formatlinja
   row-editor.js       Spec-drevne rad-editorer (verk/lytteeksempler/kilder)
-  ui.js               Rendering + re-eksport-knutepunkt for ui-*-modulene
-  ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff
-  explore.js          Utforsk — orkestrator (injiserer/wirer modalene, initExplore)
-  explore-*.js        Utforsk-featurene: context (delt kjerne + gjenbrukshjelpere),
-                      modals, varmekart, tidslinje, tech, decade, referanser,
-                      sjanger, innhold, instrument
+  app-state.js        Sidens opts og getState() (satt av initExplore); importerer
+                      ingenting, så alle kan lese tilstanden
+  ui.js               Rendering av artistkort og lister
+  ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff,
+                      metagruppene i listene (ui-metagruppe.js). Importer fra
+                      modulen som definerer navnet, ikke via ui.js
+  explore.js          Utforsk — orkestrator (injiserer/wirer modalene, initExplore),
+                      oppfrisking av åpne vinduer og registrering av navigasjonen
+  explore-*.js        Utforsk-featurene: context (delt kjerne; åpner featurene via
+                      nav, importerer dem ikke), modals, varmekart, tidslinje,
+                      tech, decade, referanser, sjanger, innhold, instrument
   proposals.js        Endringsforslag-editoren (student)
   landing.js / student.js / tre.js / tre-page.js   Side-logikk
   utskrift.js         Utskriftssiden: panelet, søk for å legge til, heftet
@@ -247,6 +252,11 @@ mest: bruk tre urelaterte ord, aldri et passord du bruker andre steder.
 - **Regeltester** (Firestore-emulator): `npm run test:rules` — krever
   `npm install` (henter `firebase-tools` og `@firebase/rules-unit-testing`)
   og Java. Verifiserer at `firestore.rules` tillater/avviser riktig.
+- **Importsjekken**: `node tools/check-imports.js` finner brutte, ukjente og
+  ubrukte importer, foreldreløse moduler, importringer (filer som importerer
+  hverandre i ring) og videresending (en modul som eksporterer noe den selv
+  har importert). Den kjører i pre-push-kroken og på GitHub sammen med
+  testene.
 
 ---
 

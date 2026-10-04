@@ -12,8 +12,8 @@ import {
 import { loadArtists } from "./artist-cache.js";
 import { GENDERS, INSTRUMENTS } from "./limits.js";
 import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES, applyGenealogyDoc } from "./genre-model.js";
-import { fillSelect, escapeHtml } from "./ui.js";
-import { TREG_SENDING_MELDING } from "./util.js";
+import { fillSelect } from "./ui.js";
+import { TREG_SENDING_MELDING, escapeHtml } from "./util.js";
 import { renderRichText } from "./rich-text.js";
 import { pageFor } from "./story-format.js";
 import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./shared.js";

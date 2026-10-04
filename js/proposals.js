@@ -9,14 +9,16 @@
 // ============================================================================
 
 import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } from "./store.js";
-import { diffFields, escapeHtml, modalOpen, modalClose, TECH_CATEGORIES, TECH_TYPES } from "./ui.js";
+import { diffFields } from "./ui-edit.js";
+import { modalOpen, modalClose } from "./ui-modal.js";
+import { TECH_CATEGORIES, TECH_TYPES } from "./ui-tech.js";
 import { ARTIST_FIELDS } from "./artist-schema.js";
 import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "./limits.js";
 import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "./row-editor.js";
 import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js";
 import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js";
 import { setupFormatBars } from "./format-bar.js";
-import { TREG_SENDING_MELDING } from "./util.js";
+import { TREG_SENDING_MELDING, escapeHtml } from "./util.js";
 import { wireCharCount } from "./ui-helpers.js";
 
 // Sjangervokabularet kommer fra slektstreet i Firestore, altså ASYNKRONT.

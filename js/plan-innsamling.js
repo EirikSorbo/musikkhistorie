@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { savePlan, onAuthChange } from "./store.js";
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { normaliserPlaner, normaliserSamleOps, brukSamleOps, samleMerke, samleVentende, samleTast } from "./presentasjon-modell.js";
 import { setModalApnetProvider, topOpenModal, VISNING_SVG, melding } from "./ui-modal.js";
 import { escapeHtml } from "./util.js";

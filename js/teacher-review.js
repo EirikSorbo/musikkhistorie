@@ -6,11 +6,12 @@
 // ============================================================================
 
 import { state, ctx, guardTeacherAction } from "./teacher-state.js";
-import { escapeHtml, renderEditDiff, wireEditDiff, readApprovedFields, modalOpen, modalClose } from "./ui.js";
+import { escapeHtml } from "./util.js";
+import { renderEditDiff, wireEditDiff, readApprovedFields } from "./ui-edit.js";
 import { approveTech, deleteTech, approvePendingEdit, rejectPendingEdit, sendTilbake } from "./store.js";
 import { currentEntityValues } from "./entity-values.js";
 import { erTilModerasjon } from "./limits.js";
-import { bekreft } from "./ui-modal.js";
+import { bekreft, modalOpen, modalClose } from "./ui-modal.js";
 
 // Dagens verdier bor i den delte modulen (studentens retur-editor leser de
 // samme): her bindes bare lærersidens state.

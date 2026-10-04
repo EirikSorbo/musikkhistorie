@@ -12,12 +12,15 @@
 //  samlingen kostet ekstra lesinger — det premisset er dødt.)
 //  Grupperingen (kategori → hovedkilde → artikkel) kommer fra kilder.js.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js";
+import { modalOpen } from "./ui-modal.js";
+import { escapeHtml } from "./util.js";
 import { isVisible } from "./limits.js";
 import { samleKilder } from "./kilder.js";
 import { genreNodeById, edgeExists } from "./genre-model.js";
 import { showEdgeInfo } from "./genealogy.js";
-import { opts, getState, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, sjangerOpts } from "./explore-context.js";
+import { onMainGenreClick, sjangerOpts } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
+import { metaGroupHeadHtml, wireMetaAccordion } from "./ui-metagruppe.js";
 import { openTechDetail } from "./explore-tech.js";
 import { openDecade } from "./explore-decade.js";
 import { openHistorier } from "./explore-innhold.js";

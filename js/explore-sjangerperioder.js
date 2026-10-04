@@ -19,11 +19,14 @@
 //  explore-context importerer feature-modulene tilbake, og GENEALOGY byttes ut
 //  ved hver ombygging av treet.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js";
+import { escapeHtml } from "./util.js";
+import { modalOpen } from "./ui-modal.js";
 import { GENEALOGY, META_GENRE_COLOR, onGenreModelChanged } from "./genre-model.js";
 import { storyOrder } from "./story-format.js";
 import { eraYears } from "./genealogy.js";
-import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, metaOversiktLenkeHtml } from "./explore-context.js";
+import { onMainGenreClick } from "./explore-context.js";
+import { getState } from "./app-state.js";
+import { groupColor, metaGroupHeadHtml, wireMetaAccordion, metaOversiktLenkeHtml } from "./ui-metagruppe.js";
 
 // Familiefargen til stolpenes nyanser (D6, v6.05).
 const familieFarge = (meta) => META_GENRE_COLOR[meta];

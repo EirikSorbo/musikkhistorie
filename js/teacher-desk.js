@@ -15,17 +15,18 @@
 // ============================================================================
 
 import { state, ctx, renderList, setContentCheck } from "./teacher-state.js";
-import { modalOpen } from "./ui.js";
+
 import { renderPendingEditsList } from "./teacher-review.js";
 import { openDetail } from "./teacher-artists.js";
 import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js";
 import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "./genre-model.js";
 import { storyOrder } from "./story-format.js";
 import { DECADES, isVisible, erTilModerasjon } from "./limits.js";
-import { escapeHtml, pct } from "./ui-helpers.js";
+import { pct } from "./ui-helpers.js";
+import { escapeHtml } from "./util.js";
 import { deleteTimeforslag, savePage } from "./store.js";
 import { synlighetVerdier } from "./feature-flags.js";
-import { askChoice, melding } from "./ui-modal.js";
+import { askChoice, melding, modalOpen } from "./ui-modal.js";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,

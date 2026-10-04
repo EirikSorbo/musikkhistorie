@@ -22,7 +22,7 @@
 import { lesUtvalg, lagreUtvalg, fjern, toem, UTSKRIFT_HENDELSE } from "./utskrift-utvalg.js";
 import { utvidUtvalg, parseUtskriftVis, SIDER_I_HEFTET, TYPE_ETIKETT } from "./utskrift-modell.js";
 import { stoppEtikett } from "./stopp-etikett.js";
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { isVisible } from "./limits.js";
 import { escapeHtml } from "./util.js";
 import { askChoice } from "./ui-modal.js";

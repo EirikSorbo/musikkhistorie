@@ -24,8 +24,8 @@ for (const fil of ["js/teacher.js", "js/landing.js", "js/tre-page.js"]) {
   });
 }
 
-test("explore-context: getState kaster ikke før initExplore", () => {
-  assert.match(les("js/explore-context.js"), /export function getState\(\) \{ return opts \? opts\.getState\(\) : \{\}; \}/);
+test("app-state: getState kaster ikke før initExplore", () => {
+  assert.match(les("js/app-state.js"), /export function getState\(\) \{ return opts \? opts\.getState\(\) : \{\}; \}/);
 });
 
 // v5.53: plussknappen på artistkortene og -radene i listene (plukk-modus).

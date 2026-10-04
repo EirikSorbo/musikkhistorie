@@ -29,7 +29,7 @@
 
 import { onAuthChange, savePlan } from "./store.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { normaliserPlaner, nyPlanId, medStoppSattInn, medStoppOppdatert, samleTast } from "./presentasjon-modell.js";
 import { setLenkeMenyProvider, kopierVisLenke, topOpenModal, VISNING_SVG, melding, sporTekst } from "./ui-modal.js";
 import { erSkrivefelt } from "./vis-lenke.js";

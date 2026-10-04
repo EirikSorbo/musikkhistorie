@@ -15,12 +15,12 @@ import {
   setTeacherChecks,
   getClientId,
 } from "./store.js";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js";
+import { renderArtists, fillSelect } from "./ui.js";
 import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js";
 import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js";
 import { sharedStateDefaults } from "./shared-data.js";
 import { $ } from "./shared.js";
-import { melding, bekreft } from "./ui-modal.js";
+import { melding, bekreft, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui-modal.js";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

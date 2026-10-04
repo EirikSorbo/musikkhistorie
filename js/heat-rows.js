@@ -16,9 +16,11 @@
 //  bindingen er null når denne fila evalueres.
 // ============================================================================
 
-import { escapeHtml, modalOpen, modalClose } from "./ui.js";
+import { escapeHtml } from "./util.js";
+import { modalOpen, modalClose } from "./ui-modal.js";
 import { DECADES } from "./limits.js";
-import { opts, getState, onMainGenreClick } from "./explore-context.js";
+import { onMainGenreClick } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
 import { heatRow, heatStripHtml, heatAxisHtml } from "./heat-strip.js";
 
 // Sporene (etikett + stripe) settes i CSS på .vk-row/.vk-axisrow, ikke her:

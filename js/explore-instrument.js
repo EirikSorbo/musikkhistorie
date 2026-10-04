@@ -16,15 +16,18 @@
 //  innovasjonskort, bare med `instrument` satt. Derfor står «Elektrisk gitar»
 //  både under Teknologi og på Gitar-tidslinjen — samme kort, to innganger.
 // ============================================================================
-import { modalOpen, escapeHtml, openArtistListModal, artistsInInstrumentGroup, renderTechCards } from "./ui.js";
+import { openArtistListModal, artistsInInstrumentGroup } from "./ui.js";
+import { escapeHtml, buildKilderList } from "./util.js";
+import { renderTechCards } from "./ui-tech.js";
 import { buildInstrumentTimeline, instrumentInnovations } from "./ui-timeline.js";
 import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "./limits.js";
 import { pageFor } from "./story-format.js";
 import { renderRichText } from "./rich-text.js";
-import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard, buildKilderList } from "./ui-helpers.js";
+import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard } from "./ui-helpers.js";
 import { META_GENRE_COLOR } from "./genre-model.js";
-import { opts, getState, buildLinkCtx } from "./explore-context.js";
-import { kobleFanePiler, visValgtFane } from "./ui-modal.js";
+import { buildLinkCtx } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
+import { kobleFanePiler, visValgtFane, modalOpen } from "./ui-modal.js";
 import { openTechDetail } from "./explore-tech.js";
 
 // Kategorien nye instrumentkort får automatisk — instrumentnyvinninger hører

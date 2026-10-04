@@ -10,10 +10,11 @@
 //  fører tilbake til søket etter at man har lest et treff.
 // ============================================================================
 
-import { modalOpen, escapeHtml } from "./ui.js";
+import { modalOpen } from "./ui-modal.js";
+import { escapeHtml } from "./util.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js";
 import { byggIndeks, sok, utdrag, marker } from "./search.js";
-import { getState } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { apneMaal } from "./explore-apne.js";
 import { erSkrivefelt, erSokHurtigtast } from "./vis-lenke.js";
 

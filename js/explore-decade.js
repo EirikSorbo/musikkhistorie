@@ -17,17 +17,19 @@
 //  data-sekt-merkene (markupen i explore-modals.js) styrer detaljnivået i
 //  presentasjonsvisningen.
 // ============================================================================
-import { modalOpen, renderDecadeRibbon, buildKilderList, buildTechTimeline, formatInfoText, escapeHtml,
-  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js";
+import { openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js";
+import { escapeHtml, buildKilderList } from "./util.js";
+import { renderDecadeRibbon, buildTechTimeline } from "./ui-timeline.js";
 import { ytMaal } from "./presentasjon-modell.js";
-import { wireLinks, wireRelated } from "./ui-helpers.js";
+import { wireLinks, wireRelated, formatInfoText } from "./ui-helpers.js";
 import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js";
 import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js";
 import { heatRow, getHeatData } from "./heat-strip.js";
 import { openTechDetail } from "./explore-tech.js";
 import { openVarmekart } from "./explore-varmekart.js";
-import { opts, getState, buildLinkCtx } from "./explore-context.js";
-import { kobleFanePiler } from "./ui-modal.js";
+import { buildLinkCtx } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
+import { kobleFanePiler, modalOpen } from "./ui-modal.js";
 
 // Fanene i brukerens rekkefølge. Nøklene tech/society er de gamle modusene, så
 // lenker og kjøreplanstopp som «tiår:1950:tech» virker som før.

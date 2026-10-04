@@ -6,23 +6,23 @@
 //
 //  Lavnivå-hjelpere, tidslinjer, teknologi, dashboard, modaler og diff-tabell
 //  bor i egne moduler (ui-helpers/ui-timeline/ui-tech/ui-dashboard/ui-modal/
-//  ui-edit). De re-eksporteres herfra, så resten av appen importerer alt fra
-//  ./ui.js som før.
+//  ui-edit), og resten av appen importerer dem direkte derfra. Til og med
+//  v6.28 sendte ui.js dem videre, og da dro en modul som bare trengte
+//  escapeHtml, med seg alt ui.js importerer.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, byInfluenceThenName } from "./limits.js";
 import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js";
 import { punkterHtml } from "./punkter.js";
 import { medSelv } from "./linkify.js";
 import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js";
 import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js";
 import { resolveDesc, missingDesc } from "./genre-descriptions.js";
-import { safeUrl } from "./util.js";
+import { safeUrl, escapeHtml, buildKilderList } from "./util.js";
+import { artistStripHtml } from "./artist-strip.js";
 import {
-  escapeHtml,
   linkDesc,
   wireLinks,
-  buildKilderList,
   kilderHtml,
   genreTags,
   metaRader,
@@ -32,9 +32,7 @@ import {
   wireRelated,
   keyWorksText,
   artistImage,
-  formatInfoText,
   factsLines,
-  artistStripHtml,
   sekt,
   PRIO_ICONS,
   PRIO_LABELS,
@@ -42,21 +40,10 @@ import {
   renderGenreEditBtn,
   imgTag,
 } from "./ui-helpers.js";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js";
+import { modalOpen, VISNING_SVG } from "./ui-modal.js";
 import { kortUtskriftHtml } from "./utskrift-utvalg.js";
 import { ytMaal, ytSpillelisteUrl, ytSpillelisteIder } from "./presentasjon-modell.js";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js";
-
-// Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
-export { escapeHtml, buildKilderList, formatInfoText };
-export { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders };
-export { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage };
-export { buildTechTimeline, renderDecadeSections, renderDecadeRibbon };
-export { renderDashboard, contentGaps };
-export { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff };
+import { wireProposeFoot } from "./ui-edit.js";
 
 // Memoisert på artist-array-referansen: subscribeArtists bytter referanse ved
 // hver oppdatering, så samme render-pass treffer cachen i stedet for å bygge
@@ -646,10 +633,6 @@ function buildArtistListRows(list) {
     </div>`;
   }).join("");
 }
-
-// artistsInGenre bor i limits.js fra v5.89 (sjangerkortet trenger den, og kan
-// ikke importere ui.js). Eksporteres videre herfra, så kallerne står urørt.
-export { artistsInGenre };
 
 // Aktive, synlige artister på et instrument.
 export function artistsByInstrument(artists, instrument) {

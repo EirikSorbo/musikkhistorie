@@ -8,12 +8,14 @@
 import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js";
 import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "./store.js";
 import { resolveMainDesc } from "./genealogy.js";
-import { dropboxDirectUrl } from "./util.js";
+import { dropboxDirectUrl, escapeHtml, buildKilderList } from "./util.js";
 import { GENEALOGY, edgeKey } from "./genre-model.js";
 import { storyFor, pageFor } from "./story-format.js";
 import { renderRichText } from "./rich-text.js";
 import { wrapSelection, prefixLines } from "./format-bar.js";
-import { escapeHtml, buildKilderList, buildMainGenreList, renderDecadeSections, renderDecadeRibbon, setupModal, modalOpen, techImage, fillSelect } from "./ui.js";
+import { buildMainGenreList, fillSelect } from "./ui.js";
+import { renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js";
+import { techImage } from "./ui-tech.js";
 import { resolveDesc } from "./genre-descriptions.js";
 import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js";
 import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "./limits.js";
@@ -23,7 +25,7 @@ const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" 
 import { wireAllLinks } from "./linkify.js";
 import { $ } from "./shared.js";
 import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "./row-editor.js";
-import { melding, bekreft } from "./ui-modal.js";
+import { melding, bekreft, setupModal, modalOpen } from "./ui-modal.js";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)

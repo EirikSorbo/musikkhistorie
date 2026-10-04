@@ -26,7 +26,8 @@ function kropp(src, signatur) {
 // --- Bolk D (v5.34) ----------------------------------------------------------
 
 test("funn 8: en åpen sjangerhistorie tegnes på nytt av begge snapshotene", () => {
-  const ctx = les("js/explore-context.js");
+  // contentChanged og genreDescsChanged bor i explore.js fra v6.29.
+  const ctx = les("js/explore.js");
   assert.match(ctx, /import \{[^}]*\brefreshHistorie\b[^}]*\} from "\.\/explore-innhold\.js/,
     "refreshHistorie må importeres (uten importen: ReferenceError i hvert snapshot)");
   assert.equal(antall(ctx, /\bmodal-historier"\)[^;\n]*\) refreshHistorie\(\);/g), 2,

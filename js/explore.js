@@ -4,27 +4,99 @@
 //  Injiserer og wirer modalene, og eksponerer det uendrede initExplore-API-et.
 //  Selve featurene bor i explore-*.js-modulene; den delte kjernen i
 //  explore-context.js. (explore.js var 1614 linjer før oppdelingen v3.54–3.55.)
+//
+//  Fra v6.29 bor også oppfriskingen av åpne vinduer her (contentChanged og
+//  genreDescsChanged, før i explore-context.js), og her fylles navigasjonen
+//  kjernen slår opp i (registrerNavigasjon). Begge trenger featurene, og denne
+//  fila er den eneste som importerer dem alle uten selv å bli importert av dem.
 // ============================================================================
-import { setupModal, initModalHeaders, modalClose, showSubsjangerInfo } from "./ui.js";
-import { modalBytt, visValgtFane } from "./ui-modal.js";
+import { showSubsjangerInfo } from "./ui.js";
+import { setupModal, initModalHeaders, modalClose, modalBytt, visValgtFane } from "./ui-modal.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "./feature-flags.js";
+import { refreshSjangerInfo } from "./genealogy.js";
+import { setHeatData } from "./heat-strip.js";
 import { MODAL_HTML } from "./explore-modals.js";
-import { opts, setOpts, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument, contentChanged, genreDescsChanged } from "./explore-context.js";
-import { openVarmekart } from "./explore-varmekart.js";
-import { openSjangerperioder } from "./explore-sjangerperioder.js";
-import { openTidslinje, hideTidTip } from "./explore-tidslinje.js";
+import { opts, setOpts, getState } from "./app-state.js";
+import { registrerNavigasjon, sjangerOpts, onMainGenreClick, buildLinkCtx, showArtistsForSjanger, showArtistsForInstrument } from "./explore-context.js";
+import { openVarmekart, renderVarmekartBody } from "./explore-varmekart.js";
+import { openSjangerperioder, renderSjangerperioderBody } from "./explore-sjangerperioder.js";
+import { openTidslinje, hideTidTip, tidslinjeHarSjanger } from "./explore-tidslinje.js";
 import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, refreshTeknologi } from "./explore-tech.js";
 import { openDecadeList, openDecade, refreshDecadeView } from "./explore-decade.js";
 import { openLytt } from "./explore-lytt.js";
 import { openTime } from "./explore-timer.js";
-import { openReferanser } from "./explore-referanser.js";
-import { openSubgenreList, openUndersjangre, openSubgenreInfo } from "./explore-sjanger.js";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel } from "./explore-innhold.js";
-import { openVisningssider } from "./explore-visningssider.js";
+import { openReferanser, renderReferanser } from "./explore-referanser.js";
+import { openSubgenreList, openUndersjangre, openSubgenreInfo, tegnSjangre } from "./explore-sjanger.js";
+import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel, renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
+import { openVisningssider, openArtistGalleri } from "./explore-visningssider.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
 import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js";
 import { openSok, wireSok } from "./explore-search.js";
+import { apneMaal } from "./explore-apne.js";
 import { erPresentasjon } from "./presentasjon.js";
+
+// Det kjernen (explore-context.js) og «Fra timene» (explore-timer.js) må kunne
+// åpne. Fylles her, idet modulen lastes, og ikke i kjernen selv: da hang 13
+// filer i én importring (se toppteksten i explore-context.js).
+registrerNavigasjon({ openTechDetail, openTidslinje, tidslinjeHarSjanger, openArtistGalleri, openInstrumenter, apneMaal });
+
+// Kalles av sidene når genreDescriptions-snapshotet endres: et åpent
+// sjangerkort skal vise den nye beskrivelsen med én gang, ikke først når
+// kortet lukkes og åpnes igjen. (Egen inngang fordi beskrivelsene bor i sin
+// egen samling — content-snapshotet fyrer ikke når de endres.)
+export function genreDescsChanged() {
+  refreshSjangerInfo(sjangerOpts());
+  // Sjangre-vinduet viser periodene fra beskrivelsene (v6.11). Bare
+  // innholdet tegnes (v6.23): vinduet heves ikke og fokuset flyttes ikke,
+  // så det kan tegnes også når et sjangerkort ligger oppå.
+  if (document.getElementById("modal-subgenre-list")?.classList.contains("open")) tegnSjangre();
+  // Sjangerperioder (v5.20) leser årstallene fra beskrivelsene: står figuren
+  // åpen, skal en rettet periode synes med én gang.
+  if (document.getElementById("modal-sjangerperioder")?.classList.contains("open")) renderSjangerperioderBody();
+  // Selve historieteksten bor i genreDescriptions (story-feltet) — en åpen
+  // historie skal vise lærerens lagring med én gang (audit-funn 8).
+  if (document.getElementById("modal-historier")?.classList.contains("open")) refreshHistorie();
+}
+
+// Kalles av sidene når content-snapshotet endres (import, redigering,
+// celleklikk): re-rendrer innholdsvisninger som står åpne, så endringen
+// slår gjennom uten å lukke/åpne modalen.
+export function contentChanged() {
+  // Varmenivåene legges igjen i heat-strip.js, der sjangerkortet (genealogy.js)
+  // henter dem. Kortet bygges et lag UNDER app-laget og kan ikke lese state
+  // herfra — explore-context importerer genealogy, så en import den andre veien
+  // ville lukket sirkelen. Dette er første og eneste snapshot-punktet, så linja
+  // på kortet er fersk fra første lasting og etter hver redigering.
+  setHeatData(getState().content?.varmekart?.heat || null);
+  // Står et sjangerkort åpent, tegnes det på nytt — da følger varmelinja med når
+  // læreren endrer nivåer, i stedet for å vise gamle tall til kortet lukkes.
+  // sjangerOpts() sendes med så omtegningen leser GJELDENDE state: de fangede
+  // opts fra åpningsøyeblikket pekte på utbyttede referanser og viste aldri en
+  // fersk beskrivelse.
+  refreshSjangerInfo(sjangerOpts());
+  const isOpen = (id) => document.getElementById(id)?.classList.contains("open");
+  if (isOpen("modal-om-historie")) renderPage("omHistorie", "om-historie-body", "omh-extra");
+  if (isOpen("modal-rotter")) {
+    renderPage("rotter", "rotter-body", "rotter-extra");
+    // Rot-boblene bygges av sjangertreet, som lander ASYNKRONT. Sto kortet
+    // åpent da snapshotet kom, ble de stående tomme til det ble lukket og
+    // åpnet igjen.
+    renderRotterChips();
+  }
+  if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
+  if (isOpen("modal-varmekart")) renderVarmekartBody();
+  // Historien (v5.34, audit-funn 8): varmestripene over fortellingen leser
+  // samme heat-data som varmekartet, og lærerens celleklikk skal synes der
+  // også — kortet var den eneste innholdsvisningen uten snapshot-gren, så
+  // stripa og nivåvelgeren motsa hverandre etter lagring.
+  if (isOpen("modal-historier")) refreshHistorie();
+  // Sjangerperioder: treet kommer via content, og en figur som sto og ventet på
+  // det skal enten tegnes eller si at treet mangler. Tegner bare om ved endring.
+  if (isOpen("modal-sjangerperioder")) renderSjangerperioderBody();
+  // Frittstående referanser bor i content: lagrer læreren en ny, skal kortet
+  // vise den med én gang, ikke ved neste åpning.
+  if (isOpen("modal-referanser")) renderReferanser();
+}
 
 function injectModals() {
   const wrap = document.createElement("div");

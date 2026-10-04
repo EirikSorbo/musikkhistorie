@@ -10,14 +10,15 @@
 //  Galleriet viser de samme artistene som «Artister»-knappen og navnelista på
 //  sjangerkortet (artistsInGenre), i samme rekkefølge.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js";
+import { modalOpen } from "./ui-modal.js";
 import { imgTag, wireRelated } from "./ui-helpers.js";
-import { safeUrl } from "./util.js";
+import { safeUrl, escapeHtml } from "./util.js";
 import { artistsInGenre } from "./limits.js";
 import { GENEALOGY, META_GENRE_COLOR, FAMILIES } from "./genre-model.js";
 import { genreFamilyNodes } from "./ui-timeline.js";
 import { storyOrder } from "./story-format.js";
-import { getState, buildLinkCtx } from "./explore-context.js";
+import { buildLinkCtx } from "./explore-context.js";
+import { getState } from "./app-state.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
 
 const metaFarge = (meta) => META_GENRE_COLOR[meta] || FAMILIES.gray?.stroke || "#9bada1";

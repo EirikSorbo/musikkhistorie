@@ -4,9 +4,9 @@
 //  Rene, gjenbrukbare byggeklosser for rendering (HTML-snutter, formattering).
 //  Avhenger kun av util + linkify + rich-text + limits (GENDERS) + artist-strip
 //  + ui-modal (avhengighetsfri) — INGEN render-funksjoner, så modulen kan
-//  importeres fritt uten import-sykler. artistStripHtml re-eksporteres herfra,
-//  så ui.js henter alle byggeklossene sine ett sted.
-//  Re-eksporteres fra ui.js.
+//  importeres fritt uten import-sykler. Den sender ingenting videre (fra
+//  v6.29): escapeHtml og safeUrl hentes fra util.js, artistStripHtml fra
+//  artist-strip.js.
 // ============================================================================
 
 import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "./util.js";
@@ -15,9 +15,6 @@ import { renderRichText, renderInline } from "./rich-text.js";
 import { GENDERS } from "./limits.js";
 import { askChoice, modalClose } from "./ui-modal.js";
 import { lesPunkter, punkterTilTekst, punktVarsel } from "./punkter.js";
-export { artistStripHtml } from "./artist-strip.js";
-
-export { escapeHtml, buildKilderList, safeUrl };
 
 // Bilde-fallback: når en skalert Wikimedia-thumbnail ikke lar seg hente
 // (Wikimedia avviser enkelte ferske bredder), bytt <img> tilbake til

@@ -6,7 +6,8 @@
 //  huben er inngangen til den. Flyttet ut av explore.js (v3.55, runde 2).
 //  currentStoryGenre er modul-tilstand her.
 // ============================================================================
-import { modalOpen, escapeHtml } from "./ui.js";
+import { modalOpen } from "./ui-modal.js";
+import { escapeHtml } from "./util.js";
 import { isVisible } from "./limits.js";
 import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "./genre-model.js";
 import { pageFor, storyFor, stripGenrePath, storyOrder } from "./story-format.js";
@@ -15,7 +16,8 @@ import { genreFamilyNodes } from "./ui-timeline.js";
 import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js";
 import { wireLinks } from "./ui-helpers.js";
 import { renderSjangerhimmel } from "./constellation.js";
-import { opts, getState, buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js";
+import { buildLinkCtx, injectTeacherRow, onMainGenreClick } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
 
 // Samleinngang for «vis meg helheten»: alle tidslinjer og visuelle oversikter

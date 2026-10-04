@@ -6,16 +6,17 @@
 
 import { state, ctx, openAdminModal, lukkEtter, renderList, settTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js";
 import { updateArtistFields, setTeacherChecks } from "./store.js";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js";
+import { renderArtistDetail, fillSelect, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js";
+import { renderDashboard } from "./ui-dashboard.js";
 import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js";
 import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js";
 import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js";
-import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js";
+import { GENDERS, INSTRUMENTS, isVisible, artistsInGenre } from "./limits.js";
 import { debounce } from "./util.js";
 import { $ } from "./shared.js";
 import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js";
 import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js";
-import { melding, bekreft } from "./ui-modal.js";
+import { melding, bekreft, modalOpen, modalClose } from "./ui-modal.js";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore

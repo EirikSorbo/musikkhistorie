@@ -17,8 +17,8 @@
 //  layout — ingen avhengigheter. Zoom/pan for detaljer.
 // ============================================================================
 import { GENEALOGY, FAMILIES, canonMainGenre, famOf, nodeColor, layoutX } from "./genre-model.js";
-import { escapeHtml } from "./ui-helpers.js";
-import { safeUrl, wikimediaThumb } from "./util.js";
+
+import { safeUrl, wikimediaThumb, escapeHtml } from "./util.js";
 
 const SVGNS = "http://www.w3.org/2000/svg";
 // Lerret i treets rekkefølge (samme cx-orden som genealogy.js), men radene er

@@ -11,7 +11,8 @@
 //  frister, ingen polling — sidene kaller provVisMaal fra snapshot-hookene.
 // ============================================================================
 
-import { opts, getState, onMainGenreClick, sjangerOpts } from "./explore-context.js";
+import { onMainGenreClick, sjangerOpts } from "./explore-context.js";
+import { opts, getState } from "./app-state.js";
 import { showSubsjangerInfo } from "./ui.js";
 import { showEdgeInfo } from "./genealogy.js";
 import { openTechDetail, openTeknologi } from "./explore-tech.js";
