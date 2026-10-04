@@ -1,8 +1,8 @@
 // ============================================================================
 //  UI — ENDRINGSFORSLAG (diff-hjelpere)
 // ----------------------------------------------------------------------------
-//  Bygger og håndterer diff-tabellen for endringsforslag. Re-eksporteres fra
-//  ui.js, så teacher.js og proposals.js importerer dem derfra som før.
+//  Bygger og håndterer diff-tabellen for endringsforslag. Brukes av
+//  proposals.js, teacher-review.js, ui.js og genealogy.js.
 // ============================================================================
 
 import { escapeHtml } from "../felles/util.js";

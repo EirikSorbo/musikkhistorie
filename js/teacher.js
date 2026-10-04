@@ -1,5 +1,5 @@
 // ============================================================================
-//  LÆRER — ENTRY
+//  LÆRERSIDEN (teacher.html) — innlogging, oppstart og abonnementer
 // ----------------------------------------------------------------------------
 //  Innlogging, oppstart og Firestore-abonnementer. All feature-logikk bor i
 //  teacher-*.js-modulene; denne fila binder dem sammen rundt det delte

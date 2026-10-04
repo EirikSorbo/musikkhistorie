@@ -1,8 +1,8 @@
 // ============================================================================
-//  UI — MODALER
+//  UI — MODALER: åpne og lukke, tilbake-knappen og appens meldingsbokser
 // ----------------------------------------------------------------------------
-//  Felles åpne/lukke-logikk for popup-modaler. Re-eksporteres fra ui.js, så
-//  resten av appen importerer dem derfra som før.
+//  Felles åpne/lukke-logikk for popup-modaler. Resten av appen importerer den
+//  herfra (fra v6.29; før gikk den via ui.js).
 //
 //  Tilgjengelighet (WCAG): modalOpen setter role="dialog"/aria-modal, flytter
 //  fokus inn i dialogen og husker hvor fokus sto; modalCloseTop/modalClose

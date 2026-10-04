@@ -77,65 +77,31 @@ tre.html              Slektstre-siden (bundlede bånd)
 utskrift.html         Utskrift: studentens eget hefte av valgte kort (PDF via nettleseren)
 css/styles.css        Styling (lyst, moderne tema)
 css/utskrift.css      Heftet på skjerm og papir (@page, sidebrytinger)
-js/
+js/                   Modulene, i mapper etter område (alle filene: MODULKART.md)
+  landing.js …        Én fil per side rett i js/, pluss gate, load-guard og version
   firebase-config.js  Firebase-nøkler + lærer-e-poster  ← DU FYLLER INN
-  shared.js           Delte hjelpere (oppsett-sjekk, banner, $)
-  shared-data.js      DEN ENE dataroten: alle sider abonnerer på de syv delte
-                      samlingene gjennom denne (sharedStateDefaults + subscribeSharedData)
-  util.js             Avhengighetsfrie hjelpere (escapeHtml, safeUrl, debounce)
-  store.js            Datalag mot Firestore (sanntid, CRUD, stemming, migreringsbatch)
-  version.js          Appversjonen (cache-busting; bump + ./bump.sh)
-  gate.js             Klassekoden foran appen (se eget avsnitt)
-  load-guard.js       Feilbanner når Firebase ikke laster
-  artist-schema.js    ÉN sannhetskilde for artistfeltene (nøkler/etiketter/typer)
-  artist-normalize.js Normalisering av artistdata (ren, enhetstestbar)
-  artist-cache.js     localStorage-speil av artistlista
-  import-format.js    Parselogikk for import-JSON (ren, enhetstestbar)
-  limits.js           Instrumentvokabularet, DECADES, telling, isVisible, statistikk
-  genre-model.js      SJANGERMODELLEN: leser content/genealogy fra Firestore og
-                      avleder alt (vokabular, kanter, farger, tiårsakse) med live
-                      bindings — fang aldri en avledning i en modulnivå-konstant
-  genre-layout.js     Utregnet x per node (erstattet håndsatte koordinater)
-  genre-validate.js   Validerer et tre før import/lagring (sykler, duplikater …)
-  genre-migrate.js    PLANLEGGER identitetsbytter (navnebytte/sletting) — ren logikk
-  genealogy-data.js   FRØET (treet slik det sto i v4.47) — KUN for tools/ og tests/
-  genealogy.js        Sjanger- og koblingskortene (popupene)
-  genealogy-bundled.js Slektstre-rendereren (bundlede bånd)
-  gx-camera.js        Panorering/zoom/pinch for kartvisningene
-  genre-descriptions.js  Nivådelte sjangerbeskrivelser (meta/main/sub)
-  story-format.js     Sjangerhistoriene og innholdssidene: oppslag + storyOrder
-  constellation.js    Sjangerhimmelen (stjernekart)
-  kilder.js           Kilde-gruppering bak Referanser-kortet
-  heat-strip.js       Varmestripa (delt av varmekartet og sjangerkortet)
-  linkify.js          Auto-lenking av artist-/tech-/sjangernavn i tekst
-  rich-text.js / format-bar.js  Markdown-light i beskrivelser + formatlinja
-  row-editor.js       Spec-drevne rad-editorer (verk/lytteeksempler/kilder)
-  app-state.js        Sidens opts og getState() (satt av initExplore); importerer
-                      ingenting, så alle kan lese tilstanden
-  ui.js               Rendering av artistkort og lister
-  ui-*.js             Hjelpere, modaler, tidslinjer, tech, dashboard, diff,
-                      metagruppene i listene (ui-metagruppe.js). Importer fra
-                      modulen som definerer navnet, ikke via ui.js
-  explore.js          Utforsk — orkestrator (injiserer/wirer modalene, initExplore),
-                      oppfrisking av åpne vinduer og registrering av navigasjonen
-  explore-*.js        Utforsk-featurene: context (delt kjerne; åpner featurene via
-                      nav, importerer dem ikke), modals, varmekart, tidslinje,
-                      tech, decade, referanser, sjanger, innhold, instrument
-  proposals.js        Endringsforslag-editoren (student)
-  landing.js / student.js / tre.js / tre-page.js   Side-logikk
-  utskrift.js         Utskriftssiden: panelet, søk for å legge til, heftet
-  utskrift-modell.js  Heftets struktur (ren, testet): utvalg, rekkefølge, lytteliste,
-                      kilder, tittelforslag
-  utskrift-utvalg.js  Utvalget i localStorage, «Ta med»-knappen i kortene og merket
-                      på skriverikonet
-  teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler,
-                      inkl. teacher-genres.js: sjangertre-editoren)
+  utforsk/            Utforsk: Det store bildet, tiår, sjangre, varmekart, søk …
+  sjangre/            Sjangermodellen, sjangerkortet og slektstreet
+  visning/            Presentasjonsvisningen og kjøreplanene
+  laerer/             Lærersiden
+  forslag/            Endringsforslagene
+  utskrift/           Heftet
+  ui/                 Byggeklosser for skjermen (kort, lister, modaler, spilleren)
+  data/               Firestore, den delte dataroten og appens tilstand
+  felles/             Hjelpere og vokabular som flere deler av appen bruker
+  vendor/             Tredjepartskode (QR-koder)
+MODULKART.md          Alle filene i js/, én linje hver, laget av tools/modulkart.js
 tests/                Enhetstester (node --test) + regeltester (emulator)
-tools/                check-imports, find-stale-refs, importkart, check-versjon,
-                      seed-genealogy, build-genealogy-doc, dump-genre-fixture
+tools/                check-imports, find-stale-refs, importkart, modulkart,
+                      check-versjon, seed-genealogy, build-genealogy-doc, dump-genre-fixture
 firestore.rules       Sikkerhetsregler for databasen
-bump.sh               Setter ?v=… og importkartet (cache-busting) fra js/version.js
+bump.sh               Setter ?v=…, importkartet og modulkartet fra js/version.js
 ```
+
+Modulkartet ([MODULKART.md](MODULKART.md)) viser hver fil med tittellinjen fra
+innledningen øverst i fila, og reglene koden holder seg til. Det lages av
+`tools/modulkart.js` (kjøres av `./bump.sh`), og pre-push-kroken og GitHub
+stopper et kart som ikke stemmer med filene, så det kan ikke gå ut på dato.
 
 **Datamodell (Firestore):** samlingene `artists`, `config` (`teacherChecks`),
 `decades`, `genreDescriptions` (nivåfeltene meta/main/sub + `story` =

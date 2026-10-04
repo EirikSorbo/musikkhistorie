@@ -1,5 +1,5 @@
 // ============================================================================
-//  UTSKRIFT — siden (v5.56)
+//  UTSKRIFTSSIDEN (utskrift.html) — panelet, søket og heftet (v5.56)
 // ----------------------------------------------------------------------------
 //  utskrift.html: studentens hefte. Panelet øverst styrer utvalget (søk for å
 //  legge til, liste med fjerning, rekkefølge), tittelen, delene og formen.

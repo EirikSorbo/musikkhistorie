@@ -1,3 +1,11 @@
+// ============================================================================
+//  LENKER I LØPENDE TEKST — artist-, sjanger- og innovasjonsnavn blir klikkbare
+// ----------------------------------------------------------------------------
+//  Finner navnene på artister, sjangre og innovasjoner i beskrivelser og
+//  historier og gjør dem til lenker til kortene deres (linkifyAll), kobler
+//  klikkene (wireAllLinks), og svarer på hvilke artister en tekst nevner
+//  (nevnteArtister, nevnerNavn). medSelv holder kortets eget navn utenfor.
+// ============================================================================
 import { escapeHtml as esc } from "./util.js";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):

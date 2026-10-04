@@ -1,5 +1,10 @@
 # Handover — pensum-appen, status 22. august 2026
 
+> **Historisk dokument.** Dette beskriver appen slik den sto 22. august 2026
+> (v4.68), og oppdateres ikke. Gjeldende oversikt: [README.md](README.md) og
+> [MODULKART.md](MODULKART.md). Filstiene under er rettet til mappene fra v6.30,
+> men innholdet ellers er som det var.
+
 Skrevet ved kontekstbytte 21.08; oppdatert 22.08 etter den store gjennomgangen
 (v4.65 bugfikser + v4.66 sletterunde + v4.67 tester/verktøy/dokumentasjon +
 v4.68 brukerens avklaringer).

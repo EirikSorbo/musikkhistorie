@@ -1,5 +1,5 @@
 // ============================================================================
-//  LAST-VAKT
+//  LAST-VAKT — feilmelding når Firebase ikke laster
 // ----------------------------------------------------------------------------
 //  Hvis Firebase-SDK-en (fra gstatic.com) ikke laster — brannmur, captive
 //  portal, CDN-utfall — aborterer hele ES-modulgrafen, og siden ville ellers

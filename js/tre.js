@@ -1,5 +1,5 @@
 // ============================================================================
-//  SLEKTSTRE-SIDEN
+//  SLEKTSTRESIDEN (tre.html) — velger rendereren; resten bor i tre-page.js
 // ----------------------------------------------------------------------------
 //  All oppkobling bor i tre-page.js. Denne fila velger rendereren.
 //

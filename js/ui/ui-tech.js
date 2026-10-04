@@ -1,7 +1,7 @@
 // ============================================================================
-//  UI — TEKNOLOGI
+//  UI — TEKNOLOGI: innovasjonskortene (liste og detalj)
 // ----------------------------------------------------------------------------
-//  Rendering av teknologi-kort (liste og detalj). Re-eksporteres fra ui.js.
+//  Rendering av teknologi-kort (liste og detalj).
 // ============================================================================
 
 import { escapeHtml, safeUrl, buildKilderList } from "../felles/util.js";

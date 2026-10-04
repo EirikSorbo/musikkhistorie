@@ -1,5 +1,5 @@
 // ============================================================================
-//  SLEKTSTRE-SIDE — DELT OPPSTART
+//  SLEKTSTRESIDEN (tre.html) — oppkoblingen: treet, sjangerkortene og dataene
 // ----------------------------------------------------------------------------
 //  Oppstarten for slektstresiden (tre.html). Rendereren injiseres (tre.js
 //  sender renderGenealogyBundled — bundlede bånd, en låst designbeslutning);

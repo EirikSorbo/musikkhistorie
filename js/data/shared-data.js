@@ -1,5 +1,5 @@
 // ============================================================================
-//  DELT DATAROT
+//  DELT DATAROT — alle sider abonnerer på de delte samlingene herfra
 // ----------------------------------------------------------------------------
 //  De delte komponentene (sjangerkortet, artistlista, spillelista, innovasjons-
 //  kortet, instrumentsidene, slektstreet) leses fra SYV samlinger: artists,

@@ -4,7 +4,7 @@
 //  Pensum-oversikten i tre seksjoner: FORM (hva pensumet inneholder — tiår,
 //  sjangre, kjønn, instrument), HULL (hvor det er tynt) og MANGLER (innhold
 //  som ikke er skrevet ennå). Ingen arbeidsflyt-tall her — moderering bor i
-//  forslags-flyten. Re-eksporteres fra ui.js.
+//  forslags-flyten.
 //
 //  All klikk-håndtering går via ETT delegert el.onclick (tilordning, ikke
 //  addEventListener — modalen re-rendres ved hver åpning, og en lytter per

@@ -2,9 +2,9 @@
 //  UI — TIDSLINJER
 // ----------------------------------------------------------------------------
 //  Bygger proporsjonale tidslinjer for tiår (hendelser fra tekst), teknologi og
-//  sjangerfamilier. Intern layout-logikk holdes privat her. Re-eksporteres fra
-//  ui.js. Importerer GENEALOGY (treet er fasit for sjangertidslinjen) — trygt,
-//  fordi genealogy.js ikke importerer denne modulen.
+//  sjangerfamilier. Intern layout-logikk holdes privat her. Importerer
+//  GENEALOGY (treet er fasit for sjangertidslinjen) — trygt, fordi genealogy.js
+//  ikke importerer denne modulen.
 // ============================================================================
 
 import { escapeHtml } from "../felles/util.js";

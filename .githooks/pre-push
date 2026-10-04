@@ -9,6 +9,8 @@
 #      eller tests/ HAR ?v= (versjonen står i importkartet fra v6.28), en
 #      js/css-referanse i HTML mangler ?v= eller har feil versjon, eller et
 #      importkart er utdatert (kjør ./bump.sh)
+#    · modulkartet (MODULKART.md) ikke stemmer med filene, eller en fil i js/
+#      mangler innledning (tools/modulkart.js; kjør ./bump.sh)
 #  Aktiveres med:  git config core.hooksPath .githooks
 # ---------------------------------------------------------------------------
 set -euo pipefail
@@ -23,6 +25,9 @@ node tools/find-stale-refs.js >/dev/null || { echo "pre-push: stale referanser. 
 # Cache-busting: ?v= i HTML og importkartene, i takt med js/version.js.
 # Delt med CI (tools/check-versjon.sh), så kroken og GitHub sjekker det samme.
 bash tools/check-versjon.sh >/dev/null || { bash tools/check-versjon.sh; exit 1; }
+
+# Modulkartet skal stemme med filene og innledningene deres (delt med CI).
+node tools/modulkart.js --sjekk >/dev/null 2>&1 || { node tools/modulkart.js --sjekk; exit 1; }
 
 # Glemt versjonsbump: hvis CSS/JS endres i det som pushes, MÅ js/version.js også
 # være endret — ellers får studenter med cachet fil gammel kode mot nytt innhold.

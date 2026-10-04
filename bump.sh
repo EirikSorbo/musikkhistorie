@@ -24,5 +24,8 @@ for f in *.html; do
   perl -i -pe "s/((?:src|href)=\"(?:js|css)\/[^\"?]+)\?v=[0-9][0-9.]*/\$1?v=$VER/g" "$f"
 done
 node tools/importkart.js
+# Modulkartet (MODULKART.md) lages av innledningen øverst i hver fil, så en ny
+# fil eller en endret tittellinje kommer med når versjonen bumpes.
+node tools/modulkart.js
 
-echo "Satt ?v=$VER i *.html og importkartet"
+echo "Satt ?v=$VER i *.html og importkartet, og oppdaterte modulkartet"

@@ -1,5 +1,5 @@
 // ============================================================================
-//  TEKNOLOGI
+//  TEKNOLOGI — innovasjonskortene (liste og detalj)
 // ----------------------------------------------------------------------------
 //  Innovasjonskort (detalj + liste). Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.

@@ -1,3 +1,13 @@
+// ============================================================================
+//  FORSIDEN (index.html) — Utforsk, dagens artist, artistsøket og stemmene
+// ----------------------------------------------------------------------------
+//  Kobler opp forsiden: Utforsk-laget (initExplore), dagens artist, søk og
+//  filtre i Artister, artistkortet, stemming, endringsforslag (ett ventende per
+//  kort), «Fra timene» og returpanelet («Har du fått en kode fra læreren?»).
+//  Starter først når klassekoden er godtatt (gate.js) og rollen er valgt.
+//  Dataene kommer fra den delte dataroten (data/shared-data.js), og artistlista
+//  speiles i localStorage (data/artist-cache.js) for rask start.
+// ============================================================================
 import { fetchPendingEdits, voteUp, undoVoteUp, getClientId, onAuthChange, fetchMineReturer, fetchReturMedKode } from "./data/store.js";
 import { subscribeSharedData, sharedStateDefaults } from "./data/shared-data.js";
 import { SKJUL_I_STUDENTVISNING } from "./felles/feature-flags.js";

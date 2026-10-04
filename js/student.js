@@ -1,5 +1,5 @@
 // ============================================================================
-//  STUDENTSIDE — foreslå artist, legg til info, se liste, stem
+//  STUDENTSIDEN (student.html) — foreslå artist, legg til info, se liste, stem
 // ============================================================================
 
 import {
