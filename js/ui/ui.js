@@ -781,6 +781,15 @@ function playlistRows(list, sj = null) {
   return eksempelRader(par, "Ingen musikkeksempler registrert for denne sjangeren ennå.");
 }
 
+// Sjangerboblen(e) i en spillelisterad: et tagget eksempel viser sin EGEN
+// sjanger (én boble), et utagget artistens sjangre. Delt av spillelistene og
+// Tiår-kortets lytteliste (v6.36), så de viser det samme.
+export function eksempelSjangerHtml(a, m) {
+  return m.genre
+    ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(m.genre)}">${escapeHtml(m.genre)}</button>`
+    : genreTags(a, { withSub: false, extraClass: "tag-pl" });
+}
+
 // Radene for en liste av { a: artist, m: lytteeksempel } (v6.05: delt av
 // sjanger- og metasjanger-listene over og tiårslistene under, U7/K1).
 function eksempelRader(par, tomTekst) {
@@ -788,11 +797,7 @@ function eksempelRader(par, tomTekst) {
   // som bruker radnumrene i spennet (spillAlleHtml).
   const ider = [];
   const items = par.map(({ a, m }) => {
-    // Tagget rad viser eksempelets EGEN sjanger (én boble); utagget viser
-    // artistens sjangre.
-    const rowTag = m.genre
-      ? `<button class="tag tag-sjanger tag-pl" data-sjanger="${escapeHtml(m.genre)}">${escapeHtml(m.genre)}</button>`
-      : genreTags(a, { withSub: false, extraClass: "tag-pl" });
+    const rowTag = eksempelSjangerHtml(a, m);
     const video = ytMaal(m.url)?.video;
     ider.push(video || null);
     const yInfo = musicExampleLabel(m);

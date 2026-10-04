@@ -17,7 +17,7 @@
 //  data-sekt-merkene (markupen i explore-modals.js) styrer detaljnivået i
 //  presentasjonsvisningen.
 // ============================================================================
-import { openArtistListModal, tiarEksempler, spillAlleHtml } from "../ui/ui.js";
+import { openArtistListModal, tiarEksempler, spillAlleHtml, eksempelSjangerHtml } from "../ui/ui.js";
 import { escapeHtml, buildKilderList } from "../felles/util.js";
 import { renderDecadeRibbon, buildTechTimeline } from "../ui/ui-timeline.js";
 import { ytMaal } from "../visning/presentasjon-modell.js";
@@ -248,6 +248,6 @@ function tegnMusikk(d, s, lc) {
   lyttEl.innerHTML = `<h4 class="related-head">Lytt (${par.length})</h4>`
     + (par.length
       ? spillAlleHtml(par.map(({ m }) => ytMaal(m.url)?.video || null))
-        + `<ul class="pl-list dv-pl">${par.map(({ a, m, y }) => `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")} <span class="pl-aar">(${y})</span></a><span class="pl-hoyre"><span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`).join("")}</ul>`
+        + `<ul class="pl-list dv-pl">${par.map(({ a, m, y }) => `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")} <span class="pl-aar">(${y})</span></a><span class="pl-hoyre">${eksempelSjangerHtml(a, m)} <span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`).join("")}</ul>`
       : `<p class="muted dv-tom">Ingen lytteeksempler fra dette tiåret ennå.</p>`);
 }

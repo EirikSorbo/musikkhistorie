@@ -3829,6 +3829,10 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 .dv-pl .pl-item a:hover, .dv-pl .dv-artist:hover, .dv-pl .dv-artist:focus-visible { color: var(--accent-2); text-decoration: none; }
 .dv-pl .pl-aar { color: var(--muted); font-size: 0.85em; }
 .dv-pl .pl-hoyre { margin-left: auto; flex-shrink: 0; max-width: 45%; text-align: right; font-size: 0.8rem; color: var(--muted); }
+/* Lyttelista i Tiår har sjangerboblen foran artistnavnet (v6.36), som
+   spillelistene: boblen og navnet på linje til høyre, og bryter pent. */
+#dv-musikk-lytt .dv-pl .pl-hoyre { display: flex; align-items: baseline; justify-content: flex-end; flex-wrap: wrap; gap: 0 0.4rem; max-width: 55%; }
+#dv-musikk-lytt .dv-pl .tag.tag-pl { margin-left: 0; }
 .dv-kol .pl-alle { margin: 0 0 6px; }
 .dv-musikk .dv-sjanger { font-size: 0.86rem; }
 .dv-musikk .dv-varme { width: 44px; }
