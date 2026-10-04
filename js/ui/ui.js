@@ -249,14 +249,22 @@ function levetid(a) {
   if (a.birthYear) return `f. ${a.birthYear}`;
   return "";
 }
-export function artistGalleriHtml(liste) {
+// `visPrioritet` (v6.31, brukervalg 2026-10-04): prioritetsmerket øverst til
+// venstre på bildet, samme ikon og farge som på artistkortet. Samme regel som
+// kortene: læreren ser det alltid, studentene bare når bryteren
+// «Viktighetsgraden» er på.
+export function artistGalleriHtml(liste, { visPrioritet = false } = {}) {
   if (!liste.length) return `<p class="muted empty">Ingen artister matcher søket.</p>`;
   return `<div class="ar-galleri">${liste.map((a) => {
     const url = safeUrl(a.imageUrl);
     const sjangre = (a.mainGenre || []).join(", ");
     const under = (a.subGenre || []).join(", ");
+    const prio = visPrioritet ? (a.priority || 0) : 0;
+    const prioMerke = prio && PRIO_ICONS[prio]
+      ? `<span class="tag tag-prio prio-${prio} ar-prio" title="${PRIO_LABELS[prio]}" aria-label="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
+      : "";
     return `<button type="button" class="ar-kort" data-galleri-id="${escapeHtml(a.id)}">
-      <span class="ar-bilde">${url ? imgTag(url, a.name, 250) : `<span class="ar-initialer" aria-hidden="true">${escapeHtml((a.name || "?").split(/\s+/).map((o) => o[0]).slice(0, 2).join(""))}</span>`}</span>
+      <span class="ar-bilde">${prioMerke}${url ? imgTag(url, a.name, 250) : `<span class="ar-initialer" aria-hidden="true">${escapeHtml((a.name || "?").split(/\s+/).map((o) => o[0]).slice(0, 2).join(""))}</span>`}</span>
       <span class="ar-navn">${escapeHtml(a.name)}</span>
       ${sjangre ? `<span class="ar-linje ar-sjanger">${escapeHtml(sjangre)}</span>` : ""}
       ${under ? `<span class="ar-linje">${escapeHtml(under)}</span>` : ""}
@@ -314,7 +322,7 @@ export function renderArtists(el, state) {
       document.removeEventListener("scroll", el._listOnScroll, true);
       el._listOnScroll = null;
     }
-    el.innerHTML = artistGalleriHtml(list);
+    el.innerHTML = artistGalleriHtml(list, { visPrioritet: isTeacher || !SKJUL_I_STUDENTVISNING.viktighetsgrad });
     el._galleriListe = list;
     el._galleriVelg = onSelect || (() => {});
     if (!el.dataset.galleriKoblet) {

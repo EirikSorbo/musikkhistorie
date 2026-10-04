@@ -174,7 +174,7 @@ export const MODAL_HTML = `
 <div class="modal-backdrop" id="modal-lytt" data-vis="lytt">
   <div class="modal modal-innhold">
     <div class="modal-head">
-      <h2>Lytt</h2>
+      <h2>Spillelister</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="lytt-body"></div>

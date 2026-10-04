@@ -262,7 +262,7 @@ const SYNLIGHET_RADER = [
   { id: "koblinger", navn: "Koblingstekstene (i slektstreet og på sjangerkortet)", student: ["koblingsbeskrivelser"] },
   { id: "horEtter", navn: "«Hør etter» på sjangerkortene", student: ["horEtter"] },
   { id: "viktighet", navn: "Viktighetsgraden", student: ["viktighetsgrad"] },
-  { id: "fraTimene", navn: "«Fra timene» (delte timer på forsiden og i Lytt)", student: ["fraTimene"] },
+  { id: "fraTimene", navn: "«Fra timene» (delte timer på forsiden og i Spillelister)", student: ["fraTimene"] },
   { id: "omHistorie", navn: "Om historie", hub: ["sb-om-historie"] },
   { id: "rotter", navn: "Røtter", hub: ["sb-rotter"] },
   { id: "himmel", navn: "Sjangerhimmelen", hub: ["sb-himmel"] },

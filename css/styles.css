@@ -3876,7 +3876,12 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
   display: block; aspect-ratio: 4 / 5; margin-bottom: 5px; overflow: hidden;
   border-radius: 8px; background: var(--surface-2);
 }
+.ar-bilde { position: relative; }
 .ar-bilde img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; display: block; transition: transform 0.2s ease; }
+/* Prioritetsmerket på galleribildet (v6.31): samme merke som på kortene,
+   litt mindre, øverst til venstre over bildet. */
+.ar-bilde .ar-prio { position: absolute; top: 5px; left: 5px; z-index: 1; padding: 2px 5px; box-shadow: 0 1px 3px rgba(20, 21, 42, 0.18); }
+.ar-bilde .ar-prio svg { width: 13px; height: 13px; }
 .ar-kort:hover .ar-bilde img, .ar-kort:focus-visible .ar-bilde img { transform: scale(1.03); }
 .ar-initialer { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; color: var(--muted-2); }
 .ar-navn { font-weight: 600; font-size: 0.8rem; line-height: 1.25; overflow-wrap: anywhere; }

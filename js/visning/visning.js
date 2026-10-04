@@ -186,7 +186,7 @@ function renderListe() {
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Ta opp alt du åpner som stopp, til du trykker Ferdig">Ta opp</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
           <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
-          <label class="vis-del" title="Vis planen for studentene under «Fra timene» på forsiden og i Lytt"><input type="checkbox" data-pres-del="${escapeHtml(id)}"${p.delt ? " checked" : ""}> Del med studentene</label>
+          <label class="vis-del" title="Vis planen for studentene under «Fra timene» på forsiden og i Spillelister"><input type="checkbox" data-pres-del="${escapeHtml(id)}"${p.delt ? " checked" : ""}> Del med studentene</label>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
       </div>`;

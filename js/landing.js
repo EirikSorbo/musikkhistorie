@@ -389,7 +389,7 @@ function renderFilterResults() {
   // Kronologisk, som kortene (renderArtists sorterer filtrerte treff slik).
   pool.sort((a, b) => (a.influenceStart || 0) - (b.influenceStart || 0) || a.name.localeCompare(b.name, "no"));
   if (filterView === "liste") renderResultList(el, pool, openDetail);
-  else el.innerHTML = artistGalleriHtml(pool);
+  else el.innerHTML = artistGalleriHtml(pool, { visPrioritet: !SKJUL_I_STUDENTVISNING.viktighetsgrad });
 }
 
 // ----------------------------------------------------------------------------

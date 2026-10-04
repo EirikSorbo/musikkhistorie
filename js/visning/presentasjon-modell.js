@@ -452,7 +452,7 @@ const VISNING_NAVN = {
   "store-bildet": "Det store bildet", slektstre: "Slektstreet",
   podkaster: "Podkastene",
   // Vinduene med egen adresse fra v6.08 (S7).
-  sjangre: "Sjangrene", undersjangre: "Undersjangrene", artister: "Artistene", lytt: "Lytt",
+  sjangre: "Sjangrene", undersjangre: "Undersjangrene", artister: "Artistene", lytt: "Spillelistene",
 };
 const SIDE_NAVN = { omHistorie: "Om historie", rotter: "Røtter før 1910" };
 
