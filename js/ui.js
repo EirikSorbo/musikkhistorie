@@ -10,14 +10,14 @@
 //  ./ui.js som før.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.25";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.25";
-import { punkterHtml } from "./punkter.js?v=6.25";
-import { medSelv } from "./linkify.js?v=6.25";
-import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.25";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.25";
-import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.25";
-import { safeUrl } from "./util.js?v=6.25";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, artistsInGenre, byInfluenceThenName } from "./limits.js?v=6.26";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.26";
+import { punkterHtml } from "./punkter.js?v=6.26";
+import { medSelv } from "./linkify.js?v=6.26";
+import { showSjangerInfo, clearOpenSjanger } from "./genealogy.js?v=6.26";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, META_GENRE_COLOR, findTreeGenreNode } from "./genre-model.js?v=6.26";
+import { resolveDesc, missingDesc } from "./genre-descriptions.js?v=6.26";
+import { safeUrl } from "./util.js?v=6.26";
 import {
   escapeHtml,
   linkDesc,
@@ -40,14 +40,15 @@ import {
   PRIO_LABELS,
   ICONS,
   renderGenreEditBtn,
-} from "./ui-helpers.js?v=6.25";
-import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.25";
-import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.25";
-import { ytMaal, ytSpillelisteUrl, ytSpillelisteIder } from "./presentasjon-modell.js?v=6.25";
-import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.25";
-import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.25";
-import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.25";
-import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.25";
+  imgTag,
+} from "./ui-helpers.js?v=6.26";
+import { modalOpen, modalClose, modalCloseTop, setupModal, initModalHeaders, VISNING_SVG } from "./ui-modal.js?v=6.26";
+import { kortUtskriftHtml } from "./utskrift-utvalg.js?v=6.26";
+import { ytMaal, ytSpillelisteUrl, ytSpillelisteIder } from "./presentasjon-modell.js?v=6.26";
+import { TECH_CATEGORIES, TECH_CATEGORY_TABS, TECH_TYPES, renderTechList, renderTechCards, renderTechDetail, techImage } from "./ui-tech.js?v=6.26";
+import { buildTechTimeline, renderDecadeSections, renderDecadeRibbon } from "./ui-timeline.js?v=6.26";
+import { renderDashboard, contentGaps } from "./ui-dashboard.js?v=6.26";
+import { wireProposeFoot, diffFields, renderEditDiff, readApprovedFields, wireEditDiff } from "./ui-edit.js?v=6.26";
 
 // Re-eksport: alt over importeres av resten av appen direkte fra ./ui.js.
 export { escapeHtml, buildKilderList, formatInfoText };
@@ -252,6 +253,31 @@ function sessionOrderKey(id) {
   return _sessionOrder.get(id);
 }
 
+// Galleriet (v6.11): bilde, navn, sjanger, undersjanger, instrument og
+// levetid, sju i bredden på laptop fra v6.14 (CSS .ar-galleri). Hele kortet
+// åpner artistkortet (klikket kobles der lista tegnes: data-galleri-id).
+// Flyttet hit fra landing.js i v6.26, delt med lærersidens artistliste.
+function levetid(a) {
+  if (a.birthYear && a.deathYear) return `${a.birthYear}–${a.deathYear}`;
+  if (a.birthYear) return `f. ${a.birthYear}`;
+  return "";
+}
+export function artistGalleriHtml(liste) {
+  if (!liste.length) return `<p class="muted empty">Ingen artister matcher søket.</p>`;
+  return `<div class="ar-galleri">${liste.map((a) => {
+    const url = safeUrl(a.imageUrl);
+    const sjangre = (a.mainGenre || []).join(", ");
+    const under = (a.subGenre || []).join(", ");
+    return `<button type="button" class="ar-kort" data-galleri-id="${escapeHtml(a.id)}">
+      <span class="ar-bilde">${url ? imgTag(url, a.name, 250) : `<span class="ar-initialer" aria-hidden="true">${escapeHtml((a.name || "?").split(/\s+/).map((o) => o[0]).slice(0, 2).join(""))}</span>`}</span>
+      <span class="ar-navn">${escapeHtml(a.name)}</span>
+      ${sjangre ? `<span class="ar-linje ar-sjanger">${escapeHtml(sjangre)}</span>` : ""}
+      ${under ? `<span class="ar-linje">${escapeHtml(under)}</span>` : ""}
+      <span class="ar-linje">${escapeHtml([a.instrument, levetid(a)].filter(Boolean).join(" · "))}</span>
+    </button>`;
+  }).join("")}</div>`;
+}
+
 export function renderArtists(el, state) {
   const { artists, filters, isTeacher, clientId, handlers, viewMode, onSelect } = state;
 
@@ -290,6 +316,29 @@ export function renderArtists(el, state) {
   // når bruker slår på «Vis liste». onSelect åpner detaljmodalen for raden.
   if (viewMode === "list") {
     renderResultList(el, list, onSelect || (() => {}));
+    return;
+  }
+  // Galleriet (lærersiden fra v6.26, som studentenes artistsøk): samme
+  // utvalg og rekkefølge, et klikk åpner artistkortet. Lytteren legges én
+  // gang på beholderen og slår opp i den lista som sist ble tegnet.
+  if (viewMode === "galleri") {
+    el.className = "artist-list artist-list--galleri";
+    if (el._listOnScroll) {
+      document.removeEventListener("scroll", el._listOnScroll, true);
+      el._listOnScroll = null;
+    }
+    el.innerHTML = artistGalleriHtml(list);
+    el._galleriListe = list;
+    el._galleriVelg = onSelect || (() => {});
+    if (!el.dataset.galleriKoblet) {
+      el.dataset.galleriKoblet = "1";
+      el.addEventListener("click", (e) => {
+        const kort = e.target.closest("[data-galleri-id]");
+        if (!kort || !el._galleriListe) return;
+        const a = el._galleriListe.find((x) => x.id === kort.dataset.galleriId);
+        if (a) el._galleriVelg(a);
+      });
+    }
     return;
   }
   el.className = "artist-list";

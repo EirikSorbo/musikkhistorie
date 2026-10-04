@@ -5,7 +5,7 @@ import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { synlighetVerdier, SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "../../js/feature-flags.js?v=6.25";
+import { synlighetVerdier, SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, PUNKTER_BARE_I_PRESENTASJON } from "../../js/feature-flags.js?v=6.26";
 
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 

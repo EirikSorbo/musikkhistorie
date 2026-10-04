@@ -14,8 +14,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'"
   />
-  <link rel="stylesheet" href="css/styles.css?v=6.25" />
-  <script src="js/gate.js?v=6.25"></script>
+  <link rel="stylesheet" href="css/styles.css?v=6.26" />
+  <script src="js/gate.js?v=6.26"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
@@ -145,7 +145,14 @@
           <div class="filters">
             <div class="filter-row filter-row--controls">
               <input type="search" id="f-search" placeholder="Søk navn/sted …" />
-              <button type="button" id="t-view-toggle" class="btn ghost small">Vis liste</button>
+              <!-- Visningsvelgeren (v6.26, som i studentenes artistsøk):
+                   Kort er standard her (brukervalg 2026-10-04), fordi
+                   godkjenning, prioritet og avhuking står på kortene. -->
+              <div class="vis-velger" id="t-view-toggle" role="group" aria-label="Visning av artistene">
+                <button type="button" data-treffvisning="galleri" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Galleri</button>
+                <button type="button" data-treffvisning="liste" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Liste</button>
+                <button type="button" data-treffvisning="kort" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h6M7 13h10M7 17h8"/></svg>Kort</button>
+              </div>
               <button type="button" id="btn-tidslinje-artister" class="btn ghost small">Artisttidslinje</button>
               <label class="show-removed">
                 <input type="checkbox" id="f-hide-checked" /> Skjul sjekkede
@@ -774,7 +781,7 @@
     </div>
   </div>
 
-  <script src="js/load-guard.js?v=6.25"></script>
-  <script type="module" src="js/teacher.js?v=6.25"></script>
+  <script src="js/load-guard.js?v=6.26"></script>
+  <script type="module" src="js/teacher.js?v=6.26"></script>
 </body>
 </html>

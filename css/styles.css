@@ -1653,19 +1653,20 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 /* Artistlista bak «Artister» (v5.98, brukerønske 2026-10-01): en ren liste
    uten kort per artist, bare en diskret strek mellom radene, navnet i normal
    vekt og dempet farge, årene til høyre. Gjelder hele listevinduet (sjangre,
-   instrumenter og lærerens oversikt) og fra v6.19 «Liste» i artistsøket
-   (#filter-results); .result-row ellers er urørt. */
-:is(#modal-artistliste, #filter-results) .result-list, #filter-results.result-list { gap: 0; }
-:is(#modal-artistliste, #filter-results) .result-row {
+   instrumenter og lærerens oversikt), fra v6.19 «Liste» i artistsøket
+   (#filter-results) og fra v6.26 «Liste» på lærersiden (#artist-list);
+   .result-row ellers er urørt. */
+:is(#modal-artistliste, #filter-results, #artist-list) .result-list, #filter-results.result-list, #artist-list.result-list { gap: 0; }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-row {
   background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
   padding: 0.55rem 0.25rem; font-size: 0.95rem;
 }
-:is(#modal-artistliste, #filter-results) .result-row:last-child { border-bottom: 0; }
-:is(#modal-artistliste, #filter-results) .result-row:hover { background: var(--surface-2); transform: none; }
-:is(#modal-artistliste, #filter-results) .result-name { min-width: 0; font-weight: 400; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
-:is(#modal-artistliste, #filter-results) .result-row:hover .result-name { color: var(--accent-2); }
-:is(#modal-artistliste, #filter-results) .result-meta { justify-content: flex-end; }
-:is(#modal-artistliste, #filter-results) .result-work { font-style: normal; }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-row:last-child { border-bottom: 0; }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-row:hover { background: var(--surface-2); transform: none; }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-name { min-width: 0; font-weight: 400; color: color-mix(in srgb, var(--text) 50%, var(--muted)); }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-row:hover .result-name { color: var(--accent-2); }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-meta { justify-content: flex-end; }
+:is(#modal-artistliste, #filter-results, #artist-list) .result-work { font-style: normal; }
 /* Listevinduene (v5.99, brukerønske 2026-10-01): artistlista og spillelista
    er en tredjedel smalere enn de andre innholdskortene (41.25rem, 660 px i
    appen), også i visningsmodus fra v6.00, der bredden vokser med teksten.
@@ -3724,6 +3725,9 @@ body.presentasjon .meta-merke { display: none; }
   max-height: min(100%, calc(85vh - 5rem));
 }
 .instr-side-ramme .related-head { flex: none; }
+/* Kort liste (12 navn eller færre, v6.26): spalta får sin naturlige høyde, så
+   en manglende tekst ikke gir 20rem tomrom. */
+.instr-side.instr-side--kort { contain: none; min-height: 0; height: auto; }
 .instr-side-tall { margin-left: 4px; font-weight: 500; color: var(--muted); }
 .instr-artister { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0; padding: 0 6px 0 0; list-style: none; }
 .instr-artist {
@@ -3744,7 +3748,6 @@ body.presentasjon .meta-merke { display: none; }
 @media (max-width: 760px) {
   .instr-topp { grid-template-columns: minmax(0, 1fr); }
   .instr-side { border-left: 0; padding-left: 0; margin-top: 1rem; min-height: 0; height: 18rem; }
-  .instr-topp:has(.instr-artister li:nth-child(-n+8):last-child) .instr-side { height: auto; contain: none; }
 }
 
 /* Lytt (U7): to bolker side om side, radene som i Sjangre. */

@@ -4,11 +4,11 @@ import "../helpers/seed-model.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js?v=6.25";
-import { tiarEksempler, spillAlleHtml } from "../../js/ui.js?v=6.25";
-import { iSpalter } from "../../js/explore-sjanger.js?v=6.25";
-import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js?v=6.25";
-import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js?v=6.25";
+import { timeStopp, delteTimer, ytSpillelisteIder } from "../../js/presentasjon-modell.js?v=6.26";
+import { tiarEksempler, spillAlleHtml, artistGalleriHtml } from "../../js/ui.js?v=6.26";
+import { iSpalter } from "../../js/explore-sjanger.js?v=6.26";
+import { timeEksempler, timeTilgjengelig } from "../../js/explore-timer.js?v=6.26";
+import { SKJUL_I_STUDENTVISNING } from "../../js/feature-flags.js?v=6.26";
 
 const kilde = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
@@ -137,4 +137,19 @@ test("Avslutt tilbyr «Lagre som time» også etter en kjøreplan, som en egen p
   assert.doesNotMatch(kropp, /!aktivPlanId\(\)/);
   assert.match(kropp, /savePlan\(nyPlanId\(\), \{ tittel, laget: idag\.toISOString\(\), dato, stopp \}\)/);
   assert.match(kropp, /kjoreplan\.tittel/);
+});
+
+// v6.26: galleriet bor i ui.js og deles av forsiden og lærersiden.
+test("artistGalleriHtml: bilde eller initialer, navn, sjanger og levetid, og data-galleri-id", () => {
+  const html = artistGalleriHtml([
+    { id: "a1", name: "Charlie Parker", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Parker.jpg",
+      mainGenre: ["Bebop"], instrument: "Saksofon", birthYear: 1920, deathYear: 1955 },
+    { id: "a2", name: "Uten Bilde", mainGenre: [] },
+  ]);
+  assert.match(html, /class="ar-galleri"/);
+  assert.match(html, /data-galleri-id="a1"/);
+  assert.match(html, /<img [^>]*alt="Charlie Parker"/);
+  assert.match(html, /Saksofon · 1920–1955/);
+  assert.match(html, /<span class="ar-initialer" aria-hidden="true">UB<\/span>/);
+  assert.match(artistGalleriHtml([]), /Ingen artister/);
 });

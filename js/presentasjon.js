@@ -24,20 +24,20 @@
 //  tidlig, og da er data-sekt-attributtene inerte.
 // ============================================================================
 
-import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.25";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.25";
-import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.25";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "./ui-modal.js?v=6.25";
-import { GENEALOGY } from "./genre-model.js?v=6.25";
-import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.25";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.25";
-import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.25";
-import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.25";
-import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.25";
-import { getState } from "./explore-context.js?v=6.25";
-import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.25";
-import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.25";
-import { stoppEtikett } from "./stopp-etikett.js?v=6.25";
+import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "./feature-flags.js?v=6.26";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js?v=6.26";
+import { erSkrivefelt, parseVisVerdi } from "./vis-lenke.js?v=6.26";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "./ui-modal.js?v=6.26";
+import { GENEALOGY } from "./genre-model.js?v=6.26";
+import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js?v=6.26";
+import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.26";
+import { veksleYtAvspilling, apneYtSpiller } from "./yt-spiller.js?v=6.26";
+import { escapeHtml, safeUrl, wikimediaThumb } from "./util.js?v=6.26";
+import { apneVisNaarKlart, setVisMaalFeilProvider } from "./explore-apne.js?v=6.26";
+import { getState } from "./explore-context.js?v=6.26";
+import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "./store.js?v=6.26";
+import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js?v=6.26";
+import { stoppEtikett } from "./stopp-etikett.js?v=6.26";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -969,8 +969,8 @@ export async function avsluttPresentasjon() {
     const valg = await askChoice({
       title: "Lagre det du viste som en time?",
       text: kjoreplan
-        ? `${stopp.length} kort og lytteeksempler ble vist, også det du åpnet utenom kjøreplanen. Timen lagres for seg med dagens dato, og kjøreplanen «${kjoreplan.tittel}» endres ikke. En time kan deles med studentene under «Fra timene» (Visning-vinduet).`
-        : `${stopp.length} kort og lytteeksempler ble vist. En time kan deles med studentene under «Fra timene» (Visning-vinduet).`,
+        ? `${stopp.length} kort ble vist (lytteeksemplene regnet med), også det du åpnet utenom kjøreplanen. Timen lagres for seg med dagens dato, og kjøreplanen «${kjoreplan.tittel}» endres ikke. En time kan deles med studentene under «Fra timene» (Visning-vinduet).`
+        : `${stopp.length} kort ble vist (lytteeksemplene regnet med). En time kan deles med studentene under «Fra timene» (Visning-vinduet).`,
       buttons: [
         { label: "Lagre som time", value: "lagre", className: "primary" },
         { label: "Avslutt uten å lagre", value: "nei" },

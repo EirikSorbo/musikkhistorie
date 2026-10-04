@@ -14,13 +14,13 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=6.25";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=6.25";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.25";
-import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=6.25";
-import { sharedStateDefaults } from "./shared-data.js?v=6.25";
-import { $ } from "./shared.js?v=6.25";
-import { melding, bekreft } from "./ui-modal.js?v=6.25";
+} from "./store.js?v=6.26";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=6.26";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.26";
+import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=6.26";
+import { sharedStateDefaults } from "./shared-data.js?v=6.26";
+import { $ } from "./shared.js?v=6.26";
+import { melding, bekreft } from "./ui-modal.js?v=6.26";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,
@@ -141,25 +141,29 @@ export function setupModals() {
 //  Kjerne-render
 // ----------------------------------------------------------------------------
 
-// Visningsmodus for lærerlista: artistkort (standard) eller kompakt navneliste
-// («Vis liste»). Klikk på en rad åpner detaljmodalen (ctx.openArtistDetail).
-let teacherView = "cards";
+// Visningsmodus for lærerlista (v6.26, som studentenes artistsøk): "kort"
+// (standard, brukervalg 2026-10-04: handlingene står på kortene), "galleri"
+// eller "liste". Klikk på en rad eller et bilde åpner detaljmodalen
+// (ctx.openArtistDetail). Lista viser alle artister også uten filter.
+const LAERER_VISNINGER = { kort: "cards", liste: "list", galleri: "galleri" };
+let teacherView = "kort";
 
-export function toggleTeacherView() {
-  teacherView = teacherView === "list" ? "cards" : "list";
+export function settTeacherView(valg) {
+  if (!(valg in LAERER_VISNINGER) || valg === teacherView) return;
+  teacherView = valg;
   renderList();
 }
 
 function updateTeacherViewToggle() {
-  const btn = document.getElementById("t-view-toggle");
-  if (btn) btn.textContent = teacherView === "list" ? "Vis kort" : "Vis liste";
+  document.querySelectorAll("#t-view-toggle [data-treffvisning]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.treffvisning === teacherView)));
 }
 
 export function renderList() {
   renderArtists($("#artist-list"), {
     ...state,
     handlers,
-    viewMode: teacherView,
+    viewMode: LAERER_VISNINGER[teacherView],
     onSelect: (a) => ctx.openArtistDetail?.(a),
     linkCtx: ctx.explore ? ctx.explore.buildLinkCtx() : {},
   });

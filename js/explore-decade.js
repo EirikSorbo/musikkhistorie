@@ -18,16 +18,16 @@
 //  presentasjonsvisningen.
 // ============================================================================
 import { modalOpen, renderDecadeRibbon, buildKilderList, buildTechTimeline, formatInfoText, escapeHtml,
-  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.25";
-import { ytMaal } from "./presentasjon-modell.js?v=6.25";
-import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.25";
-import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.25";
-import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.25";
-import { heatRow, getHeatData } from "./heat-strip.js?v=6.25";
-import { openTechDetail } from "./explore-tech.js?v=6.25";
-import { openVarmekart } from "./explore-varmekart.js?v=6.25";
-import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.25";
-import { kobleFanePiler } from "./ui-modal.js?v=6.25";
+  openArtistListModal, tiarEksempler, spillAlleHtml } from "./ui.js?v=6.26";
+import { ytMaal } from "./presentasjon-modell.js?v=6.26";
+import { wireLinks, wireRelated } from "./ui-helpers.js?v=6.26";
+import { DECADES, isVisible, filterArtists, byInfluenceThenName } from "./limits.js?v=6.26";
+import { GENEALOGY, META_GENRE_ORDER, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.26";
+import { heatRow, getHeatData } from "./heat-strip.js?v=6.26";
+import { openTechDetail } from "./explore-tech.js?v=6.26";
+import { openVarmekart } from "./explore-varmekart.js?v=6.26";
+import { opts, getState, buildLinkCtx } from "./explore-context.js?v=6.26";
+import { kobleFanePiler } from "./ui-modal.js?v=6.26";
 
 // Fanene i brukerens rekkefølge. Nøklene tech/society er de gamle modusene, så
 // lenker og kjøreplanstopp som «tiår:1950:tech» virker som før.
@@ -203,7 +203,13 @@ function tegnMusikk(d, s, lc) {
     sjangre = alle.filter((x) => x.v >= 3);
     if (!sjangre.length) sjangre = alle.slice(0, 6);
   }
-  venstre.innerHTML = `<h4 class="related-head">Toneangivende sjangre</h4>` + (sjangre.length
+  // Når ingen sjanger når nivå 3, vises de seks høyeste, og da sier
+  // overskriften det (v6.26, Fable): ellers leste 1900-tallets sjangre på
+  // nivå 1–2 som toneangivende.
+  const lavt = sjangre.length > 0 && sjangre.every((x) => x.v < 3);
+  venstre.innerHTML = `<h4 class="related-head">${lavt ? "Mest toneangivende" : "Toneangivende sjangre"}</h4>`
+    + (lavt ? `<p class="muted dv-tom">Ingen sjanger er over nivå 2 i varmekartet dette tiåret.</p>` : "")
+    + (sjangre.length
     ? `<div class="dv-sjangre">${sjangre.map(({ n, v }) => {
         const farge = MAIN_GENRE_INFO[n.l]?.color || nodeColor(n);
         return `<button type="button" class="dv-sjanger" data-sjanger="${escapeHtml(n.l)}">

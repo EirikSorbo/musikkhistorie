@@ -4,18 +4,18 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
-import { state, ctx, openAdminModal, lukkEtter, renderList, toggleTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=6.25";
-import { updateArtistFields, setTeacherChecks } from "./store.js?v=6.25";
-import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=6.25";
-import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=6.25";
-import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=6.25";
-import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.25";
-import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=6.25";
-import { debounce } from "./util.js?v=6.25";
-import { $ } from "./shared.js?v=6.25";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.25";
-import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.25";
-import { melding, bekreft } from "./ui-modal.js?v=6.25";
+import { state, ctx, openAdminModal, lukkEtter, renderList, settTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js?v=6.26";
+import { updateArtistFields, setTeacherChecks } from "./store.js?v=6.26";
+import { renderArtistDetail, renderDashboard, fillSelect, modalOpen, modalClose, artistsInGenre, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "./ui.js?v=6.26";
+import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "./genre-model.js?v=6.26";
+import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js?v=6.26";
+import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "./ui-helpers.js?v=6.26";
+import { GENDERS, INSTRUMENTS, isVisible } from "./limits.js?v=6.26";
+import { debounce } from "./util.js?v=6.26";
+import { $ } from "./shared.js?v=6.26";
+import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows } from "./row-editor.js?v=6.26";
+import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "./genre-picker.js?v=6.26";
+import { melding, bekreft } from "./ui-modal.js?v=6.26";
 
 // Musikkeksempel-spec med sjangervelger (alle tre-sjangre, alfabetisk).
 // Bygges ved KALL, ikke ved import: treet kommer asynkront fra Firestore
@@ -144,8 +144,11 @@ export function setupFilters() {
   const hideChecked = $("#f-hide-checked");
   hideChecked.checked = state.filters.hideChecked;
   hideChecked.addEventListener("change", (e) => { state.filters.hideChecked = e.target.checked; renderList(); });
-  const viewToggle = $("#t-view-toggle");
-  if (viewToggle) viewToggle.addEventListener("click", toggleTeacherView);
+  // Visningsvelgeren (Galleri, Liste, Kort), som i studentenes artistsøk.
+  $("#t-view-toggle")?.addEventListener("click", (e) => {
+    const valg = e.target.closest("[data-treffvisning]")?.dataset.treffvisning;
+    if (valg) settTeacherView(valg);
+  });
 }
 
 // ----------------------------------------------------------------------------
