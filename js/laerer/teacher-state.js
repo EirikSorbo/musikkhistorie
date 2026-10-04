@@ -80,7 +80,7 @@ export const handlers = {
 
 // Sett/fjern «sjekket» for et innholdselement. Artistkort bor på artist-
 // dokumentet (teacherChecked); alle andre kategorier er navnelister i
-// config/teacherChecks (genres/subgenres/metaGenres/tech/decades/decadesTech/pages).
+// config/teacherChecks (genres/subgenres/metaGenres/tech/decades/decadesTech/pages/plateselskaper).
 // Deterministisk (on), så optimistiske knapper i detaljmodalene og Skrivebordet
 // aldri kommer i utakt. Delt av teacher-desk og detaljvisningenes Sjekk-knapp.
 export function setContentCheck(category, id, on) {

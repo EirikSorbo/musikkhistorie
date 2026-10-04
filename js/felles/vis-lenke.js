@@ -37,6 +37,8 @@ export const VIS_TYPER = new Set([
   "lytt", "sjangre", "undersjangre", "artister",
   // En delt time (v6.10, U1): «time:<planId>».
   "time",
+  // Plateselskapene (v6.37): ett kort («plateselskap:<id>») og oversikten.
+  "plateselskap", "plateselskaper",
 ]);
 
 // «artist:abc123» → { hva: "artist", id: "abc123" }. Ukjent type → null, så

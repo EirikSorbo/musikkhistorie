@@ -31,6 +31,7 @@ import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorie
 import { openVisningssider, openArtistGalleri } from "./explore-visningssider.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
 import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js";
+import { openPlateselskap, openPlateselskaper, renderPlateselskaper } from "./explore-plateselskap.js";
 import { openSok, wireSok } from "./explore-search.js";
 import { apneMaal } from "./explore-apne.js";
 import { erPresentasjon } from "../visning/presentasjon.js";
@@ -96,6 +97,8 @@ export function contentChanged() {
   // Frittstående referanser bor i content: lagrer læreren en ny, skal kortet
   // vise den med én gang, ikke ved neste åpning.
   if (isOpen("modal-referanser")) renderReferanser();
+  // Plateselskapene (v6.37): teksten, faktaene og kildene bor i content.
+  renderPlateselskaper();
 }
 
 function injectModals() {
@@ -114,7 +117,8 @@ function wireModals() {
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier",
    "modal-meta-oversikt", "modal-visningssider", "modal-galleri",
-   "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt", "modal-time"].forEach((id) => setupModal(id));
+   "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt", "modal-time",
+   "modal-plateselskaper", "modal-plateselskap"].forEach((id) => setupModal(id));
 
   // Søkefeltet i Utforsk-kortet står i sidenes egen markup med faste ID-er, så
   // forsiden og lærersiden får søket av samme kode uten å wire noe selv.
@@ -229,6 +233,7 @@ function wireModals() {
     paaKort("sb-sjangerperioder", openSjangerperioder);
     paaKort("sb-himmel", openSjangerhimmel);
     paaKort("sb-referanser", openReferanser);
+    paaKort("sb-plateselskaper", openPlateselskaper);
     paaKort("sb-guide", openAppGuide);
 
     // Kortene studentene ikke skal se (feature-flags.js, SKJUL_I_HUBEN).
@@ -312,6 +317,13 @@ function wireModals() {
       if (opts.onMainGenreCheck) opts.onMainGenreCheck(name);
       return;
     }
+    // Plateselskapet på artistkortet (v6.37): kortet for selskapet, oppå.
+    const selskap = e.target.closest("[data-plateselskap]");
+    if (selskap) {
+      e.preventDefault();
+      openPlateselskap(selskap.dataset.plateselskap);
+      return;
+    }
     const inst = e.target.closest("[data-instrument]");
     if (inst) showArtistsForInstrument(inst.dataset.instrument);
   });
@@ -341,6 +353,9 @@ export function initExplore(options) {
     openInstrumenter,
     openPodkaster,
     renderInstrumenter,
+    openPlateselskap,
+    openPlateselskaper,
+    renderPlateselskaper,
     openTeknologi,
     openTechDetail,
     refreshTechDetail,

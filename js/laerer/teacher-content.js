@@ -19,6 +19,7 @@ import { techImage } from "../ui/ui-tech.js";
 import { resolveDesc } from "../sjangre/genre-descriptions.js";
 import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "../ui/ui-helpers.js";
 import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "../felles/limits.js";
+import { FAKTA_FELT, rensFakta, plateselskapForSide } from "../felles/plateselskaper.js";
 import { heatRow, getHeatData } from "../sjangre/heat-strip.js";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
@@ -783,6 +784,8 @@ const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910", ap
 let editorTarget = null;
 // Kildene siden hadde da editoren ble åpnet (se openContentEditor).
 let editorKilder = [];
+// Faktaene (plateselskapene, v6.37), av samme grunn som kildene.
+let editorFakta = null;
 
 function storyLinkCtx() {
   return { artists: state.artists, techItems: state.techItems, genres: buildMainGenreList(state.artists) };
@@ -793,18 +796,44 @@ function renderStoryPreview() {
   if (el) el.innerHTML = renderRichText($("#se-text").value, storyLinkCtx());
 }
 
-// Instrumentsammendragene (content/instrument-<slug>) er de eneste
-// innholdssidene med kildeliste. De andre (Om historie, Røtter, Slik bruker du
-// appen) er lærerens egen prosa uten kildeapparat, og skal ikke få feltet.
+// Instrumentsammendragene (content/instrument-<slug>) og plateselskapene
+// (content/plateselskap-<id>, v6.37) er de eneste innholdssidene med
+// kildeliste. De andre (Om historie, Røtter, Slik bruker du appen) er lærerens
+// egen prosa uten kildeapparat, og skal ikke få feltet. Tegntaket gjelder bare
+// instrumentene; plateselskapene har i tillegg faktafeltene.
 const erInstrumentside = (t) => t?.type === "page" && String(t.id || "").startsWith("instrument-");
+const erPlateselskapside = (t) => t?.type === "page" && !!plateselskapForSide(t.id);
+const harKildefelt = (t) => erInstrumentside(t) || erPlateselskapside(t);
+
+// Faktafeltene til plateselskapene, bygd av FAKTA_FELT (samme liste som kortet
+// og importen leser), med verdiene fra dokumentet.
+function byggFaktafelt(fakta) {
+  const el = $("#se-fakta");
+  if (!el) return;
+  el.innerHTML = FAKTA_FELT.map((f) => `<label>${escapeHtml(f.navn)}
+    <input type="text" data-fakta-felt="${escapeHtml(f.key)}" maxlength="${f.key === "grunnlagt" ? 4 : 120}" placeholder="${escapeHtml(f.hint)}" value="${escapeHtml(String(fakta?.[f.key] ?? ""))}">
+  </label>`).join("");
+}
+function lesFaktafelt() {
+  const ut = {};
+  document.querySelectorAll("#se-fakta [data-fakta-felt]").forEach((i) => { ut[i.dataset.faktaFelt] = i.value; });
+  return rensFakta(ut);
+}
 
 function openContentEditor(target, title, existing) {
   editorTarget = target;
   // Kildene fra dokumentet tas vare på her, så en lagring av en side UTEN
   // kildefelt ikke tømmer dem: savePage skriver hele dokumentet, den fletter ikke.
   editorKilder = normalizeSources(existing?.kilder);
-  const medKilder = erInstrumentside(target);
+  const medKilder = harKildefelt(target);
   $("#se-kilder-wrap").hidden = !medKilder;
+  // Faktaene leses fra DOKUMENTET, ikke fra existing: pageFor gir bare tekst
+  // og kilder. editorFakta tas vare på som kildene over.
+  editorFakta = target?.type === "page" ? rensFakta(state.content?.[target.id]?.fakta) : null;
+  const medFakta = erPlateselskapside(target);
+  $("#se-fakta-wrap").hidden = !medFakta;
+  if (medFakta) byggFaktafelt(editorFakta);
+  else $("#se-fakta").innerHTML = "";
   // Radene tømmes for sider uten kildefelt, så forrige instruments kilder ikke
   // blir stående i et skjult felt og forvirre neste gang det åpnes.
   if (medKilder) buildRows($("#se-kilder"), SOURCE_SPEC, editorKilder);
@@ -814,7 +843,7 @@ function openContentEditor(target, title, existing) {
   // Taket gjelder KUN instrumentsammendragene: editoren deles med historiene og
   // de andre innholdssidene, som skal kunne være så lange de trenger. Kalles
   // ETTER at verdien er satt, ellers viser telleren forrige teksts lengde.
-  wireCharCount($("#se-text"), medKilder ? SAMMENDRAG_MAKS : 0, $("#se-char-count"));
+  wireCharCount($("#se-text"), erInstrumentside(target) ? SAMMENDRAG_MAKS : 0, $("#se-char-count"));
   const msg = $("#se-msg");
   msg.textContent = "";
   msg.className = "form-msg";
@@ -850,7 +879,9 @@ export function openPageEditor(pageId) {
 function sideTittel(pageId) {
   if (PAGE_TITLES[pageId]) return PAGE_TITLES[pageId];
   const gruppe = INSTRUMENT_TIMELINE_GROUPS.find((g) => instrumentPageId(g) === pageId);
-  return gruppe ? (INSTRUMENT_TITLE[gruppe] || `Utviklingen av ${gruppe}`) : pageId;
+  if (gruppe) return INSTRUMENT_TITLE[gruppe] || `Utviklingen av ${gruppe}`;
+  const selskap = plateselskapForSide(pageId);
+  return selskap ? `plateselskapet ${selskap.navn}` : pageId;
 }
 
 // Knappene i historie-editorens formatlinje (den ligger i teacher.html, med
@@ -908,8 +939,11 @@ export function setupStoryEditor() {
         // skrives med hver gang de finnes. Sider uten kildefelt får ikke et
         // tomt kilder-felt påført, men beholder det de eventuelt hadde.
         const data = { body };
-        if (erInstrumentside(editorTarget)) data.kilder = collectRows($("#se-kilder"), SOURCE_SPEC);
+        if (harKildefelt(editorTarget)) data.kilder = collectRows($("#se-kilder"), SOURCE_SPEC);
         else if (editorKilder.length) data.kilder = editorKilder;
+        // Plateselskapene: faktaene fra feltene. Tomme felt gir ingen fakta.
+        const fakta = erPlateselskapside(editorTarget) ? lesFaktafelt() : editorFakta;
+        if (fakta) data.fakta = fakta;
         await savePage(editorTarget.id, data);
       }
       closeAdminModal("modal-story-edit");

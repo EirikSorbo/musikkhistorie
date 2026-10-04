@@ -28,6 +28,7 @@ import { GENEALOGY_META_GENRES, isMainGenre } from "../sjangre/genre-model.js";
 import { validateTree } from "../sjangre/genre-validate.js";
 import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "../data/artist-schema.js";
 import { INSTRUMENTS } from "../felles/limits.js";
+import { rensFakta } from "../felles/plateselskaper.js";
 import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc, erDelpost } from "../data/import-format.js";
 import { melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 
@@ -518,6 +519,11 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       const data = { updatedAt: d.updatedAt || new Date().toISOString() };
       if (typeof d.body === "string" && d.body.trim()) data.body = d.body;
       if (Array.isArray(d.kilder) && d.kilder.length) data.kilder = d.kilder;
+      // Plateselskapenes faktafelt (v6.37): bare de kjente feltene, og bare
+      // når noen av dem har innhold. Gjelder også sikkerhetskopiene, som har
+      // feltet med fordi eksporten tar hele dokumentet.
+      const fakta = rensFakta(d.fakta);
+      if (fakta) data.fakta = fakta;
       return { id, data };
     });
   if (pageEntries.length) {

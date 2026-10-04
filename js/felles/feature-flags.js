@@ -89,6 +89,10 @@ export const SKJUL_I_HUBEN = {
   "sb-himmel":      true,
   "sb-referanser":  true,
   "sb-guide":       true,
+  // Plateselskapene (v6.37, brukervalg 2026-10-04): skjult til læreren har
+  // sjekket kortene i Oversikten. Samme nøkkel styrer søket, lenkene på
+  // artistkortene og ?vis=-lenkene (plateselskapeneSynlige i plateselskaper.js).
+  "sb-plateselskaper": true,
 };
 
 // ============================================================================

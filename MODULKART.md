@@ -5,12 +5,12 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-97 filer i 11 mapper.
+99 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
 | `js/` | Sidene og oppsettet | 10 |
-| `js/utforsk/` | Utforsk | 20 |
+| `js/utforsk/` | Utforsk | 21 |
 | `js/sjangre/` | Sjangrene og slektstreet | 13 |
 | `js/visning/` | Visning | 8 |
 | `js/laerer/` | Lærersiden | 7 |
@@ -18,7 +18,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/utskrift/` | Utskrift | 3 |
 | `js/ui/` | Byggeklosser for skjermen | 13 |
 | `js/data/` | Data | 8 |
-| `js/felles/` | Felles hjelpere | 11 |
+| `js/felles/` | Felles hjelpere | 12 |
 | `js/vendor/` | Tredjepart | 1 |
 
 ## Reglene koden holder seg til
@@ -62,6 +62,7 @@ Det store bildet, tiårene, sjangrene, varmekartet, tidslinja, Lytt, Instrumente
 | `explore-lytt.js` | LYTT — spillelistene samlet (v6.07, strukturgjennomgangen U7) |
 | `explore-metaoversikt.js` | METASJANGER-OVERSIKTEN (v5.94) — én side per aktiv metasjanger i visningen |
 | `explore-modals.js` | MODAL-MARKUP FOR UTFORSK-SIDENE |
+| `explore-plateselskap.js` | PLATESELSKAPENE — oversikten og kortet for hvert selskap (v6.37) |
 | `explore-referanser.js` | REFERANSER: alle kildene appen bygger på, samlet |
 | `explore-search.js` | SØK — visning og ruting |
 | `explore-sjanger.js` | SJANGRE OG UNDERSJANGRE |
@@ -189,6 +190,7 @@ Små hjelpere og vokabular som flere deler av appen bruker: tekst og lenker, kil
 | `kilder.js` | KILDER — vokabular, publikasjoner og aggregering |
 | `limits.js` | KONFIGURASJON, VOKABULAR OG TELLING |
 | `linkify.js` | LENKER I LØPENDE TEKST — artist-, sjanger- og innovasjonsnavn blir klikkbare |
+| `plateselskaper.js` | PLATESELSKAPENE — lista, skrivemåtene og koblingen til artistene |
 | `punkter.js` | OPPSUMMERINGSPUNKTER (v5.50) — 3–5 korte punkter per beskrivelse |
 | `rich-text.js` | RIK TEKST — markdown-light for ALL løpende tekst i appen |
 | `search.js` | SØK — én indeks over alt innholdet i appen |

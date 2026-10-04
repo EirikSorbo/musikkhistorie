@@ -774,6 +774,8 @@ function init() {
       // så en åpen fane må tegnes på nytt når artistene lander. Uten dette blir
       // tallet stående med cachens verdi mens lista viser den ferske.
       explore?.renderInstrumenter?.();
+      // Plateselskapskortet viser artistene med selskapet (v6.37).
+      explore?.renderPlateselskaper?.();
       // Et åpent tiårsvindu (Musikk-fanen bygges av artistene).
       explore?.refreshDecadeView?.();
       // Utenom throttlingen: deep-linkene skal åpnes straks data finnes

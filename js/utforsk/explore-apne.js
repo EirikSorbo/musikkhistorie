@@ -32,6 +32,8 @@ import { openArtistGalleri } from "./explore-visningssider.js";
 import { openLytt } from "./explore-lytt.js";
 import { openTime, timeTilgjengelig } from "./explore-timer.js";
 import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js";
+import { openPlateselskap, openPlateselskaper } from "./explore-plateselskap.js";
+import { finnSelskapId, plateselskapeneSynlige } from "../felles/plateselskaper.js";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -101,6 +103,8 @@ export function apneMaal(apne) {
     // Artister-vinduet bor på forsiden (landing.js), som gir åpneren.
     case "artister": return void opts.onOpenArtister?.();
     case "time": return openTime(apne.id);
+    case "plateselskap": return openPlateselskap(apne.id);
+    case "plateselskaper": return openPlateselskaper();
   }
 }
 
@@ -159,6 +163,13 @@ function klarFor(apne, s) {
       return s.contentLoaded && (!apne.id || isGenreModelReady()) ? "klar" : "vent";
     case "instrument":
       return s.contentLoaded && s.artistsLoaded ? "klar" : "vent";
+    // Plateselskapene (v6.37): teksten i content, artistene fra artistlista.
+    // Bryteren bor også i content (content/synlighet), så når innholdet har
+    // landet, vet vi om studentene får se kortene. Skjult = finnes ikke.
+    case "plateselskap": case "plateselskaper":
+      if (!(s.contentLoaded && s.artistsLoaded)) return "vent";
+      if (!plateselskapeneSynlige()) return "finnes-ikke";
+      return apne.hva === "plateselskaper" || finnSelskapId(apne.id) ? "klar" : "finnes-ikke";
     default:
       return "klar";   // podkaster: modalen tegnes på nytt når episodene lander
   }

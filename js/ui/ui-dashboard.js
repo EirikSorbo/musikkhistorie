@@ -1,10 +1,11 @@
 // ============================================================================
 //  UI — OVERSIKT (lærer)
 // ----------------------------------------------------------------------------
-//  Pensum-oversikten i tre seksjoner: FORM (hva pensumet inneholder — tiår,
-//  sjangre, kjønn, instrument), HULL (hvor det er tynt) og MANGLER (innhold
-//  som ikke er skrevet ennå). Ingen arbeidsflyt-tall her — moderering bor i
-//  forslags-flyten.
+//  Pensum-oversikten i fire seksjoner: FORM (hva pensumet inneholder — tiår,
+//  sjangre, kjønn, instrument), HULL (hvor det er tynt), MANGLER (innhold
+//  som ikke er skrevet ennå) og PLATESELSKAPENE (v6.37: ett kort per selskap
+//  til gjennomgang, med Sjekk og Rediger). Ingen arbeidsflyt-tall her —
+//  moderering bor i forslags-flyten.
 //
 //  All klikk-håndtering går via ETT delegert el.onclick (tilordning, ikke
 //  addEventListener — modalen re-rendres ved hver åpning, og en lytter per
@@ -24,6 +25,8 @@ import { escapeHtml } from "../felles/util.js";
 import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "../sjangre/genre-model.js";
 import { resolveDesc, resolveDescAny } from "../sjangre/genre-descriptions.js";
 import { storyOrder, storyFor, pageFor } from "../felles/story-format.js";
+import { selskaperSortert, plateselskapSideId, artisterForSelskap, grunnlagtAar, rensFakta, FAKTA_FELT } from "../felles/plateselskaper.js";
+import { SKJUL_I_HUBEN } from "../felles/feature-flags.js";
 
 const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
@@ -158,6 +161,7 @@ export function renderDashboard(el, {
   onEditPage,
   onEditEdge,
   onEdgeCheck,
+  onPlateselskapCheck,
   onShowArtistList,
   onShowPlaylist,
 }) {
@@ -474,6 +478,9 @@ export function renderDashboard(el, {
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
       ${missItem("Artister uten viktighetsgrad", utenPrio.length, artistRows(utenPrio))}
     </div>
+
+    <div class="ov-kick">Plateselskaper</div>
+    <div id="ov-plateselskaper">${plateselskapSeksjonHtml({ artists, content, contentLoaded, teacherChecks })}</div>
   `;
 
   // --- Delegert klikk-håndtering (én tilordning, overlever re-render) --------
@@ -548,6 +555,18 @@ export function renderDashboard(el, {
     const desc = hit("[data-ov-desc]");
     if (desc) return onEditDesc?.(desc.dataset.ovDesc, desc.dataset.ovLevel);
 
+    // Plateselskapskortene (v6.37): Sjekk, Rediger, og ellers åpnes kortet
+    // slik studentene ser det. Før koblingene under, som ellers ville tatt
+    // Sjekk-klikket og ikke funnet noe kort å lagre det på.
+    const ps = hit("[data-ov-ps]");
+    if (ps) {
+      const id = ps.dataset.ovPs;
+      const chk = hit(".tcr-check");
+      if (chk) return void onPlateselskapCheck?.(id, toggleCheckBtn(chk, "tcr-check"));
+      if (hit(".tcr-edit")) return onEditPage?.(plateselskapSideId(id));
+      return explore?.openPlateselskap?.(id);
+    }
+
     // Sjekk-knappen skifter utseende optimistisk (modalen re-rendres ikke) og
     // skriver til teacherChecks. Håndteres FØR edit-fanget, ellers ville den
     // også åpnet editoren via kortets data-attributt.
@@ -581,6 +600,59 @@ export function renderDashboard(el, {
       }
     }
   };
+}
+
+// ---------------------------------------------------------------------------
+//  Plateselskapene (v6.37, brukervalg 2026-10-04)
+// ---------------------------------------------------------------------------
+//  Ett kort per selskap, i tidsrekkefølge, så læreren kan gå gjennom dem ett
+//  og ett: hva som er skrevet (tekst, fakta, kilder), hvor mange artister i
+//  appen som har selskapet, og Sjekk og Rediger. Klikk ellers på kortet åpner
+//  selskapets kort slik studentene ser det. Seksjonen har sin egen beholder
+//  (#ov-plateselskaper) og tegnes på nytt alene når innholdet, artistene eller
+//  avhukingen endres (oppdaterPlateselskapSeksjon), så resten av Oversikten
+//  ikke folder seg sammen midt i gjennomgangen.
+export function plateselskapSeksjonHtml({ artists = [], content = {}, contentLoaded = false, teacherChecks = {} }) {
+  const sjekket = new Set(teacherChecks.plateselskaper || []);
+  const sideFor = (id) => content?.[plateselskapSideId(id)] || null;
+  const liste = selskaperSortert(sideFor);
+  const merke = (ok, tekst) => `<span class="ov-ps-merke ${ok ? "ov-ok" : "ov-warn"}">${escapeHtml(tekst)}</span>`;
+  const kort = liste.map((p) => {
+    const doc = sideFor(p.id);
+    const side = pageFor(plateselskapSideId(p.id), content);
+    const harTekst = !!side?.body?.trim();
+    const fakta = rensFakta(doc?.fakta) || {};
+    const nFakta = FAKTA_FELT.filter((f) => fakta[f.key]).length;
+    const nKilder = side?.kilder?.length || 0;
+    const nArt = activeArtists(artisterForSelskap(artists, p.id)).length;
+    const aar = grunnlagtAar(doc);
+    return `<div class="ov-ps-kort" data-ov-ps="${escapeHtml(p.id)}">
+      <div class="ov-ps-hode">
+        <span class="ov-ps-aar">${aar || ""}</span>
+        <span class="ov-ps-navn">${escapeHtml(p.navn)}</span>
+      </div>
+      <div class="ov-ps-status">
+        ${contentLoaded ? merke(harTekst, harTekst ? "Tekst" : "Tekst mangler") : `<span class="ov-ps-merke">laster …</span>`}
+        ${merke(nFakta === FAKTA_FELT.length, `Fakta ${nFakta}/${FAKTA_FELT.length}`)}
+        ${merke(nKilder > 0, `Kilder ${nKilder}`)}
+        <span class="ov-ps-merke">${nArt} ${nArt === 1 ? "artist" : "artister"}</span>
+      </div>
+      ${teacherActionRow({ checked: sjekket.has(p.id), edit: true, del: false })}
+    </div>`;
+  }).join("");
+  const nSjekket = liste.filter((p) => sjekket.has(p.id)).length;
+  const nTekst = liste.filter((p) => pageFor(plateselskapSideId(p.id), content)?.body?.trim()).length;
+  const synlig = !SKJUL_I_HUBEN["sb-plateselskaper"];
+  return `<p class="ov-ps-ingress">
+      <strong>${nSjekket} av ${liste.length} sjekket</strong> · ${nTekst} med tekst ·
+      ${synlig ? "synlige for studentene" : "skjult for studentene til du slår på «Plateselskapene» under Synlig for studentene på Skrivebordet"}
+    </p>
+    <div class="ov-ps-grid">${kort}</div>`;
+}
+
+export function oppdaterPlateselskapSeksjon(el, data) {
+  const boks = el?.querySelector("#ov-plateselskaper");
+  if (boks) boks.innerHTML = plateselskapSeksjonHtml(data);
 }
 
 function renderGenderChart(dist) {

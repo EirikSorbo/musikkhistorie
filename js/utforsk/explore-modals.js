@@ -366,6 +366,13 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-title">Sjangerhimmel</span>
         <span class="dash-desc">Artistene rundt sjangrene sine</span>
       </button>
+      <!-- Plateselskapene (v6.37, brukervalg 2026-10-04): skjult for
+           studentene til læreren har sjekket kortene (SKJUL_I_HUBEN). -->
+      <button class="dash-card" id="sb-plateselskaper">
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 5.5a6.5 6.5 0 016.5 6.5"/></svg>
+        <span class="dash-title">Plateselskaper</span>
+        <span class="dash-desc">Selskapene bak lyden</span>
+      </button>
       <button class="dash-card" id="sb-referanser">
         <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/></svg>
         <span class="dash-title">Referanser</span>
@@ -377,6 +384,31 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-desc">Kort om funksjonene og tanken bak</span>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Plateselskapene (v6.37, brukervalg 2026-10-04): oversikten i tidsrekkefølge
+     og kortet for ett selskap (data-vis «plateselskap:<id>» settes ved
+     åpning). Teksten, faktaene og kildene bor i content/plateselskap-<id>;
+     artistene og spillelista avledes av artistenes plateselskapsfelt. Tegnes
+     av explore-plateselskap.js. -->
+<div class="modal-backdrop" id="modal-plateselskaper" data-vis="plateselskaper">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Plateselskaper</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="pss-body"></div>
+  </div>
+</div>
+<div class="modal-backdrop" id="modal-plateselskap">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2 id="ps-tittel">Plateselskap</h2>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="ps-extra"></div>
+    <div id="ps-body"></div>
   </div>
 </div>
 

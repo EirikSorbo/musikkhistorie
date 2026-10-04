@@ -15,6 +15,7 @@ import { renderRichText, renderInline } from "../felles/rich-text.js";
 import { GENDERS } from "../felles/limits.js";
 import { askChoice, modalClose } from "./ui-modal.js";
 import { lesPunkter, punkterTilTekst, punktVarsel } from "../felles/punkter.js";
+import { selskaperIFelt, plateselskapeneSynlige } from "../felles/plateselskaper.js";
 
 // Bilde-fallback: når en skalert Wikimedia-thumbnail ikke lar seg hente
 // (Wikimedia avviser enkelte ferske bredder), bytt <img> tilbake til
@@ -612,15 +613,29 @@ export function factsLines(a, { showGender = false } = {}) {
       : `${a.influenceStart}–${a.influenceEnd}`;
     rows.push(["Innflytelse", `ca. ${p}`]);
   }
-  if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel]);
+  if (a.recordLabel) rows.push(["Plateselskap", a.recordLabel, { html: plateselskapHtml(a.recordLabel) }]);
   if (showGender) rows.push(["Kjønn", GENDER_LABEL[a.gender] || "Ukjent"]);
   if (a.geography) rows.push(["Virkested", a.geography]);
   return factsHtml(rows);
 }
 
+// Plateselskapsfeltet med hvert selskap som har eget kort som lenke (v6.37).
+// Feltet kan bære flere («Columbia / Atlantic»), og bare delene med kort blir
+// klikkbare; resten står som tekst, i feltets egen rekkefølge og skrivemåte.
+// Mens kortene er skjult for studentene, er hele feltet ren tekst for dem.
+// Klikket kobles delegert i explore.js ([data-plateselskap]).
+function plateselskapHtml(felt) {
+  if (!plateselskapeneSynlige()) return escapeHtml(felt);
+  const deler = selskaperIFelt(felt);
+  if (!deler.some((d) => d.selskap)) return escapeHtml(felt);
+  return deler.map(({ tekst, selskap }) => selskap
+    ? `<button type="button" class="facts-link" data-plateselskap="${escapeHtml(selskap.id)}">${escapeHtml(tekst)}</button>`
+    : escapeHtml(tekst)).join(" / ");
+}
+
 // Delt renderer for «etikett: verdi»-linjene. Fet etikett, vanlig verdi —
 // samme form på artistkort og innovasjonskort.
-function factsHtml(rows) {
+export function factsHtml(rows) {
   const fylte = rows.filter(([, v]) => v != null && String(v).trim() !== "");
   if (!fylte.length) return "";
   // Tredje element gjør verdien klikkbar: { attr } settes som data-attributt med
@@ -630,10 +645,12 @@ function factsHtml(rows) {
   // hele faktablokka — levetid fra nivå 1, årstallene først på nivå 3, og
   // kategori/instrument aldri. Nøkkelen er etiketten i kleinform, satt av
   // koden (aldri av data), og er inert utenfor presentasjonsmodus.
+  // { html } er en verdi koden har bygd og escapet selv (plateselskapene, der
+  // hver del av feltet kan være sin egen lenke).
   return `<div class="facts">${fylte.map(([l, v, lenke]) => {
     const tekst = escapeHtml(String(v));
-    const verdi = lenke
-      ? `<button type="button" class="facts-link" ${lenke.attr}="${tekst}">${tekst}</button>`
+    const verdi = lenke?.html != null ? lenke.html
+      : lenke ? `<button type="button" class="facts-link" ${lenke.attr}="${tekst}">${tekst}</button>`
       : tekst;
     const nokkel = String(l).toLowerCase().replace(/\s+/g, "-");
     return `<p data-fakta="${escapeHtml(nokkel)}"><strong>${escapeHtml(l)}:</strong> ${verdi}</p>`;

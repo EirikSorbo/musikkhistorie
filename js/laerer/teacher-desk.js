@@ -267,6 +267,7 @@ const SYNLIGHET_RADER = [
   { id: "rotter", navn: "Røtter", hub: ["sb-rotter"] },
   { id: "himmel", navn: "Sjangerhimmelen", hub: ["sb-himmel"] },
   { id: "referanser", navn: "Referanser", hub: ["sb-referanser"] },
+  { id: "plateselskaper", navn: "Plateselskapene (kortene, lenkene på artistkortene og søket)", hub: ["sb-plateselskaper"] },
   { id: "guide", navn: "Slik bruker du appen", hub: ["sb-guide"] },
   { id: "utskrift", navn: "Utskrift", student: ["utskrift"] },
   { id: "merking", navn: "Merking (stemming)", student: ["merking"] },

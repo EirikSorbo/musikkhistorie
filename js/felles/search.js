@@ -3,8 +3,8 @@
 // ----------------------------------------------------------------------------
 //  Bygger en flat liste over ALT som er skrevet i pensumet — artister, sjangre,
 //  undersjangre, sjangerhistorier, metasjanger-oversikter, innovasjonskort,
-//  tiårstekster, innholdssider, instrumentsammendrag, sjangerkoblinger og
-//  podkaster — og rangerer treff i
+//  tiårstekster, innholdssider, instrumentsammendrag, sjangerkoblinger,
+//  plateselskaper og podkaster — og rangerer treff i
 //  den. Hver post bærer med seg hvordan den åpnes (`apne`), så visningen bare
 //  sender payloaden videre til ruteren i explore-search.js. Samme grep som
 //  Referanser-kortet bruker for sine `opphav`.
@@ -22,6 +22,7 @@ import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisib
 import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "../sjangre/genre-model.js";
 import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
+import { PLATESELSKAPER, plateselskapSideId } from "./plateselskaper.js";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -40,6 +41,7 @@ export const TYPE_LABEL = {
   podkast: "Podkast",
   oversikt: "Metasjanger",
   galleri: "Artistgalleri",
+  plateselskap: "Plateselskap",
 };
 
 // Overskriften over en gruppe treff.
@@ -59,13 +61,14 @@ export const TYPE_FLERTALL = {
   podkast: "Podkaster",
   oversikt: "Metasjangre",
   galleri: "Artistgallerier",
+  plateselskap: "Plateselskaper",
 };
 
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
   "artist", "oversikt", "sjanger", "rot", "undersjanger", "tech", "hendelse",
-  "historie", "galleri", "side", "instrument", "samfunn", "teknologi", "kobling", "podkast",
+  "historie", "galleri", "side", "instrument", "plateselskap", "samfunn", "teknologi", "kobling", "podkast",
 ];
 
 const SIDE_TITTEL = { rotter: "Røtter før 1910", omHistorie: "Om historie", appGuide: "Slik bruker du appen" };
@@ -233,6 +236,20 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
     if (!side) continue;
     ut.push(post("instrument", gruppe, INSTRUMENT_TITLE[gruppe] || `Utviklingen av ${gruppe}`,
       "Instrumenter", [side.body], { hva: "instrument", id: gruppe }));
+  }
+
+  // --- Plateselskapene (v6.37) ---------------------------------------------
+  // Alle tretten, også før teksten er skrevet: kortet viser artistene uansett.
+  // Skjult for studentene med samme bryter som hubkortet, så søket ikke blir
+  // en bakvei rundt den. Skrivemåtene (Volt, Tamla, RCA …) er med i teksten.
+  if (erLærer || !skjulHub["sb-plateselskaper"]) {
+    for (const p of PLATESELSKAPER) {
+      const d = content[plateselskapSideId(p.id)] || {};
+      const f = d.fakta || {};
+      ut.push(post("plateselskap", p.id, p.navn, "Plateselskap",
+        [p.aliaser.filter((a) => a !== p.navn).join(", "), f.sted, f.grunnleggere, f.grunnlagt, d.body],
+        { hva: "plateselskap", id: p.id }));
+    }
   }
 
   // --- Sjangerkoblingene (strekene i slektstreet) --------------------------

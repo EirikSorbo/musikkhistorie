@@ -13,6 +13,7 @@
 // ============================================================================
 
 import { parseVisVerdi } from "../felles/vis-lenke.js";
+import { finnSelskapId } from "../felles/plateselskaper.js";
 
 // Flatene som styres av detaljnivået, med seksjonene i visningsrekkefølge.
 // Navnene vises i tannhjul-panelet. Flater som ikke står her (varmekart,
@@ -453,6 +454,7 @@ const VISNING_NAVN = {
   podkaster: "Podkastene",
   // Vinduene med egen adresse fra v6.08 (S7).
   sjangre: "Sjangrene", undersjangre: "Undersjangrene", artister: "Artistene", lytt: "Spillelistene",
+  plateselskaper: "Plateselskapene",
 };
 const SIDE_NAVN = { omHistorie: "Om historie", rotter: "Røtter før 1910" };
 
@@ -511,6 +513,9 @@ function oversiktPunkt(m, oppslag) {
       return { kat: "oversikter", tekst: m.id ? `Varmekartet: ${m.id}` : "Varmekartet" };
     case "side":
       return { kat: "oversikter", tekst: SIDE_NAVN[m.id] || "Slik bruker du appen" };
+    // Plateselskapene (v6.37) står blant oversiktene, med navnet fra lista.
+    case "plateselskap":
+      return { kat: "oversikter", tekst: `Plateselskap: ${finnSelskapId(m.id)?.navn || m.id || "?"}` };
     default:
       return { kat: "oversikter", tekst: VISNING_NAVN[m.hva] || m.hva };
   }

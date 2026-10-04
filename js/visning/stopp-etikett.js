@@ -18,6 +18,7 @@ import { parseVisVerdi } from "../felles/vis-lenke.js";
 import { lytteeksempelNavn } from "./presentasjon-modell.js";
 import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "../sjangre/genre-model.js";
 import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "../felles/limits.js";
+import { finnSelskapId } from "../felles/plateselskaper.js";
 
 export const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -28,7 +29,9 @@ export const TYPE_NAVN = {
   "store-bildet": "Det store bildet", podkaster: "Podkaster",
   teknologi: "Teknologi", slektstre: "Slektstre", yt: "Lytteeksempel",
   oversikt: "Oversikt", galleri: "Galleri",
-  sjangre: "Sjangre", undersjangre: "Undersjangre", artister: "Artister", lytt: "Lytt",
+  // Lytt heter Spillelister i appen fra v6.31.
+  sjangre: "Sjangre", undersjangre: "Undersjangre", artister: "Artister", lytt: "Spillelister",
+  plateselskap: "Plateselskap", plateselskaper: "Plateselskaper",
 };
 
 export const DOD = "finnes ikke lenger";
@@ -86,6 +89,12 @@ export function stoppEtikett(stopp) {
     case "instrument":
       if (!m.id) return ut(type);
       return ut(m.id, INSTRUMENT_TIMELINE_GROUPS.includes(m.id) ? {} : { feil: DOD });
+    case "plateselskap": {
+      const p = finnSelskapId(m.id);
+      return p ? ut(p.navn) : ut(m.id, { feil: DOD });
+    }
+    case "plateselskaper":
+      return ut(type);
     case "tiår":
       return ut(`${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})`);
     // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.

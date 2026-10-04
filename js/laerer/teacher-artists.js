@@ -7,7 +7,7 @@
 import { state, ctx, openAdminModal, lukkEtter, renderList, settTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js";
 import { updateArtistFields, setTeacherChecks } from "../data/store.js";
 import { renderArtistDetail, fillSelect, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "../ui/ui.js";
-import { renderDashboard } from "../ui/ui-dashboard.js";
+import { renderDashboard, oppdaterPlateselskapSeksjon } from "../ui/ui-dashboard.js";
 import { isMainGenre, edgeKey, GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "../sjangre/genre-model.js";
 import { openSingleSubgenreModal, openSingleEdgeModal, openPageEditor } from "./teacher-content.js";
 import { checkBtnHtml, setCheckBtn, toggleCheckBtn, fyllPunktfelt, lesPunktfelt } from "../ui/ui-helpers.js";
@@ -103,6 +103,7 @@ export function openOversikt() {
     onEditPage: (id) => openPageEditor(id),
     onEditEdge: (fromId, toId) => openSingleEdgeModal(fromId, toId),
     onEdgeCheck: (fromId, toId, on) => setContentCheck("edges", edgeKey(fromId, toId), on),
+    onPlateselskapCheck: (id, on) => setContentCheck("plateselskaper", id, on),
     onShowArtistList: (title, list) => openArtistListModal(title, list, openDetail, "Ingen artister her ennå."),
     // Metasjangerens lytteeksempler: samme bygger som popupen, så tallet i
     // kolonnen og antallet i lista alltid er det samme.
@@ -110,6 +111,15 @@ export function openOversikt() {
     onShowPlaylist: (title, list) => openArtistsPlaylistModal(title, list),
   });
   openAdminModal("modal-oversikt");
+}
+
+// Plateselskap-seksjonen i en ÅPEN Oversikt (v6.37): tegnes på nytt når
+// innholdet, artistene eller avhukingen endres, så status og telling følger
+// lagringen. Bare seksjonen, så utfoldede lister ellers i Oversikten blir
+// stående. No-op når Oversikten er lukket.
+export function oppdaterOversiktPlateselskaper() {
+  if (!document.getElementById("modal-oversikt")?.classList.contains("open")) return;
+  oppdaterPlateselskapSeksjon($("#oversikt-body"), state);
 }
 
 // ----------------------------------------------------------------------------
