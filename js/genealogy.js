@@ -12,19 +12,19 @@
 //  ikke kunne overleve at treet ble redigerbart for lærere.
 // ============================================================================
 
-import { wireAllLinks, medSelv } from "./linkify.js?v=6.27";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.27";
-import { renderRichText } from "./rich-text.js?v=6.27";
-import { punkterHtml } from "./punkter.js?v=6.27";
-import { escapeHtml, buildKilderList } from "./util.js?v=6.27";
-import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js?v=6.27";
-import { modalOpen } from "./ui-modal.js?v=6.27";
-import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js?v=6.27";
-import { artistsInGenre } from "./limits.js?v=6.27";
-import { wireProposeFoot } from "./ui-edit.js?v=6.27";
-import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js?v=6.27";
-import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js?v=6.27";
-import { ordneSjangerLerret } from "./pres-sjanger.js?v=6.27";
+import { wireAllLinks, medSelv } from "./linkify.js";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js";
+import { renderRichText } from "./rich-text.js";
+import { punkterHtml } from "./punkter.js";
+import { escapeHtml, buildKilderList } from "./util.js";
+import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js";
+import { modalOpen } from "./ui-modal.js";
+import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "./ui-helpers.js";
+import { artistsInGenre } from "./limits.js";
+import { wireProposeFoot } from "./ui-edit.js";
+import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js";
+import { GENEALOGY, META_GENRE_COLOR, edgeKey, nodeColor, edgeExists } from "./genre-model.js";
+import { ordneSjangerLerret } from "./pres-sjanger.js";
 
 // Main-beskrivelsen for en tre-sjanger. ÉN kilde, delt av visningen
 // (showSjangerInfo under) og lærerens editor (teacher-content.js

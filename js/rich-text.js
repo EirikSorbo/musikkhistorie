@@ -26,8 +26,8 @@
 //  import-sykel.
 // ============================================================================
 
-import { linkifyAll } from "./linkify.js?v=6.27";
-import { escapeHtml } from "./util.js?v=6.27";
+import { linkifyAll } from "./linkify.js";
+import { escapeHtml } from "./util.js";
 
 // Bokstav eller siffer, inkludert æøå og aksenter. Brukes til ordgrense-
 // sjekken for *kursiv* under.

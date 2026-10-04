@@ -14,14 +14,14 @@
 //  oversiktskort (planOversikt, testet), hvert kort åpnes oppå, og alle
 //  lytteeksemplene fra timen kan spilles som én spilleliste.
 // ============================================================================
-import { escapeHtml, modalOpen, openEksemplerSpilleliste } from "./ui.js?v=6.27";
-import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js?v=6.27";
-import { GENEALOGY } from "./genre-model.js?v=6.27";
-import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "./presentasjon-modell.js?v=6.27";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.27";
-import { opts, getState } from "./explore-context.js?v=6.27";
-import { apneMaal } from "./explore-apne.js?v=6.27";
-import { leggTilLyttBolk } from "./explore-lytt.js?v=6.27";
+import { escapeHtml, modalOpen, openEksemplerSpilleliste } from "./ui.js";
+import { SKJUL_I_STUDENTVISNING } from "./feature-flags.js";
+import { GENEALOGY } from "./genre-model.js";
+import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "./presentasjon-modell.js";
+import { parseVisVerdi } from "./vis-lenke.js";
+import { opts, getState } from "./explore-context.js";
+import { apneMaal } from "./explore-apne.js";
+import { leggTilLyttBolk } from "./explore-lytt.js";
 
 // Læreren (lærersiden) ser alltid timene; studentene når bryteren er på.
 export function fraTimeneSynlig() {

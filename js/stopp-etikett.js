@@ -13,11 +13,11 @@
 //  kall: treet og vokabularet er live bindings.
 // ============================================================================
 
-import { getState } from "./explore-context.js?v=6.27";
-import { parseVisVerdi } from "./vis-lenke.js?v=6.27";
-import { lytteeksempelNavn } from "./presentasjon-modell.js?v=6.27";
-import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js?v=6.27";
-import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js?v=6.27";
+import { getState } from "./explore-context.js";
+import { parseVisVerdi } from "./vis-lenke.js";
+import { lytteeksempelNavn } from "./presentasjon-modell.js";
+import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "./genre-model.js";
+import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "./limits.js";
 
 export const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",

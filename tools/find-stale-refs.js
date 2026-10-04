@@ -44,6 +44,8 @@ let treff = 0, kodetreff = 0;
 for (const rel of filer) {
   const linjer = fs.readFileSync(path.join(ROT, rel), "utf8").split("\n");
   linjer.forEach((linje, i) => {
+    // Importkartet er generert (tools/importkart.js) og nevner alle modulene.
+    if (linje.includes('<script type="importmap">')) return;
     for (const n of navn) {
       // Ordgrense som også tåler $ og som ikke matcher lengre navn
       // (canonMain skal ikke treffe canonMainGenre).

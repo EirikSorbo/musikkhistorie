@@ -19,15 +19,15 @@
 //  explore-context importerer feature-modulene tilbake, og GENEALOGY byttes ut
 //  ved hver ombygging av treet.
 // ============================================================================
-import { escapeHtml, modalOpen } from "./ui.js?v=6.27";
-import { GENEALOGY, META_GENRE_COLOR, onGenreModelChanged } from "./genre-model.js?v=6.27";
-import { storyOrder } from "./story-format.js?v=6.27";
-import { eraYears } from "./genealogy.js?v=6.27";
-import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, metaOversiktLenkeHtml } from "./explore-context.js?v=6.27";
+import { escapeHtml, modalOpen } from "./ui.js";
+import { GENEALOGY, META_GENRE_COLOR, onGenreModelChanged } from "./genre-model.js";
+import { storyOrder } from "./story-format.js";
+import { eraYears } from "./genealogy.js";
+import { getState, groupColor, metaGroupHeadHtml, wireMetaAccordion, onMainGenreClick, metaOversiktLenkeHtml } from "./explore-context.js";
 
 // Familiefargen til stolpenes nyanser (D6, v6.05).
 const familieFarge = (meta) => META_GENRE_COLOR[meta];
-import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js?v=6.27";
+import { periodGroups, periodAxis, pctAv, periodSignatur } from "./genre-periods.js";
 
 // Hvilken metagruppe som står åpen (navnet), «__ingen» når brukeren har lukket
 // alle, null ved frisk åpning (da åpnes den første).

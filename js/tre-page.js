@@ -14,23 +14,23 @@
 //  Nå kan en renderer ikke lenger få et annet kort enn resten av appen.
 // ============================================================================
 
-import { initExplore } from "./explore.js?v=6.27";
-import { sjangerOpts, buildLinkCtx } from "./explore-context.js?v=6.27";
-import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js?v=6.27";
-import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js?v=6.27";
-import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js?v=6.27";
-import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js?v=6.27";
-import { initPresentasjon, presPlanTikk } from "./presentasjon.js?v=6.27";
-import { initPlanMeny } from "./plan-meny.js?v=6.27";
-import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js?v=6.27";
-import { initYtSpiller } from "./yt-spiller.js?v=6.27";
-import { initVisning, visningTikk } from "./visning.js?v=6.27";
-import { initUtskriftValg } from "./utskrift-utvalg.js?v=6.27";
-import { initUtskriftSkuff } from "./utskrift-skuff.js?v=6.27";
-import { lesVisFraUrl, provVisMaal } from "./explore-apne.js?v=6.27";
-import { fetchPendingEdits } from "./store.js?v=6.27";
-import { openProposalEditor } from "./proposals.js?v=6.27";
-import { melding } from "./ui-modal.js?v=6.27";
+import { initExplore } from "./explore.js";
+import { sjangerOpts, buildLinkCtx } from "./explore-context.js";
+import { subscribeSharedData, sharedStateDefaults } from "./shared-data.js";
+import { isGenreModelReady, onGenreModelChanged } from "./genre-model.js";
+import { setupModal, modalCloseTop, modalOpen, renderArtistDetail } from "./ui.js";
+import { CONFIGURED, wireFirestoreErrorBanner } from "./shared.js";
+import { initPresentasjon, presPlanTikk } from "./presentasjon.js";
+import { initPlanMeny } from "./plan-meny.js";
+import { initPlanInnsamling, samleTikk } from "./plan-innsamling.js";
+import { initYtSpiller } from "./yt-spiller.js";
+import { initVisning, visningTikk } from "./visning.js";
+import { initUtskriftValg } from "./utskrift-utvalg.js";
+import { initUtskriftSkuff } from "./utskrift-skuff.js";
+import { lesVisFraUrl, provVisMaal } from "./explore-apne.js";
+import { fetchPendingEdits } from "./store.js";
+import { openProposalEditor } from "./proposals.js";
+import { melding } from "./ui-modal.js";
 
 export function initTrePage({ render }) {
   // Samme state-form som forsiden og lærersiden. isTeacher er alltid false her:

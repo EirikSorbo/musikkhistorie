@@ -126,10 +126,10 @@ js/
   teacher.js + teacher-*.js          Lærer-logikk (kjerne + feature-moduler,
                       inkl. teacher-genres.js: sjangertre-editoren)
 tests/                Enhetstester (node --test) + regeltester (emulator)
-tools/                check-imports, find-stale-refs, seed-genealogy,
-                      build-genealogy-doc, dump-genre-fixture
+tools/                check-imports, find-stale-refs, importkart, check-versjon,
+                      seed-genealogy, build-genealogy-doc, dump-genre-fixture
 firestore.rules       Sikkerhetsregler for databasen
-bump.sh               Setter ?v=… (cache-busting) fra js/version.js
+bump.sh               Setter ?v=… og importkartet (cache-busting) fra js/version.js
 ```
 
 **Datamodell (Firestore):** samlingene `artists`, `config` (`teacherChecks`),
@@ -192,9 +192,13 @@ domain**. Husk å legge domenet til under Authentication → Authorized domains
 (se punkt 9 over).
 
 **Cache-busting:** ved hver endring, bump `VERSION` i `js/version.js` og kjør
-`./bump.sh` (oppdaterer alle `?v=`-referanser). En pre-push-hook
-(`.githooks/pre-push`, aktiveres med `git config core.hooksPath .githooks`)
-nekter push hvis versjonene er i utakt.
+`./bump.sh`. Den setter `?v=` på skript og stilark i HTML-sidene og skriver
+*importkartet* (`tools/importkart.js`): én linje i hver side som gir hver modul
+`?v=`. Importlinjene i `js/` står derfor uten versjon (`from "./ui.js"`), og en
+ny versjon endrer bare HTML-sidene og `js/version.js`, ikke alle modulene. En
+pre-push-hook (`.githooks/pre-push`, aktiveres med
+`git config core.hooksPath .githooks`) nekter push hvis versjonene er i utakt,
+hvis et importkart er utdatert, eller hvis en import har fått `?v=`.
 
 ---
 

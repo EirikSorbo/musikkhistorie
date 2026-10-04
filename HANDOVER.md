@@ -182,7 +182,9 @@ manglende-?v=-sjekk.
 cd "/Users/eiriks05/Documents/Eiriks Script/pensum"
 printf 'export const VERSION = "4.64";\n' > js/version.js && ./bump.sh
 ```
-`bump.sh` setter `?v=` i alle `js/*.js`, `*.html` og `tests/*/*.js`. Uten dette får
+`bump.sh` setter `?v=` i alle `js/*.js`, `*.html` og `tests/*/*.js`. (Endret i
+v6.28: importene står nå uten `?v=`, og bump.sh skriver bare HTML-sidene og
+importkartet der. Se «Cache-busting» i README.) Uten dette får
 brukerne stale moduler. **Og under lokal verifisering rammer det deg selv:**
 redigerer du en fil uten å bumpe, serverer nettleseren fortsatt den forrige
 utgaven bak samme `?v=`. Det skjedde to ganger i v4.63-runden, én gang for en

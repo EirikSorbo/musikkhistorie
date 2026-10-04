@@ -221,9 +221,12 @@ for (const f of filer) {
   for (const m of utenKommentarer(kilde[f]).matchAll(/from\s+["']\.\/([^"'?]+\.js)/g)) importerte.add(m[1]);
   for (const m of utenKommentarer(kilde[f]).matchAll(/import\s+["']\.\/([^"'?]+\.js)/g)) importerte.add(m[1]);
 }
+// Importkartet (tools/importkart.js) nevner ALLE modulene. Telles det med, ser
+// hver modul ut som om en side laster den, og vakta blir blind.
 let htmlKilde = "";
 for (const h of fs.readdirSync(ROT).filter((x) => x.endsWith(".html"))) {
-  htmlKilde += fs.readFileSync(path.join(ROT, h), "utf8");
+  htmlKilde += fs.readFileSync(path.join(ROT, h), "utf8")
+    .replace(/<script type="importmap">[\s\S]*?<\/script>/g, " ");
 }
 const foreldrelose = filer.filter((f) =>
   !importerte.has(f) &&

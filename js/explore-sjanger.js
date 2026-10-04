@@ -5,11 +5,11 @@
 //  sjanger-info-modalen som lærer-oversikten bruker. Flyttet ut av explore.js
 //  (v3.55, runde 2). Delt kjerne fra explore-context.js.
 // ============================================================================
-import { escapeHtml, modalOpen, modalClose } from "./ui.js?v=6.27";
-import { isVisible } from "./limits.js?v=6.27";
-import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js?v=6.27";
-import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js?v=6.27";
-import { opts, getState, injectTeacherRow, metaOversiktKnappHtml } from "./explore-context.js?v=6.27";
+import { escapeHtml, modalOpen, modalClose } from "./ui.js";
+import { isVisible } from "./limits.js";
+import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "./genre-model.js";
+import { resolveDesc, resolveDescAny, missingDesc } from "./genre-descriptions.js";
+import { opts, getState, injectTeacherRow, metaOversiktKnappHtml } from "./explore-context.js";
 
 // Sjangre-vinduet (v6.05, brukervalg 2026-10-03, strukturgjennomgangen S6):
 // sjangrene gruppert per metasjanger, i appens ene rekkefølge, og innenfor

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
 #  Cache-busting for GitHub Pages.
-#  Setter ALLE ?v=... på lokale CSS/JS-referanser (i js/*.js og *.html) til
-#  appens VERSION fra js/version.js, så de aldri kommer ut av synk.
+#  Setter appens VERSION fra js/version.js på det sidene laster:
+#    · ?v= på <script src> og <link href> til js/ og css/ i *.html
+#    · importkartet i *.html (tools/importkart.js), som gir hver modul ?v=.
+#  Importlinjene i js/*.js står UTEN versjon (fra v6.28) og røres ikke her.
 #
 #  Bruk:  bump VERSION i js/version.js  →  kjør ./bump.sh
 # ---------------------------------------------------------------------------
@@ -14,11 +16,13 @@ cd "$(dirname "$0")"
 VER=$(grep -oE '"[0-9][0-9.]*"' js/version.js | head -1 | tr -d '"' || true)
 [ -n "$VER" ] || { echo "Fant ikke VERSION i js/version.js"; exit 1; }
 
-# nullglob: et mønster uten treff (f.eks. tomt tests/) skal forsvinne, ikke
-# sendes bokstavelig til perl — det ville stoppet løkka midt i en delvis bump.
+# Bare src/href til js/ og css/: en løs «?v=<tall>» kan like gjerne være en
+# YouTube-lenke (watch?v=3rd9…). Den forrige, bredere regexen skrev om en slik
+# lenke i en test ved hver versjon fra v5.56 til v6.27.
 shopt -s nullglob
-for f in js/*.js *.html tests/*/*.js; do
-  perl -i -pe "s/\?v=[0-9][0-9.]*/?v=$VER/g" "$f"
+for f in *.html; do
+  perl -i -pe "s/((?:src|href)=\"(?:js|css)\/[^\"?]+)\?v=[0-9][0-9.]*/\$1?v=$VER/g" "$f"
 done
+node tools/importkart.js
 
-echo "Satt ?v=$VER i alle js/*.js, *.html og tests/*/*.js"
+echo "Satt ?v=$VER i *.html og importkartet"

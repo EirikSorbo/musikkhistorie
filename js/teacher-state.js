@@ -14,13 +14,13 @@ import {
   updateArtistFields,
   setTeacherChecks,
   getClientId,
-} from "./store.js?v=6.27";
-import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js?v=6.27";
-import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js?v=6.27";
-import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js?v=6.27";
-import { sharedStateDefaults } from "./shared-data.js?v=6.27";
-import { $ } from "./shared.js?v=6.27";
-import { melding, bekreft } from "./ui-modal.js?v=6.27";
+} from "./store.js";
+import { renderArtists, fillSelect, modalOpen, modalClose, modalCloseTop, setupModal } from "./ui.js";
+import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "./genre-model.js";
+import { DECADES, instrumentsInUse, erTilModerasjon } from "./limits.js";
+import { sharedStateDefaults } from "./shared-data.js";
+import { $ } from "./shared.js";
+import { melding, bekreft } from "./ui-modal.js";
 
 export const state = {
   // De syv delte samlingene (artists, genreDescs, edgeDescs, tech, content,

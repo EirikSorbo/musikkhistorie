@@ -5,10 +5,10 @@
 #      som hvit side før)
 #    · importgrafen er skitten (tools/check-imports.js) eller det finnes
 #      stale referanser (tools/find-stale-refs.js)
-#    · en lokal js/css-referanse MANGLER ?v= (nettleseren ser «util.js» og
-#      «util.js?v=X» som TO moduler — en blandet graf laster modulen dobbelt,
-#      og med genre-modellens live bindings rendrer treet da tomt)
-#    · ?v=-referansene ikke matcher VERSION i js/version.js (kjør ./bump.sh)
+#    · cache-bustingen er i utakt (tools/check-versjon.sh): en import i js/
+#      eller tests/ HAR ?v= (versjonen står i importkartet fra v6.28), en
+#      js/css-referanse i HTML mangler ?v= eller har feil versjon, eller et
+#      importkart er utdatert (kjør ./bump.sh)
 #  Aktiveres med:  git config core.hooksPath .githooks
 # ---------------------------------------------------------------------------
 set -euo pipefail
@@ -20,7 +20,7 @@ npm test --silent >/dev/null 2>&1 || { echo "pre-push: npm test feiler. Kjør np
 node tools/check-imports.js >/dev/null || { echo "pre-push: check-imports feiler. Kjør node tools/check-imports.js."; exit 1; }
 node tools/find-stale-refs.js >/dev/null || { echo "pre-push: stale referanser. Kjør node tools/find-stale-refs.js."; exit 1; }
 
-# Cache-busting: ?v= på alle lokale referanser, og i takt med js/version.js.
+# Cache-busting: ?v= i HTML og importkartene, i takt med js/version.js.
 # Delt med CI (tools/check-versjon.sh), så kroken og GitHub sjekker det samme.
 bash tools/check-versjon.sh >/dev/null || { bash tools/check-versjon.sh; exit 1; }
 

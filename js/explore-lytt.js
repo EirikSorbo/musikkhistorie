@@ -10,10 +10,10 @@
 //  Spillelistene fra timene (U1) kommer som en tredje bolk når de finnes.
 //  «Sentrale verk» er bevisst IKKE med ennå (brukervalg 2026-10-03).
 // ============================================================================
-import { escapeHtml, modalOpen, countArtistExamples, openArtistsPlaylistModal, tiarEksempler, openEksemplerSpilleliste, countPlaylistExamples, openPlaylistModal } from "./ui.js?v=6.27";
-import { DECADES, isVisible } from "./limits.js?v=6.27";
-import { META_GENRE_ORDER, META_GENRE_COLOR, GENEALOGY, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js?v=6.27";
-import { getState } from "./explore-context.js?v=6.27";
+import { escapeHtml, modalOpen, countArtistExamples, openArtistsPlaylistModal, tiarEksempler, openEksemplerSpilleliste, countPlaylistExamples, openPlaylistModal } from "./ui.js";
+import { DECADES, isVisible } from "./limits.js";
+import { META_GENRE_ORDER, META_GENRE_COLOR, GENEALOGY, MAIN_GENRE_INFO, nodeColor } from "./genre-model.js";
+import { getState } from "./explore-context.js";
 
 // Ekstra bolker (U1: «Fra timene») kan legges inn utenfra uten at denne
 // modulen kjenner datakilden. Hver leverandør gir { tittel, rader: [{ navn,
