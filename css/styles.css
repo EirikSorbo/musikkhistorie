@@ -2349,11 +2349,13 @@ body.is-teacher #gate { display: none; }
   .btn.compact { padding: 8px 5px; font-size: 0.79rem; }
 }
 
-.artist-link, .tech-link, .genre-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.artist-link, .tech-link, .genre-link, .plateselskap-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
 .artist-link { color: #2563eb; }
 .tech-link { color: #d97706; }
 .genre-link { color: #059669; }
-.artist-link:hover, .tech-link:hover, .genre-link:hover { text-decoration-style: solid; }
+.artist-link:hover, .tech-link:hover, .genre-link:hover, .plateselskap-link:hover { text-decoration-style: solid; }
+/* Selskapsnavn i selskapskortene (v6.38): samme rav som hubkortets ikon. */
+.plateselskap-link { color: #b45309; }
 
 /* ============================================================
    Sjangerhimmelen (konstellasjonskart, constellation.js)

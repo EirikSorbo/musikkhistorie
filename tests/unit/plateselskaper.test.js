@@ -145,3 +145,19 @@ test("lærersiden: faktafeltene lagres og importeres, og Oversikten har seksjone
   assert.match(dash, /onPlateselskapCheck\?\.\(id, toggleCheckBtn\(chk, "tcr-check"\)\)/);
   assert.match(lesJs("teacher-artists.js"), /setContentCheck\("plateselskaper", id, on\)/);
 });
+
+test("selskapsnavn blir lenker bare i selskapskortene, og aldri kortets eget", async () => {
+  const { linkifyAll, medSelv } = await import("../../js/felles/linkify.js");
+  const ctx = medSelv({ plateselskaper: PLATESELSKAPER }, { plateselskap: "chess" });
+  const ut = linkifyAll("Phillips startet Sun, og Chess ga ut opptaket.", ctx);
+  assert.match(ut, /<a class="plateselskap-link" data-ps-lenke="sun"[^>]*>Sun<\/a>/);
+  assert.doesNotMatch(ut, /data-ps-lenke="chess"/, "kortets eget navn lenkes ikke");
+  assert.doesNotMatch(linkifyAll("Harold Melvin & the Blue Notes", ctx), /plateselskap-link/, "ingen genitiv-s på selskapsnavn");
+  assert.match(linkifyAll("Elvis gikk til RCA Victor.", ctx), /data-ps-lenke="victor"[^>]*>RCA Victor</, "lengste navn vinner");
+  assert.doesNotMatch(linkifyAll("House of the Rising Sun", {}), /plateselskap-link/, "uten selskapene i konteksten: ingen lenker");
+});
+
+test("standardnavnene er kortenes titler", () => {
+  assert.equal(PLATESELSKAPER.find((p) => p.id === "victor").navn, "RCA Victor");
+  for (const p of PLATESELSKAPER) assert.ok(p.aliaser.includes(p.navn), `${p.id}: standardnavnet skal også treffe`);
+});

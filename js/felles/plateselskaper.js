@@ -22,10 +22,15 @@
 import { SKJUL_I_HUBEN } from "./feature-flags.js";
 import { opts } from "../data/app-state.js";
 
+// `navn` er STANDARDNAVNET (v6.38, brukervalg 2026-10-05): kortets tittel og
+// skrivemåten artistenes plateselskapsfelt skal ha. Aliasene står til feltene
+// er ryddet, og fanger også underselskapene (Volt, Tamla, Atco, Bluebird).
 export const PLATESELSKAPER = [
   { id: "columbia", navn: "Columbia", aliaser: ["Columbia"] },
   // Bluebird var RCA Victors rimelige merke fra 1930-årene (kortet sier det).
-  { id: "victor", navn: "Victor / RCA", aliaser: ["Victor", "RCA Victor", "RCA", "Bluebird"] },
+  // «RCA Victor» er standardnavnet (v6.38): det dekker både Victor før 1929
+  // og RCA etter, og er navnet artistenes plateselskapsfelt skal bruke.
+  { id: "victor", navn: "RCA Victor", aliaser: ["Victor", "RCA Victor", "RCA", "Bluebird"] },
   { id: "paramount", navn: "Paramount", aliaser: ["Paramount"] },
   { id: "decca", navn: "Decca", aliaser: ["Decca"] },
   { id: "blue-note", navn: "Blue Note", aliaser: ["Blue Note"] },

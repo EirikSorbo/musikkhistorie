@@ -33,7 +33,14 @@ function prepareTargets(ctx) {
     .filter((g) => !SKIP.has(g.toLowerCase()))
     .sort((a, b) => b.length - a.length)
     .map((g) => ({ id: g, nameEsc: esc(g) }));
-  const prep = { artists, techItems, genres };
+  // Plateselskapene (v6.38): bare når konteksten har dem med, altså i
+  // selskapskortene selv (explore-plateselskap.js). Ellers ville «Sun» og
+  // «Savoy» blitt lenker i titler som «House of the Rising Sun» og navn som
+  // Savoy Ballroom i resten av appens tekster.
+  const plateselskaper = (ctx.plateselskaper || [])
+    .flatMap((p) => [p.navn, ...(p.aliaser || [])].filter(Boolean).map((n) => ({ id: p.id, nameEsc: esc(n) })))
+    .sort((a, b) => b.nameEsc.length - a.nameEsc.length);
+  const prep = { artists, techItems, genres, plateselskaper };
   _targetsCache.set(ctx, prep);
   return prep;
 }
@@ -54,11 +61,15 @@ export function linkifyAll(text, ctx = {}) {
   const markers = [];
   const lower = escaped.toLowerCase();
 
-  const { artists, techItems, genres } = prepareTargets(ctx._base || ctx);
+  const { artists, techItems, genres, plateselskaper } = prepareTargets(ctx._base || ctx);
   // Egne treff blir «self»-markører: de lenkes ikke, men holder plassen sin,
   // så et kortere navn aldri kan lenkes midt inni kortets eget navn.
   const self = ctx.self || {};
   const selvSjangre = new Set([].concat(self.genre || []));
+  // Selskapene først: i et selskapskort skal «Motown» føre til Motown-kortet,
+  // ikke til sjangeren med samme navn.
+  // Uten genitiv-s: «Harold Melvin & the Blue Notes» er et band, ikke Blue Note.
+  for (const p of plateselskaper) findMatches(lower, escaped, p.nameEsc, p.id, p.id === self.plateselskap ? "self" : "plateselskap", markers, { genitivS: false });
   for (const a of artists) findMatches(lower, escaped, a.nameEsc, a.id, a.id === self.artist ? "self" : "artist", markers);
   for (const t of techItems) findMatches(lower, escaped, t.nameEsc, t.id, t.id === self.tech ? "self" : "tech", markers);
   for (const g of genres) findMatches(lower, escaped, g.nameEsc, g.id, selvSjangre.has(g.id) ? "self" : "genre", markers);
@@ -75,6 +86,8 @@ export function linkifyAll(text, ctx = {}) {
       result += m.original;
     } else if (m.type === "artist") {
       result += `<a class="artist-link" data-artist-id="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
+    } else if (m.type === "plateselskap") {
+      result += `<a class="plateselskap-link" data-ps-lenke="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
     } else if (m.type === "tech") {
       result += `<a class="tech-link" data-tech-id="${esc(m.id)}" tabindex="0" role="button">${m.original}</a>`;
     } else {
@@ -123,7 +136,7 @@ function isGenitiveSuffix(ch) {
   return ch === "‘" || ch === "’" || ch === "ʼ";
 }
 
-function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
+function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers, { genitivS = true } = {}) {
   const needle = nameEsc.toLowerCase();
   let pos = 0;
   while ((pos = lowerHaystack.indexOf(needle, pos)) !== -1) {
@@ -131,7 +144,7 @@ function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers) {
     const before = pos > 0 ? lowerHaystack[pos - 1] : "";
     const after = end < lowerHaystack.length ? lowerHaystack[end] : "";
     const afterAfter = end + 1 < lowerHaystack.length ? lowerHaystack[end + 1] : "";
-    const afterIsGenitiveS = after === "s" && !isWordChar(afterAfter);
+    const afterIsGenitiveS = genitivS && after === "s" && !isWordChar(afterAfter);
     const afterOk = !isWordChar(after) || isGenitiveSuffix(after) || afterIsGenitiveS;
     if (!isWordChar(before) && afterOk && before !== "-" && after !== "-" &&
         !markers.some(m => (pos < m.end && end > m.start))) {
@@ -152,7 +165,12 @@ function wireLink(link, fn) {
   });
 }
 
-export function wireAllLinks(container, { artists, techItems, onArtistClick, onTechClick, onMainGenreClick } = {}) {
+export function wireAllLinks(container, { artists, techItems, onArtistClick, onTechClick, onMainGenreClick, onPlateselskapClick } = {}) {
+  if (onPlateselskapClick) {
+    container.querySelectorAll(".plateselskap-link[data-ps-lenke]").forEach((link) => {
+      wireLink(link, () => onPlateselskapClick(link.dataset.psLenke));
+    });
+  }
   if (onArtistClick) {
     container.querySelectorAll(".artist-link[data-artist-id]").forEach(link => {
       wireLink(link, () => {
