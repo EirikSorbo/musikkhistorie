@@ -12,7 +12,7 @@
 import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "../felles/util.js";
 import { wireAllLinks, nevnteArtister } from "../felles/linkify.js";
 import { renderRichText, renderInline } from "../felles/rich-text.js";
-import { GENDERS } from "../felles/limits.js";
+import { GENDERS, instrumenterFor } from "../felles/limits.js";
 import { askChoice, modalClose } from "./ui-modal.js";
 import { lesPunkter, punkterTilTekst, punktVarsel } from "../felles/punkter.js";
 import { selskaperIFelt, plateselskapeneSynlige } from "../felles/plateselskaper.js";
@@ -157,7 +157,7 @@ export function genreTags(a, { withInstrument = false, withSub = true, extraClas
   return [
     ...sjanger.map((s) => `<button class="tag tag-sjanger${cls}" data-sjanger="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
     ...under.map((s) => `<button class="tag tag-under${cls}" data-under="${escapeHtml(s)}">${escapeHtml(s)}</button>`),
-    withInstrument && a.instrument ? `<button class="tag tag-instrument${cls}" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : "",
+    ...(withInstrument ? instrumenterFor(a) : []).map((i) => `<button class="tag tag-instrument${cls}" data-instrument="${escapeHtml(i)}">${escapeHtml(i)}</button>`),
   ].filter(Boolean).join("");
 }
 
@@ -174,8 +174,8 @@ export function metaRader(a) {
       `${knapper.join(`<span class="meta-skille">, </span>`)}</span>`
     : "";
   return [
-    rad("Instrument", "Instrumenter", a?.instrument
-      ? [genreTags({ instrument: a.instrument }, { withInstrument: true, withSub: false })] : []),
+    rad("Instrument", "Instrumenter", instrumenterFor(a).map((i) =>
+      genreTags({ instrument: i }, { withInstrument: true, withSub: false }))),
     rad("Sjanger", "Sjangre", liste(a?.mainGenre).map((s) => genreTags({ mainGenre: [s] }, { withSub: false }))),
     rad("Undersjanger", "Undersjangre", liste(a?.subGenre).map((s) => genreTags({ subGenre: [s] }))),
   ].join("");

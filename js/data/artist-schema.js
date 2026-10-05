@@ -41,8 +41,13 @@ export const ARTIST_FIELDS = [
 // Firestore-reglene ingen endring.
 //   punkter  oppsummeringspunktene (v5.50, js/felles/punkter.js): bare læreren
 //            skriver dem (brukervalg 2026-09-24)
+//   instrument2  et andre instrument (v6.39, brukervalg 2026-10-05) for
+//            artister som er sentrale på to, f.eks. Ray Charles (Tangenter og
+//            Vokal). Bare læreren setter det; studentskjemaet har ett felt.
+//            Les alltid begge via instrumenterFor (limits.js).
 export const ARTIST_LAERERFELT = [
   { key: "punkter", label: "Oppsummering i punkter", type: "complex" },
+  { key: "instrument2", label: "Instrument 2", type: "text" },
 ];
 
 // { key: label } — brukt av diff-tabell og merge-dialog.

@@ -207,6 +207,7 @@ export function openEditModal(artistId) {
   settSelectMedVern($("#ed-metaGenre"), GENEALOGY_META_GENRES, a.metaGenre,
     "Velg metasjanger …", "finnes ikke i treet");
   settSelectMedVern($("#ed-instrument"), INSTRUMENTS, a.instrument, "Ingen / ukjent");
+  settSelectMedVern($("#ed-instrument2"), INSTRUMENTS, a.instrument2, "Ingen");
   // Sjangervelgeren: vokabularet FØRST, så artistens egne sjangre — da vet
   // velgeren hvilke brikker som ikke lenger finnes i treet, og kan merke dem
   // i stedet for å droppe dem stille.
@@ -262,6 +263,7 @@ export function setupEditForm() {
       gender:        $("#ed-gender").value,
       metaGenre:     $("#ed-metaGenre").value,
       instrument:    $("#ed-instrument").value,
+      instrument2:   $("#ed-instrument2").value === $("#ed-instrument").value ? "" : $("#ed-instrument2").value,
       mainGenre:     collectGenrePicker($("#ed-mainGenre")),
       subGenre:      $("#ed-subGenre").value.split(",").map(s => s.trim()).filter(Boolean),
       influenceStart: parseInt($("#ed-start").value, 10) || null,

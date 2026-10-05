@@ -19,6 +19,7 @@ import {
   decadesForArtist,
   DECADES,
   INSTRUMENTS,
+  instrumenterFor,
 } from "../felles/limits.js";
 import { GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
@@ -131,7 +132,7 @@ export function contentGaps({ artists = [], genreDescs = {}, edgeDescs = {}, con
   // Instrument utenfor vokabularet (INSTRUMENTS) eller tomt — verdier utenfor
   // lista splitter filteret/statistikken (Saxofon vs Saksofon-fella).
   const badInstrument = active
-    .filter((a) => !a.instrument || !INSTRUMENTS.includes(a.instrument))
+    .filter((a) => !a.instrument || !instrumenterFor(a).every((i) => INSTRUMENTS.includes(i)))
     .sort(byName);
   const total = stories.length + pages.length + mainDesc.length + subDesc.length + edgeDesc.length
     + noImage.length + noDesc.length + noMusic.length + noSources.length + noExGenre.length
@@ -474,7 +475,7 @@ export function renderDashboard(el, {
       ${missItem("Artister uten musikkeksempler", noMusic.length, artistRows(noMusic))}
       ${missItem("Lytteeksempler uten sjanger", gaps.noExGenre.length, artistRows(gaps.noExGenre))}
       ${missItem("Artister uten gyldig instrument", gaps.badInstrument.length,
-        artistRows(gaps.badInstrument, (a) => a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""))}
+        artistRows(gaps.badInstrument, (a) => instrumenterFor(a).map((i) => `<span class="tag">${escapeHtml(i)}</span>`).join("")))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
       ${missItem("Artister uten viktighetsgrad", utenPrio.length, artistRows(utenPrio))}
     </div>
@@ -526,7 +527,7 @@ export function renderDashboard(el, {
     const instr = hit("[data-ov-instr]");
     if (instr) {
       const i = instr.dataset.ovInstr;
-      return onShowArtistList?.(i, active.filter((a) => a.instrument === i).sort(byName));
+      return onShowArtistList?.(i, active.filter((a) => instrumenterFor(a).includes(i)).sort(byName));
     }
     const gen = hit("[data-ov-gender]");
     if (gen) {

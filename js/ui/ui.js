@@ -11,7 +11,7 @@
 //  escapeHtml, med seg alt ui.js importerer.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, byInfluenceThenName } from "../felles/limits.js";
+import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, byInfluenceThenName, instrumenterFor } from "../felles/limits.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { punkterHtml } from "../felles/punkter.js";
 import { medSelv } from "../felles/linkify.js";
@@ -214,7 +214,7 @@ function spotlightCard(a, lc) {
         ${factsLines(a)}
         <div class="meta">
           ${prioTag}
-          ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+          ${instrumenterFor(a).map((i) => `<button class="tag tag-instrument" data-instrument="${escapeHtml(i)}">${escapeHtml(i)}</button>`).join("")}
           ${genreTags(a)}
         </div>
         ${artistStripHtml(a)}
@@ -268,7 +268,7 @@ export function artistGalleriHtml(liste, { visPrioritet = false } = {}) {
       <span class="ar-navn">${escapeHtml(a.name)}</span>
       ${sjangre ? `<span class="ar-linje ar-sjanger">${escapeHtml(sjangre)}</span>` : ""}
       ${under ? `<span class="ar-linje">${escapeHtml(under)}</span>` : ""}
-      <span class="ar-linje">${escapeHtml([a.instrument, levetid(a)].filter(Boolean).join(" · "))}</span>
+      <span class="ar-linje">${escapeHtml([instrumenterFor(a).join(" og "), levetid(a)].filter(Boolean).join(" · "))}</span>
     </button>`;
   }).join("")}</div>`;
 }
@@ -508,7 +508,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
           ${factsLines(a, { showGender: isTeacher })}
           <div class="meta">
             ${prioTag}
-            ${a.instrument ? `<button class="tag tag-instrument" data-instrument="${escapeHtml(a.instrument)}">${escapeHtml(a.instrument)}</button>` : ""}
+            ${instrumenterFor(a).map((i) => `<button class="tag tag-instrument" data-instrument="${escapeHtml(i)}">${escapeHtml(i)}</button>`).join("")}
             ${genreTags(a)}
           </div>
           ${artistStripHtml(a)}
@@ -645,7 +645,7 @@ function buildArtistListRows(list) {
 // Aktive, synlige artister på et instrument.
 export function artistsByInstrument(artists, instrument) {
   return (artists || [])
-    .filter((a) => isVisible(a) && a.instrument === instrument)
+    .filter((a) => isVisible(a) && instrumenterFor(a).includes(instrument))
     .sort(byInfluenceThenName);
 }
 
@@ -657,7 +657,7 @@ export function artistsByInstrument(artists, instrument) {
 export function artistsInInstrumentGroup(artists, group) {
   const medlemmer = INSTRUMENT_GROUPS[group] || [group];
   return (artists || [])
-    .filter((a) => isVisible(a) && medlemmer.includes(a.instrument))
+    .filter((a) => isVisible(a) && instrumenterFor(a).some((i) => medlemmer.includes(i)))
     .sort(byInfluenceThenName);
 }
 

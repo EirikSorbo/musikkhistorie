@@ -7,7 +7,7 @@
 // ============================================================================
 import { escapeHtml } from "../felles/util.js";
 import { modalOpen, modalClose } from "../ui/ui-modal.js";
-import { isVisible } from "../felles/limits.js";
+import { isVisible, instrumenterFor } from "../felles/limits.js";
 import { isMainGenre, canonMainGenre, GENEALOGY, META_GENRE_ORDER, META_GENRE_COLOR } from "../sjangre/genre-model.js";
 import { resolveDesc, resolveDescAny, missingDesc } from "../sjangre/genre-descriptions.js";
 import { injectTeacherRow } from "./explore-context.js";
@@ -171,7 +171,7 @@ export function openSubgenreInfo(subgenreId) {
           <span class="result-name">${escapeHtml(a.name)}</span>
           <span class="result-meta">
             ${a.metaGenre ? `<span class="tag">${escapeHtml(a.metaGenre)}</span>` : ""}
-            ${a.instrument ? `<span class="tag">${escapeHtml(a.instrument)}</span>` : ""}
+            ${instrumenterFor(a).map((i) => `<span class="tag">${escapeHtml(i)}</span>`).join("")}
           </span>
           <span class="result-arrow">›</span>
         </div>`).join("")}

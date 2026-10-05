@@ -314,8 +314,10 @@ function collectUnknownGenres(artists) {
 function collectUnknownInstruments(artists) {
   const bad = new Set();
   for (const a of artists || []) {
-    const name = String(a.instrument || "").trim();
-    if (name && !INSTRUMENTS.includes(name)) bad.add(name);
+    for (const v of [a.instrument, a.instrument2]) {
+      const name = String(v || "").trim();
+      if (name && !INSTRUMENTS.includes(name)) bad.add(name);
+    }
   }
   return [...bad];
 }

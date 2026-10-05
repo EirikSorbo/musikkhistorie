@@ -44,7 +44,7 @@
 // ============================================================================
 
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
-import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange } from "../felles/limits.js";
+import { DECADES, isVisible, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, decadesForArtist, decadesForRange, instrumenterFor } from "../felles/limits.js";
 import { resolveSpan } from "../felles/timeline-lanes.js";
 import { GENEALOGY, GENEALOGY_META_GENRES, GENEALOGY_ROOT_GENRES, META_GENRE_ORDER, META_GENRE_COLOR, FAMILIES, nodeColor, edgeKey } from "../sjangre/genre-model.js";
 import { resolveDesc, resolveDescAny, epokeFritekst } from "../sjangre/genre-descriptions.js";
@@ -506,7 +506,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
       med: !bort.has(vis), kilde: kilde.get(vis),
       levetid: levetid(a),
       fakta: {
-        instrument: a.instrument || "", virkested: a.geography || "", plateselskap: a.recordLabel || "",
+        instrument: instrumenterFor(a).join(" og "), virkested: a.geography || "", plateselskap: a.recordLabel || "",
         innflytelse: innflytelse(a),
         sjangre: Array.isArray(a.mainGenre) ? [...a.mainGenre] : [],
         undersjangre: Array.isArray(a.subGenre) ? [...a.subGenre] : [],

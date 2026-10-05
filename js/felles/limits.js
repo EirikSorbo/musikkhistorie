@@ -41,8 +41,9 @@ export const INSTRUMENT_GROUPS = {
   "Låtskriving": ["Låtskriving"],
   // Ensembler, bandledere og produsenter uten ett bestemt instrument. Har
   // bevisst INGEN nyvinnings-tidslinje — det finnes ikke instrumentnyvinninger
-  // for «et band».
-  "Annet": ["Annet"],
+  // for «et band». «Gruppe» (v6.39, brukervalg 2026-10-05) er band og grupper;
+  // tydelige vokalgrupper (The Supremes) har Vokal.
+  "Annet": ["Gruppe", "Annet"],
 };
 
 // Overskriften over hvert instrumentsammendrag. Skrives ut i sin helhet fordi
@@ -92,6 +93,19 @@ function instrumentRang(group) {
 // Brukt av forslagsskjema, lærerredigering, filtre og import-valideringen.
 export const INSTRUMENTS = Object.values(INSTRUMENT_GROUPS).flat();
 
+// Alle instrumentene til en artist, hovedinstrumentet først (v6.39). En artist
+// kan ha et andre instrument (instrument2) når hen er sentral på begge, som
+// Ray Charles på tangenter og vokal. ALLE som filtrerer, teller eller viser
+// instrumenter, skal lese denne, ikke a.instrument direkte.
+export function instrumenterFor(a) {
+  const ut = [];
+  for (const v of [a?.instrument, a?.instrument2]) {
+    const t = String(v || "").trim();
+    if (t && !ut.includes(t)) ut.push(t);
+  }
+  return ut;
+}
+
 // Instrumentene som FAKTISK er i bruk, i vokabularets rekkefølge. Et filtervalg
 // eller en statistikkboble som garantert gir null treff er bare støy, så
 // filtrene og oversiktens instrumentbobler leser denne i stedet for hele
@@ -101,7 +115,7 @@ export const INSTRUMENTS = Object.values(INSTRUMENT_GROUPS).flat();
 // `behold` sikrer at et aktivt filtervalg blir stående i nedtrekket selv om
 // siste artist med instrumentet fjernes — ellers spriker nedtrekket og filteret.
 export function instrumentsInUse(artists, behold = "") {
-  const brukt = new Set(activeArtists(artists || []).map((a) => a.instrument).filter(Boolean));
+  const brukt = new Set(activeArtists(artists || []).flatMap(instrumenterFor));
   const liste = INSTRUMENTS.filter((i) => brukt.has(i));
   if (behold && !liste.includes(behold)) liste.push(behold);
   return liste;
@@ -253,7 +267,7 @@ export function filterArtists(list, filters = {}) {
       || (a.subGenre || []).some((s) => s.toLowerCase() === sj));
   }
   if (filters.metaGenre) list = list.filter((a) => a.metaGenre === filters.metaGenre);
-  if (filters.instrument) list = list.filter((a) => a.instrument === filters.instrument);
+  if (filters.instrument) list = list.filter((a) => instrumenterFor(a).includes(filters.instrument));
   if (filters.subgenre) {
     const sg = filters.subgenre;
     list = list.filter((a) => (a.subGenre || []).includes(sg) || (a.mainGenre || []).includes(sg));
@@ -286,6 +300,12 @@ function countBy(list, key) {
 }
 
 // En artist teller i ALLE tiår perioden deres spenner over
+function countByInstrument(list) {
+  const map = {};
+  for (const a of list) for (const i of instrumenterFor(a)) map[i] = (map[i] || 0) + 1;
+  return map;
+}
+
 function countByDecade(list) {
   const map = {};
   for (const a of list) {
@@ -302,7 +322,9 @@ export function computeCounts(artists) {
     total: active.length,
     perDecade: countByDecade(active),
     perMetaGenre: countBy(active, "metaGenre"),
-    perInstrument: countBy(active, "instrument"),
+    // Begge instrumentene teller (v6.39): Ray Charles er med under både
+    // Tangenter og Vokal, slik han står i begge listene.
+    perInstrument: countByInstrument(active),
   };
 }
 

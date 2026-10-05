@@ -18,7 +18,7 @@
 //  så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible } from "./limits.js";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible, instrumenterFor } from "./limits.js";
 import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "../sjangre/genre-model.js";
 import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
@@ -125,9 +125,9 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
     const verk = (a.keyWorks || []).map((w) => w && w.title).filter(Boolean);
     const eks = (a.musicExamples || []).map((m) => (typeof m === "string" ? m : m && m.title)).filter(Boolean);
     ut.push(post("artist", a.id, a.name || "(uten navn)",
-      [a.metaGenre, a.instrument].filter(Boolean).join(" · "),
+      [a.metaGenre, ...instrumenterFor(a)].filter(Boolean).join(" · "),
       [a.description, a.geography, a.recordLabel, a.metaGenre,
-        (a.mainGenre || []).join(", "), (a.subGenre || []).join(", "), a.instrument,
+        (a.mainGenre || []).join(", "), (a.subGenre || []).join(", "), instrumenterFor(a).join(", "),
         verk.join(", "), eks.join(", ")],
       { hva: "artist", id: a.id }));
   }

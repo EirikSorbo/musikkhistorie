@@ -83,6 +83,7 @@ export function normalizeArtist(a) {
 
   // Oppsummeringspunktene (v5.50): en ren liste med korte tekster.
   if ("punkter" in out) out.punkter = normaliserPunkter(out.punkter);
+  if ("instrument2" in out) out.instrument2 = String(out.instrument2 || "").trim();
 
   return out;
 }
@@ -125,6 +126,8 @@ export function buildArtistDoc(data) {
   // studentinnsending har dem aldri, og create-hvitelisten i reglene kjenner
   // dem ikke: skrev vi alltid feltet, ville hver studentinnsending blitt avvist.
   if (n.punkter?.length) retur.punkter = n.punkter;
+  // Det andre instrumentet (v6.39): samme grunn som punktene.
+  if (n.instrument2) retur.instrument2 = n.instrument2;
   return {
     ...docData,
     ...retur,
