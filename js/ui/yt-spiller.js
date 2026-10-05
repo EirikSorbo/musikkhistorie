@@ -30,7 +30,7 @@
 //  betingelse for den; nå er den alltid på, så betingelsene er borte.
 // ============================================================================
 
-import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid } from "../visning/presentasjon-modell.js";
+import { ytEmbedUrl, ytMaal, ytWatchUrl, ytSpillelisteIder, ytSpillelisteUrl, parseTid, formatTid, YT_TONING_MS, toningsSteg } from "../visning/presentasjon-modell.js";
 import { byggVisVerdi, parseVisVerdi, erSkrivefelt } from "../felles/vis-lenke.js";
 import { modalOpen, setupModal, initModalHeaders, topOpenModal } from "./ui-modal.js";
 import { getState } from "../data/app-state.js";
@@ -74,9 +74,10 @@ function ytModal() {
   initModalHeaders();
   // Alle lukkeveier (✕, ←, Escape, bakgrunn) går gjennom modalClose — FJERN
   // iframen der. Å tømme beholderen stopper lyden med sikkerhet, også når
-  // API-et ikke er tilgjengelig til å pause.
+  // API-et ikke er tilgjengelig til å pause. Spiller videoen, tones den ut
+  // først (v6.40), men lukkingen selv skjer med én gang (lukkMedToning).
   m._beforeClose = () => {
-    lukkSpiller();
+    lukkMedToning(m);
     return true;
   };
   wireTidrad(m);
@@ -161,9 +162,9 @@ function forlatEgenFullskjerm(m) {
 function lukkSpiller() {
   const m = document.getElementById("modal-yt");
   if (m) forlatEgenFullskjerm(m);
-  try { spiller?.destroy?.(); } catch (e) {}
-  spiller = null;
-  spillerKlar = false;
+  toning.gen++;   // en iframe som ennå venter på API-et, skal ikke settes inn
+  slippSpiller();
+  stoppToning();
   const ramme = document.getElementById("yt-ramme");
   if (ramme) ramme.innerHTML = "";
 }
@@ -253,18 +254,177 @@ function lastYtApi() {
   return apiLovet;
 }
 
-function lastIframe() {
+async function lastIframe() {
   const ramme = document.getElementById("yt-ramme");
   if (!ramme || !naa.video && !naa.list) return;
-  const src = ytEmbedUrl(ytWatchUrl(naa.video, naa.list), { start: naa.start, jsapi: true, kø: naa.kø });
-  if (!src) return;
+  if (!ytEmbedUrl(ytWatchUrl(naa.video, naa.list))) return;
+  const gen = ++toning.gen;
+  slippSpiller();
+  stoppToning();
+  visFeil(null);
+  ramme.innerHTML = "";
+  // Toningen trenger iframe-API-et. Første gang ventes det kort på skriptet
+  // (rammen er svart så lenge). Svarer det ikke innen 1,5 s, spilles videoen
+  // som før, med autoplay og uten toning.
+  const YT = await Promise.race([lastYtApi(), new Promise((r) => setTimeout(() => r(null), 1500))]);
+  if (gen !== toning.gen) return;   // lukket, eller et annet klipp åpnet i mellomtiden
+  toning.aktiv = !!YT?.Player;
+  const src = ytEmbedUrl(ytWatchUrl(naa.video, naa.list), { start: naa.start, jsapi: true, kø: naa.kø, autoplay: !toning.aktiv });
+  ramme.innerHTML = `<iframe id="yt-iframe" title="YouTube-avspilling" src="${src}"
+    allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    <div class="yt-svart" id="yt-svart" aria-hidden="true"${toning.aktiv ? ' style="opacity:1"' : ""}></div>`;
+  if (toning.aktiv) {
+    // Vakt: kom avspillingen aldri i gang (onReady uteble), vises bildet, så
+    // YouTubes egen avspillingsknapp kan brukes.
+    toning.vaktTimer = setTimeout(() => {
+      if (gen === toning.gen && toning.tilstand === null) settSvart(0, 300);
+    }, 4000);
+  }
+  bindSpiller();
+}
+
+// ----------------------------------------------------------------------------
+//  INN- OG UTTONING (v6.40, brukerbestilling 2026-10-05): et klipp tones inn
+//  fra svart, med lyden, på 1,5 sekunder (YT_TONING_MS), og ut til svart like
+//  lenge, både før slutten av videoen og når spilleren lukkes (✕, ←, Esc,
+//  neste stopp). Bildet tones med et svart lag over videoen (#yt-svart), som
+//  slipper klikk gjennom til YouTubes egne knapper; lyden med iframe-API-ets
+//  setVolume. Uten API-et spilles alt som før, og laget står gjennomsiktig.
+//  iPhone og iPad lar ikke nettsider styre volumet, så der tones bare bildet.
+//
+//  Lukkingen skjer med én gang (historikk, kortstabel og fokus som før), men
+//  spillermodalen står synlig, uten å ta imot klikk, til bildet er svart
+//  (.yt-uttoning). Åpnes et nytt klipp i mellomtiden, avbrytes uttoningen.
+//  Volumet settes tilbake før spilleren fjernes, så YouTube ikke husker et
+//  nedtonet volum til neste gang.
+// ----------------------------------------------------------------------------
+
+// Volumet det tones opp til: brukerens eget i YouTube, lest av ved start.
+let malVolum = 100;
+// `gen` avbryter ventende tidtakere og iframer når et nytt klipp åpnes eller
+// spilleren lukkes. `aktiv`: denne spilleren tones (API-et var klart).
+const toning = { gen: 0, aktiv: false, tilstand: null, lukker: false, videoId: null, lydTimer: null, sjekkTimer: null, lukkTimer: null, vaktTimer: null };
+
+function settSvart(opasitet, ms) {
+  const lag = document.getElementById("yt-svart");
+  if (!lag) return;
+  lag.style.transitionDuration = `${Math.round(ms)}ms`;
+  lag.style.opacity = String(opasitet);
+}
+
+function lydStyres() {
+  if (!toning.aktiv || !spillerKlar || !spiller?.setVolume) return false;
+  try { return !spiller.isMuted(); } catch (e) { return false; }
+}
+
+function rampeVolum(til, ms) {
+  clearInterval(toning.lydTimer);
+  toning.lydTimer = null;
+  if (!lydStyres()) return;
+  let fra = 0;
+  try { fra = spiller.getVolume(); } catch (e) {}
+  const t0 = performance.now();
+  const steg = () => {
+    const andel = Math.min(1, (performance.now() - t0) / Math.max(1, ms));
+    try { spiller?.setVolume(Math.round(fra + (til - fra) * andel)); } catch (e) {}
+    if (andel >= 1) { clearInterval(toning.lydTimer); toning.lydTimer = null; }
+  };
+  steg();
+  if (toning.lydTimer === null && ms > 0) toning.lydTimer = setInterval(steg, 50);
+}
+
+function tonInn() {
+  toning.tilstand = "inn";
+  settSvart(0, YT_TONING_MS);
+  rampeVolum(malVolum, YT_TONING_MS);
+}
+
+function tonUt(ms) {
+  // Har brukeren endret volumet underveis, er det det neste klipp tones opp til.
+  if (toning.tilstand === "inn" && !toning.lydTimer && lydStyres()) {
+    try { const v = spiller.getVolume(); if (v > 0) malVolum = v; } catch (e) {}
+  }
+  toning.tilstand = "ut";
+  settSvart(1, ms);
+  rampeVolum(0, ms);
+}
+
+// Ser etter slutten fire ganger i sekundet mens videoen spiller, og toner ut
+// i tide. Spoler brukeren tilbake fra slutten, tones klippet inn igjen.
+function startSjekk() {
+  if (toning.sjekkTimer) return;
+  toning.sjekkTimer = setInterval(() => {
+    if (toning.lukker || !spillerKlar || !spiller?.getPlayerState) return;
+    try {
+      if (spiller.getPlayerState() !== 1) return;
+      const varighet = spiller.getDuration();
+      const posisjon = spiller.getCurrentTime();
+      const steg = toningsSteg(toning.tilstand, varighet, posisjon);
+      if (steg === "ut") tonUt(Math.max(200, (varighet - posisjon) * 1000));
+      else if (steg === "inn") tonInn();
+    } catch (e) {}
+  }, 250);
+}
+
+function stoppToning() {
+  clearInterval(toning.lydTimer);
+  clearInterval(toning.sjekkTimer);
+  clearTimeout(toning.lukkTimer);
+  clearTimeout(toning.vaktTimer);
+  Object.assign(toning, { aktiv: false, tilstand: null, lukker: false, videoId: null, lydTimer: null, sjekkTimer: null, lukkTimer: null, vaktTimer: null });
+  document.getElementById("modal-yt")?.classList.remove("yt-uttoning");
+}
+
+// Fjerner spilleren. Ble volumet styrt, pauses videoen og volumet settes
+// tilbake først, så YouTube ikke husker uttoningens 0 til neste klipp.
+function slippSpiller() {
+  if (spiller && spillerKlar && toning.aktiv) {
+    try { spiller.pauseVideo(); spiller.setVolume(malVolum); } catch (e) {}
+  }
   try { spiller?.destroy?.(); } catch (e) {}
   spiller = null;
   spillerKlar = false;
-  visFeil(null);
-  ramme.innerHTML = `<iframe id="yt-iframe" title="YouTube-avspilling" src="${src}"
-    allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-  bindSpiller();
+}
+
+// Spilleren er klar (onReady): volumet ned, så start. Videoen er bygd inn
+// uten autoplay nettopp for dette, så ingen lyd slipper ut før nedtoningen.
+// 0 regnes som ukjent volum (det kan være en uttoning YouTube husket), og da
+// tones det opp til forrige kjente. Nekter nettleseren avspilling (ingen
+// klikk rett før, for eksempel etter omlasting på et stopp), vises bildet
+// straks, så YouTubes egen avspillingsknapp synes; trykker man på den,
+// tones lyden inn derfra.
+function startMedToning() {
+  try {
+    if (!spiller.isMuted()) {
+      const v = spiller.getVolume();
+      if (v > 0) malVolum = v;
+      spiller.setVolume(0);
+    }
+    spiller.playVideo();
+  } catch (e) {}
+  const gen = toning.gen;
+  setTimeout(() => {
+    if (gen !== toning.gen || toning.tilstand !== null) return;
+    let t = -1;
+    try { t = spiller.getPlayerState(); } catch (e) {}
+    if (t !== 1 && t !== 3) settSvart(0, 300);
+  }, 1200);
+}
+
+// Lukking: spiller videoen, tones den ut før spilleren fjernes, mens modalen
+// lukkes som vanlig og står synlig til bildet er svart. Ellers fjernes
+// spilleren med én gang, som før.
+function lukkMedToning(m) {
+  let igang = false;
+  try { igang = toning.aktiv && spillerKlar && [1, 3].includes(spiller.getPlayerState()); } catch (e) {}
+  if (!igang) { lukkSpiller(); return; }
+  const gen = ++toning.gen;
+  toning.lukker = true;
+  clearInterval(toning.sjekkTimer);
+  toning.sjekkTimer = null;
+  m.classList.add("yt-uttoning");
+  tonUt(YT_TONING_MS);
+  toning.lukkTimer = setTimeout(() => { if (gen === toning.gen) lukkSpiller(); }, YT_TONING_MS);
 }
 
 // Meldingen når YouTube nekter å spille i appen (v5.77). Feilkodene er
@@ -297,6 +457,25 @@ async function bindSpiller() {
         onReady: () => {
           spillerKlar = true;
           if (knapp) knapp.hidden = false;
+          if (toning.aktiv) startMedToning();
+        },
+        onStateChange: (e) => {
+          if (!toning.aktiv || toning.lukker) return;
+          if (e?.data === 1) {
+            let id = null;
+            try { id = spiller.getVideoData()?.video_id || null; } catch (err) {}
+            // Nytt klipp (også det neste i en kø), eller avspilling igjen
+            // etter slutten: tones inn fra svart.
+            if (toning.tilstand !== "inn" || id !== toning.videoId) {
+              toning.videoId = id;
+              tonInn();
+            }
+            startSjekk();
+          } else if (e?.data === 0 && toning.tilstand !== "ut") {
+            // Slutt uten at sjekken rakk å tone ut: svart og stille, så
+            // neste klipp i en kø også starter fra svart.
+            tonUt(300);
+          }
         },
         // Innbygging avslått av rettighetshaveren (101/150), fjernet eller
         // privat video (100) eller mangel på oppgitt avsender (153): gå ut
@@ -306,6 +485,7 @@ async function bindSpiller() {
           if (![100, 101, 150, 153].includes(e?.data)) return;
           const m = document.getElementById("modal-yt");
           if (!m) return;
+          settSvart(0, 0);   // YouTubes egen feilmelding skal synes
           settKino(m, false);
           // Tydelig melding med reserven som knapp (v5.77); fokus på knappen,
           // så Enter fra klikkeren åpner videoen.

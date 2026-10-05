@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -814,7 +814,7 @@ test("ytSpillelisteUrl: én lenke per 50 videoer, duplikater og ugyldige ut", ()
 
 test("ytEmbedUrl: en kø av videoer blir playlist-parameteret, aldri sammen med en ekte liste", () => {
   const u = ytEmbedUrl("https://youtu.be/dQw4w9WgXcQ", { kø: ["GtDlZdhHRCI", "dQw4w9WgXcQ", "-SBmury81Ws", "x"] });
-  assert.match(u, /[?&]playlist=GtDlZdhHRCI%2C-SBmury81Ws(&|$)/, "hovedvideoen og ugyldige ID-er er ute av køen");
+  assert.match(u, /[?&]playlist=dQw4w9WgXcQ%2CGtDlZdhHRCI%2C-SBmury81Ws(&|$)/, "hovedvideoen først (YouTube spiller bare playlist), ingen dubletter eller ugyldige ID-er");
   assert.doesNotMatch(ytEmbedUrl("https://youtu.be/dQw4w9WgXcQ"), /playlist=/);
   assert.doesNotMatch(ytEmbedUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLabc123456789", { kø: ["GtDlZdhHRCI"] }), /playlist=/);
 });
@@ -878,7 +878,7 @@ test("spilleren fanger YouTube-lenkene i hele appen, med reserve for sperrede vi
   assert.match(spiller, /const FEIL_TEKST = \{\n\s*100: /);
   assert.match(spiller, /settKino\(m, false\);[^]*?visFeil\(e\.data\);/);
   assert.match(spiller, /id="yt-feil" hidden role="alert"/);
-  assert.match(spiller, /visFeil\(null\);\n\s*ramme\.innerHTML = `<iframe/, "meldingen nullstilles ved ny video");
+  assert.match(spiller, /visFeil\(null\);\n\s*ramme\.innerHTML = "";[^]*?ramme\.innerHTML = `<iframe/, "meldingen nullstilles ved ny video");
   assert.match(spiller, /const ekstern = naa\.kø\.length\n\s*\? ytSpillelisteUrl\(\[naa\.video, \.\.\.naa\.kø\]\)\[0\]/);
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
   assert.match(css, /\.yt-feil\[hidden\] \{ display: none; \}/);
@@ -928,4 +928,40 @@ test("normaliserHistorikk: tåler tull fra sessionStorage", () => {
   assert.deepEqual(normaliserHistorikk(null), { liste: [], idx: -1 });
   assert.deepEqual(normaliserHistorikk({ liste: ["artist:a", "", 7, "yt:x", "sjanger:B"], idx: 9 }), { liste: ["artist:a", "sjanger:B"], idx: 1 });
   assert.deepEqual(normaliserHistorikk({ liste: ["artist:a"], idx: "x" }), { liste: ["artist:a"], idx: 0 });
+});
+
+// --- Inn- og uttoning i spilleren (v6.40, brukerbestilling 2026-10-05) ------
+
+test("toningsSteg: ut 1,5 s før slutten, inn igjen etter spoling tilbake, aldri uten varighet", () => {
+  assert.equal(YT_TONING_MS, 1500);
+  assert.equal(toningsSteg("inn", 200, 190), null, "10 s igjen");
+  assert.equal(toningsSteg("inn", 200, 198.5), "ut", "nøyaktig 1,5 s igjen");
+  assert.equal(toningsSteg("inn", 200, 199.9), "ut");
+  assert.equal(toningsSteg("ut", 200, 199), null, "toner alt ut");
+  assert.equal(toningsSteg("ut", 200, 198), null, "ikke inn igjen rett ved grensen (ingen veksling)");
+  assert.equal(toningsSteg("ut", 200, 120), "inn", "spolt tilbake");
+  assert.equal(toningsSteg(null, 200, 199), null, "ikke tonet inn ennå");
+  assert.equal(toningsSteg("inn", 0, 0), null, "ukjent varighet (direktesending)");
+  assert.equal(toningsSteg("inn", 200, NaN), null);
+});
+
+test("ytEmbedUrl: uten autoplay når spilleren starter videoen selv", () => {
+  assert.match(ytEmbedUrl("https://youtu.be/dQw4w9WgXcQ", { autoplay: false }), /[?&]autoplay=0/);
+  assert.match(ytEmbedUrl("https://youtu.be/dQw4w9WgXcQ"), /[?&]autoplay=1/, "standard som før");
+});
+
+test("spilleren toner inn og ut, og lukkingen venter ikke på uttoningen", () => {
+  const spiller = kilde("yt-spiller.js");
+  // Alle lukkeveier går gjennom lukkMedToning, og lukkingen skjer med én gang.
+  assert.match(spiller, /m\._beforeClose = \(\) => \{\n\s*lukkMedToning\(m\);\n\s*return true;/);
+  // Uten API-et: autoplay som før; med det: start selv etter nedtoning.
+  assert.match(spiller, /autoplay: !toning\.aktiv/);
+  assert.match(spiller, /spiller\.setVolume\(0\);\n\s*\}\n\s*spiller\.playVideo\(\);/);
+  // Volumet tilbake før spilleren fjernes, så YouTube ikke husker 0.
+  assert.match(spiller, /spiller\.pauseVideo\(\); spiller\.setVolume\(malVolum\);/);
+  // Et nytt klipp eller lukking avbryter ventende iframer og tidtakere.
+  assert.match(spiller, /if \(gen !== toning\.gen\) return;/);
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /\.yt-svart \{[^}]*pointer-events: none;/, "klikk når YouTubes knapper");
+  assert.match(css, /#modal-yt\.yt-uttoning \{ display: flex; pointer-events: none;/);
 });

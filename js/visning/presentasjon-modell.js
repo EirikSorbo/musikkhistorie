@@ -328,6 +328,24 @@ export function starttidTekst(url) {
   return formatTid(ytMaal(url)?.start);
 }
 
+// Inn- og uttoning i spilleren (v6.40, brukerbestilling 2026-10-05): et
+// klipp tones inn fra svart, med lyden, på YT_TONING_MS, og ut til svart like
+// lenge før slutten og når spilleren lukkes. yt-spiller.js gjør toningen;
+// avgjørelsen for hvert tikk mens videoen spiller, er ren logikk og bor her.
+export const YT_TONING_MS = 1500;
+
+// "ut" når det er YT_TONING_MS eller mindre igjen av videoen og den er tonet
+// inn, "inn" når den er tonet ut, men spolt tilbake et godt stykke fra
+// slutten, ellers null. `varighet` og `posisjon` i sekunder; ukjent varighet
+// (0, direktesending) gir aldri toning.
+export function toningsSteg(tilstand, varighet, posisjon) {
+  if (!(varighet > 0) || !Number.isFinite(posisjon)) return null;
+  const igjen = (varighet - posisjon) * 1000;
+  if (tilstand === "inn" && igjen <= YT_TONING_MS) return "ut";
+  if (tilstand === "ut" && igjen > YT_TONING_MS + 500) return "inn";
+  return null;
+}
+
 // Embed-URL for spilleren (privacy-varianten uten sporingscookies før
 // avspilling). autoplay er trygt: spilleren åpnes alltid av et klikk.
 // `start` (sekunder) overstyrer et eventuelt tidspunkt i selve lenka, og
@@ -336,17 +354,21 @@ export function starttidTekst(url) {
 // rekkefølge: YouTubes «playlist»-parameter tar en kommadelt liste uten at
 // noen spilleliste må lagres. Brukes av «Spill alle lytteeksemplene» på
 // kjøreplanens oversiktskort. Ikke sammen med en ekte spilleliste (list).
-export function ytEmbedUrl(url, { start = null, jsapi = false, kø = [] } = {}) {
+// `autoplay: false` (v6.40) brukes når spilleren selv starter videoen
+// gjennom API-et, etter å ha skrudd volumet ned for inntoningen (YT_TONING_MS).
+export function ytEmbedUrl(url, { start = null, jsapi = false, kø = [], autoplay = true } = {}) {
   const maal = ytMaal(url);
   if (!maal) return null;
-  const p = new URLSearchParams({ autoplay: "1", rel: "0" });
+  const p = new URLSearchParams({ autoplay: autoplay ? "1" : "0", rel: "0" });
   const fra = start != null ? start : maal.start;
   if (fra) p.set("start", String(fra));
   if (jsapi) p.set("enablejsapi", "1");
   if (maal.video) {
     if (maal.list) p.set("list", maal.list);
     const rest = [...new Set((kø || []).filter((id) => ID_OK.test(String(id || "")) && id !== maal.video))];
-    if (rest.length && !maal.list) p.set("playlist", rest.join(","));
+    // Hovedvideoen står først i køen også (v6.40): YouTube spiller bare
+    // videoene i «playlist» og hoppet over den i stien (prøvd 2026-10-05).
+    if (rest.length && !maal.list) p.set("playlist", [maal.video, ...rest].join(","));
     return `https://www.youtube-nocookie.com/embed/${maal.video}?${p}`;
   }
   p.set("list", maal.list);

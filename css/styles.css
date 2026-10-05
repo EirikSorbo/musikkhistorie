@@ -3319,6 +3319,13 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .modal-yt-boks { width: min(960px, 92vw); }
 .yt-ramme { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
 .yt-ramme iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Inn- og uttoning (v6.40, yt-spiller.js): et svart lag over videoen.
+   Gjennomsiktig til spilleren slår toningen på, og slipper klikk gjennom til
+   YouTubes egne knapper. Varigheten settes per toning. */
+.yt-svart { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0ms linear; }
+/* Uttoning etter lukking: modalen er lukket, men står synlig over det som
+   åpnes etterpå til bildet er svart, uten å ta imot klikk. */
+#modal-yt.yt-uttoning { display: flex; pointer-events: none; z-index: 101; }
 .yt-reserve { margin: 10px 0 0; font-size: 0.85rem; }
 /* YouTube nekter avspilling i appen (v5.77): tydelig melding med reserven som knapp. */
 .yt-feil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--line-strong); border-left: 4px solid var(--warn); border-radius: 10px; background: var(--surface-2); font-size: 0.9rem; }
