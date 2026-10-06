@@ -1,5 +1,6 @@
-// Validerer nyeste innholdseksport (json files/musikkhistorie-*.json, også de
-// eldre Innholdspakke-*.json) mot appen: sidene og historiene skal rendre
+// Validerer nyeste innholdseksport (json files/musikkhistorie-*.json eller
+// json files/eksporter/musikkhistorie-*.json, også de eldre
+// Innholdspakke-*.json) mot appen: sidene og historiene skal rendre
 // gjennom rich-text, og varmekart-radene skal matche tre-sjangrene med gyldige
 // nivåer. Fila er gitignored (innhold, ikke kode) — finnes ingen i utsjekket,
 // hoppes testene over. (Testene sov i praksis fra eksporten byttet filnavn
@@ -14,17 +15,23 @@ import { STORY_ORDER } from "../../js/felles/story-format.js";
 import { renderRichText } from "../../js/felles/rich-text.js";
 import { GENEALOGY_MAIN_GENRES } from "../../js/sjangre/genre-model.js";
 
-const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
+// Eksportene ligger i json files/eksporter/ fra 2026-10-06 (ryddingen); rota
+// leses fortsatt, så en fersk eksport lagt rett i json files/ også telles.
+const rot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "json files");
 let pakke = null;
-try {
-  const kandidater = readdirSync(dir)
-    .filter((f) => (f.startsWith("musikkhistorie") || f.startsWith("Innholdspakke")) && f.endsWith(".json"));
-  // Nyeste etter mtime, ikke navn — BACKUP-varianter sorterer ellers feil.
-  const fil = kandidater
-    .map((f) => ({ f, m: statSync(join(dir, f)).mtimeMs }))
-    .sort((a, b) => a.m - b.m).pop()?.f;
-  if (fil) pakke = JSON.parse(readFileSync(join(dir, fil), "utf8"));
-} catch { /* mappa finnes ikke i denne utsjekken */ }
+const kandidater = [];
+for (const dir of [rot, join(rot, "eksporter")]) {
+  try {
+    for (const f of readdirSync(dir))
+      if ((f.startsWith("musikkhistorie") || f.startsWith("Innholdspakke")) && f.endsWith(".json"))
+        kandidater.push(join(dir, f));
+  } catch { /* mappa finnes ikke i denne utsjekken */ }
+}
+// Nyeste etter mtime, ikke navn — BACKUP-varianter sorterer ellers feil.
+const fil = kandidater
+  .map((f) => ({ f, m: statSync(f).mtimeMs }))
+  .sort((a, b) => a.m - b.m).pop()?.f;
+if (fil) pakke = JSON.parse(readFileSync(fil, "utf8"));
 
 const skip = pakke ? false : "ingen innholdseksport til stede (gitignored innhold)";
 
