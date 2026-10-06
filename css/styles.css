@@ -1035,6 +1035,8 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .icon-btn.danger { color: var(--danger); }
 .icon-btn.danger:hover { background: #fee2e2; border-color: #fca5a5; }
 .icon-btn svg { pointer-events: none; }
+/* Pila som ikke kan brukes (øverste episode kan ikke flyttes opp, v6.48). */
+.icon-btn:disabled { opacity: 0.3; cursor: default; background: none; border-color: transparent; }
 
 /* ----- Badges ----- */
 .badge {

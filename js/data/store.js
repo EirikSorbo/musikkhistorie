@@ -43,6 +43,7 @@ import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-
 import { RETUR_FELTER } from "./artist-schema.js";
 import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "../felles/util.js";
 import { PROPOSABLE_KEYS } from "../forslag/proposal-fields.js";
+import { sorterPodkaster } from "../felles/podkast-rekkefolge.js";
 import { mergeHeatRows } from "./import-format.js";
 import { BATCH_MAX } from "../sjangre/genre-migrate.js";
 import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "../felles/limits.js";
@@ -374,9 +375,8 @@ export async function saveEdgeDesc(edgeId, data) {
 
 export function subscribePodcasts(callback) {
   return onSnapshot(podcastsCol, (snapshot) => {
-    const pods = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    pods.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
-    callback(pods);
+    // Nyeste øverst, og lærerens egen rekkefølge (v6.48, podkast-rekkefolge.js).
+    callback(sorterPodkaster(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))));
   }, onSubscribeError("podkaster"));
 }
 
@@ -416,6 +416,16 @@ export async function updatePodcast(id, data) {
 
 export async function deletePodcast(id) {
   return deleteDoc(doc(db, "podcasts", id));
+}
+
+// Lærerens flytting (v6.48): de nye order-tallene i én skriving, så lista
+// aldri står halvveis omnummerert. update (ikke set) feiler heller enn å lage
+// et halvtomt dokument av en episode som ble slettet i en annen fane.
+export async function reorderPodcasts(endringer) {
+  if (!endringer?.length) return;
+  const batch = writeBatch(db);
+  for (const { id, order } of endringer) batch.update(doc(db, "podcasts", id), { order });
+  return batch.commit();
 }
 
 export function subscribeTech(callback) {

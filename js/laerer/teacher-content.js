@@ -6,7 +6,8 @@
 // ============================================================================
 
 import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast } from "../data/store.js";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts } from "../data/store.js";
+import { flyttPodkast } from "../felles/podkast-rekkefolge.js";
 import { resolveMainDesc } from "../sjangre/genealogy.js";
 import { dropboxDirectUrl, escapeHtml, buildKilderList } from "../felles/util.js";
 import { GENEALOGY, edgeKey } from "../sjangre/genre-model.js";
@@ -630,6 +631,14 @@ export function renderPodkastAdmin() {
       document.querySelector(".podkast-add-form")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
+  // Opp og ned (v6.48): hele lista nummereres på nytt i én skriving
+  // (podkast-rekkefolge.js), og snapshotet tegner den i ny rekkefølge.
+  el.querySelectorAll("[data-pod-flytt]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const endringer = flyttPodkast(state.podcasts, btn.dataset.podId, Number(btn.dataset.podFlytt));
+      if (endringer.length) await guardTeacherAction(reorderPodcasts(endringer));
+    });
+  });
   el.querySelectorAll("[data-pod-delete]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!(await bekreft("Episoden slettes for godt.", { tittel: "Slette denne episoden?", ja: "Slett", farlig: true }))) return;
@@ -679,6 +688,7 @@ export function setupPodkastAdmin() {
           ...felter,
           // Maks eksisterende order + 1 (ikke lengde+1, som gjenbruker en verdi
           // etter at en episode er slettet → to like order → ustabil sortering).
+          // Høyest står øverst (v6.48), så den nye episoden havner øverst.
           order: Math.max(0, ...state.podcasts.map((p) => p.order || 0)) + 1,
         });
         fillPodForm(null);

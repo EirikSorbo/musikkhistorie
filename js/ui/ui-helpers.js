@@ -74,6 +74,8 @@ export const ICONS = {
   approve: ico("M22 11.08V12a10 10 0 11-5.93-9.14") + ico("M22 4L12 14.01l-3-3"),
   reject: ico("M18 6L6 18M6 6l12 12"),
   retur: ico("M9 14L4 9l5-5") + ico("M20 20v-7a4 4 0 00-4-4H4"),
+  opp: ico("M18 15l-6-6-6 6"),
+  ned: ico("M6 9l6 6 6-6"),
 };
 
 // Delt «Sjekket»-knapp — ÉN kilde til markup/klasser, så alle sjekk-flatene
@@ -184,9 +186,10 @@ export function metaRader(a) {
 // Podkast-episodekort — ett enkelt kort. Begge listene (podkastfanen i
 // explore-instrument.js og lærer-admin i teacher-content.js) tegnes gjennom
 // renderPodcastList under, så markupen ikke driver fra hverandre. `admin`
-// legger rediger + slett HELT TIL HØYRE i tittelraden, over avspilleren;
-// kalleren kobler lytterne (data-pod-edit / data-pod-delete).
-function podcastEpisodeHtml(ep, { admin = false } = {}) {
+// legger flytt opp/ned (v6.48), rediger og slett HELT TIL HØYRE i tittelraden,
+// over avspilleren; kalleren kobler lytterne (data-pod-flytt / data-pod-edit /
+// data-pod-delete). `forste`/`siste` slår av pila som ikke kan brukes.
+function podcastEpisodeHtml(ep, { admin = false, forste = false, siste = false } = {}) {
   const duration = ep.duration ? `<span class="podkast-duration">(${escapeHtml(ep.duration)})</span>` : "";
   const desc = ep.description ? `<div class="podkast-desc rt">${renderRichText(ep.description)}</div>` : "";
   // Normaliseres HER, ikke bare når læreren lagrer, så episoder som allerede
@@ -200,6 +203,8 @@ function podcastEpisodeHtml(ep, { admin = false } = {}) {
         <h3 class="podkast-title">${escapeHtml(ep.title || "Uten tittel")}</h3>
         ${duration}
         ${admin ? `<div class="podkast-actions">
+          <button class="icon-btn" data-pod-flytt="-1" data-pod-id="${id}" title="Flytt opp" aria-label="Flytt opp"${forste ? " disabled" : ""}>${ICONS.opp}</button>
+          <button class="icon-btn" data-pod-flytt="1" data-pod-id="${id}" title="Flytt ned" aria-label="Flytt ned"${siste ? " disabled" : ""}>${ICONS.ned}</button>
           <button class="icon-btn" data-pod-edit="${id}" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>
           <button class="icon-btn danger" data-pod-delete="${id}" title="Slett" aria-label="Slett">${ICONS.trash}</button>
         </div>` : ""}
@@ -237,7 +242,7 @@ export function renderPodcastList(el, episodes, { admin = false, empty = "" } = 
   }
 
   el.innerHTML = episodes.length
-    ? episodes.map((ep) => podcastEpisodeHtml(ep, { admin })).join("")
+    ? episodes.map((ep, i) => podcastEpisodeHtml(ep, { admin, forste: i === 0, siste: i === episodes.length - 1 })).join("")
     : empty;
   el.dataset.podSig = sig;
 
