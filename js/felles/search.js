@@ -1,8 +1,8 @@
 // ============================================================================
 //  SØK — én indeks over alt innholdet i appen
 // ----------------------------------------------------------------------------
-//  Bygger en flat liste over ALT som er skrevet i pensumet — artister, sjangre,
-//  undersjangre, sjangerhistorier, metasjanger-oversikter, innovasjonskort,
+//  Bygger en flat liste over ALT som er skrevet i pensumet — artister,
+//  lytteeksempler, sjangre, undersjangre, sjangerhistorier, metasjanger-oversikter, innovasjonskort,
 //  tiårstekster, innholdssider, instrumentsammendrag, sjangerkoblinger,
 //  plateselskaper og podkaster — og rangerer treff i
 //  den. Hver post bærer med seg hvordan den åpnes (`apne`), så visningen bare
@@ -14,8 +14,8 @@
 //  og den koster ingenting å holde ved like: hele pensumet er noen hundre
 //  poster, og normaliseringen under kjører på under et millisekund per bygg.
 //
-//  DOM-fri og avhengighetsfattig (limits + genre-model + story-format + util),
-//  så modulen kan enhetstestes i Node.
+//  DOM-fri og avhengighetsfattig (limits + genre-model + story-format + util,
+//  og ytMaal fra presentasjon-modell), så modulen kan enhetstestes i Node.
 // ============================================================================
 
 import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible, instrumenterFor } from "./limits.js";
@@ -23,10 +23,12 @@ import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edg
 import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
 import { PLATESELSKAPER, plateselskapSideId } from "./plateselskaper.js";
+import { ytMaal } from "../visning/presentasjon-modell.js";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
   artist: "Artist",
+  lytteeksempel: "Lytteeksempel",
   sjanger: "Sjanger",
   rot: "Rot",
   undersjanger: "Undersjanger",
@@ -47,6 +49,7 @@ export const TYPE_LABEL = {
 // Overskriften over en gruppe treff.
 export const TYPE_FLERTALL = {
   artist: "Artister",
+  lytteeksempel: "Lytteeksempler",
   sjanger: "Sjangre",
   rot: "Røtter",
   undersjanger: "Undersjangre",
@@ -67,7 +70,7 @@ export const TYPE_FLERTALL = {
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
-  "artist", "oversikt", "sjanger", "rot", "undersjanger", "tech", "hendelse",
+  "artist", "lytteeksempel", "oversikt", "sjanger", "rot", "undersjanger", "tech", "hendelse",
   "historie", "galleri", "side", "instrument", "plateselskap", "samfunn", "teknologi", "kobling", "podkast",
 ];
 
@@ -121,15 +124,49 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
   // --- Artister -------------------------------------------------------------
   // Læreren søker i HELE samlingen (også skjulte kort og forslag som venter —
   // det er hen som behandler dem); studenten kun i det som faktisk vises.
-  for (const a of erLærer ? artists : artists.filter(isVisible)) {
+  const synlige = erLærer ? artists : artists.filter(isVisible);
+  for (const a of synlige) {
     const verk = (a.keyWorks || []).map((w) => w && w.title).filter(Boolean);
-    const eks = (a.musicExamples || []).map((m) => (typeof m === "string" ? m : m && m.title)).filter(Boolean);
+    // Lytteeksemplenes tittel heter `label` (v6.41: indeksen leste `title`,
+    // som eksemplene aldri har hatt, så titlene var ikke søkbare).
+    // Et eksempel som også er et sentralt verk, står bare én gang.
+    const verkSett = new Set(verk.map(normaliser));
+    const eks = (a.musicExamples || []).map((m) => m && m.label)
+      .filter((t) => t && !verkSett.has(normaliser(t)));
     ut.push(post("artist", a.id, a.name || "(uten navn)",
       [a.metaGenre, ...instrumenterFor(a)].filter(Boolean).join(" · "),
       [a.description, a.geography, a.recordLabel, a.metaGenre,
         (a.mainGenre || []).join(", "), (a.subGenre || []).join(", "), instrumenterFor(a).join(", "),
         verk.join(", "), eks.join(", ")],
       { hva: "artist", id: a.id }));
+  }
+
+  // --- Lytteeksemplene (v6.41, brukerbestilling 2026-10-06) -----------------
+  // Hvert eksempel er et eget treff, med tittelen som overskrift og artisten
+  // ved siden av. En YouTube-video spilles direkte (yt-målet, samme som et
+  // kjøreplan-stopp, med starttidspunktet), så treffet også kan bli et stopp i
+  // Visning-editoren. Andre lenker åpner artistkortet. Samme video hos flere
+  // artister gir ett treff med alle navnene. Søk på artisten eller sjangeren
+  // finner eksemplene også, men da veier tittelen ingenting.
+  const eksempler = new Map();
+  for (const a of synlige) {
+    for (const m of a.musicExamples || []) {
+      const tittel = String(m?.label || "").trim();
+      if (!tittel || !m.url) continue;
+      const yt = ytMaal(m.url);
+      const nokkel = yt?.video || m.url;
+      const funnet = eksempler.get(nokkel);
+      if (funnet) { if (a.name && !funnet.navn.includes(a.name)) funnet.navn.push(a.name); continue; }
+      eksempler.set(nokkel, { tittel, m, yt, a, navn: a.name ? [a.name] : [] });
+    }
+  }
+  for (const [nokkel, e] of eksempler) {
+    const navn = e.navn.join(", ");
+    ut.push(post("lytteeksempel", nokkel, e.tittel, navn,
+      [e.m.genre, e.m.year, navn],
+      e.yt?.video
+        ? { hva: "yt", id: e.yt.video, modus: e.yt.list || "", ekstra: e.yt.start ? String(e.yt.start) : "" }
+        : { hva: "artist", id: e.a.id }));
   }
 
   // --- Sjangre og røtter (treets noder) -------------------------------------

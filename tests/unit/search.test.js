@@ -12,11 +12,18 @@ const STATE = {
       instrument: "Gitar", geography: "Mississippi", recordLabel: "Chess",
       mainGenre: ["Electric blues"], subGenre: ["Chicago blues"],
       description: "Flyttet til Chicago og elektrifiserte bluesen.",
-      keyWorks: [{ title: "Rollin' Stone" }], musicExamples: [{ title: "Mannish Boy" }] },
+      keyWorks: [{ title: "Rollin' Stone" }],
+      // Samme form som de ekte eksemplene: tittelen heter label (v6.41).
+      musicExamples: [
+        { label: "Mannish Boy", url: "https://www.youtube.com/watch?v=-SBmury81Ws&t=12s", genre: "Electric blues", year: 1955 },
+        { label: "Hoochie Coochie Man", url: "https://open.spotify.com/track/abc" },
+      ] },
     { id: "a2", name: "Beyoncé", status: "active", metaGenre: "R&B", instrument: "Vokal",
-      description: "Sanger fra Houston." },
+      description: "Sanger fra Houston.",
+      musicExamples: [{ label: "Mannish Boy, live", url: "https://youtu.be/-SBmury81Ws" }] },
     { id: "a3", name: "Skjult artist", status: "active", priority: -1, metaGenre: "Pop",
-      description: "Chicago står også her." },
+      description: "Chicago står også her.",
+      musicExamples: [{ label: "Skjult låt", url: "https://youtu.be/dQw4w9WgXcQ" }] },
     { id: "a4", name: "Venter på godkjenning", status: "pending", metaGenre: "Pop",
       description: "Chicago står her også." },
   ],
@@ -197,4 +204,34 @@ test("markeringen kan ikke brekke ut av HTML-en", () => {
 
 test("overlappende treff smelter sammen til én markering", () => {
   assert.equal(marker("bluesen", ["blue", "blues", "lues"]), "<mark>blues</mark>en");
+});
+
+// --- Lytteeksemplene (v6.41, brukerbestilling 2026-10-06) --------------------
+
+test("lytteeksemplene er egne treff som spilles direkte", () => {
+  const indeks = byggIndeks(STATE, { erLærer: false });
+  const res = sok(indeks, "mannish boy");
+  assert.equal(res.grupper[0].type, "lytteeksempel", "tittelen veier tyngst");
+  assert.equal(res.grupper[0].label, "Lytteeksempler");
+  const t = res.grupper[0].treff[0];
+  assert.equal(t.tittel, "Mannish Boy");
+  assert.equal(t.sti, "Muddy Waters, Beyoncé", "samme video hos to artister er ett treff med begge navnene");
+  assert.deepEqual(t.apne, { hva: "yt", id: "-SBmury81Ws", modus: "", ekstra: "12" }, "med starttidspunktet");
+  assert.ok(utdrag(t, res.termer).includes("Electric blues"), "sjangeren i utdraget");
+});
+
+test("et lytteeksempel som ikke er en YouTube-video, åpner artistkortet", () => {
+  const t = finn(byggIndeks(STATE, { erLærer: false }), "lytteeksempel", "Hoochie Coochie Man");
+  assert.deepEqual(t.apne, { hva: "artist", id: "a1" });
+});
+
+test("studenten finner ikke eksemplene til skjulte artister, læreren gjør det", () => {
+  assert.equal(finn(byggIndeks(STATE, { erLærer: false }), "lytteeksempel", "Skjult låt"), undefined);
+  assert.ok(finn(byggIndeks(STATE, { erLærer: true }), "lytteeksempel", "Skjult låt"));
+});
+
+test("søk på artisten viser eksemplene også, men artisten står først", () => {
+  const res = sok(byggIndeks(STATE, { erLærer: false }), "muddy waters");
+  assert.equal(res.grupper[0].type, "artist");
+  assert.ok(res.grupper.some((g) => g.type === "lytteeksempel" && g.treff.some((t) => t.tittel === "Mannish Boy")));
 });
