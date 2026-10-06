@@ -1,7 +1,7 @@
 // ============================================================================
 //  PRESENTASJONSVISNING — browser-delen (v5.24)
 // ----------------------------------------------------------------------------
-//  Appen som tavle i timen (fase 3 i «git ignore/PRESENTASJON-PLAN.md»):
+//  Appen som tavle i timen (fase 3 i «git ignore/notater/PRESENTASJON-PLAN.md»):
 //  læreren starter modusen fra presentasjonsikonet i toppnavigasjonen, og
 //  forsiden (og slektstresiden) viser da bare innhold — ingen forslags-,
 //  stemme- eller returknapper. En diskret verktøylinje nede til høyre gir
