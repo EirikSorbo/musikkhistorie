@@ -87,12 +87,12 @@ function hullHtml(r) {
 // metasjanger-oversikten. Med `tiarLenker` (oversikten, v6.46, brukervalg
 // 2026-10-06) er tiårene som har et tiårskort, knapper med data-tiar: den
 // felles klikklytteren i explore.js åpner tiårskortet på det tiåret, i
-// Musikk-fanen. De andre (f.eks. 1890) står som tekst.
+// Samfunn-fanen (data-tiar-fane, v6.47). De andre (f.eks. 1890) står som tekst.
 function akseHtml(axis, { tiarLenker = false } = {}) {
   const merke = (t) => {
     const pos = `left:${pctAv(axis, t).toFixed(3)}%`;
     return tiarLenker && DECADES.includes(t)
-      ? `<button type="button" class="sp-tiar" data-tiar="${t}" style="${pos}" title="Åpne ${t}-tallet" aria-label="Åpne ${t}-tallet">${t}</button>`
+      ? `<button type="button" class="sp-tiar" data-tiar="${t}" data-tiar-fane="society" style="${pos}" title="Åpne ${t}-tallet" aria-label="Åpne ${t}-tallet">${t}</button>`
       : `<span style="${pos}">${t}</span>`;
   };
   return {

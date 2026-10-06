@@ -287,11 +287,12 @@ function wireModals() {
     // gruppene i tidslinja/varmekartet/periodene og merket øverst på
     // artist- og sjangerkortet (K5).
     // Et tiår på tidsstripene (artistkortet, sjangerkortet): tiårsvinduet på
-    // Musikk-fanen (v6.07, K1).
+    // Musikk-fanen (v6.07, K1). data-tiar-fane velger en annen fane
+    // (metasjanger-oversiktens tiår åpner Samfunn, v6.47).
     const tiarBtn = e.target.closest("[data-tiar]");
     if (tiarBtn) {
       e.preventDefault();
-      openDecade(Number(tiarBtn.dataset.tiar), "musikk");
+      openDecade(Number(tiarBtn.dataset.tiar), tiarBtn.dataset.tiarFane || "musikk");
       return;
     }
     const metaBtn = e.target.closest("[data-meta-oversikt]");
