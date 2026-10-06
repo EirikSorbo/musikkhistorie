@@ -20,6 +20,7 @@
 //  ved hver ombygging av treet.
 // ============================================================================
 import { escapeHtml } from "../felles/util.js";
+import { DECADES } from "../felles/limits.js";
 import { modalOpen } from "../ui/ui-modal.js";
 import { GENEALOGY, META_GENRE_COLOR, onGenreModelChanged } from "../sjangre/genre-model.js";
 import { storyOrder } from "../felles/story-format.js";
@@ -83,11 +84,20 @@ function hullHtml(r) {
 }
 
 // Tiårsstrekene i sporet og årstallsaksen under, delt av figuren og
-// metasjanger-oversikten.
-function akseHtml(axis) {
+// metasjanger-oversikten. Med `tiarLenker` (oversikten, v6.46, brukervalg
+// 2026-10-06) er tiårene som har et tiårskort, knapper med data-tiar: den
+// felles klikklytteren i explore.js åpner tiårskortet på det tiåret, i
+// Musikk-fanen. De andre (f.eks. 1890) står som tekst.
+function akseHtml(axis, { tiarLenker = false } = {}) {
+  const merke = (t) => {
+    const pos = `left:${pctAv(axis, t).toFixed(3)}%`;
+    return tiarLenker && DECADES.includes(t)
+      ? `<button type="button" class="sp-tiar" data-tiar="${t}" style="${pos}" title="Åpne ${t}-tallet" aria-label="Åpne ${t}-tallet">${t}</button>`
+      : `<span style="${pos}">${t}</span>`;
+  };
   return {
     streker: axis.ticks.map((t) => `<span class="sp-strek" style="left:${pctAv(axis, t).toFixed(3)}%"></span>`).join(""),
-    akse: `<div class="sp-akse">${axis.ticks.map((t) => `<span style="left:${pctAv(axis, t).toFixed(3)}%">${t}</span>`).join("")}</div>`,
+    akse: `<div class="sp-akse">${axis.ticks.map(merke).join("")}</div>`,
   };
 }
 
@@ -101,7 +111,7 @@ export function periodeFigurForMeta(meta) {
   const g = groups[0];
   if (!g || !g.rows.length) return { html: "", rader: [] };
   const axis = periodAxis(groups, naa);
-  const { streker, akse } = akseHtml(axis);
+  const { streker, akse } = akseHtml(axis, { tiarLenker: true });
   const rader = g.rows.map((r) => (r.status === "ok" ? stolpeHtml(r, axis, naa) : hullHtml(r))).join("");
   return { html: `<div class="sp-scroll"><div class="sp-figur"><div class="sp-rader">${streker}${rader}</div>${akse}</div></div>`, rader: g.rows };
 }

@@ -2805,6 +2805,14 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
   position: absolute; top: 6px; transform: translateX(-50%);
   font-size: 0.74rem; color: var(--muted);
 }
+/* Tiårene som lenker til tiårskortet (metasjanger-oversikten, v6.46): samme
+   plass og skrift som tallene, med litt luft rundt for et større klikkområde. */
+.sp-akse .sp-tiar {
+  position: absolute; top: 3px; transform: translateX(-50%);
+  padding: 3px 4px; border: 0; border-radius: 5px; background: none;
+  font: inherit; font-size: 0.74rem; line-height: 1.2; color: var(--muted); cursor: pointer;
+}
+.sp-akse .sp-tiar:hover, .sp-akse .sp-tiar:focus-visible { color: var(--accent-2); text-decoration: underline; }
 .sp-forklaring { margin: 16px 0 0; font-size: 0.8rem; line-height: 1.6; color: var(--muted); }
 /* Fargeprøven og teksten den forklarer brytes alltid sammen. */
 .sp-forklaring-par { display: inline-flex; align-items: center; gap: 8px; }
