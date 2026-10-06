@@ -82,6 +82,9 @@ function setupGate() {
       signedInNotTeacher = false;
       msg.textContent = "";
       document.body.classList.add("is-teacher");
+      // Innstillingene viser hvilken konto som er logget inn (v6.44).
+      const konto = document.getElementById("innst-konto");
+      if (konto) konto.textContent = `Logget inn som ${user.email}`;
       // Stemme-identiteten er uid-en (getClientId er null før innlogging har
       // landet). Uten dette ville lærerens EGNE «Merk ★» stått som umerkede.
       if (state.clientId !== user.uid) {
