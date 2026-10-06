@@ -756,6 +756,8 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   // Pilene (v5.95, brukerønske 2026-10-01): opp og ned blar i kjøreplanens
   // stopp, venstre og høyre i sidene som er vist (som nettleserens tilbake
   // og fram), også i fri visning. Uten plan scroller opp og ned som før.
+  // Fra v6.49 (brukerønske 2026-10-06) går venstre og høyre til forrige og
+  // neste STOPP når det ikke finnes noen side å gå til (presentasjon.js).
   if (plan) {
     if (k === "ArrowUp") return "neste";
     if (k === "ArrowDown") return "forrige";
@@ -774,6 +776,9 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   // «.» er det mange presentasjonsklikkere sender fra svart-skjerm-knappen.
   if (k === "b" || k === "B" || k === ".") return "svart";
   if (k === "?") return "hjelp";
+  // Innstillingene (tannhjulet) og Avslutt (v6.49, brukerønske 2026-10-06).
+  if (k === ",") return "innstillinger";
+  if (k === "x" || k === "X") return "avslutt";
   // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
   // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
   if (k === "n" || k === "N") return "timeliste";
@@ -809,13 +814,15 @@ export const PRES_TASTER = [
     { taster: ["+"], hva: "Legg kortet du viser inn i kjøreplanen her", laerer: true },
   ] },
   { gruppe: "Visning", rader: [
-    { taster: ["←"], hva: "Forrige side du har vist" },
-    { taster: ["→"], hva: "Neste side du har vist (etter ←)" },
+    { taster: ["←"], hva: "Forrige side du har vist, ellers forrige stopp" },
+    { taster: ["→"], hva: "Neste side du har vist (etter ←), ellers neste stopp" },
     { taster: ["1", "2", "3"], hva: "Detaljnivå" },
     { taster: ["A"], hva: "Tekststørrelse: A, A+, A++" },
     { taster: ["F"], hva: "Fullskjerm av og på" },
     { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
     { taster: ["M"], hva: "Vis eller skjul menyen nede til høyre (tastene virker uansett)" },
+    { taster: [","], hva: "Innstillinger" },
+    { taster: ["X"], hva: "Avslutt visningen" },
     { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
   { gruppe: "Ellers", rader: [

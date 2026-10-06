@@ -21,7 +21,9 @@ test("funn 7: et stoppbytte pauser lyd og avbrytes når et kort nekter å lukkes
   assert.match(ga, /if \(!lukkAlleKort\(\)\) return;\n\s*\n\s*stoppIdx = p\.pos;/,
     "posisjonen settes først når alle kortene faktisk er lukket");
   const side = p.slice(p.indexOf("function gaISideHistorikk("), p.indexOf("let hoppOverSlektstre"));
-  assert.match(side, /if \(!steg \|\| !lukkAlleKort\(\)\) return;/, "← og → avbrytes også ved nekt");
+  // v6.49: uten side å gå til gis usann (pila går da til stoppet), men et
+  // kort som nekter, avbryter fortsatt (sann, ingen stoppbytte).
+  assert.match(side, /if \(!steg\) return false;\n\s*if \(!lukkAlleKort\(\)\) return true;/, "← og → avbrytes også ved nekt");
 });
 
 test("funn 12: tilbake i samme plan beholder posisjonen, og slektstre-stoppet hopper ikke tilbake", () => {

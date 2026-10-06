@@ -495,7 +495,11 @@ test("presTast: visningstastene virker i all presentasjon", () => {
   assert.equal(presTast(tast(".")), "svart", "klikkernes svart-skjerm-knapp");
   assert.equal(presTast(tast("?", { shiftKey: true })), "hjelp", "? krever Shift på de fleste tastatur");
   assert.equal(presTast(tast("2")), "nivaa2");
-  assert.equal(presTast(tast("x")), null);
+  // v6.49 (brukerønske 2026-10-06): komma åpner innstillingene, X avslutter.
+  assert.equal(presTast(tast(",")), "innstillinger");
+  assert.equal(presTast(tast("x")), "avslutt");
+  assert.equal(presTast(tast("X")), "avslutt");
+  assert.equal(presTast(tast("z")), null);
 });
 
 test("presTast: aldri i skrivefelt eller med modifikator, unntatt klikkernes PageUp/PageDown", () => {
@@ -513,7 +517,7 @@ test("presTast: aldri i skrivefelt eller med modifikator, unntatt klikkernes Pag
 
 test("presTast: av/på-tastene reagerer ikke på auto-gjentak, blaingen gjør det", () => {
   const holdt = (k) => presTast(tast(k, { repeat: true }), { plan: true });
-  for (const k of ["f", "a", "b", ".", "?", "t", "+", "n"]) assert.equal(holdt(k), null, k);
+  for (const k of ["f", "a", "b", ".", "?", "t", "+", "n", ",", "x"]) assert.equal(holdt(k), null, k);
   assert.equal(holdt("ArrowUp"), "neste");
   assert.equal(holdt("ArrowLeft"), "sideTilbake");
   assert.equal(holdt("2"), "nivaa2");
@@ -964,4 +968,17 @@ test("spilleren toner inn og ut, og lukkingen venter ikke på uttoningen", () =>
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
   assert.match(css, /\.yt-svart \{[^}]*pointer-events: none;/, "klikk når YouTubes knapper");
   assert.match(css, /#modal-yt\.yt-uttoning \{ display: flex; pointer-events: none;/);
+});
+
+// v6.49 (brukerønske 2026-10-06): venstre og høyre går i sidene som er vist,
+// og til forrige og neste stopp når det ikke finnes noen side i den retningen.
+test("pilene faller tilbake på stoppene, og komma og X er koblet", () => {
+  const pres = kilde("presentasjon.js");
+  assert.match(pres, /case "sideTilbake": return gaISideHistorikk\(-1\) \|\| gaTilStopp\(stoppIdx - 1\);/);
+  assert.match(pres, /case "sideFram": return gaISideHistorikk\(1\) \|\| gaTilStopp\(stoppIdx \+ 1\);/);
+  assert.match(pres, /if \(!steg\) return false;\n\s*if \(!lukkAlleKort\(\)\) return true;/, "et kort som nekter å lukkes, hopper ikke til neste stopp");
+  assert.match(pres, /case "innstillinger": return vekslPanel\(\);/);
+  assert.match(pres, /case "avslutt": return avsluttPresentasjon\(\);/);
+  const rader = PRES_TASTER.flatMap((g) => g.rader);
+  assert.ok(rader.some((r) => r.taster.includes(",")) && rader.some((r) => r.taster.includes("X")), "tastoversikten nevner dem");
 });

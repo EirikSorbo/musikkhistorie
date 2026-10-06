@@ -394,15 +394,19 @@ function registrerSide(vis = toppMaal()) {
   lagreHistorikk();
 }
 
+// Sann når tasten er brukt (også når et kort nektet å lukkes), usann når det
+// ikke finnes noen side i den retningen; da går pila til neste stopp.
 function gaISideHistorikk(retning) {
   const steg = historikkSteg(historikk, retning);
-  if (!steg || !lukkAlleKort()) return;
+  if (!steg) return false;
+  if (!lukkAlleKort()) return true;
   historikk = steg.h;
   lagreHistorikk();
   ventMaal = steg.vis;
   clearTimeout(ventTimer);
   ventTimer = setTimeout(() => { ventMaal = null; }, 4000);
   apneVisNaarKlart(parseVisVerdi(steg.vis));
+  return true;
 }
 
 // Satt når sida er nådd med nettleserens tilbake/fram (se over).
@@ -629,8 +633,12 @@ function wireTaster() {
       case "hjelp": return vekslHjelp();
       case "timeliste": return vekslTimeliste();
       case "meny": return settMenySkjult(!document.body.classList.contains("pres-meny-skjult"));
-      case "sideTilbake": return gaISideHistorikk(-1);
-      case "sideFram": return gaISideHistorikk(1);
+      // Ingen side å gå til (først eller sist i historikken): forrige eller
+      // neste stopp i kjøreplanen i stedet (v6.49).
+      case "sideTilbake": return gaISideHistorikk(-1) || gaTilStopp(stoppIdx - 1);
+      case "sideFram": return gaISideHistorikk(1) || gaTilStopp(stoppIdx + 1);
+      case "innstillinger": return vekslPanel();
+      case "avslutt": return avsluttPresentasjon();
       case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
     }
@@ -832,9 +840,9 @@ function byggBar() {
     </span>
     <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst (A)">A</button>
     <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (F)">${IKON.full}</button>
-    <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger" aria-label="Innstillinger">${IKON.tannhjul}</button>
+    <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger (,)" aria-label="Innstillinger">${IKON.tannhjul}</button>
     <span class="pres-klokke" id="pres-klokke" hidden aria-label="Klokka"></span>
-    <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt">Avslutt</button>
+    <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt" title="Avslutt visningen (X)">Avslutt</button>
     <div id="pres-panel" hidden></div>`;
   document.body.appendChild(bar);
 
