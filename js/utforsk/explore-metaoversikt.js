@@ -50,6 +50,10 @@ function tegnMetaOversikt(meta, modal) {
   const artGr = artisterGruppert(meta, s.artists, familie);
   const eks = lytteeksemplerGruppert(s.artists, familie);
   const { fra, til } = forbindelser(meta, GENEALOGY, (n) => nodeStartAar(n, s.genreDescs));
+  // Forbindelsene som én liste uten «Vokste ut av»/«Førte videre til» (v6.45,
+  // brukervalg 2026-10-06): først røttene, så det familien førte videre til,
+  // hver sjanger én gang.
+  const forb = [...fra, ...til].filter((n, i, alle) => alle.findIndex((m) => m.id === n.id) === i);
   const figur = periodeFigurForMeta(meta);
   const antallArt = artGr.reduce((sum, g) => sum + g.artister.length, 0);
 
@@ -77,9 +81,8 @@ function tegnMetaOversikt(meta, modal) {
     <div class="mo-kol mo-hoved">
       <h3 class="mo-head">Sjangerperioder</h3>
       ${figur.html || `<p class="gx-missing">Ingen perioder å vise ennå.</p>`}
-      ${fra.length || til.length ? `<h3 class="mo-head">Forbindelser</h3>
-        ${fra.length ? `<p class="gx-rel"><strong>Vokste ut av:</strong> ${fra.map(sjLenke).join(", ")}</p>` : ""}
-        ${til.length ? `<p class="gx-rel"><strong>Førte videre til:</strong> ${til.map(sjLenke).join(", ")}</p>` : ""}` : ""}
+      ${forb.length ? `<h3 class="mo-head">Forbindelser</h3>
+        <ul class="mo-liste mo-forbindelser">${forb.map((n) => `<li>${sjLenke(n)}</li>`).join("")}</ul>` : ""}
     </div>
     <section class="mo-kol mo-artister" aria-label="Artister">
       <h3 class="mo-head">Artister <span class="mo-antall">${antallArt}</span></h3>

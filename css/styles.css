@@ -3007,6 +3007,13 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 .mo-eks-lenke:hover, .mo-eks-lenke:focus-visible { color: var(--accent-2); text-decoration: underline; }
 .mo-aar { font-size: 0.85em; color: var(--muted); }
 .mo-eks-artist { display: block; font-size: 0.82rem; color: var(--muted); }
+/* Forbindelsene (v6.45): bare sjangernavnene, i samme skrift som artistnavnene
+   (.sj-artist) og eksempeltitlene, ikke den grønne genre-link-fargen. */
+.mo-forbindelser .genre-link {
+  display: block; font-size: 0.95rem; line-height: 1.5; font-weight: 400; text-decoration: none;
+  color: color-mix(in srgb, var(--text) 50%, var(--muted)); cursor: pointer;
+}
+.mo-forbindelser .genre-link:hover, .mo-forbindelser .genre-link:focus-visible { color: var(--accent-2); text-decoration: underline; }
 .mo-eksempler .pl-alle { margin: 0 0 0.6rem; }
 
 /* Visning (v5.96): samlesiden for spesialsidene, åpnet fra Visning-kortet i
