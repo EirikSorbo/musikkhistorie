@@ -147,7 +147,7 @@ test("tittelen klippes til TITTEL_MAKS tegn", () => {
 test("DELER-listen har unike id-er med gruppe-prefiks; artistkortet har virketid, ikke bilde", () => {
   const ider = DELER.flatMap((g) => g.valg.map((v) => v.id));
   assert.equal(new Set(ider).size, ider.length);
-  for (const id of ider) assert.match(id, /^(artist|sjanger|tech|tiaar|foran|bak)\.[a-z]+$/);
+  for (const id of ider) assert.match(id, /^(meta|artist|sjanger|tech|tiaar|foran|bak)\.[a-z]+$/);
   assert.ok(ider.includes("artist.virketid"), "tidslinja for virketid er et avhukbart valg (v5.60)");
   assert.ok(ider.includes("artist.bilde"), "bildet er fortsatt et valg");
 });
@@ -625,4 +625,33 @@ test("settSammen: et lytteeksempel ingen synlig artist har, havner i mangler", (
   assert.deepEqual(m.mangler, [{ vis: "yt:finnesikke1", grunn: "finnes-ikke" }, { vis: "yt:skjultvid01", grunn: "skjult" }]);
   assert.equal(m.tellinger.lytteeksempler, 0);
   assert.deepEqual(m.tre.annet.map((x) => [x.type, x.grunn]), [["yt", "finnes-ikke"], ["yt", "skjult"]]);
+});
+
+// --- Historien om metasjangeren (v6.42, brukerbestilling 2026-10-06) ---------
+
+test("«Historien om metasjangeren»: av som standard, først i kapitlet når den er på", () => {
+  assert.equal(STANDARD_DELER["meta.historie"], false);
+  const av = settSammen(["metasjanger:Blues"], DATA, LAERER);
+  assert.equal(av.familier[0].historie, null);
+  const paa = settSammen({ valg: ["metasjanger:Blues"], deler: { "meta.historie": true } }, DATA, { ...LAERER, deler: { "meta.historie": true } });
+  assert.equal(paa.familier[0].historie.body, "Historien om bluesen.", "løype-linja strippes");
+  assert.equal(paa.familier[0].historie.vis, "historie:Blues");
+  assert.equal(paa.tellinger.historier, 1, "teller med i sideanslaget");
+  assert.equal(paa.historierOk, true);
+});
+
+test("«Historien om metasjangeren» gjelder også et kapittel med bare noen artister, og aldri for studenten", () => {
+  const deler = { "meta.historie": true };
+  const l = settSammen(["artist:bessie"], DATA, { ...LAERER, deler });
+  assert.equal(l.familier.find((F) => F.navn === "Blues").historie.navn, "Blues");
+  const s = settSammen(["metasjanger:Blues"], DATA, { ...STUDENT, deler });
+  assert.equal(s.familier[0].historie, null);
+  assert.equal(s.historierOk, false, "panelet skjuler valget");
+  assert.equal(s.tellinger.historier, 0);
+});
+
+test("en historie valgt som eget kort står én gang, også med valget på", () => {
+  const m = settSammen(["historie:Blues", "metasjanger:Blues"], DATA, { ...LAERER, deler: { "meta.historie": true } });
+  assert.equal(m.familier.filter((F) => F.historie).length, 1);
+  assert.equal(m.tellinger.historier, 1);
 });

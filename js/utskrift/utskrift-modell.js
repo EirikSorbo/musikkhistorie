@@ -153,8 +153,16 @@ export function planTilUtvalg(stopp, artister = []) {
 // det som bare gir mening på en skjerm (innflytelseslinja per artist er
 // erstattet av tidslinja foran, beslektede artister er navigasjon).
 // `punkter: true` merker valgene som bare vises når punktene er sluppet
-// (js/felles/feature-flags.js, PUNKTER_BARE_I_PRESENTASJON).
+// (js/felles/feature-flags.js, PUNKTER_BARE_I_PRESENTASJON), og
+// `historie: true` det som bare vises når historiene er åpne for brukeren
+// (læreren, eller studenten når metasjangerhistorier-flagget er av).
 export const DELER = [
+  // Historien om metasjangeren (v6.42, brukerbestilling 2026-10-06): først i
+  // hvert metasjanger-kapittel. Av som standard, siden en historie er flere
+  // sider lang; den kan også velges som eget kort som før.
+  { gruppe: "Metasjanger", valg: [
+    { id: "meta.historie", navn: "Historien om metasjangeren", standard: false, historie: true },
+  ] },
   { gruppe: "Artistkort", valg: [
     { id: "artist.bilde", navn: "Bilde" },
     { id: "artist.fakta", navn: "Faktalinje" },
@@ -713,6 +721,18 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     sjangre: medBare(sjangerKort), artister: medBare(artistKort), under: medBare(underValgt),
     historier: medBare(histValgt), metaer: [], medOrdliste: !!d["sjanger.ordliste"],
   }).filter((F) => F.hodeKort || F.sjangre.length || F.loseArtister.length || F.ordliste.length || F.historie);
+  // Med «Historien om metasjangeren» (v6.42) får hvert metasjanger-kapittel
+  // historien sin, også uten at den er valgt som eget kort. Bare kapitler som
+  // alt står i heftet, og bare når historiene er åpne for brukeren.
+  if (d["meta.historie"] && historierOk) {
+    for (const F of familieListe) {
+      if (F.pseudo || F.historie || STORY_SKJULT.includes(F.navn)) continue;
+      const s = storyFor(F.navn, genreDescs);
+      if (s && String(s.body || "").trim()) {
+        F.historie = { vis: `historie:${F.navn}`, navn: F.navn, body: stripGenrePath(s.body), med: true };
+      }
+    }
+  }
 
   // Avkryssingstreet: alle kandidatene, også de bortvalgte, og de valgte
   // metasjangrene som egne rader (også når alt under dem er huket bort).
@@ -849,7 +869,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     metasjangre: metaValgt.length,
     sjangre: medBare(sjangerKort).length, artister: medBare(artistKort).length, undersjangre: medBare(underValgt).length,
     tiaar: tiaarMed.length, innovasjoner: medBare(techKort).length, instrumenter: instrMed.length,
-    historier: medBare(histValgt).length, sider: sideMed.length,
+    historier: familieListe.filter((F) => F.historie).length, sider: sideMed.length,
     lytteeksempler: medBare(lytteValgt).length,
     bortvalgt: kandidater.filter((v) => bort.has(v)).length,
   };
@@ -860,7 +880,7 @@ export function settSammen(utvalg, data = {}, valg = {}) {
     + tellinger.instrumenter + tellinger.historier + tellinger.sider;
 
   return {
-    valg: liste, eksplisitt, fravalg, deler: d, form: f, punkterOk,
+    valg: liste, eksplisitt, fravalg, deler: d, form: f, punkterOk, historierOk,
     kort, liten: kort <= LITEN_GRENSE,
     familier: familieListe, bakteppe, innovasjoner, instrumenter, sider,
     lytteliste, tidslinje, tellinger, aarsspenn, mangler,

@@ -155,7 +155,8 @@ function tegnDeler(u) {
   const el = $("utskrift-deler");
   if (!el) return;
   el.innerHTML = DELER.map((g) => {
-    const valg = g.valg.filter((v) => !v.punkter || modell.punkterOk);
+    const valg = g.valg.filter((v) => (!v.punkter || modell.punkterOk) && (!v.historie || modell.historierOk));
+    if (!valg.length) return "";
     return `<fieldset class="utskrift-deler-gruppe"><legend>${h(g.gruppe)}</legend>${valg.map((v) =>
       `<label><input type="checkbox" data-del="${h(v.id)}"${u.deler[v.id] ? " checked" : ""}> ${h(v.navn)}</label>`).join("")}</fieldset>`;
   }).join("");
@@ -590,6 +591,7 @@ function tocHtml() {
   const navnAv = (liste) => liste.map((a) => a.navn);
   for (const F of modell.familier) {
     const linjer = [];
+    if (F.historie) linjer.push(`Historien om ${F.navn}`);
     if (F.hodeKort?.artister.length) linjer.push(kortListe(navnAv(F.hodeKort.artister)));
     for (const k of F.sjangre) linjer.push(`${k.navn}${k.artister.length ? `: ${kortListe(navnAv(k.artister))}` : ""}`);
     if (F.loseArtister.length) linjer.push(kortListe(navnAv(F.loseArtister)));
