@@ -142,7 +142,6 @@ function startAppInner() {
 
   setupModals();
   setupGenreAdmin();
-  document.getElementById("btn-t-sjangertre")?.addEventListener("click", openGenreAdmin);
   // Innhold-området (v6.10, U5): de samme åpnerne som før, samlet ett sted.
   document.getElementById("btn-t-inn-sjangertre")?.addEventListener("click", openGenreAdmin);
   document.getElementById("btn-t-inn-oversikt")?.addEventListener("click", openOversikt);

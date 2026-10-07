@@ -249,12 +249,6 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .ov-kick:first-child { margin-top: 0; }
 .ov-kick::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-/* «Rediger pensumet» øverst i Oversikt-modalen. Blokka er et statisk søsken til
-   #oversikt-body, så .ov-kick:first-child der nuller topp-margen på «Pensumets
-   form». Luften mellom de to seksjonene må derfor legges her, i samme rytme som
-   .ov-kick ellers holder (26 px). */
-.ov-rediger { margin-bottom: 26px; }
-
 /* Kompakte nøkkeltall — fire per rad, «vanlig» tekststørrelse */
 .ov-kpis {
   display: grid;
@@ -1009,16 +1003,12 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .ov-ps-ingress { margin: 0 0 10px; font-size: 0.85rem; color: var(--muted); }
 .ov-ps-ingress strong { color: var(--text); }
 .ov-ps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-.ov-ps-kort { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; }
+/* Fra v6.55 bare navnet og ikonene (Sjekk, Rediger) på én lav rad. */
+.ov-ps-kort { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .ov-ps-kort:hover { border-color: var(--line-strong); }
-.ov-ps-hode { display: flex; align-items: baseline; gap: 8px; }
-.ov-ps-aar { min-width: 2.6rem; font-size: 0.82rem; font-weight: 600; color: #b45309; font-variant-numeric: tabular-nums; }
-.ov-ps-navn { font-weight: 600; font-size: 0.92rem; color: var(--text); }
-.ov-ps-status { display: flex; flex-wrap: wrap; gap: 4px; }
-.ov-ps-merke { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
-.ov-ps-merke.ov-ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
-.ov-ps-merke.ov-warn { color: #b45309; border-color: color-mix(in srgb, #b45309 35%, transparent); }
-.ov-ps-kort .teacher-card-actions { margin-top: auto; }
+.ov-ps-navn { flex: 1; min-width: 0; font-weight: 600; font-size: 0.92rem; color: var(--text); }
+.ov-ps-kort .teacher-card-actions { margin: 0; flex-wrap: nowrap; gap: 4px; }
+.ov-ps-kort .teacher-card-actions .spacer { display: none; }
 
 /* ----- Icon buttons ----- */
 .icon-btn {
@@ -3831,7 +3821,7 @@ body.presentasjon .meta-merke { display: none; }
 }
 .pss-kort:hover, .pss-kort:focus-visible { border-color: #b45309; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06); }
 .pss-aar { flex: none; min-width: 2.8rem; font-size: 0.95rem; font-weight: 600; color: #b45309; font-variant-numeric: tabular-nums; }
-.pss-aar:empty, .ov-ps-aar:empty { display: none; }
+.pss-aar:empty { display: none; }
 .pss-tekst { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .pss-navn { font-weight: 600; }
 .pss-linje { font-size: 0.8rem; color: var(--muted); }
@@ -3894,7 +3884,7 @@ body.presentasjon .meta-merke { display: none; }
 .laerer-omrade .section-label { margin-top: 0; }
 /* grid-auto-rows: 1fr + flex: 1 gir like høye rader i begge områdene, så
    kolonnene slutter på samme linje. */
-.laerer-fliser { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); grid-auto-rows: 1fr; gap: 10px; }
+.laerer-fliser { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); grid-auto-rows: 1fr; gap: 8px; }
 @media (min-width: 900px) {
   .laerer-omrader { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
   .laerer-omrade--undervisning .laerer-fliser { grid-template-columns: minmax(0, 1fr); }
@@ -3904,8 +3894,11 @@ body.presentasjon .meta-merke { display: none; }
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 64px;
-  padding: 12px 14px;
+  /* v6.55 (brukerønske 2026-10-07): litt lavere, fra 80 til 66 px med
+     beskrivelsen på to linjer. Var min-height 64px, padding 12px 14px og en
+     ikonrute på 36 px. */
+  min-height: 0;
+  padding: 6px 12px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -3916,11 +3909,13 @@ body.presentasjon .meta-merke { display: none; }
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
+.laerer-flis .laerer-flis-ikon { width: 30px; height: 30px; border-radius: 8px; }
+.laerer-flis .laerer-flis-ikon svg { width: 18px; height: 18px; }
 .laerer-flis:hover { border-color: var(--line-strong); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
 .laerer-flis:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.laerer-flis-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.laerer-flis-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .laerer-flis-tittel { font-weight: 600; font-size: 0.92rem; line-height: 1.25; }
-.laerer-flis-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+.laerer-flis-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.25; }
 .laerer-flis:hover .laerer-flis-tittel { color: var(--farge, var(--accent)); }
 @media (prefers-reduced-motion: reduce) {
   .laerer-flis { transition: none; }

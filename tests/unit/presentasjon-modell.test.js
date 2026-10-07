@@ -647,8 +647,12 @@ test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort si
   assert.match(css, /\.ai-track \{[^}]*height: 0\.75rem;/);
   // «Rediger pensumet»: kortene side om side, ikke én kolonne.
   assert.match(css, /\.dash-grid--smale \{ grid-template-columns: repeat\(auto-fill, minmax\(150px, 240px\)\);/);
-  // v6.10 (U5): «Rediger pensumet» er én knapp, ikke et rutenett med ett kort.
-  assert.match(readFileSync(new URL("../../teacher.html", import.meta.url), "utf8"), /id="btn-t-sjangertre">Sjangertre-editor/);
+  // v6.55 (brukerønske 2026-10-07): «Rediger pensumet» er borte fra Oversikten.
+  // Sjangertre-editoren åpnes fra sin egen flis under Innhold.
+  const laererHtml = readFileSync(new URL("../../teacher.html", import.meta.url), "utf8");
+  assert.doesNotMatch(laererHtml, /id="btn-t-sjangertre"|Rediger pensumet<\/div>/);
+  assert.match(laererHtml, /id="btn-t-inn-sjangertre"/);
+  assert.match(laererHtml, /<span class="laerer-flis-tittel">Oversikt<\/span>/);
   // Lytteeksempler i kinovisning som standard i presentasjonen; egen
   // fullskjerm bare når siden ikke alt er i fullskjerm, og den forlates ved lukking.
   const spiller = kilde("yt-spiller.js");

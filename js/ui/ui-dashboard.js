@@ -26,7 +26,7 @@ import { escapeHtml } from "../felles/util.js";
 import { GENEALOGY, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, GENEALOGY_EDGES, edgeKey, isMainGenre } from "../sjangre/genre-model.js";
 import { resolveDesc, resolveDescAny } from "../sjangre/genre-descriptions.js";
 import { storyOrder, storyFor, pageFor } from "../felles/story-format.js";
-import { selskaperSortert, plateselskapSideId, artisterForSelskap, grunnlagtAar, rensFakta, FAKTA_FELT } from "../felles/plateselskaper.js";
+import { selskaperSortert, plateselskapSideId } from "../felles/plateselskaper.js";
 import { SKJUL_I_HUBEN } from "../felles/feature-flags.js";
 
 const GENDER_COLORS = {
@@ -607,40 +607,21 @@ export function renderDashboard(el, {
 //  Plateselskapene (v6.37, brukervalg 2026-10-04)
 // ---------------------------------------------------------------------------
 //  Ett kort per selskap, i tidsrekkefølge, så læreren kan gå gjennom dem ett
-//  og ett: hva som er skrevet (tekst, fakta, kilder), hvor mange artister i
-//  appen som har selskapet, og Sjekk og Rediger. Klikk ellers på kortet åpner
+//  og ett. Fra v6.55 (brukerønske 2026-10-07) står bare navnet, Sjekk og
+//  Rediger på kortet; årstall, tekst-, fakta- og kildemerker og artisttallet
+//  er tatt bort, så kortene blir lave. Klikk ellers på kortet åpner
 //  selskapets kort slik studentene ser det. Seksjonen har sin egen beholder
 //  (#ov-plateselskaper) og tegnes på nytt alene når innholdet, artistene eller
 //  avhukingen endres (oppdaterPlateselskapSeksjon), så resten av Oversikten
 //  ikke folder seg sammen midt i gjennomgangen.
-export function plateselskapSeksjonHtml({ artists = [], content = {}, contentLoaded = false, teacherChecks = {} }) {
+export function plateselskapSeksjonHtml({ content = {}, teacherChecks = {} }) {
   const sjekket = new Set(teacherChecks.plateselskaper || []);
   const sideFor = (id) => content?.[plateselskapSideId(id)] || null;
   const liste = selskaperSortert(sideFor);
-  const merke = (ok, tekst) => `<span class="ov-ps-merke ${ok ? "ov-ok" : "ov-warn"}">${escapeHtml(tekst)}</span>`;
-  const kort = liste.map((p) => {
-    const doc = sideFor(p.id);
-    const side = pageFor(plateselskapSideId(p.id), content);
-    const harTekst = !!side?.body?.trim();
-    const fakta = rensFakta(doc?.fakta) || {};
-    const nFakta = FAKTA_FELT.filter((f) => fakta[f.key]).length;
-    const nKilder = side?.kilder?.length || 0;
-    const nArt = activeArtists(artisterForSelskap(artists, p.id)).length;
-    const aar = grunnlagtAar(doc);
-    return `<div class="ov-ps-kort" data-ov-ps="${escapeHtml(p.id)}">
-      <div class="ov-ps-hode">
-        <span class="ov-ps-aar">${aar || ""}</span>
-        <span class="ov-ps-navn">${escapeHtml(p.navn)}</span>
-      </div>
-      <div class="ov-ps-status">
-        ${contentLoaded ? merke(harTekst, harTekst ? "Tekst" : "Tekst mangler") : `<span class="ov-ps-merke">laster …</span>`}
-        ${merke(nFakta === FAKTA_FELT.length, `Fakta ${nFakta}/${FAKTA_FELT.length}`)}
-        ${merke(nKilder > 0, `Kilder ${nKilder}`)}
-        <span class="ov-ps-merke">${nArt} ${nArt === 1 ? "artist" : "artister"}</span>
-      </div>
+  const kort = liste.map((p) => `<div class="ov-ps-kort" data-ov-ps="${escapeHtml(p.id)}">
+      <span class="ov-ps-navn">${escapeHtml(p.navn)}</span>
       ${teacherActionRow({ checked: sjekket.has(p.id), edit: true, del: false })}
-    </div>`;
-  }).join("");
+    </div>`).join("");
   const nSjekket = liste.filter((p) => sjekket.has(p.id)).length;
   const nTekst = liste.filter((p) => pageFor(plateselskapSideId(p.id), content)?.body?.trim()).length;
   const synlig = !SKJUL_I_HUBEN["sb-plateselskaper"];
