@@ -22,9 +22,17 @@
 //  Lyden kommer fra lerretet; styringen spiller dempet når et lerret er
 //  koblet til (settYtDempet). Avgjørelsene uten DOM (avstemmingen, tastene,
 //  videoen) er rene funksjoner i presentasjon-modell.js og testes der.
+//
+//  Slektstreet (v6.52): lerretvinduet blir alltid stående på forsiden og
+//  viser treet i en ramme over hele lerretet (tre.html?…&innebygd), så det
+//  ikke faller ut av fullskjerm ved sidebyttet. Rammen er et eget lerret som
+//  følger styringen mens den står på slektstresiden; forsiden lar den være i
+//  fred så lenge. Utsnittet i treet (zoom og panorering) speiles som
+//  midtpunkt og bredde i treets koordinater (treUtsnitt/treTransform), så
+//  lerretet viser samme del av treet selv om skjermen er større.
 // ============================================================================
 
-import { LERRET_KANAL, LERRET_PRIVAT, lerretAvstem, lerretTast, ytFolg, ytWatchUrl } from "./presentasjon-modell.js";
+import { LERRET_KANAL, LERRET_PRIVAT, lerretAvstem, lerretTast, ytFolg, ytWatchUrl, treUtsnitt, treTransform } from "./presentasjon-modell.js";
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose } from "../ui/ui-modal.js";
 import { apneVisNaarKlart } from "../utforsk/explore-apne.js";
@@ -52,10 +60,15 @@ const zIndex = (m) => parseInt(m.style.zIndex) || 0;
 const kanon = (vis) => byggVisVerdi(parseVisVerdi(vis) || {}) || vis;
 const sideNavn = () => (/(^|\/)tre\.html$/.test(window.location.pathname) ? "tre" : "index");
 
-function sideUrl(side) {
+function sideUrl(side, { innebygd = false } = {}) {
   let kode = null;
   try { kode = new URLSearchParams(window.location.search).get("kode"); } catch (e) {}
-  return `${side === "tre" ? "tre.html" : "index.html"}?presentasjon&lerret=1${kode ? `&kode=${encodeURIComponent(kode)}` : ""}`;
+  return `${side === "tre" ? "tre.html" : "index.html"}?presentasjon&lerret=1${innebygd ? "&innebygd=1" : ""}${kode ? `&kode=${encodeURIComponent(kode)}` : ""}`;
+}
+
+// Slektstreet i rammen på lerretets forside (v6.52).
+export function lerretInnebygd() {
+  try { return new URLSearchParams(window.location.search).has("innebygd"); } catch (e) { return false; }
 }
 
 // api: { tilstand() → { nivaa, unntak, skala, svart, qa }, bruk(t), status(paa), melding(tekst) }
@@ -71,12 +84,16 @@ export function startLerret(r, a = {}) {
 //  Styringen (lærerens vindu)
 // ----------------------------------------------------------------------------
 
-let tilkoblet = 0;   // sist livstegn fra lerretet (ms), 0 = ikke koblet til
+// Lerretsidene som er koblet til: id → sist livstegn (ms). Forsiden og
+// slektstre-rammen på lerretet melder seg hver for seg (v6.52), så rammen kan
+// si farvel uten at styringen tror lerretet er borte.
+const folgere = new Map();
+let tilkoblet = false;
 let sistSendt = "";
 let sendTimer = null;
 let styringStartet = false;
 
-export function lerretTilkoblet() { return rolle === "styring" && !!tilkoblet; }
+export function lerretTilkoblet() { return rolle === "styring" && tilkoblet; }
 
 // Knappen i verktøylinja: åpner lerretet, eller lukker det når det står åpent.
 export function apneLerret() {
@@ -85,7 +102,8 @@ export function apneLerret() {
   skriv(ROLLE, "styring");
   rolle = "styring";
   startStyring();
-  const vindu = window.open(sideUrl(sideNavn()), "pensum-lerret", "popup,width=1280,height=760");
+  // Alltid forsiden: står styringen i slektstreet, viser lerretet det i rammen.
+  const vindu = window.open(sideUrl("index"), "pensum-lerret", "popup,width=1280,height=760");
   if (!vindu) api.melding?.("Nettleseren stoppet det nye vinduet. Tillat sprettoppvinduer for historieappen.no og trykk på knappen igjen.");
 }
 
@@ -99,12 +117,12 @@ export function lerretSlutt() {
 // unntak, tekststørrelsen på <html>).
 export function lerretEndret() { if (rolle === "styring") planleggSending(); }
 
-function settTilkoblet(paa) {
-  const var_ = !!tilkoblet;
-  tilkoblet = paa ? Date.now() : 0;
-  if (var_ === !!paa) return;
-  settYtDempet(!!paa);
-  api.status?.(!!paa);
+function oppdaterTilkoblet() {
+  const paa = folgere.size > 0;
+  if (paa === tilkoblet) return;
+  tilkoblet = paa;
+  settYtDempet(paa);
+  api.status?.(paa);
 }
 
 function startStyring() {
@@ -114,21 +132,29 @@ function startStyring() {
   kanal.onmessage = (e) => {
     const d = e.data || {};
     if (d.t === "hei" || d.t === "lever") {
-      settTilkoblet(true);
-      if (d.t === "hei") { sistSendt = ""; sendTilstand(true); }
+      folgere.set(String(d.id || "?"), Date.now());
+      oppdaterTilkoblet();
+      if (d.t === "hei") { sistSendt = ""; sistTre = ""; sendTilstand(true); sjekkTre(true); }
     } else if (d.t === "farvel") {
-      settTilkoblet(false);
+      folgere.delete(String(d.id || "?"));
+      oppdaterTilkoblet();
     } else if (d.t === "tast") {
       spillTast(d);
     }
   };
   // Borte uten farvel (krasj, maskinen sov): etter 12 s uten livstegn.
-  setInterval(() => { if (tilkoblet && Date.now() - tilkoblet > 12000) settTilkoblet(false); }, 4000);
+  setInterval(() => {
+    for (const [id, ms] of folgere) if (Date.now() - ms > 12000) folgere.delete(id);
+    oppdaterTilkoblet();
+  }, 4000);
   new MutationObserver(planleggSending).observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
   // Skrevne verdier (søkefeltet) er ingen DOM-endring.
   document.addEventListener("input", planleggSending, true);
   document.addEventListener("scroll", paRull, true);
   setInterval(folgYt, 400);
+  // Utsnittet i slektstreet (v6.52): kameraet setter bare et attributt, så en
+  // rask avlesning holder.
+  if (sideNavn() === "tre") setInterval(() => sjekkTre(false), 100);
   // Et lerret som alt står åpent (etter en omlasting her), melder seg.
   kanal.postMessage({ t: "styring" });
 }
@@ -253,6 +279,22 @@ function folgYt() {
   ytSist = { ...s, ms: naa };
 }
 
+// Utsnittet i slektstreet, sendt når det endres (zoom, panorering, «vis i
+// slektstreet»). Avrundet i treUtsnitt, så små skjelv ikke sendes.
+let sistTre = "";
+function sjekkTre(tving) {
+  if (!tilkoblet || !kanal) return;
+  const stage = document.getElementById("gx-stage");
+  const cam = document.getElementById("gx-cam");
+  if (!stage || !cam) return;
+  const u = treUtsnitt(cam.getAttribute("transform"), stage.clientWidth, stage.clientHeight);
+  if (!u) return;
+  const s = JSON.stringify(u);
+  if (s === sistTre && !tving) return;
+  sistTre = s;
+  kanal.postMessage({ t: "tre", ...u });
+}
+
 // En tast trykket i lerretvinduet, spilt av her som om den ble trykket her.
 function spillTast(d) {
   document.dispatchEvent(new KeyboardEvent("keydown", {
@@ -269,9 +311,14 @@ let avstemTimer = null;
 const forsok = new Map(); // mål → { n, ms }: et kort som ikke lar seg åpne, gis opp etter tre forsøk
 const sisteRull = new Map();
 let navigerer = false;
+const minId = Math.random().toString(36).slice(2, 10);
+let innebygd = false;
+let sisteTre = null;   // siste utsnitt fra styringen
+let satTre = "";       // transform-verdien lerretet selv satte
 
 function startLerretSide() {
   document.body.classList.add("pres-lerret");
+  innebygd = lerretInnebygd();
   kanal = new BroadcastChannel(LERRET_KANAL);
   kanal.onmessage = (e) => {
     const d = e.data || {};
@@ -284,33 +331,102 @@ function startLerretSide() {
       brukRull(d);
     } else if (d.t === "yt") {
       ytStyr(ytFolg(d, ytStatus()));
+    } else if (d.t === "tre") {
+      sisteTre = d;
+      brukTre();
     } else if (d.t === "styring") {
-      kanal.postMessage({ t: "hei" });
+      kanal.postMessage({ t: "hei", id: minId });
     } else if (d.t === "slutt") {
+      if (innebygd) return;   // forsiden rundt rammen tar seg av det
       try { sessionStorage.clear(); } catch (err) {}
       window.close();
       // Lot ikke vinduet seg lukke (åpnet for hånd), går det til forsiden.
       setTimeout(() => { window.location.href = "index.html"; }, 400);
     }
   };
-  kanal.postMessage({ t: "hei" });
-  setInterval(() => kanal.postMessage({ t: "lever" }), 4000);
-  window.addEventListener("pagehide", () => kanal.postMessage({ t: "farvel" }));
-  // Tastene går til styringen, unntatt F (lerretets egen fullskjerm).
+  kanal.postMessage({ t: "hei", id: minId });
+  setInterval(() => kanal.postMessage({ t: "lever", id: minId }), 4000);
+  window.addEventListener("pagehide", () => kanal.postMessage({ t: "farvel", id: minId }));
+  // Tastene går til styringen, unntatt F (lerretets egen fullskjerm). I
+  // slektstre-rammen går F til forsiden rundt, som eier fullskjermen.
   window.addEventListener("keydown", (e) => {
     const h = lerretTast(e);
+    if (h === "full" && innebygd) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      try { window.parent.postMessage({ t: "pensum-lerret-full" }, window.location.origin); } catch (err) {}
+      return;
+    }
     if (h !== "send") return;
     e.preventDefault();
     e.stopImmediatePropagation();
     kanal.postMessage({ t: "tast", key: e.key, code: e.code, shift: e.shiftKey });
   }, true);
+  if (!innebygd) {
+    window.addEventListener("message", (e) => {
+      if (e.origin !== window.location.origin || e.data?.t !== "pensum-lerret-full") return;
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+      else document.documentElement.requestFullscreen?.().catch(() => {});
+    });
+  }
+  // Treets eget kamera tegner seg på nytt (nye data, ny bredde) og setter sitt
+  // eget utsnitt; da legges styringens tilbake.
+  if (sideNavn() === "tre") {
+    new MutationObserver((endringer) => {
+      if (endringer.some((m) => m.target.id === "gx-cam" && m.target.getAttribute("transform") !== satTre)) brukTre();
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["transform"] });
+  }
+}
+
+function brukTre() {
+  if (!sisteTre) return;
+  const stage = document.getElementById("gx-stage");
+  const cam = document.getElementById("gx-cam");
+  if (!stage || !cam) return;
+  const verdi = treTransform(sisteTre, stage.clientWidth, stage.clientHeight);
+  if (!verdi || verdi === cam.getAttribute("transform")) return;
+  satTre = verdi;
+  cam.setAttribute("transform", verdi);
+}
+
+// Slektstre-rammen på lerretets forside: lages første gang styringen går inn i
+// treet og blir stående skjult etterpå, så neste tur dit går fort.
+function visTreRamme(paa) {
+  let ramme = document.getElementById("lerret-tre");
+  if (!ramme && !paa) return;
+  if (!ramme) {
+    ramme = document.createElement("iframe");
+    ramme.id = "lerret-tre";
+    ramme.title = "Slektstreet";
+    ramme.setAttribute("allow", "autoplay; fullscreen");
+    ramme.src = sideUrl("tre", { innebygd: true });
+    document.body.appendChild(ramme);
+  }
+  ramme.hidden = !paa;
+}
+
+// Kortene på forsiden lukkes når treet tar over lerretet.
+function lukkEgneKort() {
+  for (const { el } of lerretKort().reverse()) {
+    if (el.id !== "modal-yt") el._skipBeforeClose = true;
+    modalClose(el);
+  }
 }
 
 function brukTilstand(d) {
   if (d.side && d.side !== sideNavn()) {
+    // Rammen følger bare styringen mens den står i treet; ellers er den skjult.
+    if (innebygd) return;
+    // Forsiden viser treet i rammen i stedet for å bytte side (v6.52).
+    if (sideNavn() === "index" && d.side === "tre") {
+      visTreRamme(true);
+      lukkEgneKort();
+      return;
+    }
     if (!navigerer) { navigerer = true; window.location.href = sideUrl(d.side); }
     return;
   }
+  if (!innebygd) visTreRamme(false);
   try { api.bruk?.(d); } catch (e) { console.warn("Lerretet fikk ikke brukt tilstanden:", e); }
   planleggAvstem();
 }

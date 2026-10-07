@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -1070,4 +1070,32 @@ test("Å redigerer de private notatene, bare i lærerens vindu, og aldri før no
   const n = kilde("pres-notater.js");
   assert.match(n, /if \(!kort \|\| !erLaerer\(\) \|\| !lastet\) return tegn\(\);/, "et tomt felt skal aldri kunne lagres over et notat som ikke har landet");
   assert.match(n, /if \(redigerVedLasting\) \{ redigerVedLasting = false; if \(!redigerer\) return startRedigering\(\); \}/);
+});
+
+// v6.52 (brukerønske 2026-10-07): slektstreet på lerretet uten sidebytte, og
+// samme utsnitt som styringen.
+test("treUtsnitt og treTransform: samme midtpunkt og bredde av treet på en større skjerm", () => {
+  const u = treUtsnitt("translate(20,10) scale(0.56)", 1000, 600);
+  assert.deepEqual(u, { cx: 857.1, cy: 517.9, bredde: 1785.7 });
+  // Tilbake på samme scene: samme kamera (innenfor avrundingen).
+  const [, tx, ty, sc] = treTransform(u, 1000, 600).match(/translate\(([-\d.]+),([-\d.]+)\) scale\(([-\d.]+)\)/).map(Number);
+  assert.ok(Math.abs(tx - 20) < 0.1 && Math.abs(ty - 10) < 0.1 && Math.abs(sc - 0.56) < 0.001);
+  // På en dobbelt så bred scene: dobbel skala, samme midtpunkt.
+  const stor = treTransform(u, 2000, 1200).match(/scale\(([-\d.]+)\)/)[1];
+  assert.ok(Math.abs(Number(stor) - 1.12) < 0.001);
+  assert.equal(treUtsnitt("", 1000, 600), null);
+  assert.equal(treUtsnitt("translate(1,2) scale(0)", 1000, 600), null);
+  assert.equal(treUtsnitt("translate(1,2) scale(1)", 0, 600), null);
+  assert.equal(treTransform(null, 1000, 600), null);
+});
+
+test("lerretet viser treet i en ramme på forsiden og åpnes alltid på forsiden", () => {
+  const l = kilde("lerret.js");
+  assert.match(l, /window\.open\(sideUrl\("index"\), "pensum-lerret"/);
+  assert.match(l, /if \(sideNavn\(\) === "index" && d\.side === "tre"\) \{\n\s*visTreRamme\(true\);/);
+  assert.match(l, /if \(innebygd\) return;\n\s*\/\/ Forsiden viser treet i rammen/, "rammen bytter aldri side selv");
+  assert.match(l, /folgere\.delete\(String\(d\.id \|\| "\?"\)\);/, "rammen kan si farvel uten å koble fra lerretet");
+  assert.match(kilde("presentasjon.js"), /if \(!\(erLerret && lerretInnebygd\(\)\)\) fullskjermVedForsteHandling\(\);/);
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /#lerret-tre \{ position: fixed; inset: 0;/);
 });

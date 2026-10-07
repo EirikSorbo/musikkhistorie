@@ -42,7 +42,7 @@ import { getState } from "../data/app-state.js";
 import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "../data/store.js";
 import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
-import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet } from "./lerret.js";
+import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet, lerretInnebygd } from "./lerret.js";
 import { initNotater, vekslNotater, redigerNotater, notaterEndret } from "./pres-notater.js";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
@@ -1256,7 +1256,9 @@ export function initPresentasjon() {
   settKlokke(klokkePaa());
   settMenySkjult(les(LAGRING.menySkjult) === "1");
   blankFaneOgVindu();
-  fullskjermVedForsteHandling();
+  // Slektstre-rammen på lerretet (v6.52) har ingen egen fullskjerm: forsiden
+  // rundt den eier den.
+  if (!(erLerret && lerretInnebygd())) fullskjermVedForsteHandling();
   // Et stopp som ikke finnes lenger, sies fra om på lerretet (v5.75).
   setVisMaalFeilProvider((maal) => {
     const etikett = stoppEtikett({ vis: [maal.hva, maal.id, maal.modus, maal.ekstra].filter((x) => x != null && x !== "").join(":") });

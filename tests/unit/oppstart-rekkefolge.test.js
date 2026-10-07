@@ -48,7 +48,7 @@ test("visningen blanker fanen og går i fullskjerm ved første handling, men res
   assert.match(p, /document\.title = "\\u2800";/, "blank tittel som ikke trimmes bort");
   assert.match(p, /link\[rel~="icon"\][^]*?l\.href = TOMT_IKON/, "tomt fane-ikon");
   const init = p.slice(p.indexOf("export function initPresentasjon"));
-  assert.match(init, /blankFaneOgVindu\(\);\n  fullskjermVedForsteHandling\(\);/);
+  assert.match(init, /blankFaneOgVindu\(\);\n[^]*?if \(!\(erLerret && lerretInnebygd\(\)\)\) fullskjermVedForsteHandling\(\);/);
   assert.match(p, /if \(!les\(LAGRING\.fullNei\)\) slaaPaaFullskjerm\(\);/, "læreren som har gått ut, får være i fred");
   assert.match(p, /e\.key === "Escape"/, "Esc teller ikke som første handling");
   assert.match(p, /fullNei: "pensumPresFullNei"/, "nullstilles med resten av LAGRING ved avslutning");

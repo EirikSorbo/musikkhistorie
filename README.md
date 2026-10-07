@@ -36,7 +36,8 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   inn med ett klikk (pille nede til venstre viser planen, Ferdig avslutter).
   **Lerret på annen skjerm** (skjermknappen i verktøylinja, v6.50): et eget
   lerretvindu på prosjektoren følger lærerens vindu over en BroadcastChannel
-  (kort, nivå, rulling, svart skjerm; lyden fra lerretet). **Private notater**
+  (kort, nivå, rulling, svart skjerm; lyden fra lerretet). Slektstreet vises
+  i en ramme på lerretets forside (beholder fullskjermen), med samme utsnitt. **Private notater**
   (tasten P) til artist-, sjanger-, innovasjons- og tiårskort vises bare i
   lærerens vindu og lagres i samlingen `notater`, som bare læreren leser.
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og

@@ -3258,6 +3258,10 @@ body.pres-lerret :is(#pres-bar, #pres-varsel, #aktiv-plan-pille, #samle-bar, #pr
 body.pres-lerret, body.pres-lerret * { cursor: none !important; }
 body.pres-lerret * { pointer-events: none !important; }
 #pres-bar #pres-lerret.aktiv { background: #dcfce7; border-color: #86efac; color: #166534; }
+/* Slektstreet på lerretet (v6.52): tre.html i en ramme over hele forsiden,
+   så lerretet blir stående i fullskjerm når styringen går inn i treet. */
+#lerret-tre { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 99998; background: var(--bg); }
+#lerret-tre[hidden] { display: none; }
 
 /* Private notater (v6.50, js/visning/pres-notater.js): et lite kort oppå
    lerretet, bare i lærerens vindu, over svart skjerm og verktøylinja.

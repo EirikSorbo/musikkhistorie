@@ -968,3 +968,26 @@ export function ytFolg(leder, egen) {
   else if (spiller(leder.tilstand) && !spiller(egen.tilstand) && egen.tilstand !== 0) handling = "spill";
   return { spol, handling };
 }
+
+// Utsnittet i slektstreet (v6.52): styringens kamera (gx-camera.js setter
+// transform="translate(tx,ty) scale(sc)" på #gx-cam) som midtpunkt og synlig
+// bredde i treets egne koordinater. Lerretet har en annen skjermstørrelse, så
+// det er utsnittet som speiles, ikke pikslene: samme midtpunkt og samme bredde
+// av treet, uansett hvor stor scenen er. null når noe mangler.
+export function treUtsnitt(transform, sw, sh) {
+  const m = String(transform || "").match(/translate\(\s*(-?[\d.e+-]+)[ ,]+(-?[\d.e+-]+)\s*\)\s*scale\(\s*(-?[\d.e+-]+)\s*\)/);
+  if (!m || !(sw > 0) || !(sh > 0)) return null;
+  const tx = Number(m[1]), ty = Number(m[2]), sc = Number(m[3]);
+  if (![tx, ty, sc].every(Number.isFinite) || sc <= 0) return null;
+  const rund = (x) => Math.round(x * 10) / 10;
+  return { cx: rund((sw / 2 - tx) / sc), cy: rund((sh / 2 - ty) / sc), bredde: rund(sw / sc) };
+}
+
+// Motsatt vei, for lerretets egen scene: transform-verdien som viser utsnittet.
+export function treTransform(u, sw, sh) {
+  if (!u || !(u.bredde > 0) || !(sw > 0) || !(sh > 0)) return null;
+  const sc = sw / u.bredde;
+  const tx = sw / 2 - u.cx * sc, ty = sh / 2 - u.cy * sc;
+  const f = (x) => Math.round(x * 1000) / 1000;
+  return `translate(${f(tx)},${f(ty)}) scale(${f(sc)})`;
+}
