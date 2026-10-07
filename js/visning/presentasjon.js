@@ -22,6 +22,10 @@
 //
 //  Ingen av delene her kjører når modusen er av: initPresentasjon returnerer
 //  tidlig, og da er data-sekt-attributtene inerte.
+//
+//  Lerret på annen skjerm og private notater (v6.50): js/visning/lerret.js
+//  speiler lærerens vindu til et lerretvindu på prosjektoren, og
+//  js/visning/pres-notater.js viser notatene (P) bare i lærerens vindu.
 // ============================================================================
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
@@ -38,6 +42,8 @@ import { getState } from "../data/app-state.js";
 import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "../data/store.js";
 import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
+import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet } from "./lerret.js";
+import { initNotater, vekslNotater, notaterEndret } from "./pres-notater.js";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -82,6 +88,8 @@ const les = (k) => { try { return sessionStorage.getItem(k); } catch (e) { retur
 const skriv = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} };
 
 let aktiv = null;
+// Lerretvinduet på prosjektoren (v6.50): viser bare det lærerens vindu viser.
+let erLerret = false;
 
 // Kan kalles fra hvor som helst (explore.js spør før hub-kortene fjernes),
 // uavhengig av om initPresentasjon har kjørt. ?presentasjon alene slår på
@@ -178,6 +186,7 @@ function settNivaa(n) {
   nivaa = Math.min(3, Math.max(1, Number(n) || 2));
   lagreTilstand();
   brukNivaa();
+  lerretEndret();
 }
 
 // Omtegninger (chip-bytte, snapshot) bygger seksjonene på nytt uten hidden.
@@ -213,6 +222,7 @@ function settQA(vis) {
   settSynlighetOverstyrt(vis);
   try { localStorage.setItem(LAGRING.qa, vis ? "1" : ""); } catch (e) { /* privat modus */ }
   oppdaterHubKort();
+  lerretEndret();
 }
 
 // Hub-kortene ligger i DOM-en i presentasjonsmodus (explore.js fjerner dem
@@ -638,6 +648,7 @@ function wireTaster() {
       case "sideTilbake": return gaISideHistorikk(-1) || gaTilStopp(stoppIdx - 1);
       case "sideFram": return gaISideHistorikk(1) || gaTilStopp(stoppIdx + 1);
       case "innstillinger": return vekslPanel();
+      case "notater": return erLerret ? undefined : vekslNotater();
       case "avslutt": return avsluttPresentasjon();
       case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));
@@ -822,7 +833,17 @@ const IKON = {
   hake: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
   full: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>',
   tannhjul: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>',
+  skjerm: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
 };
+
+// Lerret-knappen lyser når et lerretvindu er koblet til (v6.50).
+function visLerretStatus(paa) {
+  const knapp = document.getElementById("pres-lerret");
+  if (!knapp) return;
+  knapp.classList.toggle("aktiv", !!paa);
+  knapp.title = paa ? "Lerretet er koblet til. Klikk for å lukke det." : "Åpne lerret på annen skjerm";
+  knapp.setAttribute("aria-label", knapp.title);
+}
 
 function byggBar() {
   const bar = document.createElement("div");
@@ -840,6 +861,7 @@ function byggBar() {
     </span>
     <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst (A)">A</button>
     <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (F)">${IKON.full}</button>
+    <button type="button" class="pres-knapp" id="pres-lerret" title="Åpne lerret på annen skjerm" aria-label="Åpne lerret på annen skjerm">${IKON.skjerm}</button>
     <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger (,)" aria-label="Innstillinger">${IKON.tannhjul}</button>
     <span class="pres-klokke" id="pres-klokke" hidden aria-label="Klokka"></span>
     <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt" title="Avslutt visningen (X)">Avslutt</button>
@@ -856,6 +878,7 @@ function byggBar() {
     if (e.target.closest("#pres-leggtil")) return leggTilHer();
     if (e.target.closest("#pres-skala")) return vekslSkala();
     if (e.target.closest("#pres-full")) return vekslFullskjerm();
+    if (e.target.closest("#pres-lerret")) return apneLerret();
     if (e.target.closest("#pres-tannhjul")) return vekslPanel();
     if (e.target.closest("#pres-avslutt")) return avsluttPresentasjon();
   });
@@ -889,6 +912,7 @@ function vekslSkala() {
   const trinn = (Number(les(LAGRING.stor)) + 1) % 3;
   skriv(LAGRING.stor, String(trinn));
   brukSkala(trinn);
+  lerretEndret();
 }
 
 // Fullskjermen visningen selv slo på (auto eller F). Videospilleren har sin
@@ -1007,6 +1031,7 @@ export async function avsluttPresentasjon() {
       }
     }
   }
+  lerretSlutt();
   for (const k of Object.values(LAGRING)) { try { sessionStorage.removeItem(k); } catch (e) {} }
   sistLogget = null;
   // Full sidelast: nullstiller også flaggmutasjonene fra QA-bryteren.
@@ -1064,12 +1089,14 @@ function tegnPanel(panel) {
       unntak[`${flate}.${cb.dataset.sektValg}`] = cb.checked;
       lagreTilstand();
       brukNivaa();
+      lerretEndret();
     });
   });
   panel.querySelector("#pres-nullstill")?.addEventListener("click", () => {
     unntak = {};
     lagreTilstand();
     brukNivaa();
+    lerretEndret();
     tegnPanel(panel);
   });
   panel.querySelector("#pres-qa")?.addEventListener("change", (e) => {
@@ -1185,6 +1212,12 @@ function spillAlleLytteeksempler() {
 export function initPresentasjon() {
   if (!erPresentasjon()) return;
   document.body.classList.add("presentasjon");
+  // Lerretvinduet (v6.50) er passivt: ingen kjøreplan, ingen verktøylinje
+  // (CSS), og fullskjerm ved første klikk selv om læreren har slått den av i
+  // sitt eget vindu (sessionStorage er kopiert derfra).
+  const rolle = lerretRolle();
+  erLerret = rolle === "lerret";
+  if (erLerret) { try { sessionStorage.removeItem(LAGRING.fullNei); } catch (e) {} }
   // Rot-skalaen (v5.36): i presentasjon følger tekststørrelsen skjermbredden,
   // så kortene over hele lerretet ikke står med bitteliten tekst (CSS).
   document.documentElement.classList.add("pres-modus");
@@ -1196,7 +1229,7 @@ export function initPresentasjon() {
 
   // Kjøreplanen (fase 4): id og posisjon fra sessionStorage — erPresentasjon
   // har alt skrevet URL-parametrene dit, og et sidebytte bærer dem videre.
-  planId = les(LAGRING.plan) || null;
+  planId = erLerret ? null : les(LAGRING.plan) || null;
   stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
   hoppOverSlektstre = erTilbakeNavigering();
   // Tilbake fra nettleserens hurtigbuffer (bfcache): stoppet i minnet er det
@@ -1230,7 +1263,7 @@ export function initPresentasjon() {
   });
   // Lærerøkta følger innloggingen også i fri visning (v5.82): «Navn fra
   // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
-  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); });
+  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;
@@ -1252,7 +1285,9 @@ export function initPresentasjon() {
   if (/(^|\/)tre\.html$/.test(window.location.pathname)) registrerSide("slektstre");
   if ("MutationObserver" in window) {
     new MutationObserver((endringer) => {
-      if (endringer.some((m) => m.target.classList?.contains("modal-backdrop"))) registrerSide();
+      if (!endringer.some((m) => m.target.classList?.contains("modal-backdrop"))) return;
+      registrerSide();
+      notaterEndret();
     }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "style", "data-vis"] });
   }
   brukNivaa();
@@ -1263,4 +1298,33 @@ export function initPresentasjon() {
   // Hurtigtastene (v5.38): nivå, blaing, svart skjerm, oversikten over
   // tastene og resten. Aldri i skrivefelt, unntatt klikkernes PageUp/Down.
   wireTaster();
+
+  // Private notater (v6.50): bare i lærerens vindu.
+  if (!erLerret) initNotater({ erLaererNaa: () => erLaerer });
+  // Lerret på annen skjerm (v6.50): styringen sender tilstanden, lerretet
+  // bruker den. Lerretet åpner kortene selv; nivå, unntak, tekststørrelse,
+  // QA-bryteren og svart skjerm kommer herfra.
+  startLerret(rolle, {
+    tilstand: () => ({ nivaa, unntak, skala: Number(les(LAGRING.stor)) || 0, svart: erSvart(), qa: qaPaa() }),
+    bruk: brukLerretTilstand,
+    status: visLerretStatus,
+    melding,
+  });
+  visLerretStatus(lerretTilkoblet());
+}
+
+// Lerretet bruker styringens innstillinger (bare i lerretvinduet).
+function brukLerretTilstand(t) {
+  const n = Math.min(3, Math.max(1, Number(t.nivaa) || 2));
+  const u = t.unntak && typeof t.unntak === "object" ? t.unntak : {};
+  if (n !== nivaa || JSON.stringify(u) !== JSON.stringify(unntak)) {
+    nivaa = n;
+    unntak = { ...u };
+    lagreTilstand();
+    brukNivaa();
+  }
+  const trinn = Math.min(2, Math.max(0, Number(t.skala) || 0));
+  if (trinn !== (Number(les(LAGRING.stor)) || 0)) { skriv(LAGRING.stor, String(trinn)); brukSkala(trinn); }
+  if (!!t.qa !== qaPaa()) settQA(!!t.qa);
+  if (!!t.svart !== erSvart()) vekslSvart();
 }

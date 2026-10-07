@@ -34,6 +34,11 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   Læreren bygger en plan ved å velge «Bygg på» i Visning-vinduet: så legger
   visningsknappen på kortene, plussknappen på radene og tasten + kortet rett
   inn med ett klikk (pille nede til venstre viser planen, Ferdig avslutter).
+  **Lerret på annen skjerm** (skjermknappen i verktøylinja, v6.50): et eget
+  lerretvindu på prosjektoren følger lærerens vindu over en BroadcastChannel
+  (kort, nivå, rulling, svart skjerm; lyden fra lerretet). **Private notater**
+  (tasten P) til artist-, sjanger-, innovasjons- og tiårskort vises bare i
+  lærerens vindu og lagres i samlingen `notater`, som bare læreren leser.
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
   «Husk visningen» per stopp. Tasten N i visningen åpner «Navn fra timen»:
   en artist som kom opp, og hvem som foreslo den, lagres til oppfølging på

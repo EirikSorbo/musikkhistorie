@@ -447,5 +447,23 @@ service cloud.firestore {
       allow create, update: if isTeacher() && timeforslagOk();
       allow delete: if isTeacher();
     }
+
+    // ---- Private notater (v6.50) ----
+    // Lærerens notater til kortene (artist, sjanger, innovasjon, tiår), som
+    // bare vises på lærerens egen skjerm i visningen. Egen samling fordi
+    // artistene og content kan leses av alle: et felt på selve kortet ville
+    // vært synlig for enhver som leser databasen. Bare læreren leser og
+    // skriver, med to felt og tak på teksten.
+    match /notater/{doc} {
+      function notatOk() {
+        return request.resource.data.keys().hasOnly(["tekst", "oppdatert"]) &&
+          request.resource.data.get("tekst", "") is string &&
+          request.resource.data.get("tekst", "").size() > 0 &&
+          strOk("tekst", 10000) && strOk("oppdatert", 40);
+      }
+      allow read: if isTeacher();
+      allow create, update: if isTeacher() && notatOk();
+      allow delete: if isTeacher();
+    }
   }
 }

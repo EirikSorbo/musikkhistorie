@@ -36,7 +36,7 @@ test("visningen: L åpner panelet bare for læreren, med kontekst, Enter-lagring
   assert.match(p, /case "timeliste": return vekslTimeliste\(\);/);
   assert.match(p, /function vekslTimeliste\(\) \{\n\s*if \(!erLaerer\) return;/);
   // Lærerflagget settes også i fri visning (uten plan), ikke bare inne i if (planId).
-  const auth = p.indexOf("onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); });");
+  const auth = p.indexOf("onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); });");
   const planBlokk = p.indexOf("if (planId) {\n    const planUi");
   assert.ok(auth > 0 && planBlokk > auth, "lærerflagget settes før og utenfor planblokka");
   assert.match(p, /m\.id = "modal-timeliste";/);

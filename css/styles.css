@@ -3249,6 +3249,39 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
    så lerretet er helt mørkt mens klassen diskuterer. Pekeren skjules. */
 #pres-svart { position: fixed; inset: 0; z-index: 100000; background: #000; cursor: none; }
 
+/* Lerret på annen skjerm (v6.50, js/visning/lerret.js): lerretvinduet viser
+   bare innholdet. Verktøylinja, varsler, kjøreplan-pillen og notatene er
+   borte, pekeren er skjult, og ingenting kan klikkes, for alt styres fra
+   lærerens vindu. Et klikk treffer da <body>, og det gir fortsatt
+   fullskjerm første gang (fullskjermVedForsteHandling). */
+body.pres-lerret :is(#pres-bar, #pres-varsel, #aktiv-plan-pille, #samle-bar, #pres-notater) { display: none !important; }
+body.pres-lerret, body.pres-lerret * { cursor: none !important; }
+body.pres-lerret * { pointer-events: none !important; }
+#pres-bar #pres-lerret.aktiv { background: #dcfce7; border-color: #86efac; color: #166534; }
+
+/* Private notater (v6.50, js/visning/pres-notater.js): et lite kort oppå
+   lerretet, bare i lærerens vindu, over svart skjerm og verktøylinja.
+   Faste piksler som verktøylinja: rot-skalaen i visningen skal ikke blåse
+   det opp. */
+#pres-notater {
+  position: fixed; left: 14px; bottom: 14px; z-index: 100001;
+  width: min(30rem, calc(100vw - 28px)); max-height: 55vh; overflow: auto;
+  font-size: 16px; line-height: 1.45;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--line-strong); border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(20, 21, 42, 0.22); padding: 12px 14px;
+}
+#pres-notater .pn-hode { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+#pres-notater .pn-tittel { font-size: 13px; color: var(--muted); }
+#pres-notater .pn-navn { color: var(--text); font-weight: 600; }
+#pres-notater .pn-knapper { margin-left: auto; display: flex; gap: 4px; }
+#pres-notater .pn-tom { color: var(--muted); margin: 0 0 8px; }
+#pres-notater .pn-tekst > :first-child { margin-top: 0; }
+#pres-notater .pn-tekst > :last-child { margin-bottom: 0; }
+#pres-notater .pn-felt { width: 100%; min-height: 9rem; font: inherit; resize: vertical; box-sizing: border-box; }
+#pres-notater .pn-handlinger { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+#pres-notater .pn-hint { font-size: 12px; margin-right: auto; }
+
 /* Hurtigtast-oversikten (v5.38, tasten ?): en smal dialog midt på lerretet,
    ikke et bredt kort. Tastene som tastetegn i to kolonner. */
 .modal.modal-hjelp { max-width: 34rem; }

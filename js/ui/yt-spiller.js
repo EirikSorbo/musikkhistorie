@@ -395,7 +395,10 @@ function slippSpiller() {
 // tones lyden inn derfra.
 function startMedToning() {
   try {
-    if (!spiller.isMuted()) {
+    // Styringsvinduet med et lerret koblet til (v6.50): lyden kommer fra
+    // lerretet, så styringen spiller dempet og toner bare bildet.
+    if (dempet) spiller.mute();
+    else if (!spiller.isMuted()) {
       const v = spiller.getVolume();
       if (v > 0) malVolum = v;
       spiller.setVolume(0);
@@ -497,6 +500,47 @@ async function bindSpiller() {
   } catch (e) {
     spiller = null;
   }
+}
+
+// ----------------------------------------------------------------------------
+//  Lerret på annen skjerm (v6.50, js/visning/lerret.js): styringen spiller
+//  dempet og melder fra om pause, avspilling og spoling; lerretet spiller med
+//  lyd og følger etter. Køen og tittelen følger med, så lerretet åpner samme
+//  avspilling.
+// ----------------------------------------------------------------------------
+
+let dempet = false;
+
+export function settYtDempet(paa) {
+  dempet = !!paa;
+  if (!spillerKlar || !spiller) return;
+  try {
+    if (dempet) spiller.mute();
+    else { spiller.unMute(); spiller.setVolume(malVolum); }
+  } catch (e) {}
+}
+
+// Det som spilles nå, slik lerretet trenger det for å åpne det samme.
+export function ytNaa() {
+  const m = document.getElementById("modal-yt");
+  if (!m?.classList.contains("open") || !naa.video && !naa.list) return null;
+  return { video: naa.video, list: naa.list, start: naa.start, kø: [...naa.kø], tittel: m.querySelector("#yt-tittel")?.textContent || "" };
+}
+
+// { tilstand, tid } for spilleren som er åpen, eller null.
+export function ytStatus() {
+  if (!spillerKlar || !spiller?.getPlayerState) return null;
+  try { return { tilstand: spiller.getPlayerState(), tid: spiller.getCurrentTime() }; } catch (e) { return null; }
+}
+
+// Lerretets side: følg styringen. Avgjørelsen er ytFolg i modellen.
+export function ytStyr({ spol = null, handling = null } = {}) {
+  if (!spillerKlar || !spiller) return;
+  try {
+    if (spol != null) spiller.seekTo(spol, true);
+    if (handling === "pause") spiller.pauseVideo();
+    else if (handling === "spill") spiller.playVideo();
+  } catch (e) {}
 }
 
 // Spill av eller pause (mellomrom/K i presentasjonen, funn 10), så læreren

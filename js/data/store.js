@@ -83,6 +83,9 @@ const genreDescsCol = collection(db, "genreDescriptions");
 // f.eks. "blues__jazz" — se GENEALOGY_EDGES/edgeKey i genealogy.js.
 const edgeDescsCol = collection(db, "edgeDescriptions");
 const podcastsCol = collection(db, "podcasts");
+// Lærerens private notater til kortene (v6.50): egen samling, fordi
+// artistene og content kan leses av alle. Bare læreren leser og skriver.
+const notaterCol = collection(db, "notater");
 // Navn fra timen (v5.82): lærerens hurtignotater fra visningen. Bare læreren
 // har lesetilgang (firestore.rules), så abonnementet settes opp kun på
 // lærersiden, etter innlogging.
@@ -382,6 +385,29 @@ export function subscribePodcasts(callback) {
 
 export async function addPodcast(data) {
   return addDoc(podcastsCol, data);
+}
+
+// ---- Private notater (v6.50) ----
+
+// Alle notatene som { nøkkel: { tekst, oppdatert } }. Nøkkelen er
+// notatNokkel(vis) i presentasjon-modell.js. Feilen går til kalleren, ikke
+// til appens felles feilstripe: før reglene er publisert, skal visningen si
+// det i notatkortet, ikke over hele lerretet.
+export function subscribeNotater(callback, onError) {
+  return onSnapshot(notaterCol, (snapshot) => {
+    callback(Object.fromEntries(snapshot.docs.map((d) => [d.id, d.data()])));
+  }, (err) => {
+    console.error("Kunne ikke lese de private notatene (sjekk Firestore-regler):", err.code, err.message);
+    onError?.(err);
+  });
+}
+
+// Tom tekst sletter notatet, så samlingen bare har kort med notater.
+export async function lagreNotat(nokkel, tekst) {
+  const ref = doc(db, "notater", nokkel);
+  const ren = String(tekst || "").trim();
+  if (!ren) return deleteDoc(ref);
+  return setDoc(ref, { tekst: ren.slice(0, 10000), oppdatert: new Date().toISOString() });
 }
 
 // ---- Navn fra timen (v5.82) ----

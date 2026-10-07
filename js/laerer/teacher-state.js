@@ -34,6 +34,8 @@ export const state = {
   // Navn fra timen (v5.82): lærerens notater fra visningen, til Skrivebordet.
   timeforslag: [],
   timeforslagLoaded: false,
+  // Private notater til kortene (v6.50), bare for sikkerhetskopien her.
+  notater: {},
   pendingEdits: [],
   // showRemoved starter AV (brukervalg): lærerlista skal åpne på pensumet slik
   // det faktisk står, ikke med de skjulte blandet inn. «Vis skjulte» slår dem

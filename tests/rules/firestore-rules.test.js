@@ -603,3 +603,22 @@ test("timeforslag: bare læreren leser og skriver, og bare de fire feltene", asy
   await assertFails(teacherDb().collection("timeforslag").doc("t3").set({ ...post, artist: "x".repeat(121) }), "for lang");
   await assertFails(teacherDb().collection("timeforslag").doc("t3").set({ ...post, student: { a: 1 } }), "typevakt");
 });
+
+// v6.50: lærerens private notater til kortene. Ingen andre kan lese dem,
+// heller ikke innloggede studenter eller andre Google-kontoer.
+test("notater: bare læreren leser og skriver, med to felt og tak", async () => {
+  const notat = { tekst: "Spør klassen om «Hound Dog» før de hører Big Mama Thornton.", oppdatert: "2026-10-07T10:00:00.000Z" };
+  await assertSucceeds(teacherDb().collection("notater").doc("artist:abc").set(notat));
+  await assertSucceeds(teacherDb().collection("notater").doc("artist:abc").get());
+  await assertSucceeds(teacherDb().collection("notater").get());
+  await assertSucceeds(teacherDb().collection("notater").doc("artist:abc").delete());
+  for (const db of [anonDb(), unauthDb(), otherUserDb()]) {
+    await assertFails(db.collection("notater").doc("artist:abc").get());
+    await assertFails(db.collection("notater").get());
+    await assertFails(db.collection("notater").doc("artist:x").set(notat));
+  }
+  await assertFails(teacherDb().collection("notater").doc("artist:y").set({ ...notat, ekstra: 1 }), "ukjent felt");
+  await assertFails(teacherDb().collection("notater").doc("artist:y").set({ ...notat, tekst: "" }), "tomt notat (slettes i stedet)");
+  await assertFails(teacherDb().collection("notater").doc("artist:y").set({ ...notat, tekst: "x".repeat(10001) }), "for langt");
+  await assertFails(teacherDb().collection("notater").doc("artist:y").set({ ...notat, tekst: 42 }), "typevakt");
+});

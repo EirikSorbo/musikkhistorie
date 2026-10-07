@@ -18,6 +18,7 @@ import {
   saveReferanser,
   addPodcast,
   updatePodcast,
+  lagreNotat,
   setTeacherChecks,
   savePlaner,
 } from "../data/store.js";
@@ -210,6 +211,10 @@ function buildExportData() {
   // komplett: fra v4.49 er treets STRUKTUR data, ikke kode, og en gjenoppretting
   // uten det ville gitt en app helt uten sjangervokabular.
   if (state.content?.genealogy?.nodes?.length) out.genealogy = state.content.genealogy;
+  // Lærerens private notater til kortene (v6.50, egen samling bare læreren
+  // leser). Uten dem ville en gjenoppretting mistet alt som er skrevet til
+  // timene.
+  if (Object.keys(state.notater || {}).length) out.notater = state.notater;
   return out;
 }
 
@@ -292,7 +297,7 @@ function formatImportErrors(errors) {
 // Alle toppnøkler appen forstår. Ukjente nøkler (feilstavet, eller fra et nyere
 // format) ignoreres stille ved import — vi advarer i stedet, så delvise/skjeve
 // pakker oppdages.
-const KNOWN_IMPORT_KEYS = new Set(["formatVersion", "artists", "teacherChecks", ...CONTENT_KEYS]);
+const KNOWN_IMPORT_KEYS = new Set(["formatVersion", "artists", "teacherChecks", "notater", ...CONTENT_KEYS]);
 
 // Sjangre (mainGenre) i importen som ikke finnes i slektstreet — samme
 // «single source of truth»-sjekk som redigeringsskjemaet. Advarsel, ikke feil.
@@ -340,6 +345,8 @@ function importParts(data) {
   const planAntall = Object.keys(normaliserPlaner(data.presentasjoner?.planer)).length;
   if (planAntall) parts.push(`${planAntall} kjøreplan(er) (legges til eller erstatter planen med samme id, du får se lista først)`);
   if ((data.podcasts || []).length) parts.push(`${data.podcasts.length} podkastepisoder`);
+  const notatAntall = Object.keys(data.notater || {}).length;
+  if (notatAntall) parts.push(`${notatAntall} private notater (erstatter notatet til samme kort)`);
   if (Array.isArray(data.genealogy?.nodes) && data.genealogy.nodes.length) {
     parts.push(`sjangertreet (${data.genealogy.nodes.length} sjangre)`);
   }
@@ -506,7 +513,7 @@ export function flettSjekker(gjeldende, fraFil) {
   return ut;
 }
 
-async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks, genealogy, presentasjoner }) {
+async function importExtras({ pages, varmekart, referanser, podcasts, teacherChecks, genealogy, presentasjoner, notater }) {
   const done = [];
   const failed = [];
 
@@ -624,6 +631,20 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       }
       if (n) done.push(`${n} podkastepisode(r)`);
     } catch (e) { console.error("Podkast-import feilet:", e); failed.push("podkastene"); }
+  }
+
+  // Private notater (v6.50): ett dokument per kort. Nøklene er notatNokkel
+  // (aldri skråstrek, som Firestore ville lest som en understi).
+  if (notater && typeof notater === "object") {
+    try {
+      let n = 0;
+      for (const [nokkel, v] of Object.entries(notater)) {
+        if (!nokkel || nokkel.includes("/") || typeof v?.tekst !== "string" || !v.tekst.trim()) continue;
+        await lagreNotat(nokkel, v.tekst);
+        n++;
+      }
+      if (n) done.push(`${n} private notater`);
+    } catch (e) { console.error("Notat-import feilet:", e); failed.push("de private notatene"); }
   }
 
   // Lærerens sjekk-fremdrift (merges inn). NB: tech-sjekker refererer doc-ID-er

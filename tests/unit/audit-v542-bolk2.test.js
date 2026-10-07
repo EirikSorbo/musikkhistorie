@@ -19,7 +19,7 @@ test("funn 5: kjøreplanene er med i eksporten og slipper gjennom importens hvit
   // Eksporten tar ikke med samleøktenes merker.
   assert.match(imp, /\.map\(\(\[id, p\]\) => \[id, \{ tittel: p\.tittel, laget: p\.laget, stopp: p\.stopp \}\]\)/);
   // Importen fletter plan for plan, etter at læreren har sett lista.
-  assert.match(imp, /async function importExtras\(\{[^}]*presentasjoner \}\)/);
+  assert.match(imp, /async function importExtras\(\{[^}]*presentasjoner[,} ]/);
   // Fra v6.25 appens egen bekreftelse (bekreft), ikke nettleserens confirm.
   assert.match(imp, /if \(await bekreft\(`\$\{vis\}[^`]*`, \{ tittel: "Kjøreplaner i fila"/);
   // Én skriving for alle planene (kontrollrunden for v5.45).

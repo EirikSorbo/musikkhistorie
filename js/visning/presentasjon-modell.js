@@ -778,6 +778,8 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   if (k === "?") return "hjelp";
   // Innstillingene (tannhjulet) og Avslutt (v6.49, brukerønske 2026-10-06).
   if (k === ",") return "innstillinger";
+  // Private notater (v6.50): bare i lærerens eget vindu, aldri på lerretet.
+  if (k === "p" || k === "P") return "notater";
   if (k === "x" || k === "X") return "avslutt";
   // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
   // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
@@ -829,6 +831,7 @@ export const PRES_TASTER = [
     { taster: ["S"], hva: "Søk" },
     { taster: ["L"], hva: "Lytt: spill det første lytteeksempelet til artisten som vises" },
     { taster: ["N"], hva: "Navn fra timen: noter en artist som kom opp, og hvem som foreslo den", laerer: true },
+    { taster: ["P"], hva: "Private notater for kortet som vises (bare på din skjerm)", laerer: true },
     { taster: ["Esc"], hva: "Lukk øverste kort" },
     { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
   ] },
@@ -886,4 +889,79 @@ export function delteTimer(planer) {
     .filter(([, p]) => p && p.delt === true && Array.isArray(p.stopp) && p.stopp.length)
     .map(([id, p]) => ({ id, ...p }))
     .sort((a, b) => String(b.dato || "").localeCompare(String(a.dato || "")) || String(b.laget || "").localeCompare(String(a.laget || "")));
+}
+
+// ----------------------------------------------------------------------------
+//  Lerret på annen skjerm og private notater (v6.50, brukerbestilling
+//  2026-10-07). Lærerens vindu er styringen, og et eget lerretvindu på
+//  prosjektoren følger det over en BroadcastChannel (js/visning/lerret.js).
+//  Avgjørelsene som kan tas uten DOM, bor her og testes.
+// ----------------------------------------------------------------------------
+
+export const LERRET_KANAL = "pensum-lerret";
+
+// Lærerens egne verktøy, som aldri vises på lerretet: «Navn fra timen» har
+// studentenes fornavn, kjøreplan-editoren og tastoversikten er styring.
+// Dialoger uten id (spørsmål og bekreftelser) holdes også utenfor.
+export const LERRET_PRIVAT = new Set(["modal-timeliste", "modal-pres-taster", "modal-visning", "modal-vk-edit", "modal-proposal"]);
+
+// Notatene følger kortet: artist, sjanger, innovasjon og tiår. Nøkkelen er
+// dokument-id-en i notater-samlingen. Tiåret har ett notat for begge fanene,
+// og id-en kodes, så en skråstrek i et sjangernavn ikke lager en understi.
+export const NOTAT_TYPER = ["artist", "sjanger", "tech", "tiår"];
+
+export function notatNokkel(vis) {
+  const m = parseVisVerdi(vis);
+  if (!m || !NOTAT_TYPER.includes(m.hva) || !m.id) return null;
+  return `${m.hva}:${encodeURIComponent(m.id)}`;
+}
+
+// Hva lerretet må gjøre for at kortstabelen skal bli lik styringens. Begge
+// lister står nederst først. Et kort med mål ({ vis }) åpnes av lerretet
+// selv; et kort uten mål ({ id, hash }) vises som en kopi av styringens HTML
+// (søket, artistlistene, kjøreplanens oversikt). Felles bunn beholdes, og
+// lerretet lukker det som ligger over og åpner neste kort, ett om gangen,
+// så rekkefølgen blir riktig også når et kort må vente på dataene sine.
+export function lerretAvstem(naa, maal) {
+  const a = Array.isArray(naa) ? naa : [];
+  const b = Array.isArray(maal) ? maal : [];
+  const lik = (x, y) => (x?.vis || y?.vis ? !!x?.vis && x.vis === y?.vis : !!x?.id && x.id === y?.id);
+  let k = 0;
+  while (k < a.length && k < b.length && lik(a[k], b[k])) k++;
+  const oppdater = [];
+  for (let i = 0; i < k; i++) if (!b[i].vis && a[i].hash !== b[i].hash) oppdater.push(i);
+  return {
+    lukk: a.length - k,
+    aapne: k < b.length ? b[k] : null,
+    oppdater,
+    ferdig: a.length === k && b.length === k && !oppdater.length,
+  };
+}
+
+// Taster som trykkes i lerretvinduet: F er lerretets egen fullskjerm, alt
+// annet sendes til styringen (en klikker kobler seg til vinduet som har
+// fokus, og det kan være lerretet etter at læreren klikket der for å få
+// fullskjerm). Modifikatorer tilhører nettleseren.
+export function lerretTast(e) {
+  if (!e || e.ctrlKey || e.metaKey || e.altKey) return null;
+  const k = String(e.key || "");
+  if (k === "f" || k === "F") return "full";
+  if (!k || k === "Shift" || k === "Control" || k === "Alt" || k === "Meta") return null;
+  return "send";
+}
+
+// Hva lerretets spiller skal gjøre for å følge styringens. `leder` og
+// `egen`: { tilstand, tid } der tilstand er YouTubes (1 spiller, 2 pause,
+// 3 bufrer, 0 ferdig); `leder.spolt` er satt når læreren spolte. Tiden
+// rettes bare da, og bare når forskjellen er tydelig: starter styringens
+// video et par sekunder etter lerretets, skal ikke lyden på lerretet hoppe
+// tilbake for å vente på den.
+export function ytFolg(leder, egen) {
+  if (!leder || !egen) return { spol: null, handling: null };
+  const spiller = (t) => t === 1 || t === 3;
+  const spol = leder.spolt && Number.isFinite(leder.tid) && Number.isFinite(egen.tid) && Math.abs(leder.tid - egen.tid) > 2 ? leder.tid : null;
+  let handling = null;
+  if (leder.tilstand === 2 && spiller(egen.tilstand)) handling = "pause";
+  else if (spiller(leder.tilstand) && !spiller(egen.tilstand) && egen.tilstand !== 0) handling = "spill";
+  return { spol, handling };
 }

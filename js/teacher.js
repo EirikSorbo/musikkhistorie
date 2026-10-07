@@ -9,6 +9,7 @@
 import {
   subscribeTeacherChecks,
   subscribeTimeforslag,
+  subscribeNotater,
   subscribePendingEdits,
   mergeVarmekartRows,
   deleteTech,
@@ -334,6 +335,9 @@ function startAppInner() {
   // Navn fra timen (v5.82): bare læreren kan lese samlingen, og lærersiden
   // starter først etter innlogging, så abonnementet får aldri avslag.
   subscribeTimeforslag((liste) => { state.timeforslag = liste; state.timeforslagLoaded = true; refreshDesk(); });
+  // Private notater (v6.50): med i sikkerhetskopien. Er reglene ikke
+  // publisert ennå, blir lista bare tom; resten av lærersiden går som før.
+  subscribeNotater((n) => { state.notater = n || {}; }, () => {});
   subscribePendingEdits((edits) => { state.pendingEdits = edits; renderPendingEditsList(); refreshDesk(); });
 
   // Tegn Skrivebordet med en gang (tomt/nullstilt) så panelet ikke står blankt

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -456,7 +456,7 @@ test("«Legg til her»: knappen kun for lærerøkter, lagring på ferske planer,
   const spiller = kilde("presentasjon.js");
   assert.match(spiller, /knapp\.hidden = !\(erLaerer && plan\);/, "skjult uten lærerøkt og plan");
   // v5.96: lærerøkta styrer også Visning-kortet i huben (oppdaterHubKort).
-  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); oppdaterHubKort\(\); \}\);/);
+  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); oppdaterHubKort\(\); notaterEndret\(\); \}\);/);
   assert.match(spiller, /const indeks = innsettingsIndeks\(stoppIdx, plan\.stopp\.length\);/);
   assert.match(spiller, /const stopp = \{ vis, nivaa \};/, "stoppet lagres med detaljnivået som vises");
   assert.match(spiller, /plan = await settInnStopp\(planId, indeks, stopp\);/);
@@ -981,4 +981,79 @@ test("pilene faller tilbake på stoppene, og komma og X er koblet", () => {
   assert.match(pres, /case "avslutt": return avsluttPresentasjon\(\);/);
   const rader = PRES_TASTER.flatMap((g) => g.rader);
   assert.ok(rader.some((r) => r.taster.includes(",")) && rader.some((r) => r.taster.includes("X")), "tastoversikten nevner dem");
+});
+
+// --- Lerret på annen skjerm og private notater (v6.50, brukerbestilling 2026-10-07) ---
+
+test("notatNokkel: artist, sjanger, innovasjon og tiår; tiåret har ett notat for begge fanene", () => {
+  assert.equal(notatNokkel("artist:abc123"), "artist:abc123");
+  assert.equal(notatNokkel("sjanger:Electric blues"), "sjanger:Electric%20blues");
+  assert.equal(notatNokkel("sjanger:R&B"), "sjanger:R%26B");
+  assert.equal(notatNokkel("tech:t1"), "tech:t1");
+  assert.equal(notatNokkel("tiår:1950:society"), "tiår:1950");
+  assert.equal(notatNokkel("tiår:1950:tech"), "tiår:1950");
+  for (const v of ["yt:dQw4w9WgXcQ", "historie:Blues", "varmekart", "artist", "", null, undefined]) {
+    assert.equal(notatNokkel(v), null, String(v));
+  }
+});
+
+test("lerretAvstem: felles bunn beholdes, det over lukkes, neste kort åpnes ett om gangen", () => {
+  const A = { vis: "sjanger:Bebop" }, B = { vis: "artist:x" }, C = { vis: "artist:y" };
+  assert.deepEqual(lerretAvstem([A, B], [A, B]), { lukk: 0, aapne: null, oppdater: [], ferdig: true });
+  assert.deepEqual(lerretAvstem([A], [A, B]), { lukk: 0, aapne: B, oppdater: [], ferdig: false });
+  assert.deepEqual(lerretAvstem([A, B], [A]), { lukk: 1, aapne: null, oppdater: [], ferdig: false });
+  assert.deepEqual(lerretAvstem([A, B], [A, C]), { lukk: 1, aapne: C, oppdater: [], ferdig: false }, "nytt mål på samme plass");
+  assert.deepEqual(lerretAvstem([], [A, B, C]).aapne, A, "nederst først");
+  assert.equal(lerretAvstem([A, B], []).lukk, 2);
+});
+
+test("lerretAvstem: kopier uten mål sammenlignes på id, og nytt innhold oppdateres på stedet", () => {
+  const sok1 = { id: "modal-sok", hash: "1" }, sok2 = { id: "modal-sok", hash: "2" };
+  assert.deepEqual(lerretAvstem([sok1], [sok2]), { lukk: 0, aapne: null, oppdater: [0], ferdig: false });
+  assert.equal(lerretAvstem([sok1], [sok1]).ferdig, true);
+  assert.deepEqual(lerretAvstem([{ vis: "artist:x" }], [sok1]), { lukk: 1, aapne: sok1, oppdater: [], ferdig: false });
+});
+
+test("lerretTast: F er lerretets egen fullskjerm, resten går til styringen", () => {
+  const t = (key, mod = {}) => lerretTast({ key, ...mod });
+  assert.equal(t("f"), "full");
+  assert.equal(t("F"), "full");
+  for (const k of ["ArrowRight", "PageDown", "b", ".", "1", "Escape", " "]) assert.equal(t(k), "send", k);
+  assert.equal(t("Shift"), null);
+  assert.equal(t("r", { metaKey: true }), null, "Cmd+R tilhører nettleseren");
+});
+
+test("ytFolg: lerretet følger pause, avspilling og tydelig spoling", () => {
+  assert.deepEqual(ytFolg({ tilstand: 2, tid: 30 }, { tilstand: 1, tid: 30.4 }), { spol: null, handling: "pause" });
+  assert.deepEqual(ytFolg({ tilstand: 1, tid: 30 }, { tilstand: 2, tid: 30 }), { spol: null, handling: "spill" });
+  assert.deepEqual(ytFolg({ tilstand: 1, tid: 90, spolt: true }, { tilstand: 1, tid: 31 }), { spol: 90, handling: null });
+  assert.deepEqual(ytFolg({ tilstand: 1, tid: 20 }, { tilstand: 1, tid: 33 }), { spol: null, handling: null }, "en styring som startet sent, drar ikke lerretet tilbake");
+  assert.deepEqual(ytFolg({ tilstand: 1, tid: 31 }, { tilstand: 1, tid: 30 }), { spol: null, handling: null }, "små forskjeller rettes ikke");
+  assert.deepEqual(ytFolg({ tilstand: 1, tid: 5 }, { tilstand: 0, tid: 200 }).handling, null, "ferdig spilt startes ikke av seg selv");
+  assert.deepEqual(ytFolg(null, { tilstand: 1, tid: 0 }), { spol: null, handling: null });
+});
+
+test("P er notatene, bare for læreren, og lærerens egne verktøy vises aldri på lerretet", () => {
+  assert.equal(presTast(tast("p")), "notater");
+  assert.equal(presTast(tast("P")), "notater");
+  assert.equal(presTast(tast("p"), { iSkrivefelt: true }), null, "P skrives i notatfeltet");
+  const rad = PRES_TASTER.flatMap((g) => g.rader).find((r) => r.taster.includes("P"));
+  assert.ok(rad && rad.laerer);
+  for (const id of ["modal-timeliste", "modal-pres-taster", "modal-visning"]) assert.ok(LERRET_PRIVAT.has(id), id);
+  const pres = kilde("presentasjon.js");
+  assert.match(pres, /case "notater": return erLerret \? undefined : vekslNotater\(\);/);
+  assert.match(pres, /planId = erLerret \? null : les\(LAGRING\.plan\) \|\| null;/, "lerretet spiller ingen kjøreplan selv");
+  assert.match(pres, /lerretSlutt\(\);\n\s*for \(const k of Object\.values\(LAGRING\)\)/, "Avslutt lukker lerretet også");
+  const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
+  assert.match(css, /body\.pres-lerret :is\(#pres-bar, #pres-varsel, #aktiv-plan-pille, #samle-bar, #pres-notater\) \{ display: none !important; \}/, "notatene og verktøylinja aldri på lerretet");
+});
+
+test("de private notatene er med i lærerens sikkerhetskopi, og importen skriver dem tilbake", () => {
+  const imp = readFileSync(new URL("../../js/laerer/teacher-import.js", import.meta.url), "utf8");
+  assert.match(imp, /if \(Object\.keys\(state\.notater \|\| \{\}\)\.length\) out\.notater = state\.notater;/);
+  assert.match(imp, /const KNOWN_IMPORT_KEYS = new Set\(\[[^\]]*"notater"/);
+  assert.match(imp, /await lagreNotat\(nokkel, v\.tekst\);/);
+  assert.match(imp, /nokkel\.includes\("\/"\)/, "ingen understier i Firestore");
+  const t = readFileSync(new URL("../../js/teacher.js", import.meta.url), "utf8");
+  assert.match(t, /subscribeNotater\(\(n\) => \{ state\.notater = n \|\| \{\}; \}, \(\) => \{\}\);/);
 });
