@@ -43,7 +43,7 @@ import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "../da
 import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
 import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet } from "./lerret.js";
-import { initNotater, vekslNotater, notaterEndret } from "./pres-notater.js";
+import { initNotater, vekslNotater, redigerNotater, notaterEndret } from "./pres-notater.js";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -649,6 +649,7 @@ function wireTaster() {
       case "sideFram": return gaISideHistorikk(1) || gaTilStopp(stoppIdx + 1);
       case "innstillinger": return vekslPanel();
       case "notater": return erLerret ? undefined : vekslNotater();
+      case "notatRediger": return erLerret ? undefined : redigerNotater();
       case "avslutt": return avsluttPresentasjon();
       case "spill": return veksleYtAvspilling();
       default: if (h.startsWith("nivaa")) settNivaa(h.slice(5));

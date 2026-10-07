@@ -7,7 +7,8 @@
 //  viser dem aldri. Hver visning starter med notatene skjult; valget huskes
 //  ikke.
 //
-//  Notatene skrives i kortet selv («Rediger» eller «Skriv notat») og lagres
+//  Notatene skrives i kortet selv («Rediger» eller «Skriv notat», eller
+//  tasten Å, som går rett til redigering, v6.51) og lagres
 //  i samlingen notater, som bare læreren kan lese (artistene og content kan
 //  leses av alle). Nøkkelen er notatNokkel i presentasjon-modell.js. Kortet
 //  viser notatet til det øverste åpne kortet som kan ha notater, så et
@@ -29,6 +30,9 @@ let feil = "";
 let avmeld = null;
 let redigerer = null;   // { nokkel, navn } mens læreren skriver, ellers null
 let lagrer = false;
+// Å trykket før notatene hadde landet: redigeringen starter når de kommer, så
+// et tomt felt aldri lagres over et notat som finnes.
+let redigerVedLasting = false;
 let erLaerer = () => false;
 
 export function initNotater({ erLaererNaa } = {}) {
@@ -38,9 +42,23 @@ export function initNotater({ erLaererNaa } = {}) {
 // Tasten P.
 export function vekslNotater() {
   synlig = !synlig;
-  if (!synlig) redigerer = null;
+  if (!synlig) { redigerer = null; redigerVedLasting = false; }
   abonnerVedBehov();
   tegn();
+}
+
+// Tasten Å (v6.51): notatkortet fram, rett i redigering for kortet som vises.
+export function redigerNotater() {
+  synlig = true;
+  abonnerVedBehov();
+  if (redigerer) return;
+  if (erLaerer() && aktivtKort() && !lastet && !feil) {
+    redigerVedLasting = true;
+    tegn();
+    return;
+  }
+  if (lastet) startRedigering();
+  else tegn();
 }
 
 // Kortstabelen eller innloggingen endret seg.
@@ -56,10 +74,12 @@ function abonnerVedBehov() {
     notater = n || {};
     lastet = true;
     feil = "";
+    if (redigerVedLasting) { redigerVedLasting = false; if (!redigerer) return startRedigering(); }
     if (!redigerer) tegn();
   }, (err) => {
     avmeld = null;
     lastet = false;
+    redigerVedLasting = false;
     feil = err?.code === "permission-denied"
       ? "Reglene for private notater er ikke publisert ennå. Publiser firestore.rules i Firebase-konsollen, så virker de."
       : `Fikk ikke lest notatene (${err?.message || err}).`;
@@ -156,7 +176,7 @@ function tegn() {
 
 function startRedigering() {
   const kort = aktivtKort();
-  if (!kort || !erLaerer()) return;
+  if (!kort || !erLaerer() || !lastet) return tegn();
   redigerer = kort;
   tegn();
 }

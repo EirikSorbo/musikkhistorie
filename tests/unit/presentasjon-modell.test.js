@@ -1057,3 +1057,17 @@ test("de private notatene er med i lærerens sikkerhetskopi, og importen skriver
   const t = readFileSync(new URL("../../js/teacher.js", import.meta.url), "utf8");
   assert.match(t, /subscribeNotater\(\(n\) => \{ state\.notater = n \|\| \{\}; \}, \(\) => \{\}\);/);
 });
+
+// v6.51 (brukerønske 2026-10-07): Å går rett til redigering av notatet.
+test("Å redigerer de private notatene, bare i lærerens vindu, og aldri før notatene har landet", () => {
+  assert.equal(presTast(tast("å")), "notatRediger");
+  assert.equal(presTast(tast("Å")), "notatRediger");
+  assert.equal(presTast(tast("å"), { iSkrivefelt: true }), null, "å skrives i notatfeltet");
+  assert.equal(presTast(tast("å", { repeat: true })), null);
+  const rad = PRES_TASTER.flatMap((g) => g.rader).find((r) => r.taster.includes("Å"));
+  assert.ok(rad && rad.laerer);
+  assert.match(kilde("presentasjon.js"), /case "notatRediger": return erLerret \? undefined : redigerNotater\(\);/);
+  const n = kilde("pres-notater.js");
+  assert.match(n, /if \(!kort \|\| !erLaerer\(\) \|\| !lastet\) return tegn\(\);/, "et tomt felt skal aldri kunne lagres over et notat som ikke har landet");
+  assert.match(n, /if \(redigerVedLasting\) \{ redigerVedLasting = false; if \(!redigerer\) return startRedigering\(\); \}/);
+});

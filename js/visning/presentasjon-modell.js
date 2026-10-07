@@ -780,6 +780,8 @@ export function presTast(e, { plan = false, iSkrivefelt = false, video = false }
   if (k === ",") return "innstillinger";
   // Private notater (v6.50): bare i lærerens eget vindu, aldri på lerretet.
   if (k === "p" || k === "P") return "notater";
+  // Å: rett til redigering av notatet til kortet som vises (v6.51).
+  if (k === "å" || k === "Å") return "notatRediger";
   if (k === "x" || k === "X") return "avslutt";
   // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
   // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
@@ -832,6 +834,7 @@ export const PRES_TASTER = [
     { taster: ["L"], hva: "Lytt: spill det første lytteeksempelet til artisten som vises" },
     { taster: ["N"], hva: "Navn fra timen: noter en artist som kom opp, og hvem som foreslo den", laerer: true },
     { taster: ["P"], hva: "Private notater for kortet som vises (bare på din skjerm)", laerer: true },
+    { taster: ["Å"], hva: "Rediger de private notatene til kortet som vises", laerer: true },
     { taster: ["Esc"], hva: "Lukk øverste kort" },
     { taster: ["?"], hva: "Vis eller skjul hurtigtastene" },
   ] },
