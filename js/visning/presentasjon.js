@@ -30,7 +30,7 @@
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
 import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js";
-import { erSkrivefelt, parseVisVerdi } from "../felles/vis-lenke.js";
+import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
 import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js";
@@ -626,6 +626,7 @@ function wireTaster() {
     const h = presTast(e, {
       plan: !!plan,
       iSkrivefelt: erSkrivefelt(document.activeElement),
+      tomtFelt: erTomtLinjefelt(document.activeElement),
       video: topOpenModal()?.id === "modal-yt",
     });
     if (!h) return;

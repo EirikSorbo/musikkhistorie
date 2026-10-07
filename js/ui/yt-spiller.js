@@ -312,9 +312,10 @@ function settSvart(opasitet, ms) {
   lag.style.opacity = String(opasitet);
 }
 
+// Ikke spiller.isMuted(): den leser en mellomlagret verdi som kan henge etter
+// unMute() i startMedToning, og da ble volumet stående på 0 (v6.56).
 function lydStyres() {
-  if (!toning.aktiv || !spillerKlar || !spiller?.setVolume) return false;
-  try { return !spiller.isMuted(); } catch (e) { return false; }
+  return toning.aktiv && spillerKlar && !!spiller?.setVolume && !dempet;
 }
 
 function rampeVolum(til, ms) {
@@ -397,11 +398,16 @@ function startMedToning() {
   try {
     // Styringsvinduet med et lerret koblet til (v6.50): lyden kommer fra
     // lerretet, så styringen spiller dempet og toner bare bildet.
+    // YouTube husker «dempet» mellom spillere på samme nettsted. Styringens
+    // mute() kunne derfor gjøre lerretets neste klipp stumt, og etter at
+    // lerretet var lukket, styringens eget. Uten demping slås lyden derfor
+    // alltid på her, mens volumet står på 0 og videoen ikke spiller (v6.56).
     if (dempet) spiller.mute();
-    else if (!spiller.isMuted()) {
+    else {
       const v = spiller.getVolume();
       if (v > 0) malVolum = v;
       spiller.setVolume(0);
+      spiller.unMute();
     }
     spiller.playVideo();
   } catch (e) {}

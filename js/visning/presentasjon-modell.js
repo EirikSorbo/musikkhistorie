@@ -746,12 +746,16 @@ export function normaliserHistorikk(raa) {
 // et felt der tastene er tekst.
 // `video`: lytteeksempelet ligger øverst (mellomrom og K spiller og pauser,
 // så læreren ikke må klikke i videoen; audit v5.42 funn 10).
-export function presTast(e, { plan = false, iSkrivefelt = false, video = false } = {}) {
+export function presTast(e, { plan = false, iSkrivefelt = false, tomtFelt = false, video = false } = {}) {
   if (!e || e.ctrlKey || e.metaKey || e.altKey) return null;
   const k = String(e.key || "");
   // Presentasjonsklikkernes blataster tas alltid, også fra et skrivefelt.
   if (plan && k === "PageDown") return "neste";
   if (plan && k === "PageUp") return "forrige";
+  // Venstre og høyre pil også fra et TOMT tekst- eller søkefelt (v6.56): en
+  // liste som åpnes, gir søkefeltet sitt fokus, og da gjorde pilene ingenting.
+  if (iSkrivefelt && tomtFelt && k === "ArrowLeft") return "sideTilbake";
+  if (iSkrivefelt && tomtFelt && k === "ArrowRight") return "sideFram";
   if (iSkrivefelt) return null;
   // Pilene (v5.95, brukerønske 2026-10-01): opp og ned blar i kjøreplanens
   // stopp, venstre og høyre i sidene som er vist (som nettleserens tilbake

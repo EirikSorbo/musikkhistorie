@@ -85,6 +85,15 @@ export function erSkrivefelt(el) {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || !!el.isContentEditable;
 }
 
+// Et tomt énlinjes tekst- eller søkefelt (v6.56). Listene og søket gir feltet
+// fokus når de åpnes; der har venstre og høyre pil ingenting å flytte, så i
+// visningen går de til forrige og neste side også derfra.
+export function erTomtLinjefelt(el) {
+  if (!el || String(el.tagName || "").toUpperCase() !== "INPUT") return false;
+  const type = String(el.type || "text").toLowerCase();
+  return (type === "text" || type === "search") && !el.value;
+}
+
 // «S» alene, utenfor skrivefelt (brukervalg 2026-09-28, v5.79 og igjen
 // v5.84; v5.83 prøvde F, som kolliderte med fullskjerm i visningen; før
 // v5.79 «/» eller Ctrl/Cmd+K). Med Ctrl, Cmd eller Alt er det en annen

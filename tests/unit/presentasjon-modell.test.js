@@ -602,7 +602,7 @@ test("PRES_TASTER: hver tast i oversikten har en handling i presTast", () => {
 
 test("tastene er koblet: én felles lytter, svart skjerm i capture, samleøkt etter presentasjonen, Ctrl/Cmd+S i editoren", () => {
   const spiller = kilde("presentasjon.js");
-  assert.match(spiller, /const h = presTast\(e, \{\n\s*plan: !!plan,\n\s*iSkrivefelt: erSkrivefelt\(document\.activeElement\),\n\s*video: topOpenModal\(\)\?\.id === "modal-yt",\n\s*\}\);/);
+  assert.match(spiller, /const h = presTast\(e, \{\n\s*plan: !!plan,\n\s*iSkrivefelt: erSkrivefelt\(document\.activeElement\),\n\s*tomtFelt: erTomtLinjefelt\(document\.activeElement\),\n\s*video: topOpenModal\(\)\?\.id === "modal-yt",\n\s*\}\);/);
   assert.match(spiller, /case "spill": return veksleYtAvspilling\(\);/);
   assert.match(spiller, /case "oppsummering": return gaTilStopp\(plan\.stopp\.length \+ 1\);/);
   assert.doesNotMatch(spiller, /function wirePlanTaster/, "den gamle pil-lytteren er erstattet");
@@ -964,7 +964,10 @@ test("spilleren toner inn og ut, og lukkingen venter ikke på uttoningen", () =>
   assert.match(spiller, /m\._beforeClose = \(\) => \{\n\s*lukkMedToning\(m\);\n\s*return true;/);
   // Uten API-et: autoplay som før; med det: start selv etter nedtoning.
   assert.match(spiller, /autoplay: !toning\.aktiv/);
-  assert.match(spiller, /spiller\.setVolume\(0\);\n\s*\}\n\s*spiller\.playVideo\(\);/);
+  assert.match(spiller, /spiller\.setVolume\(0\);\n\s*spiller\.unMute\(\);\n\s*\}\n\s*spiller\.playVideo\(\);/);
+  // v6.56: YouTube husker «dempet» mellom spillere, og isMuted() kan henge
+  // etter unMute(). Lyden styres derfor alltid når spilleren ikke er dempet.
+  assert.match(spiller, /return toning\.aktiv && spillerKlar && !!spiller\?\.setVolume && !dempet;/);
   // Volumet tilbake før spilleren fjernes, så YouTube ikke husker 0.
   assert.match(spiller, /spiller\.pauseVideo\(\); spiller\.setVolume\(malVolum\);/);
   // Et nytt klipp eller lukking avbryter ventende iframer og tidtakere.
@@ -1102,4 +1105,25 @@ test("lerretet viser treet i en ramme på forsiden og åpnes alltid på forsiden
   assert.match(kilde("presentasjon.js"), /if \(!\(erLerret && lerretInnebygd\(\)\)\) fullskjermVedForsteHandling\(\);/);
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
   assert.match(css, /#lerret-tre \{ position: fixed; inset: 0;/);
+});
+
+// v6.56 (teknisk gjennomgang før første bruk): en liste som åpnes, gir
+// søkefeltet sitt fokus. Fra et TOMT felt går venstre og høyre pil likevel
+// til forrige og neste side; med tekst i feltet flytter de markøren.
+test("presTast: venstre og høyre pil fra et tomt søkefelt", async () => {
+  const { erTomtLinjefelt } = await import("../../js/felles/vis-lenke.js");
+  const tomt = { iSkrivefelt: true, tomtFelt: true };
+  assert.equal(presTast(tast("ArrowLeft"), tomt), "sideTilbake");
+  assert.equal(presTast(tast("ArrowRight"), tomt), "sideFram");
+  assert.equal(presTast(tast("x"), tomt), null, "bokstavene skrives fortsatt");
+  assert.equal(presTast(tast("ArrowUp"), { ...tomt, plan: true }), null);
+  assert.equal(presTast(tast("ArrowLeft"), { iSkrivefelt: true, tomtFelt: false }), null);
+  assert.equal(erTomtLinjefelt({ tagName: "INPUT", type: "search", value: "" }), true);
+  assert.equal(erTomtLinjefelt({ tagName: "INPUT", type: "text", value: "" }), true);
+  assert.equal(erTomtLinjefelt({ tagName: "INPUT", type: "search", value: "a" }), false);
+  assert.equal(erTomtLinjefelt({ tagName: "INPUT", type: "number", value: "" }), false);
+  assert.equal(erTomtLinjefelt({ tagName: "TEXTAREA", value: "" }), false);
+  assert.equal(erTomtLinjefelt(null), false);
+  const kildeP = readFileSync(new URL("../../js/visning/presentasjon.js", import.meta.url), "utf8");
+  assert.match(kildeP, /tomtFelt: erTomtLinjefelt\(document\.activeElement\),/);
 });
