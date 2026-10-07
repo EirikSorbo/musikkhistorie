@@ -2881,6 +2881,9 @@ body.presentasjon .artist-image .pres-levetid {
 body.presentasjon .pres-artist-spalter {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
   gap: 0 2.4rem; align-items: start;
+  /* Luft ned fra innflytelseslinja (v6.53, brukerønske 2026-10-07): uten
+     denne sto «Instrument»/«Sjanger» nesten klistret til tidslinja over. */
+  margin-top: 1.6rem;
 }
 body.presentasjon .pres-artist-hoyre {
   display: flex; flex-direction: column; align-items: center; gap: 1.2rem;
@@ -2889,8 +2892,10 @@ body.presentasjon .pres-artist-hoyre {
    bildet og la portrettet til venstre. */
 body.presentasjon[data-pres-nivaa="1"] .pres-artist-spalter { display: flex; flex-direction: column; align-items: center; }
 body.presentasjon[data-pres-nivaa="1"] .pres-artist-hoyre { order: -1; }
-/* Skillelinja under instrument og sjanger (nivå 2 og 3). */
-.pres-linje { border: 0; border-top: 1px solid var(--line-strong); margin: 1rem 0 1.2rem; }
+/* Skillelinja under instrument og sjanger (nivå 2 og 3). Mer luft under enn
+   over (v6.53, brukerønske 2026-10-07): punktene skal ikke klistre seg til
+   streken slik «Instrument»/«Sjanger» gjør det over den. */
+.pres-linje { border: 0; border-top: 1px solid var(--line-strong); margin: 1rem 0 2rem; }
 /* De beslektede artistene under bildet: midtstilt i spalta, uten appens
    egen skillestrek over (bildet står der). */
 body.presentasjon .pres-artist-hoyre .related {
