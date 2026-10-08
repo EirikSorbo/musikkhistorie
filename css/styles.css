@@ -713,6 +713,126 @@ textarea { resize: vertical; }
 .form-msg.error { color: var(--danger); }
 .form-msg.ok { color: var(--ok); }
 .form-msg.warn { color: var(--warn); }
+
+/* ----- Stegvis artistskjema (v6.57) -----
+   student.html: lista over de fem stegene, ett steg synlig om gangen, og
+   knappelinja, som blir stående nederst i synsfeltet mens et langt steg
+   rulles (der står også feilmeldingene, så de alltid synes). */
+#forslag-panel { scroll-margin-top: 80px; }
+.steg-liste {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  gap: 6px;
+}
+.steg-liste li { flex: 1 1 0; min-width: 0; }
+.steg-knapp {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px 9px;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid var(--line);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted-2);
+  text-align: left;
+  cursor: pointer;
+}
+.steg-knapp:disabled { cursor: default; }
+.steg-knapp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.steg-nr {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  color: var(--muted-2);
+}
+.steg-navn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.steg-knapp.besokt { color: var(--muted); border-bottom-color: #bbe5c8; }
+.steg-knapp.besokt:hover { color: var(--text); }
+.steg-knapp.besokt .steg-nr { background: var(--surface-2); border-color: var(--accent); color: var(--accent); }
+.steg-knapp[aria-current="step"] { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+.steg-knapp[aria-current="step"] .steg-nr { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.utkast-linje {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* .panel h3 har høyere vekt enn en enkelt klasse, derfor .steg foran. */
+.steg .steg-tittel { margin: 0 0 4px; font-size: 1.05rem; }
+.steg .steg-tittel:focus { outline: none; }
+.steg-ingress { margin: 0 0 16px; }
+.steg .add-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.steg [aria-invalid="true"] { border-color: var(--danger); }
+
+.steg-knapper {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding: 14px 0 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.steg-knapper .btn { display: inline-flex; align-items: center; gap: 6px; }
+#steg-neste, #send-knapp { margin-left: auto; }
+.steg-knapper .form-msg { flex: 1 1 100%; order: 3; }
+.steg-knapper .form-msg:empty { display: none; }
+.utkast-hint { margin: 6px 0 0; }
+
+/* Oversikten i siste steg: én rad per steg, med «Endre». */
+.steg-oversikt { border-top: 1px solid var(--line); padding-top: 16px; }
+.oppsummering { margin: 0; display: grid; gap: 6px; }
+.opps-rad {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 6px 6px 6px 12px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  font-size: 0.86rem;
+}
+.opps-rad dt { font-weight: 600; color: var(--text); }
+.opps-rad dd { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.opps-tom { color: var(--muted-2); font-style: italic; }
+
+@media (max-width: 640px) {
+  /* Bare det aktive steget har navn; de andre er tall. */
+  .steg-liste li { flex: 0 0 auto; }
+  .steg-liste li.aktiv { flex: 1 1 auto; }
+  .steg-knapp:not([aria-current="step"]) .steg-navn { display: none; }
+  .opps-rad { grid-template-columns: minmax(0, 1fr) auto; }
+  .opps-rad dt { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .steg .add-grid { grid-template-columns: 1fr; }
+}
 .punkt-varsel { color: var(--warn); }
 
 /* ----- Listehode + filtre ----- */

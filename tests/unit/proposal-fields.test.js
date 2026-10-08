@@ -58,9 +58,13 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
   const les = (f) => lesJs(f);
 
   // 1) Nytt artistforslag (student.html)
+  // Fra v6.57 (stegvis skjema) står vakten i sjekken for siste steg, med
+  // trim, så et navn av bare mellomrom heller ikke slipper gjennom.
   const student = les("student.js");
-  assert.match(student, /if \(!candidate\.proposedBy\)/,
+  assert.match(student, /paakrevd\("#in-by", /,
     "student.js mangler vakten for forslagsstillerens navn");
+  assert.match(student, /const paakrevd = \(sel, tekst\) => \(\$\(sel\)\.value\.trim\(\) \? null : /,
+    "påkrevd-sjekken må trimme verdien");
   assert.doesNotMatch(student, /#in-by"\)\.value\.trim\(\) \|\| "Anonym"/,
     "student.js skal ikke lenger falle tilbake på «Anonym» ved innsending");
 
@@ -306,8 +310,11 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
   const iKommentar = html.indexOf('id="retur-comment"');
   const iSkjema = html.indexOf('id="add-form"');
   const iVeiledning = html.indexOf('id="skrivehjelp"');
+  const iBeskrivelse = html.indexOf('id="in-desc"');
   assert.ok(iBy > 0 && iKommentar > iBy, "kommentarfeltet skal stå under navnefeltet");
-  assert.ok(iVeiledning > 0 && iVeiledning < iSkjema, "veiledningen skal stå øverst, over skjemaet");
+  // v6.57: veiledningen flyttet fra toppen av skjemaet til beskrivelsessteget.
+  assert.ok(iVeiledning > iSkjema && iVeiledning < iBeskrivelse,
+    "veiledningen skal stå i beskrivelsessteget, rett over tekstfeltet");
   assert.match(html, /<details[^>]*id="skrivehjelp"[^>]*hidden/, "veiledningen starter skjult");
   assert.match(html, /id="retur-comment-felt"[^>]*hidden/, "kommentarfeltet starter skjult");
 

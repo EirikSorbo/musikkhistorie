@@ -244,3 +244,19 @@ export function collectRows(wrapEl, spec) {
     return out;
   }).filter((o) => o[spec.keepKey]);
 }
+
+// Radene slik de står skrevet, til utkastet i studentskjemaet (v6.57). Til
+// forskjell fra collectRows tas også halvskrevne rader med (en tittel uten
+// lenke ennå), og verdiene står urørt som tekst. buildRows bygger dem opp
+// igjen. Helt tomme rader droppes.
+export function collectRawRows(wrapEl, spec) {
+  return [...wrapEl.querySelectorAll("." + spec.rowClass)].map((r) => {
+    const out = {};
+    for (const f of spec.fields) {
+      if (f.ui) continue;
+      const v = r.querySelector("." + f.cls)?.value ?? "";
+      if (v.trim()) out[f.key] = v;
+    }
+    return out;
+  }).filter((o) => Object.keys(o).length);
+}
