@@ -91,6 +91,10 @@ export function sjangerOpts() {
       modalClose(document.getElementById("modal-sjanger"));
       opts.onSubgenreEdit(label, level);
     } : undefined,
+    // Private notater (v6.58): videreformidlet rått (hva/id/navn), satt bare
+    // av teacher.js. Går IKKE via genealogy.js' egen import — se merknaden
+    // der om Firestore-SDK-en i importgrafen til node-testene.
+    onNotat: opts.onNotat,
     onPropose: opts.onProposeEdit,
     hasPendingEdit: opts.hasPendingEdit,
     onMainGenreCheck: opts.onMainGenreCheck,

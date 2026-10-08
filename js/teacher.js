@@ -49,6 +49,7 @@ import { renderPendingEditsList, setupPendingEditsUi } from "./laerer/teacher-re
 import { initVisning, visningTikk } from "./visning/visning.js";
 import { initPlanMeny } from "./visning/plan-meny.js";
 import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
+import { initNotater, redigerNotatForKort } from "./visning/pres-notater.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
 import { initUtskriftSkuff } from "./utskrift/utskrift-skuff.js";
@@ -168,6 +169,11 @@ function startAppInner() {
     onArtistClick: openDetail,
     onSlektstre: () => { window.location.href = "tre.html"; },
     onSubgenreEdit: (label, level) => openSingleSubgenreModal(label, level),
+    // Private notater (v6.58): sjanger-popupens «Notater»-knapp (#sj-extra,
+    // genealogy.js → explore-context.js' sjangerOpts) kaller denne — se
+    // js/visning/pres-notater.js. Student-sidene setter aldri onNotat, så
+    // knappen vises bare her.
+    onNotat: (hva, id, navn) => redigerNotatForKort(hva, id, navn),
     onStoryEdit: (genre) => openStoryEditor(genre),
     onPageEdit: (pageId) => openPageEditor(pageId),
     // Frittstående referanser har ikke noe kort å åpne fra Referanser-lista;
@@ -215,6 +221,11 @@ function startAppInner() {
   initYtSpiller();
   initPlanMeny();
   initPlanInnsamling();
+  // Private notater (v6.58): lærersiden presenterer aldri noe eget lerret,
+  // så «aktivt kort» kommer alltid fra knappene (redigerNotatForKort), ikke
+  // fra et åpent presentasjonskort. erLaererNaa er en konstant her — bare
+  // innloggede lærere (TEACHER_EMAILS over) kommer forbi gaten foran siden.
+  initNotater({ erLaererNaa: () => true });
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
   initUtskriftValg({ hentData: () => state });
   initUtskriftSkuff();

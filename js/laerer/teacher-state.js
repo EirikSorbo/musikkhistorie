@@ -16,6 +16,7 @@ import {
   getClientId,
 } from "../data/store.js";
 import { renderArtists, fillSelect } from "../ui/ui.js";
+import { redigerNotatForKort } from "../visning/pres-notater.js";
 import { GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES } from "../sjangre/genre-model.js";
 import { DECADES, instrumentsInUse, erTilModerasjon } from "../felles/limits.js";
 import { sharedStateDefaults } from "../data/shared-data.js";
@@ -77,7 +78,14 @@ export const handlers = {
     const a = state.artists.find(x => x.id === id);
     guardTeacherAction(updateArtistFields(id, { teacherChecked: !(a?.teacherChecked) }));
   },
-  showTimeline: (id) => ctx.explore?.openTidslinje({ artistId: id }),
+  // Notater (v6.58): lærerens egen «Notater»-knapp på artistkortet — se
+  // js/visning/pres-notater.js. «Vis i tidslinje»/«Merk ★» er fjernet fra
+  // lærervisningen (brukerønske 2026-10-08): de hørte til studentenes
+  // forslagsflyt, ikke lærerens eget bruk av kortene.
+  notat: (id) => {
+    const a = state.artists.find(x => x.id === id);
+    redigerNotatForKort("artist", id, a?.name || "Artist");
+  },
 };
 
 // Sett/fjern «sjekket» for et innholdselement. Artistkort bor på artist-

@@ -13,6 +13,15 @@
 //  leses av alle). Nøkkelen er notatNokkel i presentasjon-modell.js. Kortet
 //  viser notatet til det øverste åpne kortet som kan ha notater, så et
 //  lytteeksempel oppå artistkortet ikke tar notatene bort.
+//
+//  Lærersiden (v6.58, brukerønske 2026-10-08): en «Notater»-knapp på
+//  artist-, teknologi-, tiårs- og sjangerkortene i lærerviewet kaller
+//  redigerNotatForKort(hva, id, navn) direkte — der står jo ALDRI et kort
+//  åpent på lerretet (teacher.html presenterer ingenting). Boksen er den
+//  SAMME som i visningen; bare målet kommer fra en knapp i stedet for det
+//  øverste åpne kortet. aktivtKort() ser fortsatt FØRST etter et ekte åpent
+//  kort (data-vis), så en reell presentasjon alltid vinner over et gammelt
+//  admin-valg.
 // ============================================================================
 
 import { subscribeNotater, lagreNotat } from "../data/store.js";
@@ -34,6 +43,11 @@ let lagrer = false;
 // et tomt felt aldri lagres over et notat som finnes.
 let redigerVedLasting = false;
 let erLaerer = () => false;
+// Satt av redigerNotatForKort (lærerviewets knapp), lest av aktivtKort() når
+// INGEN ekte kort står åpent. Nullstilles når boksen lukkes manuelt, så den
+// ikke blir stående og peker på et admin-kort neste gang P åpner boksen i en
+// faktisk visning.
+let overstyrtKort = null;
 
 export function initNotater({ erLaererNaa } = {}) {
   if (typeof erLaererNaa === "function") erLaerer = erLaererNaa;
@@ -42,9 +56,26 @@ export function initNotater({ erLaererNaa } = {}) {
 // Tasten P.
 export function vekslNotater() {
   synlig = !synlig;
-  if (!synlig) { redigerer = null; redigerVedLasting = false; }
+  if (!synlig) { redigerer = null; redigerVedLasting = false; overstyrtKort = null; }
   abonnerVedBehov();
   tegn();
+}
+
+// Lærerviewets «Notater»-knapp (v6.58) på artist-, teknologi-, tiårs- og
+// sjangerkortene: samme boks og redigeringsflyt som tasten Å, men med et
+// eksplisitt mål i stedet for det øverste åpne kortet — teacher.html har
+// ingen lerret å lete etter et åpent kort på. `hva` er samme nøkkel som
+// NOTAT_TYPER («artist», «tech», «tiår», «sjanger»), `id` er kortets egen id
+// (artistens/innovasjonens dok-ID, tiårstallet, eller sjangerens etikett).
+export function redigerNotatForKort(hva, id, navn) {
+  const nokkel = notatNokkel(`${hva}:${id}`);
+  if (!nokkel) return;
+  overstyrtKort = { nokkel, navn };
+  redigerer = null;
+  synlig = true;
+  abonnerVedBehov();
+  if (erLaerer() && !lastet && !feil) { redigerVedLasting = true; tegn(); return; }
+  if (lastet) startRedigering(); else tegn();
 }
 
 // Tasten Å (v6.51): notatkortet fram, rett i redigering for kortet som vises.
@@ -94,7 +125,9 @@ function aktivtKort() {
     const nokkel = notatNokkel(m.dataset.vis);
     if (nokkel) return { nokkel, navn: kortNavn(m.dataset.vis) };
   }
-  return null;
+  // Ingen ekte kort åpent: lærerviewets knapp (redigerNotatForKort) kan ha
+  // satt et eksplisitt mål. Den vinner ALDRI over et faktisk åpent kort over.
+  return overstyrtKort;
 }
 
 function kortNavn(vis) {

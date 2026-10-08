@@ -19,6 +19,7 @@ import { renderDecadeSections, renderDecadeRibbon } from "../ui/ui-timeline.js";
 import { techImage } from "../ui/ui-tech.js";
 import { resolveDesc } from "../sjangre/genre-descriptions.js";
 import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "../ui/ui-helpers.js";
+import { redigerNotatForKort } from "../visning/pres-notater.js";
 import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "../felles/limits.js";
 import { FAKTA_FELT, rensFakta, plateselskapForSide } from "../felles/plateselskaper.js";
 import { heatRow, getHeatData } from "../sjangre/heat-strip.js";
@@ -97,12 +98,14 @@ export function openSingleDecadeModal(decadeId, mode) {
   // Sjekk + Rediger som ikonknapper (samme rad som alle andre kort). Samfunn og
   // teknologi sjekkes hver for seg (teacherChecks.decades / decadesTech) — samme
   // to kort som på Skrivebordet — så knappen følger hvilket aspekt som vises.
+  // Notater (v6.58): ÉN nøkkel («tiår:1950») for begge aspektene — samfunn og
+  // teknologi er samme tiår, bare to faner i samme kort.
   const checkField = isSociety ? "decades" : "decadesTech";
   const actions = $("#ds-actions");
   if (actions) {
     actions.innerHTML = teacherActionRow({
       checked: (state.teacherChecks?.[checkField] || []).includes(String(d)),
-      edit: true, del: false,
+      edit: true, del: false, notat: true,
     });
     wireTeacherRow(actions, {
       onCheck: (on) => setContentCheck(checkField, String(d), on),
@@ -111,6 +114,7 @@ export function openSingleDecadeModal(decadeId, mode) {
         $("#ds-view").style.display = "none";
         $("#ds-edit").style.display = "";
       },
+      onNotat: () => redigerNotatForKort("tiår", String(d), `${d}-tallet`),
     });
   }
 
@@ -449,6 +453,7 @@ function renderTechAdmin() {
       <div class="card-foot teacher-card-actions" style="margin-top:auto;padding-top:8px">
         ${checkBtnHtml((state.teacherChecks?.tech || []).includes(t.id), "tech-check-btn")}
         <div class="spacer"></div>
+        <button class="icon-btn tech-notat-btn" title="Private notater" aria-label="Private notater">${ICONS.notat}</button>
         <button class="icon-btn tech-edit-btn" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>
         <button class="icon-btn danger tech-del-btn" title="Slett" aria-label="Slett">${ICONS.trash}</button>
       </div>
@@ -461,6 +466,14 @@ function renderTechAdmin() {
     btn.addEventListener("click", () => {
       const id = btn.closest("[data-tech-id]").dataset.techId;
       setContentCheck("tech", id, toggleCheckBtn(btn, "tech-check-btn"));
+    });
+  });
+
+  el.querySelectorAll(".tech-notat-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.closest("[data-tech-id]").dataset.techId;
+      const t = state.techItems.find(x => x.id === id);
+      redigerNotatForKort("tech", id, t?.name || "Innovasjon");
     });
   });
 

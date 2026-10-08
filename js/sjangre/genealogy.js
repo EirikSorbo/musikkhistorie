@@ -157,7 +157,7 @@ export function refreshSjangerInfo(freshOpts) {
 // allerede åpen modal. Egen parameter, IKKE i opts: opts lagres i openSjanger
 // og ville smittet alle senere omtegninger.
 export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, harTidslinje, onShowGallery, onVisITre, onEdit, onPropose, hasPendingEdit, onMainGenreCheck } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, harTidslinje, onShowGallery, onVisITre, onEdit, onPropose, hasPendingEdit, onMainGenreCheck, onNotat } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -272,7 +272,12 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
     b.addEventListener("click", () => showEdgeInfo(b.dataset.koblingFra, b.dataset.koblingTil, opts)));
   // Rediger (lærer): n.l er doc-ID-en i genreDescriptions — samme ID som
   // «Foreslå endring» under bruker, så begge veier treffer samme dokument.
-  renderGenreEditBtn(root, onEdit ? () => onEdit(n.l, "main") : null);
+  // Notater (v6.58): onNotat kommer fra sjangerOpts() (explore-context.js),
+  // som bare teacher.js fyller — modulen her importerer ALDRI
+  // js/visning/pres-notater.js selv (den drar med seg Firestore-SDK-en fra
+  // CDN-en, og ville brutt node-testene som laster genealogy.js direkte).
+  renderGenreEditBtn(root, onEdit ? () => onEdit(n.l, "main") : null,
+    onNotat ? () => onNotat("sjanger", n.l, n.f || n.l) : null);
   // Lærerens sjekk-knapp bygges HER, som de andre lærer-elementene. Den ble
   // tidligere appendet utenfra etter klikk, og forsvant derfor ved hver
   // omtegning (mBody.innerHTML settes på nytt) uten å bli lagt tilbake.

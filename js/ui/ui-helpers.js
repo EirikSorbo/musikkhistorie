@@ -76,6 +76,11 @@ export const ICONS = {
   retur: ico("M9 14L4 9l5-5") + ico("M20 20v-7a4 4 0 00-4-4H4"),
   opp: ico("M18 15l-6-6-6 6"),
   ned: ico("M6 9l6 6 6-6"),
+  // Private notater (v6.58): en side med tekstlinjer, ETT path med flere
+  // «M»-segmenter (sideomriss, brettet hjørne, tre linjer) i stedet for flere
+  // oppå hverandre svg-er — se merknaden over «edit» om de sammensatte
+  // ikonene. Denne er tegnet som ETT ikon, ikke to halve.
+  notat: ico("M15 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7z M14 2v4a2 2 0 002 2h4 M10 9H8 M16 13H8 M16 17H8"),
 };
 
 // Delt «Sjekket»-knapp — ÉN kilde til markup/klasser, så alle sjekk-flatene
@@ -106,8 +111,12 @@ export function toggleCheckBtn(btn, extra = "") {
 // høyre — samme ikonknapper som artistkortene. Vises kun når lærer-callbacks
 // finnes, så studentvisningen aldri får knappene. Slett tas kun med for hele
 // enheter (innovasjonskort) — sjanger/historie/side har ingen enhet å slette.
-export function teacherActionRow({ checked = false, edit = true, del = false } = {}) {
+// `notat` (v6.58): «Notater»-knappen, bare for de fire kort-typene i
+// NOTAT_TYPER (artist, sjanger, tech, tiår) — default av, så de andre
+// kallstedene (koblinger, plateselskaper …) ser ut akkurat som før.
+export function teacherActionRow({ checked = false, edit = true, del = false, notat = false } = {}) {
   const right = [
+    notat ? `<button type="button" class="icon-btn tcr-notat" title="Private notater" aria-label="Private notater">${ICONS.notat}</button>` : "",
     edit ? `<button type="button" class="icon-btn tcr-edit" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>` : "",
     del ? `<button type="button" class="icon-btn danger tcr-del" title="Slett" aria-label="Slett">${ICONS.trash}</button>` : "",
   ].filter(Boolean).join("");
@@ -118,34 +127,39 @@ export function teacherActionRow({ checked = false, edit = true, del = false } =
   </div>`;
 }
 
-// Lærerens Rediger-ikon i sjanger-modalens hode (#sj-extra). Samme ikonknapp
-// som artistkortene bruker — sjanger-/undersjanger-popupen hadde før en
-// tekstknapp «Rediger» nederst i kroppen, som var den eneste flaten i appen
-// der redigering ikke så ut som redigering.
+// Lærerens Rediger- og Notater-ikoner i sjanger-modalens hode (#sj-extra).
+// Samme ikonknapper som artistkortene bruker — sjanger-/undersjanger-
+// popupen hadde før en tekstknapp «Rediger» nederst i kroppen, som var den
+// eneste flaten i appen der redigering ikke så ut som redigering. Notater
+// (v6.58) vises bare når onNotat er gitt (kun hovedsjangeren, ikke koblinger
+// eller undersjangre — de er ikke en NOTAT_TYPE).
 //
 // Beholderen tømmes ALLTID først: #modal-sjanger gjenbrukes av sjanger-,
 // undersjanger- OG koblingsvisningen, så uten dette ville knappen fra forrige
 // popup blitt stående og redigert feil sjanger. Uten onEdit (student,
 // slektstresiden) blir hodet stående tomt.
-export function renderGenreEditBtn(root, onEdit) {
+export function renderGenreEditBtn(root, onEdit, onNotat) {
   const extra = root.querySelector("#sj-extra");
   if (!extra) return;
-  extra.innerHTML = onEdit
-    ? `<button type="button" class="icon-btn sj-edit-btn" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>`
-    : "";
-  const btn = extra.querySelector(".sj-edit-btn");
-  if (btn) btn.addEventListener("click", onEdit);
+  extra.innerHTML = [
+    onNotat ? `<button type="button" class="icon-btn sj-notat-btn" title="Private notater" aria-label="Private notater">${ICONS.notat}</button>` : "",
+    onEdit ? `<button type="button" class="icon-btn sj-edit-btn" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>` : "",
+  ].join("");
+  extra.querySelector(".sj-edit-btn")?.addEventListener("click", onEdit);
+  extra.querySelector(".sj-notat-btn")?.addEventListener("click", onNotat);
 }
 
-// Kobler radens tre knapper. Sjekk-knappen skifter utseende optimistisk (modalen
+// Kobler radens knapper. Sjekk-knappen skifter utseende optimistisk (modalen
 // re-rendres ikke av snapshotet), og onCheck(nyTilstand) skriver til Firestore.
-export function wireTeacherRow(container, { onCheck, onEdit, onDelete } = {}) {
+export function wireTeacherRow(container, { onCheck, onEdit, onDelete, onNotat } = {}) {
   const chk = container.querySelector(".tcr-check");
   if (chk && onCheck) chk.addEventListener("click", () => onCheck(toggleCheckBtn(chk, "tcr-check")));
   const edt = container.querySelector(".tcr-edit");
   if (edt && onEdit) edt.addEventListener("click", onEdit);
   const del = container.querySelector(".tcr-del");
   if (del && onDelete) del.addEventListener("click", onDelete);
+  const nt = container.querySelector(".tcr-notat");
+  if (nt && onNotat) nt.addEventListener("click", onNotat);
 }
 
 // Bygger sjanger- og undersjanger-bobler (begge klikkbare filtre).

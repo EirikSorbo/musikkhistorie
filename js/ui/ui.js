@@ -446,10 +446,12 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
 
   // Studenthandlinger. «Merk ★» (samme stjerne som prioritet «Viktigst») i
   // stedet for «Svært relevant» — small-knapp så den ligger på samme rad som
-  // «Vis i tidslinje» / «Foreslå endring». Skjult for studentene mens
-  // stemming ikke er i bruk (merking-flagget, v5.72); da får utskriftsknappen
-  // plassen på samme linje. Læreren ser den alltid.
-  const visMerk = isTeacher || !SKJUL_I_STUDENTVISNING.merking;
+  // «Foreslå endring». Skjult for studentene mens stemming ikke er i bruk
+  // (merking-flagget, v5.72); da får utskriftsknappen plassen på samme
+  // linje. Læreren har fått en egen «Notater»-knapp i stedet (v6.58,
+  // brukerønske 2026-10-08): merkingen var ment for studentenes stemmegiving,
+  // ikke lærerens eget bruk.
+  const visMerk = !isTeacher && !SKJUL_I_STUDENTVISNING.merking;
   let voteBtn = "";
   if (visMerk && !removed && !pending && !returned) {
     voteBtn = hasUpvoted
@@ -461,14 +463,16 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
   // så alle kort-typer viser identiske knapper). Prioritetsikonene er egne:
   // de gjenbruker PRIO_ICONS-pathene, men i knappestørrelse (16px).
   const ICO_CHECK = ICONS.check, ICO_EDIT = ICONS.edit, ICO_BAN = ICONS.ban,
-        ICO_TRASH = ICONS.trash, ICO_APPROVE = ICONS.approve, ICO_REJECT = ICONS.reject;
+        ICO_TRASH = ICONS.trash, ICO_APPROVE = ICONS.approve, ICO_REJECT = ICONS.reject,
+        ICO_NOTAT = ICONS.notat;
   const ICO_STAR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
   const ICO_ALERT = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
   const ICO_THUMB = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>`;
 
   // Lærerhandlinger. Ventende og returnerte deler rad: godkjenn/avvis gjelder
   // begge, og «send tilbake» på et alt returnert kort lager ny kode og ny
-  // tilbakemelding (til studenten som mistet koden).
+  // tilbakemelding (til studenten som mistet koden). Notater (v6.58) står
+  // med i begge rader — notatet gjelder artisten, ikke statusen den er i.
   let teacherBtns = "";
   if (isTeacher && (pending || returned)) {
     teacherBtns = `
@@ -476,6 +480,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
         <button class="icon-btn primary" data-action="approve" data-id="${escapeHtml(a.id)}" title="Godkjenn">${ICO_APPROVE}</button>
         <button class="icon-btn danger" data-action="reject" data-id="${escapeHtml(a.id)}" title="Avvis">${ICO_REJECT}</button>
         <button class="icon-btn" data-action="sendBack" data-id="${escapeHtml(a.id)}" title="${returned ? "Send tilbake på nytt (ny kode)" : "Send tilbake til studenten"}">${ICONS.retur}</button>
+        <button class="icon-btn" data-action="notat" data-id="${escapeHtml(a.id)}" title="Private notater">${ICO_NOTAT}</button>
         <button class="icon-btn" data-action="edit" data-id="${escapeHtml(a.id)}" title="Rediger">${ICO_EDIT}</button>
       </div>`;
   } else if (isTeacher) {
@@ -491,6 +496,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
           <button class="icon-btn ${removed ? "active" : ""}" data-action="${removed ? "restore" : "remove"}" data-id="${escapeHtml(a.id)}" title="${removed ? "Gjør synlig" : "Skjul for studenter"}">${ICO_BAN}</button>
         </div>
         <div class="ta-right">
+          <button class="icon-btn" data-action="notat" data-id="${escapeHtml(a.id)}" title="Private notater">${ICO_NOTAT}</button>
           <button class="icon-btn" data-action="edit" data-id="${escapeHtml(a.id)}" title="Rediger">${ICO_EDIT}</button>
           <button class="icon-btn danger" data-action="del" data-id="${escapeHtml(a.id)}" title="Slett">${ICO_TRASH}</button>
         </div>
@@ -524,7 +530,7 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
 
       <footer class="card-foot">
         ${isTeacher ? `<span class="proposed muted">Foreslått av ${escapeHtml(a.proposedBy || "Anonym")}</span>` : ""}
-        <button class="btn ghost small" data-action="showTimeline" data-id="${escapeHtml(a.id)}">Vis i tidslinje</button>
+        ${!isTeacher ? `<button class="btn ghost small" data-action="showTimeline" data-id="${escapeHtml(a.id)}">Vis i tidslinje</button>` : ""}
         ${!isTeacher ? `<button class="btn ghost small" data-propose-type="artist" data-propose-id="${escapeHtml(a.id)}">Foreslå endring</button>` : ""}
         ${voteBtn}
         ${kortUtskriftHtml(a, { knapp: true })}
