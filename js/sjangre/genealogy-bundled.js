@@ -135,6 +135,7 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
   //     layouten kan løse kollisjoner, og getComputedTextLength krever at
   //     teksten står i et synlig dokument.
   const gnodes = {};
+  const hjorne = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--radius-s")) || 0;
   nodes.forEach((n) => {
     // Tastatur og skjermleser: <g> er ikke fokuserbart av seg selv, så hele
     // treet var uspillbart uten mus. role+tabindex+aria-label gjør hver pille
@@ -146,7 +147,9 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
       "aria-label": `Sjanger: ${n.f || n.l}`,
     });
     g.dataset.id = n.id;
-    const rect = el("rect", { rx: NH / 2, height: NH, class: "gxb-pill" });
+    // Hjørnene følger designvariabelen --radius-s (v6.63, brukerønske): firkantede
+    // bobler som sjangerstripene, ikke piller (var NH / 2).
+    const rect = el("rect", { rx: hjorne, height: NH, class: "gxb-pill" });
     const text = el("text", { "text-anchor": "middle", "dominant-baseline": "central", class: "gxb-label" });
     text.textContent = n.l;
     g.appendChild(rect);
