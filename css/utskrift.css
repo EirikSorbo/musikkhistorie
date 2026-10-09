@@ -16,7 +16,7 @@
 .utskrift-kolonner { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
 @media (max-width: 760px) { .utskrift-kolonner { grid-template-columns: 1fr; } }
 .utskrift-boks { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--surface); }
-.utskrift-boks > summary { cursor: pointer; font-weight: 600; font-family: "Space Grotesk", "Inter", sans-serif; }
+.utskrift-boks > summary { cursor: pointer; font-weight: 600; font-family: var(--font-display); }
 .utskrift-boks > summary span { color: var(--muted); font-weight: 500; }
 .utskrift-sok { margin: 10px 0 8px; }
 .utskrift-sok .sok-felt { width: 100%; }
@@ -24,7 +24,7 @@
 .utskrift-treff {
   display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left;
   font: inherit; font-size: 0.88rem; color: var(--text); background: var(--surface-2);
-  border: 1px solid transparent; border-radius: 9px; padding: 6px 10px; cursor: pointer;
+  border: 1px solid transparent; border-radius: calc(var(--radius-m) - 1px); padding: 6px 10px; cursor: pointer;
 }
 .utskrift-treff:hover { border-color: var(--accent); }
 .utskrift-treff:disabled { cursor: default; opacity: 0.7; }
@@ -54,9 +54,9 @@
 .ut-rad { display: flex; flex-wrap: wrap; gap: 0 12px; }
 .ut-rad li { min-width: 110px; }
 .utskrift-rekkefolge { display: block; margin-top: 10px; font-size: 0.88rem; }
-.utskrift-rekkefolge select { display: block; width: 100%; margin-top: 4px; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 9px; }
+.utskrift-rekkefolge select { display: block; width: 100%; margin-top: 4px; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: calc(var(--radius-m) - 1px); }
 .utskrift-tittel { display: block; margin: 10px 0 0; font-size: 0.88rem; }
-.utskrift-tittel input { display: block; width: 100%; margin-top: 4px; font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; }
+.utskrift-tittel input { display: block; width: 100%; margin-top: 4px; font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: calc(var(--radius-m) - 1px); }
 #utskrift-tittel-hint { margin: 4px 0 8px; font-size: 0.8rem; }
 .utskrift-deler-gruppe, .utskrift-form { border: 0; padding: 0; margin: 10px 0 0; }
 .utskrift-deler-gruppe legend, .utskrift-form legend { padding: 0; font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
@@ -76,7 +76,7 @@
 .ut-sj-rad label { flex: 1; }
 .ut-fold {
   flex: none; font: inherit; font-size: 0.76rem; color: var(--muted); background: none;
-  border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 1px 8px; cursor: pointer; white-space: nowrap;
 }
 .ut-fold:hover { color: var(--text); border-color: var(--line-strong); }
 .ut-fold::before { content: "▾ "; font-size: 0.7rem; }
@@ -92,15 +92,15 @@
 
 /* --- Heftet på skjerm ----------------------------------------------------- */
 .hefte {
-  --h-tekst: #101a13; --h-demp: #4e6657; --h-demp2: #7d9885; --h-linje: #d5dfd8; --h-flate: #f1f5f2;
-  width: 210mm; max-width: 100%; margin: 20px auto 40px; background: #fff;
-  padding: 16mm 16mm 18mm; box-shadow: var(--shadow); border-radius: 4px;
+  --h-tekst: var(--text); --h-demp: var(--muted); --h-demp2: var(--muted-2); --h-linje: var(--paper-line); --h-flate: var(--surface-soft);
+  width: 210mm; max-width: 100%; margin: 20px auto 40px; background: var(--paper);
+  padding: 16mm 16mm 18mm; box-shadow: var(--shadow); border-radius: calc(var(--radius-2xs) + 1px);
   color: var(--h-tekst); font-size: 10.5pt; line-height: 1.45;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 @media (max-width: 860px) { .hefte { padding: 20px 16px 28px; border-radius: 0; } }
 .hefte.kompakt { font-size: 9.6pt; line-height: 1.4; }
-.hefte h1, .hefte h2, .hefte h3, .hefte h4 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: -0.01em; margin: 0; font-weight: 600; color: var(--h-tekst); }
+.hefte h1, .hefte h2, .hefte h3, .hefte h4 { font-family: var(--font-display); letter-spacing: -0.01em; margin: 0; font-weight: 600; color: var(--h-tekst); }
 .hefte p { margin: 0 0 2.4mm; }
 .hefte a { color: inherit; text-decoration: none; }
 .hefte .rt p { margin: 0 0 2.6mm; }
@@ -123,11 +123,11 @@
    hefter (h-forside-liten) har tittelblokka som et hode på første side, uten
    sideskift etter. */
 .h-forside { display: flex; flex-direction: column; }
-.h-tittelblokk { margin-top: 24mm; border-left: 1.6mm solid var(--farge, #16a34a); padding-left: 7mm; }
+.h-tittelblokk { margin-top: 24mm; border-left: 1.6mm solid var(--farge, var(--accent)); padding-left: 7mm; }
 .h-forside-liten .h-tittelblokk { margin-top: 2mm; }
 .h-forside-liten .h-tidslinje { margin-top: 10mm; }
 .h-tittel { font-size: 30pt; line-height: 1.08; margin-bottom: 4mm; }
-.h-under { font-size: 14pt; color: var(--h-demp); font-family: "Space Grotesk", "Inter", sans-serif; }
+.h-under { font-size: 14pt; color: var(--h-demp); font-family: var(--font-display); }
 .h-meta { margin-top: 12mm; font-size: 9.5pt; color: var(--h-demp); }
 .h-meta strong { color: var(--h-tekst); font-weight: 600; }
 
@@ -152,14 +152,14 @@
 .h-tl-navn { color: var(--h-tekst); padding-right: 3mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-tl-navn.sj { font-weight: 600; }
 .h-tl-spor { position: relative; height: 4mm; background-image: linear-gradient(to right, var(--h-linje) 0, var(--h-linje) 0.3pt, transparent 0.3pt); background-repeat: repeat-x; }
-.h-tl-stolpe { position: absolute; top: 0; height: 100%; border-radius: 1mm; background: var(--stolpe, #16a34a); }
+.h-tl-stolpe { position: absolute; top: 0; height: 100%; border-radius: 1mm; background: var(--stolpe, var(--accent)); }
 .h-tl-stolpe.sjanger { opacity: 0.32; }
 .h-tl-stolpe.artist { top: 1mm; height: 2mm; }
 /* Åpne perioder tones ut mot høyre (v5.74), som i Sjangerperioder-kortet:
    full farge til i dag leste som «alltid». */
 .h-tl-stolpe.apen {
   border-top-right-radius: 0; border-bottom-right-radius: 0;
-  background: linear-gradient(to right, var(--stolpe, #16a34a) 0, var(--stolpe, #16a34a) 55%, transparent 100%);
+  background: linear-gradient(to right, var(--stolpe, var(--accent)) 0, var(--stolpe, var(--accent)) 55%, transparent 100%);
 }
 
 /* På skjerm markeres sidestartene (ny side i utskriften) med en stiplet
@@ -172,7 +172,7 @@
 }
 
 /* Familie- og sjangerhoder */
-.h-familie-hode, .h-seksjon-hode, .h-sjanger-hode { border-left: 1.6mm solid var(--farge, #16a34a); padding-left: 6mm; margin-bottom: 5mm; }
+.h-familie-hode, .h-seksjon-hode, .h-sjanger-hode { border-left: 1.6mm solid var(--farge, var(--accent)); padding-left: 6mm; margin-bottom: 5mm; }
 .h-familie-hode h1, .h-seksjon-hode h1 { font-size: 22pt; line-height: 1.1; margin-bottom: 1.5mm; }
 .h-sjanger { margin-top: 9mm; }
 .h-sjanger-hode h2 { font-size: 17pt; line-height: 1.12; margin-bottom: 1.5mm; }
@@ -207,7 +207,7 @@
 /* Kortene (artist og innovasjon) */
 .h-kort { margin: 6mm 0 0; padding-top: 4.5mm; border-top: 0.5pt solid var(--h-linje); }
 .h-kort-navn { font-size: 14pt; margin-bottom: 1mm; }
-.h-aar { font-family: "Inter", sans-serif; font-weight: 400; font-size: 10pt; color: var(--h-demp); margin-left: 2mm; }
+.h-aar { font-family: var(--font-body); font-weight: 400; font-size: 10pt; color: var(--h-demp); margin-left: 2mm; }
 .h-fakta { font-size: 8.8pt; color: var(--h-demp); margin-bottom: 3mm; }
 .h-fakta b { font-weight: 600; color: var(--h-tekst); }
 .h-fakta .h-etikett { color: var(--h-demp2); }
@@ -221,7 +221,7 @@
 .h-lytt { display: flex; gap: 2.5mm; align-items: flex-start; background: var(--h-flate); border-radius: 2.5mm; padding: 2.5mm 3.5mm; font-size: 9.5pt; margin-top: 3mm; }
 .h-lytt svg { flex: none; width: 4mm; height: 4mm; margin-top: 0.6mm; color: var(--h-demp); }
 .h-lytt strong { font-weight: 600; }
-.h-nr { display: inline-block; min-width: 4.4mm; height: 4.4mm; line-height: 4.4mm; padding: 0 1mm; text-align: center; border-radius: 2.2mm; background: var(--h-tekst); color: #fff; font-size: 7pt; font-weight: 600; vertical-align: 0.2mm; margin-left: 1mm; }
+.h-nr { display: inline-block; min-width: 4.4mm; height: 4.4mm; line-height: 4.4mm; padding: 0 1mm; text-align: center; border-radius: 2.2mm; background: var(--h-tekst); color: var(--on-accent); font-size: 7pt; font-weight: 600; vertical-align: 0.2mm; margin-left: 1mm; }
 .hefte.kompakt .h-kort { margin-top: 4mm; padding-top: 3mm; }
 .hefte.kompakt .h-kort-navn { font-size: 12.5pt; }
 /* Kompakt form har små bilder (v5.74), ikke ingen. */
@@ -263,7 +263,7 @@
 /* --- Papiret -------------------------------------------------------------- */
 @page { size: A4; margin: 16mm 16mm 18mm; }
 @media print {
-  html, body { background: #fff; }
+  html, body { background: var(--paper); }
   .topbar, .utskrift-panel, #banner, .sitefoot, #app-load-error, .modal-backdrop, #samle-bar, #pres-bar { display: none !important; }
   main.wrap { max-width: none; padding: 0; margin: 0; }
   .hefte { width: auto; max-width: none; margin: 0; padding: 0; box-shadow: none; border-radius: 0; }

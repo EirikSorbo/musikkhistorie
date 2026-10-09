@@ -48,7 +48,7 @@ function renderPodkast() {
   // med vilje: en episode som spiller skal fortsette å spille når kortet lukkes,
   // og stå der den var — samme episode, samme sted — når det åpnes igjen.
   renderPodcastList(el, s.podcasts, {
-    empty: `<p class="muted empty" style="background:#fff">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`,
+    empty: `<p class="muted empty" style="background:var(--surface)">Episodene publiseres fortløpende etter hvert som studentgruppene leverer sine bidrag.</p>`,
   });
   if (extra) {
     extra.innerHTML = opts.onPodkastAdmin

@@ -322,64 +322,64 @@ ${TECH_DETAIL_MODAL_HTML}
            fjerner kortet utenfor visningen; SKJUL_I_HUBEN og lærerøkta i
            presentasjon.js styrer det på lerretet). -->
       <button class="dash-card" id="sb-visning">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 8.5v5l4-2.5z"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-visning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 8.5v5l4-2.5z"/></svg>
         <span class="dash-title">Visning</span>
         <span class="dash-desc">Spesialsider for visningsmodus</span>
       </button>
       <button class="dash-card" id="sb-om-historie">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#4d7c0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M8 2v4l4 4 4-4V2"/><path d="M8 22v-4l4-4 4 4v4"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-om-historie)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M8 2v4l4 4 4-4V2"/><path d="M8 22v-4l4-4 4 4v4"/></svg>
         <span class="dash-title">Om historie</span>
         <span class="dash-desc">Hvorfor musikkhistorie</span>
       </button>
       <button class="dash-card" id="sb-rotter">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c0 3-2.5 4.5-4 7"/><path d="M12 11c0 3 2.5 4.5 4 7"/><path d="M12 11v7"/><circle cx="12" cy="19.5" r="1.3"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-rotter)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c0 3-2.5 4.5-4 7"/><path d="M12 11c0 3 2.5 4.5 4 7"/><path d="M12 11v7"/><circle cx="12" cy="19.5" r="1.3"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>
         <span class="dash-title">Røtter</span>
         <span class="dash-desc">Opphavet før 1910</span>
       </button>
       <button class="dash-card" id="sb-historier">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-historier)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span class="dash-title">Sjangerhistorier</span>
         <span class="dash-desc">Én fortelling per metasjanger</span>
       </button>
       <button class="dash-card" id="sb-tidslinje">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-tidslinje)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h8M9 12h12M5 17h10"/></svg>
         <span class="dash-title">Artisttidslinje</span>
         <span class="dash-desc">Artistenes aktive år visualisert</span>
       </button>
       <button class="dash-card" id="sb-slektstre">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/><path d="M12 6v5M12 11c-4 0-7 3-7 7M12 11c4 0 7 3 7 7M12 11v7"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-slektstre)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/><path d="M12 6v5M12 11c-4 0-7 3-7 7M12 11c4 0 7 3 7 7M12 11v7"/></svg>
         <span class="dash-title">Slektstre</span>
         <span class="dash-desc">Hvordan sjangrene henger sammen</span>
       </button>
       <button class="dash-card" id="sb-varmekart">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-varmekart)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
         <span class="dash-title">Varmekart</span>
         <span class="dash-desc">Hvor toneangivende sjangrene var i ulike tiår</span>
       </button>
       <button class="dash-card" id="sb-sjangerperioder">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M4 16h7"/><path d="M8 11h8"/><path d="M13 6h7"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-sjangerperioder)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M4 16h7"/><path d="M8 11h8"/><path d="M13 6h7"/></svg>
         <span class="dash-title">Sjangerperioder</span>
         <span class="dash-desc">Når sjangrene var aktive</span>
       </button>
       <button class="dash-card" id="sb-himmel">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-himmel)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="19" cy="9" r="2.2"/><circle cx="11" cy="19" r="2.2"/><path d="M8.1 6.5l8.7 2M17.7 10.7l-5.5 6.5M6.8 8.1l3.5 8.8"/></svg>
         <span class="dash-title">Sjangerhimmel</span>
         <span class="dash-desc">Artistene rundt sjangrene sine</span>
       </button>
       <!-- Plateselskapene (v6.37, brukervalg 2026-10-04): skjult for
            studentene til læreren har sjekket kortene (SKJUL_I_HUBEN). -->
       <button class="dash-card" id="sb-plateselskaper">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 5.5a6.5 6.5 0 016.5 6.5"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-plateselskaper)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 5.5a6.5 6.5 0 016.5 6.5"/></svg>
         <span class="dash-title">Plateselskaper</span>
         <span class="dash-desc">Selskapene bak lyden</span>
       </button>
       <button class="dash-card" id="sb-referanser">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-referanser)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/></svg>
         <span class="dash-title">Referanser</span>
         <span class="dash-desc">Kildene appen bygger på</span>
       </button>
       <button class="dash-card" id="sb-guide">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-guide)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
         <span class="dash-title">Slik bruker du appen</span>
         <span class="dash-desc">Kort om funksjonene og tanken bak</span>
       </button>

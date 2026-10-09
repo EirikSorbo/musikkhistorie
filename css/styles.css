@@ -3,41 +3,332 @@
    =========================================================================== */
 
 :root {
+  /* =========================================================================
+     DESIGNVARIABLENE (samlet v6.59, 2026-10-09)
+     -------------------------------------------------------------------------
+     Hele utseendet styres herfra. Reglene lenger ned bruker bare
+     variablene i del 2 og 3 (roller, skrift, hjørner, skygger, lag), ikke
+     fargekoder. Et nytt design gjøres derfor i denne blokka:
+       - Bytt palett (del 1) for å endre fargetonene overalt.
+       - Pek en rolle (del 2) mot en annen palettfarge for å endre én ting.
+       - Skriftene lastes fra Google Fonts i <head> på de fem HTML-sidene
+         (index, teacher, tre, student, utskrift); bytt der og i --font-*.
+     Unntak som bevisst står igjen utenfor blokka:
+       - Sjangerfamilienes farger (js/sjangre/genealogy-data.js og
+         sjangertreet i Firestore): de bærer mening, ikke stil.
+       - Kildekategoriene (js/felles/kilder.js), diagrampaletten
+         (js/sjangre/genre-periods.js) og VK_INK (explore-varmekart.js):
+         koden regner med fargekodene (gjennomsiktighet, blanding).
+       - Utskriftens sidetopp (@page i js/utskrift.js) og heftets mm-mål.
+     ========================================================================= */
+
+  /* ----- 1. PALETT: rå fargeverdier, gruppert etter fargetone ----- */
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-200: #bbf7d0;
+  --green-300: #86efac;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-800: #166534;
+  --green-900: #164e2a;
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-200: #a7f3d0;
+  --emerald-300: #6ee7b7;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-800: #065f46;
+  --pine-700: #0f6e56;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+  --cyan-600: #0891b2;
+  --sky-100: #e0f2fe;
+  --sky-300: #7dd3fc;
+  --sky-400: #38bdf8;
+  --sky-800: #075985;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --iris-600: #534ab7;
+  --violet-50: #f5f3ff;
+  --violet-100: #ede9fe;
+  --violet-200: #ddd6fe;
+  --violet-500: #8b5cf6;
+  --violet-600: #7c3aed;
+  --violet-800: #5b21b6;
+  --pink-500: #ec4899;
+  --pink-600: #db2777;
+  --pink-700: #be185d;
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-300: #fca5a5;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-900: #7f1d1d;
+  --orange-600: #ea580c;
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --yellow-100: #fef9c3;
+  --yellow-200: #fef08a;
+  --yellow-400: #facc15;
+  --yellow-800: #854d0e;
+  --lime-700: #4d7c0f;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-400: #9ca3af;
+  --white: #ffffff;
+  --black: #000000;
+
+  /* RGB-tripler for gjennomsiktige varianter: rgba(var(--x-rgb), 0.2).
+     Endres --accent, må --accent-rgb følge med. */
+  --accent-rgb: 22, 163, 74;
+  --accent-3-rgb: 13, 148, 136;
+  --shadow-rgb: 20, 21, 42;
+  --text-rgb: 16, 26, 19;
+  --black-rgb: 0, 0, 0;
+  --white-rgb: 255, 255, 255;
+
+  /* ----- 2. ROLLER: hva fargen brukes til ----- */
+
   /* Flater */
-  --bg: #ffffff;
-  --surface: #ffffff;
+  --bg: var(--white);
+  --surface: var(--white);
   --surface-2: #edf5ef;
+  --surface-soft: #f1f5f2;              /* ikonruter uten color-mix, flater i heftet */
+  --surface-accent: var(--green-50);    /* aktiv rad, aktivt nav-ikon, hover på merkelapp */
+  --surface-accent-strong: var(--green-100);
+  --paper: var(--white);                /* heftet og utskriften, uansett tema */
+  --paper-line: #d5dfd8;                /* skillelinjer i heftet */
+  --tree-bg: var(--surface);            /* slektstreets lerret */
+  --map-bg: #f2f6f3;                    /* sjangerhimmelen, også glorien bak etikettene */
+  --heat-nodata: #eef2f0;               /* varmestriper uten data */
+  --backdrop: rgba(var(--shadow-rgb), 0.4);
+  --highlight: var(--yellow-200);       /* treff i søket */
+
+  /* Linjer */
   --line: #ddeae1;
   --line-strong: #ccddd2;
+  --line-accent: var(--green-300);
+  --line-accent-soft: var(--green-200);
+  --line-cool: var(--gray-200);
+  --line-step-visited: #bbe5c8;
 
   /* Tekst */
   --text: #101a13;
+  --text-body: #2c2e44;                 /* brødtekst i beskrivelser og historier */
   --muted: #4e6657;
   --muted-2: #7d9885;
+  --text-accent: var(--green-800);
+  --on-accent: var(--white);            /* tekst på farget bunn */
 
   /* Aksent (grønn → emerald → teal) */
-  --accent: #16a34a;
-  --accent-2: #059669;
-  --grad: linear-gradient(135deg, #16a34a 0%, #059669 55%, #0d9488 100%);
+  --accent: var(--green-600);
+  --accent-2: var(--emerald-600);
+  --accent-3: var(--teal-600);
+  --grad: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 55%, var(--accent-3) 100%);
 
-  --ok: #10b981;
-  --danger: #ef4444;
-  --warn: #f59e0b;
+  /* Status */
+  --ok: var(--emerald-500);
+  --success: var(--green-600);
+  --success-bg: var(--green-50);
+  --success-mark: var(--green-500);     /* sjekket kort og merkelapp */
+  --danger: var(--red-500);
+  --danger-solid: var(--red-600);
+  --danger-text: var(--red-900);
+  --danger-bg: var(--red-50);
+  --danger-bg-strong: var(--red-100);
+  --danger-bg-soft: #fff5f5;
+  --danger-bg-faint: #fffafa;
+  --danger-line: var(--red-300);
+  --danger-line-soft: #f3c9c9;
+  --rec: var(--red-600);                /* opptaksprikken i samlelinja */
+  --warn: var(--amber-500);
+  --warn-text: var(--amber-700);
+  --warn-bg: var(--amber-50);
+  --warn-line-soft: #f2ddb0;
+  --pending-text: var(--amber-800);
+  --pending-bg: var(--amber-100);
+  --pending-line: var(--amber-200);
+  --retur: var(--violet-500);
+  --retur-text: var(--violet-800);
+  --retur-bg: var(--violet-50);
+  --retur-bg-strong: var(--violet-100);
+  --retur-line: var(--violet-200);
 
-  /* Kjønnsfarger (god kontrast på lyst) */
-  --c-kvinne: #ec4899;
-  --c-mann: #3b82f6;
-  --c-annet: #f59e0b;
+  /* Banneret øverst */
+  --banner-bg: linear-gradient(135deg, rgba(var(--accent-rgb), 0.07), rgba(var(--accent-3-rgb), 0.07));
+  --banner-line: var(--green-200);
+  --banner-text: var(--green-900);
 
-  /* Instrumentknappene i Instrumenter-kortet — én felles blå. */
-  --instr-blaa: #1d4ed8;
-  --c-ukjent: #94a3b8;
+  /* Viktighetsgrad (1 = mest sentral, skjult = -1) */
+  --prio-1-text: var(--green-800);
+  --prio-1-bg: var(--green-50);
+  --prio-1-line: var(--green-300);
+  --prio-1-ring: var(--green-200);
+  --prio-2-text: var(--sky-800);
+  --prio-2-bg: var(--sky-100);
+  --prio-2-line: var(--sky-400);
+  --prio-2-ring: var(--sky-300);
+  --prio-3-text: var(--yellow-800);
+  --prio-3-bg: var(--yellow-100);
+  --prio-3-line: var(--yellow-400);
+  --prio-3-ring: var(--amber-200);
+  --prio-skjult-text: var(--slate-500);
+  --prio-skjult-bg: var(--slate-100);
+  --prio-skjult-line: var(--slate-300);
+  --prio-skjult-ring: var(--slate-200);
 
-  --radius: 18px;
-  --radius-sm: 12px;
-  --shadow-sm: 0 1px 2px rgba(20, 21, 42, 0.04), 0 2px 6px rgba(20, 21, 42, 0.04);
-  --shadow: 0 4px 14px rgba(20, 21, 42, 0.06), 0 12px 32px rgba(20, 21, 42, 0.06);
-  --shadow-lg: 0 18px 50px rgba(22, 163, 74, 0.14);
+  /* Merkelapper (tags) */
+  --tag-genre-text: var(--emerald-800);
+  --tag-genre-bg: var(--emerald-100);
+  --tag-genre-line: var(--emerald-300);
+  --tag-genre-bg-hover: var(--emerald-200);
+  --tag-genre-line-hover: var(--emerald-500);
+  --tag-sub-bg: var(--emerald-50);
+  --tag-sub-bg-hover: var(--emerald-100);
+  --tag-sub-line: var(--emerald-200);
+  --tag-empty-text: var(--gray-400);
+  --tag-empty-bg: var(--gray-100);
+  --tag-empty-line: var(--gray-200);
+  --tag-instr-text: var(--blue-800);
+  --tag-instr-bg: var(--blue-100);
+  --tag-instr-bg-hover: var(--blue-200);
+  --tag-instr-line: var(--blue-300);
+  --tag-instr-line-hover: var(--blue-500);
+  --tag-root-text: #55635b;
+  --tag-root-bg-hover: #e6ece8;
+  --tag-root-line-hover: #9bada1;
+  --tag-unknown-text: var(--yellow-800);
+  --tag-unknown-bg: var(--yellow-100);
+
+  /* Lenker i løpende tekst */
+  --link-artist: var(--blue-600);
+  --link-genre: var(--emerald-600);
+  --link-tech: var(--amber-600);
+  --link-label: var(--amber-700);       /* plateselskap */
+
+  /* Ikonknapper */
+  --icon-primary: var(--blue-700);
+  --icon-primary-bg-hover: var(--blue-100);
+  --icon-primary-line-hover: var(--blue-300);
+
+  /* Ikonfargene på kortene og flisene. Sett --icon-mono (f.eks. til
+     var(--text)) for å gjøre alle ikonene ensfargede på én gang. */
+  --icon-artister: var(--icon-mono, var(--blue-700));
+  --icon-sjangre: var(--icon-mono, var(--pine-700));
+  --icon-tiar: var(--icon-mono, var(--iris-600));
+  --icon-lytt: var(--icon-mono, var(--pink-700));
+  --icon-instrumenter: var(--icon-mono, var(--teal-700));
+  --icon-store-bildet: var(--icon-mono, var(--violet-600));
+  --icon-visning: var(--icon-mono, var(--teal-700));
+  --icon-om-historie: var(--icon-mono, var(--lime-700));
+  --icon-rotter: var(--icon-mono, var(--amber-700));
+  --icon-historier: var(--icon-mono, var(--iris-600));
+  --icon-tidslinje: var(--icon-mono, var(--blue-700));
+  --icon-slektstre: var(--icon-mono, var(--pine-700));
+  --icon-varmekart: var(--icon-mono, var(--red-600));
+  --icon-sjangerperioder: var(--icon-mono, var(--orange-600));
+  --icon-himmel: var(--icon-mono, var(--violet-600));
+  --icon-plateselskaper: var(--icon-mono, var(--amber-700));
+  --icon-referanser: var(--icon-mono, var(--pink-700));
+  --icon-guide: var(--icon-mono, var(--cyan-600));
+  --icon-tech: var(--icon-mono, var(--amber-600));
+  /* Lærersidens fliser og innstillingsrader */
+  --icon-l-visning: var(--icon-mono, var(--teal-600));
+  --icon-l-utskrift: var(--icon-mono, var(--slate-600));
+  --icon-l-oversikt: var(--icon-mono, var(--green-600));
+  --icon-l-sjangertre: var(--icon-mono, var(--violet-600));
+  --icon-l-podkast: var(--icon-mono, var(--pink-600));
+  --icon-l-referanse: var(--icon-mono, var(--blue-700));
+  --icon-l-konto: var(--icon-mono, var(--green-600));
+  --icon-l-eksport: var(--icon-mono, var(--blue-700));
+  --icon-l-import: var(--icon-mono, var(--teal-600));
+  --icon-l-fare: var(--icon-mono, var(--red-600));
+
+  /* Kjønn og instrument (diagrammer og knapper) */
+  --c-kvinne: var(--pink-500);
+  --c-mann: var(--blue-500);
+  --c-annet: var(--amber-500);
+  --c-ukjent: var(--slate-400);
+  --instr-blaa: var(--blue-700);
+
+  /* Søyler i Oversikt */
+  --bar-examples: linear-gradient(135deg, var(--teal-600) 0%, var(--cyan-600) 100%);
+
+  /* Slektstreet */
+  --tree-missing: var(--red-600);
+  --tree-alert: var(--red-600);
+  --tree-sw-line: #e0a85a;
+  --tree-reaction: var(--amber-600);
+  --tree-reaction-text: #b4690e;
+
+  /* Video og lerret */
+  --media-bg: var(--black);
+  --blackout: var(--black);             /* svart skjerm (B) i visningen */
+  --media-head-bg: rgba(var(--black-rgb), 0.75);
+  --on-media: var(--white);
+  --on-media-line: rgba(var(--white-rgb), 0.35);
+
+  /* ----- 3. FORM: skrift, hjørner, skygger, lag ----- */
+
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Hjørneradius. Mellomverdiene i reglene er regnet ut fra skalaen
+     (calc(var(--radius-m) - 1px) = 9px), så de følger med ved en endring. */
+  --radius-2xs: 3px;
+  --radius-xs: 6px;
+  --radius-s: 8px;
+  --radius-m: 10px;                     /* knapper, felt, rader */
+  --radius-l: 12px;                     /* små kort */
+  --radius-xl: 14px;                    /* paneler */
+  --radius-2xl: 18px;                   /* store kort og vinduer */
+  --radius-chip: 100px;                 /* merkelapper og søyler */
+  --radius-pill: 999px;                 /* flytende piller og linjer */
+  --radius: var(--radius-2xl);          /* eldre navn, beholdt */
+  --radius-sm: var(--radius-l);         /* eldre navn, beholdt */
+
+  /* Skygger */
+  --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), 0.04), 0 2px 6px rgba(var(--shadow-rgb), 0.04);
+  --shadow: 0 4px 14px rgba(var(--shadow-rgb), 0.06), 0 12px 32px rgba(var(--shadow-rgb), 0.06);
+  --shadow-lg: 0 18px 50px rgba(var(--accent-rgb), 0.14);
+  --shadow-hover: 0 2px 8px rgba(var(--black-rgb), 0.06);
+  --shadow-float: 0 6px 24px rgba(var(--black-rgb), 0.14);   /* verktøylinjer og piller nederst */
+  --shadow-popover: 0 10px 32px rgba(var(--black-rgb), 0.16); /* menyer, paneler og skuffen */
+  --shadow-accent: 0 6px 18px rgba(var(--accent-rgb), 0.32);
+  --shadow-accent-hover: 0 10px 26px rgba(var(--accent-rgb), 0.4);
+  --focus-ring: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+
+  /* Lag (z-index). Rekkefølgen betyr noe: vinduene (100 og oppover, satt
+     av ui-modal.js) skal under visningens linjer, svart skjerm og notater. */
+  --z-topbar: 20;
+  --z-menu: 30;
+  --z-modal: 100;
+  --z-modal-fade: 101;
+  --z-role-gate: 200;
+  --z-pass-gate: 300;
+  --z-tooltip: 2000;
+  --z-drawer: 10000;
+  --z-canvas-frame: 99998;
+  --z-bar: 99999;
+  --z-blackout: 100000;
+  --z-notes: 100001;
 }
 
 * { box-sizing: border-box; }
@@ -53,7 +344,7 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   color: var(--text);
   line-height: 1.55;
   background: var(--bg);
@@ -64,7 +355,7 @@ body {
 
 /* Bakgrunnsskyer fjernet – ren hvit bakgrunn */
 
-h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 
 /* padding-inline, IKKE korthånden: «padding: 0 22px» satte også padding-top og
    -bottom til 0, og siden main.wrap treffer begge selektorene med lik
@@ -76,8 +367,8 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 20;
-  background: #fff;
+  z-index: var(--z-topbar);
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 .topbar .wrap {
@@ -90,21 +381,21 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 
 /* ----- Oppsett-banner ----- */
 .banner {
   display: none;
-  background: linear-gradient(135deg, rgba(22,163,74,0.07), rgba(13,148,136,0.07));
-  border: 1px solid #bbf7d0;
+  background: var(--banner-bg);
+  border: 1px solid var(--banner-line);
   border-radius: var(--radius-sm);
   padding: 14px 18px;
   margin-bottom: 24px;
   font-size: 0.9rem;
-  color: #164e2a;
+  color: var(--banner-text);
 }
 .banner.show { display: block; }
-.banner.banner-error { display: block; background: #fef2f2; border-color: #fca5a5; color: #7f1d1d; }
+.banner.banner-error { display: block; background: var(--danger-bg); border-color: var(--danger-line); color: var(--danger-text); }
 .banner code {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   padding: 1px 6px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   font-size: 0.85em;
 }
 
@@ -141,7 +432,7 @@ body.is-teacher .show-removed { display: inline-flex; }
   background: var(--surface);
   color: var(--text);
   padding: 9px 16px;
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
 }
@@ -152,29 +443,29 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .btn:active { transform: translateY(0); }
 .btn.primary {
   background: var(--grad);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   font-weight: 600;
-  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.32);
+  box-shadow: var(--shadow-accent);
 }
-.btn.primary:hover { box-shadow: 0 10px 26px rgba(22, 163, 74, 0.4); filter: brightness(1.03); }
-.btn.sent { background: #16a34a; color: #fff; border: none; font-weight: 600; cursor: default; box-shadow: 0 6px 18px rgba(22, 163, 74, 0.32); }
-.btn.sent:hover { filter: none; box-shadow: 0 6px 18px rgba(22, 163, 74, 0.32); }
+.btn.primary:hover { box-shadow: var(--shadow-accent-hover); filter: brightness(1.03); }
+.btn.sent { background: var(--accent); color: var(--on-accent); border: none; font-weight: 600; cursor: default; box-shadow: var(--shadow-accent); }
+.btn.sent:hover { filter: none; box-shadow: var(--shadow-accent); }
 .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
 .btn.ghost:hover { color: var(--text); }
-.btn.small { padding: 6px 11px; font-size: 0.82rem; border-radius: 9px; }
+.btn.small { padding: 6px 11px; font-size: 0.82rem; border-radius: calc(var(--radius-m) - 1px); }
 /* .compact: for knapperader med tre like brede knapper (f.eks. Undersjangre/
    Tidslinje/Varmekart i sjanger-kortet) — mindre padding/tekst og min-width:0
    så de tre får plass på smale skjermer (iPhone) uten at siste går ut. */
 .btn.compact { padding: 9px 8px; font-size: 0.86rem; min-width: 0; white-space: nowrap; }
-.btn.danger { color: var(--danger); border-color: #f3c9c9; }
-.btn.danger:hover { border-color: var(--danger); background: #fff5f5; }
+.btn.danger { color: var(--danger); border-color: var(--danger-line-soft); }
+.btn.danger:hover { border-color: var(--danger); background: var(--danger-bg-soft); }
 
 /* ----- Dashboard / stats ----- */
 .stat-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   padding: 14px 18px;
 }
 .stat-label { color: var(--muted); font-size: 0.82rem; margin-bottom: 6px; }
@@ -184,7 +475,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
   height: 9px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 100px;
+  border-radius: var(--radius-chip);
   overflow: hidden;
   margin-top: 10px;
 }
@@ -193,7 +484,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
   height: 100%;
   background: var(--grad);
   display: block;
-  border-radius: 100px;
+  border-radius: var(--radius-chip);
   transition: width 0.4s ease;
 }
 
@@ -201,7 +492,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .gender-bar {
   display: flex;
   height: 20px;
-  border-radius: 100px;
+  border-radius: var(--radius-chip);
   overflow: hidden;
   margin: 8px 0 10px;
   background: var(--surface-2);
@@ -264,9 +555,9 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
   display: flex;
   align-items: baseline;
   gap: 8px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-l);
   padding: 10px 14px;
   font-family: inherit;
   text-align: left;
@@ -290,10 +581,10 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-prio-i { display: flex; flex: none; }
 /* Fargene er prioritetsmerkets egne (.tag-prio), så symbolet her og merket på
    kortet leses som samme sak. */
-.prio-3 .ov-prio-i { color: #854d0e; }
-.prio-2 .ov-prio-i { color: #075985; }
-.prio-1 .ov-prio-i { color: #166534; }
-.prio--1 .ov-prio-i { color: #64748b; }
+.prio-3 .ov-prio-i { color: var(--prio-3-text); }
+.prio-2 .ov-prio-i { color: var(--prio-2-text); }
+.prio-1 .ov-prio-i { color: var(--prio-1-text); }
+.prio--1 .ov-prio-i { color: var(--prio-skjult-text); }
 
 .ov-block { margin-top: 12px; }
 .ov-two {
@@ -328,7 +619,7 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   width: 100%;
   max-width: 30px;
   background: var(--grad);
-  border-radius: 5px 5px 0 0;
+  border-radius: calc(var(--radius-xs) - 1px) calc(var(--radius-xs) - 1px) 0 0;
   transition: opacity 0.12s;
 }
 .ov-hist-col:hover .ov-hist-bar { opacity: 0.7; }
@@ -388,7 +679,7 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 .ov-row-meta:hover .ov-name { color: var(--muted); text-decoration: none; }
 /* Søyla for lytteeksempler har egen kulør (teal → cyan) så de to kolonnene ikke
    leses som én lang søyle med et tall midt inni. */
-.ov-bar-ex .bar-fill { background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%); }
+.ov-bar-ex .bar-fill { background: var(--bar-examples); }
 .ov-row-meta .ov-bar-zero .bar-fill { background: var(--warn); opacity: 0.45; }
 /* Kolonneoverskriftene: hver etikett spenner over søyla OG tallet sitt, og står
    midtstilt over paret. */
@@ -438,17 +729,17 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   font-family: inherit;
   font-size: 0.78rem;
   padding: 4px 11px;
-  border-radius: 100px;
+  border-radius: var(--radius-chip);
   border: 1px solid var(--line-strong);
-  background: #fff;
+  background: var(--surface);
   color: var(--muted);
   cursor: pointer;
   transition: border-color 0.12s, color 0.12s;
 }
 .ov-chip strong { color: var(--text); font-weight: 600; }
 .ov-chip:hover { border-color: var(--accent); color: var(--accent-2); }
-.ov-chip.ov-zero { color: #b45309; border-color: #f2ddb0; background: #fffbeb; }
-.ov-chip.ov-zero strong { color: #b45309; }
+.ov-chip.ov-zero { color: var(--warn-text); border-color: var(--warn-line-soft); background: var(--warn-bg); }
+.ov-chip.ov-zero strong { color: var(--warn-text); }
 .ov-chip.ov-zero:hover { border-color: var(--warn); }
 
 /* Hull-kort */
@@ -458,10 +749,10 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   gap: 12px;
 }
 .ov-gap {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-left: 3px solid var(--warn);
-  border-radius: 0 14px 14px 0;
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
   padding: 12px 15px;
 }
 .ov-gap-t {
@@ -482,9 +773,9 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   gap: 10px;
 }
 .ov-miss-item {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-l);
   padding: 10px 14px;
 }
 .ov-miss-head {
@@ -504,7 +795,7 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 }
 .ov-miss-head:hover span:first-child { color: var(--accent-2); }
 .ov-miss-head .ov-count { font-variant-numeric: tabular-nums; color: var(--muted-2); }
-.ov-miss-head .ov-count.ov-warn { color: #b45309; font-weight: 600; }
+.ov-miss-head .ov-count.ov-warn { color: var(--warn-text); font-weight: 600; }
 .ov-miss-head .ov-count.ov-ok { color: var(--ok); }
 .ov-expand { margin-top: 10px; }
 
@@ -528,8 +819,8 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   font-size: 0.92rem;
   padding: 10px 14px;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--radius-m);
+  background: var(--surface);
   color: var(--text);
 }
 .sok-felt:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-sm); }
@@ -572,9 +863,9 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
   width: 100%;
   text-align: left;
   font-family: inherit;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   padding: 9px 12px;
   margin-bottom: 6px;
   cursor: pointer;
@@ -593,9 +884,9 @@ button.ov-kpi:hover .ov-kpi-l { color: var(--accent-2); }
 }
 /* Uthevingen skal lese som en markering, ikke som en lenke. */
 .sok-rad-treff mark, .sok-t-tittel mark {
-  background: #fef08a;
+  background: var(--highlight);
   color: inherit;
-  border-radius: 3px;
+  border-radius: var(--radius-2xs);
   padding: 0 1px;
 }
 
@@ -633,7 +924,7 @@ input, select, textarea {
   background: var(--surface);
   border: 1px solid var(--line-strong);
   color: var(--text);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   padding: 10px 12px;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
@@ -641,7 +932,7 @@ input::placeholder, textarea::placeholder { color: var(--muted-2); }
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+  box-shadow: var(--focus-ring);
 }
 textarea { resize: vertical; }
 .field-label { font-size: 0.82rem; font-weight: 500; color: var(--muted); display: block; margin-bottom: 8px; }
@@ -685,7 +976,7 @@ textarea { resize: vertical; }
    den, og den forsvinner stille fra tre-visningene. Varselfarge, ikke sletting.
    .tag må stå med i velgeren: .tag.tag-sjanger har samme vekt og kommer
    SENERE i fila, så uten den vant den grønne sjangerfargen. */
-.tag.gp-brikke.gp-ukjent { background: #fef9c3; border-color: var(--warn); color: #854d0e; }
+.tag.gp-brikke.gp-ukjent { background: var(--tag-unknown-bg); border-color: var(--warn); color: var(--tag-unknown-text); }
 .gp-fjern {
   background: none; border: 0; padding: 0; margin: 0;
   font: inherit; font-size: 0.72rem; line-height: 1;
@@ -701,7 +992,7 @@ textarea { resize: vertical; }
 /* Påstander uten kildebelegg — arbeidsnotat i lærerens sjangereditor. Gul
    venstrekant, samme signal som «trenger tilsyn» ellers i admin. */
 .ss-usikker { border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 8%, var(--surface));
-  border-radius: 0 6px 6px 0; padding: 8px 10px; margin-bottom: 8px; }
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0; padding: 8px 10px; margin-bottom: 8px; }
 .ss-usikker-tekst { font-size: 0.9rem; }
 .ss-usikker .hint { margin: 4px 0 0; }
 .ss-usikker .ss-usikker-ok { margin-top: 6px; }
@@ -744,7 +1035,7 @@ textarea { resize: vertical; }
   cursor: pointer;
 }
 .steg-knapp:disabled { cursor: default; }
-.steg-knapp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.steg-knapp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-xs); }
 .steg-nr {
   flex: 0 0 auto;
   width: 24px;
@@ -759,11 +1050,11 @@ textarea { resize: vertical; }
   color: var(--muted-2);
 }
 .steg-navn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.steg-knapp.besokt { color: var(--muted); border-bottom-color: #bbe5c8; }
+.steg-knapp.besokt { color: var(--muted); border-bottom-color: var(--line-step-visited); }
 .steg-knapp.besokt:hover { color: var(--text); }
 .steg-knapp.besokt .steg-nr { background: var(--surface-2); border-color: var(--accent); color: var(--accent); }
 .steg-knapp[aria-current="step"] { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
-.steg-knapp[aria-current="step"] .steg-nr { background: var(--accent); border-color: var(--accent); color: #fff; }
+.steg-knapp[aria-current="step"] .steg-nr { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 .utkast-linje {
   display: flex;
@@ -774,7 +1065,7 @@ textarea { resize: vertical; }
   padding: 8px 12px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   font-size: 0.85rem;
   color: var(--muted);
 }
@@ -815,7 +1106,7 @@ textarea { resize: vertical; }
   align-items: center;
   padding: 6px 6px 6px 12px;
   background: var(--surface-2);
-  border-radius: 8px;
+  border-radius: var(--radius-s);
   font-size: 0.86rem;
 }
 .opps-rad dt { font-weight: 600; color: var(--text); }
@@ -899,7 +1190,7 @@ textarea { resize: vertical; }
 .artist-image img {
   width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--radius-s);
   object-fit: cover;
   display: block;
 }
@@ -917,33 +1208,33 @@ textarea { resize: vertical; }
   background: var(--surface-2);
   border: 1px solid var(--line);
   padding: 3px 10px;
-  border-radius: 100px;
+  border-radius: var(--radius-chip);
   color: var(--muted);
 }
 /* Sjanger = sterkere grønnyanse, undersjanger = lysere */
-.tag.tag-sjanger { color: #065f46; background: #d1fae5; border-color: #6ee7b7; }
-.tag.tag-under { color: var(--accent-2); background: #ecfdf5; border-color: #a7f3d0; }
+.tag.tag-sjanger { color: var(--tag-genre-text); background: var(--tag-genre-bg); border-color: var(--tag-genre-line); }
+.tag.tag-under { color: var(--accent-2); background: var(--tag-sub-bg); border-color: var(--tag-sub-line); }
 button.tag { cursor: pointer; font-family: inherit; line-height: inherit; }
-button.tag:hover { border-color: var(--accent); color: var(--accent); background: #f0fdf4; }
-button.tag.tag-sjanger:hover { border-color: #10b981; color: #065f46; background: #a7f3d0; }
+button.tag:hover { border-color: var(--accent); color: var(--accent); background: var(--surface-accent); }
+button.tag.tag-sjanger:hover { border-color: var(--tag-genre-line-hover); color: var(--tag-genre-text); background: var(--tag-genre-bg-hover); }
 /* Sjanger uten artister ennå: nedtonet + stiplet, men fortsatt klikkbar for beskrivelsen. */
-.tag.tag-sjanger.is-empty { color: #9ca3af; background: #f3f4f6; border-color: #e5e7eb; border-style: dashed; }
-button.tag.tag-sjanger.is-empty:hover { color: #065f46; background: #ecfdf5; border-color: #6ee7b7; }
-button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: #d1fae5; }
+.tag.tag-sjanger.is-empty { color: var(--tag-empty-text); background: var(--tag-empty-bg); border-color: var(--tag-empty-line); border-style: dashed; }
+button.tag.tag-sjanger.is-empty:hover { color: var(--tag-genre-text); background: var(--tag-sub-bg); border-color: var(--tag-genre-line); }
+button.tag.tag-under:hover { border-color: var(--accent-2); color: var(--accent-2); background: var(--tag-sub-bg-hover); }
 /* Røtter-boblene i «Røtter før 1910»: samme form som sjangerboblene, men i
    gråtonen treets fargeforklaring gir «Røtter» — de er ikke sjangre ennå. */
-.tag.tag-rot { color: #55635b; background: var(--surface-2); border-color: var(--line-strong); }
-button.tag.tag-rot:hover { color: var(--text); background: #e6ece8; border-color: #9bada1; }
-.tag.tag-instrument { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
-button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; background: #bfdbfe; }
+.tag.tag-rot { color: var(--tag-root-text); background: var(--surface-2); border-color: var(--line-strong); }
+button.tag.tag-rot:hover { color: var(--text); background: var(--tag-root-bg-hover); border-color: var(--tag-root-line-hover); }
+.tag.tag-instrument { color: var(--tag-instr-text); background: var(--tag-instr-bg); border-color: var(--tag-instr-line); }
+button.tag.tag-instrument:hover { border-color: var(--tag-instr-line-hover); color: var(--tag-instr-text); background: var(--tag-instr-bg-hover); }
 .tag.tag-prio { padding: 2px 8px; display: inline-flex; align-items: center; }
 .tag.tag-prio svg { display: block; }
-.tag.tag-prio.prio-3 { background: #fef9c3; border-color: #facc15; color: #854d0e; }
-.tag.tag-prio.prio-2 { background: #e0f2fe; border-color: #38bdf8; color: #075985; }
-.tag.tag-prio.prio-1 { background: #f0fdf4; border-color: #86efac; color: #166534; }
-.tag.tag-prio.prio--1 { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+.tag.tag-prio.prio-3 { background: var(--prio-3-bg); border-color: var(--prio-3-line); color: var(--prio-3-text); }
+.tag.tag-prio.prio-2 { background: var(--prio-2-bg); border-color: var(--prio-2-line); color: var(--prio-2-text); }
+.tag.tag-prio.prio-1 { background: var(--prio-1-bg); border-color: var(--prio-1-line); color: var(--prio-1-text); }
+.tag.tag-prio.prio--1 { background: var(--prio-skjult-bg); border-color: var(--prio-skjult-line); color: var(--prio-skjult-text); }
 
-.desc { margin: 4px 0; font-size: 0.9rem; color: #2c2e44; }
+.desc { margin: 4px 0; font-size: 0.9rem; color: var(--text-body); }
 .works { margin: 0; font-size: 0.85rem; color: var(--muted); }
 .works a { color: var(--accent); text-decoration: underline; }
 .works a:hover { color: var(--accent-2); }
@@ -968,7 +1259,7 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 0.82rem; font-weight: 500; color: var(--text);
   background: var(--bg); border: 1px solid var(--line-strong);
-  padding: 5px 11px; border-radius: 100px; cursor: pointer; transition: 0.12s;
+  padding: 5px 11px; border-radius: var(--radius-chip); cursor: pointer; transition: 0.12s;
 }
 .related-chip:hover { border-color: var(--accent); color: var(--accent-2); }
 
@@ -999,8 +1290,8 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
    containeren sin (.desc/.gx-desc), så de settes ikke på nytt her. */
 .story-body h3, .rt h3 { margin: 18px 0 6px; font-size: 1.02rem; color: var(--text); }
 .story-body h3:first-child, .rt h3:first-child { margin-top: 0; }
-.story-body p { margin: 0 0 10px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
-.story-body ul, .story-body ol { margin: 0 0 10px; padding-left: 20px; font-size: 0.9rem; color: #2c2e44; line-height: 1.6; }
+.story-body p { margin: 0 0 10px; font-size: 0.9rem; color: var(--text-body); line-height: 1.6; }
+.story-body ul, .story-body ol { margin: 0 0 10px; padding-left: 20px; font-size: 0.9rem; color: var(--text-body); line-height: 1.6; }
 .story-body li, .rt li { margin-bottom: 3px; }
 .rt p { margin: 0 0 8px; }
 .rt ul, .rt ol { margin: 0 0 8px; padding-left: 20px; }
@@ -1016,12 +1307,12 @@ button.tag.tag-instrument:hover { border-color: #3b82f6; color: #1e40af; backgro
    v6.11 (brukervalg 2026-10-03). Klassen lytt-lenke står igjen som krok. */
 .story-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .story-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
-#se-text { width: 100%; min-height: 420px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; line-height: 1.55; }
+#se-text { width: 100%; min-height: 420px; resize: vertical; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.55; }
 /* Sjangerbeskrivelsen: main-nivåets tekster ligger rundt 2000 tegn, så feltet
    settes i piksler i stedet for rader. rows="10" i teacher.html blir stående
    som fallback hvis stilarket ikke lastes. */
 #ss-desc { min-height: 300px; }
-.story-preview { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-height: 480px; overflow-y: auto; background: #fff; }
+.story-preview { border: 1px solid var(--line); border-radius: var(--radius-m); padding: 12px 14px; max-height: 480px; overflow-y: auto; background: var(--surface); }
 @media (max-width: 900px) { .story-edit-grid { grid-template-columns: 1fr; } }
 
 .kilder { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
@@ -1042,7 +1333,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .ref-seksjon {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   margin: 26px 0 8px; padding-bottom: 6px;
-  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.08rem; font-weight: 700; color: var(--text);
   border-bottom: 2px solid var(--ref-farge, var(--line-strong));
 }
@@ -1060,13 +1351,13 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
    frittstående. Liten og dempet, så den ikke konkurrerer med selve lenken. */
 .ref-kort {
   font-size: 0.72rem; line-height: 1.3; color: var(--muted);
-  background: none; border: 1px solid var(--line-strong); border-radius: 999px;
+  background: none; border: 1px solid var(--line-strong); border-radius: var(--radius-pill);
   padding: 1px 9px; cursor: pointer; white-space: nowrap;
 }
 .ref-kort:hover { color: var(--accent); border-color: var(--accent); }
 .ref-opphav { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 6px 21px; }
 /* Raden Referanser-lista sendte læreren til, uthevet til neste åpning. */
-.source-row.rad-uthevet { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.source-row.rad-uthevet { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-s); }
 
 /* Kilderaden har fem felter (tekst, forfatter, år, lenke, kategori) og
    fjern-knappen. De får ikke plass på én linje i en modal, så raden BRYTER:
@@ -1076,7 +1367,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
   display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start;
   /* Rammen holder de to linjene sammen som ÉN kilde — uten den var det umulig
      å se hvor en kilde sluttet og den neste begynte. */
-  margin-bottom: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px;
+  margin-bottom: 8px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-m);
 }
 .source-row .source-text { flex: 4 1 220px; }
 .source-row .source-forfatter { flex: 2 1 150px; }
@@ -1124,7 +1415,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .ov-ps-ingress strong { color: var(--text); }
 .ov-ps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
 /* Fra v6.55 bare navnet og ikonene (Sjekk, Rediger) på én lav rad. */
-.ov-ps-kort { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.ov-ps-kort { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); padding: 6px 8px 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .ov-ps-kort:hover { border-color: var(--line-strong); }
 .ov-ps-navn { flex: 1; min-width: 0; font-weight: 600; font-size: 0.92rem; color: var(--text); }
 .ov-ps-kort .teacher-card-actions { margin: 0; flex-wrap: nowrap; gap: 4px; }
@@ -1133,17 +1424,17 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 /* ----- Icon buttons ----- */
 .icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 8px;
+  width: 32px; height: 32px; border-radius: var(--radius-s);
   border: 1px solid var(--line); background: var(--surface);
   color: var(--muted); cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .icon-btn:hover { background: var(--bg); border-color: var(--line-strong); color: var(--text); }
-.icon-btn.active { background: #dcfce7; border-color: #86efac; color: #16a34a; }
-.icon-btn.primary { color: #1d4ed8; }
-.icon-btn.primary:hover { background: #dbeafe; border-color: #93c5fd; }
+.icon-btn.active { background: var(--surface-accent-strong); border-color: var(--line-accent); color: var(--accent); }
+.icon-btn.primary { color: var(--icon-primary); }
+.icon-btn.primary:hover { background: var(--icon-primary-bg-hover); border-color: var(--icon-primary-line-hover); }
 .icon-btn.danger { color: var(--danger); }
-.icon-btn.danger:hover { background: #fee2e2; border-color: #fca5a5; }
+.icon-btn.danger:hover { background: var(--danger-bg-strong); border-color: var(--danger-line); }
 .icon-btn svg { pointer-events: none; }
 /* Pila som ikke kan brukes (øverste episode kan ikke flyttes opp, v6.48). */
 .icon-btn:disabled { opacity: 0.3; cursor: default; background: none; border-color: transparent; }
@@ -1153,14 +1444,14 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
   font-size: 0.68rem;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 7px;
+  border-radius: calc(var(--radius-s) - 1px);
   vertical-align: middle;
 }
-.badge.removed { background: #fee2e2; color: var(--danger); }
-.badge.pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-.badge.returned { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
-.card.is-pending { border-left: 3px solid #f59e0b; opacity: 0.92; }
-.card.is-returned { border-left: 3px solid #8b5cf6; opacity: 0.92; }
+.badge.removed { background: var(--danger-bg-strong); color: var(--danger); }
+.badge.pending { background: var(--pending-bg); color: var(--pending-text); border: 1px solid var(--pending-line); }
+.badge.returned { background: var(--retur-bg-strong); color: var(--retur-text); border: 1px solid var(--retur-line); }
+.card.is-pending { border-left: 3px solid var(--warn); opacity: 0.92; }
+.card.is-returned { border-left: 3px solid var(--retur); opacity: 0.92; }
 
 /* ----- Returflyt («send tilbake») -----
    [hidden]-skjulingen dekkes av den globale regelen øverst (v5.24). */
@@ -1171,17 +1462,17 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
   gap: 4px;
   margin-top: 10px;
   padding: 8px 10px;
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  border-radius: 8px;
+  background: var(--retur-bg);
+  border: 1px solid var(--retur-line);
+  border-radius: var(--radius-s);
   font-size: 0.85rem;
 }
 .retur-kode-inline {
   font-weight: 700;
   letter-spacing: 0.12em;
-  background: #ede9fe;
+  background: var(--retur-bg-strong);
   padding: 1px 6px;
-  border-radius: 5px;
+  border-radius: calc(var(--radius-xs) - 1px);
 }
 .retur-linje { margin-top: 4px; font-size: 0.82rem; }
 .retur-panel { padding: 14px 18px; }
@@ -1210,7 +1501,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
   padding: 6px 11px;
   font-size: 0.82rem;
   line-height: 1.3;
-  border-radius: 9px;
+  border-radius: calc(var(--radius-m) - 1px);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-weight: 600;
@@ -1229,31 +1520,31 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
   align-items: flex-start;
   padding: 10px 12px;
   margin-bottom: 10px;
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  border-radius: 10px;
+  background: var(--retur-bg);
+  border: 1px solid var(--retur-line);
+  border-radius: var(--radius-m);
 }
 .retur-student-kort p { margin: 0; font-size: 0.9rem; }
 
 .retur-kode {
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: 0.25em;
   text-align: center;
   padding: 14px 10px;
-  background: #f5f3ff;
-  border: 1px dashed #8b5cf6;
-  border-radius: 10px;
-  color: #5b21b6;
+  background: var(--retur-bg);
+  border: 1px dashed var(--retur);
+  border-radius: var(--radius-m);
+  color: var(--retur-text);
   user-select: all;
 }
-.card.is-prio-3 { border-left: 3px solid #facc15; }
-.card.is-prio-2 { border-left: 3px solid #38bdf8; }
-.card.is-prio-1 { border-left: 3px solid #86efac; }
-.card.is-prio--1 { border-left: 3px solid #cbd5e1; opacity: 0.6; }
-.card.is-checked { border-left: 3px solid #22c55e; }
-.tag.is-checked { outline: 2px solid #22c55e; outline-offset: -2px; }
+.card.is-prio-3 { border-left: 3px solid var(--prio-3-line); }
+.card.is-prio-2 { border-left: 3px solid var(--prio-2-line); }
+.card.is-prio-1 { border-left: 3px solid var(--prio-1-line); }
+.card.is-prio--1 { border-left: 3px solid var(--prio-skjult-line); opacity: 0.6; }
+.card.is-checked { border-left: 3px solid var(--success-mark); }
+.tag.is-checked { outline: 2px solid var(--success-mark); outline-offset: -2px; }
 
 /* Flyter inline med resten av hodet. (Var absolutt-sentrert i «Finn
    artister»-hodet, men med tre knapper der kolliderte baren med dem.) */
@@ -1289,21 +1580,21 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 #t-prio-bar { flex: 0 0 100%; justify-content: center; }
 .prio-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 10px;
+  width: 36px; height: 36px; border-radius: var(--radius-m);
   border: 1px solid var(--line); background: var(--surface);
   color: var(--muted); cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .prio-filter-btn:hover { background: var(--bg); border-color: var(--line-strong); color: var(--text); }
-.prio-filter-btn.active-3 { background: #fef9c3; border-color: #facc15; color: #854d0e; box-shadow: 0 0 0 2px #fde68a; }
-.prio-filter-btn.active-2 { background: #e0f2fe; border-color: #38bdf8; color: #075985; box-shadow: 0 0 0 2px #7dd3fc; }
-.prio-filter-btn.active-1 { background: #f0fdf4; border-color: #86efac; color: #166534; box-shadow: 0 0 0 2px #bbf7d0; }
-.prio-filter-btn.active--1 { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; box-shadow: 0 0 0 2px #e2e8f0; }
+.prio-filter-btn.active-3 { background: var(--prio-3-bg); border-color: var(--prio-3-line); color: var(--prio-3-text); box-shadow: 0 0 0 2px var(--prio-3-ring); }
+.prio-filter-btn.active-2 { background: var(--prio-2-bg); border-color: var(--prio-2-line); color: var(--prio-2-text); box-shadow: 0 0 0 2px var(--prio-2-ring); }
+.prio-filter-btn.active-1 { background: var(--prio-1-bg); border-color: var(--prio-1-line); color: var(--prio-1-text); box-shadow: 0 0 0 2px var(--prio-1-ring); }
+.prio-filter-btn.active--1 { background: var(--prio-skjult-bg); border-color: var(--prio-skjult-line); color: var(--prio-skjult-text); box-shadow: 0 0 0 2px var(--prio-skjult-ring); }
 .prio-filter-btn svg { pointer-events: none; }
 
 .btn.ghost.accent { color: var(--accent); border-color: var(--accent); }
-.btn.ghost.accent:hover { background: var(--accent); color: #fff; }
-.btn.small.accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; }
+.btn.ghost.accent:hover { background: var(--accent); color: var(--on-accent); }
+.btn.small.accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); border-color: transparent; }
 
 /* ----- Diverse ----- */
 .muted { color: var(--muted); }
@@ -1330,7 +1621,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 
 /* ----- Rollevelger ----- */
 .role-gate {
-  position: fixed; inset: 0; z-index: 200;
+  position: fixed; inset: 0; z-index: var(--z-role-gate);
   display: flex; align-items: center; justify-content: center;
   background: var(--bg);
 }
@@ -1357,9 +1648,9 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(20, 21, 42, 0.4);
+  background: var(--backdrop);
   backdrop-filter: blur(4px);
-  z-index: 100;
+  z-index: var(--z-modal);
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -1467,7 +1758,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 /* --tl-color settes kun av sjangertidslinjen (familiefargen fra slektstreet).
    Uten den faller alt tilbake på --accent, så tiårs- og teknologitidslinjene
    er uendret grønne. */
-.tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: var(--tl-color, var(--accent)); border-radius: 2px; transform: translateY(-50%); }
+.tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: var(--tl-color, var(--accent)); border-radius: calc(var(--radius-2xs) - 1px); transform: translateY(-50%); }
 .tl-item { position: relative; flex: 1 0 120px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
 .tl-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--tl-color, var(--accent)); background: var(--bg); flex-shrink: 0; z-index: 2; }
 .tl-label { position: absolute; width: 110px; text-align: center; }
@@ -1614,10 +1905,10 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .instr-knapper { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; justify-content: space-between; }
 .instr-knappegruppe { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Skillelinjen følger tidslinjen, som ligger under teksten. */
-.instr-tl { border-top: 1px solid var(--line, #e5e7eb); margin-top: 18px; padding-top: 6px; }
+.instr-tl { border-top: 1px solid var(--line, var(--line-cool)); margin-top: 18px; padding-top: 6px; }
 /* Kildene helt nederst, under tidslinja (v6.16). */
 .instr-kilder:empty { display: none; }
-.instr-kilder { border-top: 1px solid var(--line, #e5e7eb); margin-top: 6px; padding-top: 4px; }
+.instr-kilder { border-top: 1px solid var(--line, var(--line-cool)); margin-top: 6px; padding-top: 4px; }
 
 /* ----- Endringsforslag-liste ----- */
 .pending-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
@@ -1634,10 +1925,10 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .diff-table .diff-proposed { width: 32%; white-space: pre-wrap; word-break: break-word; }
 .diff-table .diff-actions { width: 18%; white-space: nowrap; }
 .diff-table .diff-actions button { padding: 4px 10px; min-width: 36px; margin-right: 4px; }
-.diff-table .diff-row.is-approved { background: #f0fdf4; }
-.diff-table .diff-row.is-approved .diff-approve { background: #16a34a; color: #fff; border-color: #16a34a; }
-.diff-table .diff-row.is-rejected { background: #fef2f2; }
-.diff-table .diff-row.is-rejected .diff-reject { background: #dc2626; color: #fff; border-color: #dc2626; }
+.diff-table .diff-row.is-approved { background: var(--success-bg); }
+.diff-table .diff-row.is-approved .diff-approve { background: var(--success); color: var(--on-accent); border-color: var(--success); }
+.diff-table .diff-row.is-rejected { background: var(--danger-bg); }
+.diff-table .diff-row.is-rejected .diff-reject { background: var(--danger-solid); color: var(--on-accent); border-color: var(--danger-solid); }
 .diff-empty { color: var(--muted); font-style: italic; }
 .diff-full { margin-top: 6px; font-size: 0.88rem; white-space: pre-wrap; }
 @media (max-width: 640px) {
@@ -1666,7 +1957,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .tech-tabs-extra { margin-left: auto; }
 .tech-tabs-extra:empty { display: none; }
 .tech-tabs-extra .btn { white-space: nowrap; }
-.tech-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tech-tab.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
 
 /* ----- Innstillinger-knapp i header (lærer) ----- */
@@ -1684,7 +1975,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   color: var(--muted-2);
   font-weight: 600;
 }
-.innst-kort { border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
+.innst-kort { border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--surface); overflow: hidden; }
 .innst-rad { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 .innst-rad + .innst-rad { border-top: 1px solid var(--line); }
 .innst-ikon, .laerer-flis-ikon {
@@ -1693,10 +1984,10 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   color: var(--farge, var(--accent));
-  background: #f1f5f2;
-  background: color-mix(in srgb, var(--farge, var(--accent)) 12%, #fff);
+  background: var(--surface-soft);
+  background: color-mix(in srgb, var(--farge, var(--accent)) 12%, var(--surface));
 }
 .innst-ikon svg, .laerer-flis-ikon svg { width: 20px; height: 20px; }
 .innst-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -1704,7 +1995,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .innst-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.4; overflow-wrap: anywhere; }
 .innst-rad .btn { flex: none; }
 .innst-gruppe--fare .innst-overskrift { color: var(--danger); }
-.innst-gruppe--fare .innst-kort { border-color: #f3c9c9; background: #fffafa; }
+.innst-gruppe--fare .innst-kort { border-color: var(--danger-line-soft); background: var(--danger-bg-faint); }
 @media (max-width: 460px) {
   .innst-rad { flex-wrap: wrap; }
   .innst-rad .btn { margin-left: 48px; }
@@ -1712,7 +2003,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 
 /* ----- Merge-konflikt ----- */
 .merge-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; max-height: 55vh; overflow-y: auto; }
-.conflict-row { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.conflict-row { border: 1px solid var(--line); border-radius: var(--radius-m); overflow: hidden; }
 .conflict-field-name { font-size: 0.78rem; font-weight: 600; color: var(--muted); padding: 6px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
 .conflict-opt { display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background 0.1s; }
 .conflict-opt:hover { background: var(--surface-2); }
@@ -1737,7 +2028,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   text-align: left;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: calc(var(--radius-m) - 1px);
   padding: 6px 12px;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, transform 0.1s;
@@ -1816,11 +2107,11 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    valgte trykket inn. Samme høyde og rundhet som .btn.small. */
 .vis-velger {
   display: inline-flex; gap: 2px; padding: 2px;
-  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface);
 }
 .vis-velger button {
   display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
-  border: 0; border-radius: 8px; background: none; cursor: pointer;
+  border: 0; border-radius: var(--radius-s); background: none; cursor: pointer;
   font: inherit; font-size: 0.82rem; color: var(--muted);
 }
 .vis-velger button:hover { color: var(--text); }
@@ -1848,9 +2139,9 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: var(--radius-l);
   padding: 12px 15px;
   font-family: inherit;
   text-align: left;
@@ -1864,7 +2155,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   justify-content: center;
   width: 36px; height: 36px;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: calc(var(--radius-m) - 1px);
   background: var(--surface-2);
   color: var(--accent-2);
 }
@@ -1897,9 +2188,9 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   margin-top: 14px;
 }
 .desk-cat {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-l);
   padding: 10px 12px;
 }
 /* Tittel + progresjonsstrek på samme rad — holder kortet lavt. Tittelen kan
@@ -1944,7 +2235,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   font-family: inherit;
   font-size: 0.74rem;
   padding: 2px 8px;
-  border-radius: 100px;
+  border-radius: var(--radius-chip);
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--muted);
@@ -1952,7 +2243,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 }
 .desk-undo-chip:hover { border-color: var(--danger); color: var(--danger); }
 .desk-ok { font-size: 0.85rem; color: var(--muted-2); }
-.desk-item.active { border-color: var(--accent); background: #f0fdf4; }
+.desk-item.active { border-color: var(--accent); background: var(--surface-accent); }
 /* Må stå ETTER basisregelen — regler med lik spesifisitet vinner på rekkefølge,
    media query eller ei (720px-blokka øverst i fila taper mot basis her nede).
    4 kort per rad på brede skjermer, trappes ned til 1 på mobil. */
@@ -2045,9 +2336,9 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   }
 }
 .dash-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   padding: 16px 14px;
   text-align: center;
   cursor: pointer;
@@ -2057,8 +2348,9 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   gap: 2px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.dash-card:hover { border-color: var(--line-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.dash-icon { width: 22px; height: 22px; margin-bottom: 4px; flex-shrink: 0; }
+.dash-card:hover { border-color: var(--line-strong); box-shadow: var(--shadow-hover); }
+/* Fargen kommer fra --ikon, satt på hvert ikon (variablene --icon-* i :root). */
+.dash-icon { width: 22px; height: 22px; margin-bottom: 4px; flex-shrink: 0; stroke: var(--ikon, currentColor); }
 .dash-title { font-weight: 600; font-size: 0.95rem; color: var(--text); }
 .dash-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
 
@@ -2107,7 +2399,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .dr-node:hover .dr-dot { transform: scale(1.25); }
 .dr-node.active .dr-dot {
   background: var(--accent);
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.16);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
 }
 .dr-year {
   font-size: 0.66rem;
@@ -2116,7 +2408,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   letter-spacing: -0.02em;
 }
 .dr-node.active .dr-year { color: var(--accent-2); font-weight: 700; }
-.dr-node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.dr-node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-s); }
 
 @media (max-width: 480px) {
   .dr-year { font-size: 0.56rem; letter-spacing: -0.03em; }
@@ -2131,7 +2423,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    grønne fyllet — de skal lese som en liste, ikke som åtte tunge blokker. */
 .podkast-list { display: flex; flex-direction: column; gap: 10px; }
 .podkast-episode {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
@@ -2183,13 +2475,13 @@ a.brand { text-decoration: none; color: inherit; display: flex; align-items: cen
   background: none;
   text-decoration: none;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   cursor: pointer;
   transition: 0.12s;
 }
 .nav-icon svg { display: block; }
 .nav-icon:hover { color: var(--text); background: var(--surface-2); }
-.nav-icon.active { color: var(--accent); background: #f0fdf4; border-color: #bbf7d0; }
+.nav-icon.active { color: var(--accent); background: var(--surface-accent); border-color: var(--line-accent-soft); }
 /* Tannhjulet på lærersiden er teacher-only (modalen virker først etter
    innlogging) — må gjentas her fordi .nav-icon ellers vinner på kilderekkefølge. */
 .nav-icon.teacher-only { display: none; }
@@ -2311,7 +2603,7 @@ body.is-teacher #gate { display: none; }
   position: relative;
   width: 100%;
   height: 460px;
-  background: #fff;
+  background: var(--tree-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -2325,7 +2617,7 @@ body.is-teacher #gate { display: none; }
 .gx-ctrl { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 6px; z-index: 5; }
 .gx-ctrl button {
   width: 32px; height: 32px;
-  border-radius: 9px;
+  border-radius: calc(var(--radius-m) - 1px);
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--text);
@@ -2339,7 +2631,7 @@ body.is-teacher #gate { display: none; }
    (v4.70): på 12 px ble aksen nesten uleselig ved siden av dem, og den er
    selve tidsreferansen kartet leses mot. Fortsatt tydelig underordnet
    navnene, som den skal være. */
-.gx-decade { font-size: 17px; fill: var(--muted-2); font-family: "Inter", sans-serif; }
+.gx-decade { font-size: 17px; fill: var(--muted-2); font-family: var(--font-body); }
 
 /* Usynlig, bred trykkbane oppå hver strek — fanger klikk/hover for koblingen
    (en tynn linje er umulig å treffe med finger). pointer-events: stroke gjør
@@ -2363,15 +2655,15 @@ body.is-teacher #gate { display: none; }
   padding: 6px 8px 6px 11px;
   background: var(--surface);
   border: 1px solid var(--line-strong);
-  border-radius: 11px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-radius: calc(var(--radius-l) - 1px);
+  box-shadow: 0 4px 16px rgba(var(--black-rgb), 0.12);
   z-index: 6;
 }
 .gx-card.show { display: flex; }
 .gx-card-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
 .gx-card-name {
   font-size: 0.9rem; font-weight: 600; color: var(--text);
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-body);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .gx-card-btn { flex: none; }
@@ -2382,7 +2674,7 @@ body.is-teacher #gate { display: none; }
 .gx-desc { font-size: 0.92rem; line-height: 1.55; margin: 0 0 10px; color: var(--text); }
 .gx-rel { font-size: 0.85rem; color: var(--muted); margin: 0 0 4px; }
 .gx-rel strong { color: var(--text); font-weight: 600; }
-.gx-react-rel strong { color: #b4690e; }
+.gx-react-rel strong { color: var(--tree-reaction-text); }
 
 /* «Hør etter» på sjangerkortet: kuraterte lytteforslag for sjangeren som sådan.
    Rundt 100 forfattede eksempler lå usett som `t` på treets noder til v4.64.
@@ -2392,7 +2684,7 @@ body.is-teacher #gate { display: none; }
   margin: 0 0 12px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   background: var(--surface-2);
 }
 .gx-lytt-head {
@@ -2414,10 +2706,10 @@ body.is-teacher #gate { display: none; }
 .tag.tag-pl { font-size: 0.7rem; padding: 0 5px; vertical-align: middle; line-height: 1.5; margin-left: 4px; }
 
 .gx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 12px; }
-.gx-missing { color: var(--danger, #dc2626); font-weight: 600; }
+.gx-missing { color: var(--danger, var(--tree-missing)); font-weight: 600; }
 .gx-leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); }
 .gx-leg-hint { font-style: italic; color: var(--muted-2); }
-.gx-sw-line { width: 18px; height: 0; border-top: 2px dashed #e0a85a; display: inline-block; vertical-align: middle; }
+.gx-sw-line { width: 18px; height: 0; border-top: 2px dashed var(--tree-sw-line); display: inline-block; vertical-align: middle; }
 
 /* --------------------------------------------------------------------------
    Slektstreet: bundlede bånd (tre.html, genealogy-bundled.js)
@@ -2440,17 +2732,17 @@ body.is-teacher #gate { display: none; }
 .gxb-stub.gx-hl, .gxb-knot.gx-hl { opacity: 1; }
 .gxb-stub.gx-dim, .gxb-knot.gx-dim { opacity: 0.07; }
 .gxb-node { cursor: pointer; }
-.gxb-pill { fill: #fff; transition: filter 0.15s; }
+.gxb-pill { fill: var(--surface); transition: filter 0.15s; }
 /* Sjangernavnet er hovedsaken i kartet: stor nok til å leses før båndene.
    STØRRELSEN gjør den jobben, ikke vekten — fet skrift på alle 54 pillene ble
    for tungt (brukervalg v4.71), så vekten er tilbake på 500 som før v4.70.
    Størrelsen henger sammen med NH/PILL_PAD i genealogy-bundled.js — endres den
    ene, må den andre følge etter. */
 .gxb-label { font-size: 22px; font-weight: 500; fill: var(--text); pointer-events: none;
-  font-family: "Inter", sans-serif; }
-.gxb-node.gxb-focus .gxb-pill { filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.22)); }
-.gxb-sw-band { width: 18px; height: 0; border-top: 3px solid #dc2626; display: inline-block; vertical-align: middle; }
-.gxb-sw-knot { width: 10px; height: 10px; border-radius: 50%; background: #dc2626; display: inline-block;
+  font-family: var(--font-body); }
+.gxb-node.gxb-focus .gxb-pill { filter: drop-shadow(0 2px 7px rgba(var(--black-rgb), 0.22)); }
+.gxb-sw-band { width: 18px; height: 0; border-top: 3px solid var(--tree-alert); display: inline-block; vertical-align: middle; }
+.gxb-sw-knot { width: 10px; height: 10px; border-radius: 50%; background: var(--tree-alert); display: inline-block;
   vertical-align: middle; }
 
 /* Ekstra smal: veldig gamle/små telefoner */
@@ -2464,12 +2756,12 @@ body.is-teacher #gate { display: none; }
 }
 
 .artist-link, .tech-link, .genre-link, .plateselskap-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
-.artist-link { color: #2563eb; }
-.tech-link { color: #d97706; }
-.genre-link { color: #059669; }
+.artist-link { color: var(--link-artist); }
+.tech-link { color: var(--link-tech); }
+.genre-link { color: var(--link-genre); }
 .artist-link:hover, .tech-link:hover, .genre-link:hover, .plateselskap-link:hover { text-decoration-style: solid; }
 /* Selskapsnavn i selskapskortene (v6.38): samme rav som hubkortets ikon. */
-.plateselskap-link { color: #b45309; }
+.plateselskap-link { color: var(--link-label); }
 
 /* ============================================================
    Sjangerhimmelen (konstellasjonskart, constellation.js)
@@ -2478,7 +2770,7 @@ body.is-teacher #gate { display: none; }
 .sh-chip {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 0.78rem; padding: 4px 11px; border: 1px solid var(--line-strong);
-  border-radius: 999px; background: #fff; color: var(--text); cursor: pointer;
+  border-radius: var(--radius-pill); background: var(--surface); color: var(--text); cursor: pointer;
 }
 .sh-chip.off { opacity: 0.35; }
 .sh-chip.solo { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); font-weight: 500; }
@@ -2492,22 +2784,22 @@ body.is-teacher #gate { display: none; }
 #sh-svg {
   touch-action: none; cursor: grab;
   width: 100%; height: min(52vh, 480px);
-  background: var(--bg-soft, #f2f6f3);
-  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--bg-soft, var(--map-bg));
+  border: 1px solid var(--line); border-radius: var(--radius-l);
 }
 #sh-svg:active { cursor: grabbing; }
 #sh-svg text { pointer-events: none; font-family: inherit; }
 /* Sjangernavn alltid synlige; artistnavn kommer med fokus (og zoom for de tetteste). */
-#sh-svg .sh-starlbl { font-size: 21px; fill: var(--text); paint-order: stroke; stroke: var(--bg-soft, #f2f6f3); stroke-width: 4px; }
-#sh-svg .sh-rootlbl { font-size: 15px; fill: var(--muted); paint-order: stroke; stroke: var(--bg-soft, #f2f6f3); stroke-width: 3px; }
-#sh-svg .sh-artlbl { display: none; font-size: 13px; fill: var(--text); paint-order: stroke; stroke: var(--bg-soft, #f2f6f3); stroke-width: 2.5px; }
+#sh-svg .sh-starlbl { font-size: 21px; fill: var(--text); paint-order: stroke; stroke: var(--bg-soft, var(--map-bg)); stroke-width: 4px; }
+#sh-svg .sh-rootlbl { font-size: 15px; fill: var(--muted); paint-order: stroke; stroke: var(--bg-soft, var(--map-bg)); stroke-width: 3px; }
+#sh-svg .sh-artlbl { display: none; font-size: 13px; fill: var(--text); paint-order: stroke; stroke: var(--bg-soft, var(--map-bg)); stroke-width: 2.5px; }
 /* Alle navn ved berøringsfokus; ellers kun det man holder over (sh-show). */
 #sh-svg .sh-artgroup.sh-locked .sh-artlbl { display: block; }
 #sh-svg .sh-artlbl.sh-show { display: block; font-weight: 700; stroke-width: 3.5px; }
 #sh-svg .sh-artdot { transition: r .08s; }
 /* Artistbildet ved hover (bygges i constellation.js). Skygge + peker-gjennom, så
    ruta aldri stjeler hover fra prikken under og «blinker» av og på. */
-#sh-svg .sh-thumb { pointer-events: none; filter: drop-shadow(0 3px 8px rgba(16, 26, 19, 0.28)); }
+#sh-svg .sh-thumb { pointer-events: none; filter: drop-shadow(0 3px 8px rgba(var(--text-rgb), 0.28)); }
 
 /* ----- Varmekart: én glidende stripe per sjanger -----
    Raden var 13 avrundede bolker med luft imellom; nå er den ÉN stripe der
@@ -2680,7 +2972,7 @@ body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
 .vk-axisrow { align-items: end; margin-bottom: 6px; }
 .vk-scroll { overflow-x: auto; }
 .vk-scroll-inner { min-width: 600px; }
-.vk-row { border-radius: 8px; margin-bottom: 2px; padding: 2px 0; transition: background-color .12s; }
+.vk-row { border-radius: var(--radius-s); margin-bottom: 2px; padding: 2px 0; transition: background-color .12s; }
 @media (hover: hover) {
   .vk-row:hover { background: var(--surface-2); }
 }
@@ -2713,7 +3005,7 @@ body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
 .vk-strip {
   position: relative;
   height: 15px;
-  border-radius: 8px;
+  border-radius: var(--radius-s);
   overflow: hidden;
   transition: box-shadow .12s;
 }
@@ -2734,11 +3026,11 @@ body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
   appearance: none;
 }
 button.vk-cell { cursor: pointer; }
-button.vk-cell:hover { background: rgba(255, 255, 255, 0.34); }
+button.vk-cell:hover { background: rgba(var(--white-rgb), 0.34); }
 button.vk-cell:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-  border-radius: 3px;
+  border-radius: var(--radius-2xs);
 }
 
 /* Hover-kortet på tidslinjens blokker: bilde + navn + aktiv-periode. Ligger i
@@ -2748,14 +3040,14 @@ button.vk-cell:focus-visible {
    på hver side, så liggende blir liggende og stående blir stående. */
 .tid-tip {
   position: fixed;
-  z-index: 2000;
+  z-index: var(--z-tooltip);
   pointer-events: none;
   width: max-content;
   max-width: 200px;
   padding: 8px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-m);
   box-shadow: var(--shadow-lg);
 }
 .tid-tip img {
@@ -2764,7 +3056,7 @@ button.vk-cell:focus-visible {
   height: auto;
   max-width: 168px;
   max-height: 168px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   margin: 0 auto 7px;
 }
 .tid-tip-name { font-size: 0.84rem; font-weight: 600; color: var(--text); }
@@ -2776,7 +3068,7 @@ button.vk-cell:focus-visible {
    (.sh-hot) beholder familiefargen som anker for stjernebildet.
    NB: ingen transition på fill her — Chrome låser transisjonen på startverdien
    når fill går fra presentasjonsattributt til CSS-verdi (gråtonen slo aldri inn). */
-#sh-svg.sh-focusmode .sh-star:not(.sh-hot) circle:not(.sh-halo) { fill: var(--muted-2, #7d9885); fill-opacity: 0.3; }
+#sh-svg.sh-focusmode .sh-star:not(.sh-hot) circle:not(.sh-halo) { fill: var(--muted-2, var(--muted-2)); fill-opacity: 0.3; }
 #sh-svg.sh-focusmode .sh-star:not(.sh-hot) .sh-starlbl { fill: var(--muted); opacity: 0.55; }
 #sh-svg.sh-focusmode .sh-root { opacity: 0.35; }
 #sh-svg.sh-focusmode .sh-lineage { opacity: 0.4; }
@@ -2789,9 +3081,9 @@ button.vk-cell:focus-visible {
 .sh-focus-panel {
   position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2;
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  background: var(--surface, #fff); border: 1px solid var(--line-strong);
-  border-radius: 10px; padding: 8px 12px; font-size: 0.85rem; color: var(--text);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08); pointer-events: auto;
+  background: var(--surface, var(--surface)); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m); padding: 8px 12px; font-size: 0.85rem; color: var(--text);
+  box-shadow: 0 2px 8px rgba(var(--black-rgb), 0.08); pointer-events: auto;
 }
 .sh-fp-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
 .sh-fp-meta { color: var(--muted); font-size: 0.8rem; }
@@ -2806,7 +3098,7 @@ html.pensum-locked body > *:not(#pass-gate) { display: none !important; }
 html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 
 .pass-gate {
-  position: fixed; inset: 0; z-index: 300;
+  position: fixed; inset: 0; z-index: var(--z-pass-gate);
   display: flex; align-items: center; justify-content: center;
   background: var(--bg); padding: 24px;
 }
@@ -2838,7 +3130,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .gen-kryss-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 2px 12px; margin-top: 8px; max-height: 220px; overflow-y: auto; }
 .gen-kryss { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
-.gen-blokk { border-left: 3px solid var(--danger, #dc2626); padding: 2px 0 2px 10px; margin: 0 0 12px; border-radius: 0; }
+.gen-blokk { border-left: 3px solid var(--danger, var(--danger-solid)); padding: 2px 0 2px 10px; margin: 0 0 12px; border-radius: 0; }
 .gen-blokk p { margin: 0 0 2px; }
 
 /* Podkast-episode som ikke lot seg spille av: en forklaring med direktelenke
@@ -2847,7 +3139,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 
 /* Arbeidsforklaringen øverst i Instrumenter-kortet. Sammenleggbar, dempet
    ramme: den skal kunne stå åpen uten å ta oppmerksomheten fra innholdet. */
-.instr-guide { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 0 0 16px; background: var(--surface-2); }
+.instr-guide { border: 1px solid var(--line); border-radius: var(--radius-m); padding: 10px 12px; margin: 0 0 16px; background: var(--surface-2); }
 .instr-guide > summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; }
 .instr-guide p { margin: 8px 0 6px; font-size: 0.86rem; color: var(--muted); }
 .instr-guide ol { margin: 0; padding-left: 20px; font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
@@ -2871,7 +3163,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 .gxb-node:focus { outline: none; }
 .gxb-node:focus-visible .gxb-pill {
   stroke-width: 5;
-  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 0 3px rgba(var(--black-rgb), 0.45));
 }
 
 
@@ -2893,7 +3185,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 }
 .sp-rad {
   position: relative; display: block; width: 100%; height: 40px;
-  padding: 0; border: 0; border-radius: 6px;
+  padding: 0; border: 0; border-radius: var(--radius-xs);
   background: none; font: inherit; color: inherit; cursor: pointer;
 }
 @media (hover: hover) {
@@ -2901,7 +3193,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 }
 .sp-rad:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* min-width: en gyldig periode skal alltid synes, også når den er kort. */
-.sp-stolpe { position: absolute; bottom: 7px; height: 11px; min-width: 3px; border-radius: 2px; z-index: 2; }
+.sp-stolpe { position: absolute; bottom: 7px; height: 11px; min-width: 3px; border-radius: calc(var(--radius-2xs) - 1px); z-index: 2; }
 .sp-navn {
   position: absolute; bottom: 20px; white-space: nowrap; z-index: 2;
   font-size: 0.8rem; font-weight: 700; line-height: 1.2; color: var(--text);
@@ -2921,7 +3213,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
    plass og skrift som tallene, med litt luft rundt for et større klikkområde. */
 .sp-akse .sp-tiar {
   position: absolute; top: 3px; transform: translateX(-50%);
-  padding: 3px 4px; border: 0; border-radius: 5px; background: none;
+  padding: 3px 4px; border: 0; border-radius: calc(var(--radius-xs) - 1px); background: none;
   font: inherit; font-size: 0.74rem; line-height: 1.2; color: var(--muted); cursor: pointer;
 }
 .sp-akse .sp-tiar:hover, .sp-akse .sp-tiar:focus-visible { color: var(--accent-2); text-decoration: underline; }
@@ -2929,7 +3221,7 @@ html.pensum-locked, html.pensum-locked body { background: var(--bg); }
 /* Fargeprøven og teksten den forklarer brytes alltid sammen. */
 .sp-forklaring-par { display: inline-flex; align-items: center; gap: 8px; }
 .sp-toning {
-  display: inline-block; width: 44px; height: 9px; border-radius: 2px;
+  display: inline-block; width: 44px; height: 9px; border-radius: calc(var(--radius-2xs) - 1px);
   background: linear-gradient(to right, var(--muted) 45%, transparent);
 }
 
@@ -3164,7 +3456,7 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
   display: block; width: 100%; padding: 0; border: 0; background: none;
   font: inherit; color: inherit; text-align: center; cursor: pointer;
 }
-.ga-bilde { display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 10px; background: var(--surface-2); }
+.ga-bilde { display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--radius-m); background: var(--surface-2); }
 .ga-bilde img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; }
 .ga-tom {
   display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
@@ -3172,7 +3464,7 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
 }
 .ga-navn { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.3; color: var(--text); }
 .ga-kort:hover .ga-navn, .ga-kort:focus-visible .ga-navn { color: var(--accent-2); text-decoration: underline; }
-.ga-kort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 10px; }
+.ga-kort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius-m); }
 /* På lerretet følger bildestørrelsen detaljnivået (v6.00; antallet fra
    v6.03, brukerønske 2026-10-02): 6 bilder i bredden på nivå 1, 8 på nivå 2,
    10 på nivå 3. Navnene følger bildestørrelsen. */
@@ -3294,7 +3586,7 @@ body.presentasjon .modal-backdrop > .modal.modal-yt-boks {
    når pekeren står der eller fokus er i den; tidsraden og reservelenka
    hører til planleggingen og er ute av bildet. Knappen i tittellinja går
    tilbake til kortet (yt-spiller.js). */
-body.presentasjon #modal-yt.yt-kino { background: #000; padding: 0; }
+body.presentasjon #modal-yt.yt-kino { background: var(--media-bg); padding: 0; }
 /* Verktøylinja og samlelinja ligger ellers over YouTubes kontroller nederst
    i videoen (audit v5.42 funn 35). I kino løftes de over kontrollstripa
    (ca. 48 px), så YouTubes knapper kan brukes, og de dempes til pekeren
@@ -3305,7 +3597,7 @@ body.presentasjon:has(#modal-yt.yt-kino.open) :is(#pres-bar, #samle-bar):is(:hov
 body.presentasjon #modal-yt.yt-kino > .modal.modal-yt-boks {
   position: relative; display: flex; align-items: center; justify-content: center;
   width: 100%; max-width: none; height: 100%; max-height: 100%;
-  padding: 0; border-radius: 0; background: #000; box-shadow: none; overflow: hidden;
+  padding: 0; border-radius: 0; background: var(--media-bg); box-shadow: none; overflow: hidden;
   /* Videoen kommer rett på skjermen: kortenes innglidning (rise) ville
      startet bildet 8 px for lavt. */
   animation: none;
@@ -3316,13 +3608,13 @@ body.presentasjon #modal-yt.yt-kino > .modal.modal-yt-boks {
 #modal-yt.yt-kino .modal-head {
   position: absolute; top: 0; left: 0; right: 0; z-index: 2; margin: 0;
   padding: 0.6rem 1rem 1.6rem;
-  background: linear-gradient(rgba(0, 0, 0, 0.75), transparent);
+  background: linear-gradient(var(--media-head-bg), transparent);
   opacity: 0; transition: opacity 0.2s;
 }
 #modal-yt.yt-kino .modal-head:hover,
 #modal-yt.yt-kino .modal-head:focus-within { opacity: 1; }
-#modal-yt.yt-kino .modal-head h2 { color: #fff; font-size: 1rem; }
-#modal-yt.yt-kino .modal-head .btn { color: #fff; background: transparent; border-color: rgba(255, 255, 255, 0.35); }
+#modal-yt.yt-kino .modal-head h2 { color: var(--on-media); font-size: 1rem; }
+#modal-yt.yt-kino .modal-head .btn { color: var(--on-media); background: transparent; border-color: var(--on-media-line); }
 
 /* Innovasjonskortets bilde er et lite miniatyrbilde i margen i appen. På
    lerretet vokser det, og renderTechDetail ber da om en bredere thumbnail. */
@@ -3362,7 +3654,7 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 
 /* Svart skjerm (v5.38, tasten B eller «.»): over ALT, også verktøylinja,
    så lerretet er helt mørkt mens klassen diskuterer. Pekeren skjules. */
-#pres-svart { position: fixed; inset: 0; z-index: 100000; background: #000; cursor: none; }
+#pres-svart { position: fixed; inset: 0; z-index: var(--z-blackout); background: var(--blackout); cursor: none; }
 
 /* Lerret på annen skjerm (v6.50, js/visning/lerret.js): lerretvinduet viser
    bare innholdet. Verktøylinja, varsler, kjøreplan-pillen og notatene er
@@ -3372,10 +3664,10 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 body.pres-lerret :is(#pres-bar, #pres-varsel, #aktiv-plan-pille, #samle-bar, #pres-notater) { display: none !important; }
 body.pres-lerret, body.pres-lerret * { cursor: none !important; }
 body.pres-lerret * { pointer-events: none !important; }
-#pres-bar #pres-lerret.aktiv { background: #dcfce7; border-color: #86efac; color: #166534; }
+#pres-bar #pres-lerret.aktiv { background: var(--surface-accent-strong); border-color: var(--line-accent); color: var(--text-accent); }
 /* Slektstreet på lerretet (v6.52): tre.html i en ramme over hele forsiden,
    så lerretet blir stående i fullskjerm når styringen går inn i treet. */
-#lerret-tre { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: 99998; background: var(--bg); }
+#lerret-tre { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; z-index: var(--z-canvas-frame); background: var(--bg); }
 #lerret-tre[hidden] { display: none; }
 
 /* Private notater (v6.50, js/visning/pres-notater.js): et lite kort oppå
@@ -3383,12 +3675,12 @@ body.pres-lerret * { pointer-events: none !important; }
    Faste piksler som verktøylinja: rot-skalaen i visningen skal ikke blåse
    det opp. */
 #pres-notater {
-  position: fixed; left: 14px; bottom: 14px; z-index: 100001;
+  position: fixed; left: 14px; bottom: 14px; z-index: var(--z-notes);
   width: min(30rem, calc(100vw - 28px)); max-height: 55vh; overflow: auto;
   font-size: 16px; line-height: 1.45;
   background: var(--surface); color: var(--text);
-  border: 1px solid var(--line-strong); border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(20, 21, 42, 0.22); padding: 12px 14px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-l);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.22); padding: 12px 14px;
 }
 #pres-notater .pn-hode { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 #pres-notater .pn-tittel { font-size: 13px; color: var(--muted); }
@@ -3408,7 +3700,7 @@ body.pres-lerret * { pointer-events: none !important; }
 .modal-timeliste .timeliste-kontekst { margin: 0 0 10px; font-size: 0.9rem; }
 .modal-timeliste .timeliste-skjema { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; margin: 0 0 8px; }
 .modal-timeliste .timeliste-skjema label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
-.modal-timeliste .timeliste-skjema input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 1rem; color: var(--text); background: var(--surface); }
+.modal-timeliste .timeliste-skjema input { padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-s); font: inherit; font-size: 1rem; color: var(--text); background: var(--surface); }
 .modal-timeliste .timeliste-hint { margin: 0 0 6px; font-size: 0.85rem; }
 .timeliste-liste { list-style: none; margin: 8px 0 0; padding: 0; }
 .timeliste-rad { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
@@ -3427,7 +3719,7 @@ body.pres-lerret * { pointer-events: none !important; }
 .pres-taster dd { margin: 0; }
 .pres-taster kbd, .pres-panel-tips kbd {
   display: inline-block; min-width: 1.6em; padding: 0.05em 0.45em;
-  border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 6px;
+  border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: var(--radius-xs);
   background: var(--surface-2); color: var(--text);
   font: inherit; font-size: 0.85em; text-align: center; line-height: 1.5;
 }
@@ -3447,21 +3739,21 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
   /* Fast størrelse (v5.36): verktøy, ikke innhold. Rot-skalaen følger
      skjermbredden i presentasjon, og linja skal ikke vokse med den. */
   font-size: 15px;
-  position: fixed; right: 14px; bottom: 14px; z-index: 99999;
+  position: fixed; right: 14px; bottom: 14px; z-index: var(--z-bar);
   display: flex; gap: 6px; align-items: center;
   background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: 999px; padding: 6px 8px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+  border-radius: var(--radius-pill); padding: 6px 8px;
+  box-shadow: var(--shadow-float);
 }
 .pres-knapp {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 32px; height: 32px; padding: 0 9px;
-  border: 1px solid var(--line); border-radius: 999px;
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
   background: var(--surface); color: var(--text);
   font: inherit; font-size: 0.9em; cursor: pointer;
 }
 .pres-knapp:hover { border-color: var(--line-strong); background: var(--surface-2); }
-.pres-knapp.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pres-knapp.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 /* «Legg til her» (v5.37) er deaktivert til et kort som kan bli stopp ligger
    øverst. Svak, men synlig: knappen skal ikke hoppe ut og inn av linja. */
 .pres-knapp:disabled { opacity: 0.35; cursor: default; }
@@ -3474,8 +3766,8 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
   position: absolute; right: 0; bottom: calc(100% + 10px);
   width: min(360px, calc(100vw - 40px)); max-height: 62vh; overflow: auto;
   background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: 14px; padding: 14px; text-align: left;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-xl); padding: 14px; text-align: left;
+  box-shadow: var(--shadow-popover);
 }
 .pres-panel-hode {
   margin: 0 0 8px; font-size: 0.75em; font-weight: 600;
@@ -3488,24 +3780,24 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 
 /* Innebygd YouTube-spiller. */
 .modal-yt-boks { width: min(960px, 92vw); }
-.yt-ramme { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
+.yt-ramme { position: relative; aspect-ratio: 16 / 9; background: var(--media-bg); border-radius: var(--radius-m); overflow: hidden; }
 .yt-ramme iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 /* Inn- og uttoning (v6.40, yt-spiller.js): et svart lag over videoen.
    Gjennomsiktig til spilleren slår toningen på, og slipper klikk gjennom til
    YouTubes egne knapper. Varigheten settes per toning. */
-.yt-svart { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0ms linear; }
+.yt-svart { position: absolute; inset: 0; background: var(--media-bg); opacity: 0; pointer-events: none; transition: opacity 0ms linear; }
 /* Uttoning etter lukking: modalen er lukket, men står synlig over det som
    åpnes etterpå til bildet er svart, uten å ta imot klikk. */
-#modal-yt.yt-uttoning { display: flex; pointer-events: none; z-index: 101; }
+#modal-yt.yt-uttoning { display: flex; pointer-events: none; z-index: var(--z-modal-fade); }
 .yt-reserve { margin: 10px 0 0; font-size: 0.85rem; }
 /* YouTube nekter avspilling i appen (v5.77): tydelig melding med reserven som knapp. */
-.yt-feil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--line-strong); border-left: 4px solid var(--warn); border-radius: 10px; background: var(--surface-2); font-size: 0.9rem; }
+.yt-feil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--line-strong); border-left: 4px solid var(--warn); border-radius: var(--radius-m); background: var(--surface-2); font-size: 0.9rem; }
 .yt-feil[hidden] { display: none; }
 .yt-feil .btn { text-decoration: none; }
 #modal-yt.yt-kino .yt-feil { display: none; }
 /* Starttidspunkt-raden (v5.29). */
 .yt-tidrad { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; font-size: 0.88rem; }
-.yt-tidrad input { width: 5.5em; padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.yt-tidrad input { width: 5.5em; padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--radius-s); font: inherit; }
 .yt-tidrad input.yt-tid-feil { border-color: var(--danger); }
 .yt-tid-hint { font-size: 0.8rem; }
 .yt-tidrad[hidden] { display: none; }
@@ -3517,7 +3809,7 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 }
 .pres-adm-navn { flex: 1; min-width: 200px; }
 .pres-adm-knapper { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.pres-adm-knapper select { font: inherit; font-size: 0.82rem; padding: 5px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); }
+.pres-adm-knapper select { font: inherit; font-size: 0.82rem; padding: 5px 6px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--surface); color: var(--text); }
 .pres-adm-feil { color: var(--danger); font-size: 0.85em; margin-left: 6px; }
 .pres-adm-leggtil { display: flex; gap: 8px; margin-top: 12px; }
 .pres-adm-leggtil input { flex: 1; }
@@ -3533,10 +3825,10 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .pres-klokke { font-size: 0.85em; color: var(--muted); font-variant-numeric: tabular-nums; padding: 0 4px; }
 /* Varselet på lerretet (v5.75): et stopp som ikke finnes lenger. */
 #pres-varsel {
-  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999;
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: var(--z-bar);
   max-width: min(640px, calc(100vw - 40px)); padding: 10px 16px;
   background: var(--surface); color: var(--text); border: 1px solid var(--danger);
-  border-radius: 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14); font-size: 15px;
+  border-radius: var(--radius-l); box-shadow: var(--shadow-float); font-size: 15px;
 }
 #pres-varsel[hidden] { display: none; }
 /* «Spill alle lytteeksemplene» på oversiktskortet. */
@@ -3545,7 +3837,7 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 /* Editoren (v5.75): søk for å legge til stopp, dra og slipp, «Vis». */
 .pres-adm-stopprad { cursor: grab; }
 .pres-adm-stopprad.pres-adm-drar { opacity: 0.45; }
-.pres-adm-stopprad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 8px; }
+.pres-adm-stopprad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: var(--radius-s); }
 .pres-adm-grep { flex: none; color: var(--muted-2); display: inline-flex; align-items: center; padding: 0 2px; }
 .pres-adm-lenkeknapp { font: inherit; font-size: 0.8rem; color: var(--accent-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .pres-adm-sok { margin-top: 12px; }
@@ -3554,7 +3846,7 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .pres-adm-treff {
   display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left;
   font: inherit; font-size: 0.88rem; color: var(--text); background: var(--surface-2);
-  border: 1px solid transparent; border-radius: 9px; padding: 6px 10px; cursor: pointer;
+  border: 1px solid transparent; border-radius: calc(var(--radius-m) - 1px); padding: 6px 10px; cursor: pointer;
 }
 .pres-adm-treff:hover { border-color: var(--accent); }
 .pres-adm-treff.er-med { opacity: 0.75; }
@@ -3581,13 +3873,13 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .vis-paa {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 12px; margin-bottom: 14px;
-  border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface-2);
 }
 .vis-fri { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .vis-fri .muted { font-size: 0.88rem; }
 .vis-fri kbd {
   display: inline-block; min-width: 1.4em; padding: 0 0.35em;
-  border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px;
+  border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: calc(var(--radius-xs) - 1px);
   background: var(--surface-2); font: inherit; font-size: 0.85em; text-align: center;
 }
 .vis-hode {
@@ -3600,10 +3892,10 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 /* «Legg til i kjøreplan»-menyen på lenkeknappen (v5.26, kun lærer-innlogging).
    Ankres i .modal-head (position:relative) og legger seg under tittellinja. */
 .lenke-meny {
-  position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: var(--z-menu);
   min-width: 250px; max-width: 330px;
   background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: 12px; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius-l); box-shadow: var(--shadow-popover);
   padding: 8px; font-weight: 400;
 }
 .lenke-meny-hode {
@@ -3613,23 +3905,23 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .lenke-meny-ok { text-transform: none; letter-spacing: 0; font-size: 0.88rem; color: var(--accent-2); margin: 6px; }
 .lenke-meny-valg {
   display: block; width: 100%; text-align: left; font: inherit; font-size: 0.88rem;
-  padding: 7px 8px; border: 0; background: none; border-radius: 8px;
+  padding: 7px 8px; border: 0; background: none; border-radius: var(--radius-s);
   cursor: pointer; color: var(--text);
 }
 .lenke-meny-valg:hover { background: var(--surface-2); }
-.lenke-meny-ny { color: var(--muted); margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; padding-top: 9px; }
+.lenke-meny-ny { color: var(--muted); margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 var(--radius-s) var(--radius-s); padding-top: 9px; }
 
 /* Samleøkta (v5.27): linja nede til VENSTRE (presentasjonslinja bor til
    høyre) + plussknappen i kortenes tittellinje under plukk-modus. */
 #samle-bar {
-  position: fixed; left: 14px; bottom: 14px; z-index: 99999;
+  position: fixed; left: 14px; bottom: 14px; z-index: var(--z-bar);
   display: flex; gap: 8px; align-items: center;
   background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: 999px; padding: 6px 10px; font-size: 0.88rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+  border-radius: var(--radius-pill); padding: 6px 10px; font-size: 0.88rem;
+  box-shadow: var(--shadow-float);
 }
 .samle-rec {
-  width: 10px; height: 10px; border-radius: 50%; background: #dc2626; flex: none;
+  width: 10px; height: 10px; border-radius: 50%; background: var(--rec); flex: none;
   animation: samle-puls 1.2s ease-in-out infinite;
 }
 @keyframes samle-puls { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -3644,7 +3936,7 @@ body.samler-plukk .kort-pluss {
   border-radius: 50%; border: 1px solid var(--accent-2); background: var(--surface);
   color: var(--accent-2); cursor: pointer;
 }
-body.samler-plukk .kort-pluss:hover { background: var(--accent-2); color: #fff; }
+body.samler-plukk .kort-pluss:hover { background: var(--accent-2); color: var(--on-accent); }
 .kort-pluss svg { display: block; }
 .result-row .kort-pluss { margin-left: auto; }
 /* Den aktive kjøreplanen (v5.76, js/plan-meny.js): samme plussknapper som i
@@ -3655,7 +3947,7 @@ body.har-aktiv-plan .kort-pluss {
   border-radius: 50%; border: 1px solid var(--accent-2); background: var(--surface);
   color: var(--accent-2); cursor: pointer;
 }
-body.har-aktiv-plan .kort-pluss:hover { background: var(--accent-2); color: #fff; }
+body.har-aktiv-plan .kort-pluss:hover { background: var(--accent-2); color: var(--on-accent); }
 /* «Vis»-knappen på artistkortene i «Finn artister» (v5.81): bare i
    presentasjonsmodus, der den åpner artisten på lerretet (nivå 1–3). */
 .kort-vis { display: none; }
@@ -3665,7 +3957,7 @@ body.presentasjon .kort-vis {
   border-radius: 50%; border: 1px solid var(--accent-2); background: var(--surface);
   color: var(--accent-2); cursor: pointer;
 }
-body.presentasjon .kort-vis:hover { background: var(--accent-2); color: #fff; }
+body.presentasjon .kort-vis:hover { background: var(--accent-2); color: var(--on-accent); }
 .kort-vis svg { display: block; }
 /* Bredere artistkort i «Finn artister» under visning (v5.81, brukerkrav
    2026-09-28): minstebredden følger tekststørrelsen (rem, html.pres-modus),
@@ -3678,11 +3970,11 @@ body.laerer-okt.har-aktiv-plan .modal-head .modal-lenke-meny { display: inline-f
 body.laerer-okt.samler-plukk .modal-head .modal-lenke-meny { display: none; }
 body.laerer-okt.har-aktiv-plan .modal-head .modal-lenke { color: var(--accent-2); border-color: var(--accent-2); }
 #aktiv-plan-pille {
-  position: fixed; left: 14px; bottom: 14px; z-index: 99999;
+  position: fixed; left: 14px; bottom: 14px; z-index: var(--z-bar);
   display: flex; gap: 8px; align-items: center;
   background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: 999px; padding: 6px 8px 6px 12px; font-size: 0.88rem; color: var(--accent-2);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+  border-radius: var(--radius-pill); padding: 6px 8px 6px 12px; font-size: 0.88rem; color: var(--accent-2);
+  box-shadow: var(--shadow-float);
 }
 #aktiv-plan-pille svg { flex: none; }
 #aktiv-plan-pille .aktiv-plan-tekst { color: var(--text); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -3692,10 +3984,10 @@ body:has(#samle-bar) #aktiv-plan-pille { bottom: 64px; }
 /* Skuffen (v5.76, js/utskrift-skuff.js): utskriftsutvalget som en liste
    under skriverikonet i toppmenyen, med fjern og dra for rekkefølgen. */
 .skuff {
-  position: fixed; top: 60px; right: 14px; z-index: 10000;
+  position: fixed; top: 60px; right: 14px; z-index: var(--z-drawer);
   width: min(400px, calc(100vw - 28px)); max-height: 70vh; overflow: auto;
-  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16); padding: 12px 14px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-popover); padding: 12px 14px; text-align: left;
 }
 .skuff[hidden] { display: none; }
 .skuff-hode { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.95rem; }
@@ -3705,11 +3997,11 @@ body:has(#samle-bar) #aktiv-plan-pille { bottom: 64px; }
 .skuff-rad { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--line); cursor: grab; }
 .skuff-rad:first-child { border-top: 0; }
 .skuff-rad.pres-adm-drar { opacity: 0.45; }
-.skuff-rad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 8px; }
+.skuff-rad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: var(--radius-s); }
 .skuff-grep { flex: none; color: var(--muted-2); display: inline-flex; }
 .skuff-type { flex: none; min-width: 78px; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .skuff-navn { flex: 1; font-size: 0.88rem; }
-.skuff-fjern { flex: none; font: inherit; font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid transparent; border-radius: 6px; padding: 1px 6px; cursor: pointer; }
+.skuff-fjern { flex: none; font: inherit; font-size: 0.8rem; color: var(--muted); background: none; border: 1px solid transparent; border-radius: var(--radius-xs); padding: 1px 6px; cursor: pointer; }
 .skuff-fjern:hover { color: var(--danger); border-color: var(--line); }
 .skuff-hint { font-size: 0.78rem; margin: 8px 0 0; }
 .skuff-tom { font-size: 0.88rem; padding: 6px 0; }
@@ -3730,8 +4022,8 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
 .nav-icon.nav-utskrift { position: relative; }
 .nav-merke {
   position: absolute; top: 1px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px;
-  border-radius: 8px; background: var(--accent); color: #fff; font-size: 0.66rem; font-weight: 700;
-  line-height: 16px; text-align: center; font-family: "Inter", system-ui, sans-serif;
+  border-radius: var(--radius-s); background: var(--accent); color: var(--on-accent); font-size: 0.66rem; font-weight: 700;
+  line-height: 16px; text-align: center; font-family: var(--font-body);
 }
 .modal-head .utskrift-ta-med { padding: 5px 9px; min-width: 34px; display: inline-flex; align-items: center; justify-content: center; margin-right: 2px; color: var(--muted); }
 .modal-head .utskrift-ta-med.er-med { color: var(--accent-2); border-color: var(--accent-2); }
@@ -3767,10 +4059,10 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
 .sj-familier { columns: 3 17rem; column-gap: 12px; }
 .sj-familie {
   break-inside: avoid; margin: 0 0 12px; padding: 10px 12px 8px;
-  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-xl);
 }
 .sj-fam-hode { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
-.sj-fam-prikk { width: 10px; height: 10px; border-radius: 3px; flex: none; background: var(--fam); }
+.sj-fam-prikk { width: 10px; height: 10px; border-radius: var(--radius-2xs); flex: none; background: var(--fam); }
 .sj-fam-navn { margin: 0; font-size: 0.98rem; font-weight: 600; }
 .sj-fam-tall { font-size: 0.74rem; color: var(--muted); }
 .sj-fam-lenke {
@@ -3780,7 +4072,7 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
 .sj-fam-lenke:hover, .sj-fam-lenke:focus-visible { text-decoration: underline; }
 .sj-rad {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 4px 4px; margin: 0 -4px;
-  border: 0; border-radius: 6px; background: none; cursor: pointer; text-align: left;
+  border: 0; border-radius: var(--radius-xs); background: none; cursor: pointer; text-align: left;
   font: inherit; font-size: 0.87rem; color: var(--text); box-sizing: content-box;
 }
 .sj-rad:hover, .sj-rad:focus-visible { background: var(--surface-2); }
@@ -3806,7 +4098,7 @@ html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-m
   font: inherit; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: color-mix(in srgb, var(--fam) 70%, black);
 }
-.meta-merke-knapp::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--fam); }
+.meta-merke-knapp::before { content: ""; width: 8px; height: 8px; border-radius: calc(var(--radius-2xs) - 1px); background: var(--fam); }
 .meta-merke-knapp:hover, .meta-merke-knapp:focus-visible { text-decoration: underline; }
 body.presentasjon .meta-merke { display: none; }
 
@@ -3855,14 +4147,14 @@ body.presentasjon .meta-merke { display: none; }
 .dv-sjangre { display: flex; flex-direction: column; gap: 1px; margin-bottom: 8px; }
 .dv-sjanger {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 5px 6px; margin: 0 -6px;
-  border: 0; border-radius: 6px; background: none; cursor: pointer; text-align: left;
+  border: 0; border-radius: var(--radius-xs); background: none; cursor: pointer; text-align: left;
   font: inherit; font-size: 0.9rem; color: var(--text); box-sizing: content-box;
 }
 .dv-sjanger:hover, .dv-sjanger:focus-visible { background: var(--surface-2); }
 .dv-prikk { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .dv-navn { flex: 1; min-width: 0; }
-.dv-varme { position: relative; flex: none; width: 64px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
-.dv-varme i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+.dv-varme { position: relative; flex: none; width: 64px; height: 6px; border-radius: var(--radius-2xs); background: var(--surface-2); overflow: hidden; }
+.dv-varme i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--radius-2xs); }
 .dv-artist { padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--text); }
 .dv-artist:hover, .dv-artist:focus-visible { color: var(--accent-2); text-decoration: underline; }
 
@@ -3902,7 +4194,7 @@ body.presentasjon .meta-merke { display: none; }
 .instr-artister { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0; padding: 0 6px 0 0; list-style: none; }
 .instr-artist {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; width: 100%;
-  padding: 3px 4px; margin: 0 -4px; border: 0; border-radius: 6px; background: none;
+  padding: 3px 4px; margin: 0 -4px; border: 0; border-radius: var(--radius-xs); background: none;
   cursor: pointer; text-align: left; font: inherit; font-size: 0.86rem; line-height: 1.35; color: var(--text);
   box-sizing: content-box;
 }
@@ -3928,7 +4220,7 @@ body.presentasjon .meta-merke { display: none; }
 #ps-body > .facts p { font-size: 0.88rem; }
 .ps-artist-aar { flex: none; width: 2.6rem; font-size: 0.76rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ps-skjult .instr-artist-navn { color: var(--muted); }
-.ps-skjult-merke { font-size: 0.7rem; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+.ps-skjult-merke { font-size: 0.7rem; color: var(--muted); border: 1px solid var(--line); border-radius: calc(var(--radius-2xs) + 1px); padding: 0 4px; margin-left: 4px; }
 .pss-liste {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 10px;
@@ -3936,11 +4228,11 @@ body.presentasjon .meta-merke { display: none; }
 .pss-kort {
   display: flex; align-items: center; gap: 14px; width: 100%; height: 100%;
   padding: 12px 14px; text-align: left; font: inherit; color: var(--text); cursor: pointer;
-  background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface, var(--surface)); border: 1px solid var(--line); border-radius: var(--radius-m);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.pss-kort:hover, .pss-kort:focus-visible { border-color: #b45309; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06); }
-.pss-aar { flex: none; min-width: 2.8rem; font-size: 0.95rem; font-weight: 600; color: #b45309; font-variant-numeric: tabular-nums; }
+.pss-kort:hover, .pss-kort:focus-visible { border-color: var(--link-label); box-shadow: 0 1px 6px rgba(var(--black-rgb), 0.06); }
+.pss-aar { flex: none; min-width: 2.8rem; font-size: 0.95rem; font-weight: 600; color: var(--link-label); font-variant-numeric: tabular-nums; }
 .pss-aar:empty { display: none; }
 .pss-tekst { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .pss-navn { font-weight: 600; }
@@ -3966,7 +4258,7 @@ body.presentasjon .meta-merke { display: none; }
   }
   body.tre-side:not(.presentasjon) #modal-sjanger > .modal {
     pointer-events: auto; width: min(460px, 36vw); max-width: none; height: 100vh; max-height: 100vh;
-    margin: 0; border-radius: 0; overflow-y: auto; box-shadow: -10px 0 30px rgba(20, 21, 42, 0.12);
+    margin: 0; border-radius: 0; overflow-y: auto; box-shadow: -10px 0 30px rgba(var(--shadow-rgb), 0.12);
   }
   /* I det smale panelet står artistlista under teksten. */
   body.tre-side:not(.presentasjon) #modal-sjanger .pres-sjanger-spalter { grid-template-columns: minmax(0, 1fr); }
@@ -3975,7 +4267,7 @@ body.presentasjon .meta-merke { display: none; }
 }
 /* «Les om koblingen» ved navnene i slektskapslinjene (v6.08, K2). */
 .gx-kobling-lenke {
-  display: inline-flex; vertical-align: -2px; padding: 1px 2px; border: 0; border-radius: 4px;
+  display: inline-flex; vertical-align: -2px; padding: 1px 2px; border: 0; border-radius: calc(var(--radius-2xs) + 1px);
   background: none; cursor: pointer; color: var(--muted-2);
 }
 .gx-kobling-lenke:hover, .gx-kobling-lenke:focus-visible { color: var(--accent-2); background: var(--surface-2); }
@@ -3989,7 +4281,7 @@ body.presentasjon .meta-merke { display: none; }
 .fra-timene-liste { display: flex; flex-direction: column; }
 .fra-timene-liste .sj-rad { padding: 6px 4px; }
 /* «Synlig for studentene» på Skrivebordet (U4). */
-.desk-synlighet { margin-top: 16px; border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; background: #fff; }
+.desk-synlighet { margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius-xl); padding: 10px 14px; background: var(--surface); }
 .desk-synlighet > summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
 .desk-synlighet-hint { margin: 8px 0; font-size: 0.82rem; }
 .desk-synlighet-liste { columns: 2 18rem; column-gap: 20px; }
@@ -4019,9 +4311,9 @@ body.presentasjon .meta-merke { display: none; }
      ikonrute på 36 px. */
   min-height: 0;
   padding: 6px 12px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-l);
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -4029,7 +4321,7 @@ body.presentasjon .meta-merke { display: none; }
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-.laerer-flis .laerer-flis-ikon { width: 30px; height: 30px; border-radius: 8px; }
+.laerer-flis .laerer-flis-ikon { width: 30px; height: 30px; border-radius: var(--radius-s); }
 .laerer-flis .laerer-flis-ikon svg { width: 18px; height: 18px; }
 .laerer-flis:hover { border-color: var(--line-strong); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
 .laerer-flis:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -4114,13 +4406,13 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 }
 .ar-bilde {
   display: block; aspect-ratio: 4 / 5; margin-bottom: 5px; overflow: hidden;
-  border-radius: 8px; background: var(--surface-2);
+  border-radius: var(--radius-s); background: var(--surface-2);
 }
 .ar-bilde { position: relative; }
 .ar-bilde img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; display: block; transition: transform 0.2s ease; }
 /* Prioritetsmerket på galleribildet (v6.31): samme merke som på kortene,
    litt mindre, øverst til venstre over bildet. */
-.ar-bilde .ar-prio { position: absolute; top: 5px; left: 5px; z-index: 1; padding: 2px 5px; box-shadow: 0 1px 3px rgba(20, 21, 42, 0.18); }
+.ar-bilde .ar-prio { position: absolute; top: 5px; left: 5px; z-index: 1; padding: 2px 5px; box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.18); }
 .ar-bilde .ar-prio svg { width: 13px; height: 13px; }
 .ar-kort:hover .ar-bilde img, .ar-kort:focus-visible .ar-bilde img { transform: scale(1.03); }
 .ar-initialer { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; color: var(--muted-2); }
@@ -4143,7 +4435,7 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 .sj-spalte .sj-familie { margin: 0; }
 @media (max-width: 900px) { .sj-spalter { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .sj-spalter { grid-template-columns: minmax(0, 1fr); } }
-:is(#modal-subgenre-list, #modal-undersjangre) .sj-familie { padding: 7px 10px 5px; margin-bottom: 9px; border-radius: 12px; }
+:is(#modal-subgenre-list, #modal-undersjangre) .sj-familie { padding: 7px 10px 5px; margin-bottom: 9px; border-radius: var(--radius-l); }
 :is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-hode { gap: 7px; margin-bottom: 2px; flex-wrap: nowrap; }
 :is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-navn { font-size: 1rem; }
 :is(#modal-subgenre-list, #modal-undersjangre) .sj-fam-lenke { font-size: 0.8rem; white-space: nowrap; }

@@ -81,7 +81,7 @@ student.html          Studentside: foreslå artist
 teacher.html          Lærerside (Google-innlogging): Skrivebord, Oversikt, admin
 tre.html              Slektstre-siden (bundlede bånd)
 utskrift.html         Utskrift: studentens eget hefte av valgte kort (PDF via nettleseren)
-css/styles.css        Styling (lyst, moderne tema)
+css/styles.css        Styling; HELE utseendet styres av variablene i :root øverst (se «Design»)
 css/utskrift.css      Heftet på skjerm og papir (@page, sidebrytinger)
 js/                   Modulene, i mapper etter område (alle filene: MODULKART.md)
   landing.js …        Én fil per side rett i js/, pluss gate, load-guard og version
@@ -121,6 +121,22 @@ med `status: "active"` som ikke er lærer-skjult (`priority: -1`) vises for
 studenter.
 
 ---
+
+## Design
+
+Utseendet styres fra `:root`-blokka øverst i `css/styles.css` (samlet v6.59):
+
+- **Palett** (`--green-600`, `--amber-700` …): rå fargeverdier.
+- **Roller** (`--surface`, `--text`, `--accent`, `--prio-1-bg`, `--tag-genre-bg`, `--icon-tiar` …):
+  hva fargene brukes til. Reglene bruker bare disse.
+- **Form:** skrift (`--font-body/-display/-mono`), hjørner (`--radius-2xs` til
+  `--radius-2xl`, `--radius-chip`, `--radius-pill`), skygger (`--shadow-*`) og lag (`--z-*`).
+
+Et nytt design er derfor i hovedsak endringer i den blokka. `--icon-mono` gjør
+alle kortikonene ensfargede. Skriftene lastes i `<head>` på de fem HTML-sidene.
+Sjangerfamilienes farger bærer mening og står i dataene, ikke her.
+`tests/unit/design-variabler.test.js` feiler hvis noen skriver fargekoder eller
+skriftnavn utenfor `:root`, eller bruker en variabel som ikke finnes.
 
 ## Oppsett av Firebase (ca. 5 minutter)
 

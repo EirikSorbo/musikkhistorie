@@ -217,7 +217,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
     for (const rid of n.reactions) {
       const p = nodeById.get(rid); if (!p) continue;
       lineageG.appendChild(el("line", { x1: p.x, y1: p.y, x2: n.x, y2: n.y,
-        stroke: "#d97706", "stroke-width": 1.2, "stroke-opacity": 0.4, "stroke-dasharray": "5 5" }));
+        stroke: "var(--tree-reaction,#d97706)", "stroke-width": 1.2, "stroke-opacity": 0.4, "stroke-dasharray": "5 5" }));
     }
   }
 
@@ -245,7 +245,7 @@ export function renderSjangerhimmel(container, artists, { onArtistClick, onGenre
       const isBridge = m.others.length > 0;
       const baseR = isBridge ? 6.5 : 5;
       const dot = el("circle", { cx: x, cy: y, r: baseR, fill: (n.color || famColor(n.fam)),
-        stroke: isBridge ? "var(--text,#101a13)" : "#fff", "stroke-width": isBridge ? 1.6 : 1,
+        stroke: isBridge ? "var(--text,#101a13)" : "var(--surface,#fff)", "stroke-width": isBridge ? 1.6 : 1,
         class: "sh-artdot", "data-name": m.artist.name || "" });
       dot.style.cursor = "pointer";
       const anchor = dx >= 0 ? "start" : "end";

@@ -14,7 +14,8 @@ import { escapeHtml } from "../felles/util.js";
 
 const HEAT_DECADES = DECADES;
 const HEAT_SEG = 100 / DECADES.length;   // ett tiårs bredde i prosent
-export const HEAT_NODATA = "#eef2f0";
+// Fargen står i :root (--heat-nodata). Brukes bare i stilstrenger, så var() holder.
+export const HEAT_NODATA = "var(--heat-nodata, #eef2f0)";
 
 // Cellene fargelegges i sjangerens familiefarge (fra slektstreet), mens
 // varmenivået (0–5) styrer lysheten: lyst = lite toneangivende, mørkt = mye.

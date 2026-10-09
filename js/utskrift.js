@@ -673,7 +673,7 @@ function bakteppeHtml(d) {
     ${d["tiaar.teknologi"] ? `<h3 class="h-del">Teknologi</h3>${tekst(b.teknologi)}` : ""}
     ${b.innovasjoner.length ? `<h3 class="h-del">Innovasjoner i tiåret</h3><p class="h-innov-liste">${b.innovasjoner.map((t) => `${h(t.navn)}${t.aar ? ` (${t.aar})` : ""}`).join(" · ")}</p>` : ""}
   </article>`);
-  return `<section class="h-seksjon h-nyside h-bakteppe" data-toc="bakteppe" style="--farge:#534ab7">${seksjonHode("Bakteppe", "Tiårene")}${tiaar.join("")}</section>`;
+  return `<section class="h-seksjon h-nyside h-bakteppe" data-toc="bakteppe" style="--farge:var(--icon-tiar)">${seksjonHode("Bakteppe", "Tiårene")}${tiaar.join("")}</section>`;
 }
 
 function techKortHtml(t, d, kompakt) {
@@ -698,17 +698,17 @@ function techKortHtml(t, d, kompakt) {
 
 function innovasjonerHtml(d, kompakt) {
   if (!modell.innovasjoner.length) return "";
-  return `<section class="h-seksjon h-nyside h-innovasjoner" data-toc="innovasjoner" style="--farge:#d97706">${seksjonHode("Innovasjoner", "Teknologien bak lyden")}${modell.innovasjoner.map((t) => techKortHtml(t, d, kompakt)).join("")}</section>`;
+  return `<section class="h-seksjon h-nyside h-innovasjoner" data-toc="innovasjoner" style="--farge:var(--icon-tech)">${seksjonHode("Innovasjoner", "Teknologien bak lyden")}${modell.innovasjoner.map((t) => techKortHtml(t, d, kompakt)).join("")}</section>`;
 }
 
 function instrumenterHtml() {
   if (!modell.instrumenter.length) return "";
   const deler = modell.instrumenter.map((i) => `<article class="h-instrument"><h2>${h(i.tittel)}</h2>${i.body.trim() ? rt(i.body) : mangler("Sammendraget er ikke skrevet ennå.")}</article>`);
-  return `<section class="h-seksjon h-nyside h-instrumenter" data-toc="instrumenter" style="--farge:#0f766e">${seksjonHode("Instrumenter", "Instrumentenes utvikling")}${deler.join("")}</section>`;
+  return `<section class="h-seksjon h-nyside h-instrumenter" data-toc="instrumenter" style="--farge:var(--icon-instrumenter)">${seksjonHode("Instrumenter", "Instrumentenes utvikling")}${deler.join("")}</section>`;
 }
 
 function siderHtml() {
-  return modell.sider.map((s) => `<section class="h-seksjon h-nyside h-side" data-toc="side:${h(s.id)}" style="--farge:#7c3aed">${seksjonHode("Det store bildet", s.tittel)}${s.body.trim() ? rt(s.body) : mangler("Teksten er ikke skrevet ennå.")}</section>`).join("");
+  return modell.sider.map((s) => `<section class="h-seksjon h-nyside h-side" data-toc="side:${h(s.id)}" style="--farge:var(--icon-store-bildet)">${seksjonHode("Det store bildet", s.tittel)}${s.body.trim() ? rt(s.body) : mangler("Teksten er ikke skrevet ennå.")}</section>`).join("");
 }
 
 // «Spill hele lista» (v5.74): én YouTube-lenke som spiller alle videoene i
