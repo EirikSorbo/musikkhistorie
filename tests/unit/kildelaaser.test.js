@@ -55,7 +55,8 @@ test("funn 13: omtegning hever aldri sjangerkortet over modaler oppå det", () =
 test("funn 17: mobilblokka nuller ikke main- og footer-paddingen", () => {
   const css = les("css/styles.css");
   assert.match(css, /\.wrap \{ padding-inline: 14px; \}/);
-  assert.match(css, /main \{ padding-block: 20px 50px; \}/);
+  // v6.65: toppen strammet inn (20px → 6px) da streken under toppfeltet ble borte.
+  assert.match(css, /main \{ padding-block: 6px 50px; \}/);
   assert.doesNotMatch(css, /\.wrap \{ padding: 0 14px; \}/, "korthånden slo main (spesifisitet)");
 });
 

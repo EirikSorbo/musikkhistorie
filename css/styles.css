@@ -388,7 +388,7 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; font-wei
   top: 0;
   z-index: var(--z-topbar);
   background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  /* Ingen strek under toppfeltet (v6.65, brukerønske). */
 }
 .topbar .wrap {
   display: flex;
@@ -419,7 +419,8 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; font-wei
 }
 
 /* ----- Paneler ----- */
-main { padding-block: 30px 70px; }
+/* Innholdet står tett under toppfeltet (v6.65): var 30 px før streken ble borte. */
+main { padding-block: 10px 70px; }
 /* Seksjonene er uten ramme og innrykk fra v6.60 (A2): luft og streken over
    .section-label skiller dem. */
 .panel {
@@ -2554,7 +2555,7 @@ body.is-teacher #gate { display: none; }
      (audit-funn 26/17) — «padding: 0 14px» nullet main-luften, siden .wrap
      (0,1,0) slår main (0,0,1) på <main class="wrap">. */
   .wrap { padding-inline: 14px; }
-  main { padding-block: 20px 50px; }
+  main { padding-block: 6px 50px; }
   /* Slektstre-hodet: «Åpne musicmap.info» får sin egen rad på telefon (ellers
      blir rada for bred). Overskrift + Tilbake/Lukk blir på rad 1. */
   .gx-page-head { flex-wrap: wrap; }
