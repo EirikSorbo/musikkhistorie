@@ -1272,7 +1272,10 @@ button.tag.tag-instrument:hover { border-color: var(--tag-instr-line-hover); col
 .facts-link:hover { color: var(--accent); text-decoration-color: currentColor; }
 
 /* Beslektede artister i detaljmodalen (#5) */
-.related { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+/* Uten skillestrek over (v6.62, brukerønske): luften skiller blokka fra teksten. */
+.related { margin-top: 14px; padding-top: 12px; }
+/* … og uten streken over knapperaden rett under. */
+.related + .card-foot { border-top: 0; }
 .related-head { margin: 0 0 8px; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
 .related-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .related-chip {
@@ -1924,11 +1927,11 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    står under overskriften fra v6.16 (brukervalg 2026-10-03). */
 .instr-knapper { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; justify-content: space-between; }
 .instr-knappegruppe { display: flex; gap: 8px; flex-wrap: wrap; }
-/* Skillelinjen følger tidslinjen, som ligger under teksten. */
-.instr-tl { border-top: 1px solid var(--line, var(--line-cool)); margin-top: 18px; padding-top: 6px; }
+/* Uten skillelinjer over og under tidslinjen (v6.62, brukerønske): luften skiller. */
+.instr-tl { margin-top: 18px; padding-top: 6px; }
 /* Kildene helt nederst, under tidslinja (v6.16). */
 .instr-kilder:empty { display: none; }
-.instr-kilder { border-top: 1px solid var(--line, var(--line-cool)); margin-top: 6px; padding-top: 4px; }
+.instr-kilder { margin-top: 6px; padding-top: 4px; }
 
 /* ----- Endringsforslag-liste ----- */
 .pending-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
@@ -4445,9 +4448,19 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 .ar-linje { font-size: 0.7rem; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
 .ar-sjanger { color: color-mix(in srgb, var(--accent-2) 70%, var(--muted)); }
 /* Lytt (v6.11): tre kolonner side om side; «Fra timene» brytes under. */
-.lytt-bolker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
-@media (max-width: 760px) { .lytt-bolker { grid-template-columns: minmax(0, 1fr); } }
-.lytt-bolker .sj-familie { margin: 0; }
+/* Uten rammer rundt kategoriene; en strek mellom spaltene skiller dem (v6.62,
+   brukerønske). En fjerde bolk («Fra timene») begynner en ny rad uten strek. */
+.lytt-bolker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 0; align-items: stretch; }
+.lytt-bolker .sj-familie { margin: 0; padding: 0 16px; border: 0; border-radius: 0; background: transparent; }
+.lytt-bolker .sj-familie:not(:nth-child(3n+1)) { border-left: 1px solid var(--line); }
+.lytt-bolker .sj-familie:nth-child(3n+1) { padding-left: 0; }
+.lytt-bolker .sj-familie:nth-child(3n) { padding-right: 0; }
+/* Smal skjerm: én spalte, og strekene ligger mellom bolkene i stedet. */
+@media (max-width: 760px) {
+  .lytt-bolker { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .lytt-bolker .sj-familie, .lytt-bolker .sj-familie:nth-child(n) { padding: 12px 0; border-left: 0; }
+  .lytt-bolker .sj-familie + .sj-familie { border-top: 1px solid var(--line); }
+}
 /* Sjangre og Undersjangre (v6.11, justert v6.12, brukervalg 2026-10-03):
    tette spalter, litt større tekst enn i v6.11, familiehodet på én rad med
    «Oversikt» til høyre, og årstallene (antallet i Undersjangre) høyrejustert.
