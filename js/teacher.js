@@ -249,9 +249,10 @@ function startAppInner() {
   setupPodkastAdmin();
   const btnArtister = document.getElementById("btn-t-artister");
   if (btnArtister) btnArtister.addEventListener("click", () => {
-    const listSection = document.getElementById("artist-list");
-    if (listSection) listSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    setTimeout(() => $("#f-search")?.focus(), 300);
+    // Overskriften «Artistkort» øverst, under det faste toppfeltet (v6.67;
+    // var selve lista, som la overskrift og filtre skjult under toppfeltet).
+    document.getElementById("artistkort-tittel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => $("#f-search")?.focus({ preventScroll: true }), 300);
   });
   setupTechAdmin();
 

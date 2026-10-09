@@ -163,7 +163,7 @@
   --ok: var(--emerald-500);
   --success: var(--green-600);
   --success-bg: var(--green-50);
-  --success-mark: var(--green-500);     /* sjekket kort og merkelapp */
+  --success-mark: var(--ink);           /* sjekket kort og merkelapp: blekk i A2 (v6.67), rødt er viktighetsgrad 1 */
   --danger: var(--red-500);
   --danger-solid: var(--red-600);
   --danger-text: var(--red-900);
@@ -1032,6 +1032,8 @@ textarea { resize: vertical; }
    knappelinja, som blir stående nederst i synsfeltet mens et langt steg
    rulles (der står også feilmeldingene, så de alltid synes). */
 #forslag-panel { scroll-margin-top: 80px; }
+/* Artister-kortet på lærersiden ruller hit; luft til det faste toppfeltet (v6.67). */
+#artistkort-tittel { scroll-margin-top: 80px; }
 .steg-liste {
   list-style: none;
   margin: 0 0 14px;
