@@ -2485,7 +2485,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    manifest.json, som nettleseren viser i fanen og i appvinduet (brukerkrav
    2026-09-25). Navnet er nå «Musikkhistorie». */
 a.brand { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
-.brand-icon { height: 36px; width: auto; }
+.brand-icon { height: 40px; width: auto; }   /* MUR114-logoen (v6.69) */
 
 /* Navigasjon */
 .nav { display: flex; gap: 6px; align-items: center; }
