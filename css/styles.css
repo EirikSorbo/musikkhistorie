@@ -2152,11 +2152,9 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    tidligere klistret inntil hverandre (lista hadde ingen egen regel). */
 .subgenre-tag-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* A2 (v6.60): seksjonene har ingen ramme; en strek over etiketten skiller dem, som i et trykt program. */
-.section-label { font-size: 0.8rem; color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin: 0 0 10px; border-top: 2px solid var(--text); padding-top: 8px; }
-.dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; border-top: 2px solid var(--text); padding-top: 8px; }
-/* Streken står på hele raden (med «Vis ny artist»), ikke bare under etiketten. */
-.dagens-head .section-label { border-top: 0; padding-top: 0; }
+/* Seksjonene har verken ramme (A2, v6.60) eller strek over etiketten (v6.61, brukerønske): luften skiller dem. */
+.section-label { font-size: 0.8rem; color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin: 0 0 10px; }
+.dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 
 /* ----- Skrivebord (lærer-arbeidsflyt øverst) ----- */
 .desk-inbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
@@ -2900,7 +2898,8 @@ body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
 .ai-track {
   position: relative;
   height: 0.75rem;
-  border-radius: 0.375rem;
+  /* Samme hjørner som sjangerstripene (.vk-strip), ikke pilleform (v6.61). */
+  border-radius: var(--radius-s);
   background-color: var(--surface-2);
   background-image: repeating-linear-gradient(to right,
     var(--line) 0 1px, transparent 1px 15.3846%);
@@ -2911,7 +2910,7 @@ body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
   top: 0;
   bottom: 0;
   border: 1px solid;
-  border-radius: 0.3125rem;
+  border-radius: var(--radius-s);
 }
 /* Flat ende = «fortsetter utenfor bildet»: åpent sluttår, eller en periode som
    begynner før 1900. Samme signal som de åpne blokkene i tidslinjen. */
