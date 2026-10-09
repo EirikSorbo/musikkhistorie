@@ -88,9 +88,13 @@ export function addMainGenreCheckToggle(genre) {
   });
 }
 
-export function openOversikt() {
+// Oversikt og Mangler (v6.66) tegnes sammen: tallene kommer fra samme
+// gjennomgang, og nøkkeltallet «Sjangerkoblinger» i Oversikt åpner lista i Mangler.
+function tegnOversiktOgMangler() {
   renderDashboard($("#oversikt-body"), {
     ...state,
+    manglerEl: $("#mangler-body"),
+    onOpenMangler: () => openAdminModal("modal-mangler"),
     explore: ctx.explore,
     // Samme telling som artistlista bak sjanger-popupen (meta/main/sub-match),
     // så tallet i oversikten og lista brukeren klikker seg til stemmer overens.
@@ -110,16 +114,27 @@ export function openOversikt() {
     countExamplesFor: (list) => countArtistExamples(list),
     onShowPlaylist: (title, list) => openArtistsPlaylistModal(title, list),
   });
+}
+
+export function openOversikt() {
+  tegnOversiktOgMangler();
   openAdminModal("modal-oversikt");
 }
 
-// Plateselskap-seksjonen i en ÅPEN Oversikt (v6.37): tegnes på nytt når
+// «Mangler» (v6.66, brukerønske 2026-10-09): innholdet som ikke er skrevet
+// ennå, og plateselskapene, i et eget vindu fra Innhold-flisa.
+export function openMangler() {
+  tegnOversiktOgMangler();
+  openAdminModal("modal-mangler");
+}
+
+// Plateselskap-seksjonen i et ÅPENT Mangler-vindu (v6.37, flyttet v6.66): tegnes på nytt når
 // innholdet, artistene eller avhukingen endres, så status og telling følger
 // lagringen. Bare seksjonen, så utfoldede lister ellers i Oversikten blir
 // stående. No-op når Oversikten er lukket.
 export function oppdaterOversiktPlateselskaper() {
-  if (!document.getElementById("modal-oversikt")?.classList.contains("open")) return;
-  oppdaterPlateselskapSeksjon($("#oversikt-body"), state);
+  if (!document.getElementById("modal-mangler")?.classList.contains("open")) return;
+  oppdaterPlateselskapSeksjon($("#mangler-body"), state);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,13 +1,13 @@
 // ============================================================================
 //  UI — OVERSIKT (lærer)
 // ----------------------------------------------------------------------------
-//  Pensum-oversikten i fire seksjoner: FORM (hva pensumet inneholder — tiår,
-//  sjangre, kjønn, instrument), HULL (hvor det er tynt), MANGLER (innhold
-//  som ikke er skrevet ennå) og PLATESELSKAPENE (v6.37: ett kort per selskap
-//  til gjennomgang, med Sjekk og Rediger). Ingen arbeidsflyt-tall her —
-//  moderering bor i forslags-flyten.
+//  Pensum-oversikten: FORM (hva pensumet inneholder — tiår, sjangre, kjønn,
+//  instrument) og HULL (hvor det er tynt). MANGLER (innhold som ikke er
+//  skrevet ennå, med PLATESELSKAPENE som ett av punktene: ett kort per selskap
+//  med Sjekk og Rediger) står fra v6.66 i et eget vindu (manglerEl). Ingen
+//  arbeidsflyt-tall her — moderering bor i forslags-flyten.
 //
-//  All klikk-håndtering går via ETT delegert el.onclick (tilordning, ikke
+//  All klikk-håndtering går via ETT delegert onclick per flate (tilordning, ikke
 //  addEventListener — modalen re-rendres ved hver åpning, og en lytter per
 //  åpning ville stablet seg opp).
 // ============================================================================
@@ -165,6 +165,11 @@ export function renderDashboard(el, {
   onPlateselskapCheck,
   onShowArtistList,
   onShowPlaylist,
+  // «Mangler» (v6.66, brukerønske 2026-10-09): det som ikke er skrevet ennå,
+  // med plateselskapene som ett av punktene, tegnes i et eget vindu. Uten
+  // manglerEl havner det under Oversikten som før (testene tegner slik).
+  manglerEl = null,
+  onOpenMangler,
 }) {
   const active = activeArtists(artists);
   const counts = computeCounts(artists);
@@ -351,7 +356,7 @@ export function renderDashboard(el, {
   const edgesFilled = GENEALOGY_EDGES.length - gaps.edgeDesc.length;
   const edgeX = expandList(edgeRows, GENEALOGY_EDGES.length);
 
-  el.innerHTML = `
+  const oversiktHtml = `
     <div class="ov-kick">Pensumets form</div>
     <div class="ov-kpis">
       <div class="ov-kpi">
@@ -374,7 +379,7 @@ export function renderDashboard(el, {
         <span class="ov-kpi-n">${exampleCount}</span>
         <span class="ov-kpi-l">Lytteeksempler</span>
       </div>
-      <button type="button" class="ov-kpi ov-click" data-ov-open="edges" title="Åpner lista over koblingene nederst">
+      <button type="button" class="ov-kpi ov-click" data-ov-open="edges" title="Åpner lista over koblingene i Mangler">
         <span class="ov-kpi-n">${GENEALOGY_EDGES.length}</span>
         <span class="ov-kpi-l">Sjangerkoblinger</span>
       </button>
@@ -447,7 +452,10 @@ export function renderDashboard(el, {
       </div>
     </div>
 
-    <div class="ov-kick">Innhold som mangler</div>
+  `;
+
+  const psTall = plateselskapTelling({ content, teacherChecks });
+  const manglerHtml = `
     <div class="ov-miss">
       <div class="ov-miss-item">
         <button type="button" class="ov-miss-head" ${storiesMissing.length ? `data-ov-toggle="ov-x-stories"` : `data-ov-story="${escapeHtml(historieListe[0])}"`}>
@@ -478,19 +486,31 @@ export function renderDashboard(el, {
         artistRows(gaps.badInstrument, (a) => instrumenterFor(a).map((i) => `<span class="tag">${escapeHtml(i)}</span>`).join("")))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
       ${missItem("Artister uten viktighetsgrad", utenPrio.length, artistRows(utenPrio))}
+      <div class="ov-miss-item ov-miss-bred">
+        <button type="button" class="ov-miss-head" data-ov-toggle="ov-x-plateselskaper">
+          <span>Plateselskaper</span>
+          <span id="ov-ps-telling" class="ov-count ${psTall.ok ? "ov-ok" : "ov-warn"}" title="Sjekket">${psTall.tekst}</span>
+        </button>
+        <div id="ov-x-plateselskaper" class="ov-expand" style="display:none">
+          <div id="ov-plateselskaper">${plateselskapSeksjonHtml({ artists, content, contentLoaded, teacherChecks })}</div>
+        </div>
+      </div>
     </div>
-
-    <div class="ov-kick">Plateselskaper</div>
-    <div id="ov-plateselskaper">${plateselskapSeksjonHtml({ artists, content, contentLoaded, teacherChecks })}</div>
   `;
+  if (manglerEl) {
+    el.innerHTML = oversiktHtml;
+    manglerEl.innerHTML = manglerHtml;
+  } else {
+    el.innerHTML = oversiktHtml + `<div class="ov-kick">Innhold som mangler</div>` + manglerHtml;
+  }
 
   // --- Delegert klikk-håndtering (én tilordning, overlever re-render) --------
-  el.onclick = (e) => {
+  const klikk = (e) => {
     const hit = (sel) => e.target.closest(sel);
 
     const tog = hit("[data-ov-toggle]");
     if (tog) {
-      const panel = el.querySelector(`#${tog.dataset.ovToggle}`);
+      const panel = e.currentTarget.querySelector(`#${tog.dataset.ovToggle}`);
       if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
       return;
     }
@@ -589,18 +609,21 @@ export function renderDashboard(el, {
       switch (open.dataset.ovOpen) {
         case "tech": return explore?.openTeknologi();
         case "subgenres": return explore?.openSubgenreList();
-        // Koblingene har ingen egen visning: nøkkeltallet folder ut lista som
-        // allerede står i «Innhold som mangler» og ruller ned til den.
+        // Koblingene har ingen egen visning: nøkkeltallet åpner Mangler (der
+        // lista står), folder den ut og ruller ned til den.
         case "edges": {
-          const panel = el.querySelector(`#${edgeX.id}`);
+          const panel = (manglerEl || el).querySelector(`#${edgeX.id}`);
           if (!panel) return;
           panel.style.display = "block";
-          panel.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (manglerEl) onOpenMangler?.();
+          setTimeout(() => panel.scrollIntoView({ behavior: "smooth", block: "center" }), manglerEl ? 250 : 0);
           return;
         }
       }
     }
   };
+  el.onclick = klikk;
+  if (manglerEl) manglerEl.onclick = klikk;
 }
 
 // ---------------------------------------------------------------------------
@@ -632,9 +655,23 @@ export function plateselskapSeksjonHtml({ content = {}, teacherChecks = {} }) {
     <div class="ov-ps-grid">${kort}</div>`;
 }
 
+// «Sjekket X/Y» på plateselskap-punktet i Mangler.
+function plateselskapTelling({ content = {}, teacherChecks = {} }) {
+  const sjekket = new Set(teacherChecks.plateselskaper || []);
+  const liste = selskaperSortert((id) => content?.[plateselskapSideId(id)] || null);
+  const n = liste.filter((p) => sjekket.has(p.id)).length;
+  return { tekst: `${n}/${liste.length}`, ok: liste.length > 0 && n === liste.length };
+}
+
 export function oppdaterPlateselskapSeksjon(el, data) {
   const boks = el?.querySelector("#ov-plateselskaper");
   if (boks) boks.innerHTML = plateselskapSeksjonHtml(data);
+  const telling = el?.querySelector("#ov-ps-telling");
+  if (telling) {
+    const t = plateselskapTelling(data);
+    telling.textContent = t.tekst;
+    telling.className = `ov-count ${t.ok ? "ov-ok" : "ov-warn"}`;
+  }
 }
 
 function renderGenderChart(dist) {

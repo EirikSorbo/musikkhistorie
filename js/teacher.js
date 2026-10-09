@@ -25,7 +25,7 @@ import { initExplore } from "./utforsk/explore.js";
 import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 
 import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./laerer/teacher-state.js";
-import { openDetail, addMainGenreCheckToggle, openOversikt, oppdaterOversiktPlateselskaper, setupFilters, setupEditForm } from "./laerer/teacher-artists.js";
+import { openDetail, addMainGenreCheckToggle, openOversikt, openMangler, oppdaterOversiktPlateselskaper, setupFilters, setupEditForm } from "./laerer/teacher-artists.js";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -146,6 +146,7 @@ function startAppInner() {
   // Innhold-området (v6.10, U5): de samme åpnerne som før, samlet ett sted.
   document.getElementById("btn-t-inn-sjangertre")?.addEventListener("click", openGenreAdmin);
   document.getElementById("btn-t-inn-oversikt")?.addEventListener("click", openOversikt);
+  document.getElementById("btn-t-inn-mangler")?.addEventListener("click", openMangler);
   document.getElementById("btn-t-inn-tech")?.addEventListener("click", () => openTechAdmin());
   document.getElementById("btn-t-inn-podkast")?.addEventListener("click", () => openPodkastAdmin());
   // Visning-vinduet bak presentasjonsikonet (v5.41): kjøreplanene og

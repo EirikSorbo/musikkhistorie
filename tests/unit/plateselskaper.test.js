@@ -141,7 +141,9 @@ test("lærersiden: faktafeltene lagres og importeres, og Oversikten har seksjone
   assert.match(innhold, /if \(harKildefelt\(editorTarget\)\) data\.kilder = collectRows/);
   assert.match(lesJs("teacher-import.js"), /const fakta = rensFakta\(d\.fakta\);\n\s+if \(fakta\) data\.fakta = fakta;/);
   const dash = lesJs("ui-dashboard.js");
-  assert.match(dash, /<div class="ov-kick">Plateselskaper<\/div>/);
+  // v6.66: plateselskapene er ett av punktene i Mangler-vinduet, ikke en egen seksjon.
+  assert.match(dash, /data-ov-toggle="ov-x-plateselskaper"/);
+  assert.match(html, /id="modal-mangler"[\s\S]*id="mangler-body"/);
   assert.match(dash, /onPlateselskapCheck\?\.\(id, toggleCheckBtn\(chk, "tcr-check"\)\)/);
   assert.match(lesJs("teacher-artists.js"), /setContentCheck\("plateselskaper", id, on\)/);
 });
