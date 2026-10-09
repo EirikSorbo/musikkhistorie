@@ -57,6 +57,14 @@ const klar = () => !!(state.artistsLoaded && state.genreDescsLoaded && state.con
 
 const tittelNaa = () => lesUtvalg().tittel || tittelForslag;
 
+// Vindustittelen står blank (v6.64, brukerønske), men nettleseren bruker
+// document.title som filnavn når heftet lagres som PDF. Heftets tittel settes
+// derfor bare mens utskriften pågår.
+let pdfTittel = null;
+const BLANK_TITTEL = "⠀";
+window.addEventListener("beforeprint", () => { if (pdfTittel) document.title = pdfTittel; });
+window.addEventListener("afterprint", () => { document.title = BLANK_TITTEL; });
+
 // ----------------------------------------------------------------------------
 //  Tegning (samlet per ramme: fem snapshot-hooks lander tett ved oppstart)
 // ----------------------------------------------------------------------------
@@ -816,7 +824,7 @@ function tegnHefte(u) {
         : "Legg til det du vil ha med. Søk i panelet over, eller åpne et kort i appen og trykk skriverikonet i tittellinja. Alt du velger, samles her, i den rekkefølgen pensumet er bygd opp."}</p>
       <p><a class="btn ghost small" href="index.html">Til startsiden</a></p>
     </div>`;
-    document.title = "Utskrift – Pensumforslag";
+    pdfTittel = null;
     return;
   }
   const t = tittelNaa();
@@ -837,7 +845,7 @@ function tegnHefte(u) {
     kolofonHtml(),
   ].join("");
   settSidestil(t);
-  document.title = `${t} – Utskrift`;
+  pdfTittel = `${t} – Utskrift`;
   const anslag = sideanslag();
   fyllSidetall(anslag);
   const sider = anslag?.sider || null;
