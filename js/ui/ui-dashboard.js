@@ -467,6 +467,15 @@ export function renderDashboard(el, {
       ${pageItem("Røtter før 1910", rotterOk, "rotter")}
       ${pageItem("Om historie", omHistorieOk, "omHistorie")}
       ${pageItem("Skriveveiledning", pageStatus("skriveveiledning"), "skriveveiledning")}
+      <div class="ov-miss-item ov-miss-bred">
+        <button type="button" class="ov-miss-head" data-ov-toggle="ov-x-plateselskaper">
+          <span>Plateselskaper</span>
+          <span id="ov-ps-telling" class="ov-count ${psTall.ok ? "ov-ok" : "ov-warn"}" title="Sjekket">${psTall.tekst}</span>
+        </button>
+        <div id="ov-x-plateselskaper" class="ov-expand" style="display:none">
+          <div id="ov-plateselskaper">${plateselskapSeksjonHtml({ artists, content, contentLoaded, teacherChecks })}</div>
+        </div>
+      </div>
       ${missItem("Sjangre uten beskrivelse", mainMissing.length,
         mainMissing.map((n) => nameRow(n, `data-ov-desc="${escapeHtml(n)}" data-ov-level="main"`)).join(""))}
       ${missItem("Undersjangre uten beskrivelse", subMissing.length,
@@ -486,15 +495,6 @@ export function renderDashboard(el, {
         artistRows(gaps.badInstrument, (a) => instrumenterFor(a).map((i) => `<span class="tag">${escapeHtml(i)}</span>`).join("")))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
       ${missItem("Artister uten viktighetsgrad", utenPrio.length, artistRows(utenPrio))}
-      <div class="ov-miss-item ov-miss-bred">
-        <button type="button" class="ov-miss-head" data-ov-toggle="ov-x-plateselskaper">
-          <span>Plateselskaper</span>
-          <span id="ov-ps-telling" class="ov-count ${psTall.ok ? "ov-ok" : "ov-warn"}" title="Sjekket">${psTall.tekst}</span>
-        </button>
-        <div id="ov-x-plateselskaper" class="ov-expand" style="display:none">
-          <div id="ov-plateselskaper">${plateselskapSeksjonHtml({ artists, content, contentLoaded, teacherChecks })}</div>
-        </div>
-      </div>
     </div>
   `;
   if (manglerEl) {

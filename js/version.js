@@ -5,4 +5,4 @@
 //  HTML-sidene og importkartet samme versjon (se «Cache-busting» i README).
 //  Desimalene er hundredeler: 6.99 følges av 7.00.
 // ============================================================================
-export const VERSION = "6.67";
+export const VERSION = "6.68";
