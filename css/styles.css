@@ -94,10 +94,27 @@
   --white: #ffffff;
   --black: #000000;
 
+  /* A2 «Programhefte uten rammer» (v6.60): blekk, steingrå og vermilion. */
+  --ink: #111111;
+  --ink-2: #1d1d1d;
+  --stone-50: #f6f6f3;
+  --stone-100: #f2f2ef;
+  --stone-150: #ededea;
+  --stone-200: #e6e6e2;
+  --stone-300: #d4d4cf;
+  --stone-400: #b5b5b0;
+  --stone-500: #7a7a7a;
+  --stone-600: #5c5c5c;
+  --vermilion-50: #fdeeea;
+  --vermilion-100: #fadcd4;
+  --vermilion-200: #f0b9ad;
+  --vermilion-600: #c8321a;
+  --vermilion-700: #a82a15;
+
   /* RGB-tripler for gjennomsiktige varianter: rgba(var(--x-rgb), 0.2).
      Endres --accent, må --accent-rgb følge med. */
-  --accent-rgb: 22, 163, 74;
-  --accent-3-rgb: 13, 148, 136;
+  --accent-rgb: 200, 50, 26;
+  --accent-3-rgb: 200, 50, 26;
   --shadow-rgb: 20, 21, 42;
   --text-rgb: 16, 26, 19;
   --black-rgb: 0, 0, 0;
@@ -108,39 +125,39 @@
   /* Flater */
   --bg: var(--white);
   --surface: var(--white);
-  --surface-2: #edf5ef;
-  --surface-soft: #f1f5f2;              /* ikonruter uten color-mix, flater i heftet */
-  --surface-accent: var(--green-50);    /* aktiv rad, aktivt nav-ikon, hover på merkelapp */
-  --surface-accent-strong: var(--green-100);
+  --surface-2: var(--stone-100);
+  --surface-soft: var(--stone-100);              /* ikonruter uten color-mix, flater i heftet */
+  --surface-accent: var(--vermilion-50);    /* aktiv rad, aktivt nav-ikon, hover på merkelapp */
+  --surface-accent-strong: var(--vermilion-100);
   --paper: var(--white);                /* heftet og utskriften, uansett tema */
   --paper-line: #d5dfd8;                /* skillelinjer i heftet */
   --tree-bg: var(--surface);            /* slektstreets lerret */
-  --map-bg: #f2f6f3;                    /* sjangerhimmelen, også glorien bak etikettene */
-  --heat-nodata: #eef2f0;               /* varmestriper uten data */
+  --map-bg: var(--stone-50);                    /* sjangerhimmelen, også glorien bak etikettene */
+  --heat-nodata: var(--stone-150);               /* varmestriper uten data */
   --backdrop: rgba(var(--shadow-rgb), 0.4);
   --highlight: var(--yellow-200);       /* treff i søket */
 
   /* Linjer */
-  --line: #ddeae1;
-  --line-strong: #ccddd2;
-  --line-accent: var(--green-300);
-  --line-accent-soft: var(--green-200);
+  --line: var(--stone-300);
+  --line-strong: var(--ink);
+  --line-accent: var(--vermilion-600);
+  --line-accent-soft: var(--vermilion-200);
   --line-cool: var(--gray-200);
   --line-step-visited: #bbe5c8;
 
   /* Tekst */
-  --text: #101a13;
-  --text-body: #2c2e44;                 /* brødtekst i beskrivelser og historier */
-  --muted: #4e6657;
-  --muted-2: #7d9885;
-  --text-accent: var(--green-800);
+  --text: var(--ink);
+  --text-body: var(--ink-2);                 /* brødtekst i beskrivelser og historier */
+  --muted: var(--stone-600);
+  --muted-2: var(--stone-500);
+  --text-accent: var(--vermilion-700);
   --on-accent: var(--white);            /* tekst på farget bunn */
 
   /* Aksent (grønn → emerald → teal) */
-  --accent: var(--green-600);
-  --accent-2: var(--emerald-600);
-  --accent-3: var(--teal-600);
-  --grad: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 55%, var(--accent-3) 100%);
+  --accent: var(--vermilion-600);
+  --accent-2: var(--vermilion-700);
+  --accent-3: var(--vermilion-600);
+  --grad: linear-gradient(var(--accent), var(--accent));
 
   /* Status */
   --ok: var(--emerald-500);
@@ -171,45 +188,45 @@
   --retur-line: var(--violet-200);
 
   /* Banneret øverst */
-  --banner-bg: linear-gradient(135deg, rgba(var(--accent-rgb), 0.07), rgba(var(--accent-3-rgb), 0.07));
-  --banner-line: var(--green-200);
-  --banner-text: var(--green-900);
+  --banner-bg: var(--surface);
+  --banner-line: var(--ink);
+  --banner-text: var(--ink);
 
   /* Viktighetsgrad (1 = mest sentral, skjult = -1) */
-  --prio-1-text: var(--green-800);
-  --prio-1-bg: var(--green-50);
-  --prio-1-line: var(--green-300);
-  --prio-1-ring: var(--green-200);
-  --prio-2-text: var(--sky-800);
-  --prio-2-bg: var(--sky-100);
-  --prio-2-line: var(--sky-400);
-  --prio-2-ring: var(--sky-300);
-  --prio-3-text: var(--yellow-800);
-  --prio-3-bg: var(--yellow-100);
-  --prio-3-line: var(--yellow-400);
-  --prio-3-ring: var(--amber-200);
+  --prio-1-text: var(--vermilion-700);
+  --prio-1-bg: var(--vermilion-50);
+  --prio-1-line: var(--vermilion-600);
+  --prio-1-ring: var(--vermilion-200);
+  --prio-2-text: var(--ink);
+  --prio-2-bg: var(--stone-100);
+  --prio-2-line: var(--stone-500);
+  --prio-2-ring: var(--stone-300);
+  --prio-3-text: var(--stone-600);
+  --prio-3-bg: var(--surface);
+  --prio-3-line: var(--stone-300);
+  --prio-3-ring: var(--stone-150);
   --prio-skjult-text: var(--slate-500);
   --prio-skjult-bg: var(--slate-100);
   --prio-skjult-line: var(--slate-300);
   --prio-skjult-ring: var(--slate-200);
 
   /* Merkelapper (tags) */
-  --tag-genre-text: var(--emerald-800);
-  --tag-genre-bg: var(--emerald-100);
-  --tag-genre-line: var(--emerald-300);
-  --tag-genre-bg-hover: var(--emerald-200);
-  --tag-genre-line-hover: var(--emerald-500);
-  --tag-sub-bg: var(--emerald-50);
-  --tag-sub-bg-hover: var(--emerald-100);
-  --tag-sub-line: var(--emerald-200);
+  --tag-genre-text: var(--ink);
+  --tag-genre-bg: var(--surface);
+  --tag-genre-line: var(--ink);
+  --tag-genre-bg-hover: var(--stone-100);
+  --tag-genre-line-hover: var(--vermilion-600);
+  --tag-sub-bg: var(--surface);
+  --tag-sub-bg-hover: var(--stone-100);
+  --tag-sub-line: var(--stone-400);
   --tag-empty-text: var(--gray-400);
   --tag-empty-bg: var(--gray-100);
   --tag-empty-line: var(--gray-200);
-  --tag-instr-text: var(--blue-800);
-  --tag-instr-bg: var(--blue-100);
-  --tag-instr-bg-hover: var(--blue-200);
-  --tag-instr-line: var(--blue-300);
-  --tag-instr-line-hover: var(--blue-500);
+  --tag-instr-text: var(--ink);
+  --tag-instr-bg: var(--stone-100);
+  --tag-instr-bg-hover: var(--stone-200);
+  --tag-instr-line: var(--stone-300);
+  --tag-instr-line-hover: var(--ink);
   --tag-root-text: #55635b;
   --tag-root-bg-hover: #e6ece8;
   --tag-root-line-hover: #9bada1;
@@ -217,16 +234,18 @@
   --tag-unknown-bg: var(--yellow-100);
 
   /* Lenker i løpende tekst */
-  --link-artist: var(--blue-600);
-  --link-genre: var(--emerald-600);
-  --link-tech: var(--amber-600);
-  --link-label: var(--amber-700);       /* plateselskap */
+  --link-artist: var(--ink);
+  --link-genre: var(--ink);
+  --link-tech: var(--ink);
+  --link-label: var(--ink);       /* plateselskap */
 
   /* Ikonknapper */
-  --icon-primary: var(--blue-700);
+  --icon-primary: var(--ink);
   --icon-primary-bg-hover: var(--blue-100);
   --icon-primary-line-hover: var(--blue-300);
 
+  /* A2: ensfargede ikoner i blekk. Fjern linja for å få fargene tilbake. */
+  --icon-mono: var(--ink);
   /* Ikonfargene på kortene og flisene. Sett --icon-mono (f.eks. til
      var(--text)) for å gjøre alle ikonene ensfargede på én gang. */
   --icon-artister: var(--icon-mono, var(--blue-700));
@@ -286,34 +305,34 @@
 
   /* ----- 3. FORM: skrift, hjørner, skygger, lag ----- */
 
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Archivo", "Public Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Hjørneradius. Mellomverdiene i reglene er regnet ut fra skalaen
      (calc(var(--radius-m) - 1px) = 9px), så de følger med ved en endring. */
-  --radius-2xs: 3px;
-  --radius-xs: 6px;
-  --radius-s: 8px;
-  --radius-m: 10px;                     /* knapper, felt, rader */
-  --radius-l: 12px;                     /* små kort */
-  --radius-xl: 14px;                    /* paneler */
-  --radius-2xl: 18px;                   /* store kort og vinduer */
-  --radius-chip: 100px;                 /* merkelapper og søyler */
-  --radius-pill: 999px;                 /* flytende piller og linjer */
+  --radius-2xs: 0px;
+  --radius-xs: 0px;
+  --radius-s: 2px;
+  --radius-m: 2px;                     /* knapper, felt, rader */
+  --radius-l: 2px;                     /* små kort */
+  --radius-xl: 2px;                    /* paneler */
+  --radius-2xl: 2px;                   /* store kort og vinduer */
+  --radius-chip: 2px;                 /* merkelapper og søyler */
+  --radius-pill: 2px;                 /* flytende piller og linjer */
   --radius: var(--radius-2xl);          /* eldre navn, beholdt */
   --radius-sm: var(--radius-l);         /* eldre navn, beholdt */
 
   /* Skygger */
-  --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), 0.04), 0 2px 6px rgba(var(--shadow-rgb), 0.04);
-  --shadow: 0 4px 14px rgba(var(--shadow-rgb), 0.06), 0 12px 32px rgba(var(--shadow-rgb), 0.06);
-  --shadow-lg: 0 18px 50px rgba(var(--accent-rgb), 0.14);
-  --shadow-hover: 0 2px 8px rgba(var(--black-rgb), 0.06);
-  --shadow-float: 0 6px 24px rgba(var(--black-rgb), 0.14);   /* verktøylinjer og piller nederst */
-  --shadow-popover: 0 10px 32px rgba(var(--black-rgb), 0.16); /* menyer, paneler og skuffen */
-  --shadow-accent: 0 6px 18px rgba(var(--accent-rgb), 0.32);
-  --shadow-accent-hover: 0 10px 26px rgba(var(--accent-rgb), 0.4);
-  --focus-ring: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: none;
+  --shadow-hover: 0 0 0 1px var(--ink);
+  --shadow-float: 0 0 0 1px var(--ink);   /* verktøylinjer og piller nederst */
+  --shadow-popover: 0 0 0 1px var(--ink); /* menyer, paneler og skuffen */
+  --shadow-accent: none;
+  --shadow-accent-hover: none;
+  --focus-ring: 0 0 0 2px rgba(var(--accent-rgb), 0.35);
 
   /* Lag (z-index). Rekkefølgen betyr noe: vinduene (100 og oppover, satt
      av ui-modal.js) skal under visningens linjer, svart skjerm og notater. */
@@ -355,7 +374,7 @@ body {
 
 /* Bakgrunnsskyer fjernet – ren hvit bakgrunn */
 
-h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; font-weight: 800; }
 
 /* padding-inline, IKKE korthånden: «padding: 0 22px» satte også padding-top og
    -bottom til 0, og siden main.wrap treffer begge selektorene med lik
@@ -401,13 +420,14 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 
 /* ----- Paneler ----- */
 main { padding-block: 30px 70px; }
+/* Seksjonene er uten ramme og innrykk fra v6.60 (A2): luft og streken over
+   .section-label skiller dem. */
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 0;
   border-radius: var(--radius);
-  padding: 26px;
+  padding: 26px 0;
   margin-bottom: 22px;
-  box-shadow: var(--shadow-sm);
 }
 .panel > h2 {
   margin: 0 0 18px;
@@ -1475,7 +1495,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
   border-radius: calc(var(--radius-xs) - 1px);
 }
 .retur-linje { margin-top: 4px; font-size: 0.82rem; }
-.retur-panel { padding: 14px 18px; }
+.retur-panel { padding: 14px 0; }
 /* Kodefeltet ligger på SAMME rad som knappen som åpner det. stretch gir feltet
    nøyaktig knappens høyde uansett hvordan de to er polstret. */
 .retur-kode-rad {
@@ -2092,6 +2112,8 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
   display: block;
   margin-top: 0;
 }
+/* A2: kortet i «Dagens artist» står uten ramme, rett på siden. */
+.spotlight-grid .card { border: 0; box-shadow: none; padding-left: 0; padding-right: 0; background: transparent; }
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -2130,8 +2152,11 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    tidligere klistret inntil hverandre (lista hadde ingen egen regel). */
 .subgenre-tag-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
-.section-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 10px; }
-.dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+/* A2 (v6.60): seksjonene har ingen ramme; en strek over etiketten skiller dem, som i et trykt program. */
+.section-label { font-size: 0.8rem; color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin: 0 0 10px; border-top: 2px solid var(--text); padding-top: 8px; }
+.dagens-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; border-top: 2px solid var(--text); padding-top: 8px; }
+/* Streken står på hele raden (med «Vis ny artist»), ikke bare under etiketten. */
+.dagens-head .section-label { border-top: 0; padding-top: 0; }
 
 /* ----- Skrivebord (lærer-arbeidsflyt øverst) ----- */
 .desk-inbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
@@ -2533,7 +2558,7 @@ body.is-teacher #gate { display: none; }
      blir rada for bred). Overskrift + Tilbake/Lukk blir på rad 1. */
   .gx-page-head { flex-wrap: wrap; }
   .gx-page-head .gx-musicmap { order: 1; flex-basis: 100%; }
-  .panel { padding: 18px 14px; margin-bottom: 14px; }
+  .panel { padding: 18px 0; margin-bottom: 14px; }
 
   /* Modaler fyller mer av skjermen */
   .modal-backdrop { padding: 10px; }
@@ -2748,18 +2773,18 @@ body.is-teacher #gate { display: none; }
 /* Ekstra smal: veldig gamle/små telefoner */
 @media (max-width: 380px) {
   .nav-icon { width: 32px; height: 32px; }
-  .panel { padding: 14px 12px; }
+  .panel { padding: 14px 0; }
   .modal { padding: 16px 14px; }
   .btn { padding: 8px 13px; }
   .btn.small { padding: 5px 9px; font-size: 0.78rem; }
   .btn.compact { padding: 8px 5px; font-size: 0.79rem; }
 }
 
-.artist-link, .tech-link, .genre-link, .plateselskap-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.artist-link, .tech-link, .genre-link, .plateselskap-link { cursor: pointer; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
 .artist-link { color: var(--link-artist); }
 .tech-link { color: var(--link-tech); }
 .genre-link { color: var(--link-genre); }
-.artist-link:hover, .tech-link:hover, .genre-link:hover, .plateselskap-link:hover { text-decoration-style: solid; }
+.artist-link:hover, .tech-link:hover, .genre-link:hover, .plateselskap-link:hover { color: var(--accent); }
 /* Selskapsnavn i selskapskortene (v6.38): samme rav som hubkortets ikon. */
 .plateselskap-link { color: var(--link-label); }
 

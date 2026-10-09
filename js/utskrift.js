@@ -757,7 +757,8 @@ function settSidestil(t) {
     st.id = "utskrift-sidestil";
     document.head.append(st);
   }
-  const font = "font: 7.5pt Inter, system-ui, sans-serif; color: #7d9885;";
+  // Sidetoppen i @page kan ikke lese CSS-variablene, så skrift og farge står her (samme som --font-body og --muted-2).
+  const font = "font: 7.5pt \"Public Sans\", system-ui, sans-serif; color: #7a7a7a;";
   st.textContent = `@page { @top-left { content: ${JSON.stringify(`Populærmusikkhistorie · ${t}`)}; ${font} }`
     + ` @bottom-left { content: "historieappen.no"; ${font} } @bottom-right { content: counter(page); ${font} } }\n`
     + `@page :first { @top-left { content: none; } }`;
