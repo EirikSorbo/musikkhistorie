@@ -3769,25 +3769,32 @@ body.pres-lerret * { pointer-events: none !important; }
    det opp. */
 /* Påminnelser i visningen (v6.70): kort øverst på midten, til de lukkes.
    Under svart skjerm (B), så lerretet faktisk blir svart. */
+/* Påminnelseskortene (v6.70): store og midt på skjermen, både vannrett og
+   loddrett (v6.73, brukerønske 2026-10-11). Størrelsene er i rem, så de
+   følger tekststørrelsen i visningen (A, A+, A++). Flere kort står under
+   hverandre i midten; «safe center» holder det øverste synlig hvis de ikke
+   får plass. Laget er --z-bar: over kortene, under svart skjerm. */
 #pres-paminnelser {
-  position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-  z-index: var(--z-bar); width: min(460px, calc(100vw - 32px));
-  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  position: fixed; inset: 0; z-index: var(--z-bar);
+  display: flex; flex-direction: column; align-items: center; justify-content: safe center;
+  gap: 1rem; padding: 1.5rem; pointer-events: none;
 }
 #pres-paminnelser:empty { display: none; }
 .pres-paminnelse {
-  pointer-events: auto; background: var(--surface); border: 2px solid var(--accent);
-  border-radius: var(--radius-l); box-shadow: var(--shadow-float); padding: 10px 14px 12px;
+  pointer-events: auto; width: min(40rem, 100%); max-height: calc(100vh - 3rem); overflow: auto;
+  background: var(--surface); border: 3px solid var(--accent);
+  border-radius: var(--radius-l); box-shadow: var(--shadow-float); padding: 1.4rem 1.8rem 1.7rem;
 }
 .pres-paminnelse-hode {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);
 }
 .pres-paminnelse-lukk { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.95rem; cursor: pointer; padding: 2px 4px; }
 .pres-paminnelse-lukk:hover { color: var(--text); }
-.pres-paminnelse .rt { margin-top: 4px; font-size: 1rem; line-height: 1.45; color: var(--text); }
+.pres-paminnelse .pres-paminnelse-lukk { font-size: 1.4rem; line-height: 1; padding: 0.2rem 0.4rem; }
+.pres-paminnelse .rt { margin-top: 0.6rem; font-size: 1.6rem; line-height: 1.35; color: var(--text); }
 .pres-paminnelse .rt p { margin: 0; }
-.pres-paminnelse .rt p + p { margin-top: 6px; }
+.pres-paminnelse .rt p + p { margin-top: 0.5em; }
 /* Editoren: én rad per påminnelse, teksten under. */
 .pres-adm-pam { margin-top: 18px; }
 .pres-adm-pam-rad { display: grid; grid-template-columns: auto 110px 1fr auto; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
