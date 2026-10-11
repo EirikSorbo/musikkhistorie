@@ -33,7 +33,8 @@ import { getState } from "../data/app-state.js";
 import { escapeHtml } from "../felles/util.js";
 import { onAuthChange, savePlan, deletePlan } from "../data/store.js";
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN } from "./presentasjon-modell.js";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange } from "./presentasjon-modell.js";
+import { abonnerPaminnelser, vedPaminnelseEndring, paminnelserFor, paminnelserLastet, paminnelseFeil, lagrePaminnelser } from "./paminnelser.js";
 import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js";
 import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js";
@@ -47,7 +48,7 @@ import { apneMaal } from "../utforsk/explore-apne.js";
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
 
-let kladd = null;   // { id, tittel, stopp } — settes ved Ny/Rediger, null i lista
+let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret } — settes ved Ny/Rediger, null i lista
 
 // Godtar både en full «Kopier lenke»-URL og en rå vis-verdi. («artist:x»
 // alene parses som URL med artist:-protokoll — uten vis-parameter faller den
@@ -246,6 +247,56 @@ function renderKladd() {
     </div>`;
   }).join("") : `<p class="muted">Ingen stopp ennå. Søk under, eller finn fram i appen og trykk visningsknappen i kortets tittellinje.</p>`;
   tegnKladdSok();
+  tegnPaminnelser();
+}
+
+// --- Påminnelser (v6.70, brukerbestilling 2026-10-11) -------------------------
+// Lagres for seg i samlingen notater (js/visning/paminnelser.js), ikke i selve
+// planen: planene ligger i content, som alle kan lese. Rader uten tekst
+// lagres ikke.
+
+function tegnPaminnelser() {
+  const el = document.getElementById("pres-adm-pam");
+  if (!el || !kladd) return;
+  if (!kladd.pamLastet) { el.innerHTML = `<p class="muted">Laster påminnelsene …</p>`; return; }
+  const feil = paminnelseFeil();
+  const rader = kladd.paminnelser.map((p, i) => `
+    <div class="pres-adm-pam-rad">
+      <select data-pam-type="${i}" aria-label="Når påminnelsen kommer">
+        <option value="etter" ${p.type !== "klokka" ? "selected" : ""}>Minutter etter start</option>
+        <option value="klokka" ${p.type === "klokka" ? "selected" : ""}>Klokkeslett</option>
+      </select>
+      ${p.type === "klokka"
+        ? `<input type="time" data-pam-kl="${i}" value="${escapeHtml(p.kl || "")}" aria-label="Klokkeslett" />`
+        : `<input type="number" data-pam-min="${i}" min="0" max="600" step="1" value="${escapeHtml(String(p.min ?? ""))}" aria-label="Minutter etter start" />`}
+      <label class="pres-adm-pam-lerret"><input type="checkbox" data-pam-lerret="${i}" ${p.lerret ? "checked" : ""} /> Vis også på lerretet</label>
+      <button type="button" class="btn ghost small danger" data-pam-fjern="${i}" title="Fjern påminnelsen" aria-label="Fjern påminnelsen">✕</button>
+      <textarea data-pam-tekst="${i}" rows="2" maxlength="1000" placeholder="Hva skal stå i påminnelsen?">${escapeHtml(p.tekst || "")}</textarea>
+    </div>`).join("");
+  el.innerHTML = (feil ? `<p class="pres-adm-feil">${escapeHtml(feil)}</p>` : "")
+    + (rader || `<p class="muted">Ingen påminnelser i denne planen.</p>`);
+}
+
+// Påminnelsene lander etter at editoren ble åpnet: fyll kladden, så lenge
+// læreren ikke alt har begynt å endre.
+vedPaminnelseEndring(() => {
+  if (!kladd || kladd.pamEndret) return;
+  if (!kladd.pamLastet || !kladd.paminnelser.length) {
+    kladd.paminnelser = paminnelserFor(kladd.id);
+    kladd.pamLastet = true;
+    tegnPaminnelser();
+  }
+});
+
+// Gyldige påminnelser til lagring, eller en feilmelding.
+function paminnelserTilLagring() {
+  const liste = (kladd.paminnelser || []).filter((p) => String(p.tekst || "").trim());
+  for (const [i, p] of liste.entries()) {
+    const ok = p.type === "klokka" ? /^\d\d:\d\d$/.test(p.kl || "") : Number.isFinite(Number(p.min)) && Number(p.min) >= 0 && Number(p.min) <= 600;
+    if (!ok) return { feil: `Påminnelse ${i + 1} mangler ${p.type === "klokka" ? "klokkeslett" : "antall minutter (0 til 600)"}.` };
+  }
+  if (paminnelserForLange(liste)) return { feil: "Påminnelsene har for mye tekst til sammen. Kort dem ned litt." };
+  return { liste };
 }
 
 // --- Søk for å legge til stopp (v5.75) ----------------------------------------
@@ -313,10 +364,22 @@ async function lagre() {
     laget: planerNaa()[kladd.id]?.laget || new Date().toISOString(),
     stopp: kladd.stopp,
   };
+  const pam = paminnelserTilLagring();
+  if (pam.feil) { msg(pam.feil, false); return; }
+  const id = kladd.id;
+  const pamEndret = kladd.pamEndret;
   if (!(await vakt(savePlan(kladd.id, plan)))) return;   // kladden beholdes
   kladd = null;
   renderListe();
   renderKladd();
+  if (pamEndret) {
+    try {
+      await lagrePaminnelser(id, pam.liste);
+    } catch (err) {
+      msg(`Kjøreplanen er lagret, men påminnelsene ble ikke lagret (${err?.message || err}).`, false);
+      return;
+    }
+  }
   msg("Kjøreplanen er lagret.");
 }
 
@@ -420,6 +483,12 @@ function byggModal() {
         <input type="text" id="pres-adm-lenke" placeholder="Eller lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
         <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
       </div>
+      <div class="pres-adm-pam">
+        <h3 class="vis-hode">Påminnelser</h3>
+        <p class="muted pres-adm-hint">Dukker opp når denne planen spilles: et antall minutter etter at du startet den, eller på et klokkeslett. De vises bare på din skjerm, med mindre du krysser av for lerretet. Navn på artister og sjangre blir lenker.</p>
+        <div id="pres-adm-pam"></div>
+        <button type="button" id="pres-adm-pam-ny" class="btn ghost small">Legg til påminnelse</button>
+      </div>
       <div class="add-actions" style="margin-top:14px">
         <button type="button" id="pres-adm-lagre" class="btn primary" title="Lagre (Ctrl/Cmd+S)">Lagre kjøreplanen</button>
         <button type="button" id="pres-adm-avbryt" class="btn ghost">Avbryt</button>
@@ -474,6 +543,7 @@ export function initVisning() {
   });
   onAuthChange((user) => {
     erLaerer = erLaererBruker(user);
+    if (erLaerer) abonnerPaminnelser();
     visningTikk();
   });
   // «samles nå» følger økta: Ferdig i linja kan trykkes mens vinduet står åpent.
@@ -523,7 +593,7 @@ function koblVindu(m) {
 
     if (hit("#pres-adm-ny")) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
-      kladd = { id: nyPlanId(), tittel: "", stopp: [] };
+      kladd = { id: nyPlanId(), tittel: "", stopp: [], paminnelser: [], pamLastet: true, pamEndret: false };
       renderKladd();
       document.getElementById("pres-adm-tittel")?.focus();
       return;
@@ -540,7 +610,7 @@ function koblVindu(m) {
       }
       const p = planerNaa()[id];
       if (!p) return;
-      kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })) };
+      kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false };
       renderKladd();
       return;
     }
@@ -633,12 +703,28 @@ function koblVindu(m) {
       forkastSamlinger(id);
       if (aktivPlan() === id) settAktivPlan(null);
       if (!(await vakt(deletePlan(id)))) return;
+      // Påminnelsene til planen ryddes bort (de ligger i notater).
+      if (paminnelserFor(id).length) lagrePaminnelser(id, []).catch(() => {});
       renderListe();
       msg("Kjøreplanen er slettet.");
       return;
     }
 
     if (!kladd) return;
+    if (hit("#pres-adm-pam-ny")) {
+      kladd.paminnelser.push({ id: `p${Date.now().toString(36)}`, type: "etter", min: 10, tekst: "", lerret: false });
+      kladd.pamEndret = true;
+      tegnPaminnelser();
+      document.querySelector(`[data-pam-tekst="${kladd.paminnelser.length - 1}"]`)?.focus();
+      return;
+    }
+    const pamFjern = hit("[data-pam-fjern]");
+    if (pamFjern) {
+      kladd.paminnelser.splice(Number(pamFjern.dataset.pamFjern), 1);
+      kladd.pamEndret = true;
+      tegnPaminnelser();
+      return;
+    }
     if (hit("#pres-adm-legg")) return leggTilStopp();
     if (hit("#pres-adm-lagre")) return lagre();
     if (hit("#pres-adm-avbryt")) {
@@ -749,6 +835,30 @@ function koblVindu(m) {
   m.querySelector("#pres-adm-tittel")?.addEventListener("input", (e) => {
     if (kladd) kladd.tittel = e.target.value;
   });
+
+  // Påminnelsene (v6.70): feltene skriver rett i kladden; typebyttet tegner raden på nytt.
+  const pamFelt = (e) => {
+    if (!kladd) return;
+    const t = e.target;
+    const d = t.dataset || {};
+    const p = (i) => kladd.paminnelser[Number(i)];
+    if (d.pamTekst != null && p(d.pamTekst)) p(d.pamTekst).tekst = t.value;
+    else if (d.pamMin != null && p(d.pamMin)) p(d.pamMin).min = t.value === "" ? "" : Number(t.value);
+    else if (d.pamKl != null && p(d.pamKl)) p(d.pamKl).kl = t.value;
+    else if (d.pamLerret != null && p(d.pamLerret)) p(d.pamLerret).lerret = t.checked;
+    else if (d.pamType != null && p(d.pamType)) {
+      const r = p(d.pamType);
+      r.type = t.value;
+      if (r.type === "klokka" && !r.kl) r.kl = "10:00";
+      if (r.type === "etter" && (r.min === "" || r.min == null)) r.min = 10;
+      kladd.pamEndret = true;
+      tegnPaminnelser();
+      return;
+    } else return;
+    kladd.pamEndret = true;
+  };
+  m.addEventListener("input", pamFelt);
+  m.addEventListener("change", pamFelt);
 
   // Enter i lim-inn-feltet = «Legg til stopp» (raskere flyt med mange lenker).
   m.querySelector("#pres-adm-lenke")?.addEventListener("keydown", (e) => {

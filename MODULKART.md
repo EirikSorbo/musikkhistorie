@@ -5,14 +5,14 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-102 filer i 11 mapper.
+103 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
 | `js/` | Sidene og oppsettet | 10 |
 | `js/utforsk/` | Utforsk | 21 |
 | `js/sjangre/` | Sjangrene og slektstreet | 13 |
-| `js/visning/` | Visning | 10 |
+| `js/visning/` | Visning | 11 |
 | `js/laerer/` | Lærersiden | 7 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 3 |
@@ -103,6 +103,7 @@ Presentasjonsvisningen på lerretet, kjøreplanene og Visning-vinduet bak presen
 | Fil | Hva den gjør |
 |---|---|
 | `lerret.js` | LERRET PÅ ANNEN SKJERM (v6.50, brukerbestilling 2026-10-07) |
+| `paminnelser.js` | PÅMINNELSER I VISNINGEN (v6.70, brukerbestilling 2026-10-11) |
 | `plan-innsamling.js` | SAMLEØKT — to måter å bygge en kjøreplan mens man bruker appen (v5.27) |
 | `plan-meny.js` | «LEGG TIL I KJØREPLAN»-MENYEN OG DEN AKTIVE KJØREPLANEN |
 | `pres-artist.js` | ARTISTKORTETS LERRET (v5.40) — oppsettet i presentasjonsvisningen |

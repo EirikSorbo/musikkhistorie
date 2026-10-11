@@ -995,3 +995,94 @@ export function treTransform(u, sw, sh) {
   const f = (x) => Math.round(x * 1000) / 1000;
   return `translate(${f(tx)},${f(ty)}) scale(${f(sc)})`;
 }
+
+// ----------------------------------------------------------------------------
+//  Påminnelser i en kjøreplan (v6.70, brukerbestilling 2026-10-11)
+// ----------------------------------------------------------------------------
+//  En påminnelse dukker opp som et kort i lærerens vindu, enten et visst antall
+//  minutter etter at planen ble startet («etter») eller på et klokkeslett
+//  («klokka»), og blir stående til læreren lukker den. Med «lerret» vises den
+//  også på lerretet. Lista lagres i samlingen notater (bare læreren kan lese
+//  den) under paminnelseNokkel(planId), som JSON i feltet tekst; det holder
+//  reglene for notater uendret (tekst, høyst 10 000 tegn).
+
+export const PAMINNELSE_MAKS = 20;
+export const PAMINNELSE_TEKST_MAKS = 1000;
+export const paminnelseNokkel = (planId) => `paminnelser:${planId}`;
+
+const KL = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+// Én ren påminnelse, eller null når den ikke kan brukes.
+function rensEn(p, i) {
+  if (!p || typeof p !== "object") return null;
+  const tekst = String(p.tekst || "").trim().slice(0, PAMINNELSE_TEKST_MAKS);
+  if (!tekst) return null;
+  const id = String(p.id || `p${i}`).slice(0, 40);
+  const lerret = !!p.lerret;
+  if (p.type === "klokka") {
+    const kl = String(p.kl || "").trim();
+    if (!KL.test(kl)) return null;
+    return { id, type: "klokka", kl, tekst, lerret };
+  }
+  const min = Math.round(Number(p.min));
+  if (!Number.isFinite(min) || min < 0 || min > 600) return null;
+  return { id, type: "etter", min, tekst, lerret };
+}
+
+export function rensPaminnelser(liste) {
+  if (!Array.isArray(liste)) return [];
+  const sett = new Set();
+  const ut = [];
+  liste.forEach((p, i) => {
+    const r = rensEn(p, i);
+    if (!r || sett.has(r.id)) return;
+    sett.add(r.id);
+    ut.push(r);
+  });
+  return ut.slice(0, PAMINNELSE_MAKS);
+}
+
+export function lesPaminnelser(tekst) {
+  try { return rensPaminnelser(JSON.parse(tekst || "[]")); } catch (e) { return []; }
+}
+
+// Reglene for notater tillater høyst 10 000 tegn i tekst. Editoren sier fra
+// før lagring når lista blir for lang (mange lange påminnelser).
+export const PAMINNELSE_LAGRING_MAKS = 10000;
+export const paminnelserForLange = (liste) => skrivPaminnelser(liste).length > PAMINNELSE_LAGRING_MAKS;
+
+// Tom liste blir tom tekst, så lagreNotat sletter dokumentet.
+export function skrivPaminnelser(liste) {
+  const rene = rensPaminnelser(liste);
+  return rene.length ? JSON.stringify(rene) : "";
+}
+
+// Tidspunktet påminnelsen forfaller (ms), regnet fra planens start. Et
+// klokkeslett gjelder starttidens dag og bare FRA starten: en påminnelse
+// kl. 10.15 i en visning som startet 10.20, kommer ikke.
+export function paminnelseTid(p, startMs) {
+  if (!p || !Number.isFinite(startMs)) return null;
+  if (p.type === "etter") return startMs + p.min * 60000;
+  const m = KL.exec(p.kl || "");
+  if (!m) return null;
+  const d = new Date(startMs);
+  d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+  const t = d.getTime();
+  return t >= startMs ? t : null;
+}
+
+// Påminnelsene som skal fram nå: forfalt, og ikke vist før i denne visningen.
+// I tidsrekkefølge.
+export function forfalnePaminnelser(liste, startMs, naaMs, vist = []) {
+  const allerede = new Set(vist);
+  return rensPaminnelser(liste)
+    .map((p) => ({ p, t: paminnelseTid(p, startMs) }))
+    .filter(({ p, t }) => t != null && t <= naaMs && !allerede.has(p.id))
+    .sort((a, b) => a.t - b.t)
+    .map(({ p }) => p);
+}
+
+export function paminnelseEtikett(p) {
+  if (!p) return "";
+  return p.type === "klokka" ? `Kl. ${p.kl.replace(":", ".")}` : `${p.min} min etter start`;
+}

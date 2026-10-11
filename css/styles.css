@@ -3708,6 +3708,35 @@ body.pres-lerret * { pointer-events: none !important; }
    lerretet, bare i lærerens vindu, over svart skjerm og verktøylinja.
    Faste piksler som verktøylinja: rot-skalaen i visningen skal ikke blåse
    det opp. */
+/* Påminnelser i visningen (v6.70): kort øverst på midten, til de lukkes.
+   Under svart skjerm (B), så lerretet faktisk blir svart. */
+#pres-paminnelser {
+  position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: var(--z-bar); width: min(460px, calc(100vw - 32px));
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+#pres-paminnelser:empty { display: none; }
+.pres-paminnelse {
+  pointer-events: auto; background: var(--surface); border: 2px solid var(--accent);
+  border-radius: var(--radius-l); box-shadow: var(--shadow-float); padding: 10px 14px 12px;
+}
+.pres-paminnelse-hode {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);
+}
+.pres-paminnelse-lukk { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.95rem; cursor: pointer; padding: 2px 4px; }
+.pres-paminnelse-lukk:hover { color: var(--text); }
+.pres-paminnelse .rt { margin-top: 4px; font-size: 1rem; line-height: 1.45; color: var(--text); }
+.pres-paminnelse .rt p { margin: 0; }
+.pres-paminnelse .rt p + p { margin-top: 6px; }
+/* Editoren: én rad per påminnelse, teksten under. */
+.pres-adm-pam { margin-top: 18px; }
+.pres-adm-pam-rad { display: grid; grid-template-columns: auto 110px 1fr auto; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.pres-adm-pam-rad textarea { grid-column: 1 / -1; width: 100%; font: inherit; }
+.pres-adm-pam-lerret { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+#pres-adm-pam-ny { margin-top: 8px; }
+@media (max-width: 560px) { .pres-adm-pam-rad { grid-template-columns: 1fr 1fr; } }
+
 #pres-notater {
   position: fixed; left: 14px; bottom: 14px; z-index: var(--z-notes);
   width: min(30rem, calc(100vw - 28px)); max-height: 55vh; overflow: auto;

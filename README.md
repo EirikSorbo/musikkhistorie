@@ -40,6 +40,11 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   i en ramme på lerretets forside (beholder fullskjermen), med samme utsnitt. **Private notater**
   (tasten P) til artist-, sjanger-, innovasjons- og tiårskort vises bare i
   lærerens vindu og lagres i samlingen `notater`, som bare læreren leser.
+  **Påminnelser** (v6.70) legges inn per kjøreplan i editoren: et antall
+  minutter etter at planen ble startet, eller et klokkeslett. De dukker opp
+  som kort øverst på lærerens skjerm til de lukkes, eventuelt også på
+  lerretet, og navn på artister og sjangre blir lenker. Lagres i `notater`
+  (`paminnelser:<planId>`, js/visning/paminnelser.js).
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
   «Husk visningen» per stopp. Tasten N i visningen åpner «Navn fra timen»:
   en artist som kom opp, og hvem som foreslo den, lagres til oppfølging på

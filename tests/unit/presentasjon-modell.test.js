@@ -456,7 +456,7 @@ test("«Legg til her»: knappen kun for lærerøkter, lagring på ferske planer,
   const spiller = kilde("presentasjon.js");
   assert.match(spiller, /knapp\.hidden = !\(erLaerer && plan\);/, "skjult uten lærerøkt og plan");
   // v5.96: lærerøkta styrer også Visning-kortet i huben (oppdaterHubKort).
-  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); oppdaterHubKort\(\); notaterEndret\(\); \}\);/);
+  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); oppdaterHubKort\(\); notaterEndret\(\); paminnelserAuthEndret\(\); \}\);/);
   assert.match(spiller, /const indeks = innsettingsIndeks\(stoppIdx, plan\.stopp\.length\);/);
   assert.match(spiller, /const stopp = \{ vis, nivaa \};/, "stoppet lagres med detaljnivået som vises");
   assert.match(spiller, /plan = await settInnStopp\(planId, indeks, stopp\);/);

@@ -44,6 +44,7 @@ import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
 import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet, lerretInnebygd } from "./lerret.js";
 import { initNotater, vekslNotater, redigerNotater, notaterEndret } from "./pres-notater.js";
+import { startPaminnelser, paminnelserAuthEndret, paminnelserTilLerret, visLerretPaminnelser } from "./paminnelser.js";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -75,6 +76,9 @@ const LAGRING = {
   // Alt som ble vist i økta, i rekkefølge og UTEN tak (v6.10, U1): grunnlaget
   // for «Lagre som time». Sidehistorikken over er kappet (HISTORIKK_MAKS).
   timelogg: "pensumPresTime",
+  // Påminnelsene (v6.70): når planen ble startet, og hva som er vist og lukket.
+  planStart: "pensumPresPlanStart",
+  paminnelser: "pensumPresPaminnelser",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -1267,7 +1271,7 @@ export function initPresentasjon() {
   });
   // Lærerøkta følger innloggingen også i fri visning (v5.82): «Navn fra
   // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
-  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); });
+  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); paminnelserAuthEndret(); });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;
@@ -1305,11 +1309,15 @@ export function initPresentasjon() {
 
   // Private notater (v6.50): bare i lærerens vindu.
   if (!erLerret) initNotater({ erLaererNaa: () => erLaerer });
+  // Påminnelser i kjøreplanen (v6.70): bare i lærerens vindu, og bare med plan.
+  if (!erLerret && planId) {
+    startPaminnelser({ planId, erLaererNaa: () => erLaerer, startNokkel: LAGRING.planStart, statusNokkel: LAGRING.paminnelser, vedLerretEndring: lerretEndret });
+  }
   // Lerret på annen skjerm (v6.50): styringen sender tilstanden, lerretet
   // bruker den. Lerretet åpner kortene selv; nivå, unntak, tekststørrelse,
   // QA-bryteren og svart skjerm kommer herfra.
   startLerret(rolle, {
-    tilstand: () => ({ nivaa, unntak, skala: Number(les(LAGRING.stor)) || 0, svart: erSvart(), qa: qaPaa() }),
+    tilstand: () => ({ nivaa, unntak, skala: Number(les(LAGRING.stor)) || 0, svart: erSvart(), qa: qaPaa(), paminnelser: paminnelserTilLerret() }),
     bruk: brukLerretTilstand,
     status: visLerretStatus,
     melding,
@@ -1331,4 +1339,5 @@ function brukLerretTilstand(t) {
   if (trinn !== (Number(les(LAGRING.stor)) || 0)) { skriv(LAGRING.stor, String(trinn)); brukSkala(trinn); }
   if (!!t.qa !== qaPaa()) settQA(!!t.qa);
   if (!!t.svart !== erSvart()) vekslSvart();
+  visLerretPaminnelser(t.paminnelser);
 }
