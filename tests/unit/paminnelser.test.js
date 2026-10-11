@@ -67,7 +67,7 @@ test("etiketten sier når påminnelsen kommer", () => {
 // --- v6.72: fri visning, raske påminnelser (R) og oversikten oppå stoppet (O) ---
 import { readFileSync } from "node:fs";
 import {
-  raskPaminnelse, FRI_PLAN, RASK_MAKS, nyPlanId, presTast, PRES_TASTER, PAMINNELSE_PRESET_MIN, foerHeleTimen,
+  raskPaminnelse, FRI_PLAN, RASK_MAKS, nyPlanId, presTast, PRES_TASTER, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST,
 } from "../../js/visning/presentasjon-modell.js";
 
 const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
@@ -173,4 +173,18 @@ test("Oversikt-ikonet er borte fra toppfeltet (v6.72): Oversikt er en knapp i In
     assert.doesNotMatch(nav, /title="Oversikt"/, side);
   }
   assert.match(les("teacher.html"), /id="btn-t-inn-oversikt"/, "knappen i Innhold står");
+});
+
+test("knappene «før hel time» legger rett inn med fast tekst, også over midnatt (v6.75)", () => {
+  assert.deepEqual(HEL_TIME_TEKST, ["Pause om 2 minutter", "Timen er over om 2 minutter"]);
+  const kl2330 = new Date(2026, 9, 12, 23, 30).getTime();
+  const [forste, andre] = foerHeleTimen(kl2330);
+  assert.equal(andre, new Date(2026, 9, 13, 0, 58).getTime());
+  const r = raskPaminnelse({ type: "naar", naar: andre, tekst: HEL_TIME_TEKST[1] }, kl2330);
+  assert.deepEqual(r.p, { id: `r${kl2330.toString(36)}`, type: "naar", naar: andre, tekst: "Timen er over om 2 minutter", lerret: false });
+  assert.match(raskPaminnelse({ type: "naar", naar: kl2330, tekst: "x" }, kl2330).feil, /passert/);
+  assert.equal(raskPaminnelse({ type: "naar", naar: forste, tekst: HEL_TIME_TEKST[0] }, kl2330).p.naar, forste);
+  const kilde = les("js/visning/presentasjon.js");
+  assert.match(kilde, /data-rask-hel="\$\{i\}" data-rask-naar="\$\{ms\}"/);
+  assert.match(kilde, /raskPaminnelse\(\{ type: "naar", naar, tekst, lerret: false \}\)/);
 });

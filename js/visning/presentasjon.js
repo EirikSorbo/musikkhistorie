@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -1164,8 +1164,10 @@ const kortTekst = (t) => { const r = String(t || "").replace(/\s+/g, " ").trim()
 
 // Tidsknappene (v6.74, brukerønske 2026-10-11): øverst to knapper for to
 // minutter før førstkommende hele time og timen etter, under dem hvert tiende
-// minutt pluss 15 og 45, opp til 120. En knapp åpner skjemaet med tiden fylt
-// ut; tiden kan endres der. `valg` = { type: "om" | "kl", verdi, tekst, lerret }
+// minutt pluss 15 og 45, opp til 120. En minuttknapp åpner skjemaet med tiden
+// fylt ut; tiden kan endres der. De to øverste legger påminnelsen rett inn med
+// fast tekst (HEL_TIME_TEKST, v6.75): «Pause om 2 minutter» og «Timen er over
+// om 2 minutter». `valg` = { type: "om" | "kl", verdi, tekst, lerret }
 // eller null (bare knappene). Teksten og lerretvalget står når tiden byttes.
 const klokkeVerdi = (ms) => { const d = new Date(ms); return `${toSiffer(d.getHours())}:${toSiffer(d.getMinutes())}`; };
 
@@ -1182,13 +1184,11 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
   panel.innerHTML = `
     <p class="pres-panel-hode">Ny påminnelse</p>
     <div class="pres-rask-hel" role="group" aria-label="To minutter før hel time">
-      ${hele.map((ms) => {
-        const kl = klokkeVerdi(ms);
-        return `<button type="button" class="pres-rask-preset pres-rask-preset-hel${valgt("kl", kl) ? " valgt" : ""}" data-rask-kl="${kl}" aria-pressed="${valgt("kl", kl)}">
-        <span class="pres-rask-preset-tid">Kl. ${kl.replace(":", ".")}</span>
-        <span class="pres-rask-preset-hint">2 min før kl. ${toSiffer(new Date(ms + 2 * 60000).getHours())}</span>
-      </button>`;
-      }).join("")}
+      ${hele.map((ms, i) => `<button type="button" class="pres-rask-preset pres-rask-preset-hel" data-rask-hel="${i}" data-rask-naar="${ms}"
+        title="Legger inn «${HEL_TIME_TEKST[i]}» kl. ${klokkeVerdi(ms).replace(":", ".")}">
+        <span class="pres-rask-preset-tid">Kl. ${klokkeVerdi(ms).replace(":", ".")}</span>
+        <span class="pres-rask-preset-hint">${HEL_TIME_TEKST[i]}</span>
+      </button>`).join("")}
     </div>
     <div class="pres-rask-min" role="group" aria-label="Om antall minutter">
       ${PAMINNELSE_PRESET_MIN.map((n) => `<button type="button" class="pres-rask-preset${valgt("om", n) ? " valgt" : ""}" data-rask-min="${n}" aria-pressed="${valgt("om", n)}">${n} min</button>`).join("")}
@@ -1221,24 +1221,35 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
         <button type="button" class="pres-paminnelse-lukk" data-rask-fjern="${escapeHtml(p.id)}" title="Fjern påminnelsen" aria-label="Fjern påminnelsen">✕</button></li>`).join("")}
     </ul>` : ""}`;
 
-  // En tidsknapp: skjemaet med tiden fylt ut, teksten og lerretvalget beholdes.
+  // Skjemaet slik det står nå (teksten og lerretvalget), så en omtegning ikke
+  // visker ut det som er skrevet.
+  const naaValg = (endring = {}) => (valg || endring.type) && {
+    ...valg, ...endring,
+    tekst: panel.querySelector("#pres-rask-tekst")?.value || "",
+    lerret: !!panel.querySelector("#pres-rask-lerret")?.checked,
+  };
+  // En minuttknapp: skjemaet med tiden fylt ut.
   const velg = (type, verdi) => {
-    tegnRaskPanel(panel, "", {
-      type, verdi,
-      tekst: panel.querySelector("#pres-rask-tekst")?.value || "",
-      lerret: !!panel.querySelector("#pres-rask-lerret")?.checked,
-    });
+    tegnRaskPanel(panel, "", naaValg({ type, verdi }));
     panel.querySelector("#pres-rask-tekst")?.focus();
   };
-  panel.querySelectorAll("[data-rask-kl]").forEach((b) => b.addEventListener("click", () => velg("kl", b.dataset.raskKl)));
+  // De to øverste: rett inn, med fast tekst og bare på din skjerm.
+  panel.querySelectorAll("[data-rask-hel]").forEach((b) => b.addEventListener("click", () => {
+    const tekst = HEL_TIME_TEKST[Number(b.dataset.raskHel)];
+    const naar = Number(b.dataset.raskNaar);
+    if (ventendeRaske().some((p) => p.naar === naar && p.tekst === tekst)) {
+      tegnRaskPanel(panel, `«${tekst}» står alt inne til kl. ${klokkeVerdi(naar).replace(":", ".")}.`, naaValg());
+      return;
+    }
+    const r = raskPaminnelse({ type: "naar", naar, tekst, lerret: false });
+    const ok = !r.feil && leggTilRask(r.p);
+    tegnRaskPanel(panel, ok ? `Lagt til: «${tekst}» kl. ${klokkeVerdi(naar).replace(":", ".")}.` : (r.feil || "Fikk ikke lagt til påminnelsen (høyst 20 i en visning)."), naaValg());
+    if (!ok) panel.querySelector("#pres-rask-msg")?.classList.add("feil");
+  }));
   panel.querySelectorAll("[data-rask-min]").forEach((b) => b.addEventListener("click", () => velg("om", b.dataset.raskMin)));
   panel.querySelectorAll("[data-rask-fjern]").forEach((b) => b.addEventListener("click", () => {
     fjernRask(b.dataset.raskFjern);
-    tegnRaskPanel(panel, "", valg && {
-      ...valg,
-      tekst: panel.querySelector("#pres-rask-tekst")?.value || "",
-      lerret: !!panel.querySelector("#pres-rask-lerret")?.checked,
-    });
+    tegnRaskPanel(panel, "", naaValg());
   }));
   if (!valg) return;
 

@@ -1125,6 +1125,10 @@ export const PAMINNELSE_PRESET_MIN = [10, 15, 20, 30, 40, 45, 50, 60, 70, 80, 90
 // De to knappene øverst: `minFoer` minutter før førstkommende hele time (kl.
 // 10.17 gir 10.58), og samme tid timen etter (11.58). Har tidspunktet alt
 // passert (kl. 10.59), er det neste time som gjelder. Tidspunkt i ms.
+// Teksten de to knappene legger rett inn, uten skjema (v6.75, brukerønske
+// 2026-10-11): den første er pausen, den andre slutten på timen.
+export const HEL_TIME_TEKST = ["Pause om 2 minutter", "Timen er over om 2 minutter"];
+
 export function foerHeleTimen(naaMs, minFoer = 2) {
   const d = new Date(naaMs);
   d.setMinutes(60 - minFoer, 0, 0);
@@ -1135,11 +1139,15 @@ export function foerHeleTimen(naaMs, minFoer = 2) {
 export const RASK_MAKS = 20;
 
 // { p } med en ren påminnelse, eller { feil } med teksten læreren skal se.
-export function raskPaminnelse({ type, min, kl, tekst, lerret } = {}, naaMs = Date.now()) {
+export function raskPaminnelse({ type, min, kl, naar: tid, tekst, lerret } = {}, naaMs = Date.now()) {
   const t = String(tekst || "").trim().slice(0, PAMINNELSE_TEKST_MAKS);
   if (!t) return { feil: "Skriv hva som skal stå i påminnelsen." };
   let naar;
-  if (type === "kl") {
+  if (type === "naar") {
+    // Et ferdig tidspunkt (knappene «før hel time»): virker også over midnatt.
+    naar = Math.round(Number(tid));
+    if (!Number.isFinite(naar) || naar <= naaMs) return { feil: "Tidspunktet har alt passert." };
+  } else if (type === "kl") {
     const m = KL.exec(String(kl || "").trim());
     if (!m) return { feil: "Skriv et klokkeslett, for eksempel 10:30." };
     const d = new Date(naaMs);
