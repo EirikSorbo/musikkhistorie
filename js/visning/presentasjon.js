@@ -1096,6 +1096,9 @@ function vekslPanel(modus = "innst") {
   if (!panel) return;
   if (!panel.hidden && panel.dataset.modus === modus) { skjulPanel(panel); return; }
   panel.dataset.modus = modus;
+  // Panelet bor i verktøylinja: er menyen skjult (M), kommer den fram igjen,
+  // ellers åpnet R og komma et panel ingen så (teknisk test 2026-10-12, v6.79).
+  if (document.body.classList.contains("pres-meny-skjult")) settMenySkjult(false);
   if (modus === "rask") tegnRaskPanel(panel);
   else tegnPanel(panel);
   panel.hidden = false;

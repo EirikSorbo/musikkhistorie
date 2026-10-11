@@ -191,3 +191,10 @@ test("knappene «før hel time» legger rett inn med fast tekst, også over midn
   assert.match(kilde, /data-rask-hel="\$\{i\}" data-rask-naar="\$\{ms\}"/);
   assert.match(kilde, /raskPaminnelse\(\{ type: "naar", naar, tekst, lerret: true \}\)/, "også på lerretet (v6.76)");
 });
+
+test("panelet over verktøylinja henter fram en skjult meny (M), ellers var R og komma usynlige (v6.79)", () => {
+  const kilde = les("js/visning/presentasjon.js");
+  const veksl = kilde.match(/function vekslPanel\(modus = "innst"\) \{[\s\S]*?\n\}/)?.[0] || "";
+  assert.match(veksl, /if \(document\.body\.classList\.contains\("pres-meny-skjult"\)\) settMenySkjult\(false\);/);
+  assert.match(les("css/styles.css"), /body\.presentasjon\.pres-meny-skjult #pres-bar \{ display: none; \}/, "panelet ligger i #pres-bar");
+});
