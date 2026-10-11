@@ -16,11 +16,19 @@
 //  Starttiden og hva som er vist og lukket, står i sessionStorage, så en
 //  omlasting eller et sidebytte (slektstreet) ikke starter klokka på nytt
 //  eller viser lukkede påminnelser igjen.
+//
+//  v6.72 (brukervalg 2026-10-11, «begge deler»):
+//   • Fri visning har en egen fast liste under planId FRI_PLAN («fri»), som
+//     redigeres i Visning-vinduet og går hver gang fri visning startes.
+//   • Raske påminnelser (tasten R) gjelder bare visningen som går. De står i
+//     sessionStorage med et fast tidspunkt (type «naar») og vises også uten
+//     innlogging; de lagrede trenger læreren (samlingen notater).
 // ============================================================================
 
 import { subscribeNotater, lagreNotat } from "../data/store.js";
 import {
   lesPaminnelser, skrivPaminnelser, paminnelseNokkel, forfalnePaminnelser, paminnelseEtikett,
+  rensPaminnelser, RASK_MAKS,
 } from "./presentasjon-modell.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { wireAllLinks } from "../felles/linkify.js";
@@ -72,16 +80,17 @@ let erLaerer = () => false;
 let lerretEndret = () => {};
 let nokler = null;      // sessionStorage-nøklene fra presentasjon.js
 let status = { vist: [], lukket: [] };
+let raske = [];         // raske påminnelser i denne visningen (v6.72)
 let aapne = [];
 let timer = null;
 
 const lesJson = (k, standard) => { try { return JSON.parse(sessionStorage.getItem(k) || "null") ?? standard; } catch (e) { return standard; } };
 const skrivJson = (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
-export function startPaminnelser({ planId, erLaererNaa, startNokkel, statusNokkel, vedLerretEndring }) {
+export function startPaminnelser({ planId, erLaererNaa, startNokkel, statusNokkel, raskNokkel, vedLerretEndring }) {
   if (!planId || planAktiv) return;
   planAktiv = planId;
-  nokler = { start: startNokkel, status: statusNokkel };
+  nokler = { start: startNokkel, status: statusNokkel, rask: raskNokkel };
   if (typeof erLaererNaa === "function") erLaerer = erLaererNaa;
   if (typeof vedLerretEndring === "function") lerretEndret = vedLerretEndring;
   // Klokka følger planen: samme plan beholder starttiden, en annen begynner på nytt.
@@ -90,13 +99,17 @@ export function startPaminnelser({ planId, erLaererNaa, startNokkel, statusNokke
     start = { plan: planId, ms: Date.now() };
     skrivJson(startNokkel, start);
     skrivJson(statusNokkel, { vist: [], lukket: [] });
+    // En ny visning: de raske fra en tidligere visning i fanen gjelder ikke.
+    if (raskNokkel) skrivJson(raskNokkel, []);
   }
   startMs = start.ms;
+  raske = raskNokkel ? rensPaminnelser(lesJson(raskNokkel, [])).filter((p) => p.type === "naar") : [];
   const s = lesJson(statusNokkel, {});
   status = { vist: Array.isArray(s.vist) ? s.vist : [], lukket: Array.isArray(s.lukket) ? s.lukket : [] };
   vedPaminnelseEndring(sjekk);
   timer = setInterval(sjekk, 10000);
   paminnelserAuthEndret();
+  sjekk();   // de raske vises også uten innlogging
 }
 
 // Innloggingen kan lande etter at visningen startet.
@@ -107,9 +120,12 @@ export function paminnelserAuthEndret() {
 }
 
 function sjekk() {
-  if (!planAktiv || !erLaerer() || !lastet) return;
-  const liste = data[planAktiv] || [];
-  const nye = forfalnePaminnelser(liste, startMs, Date.now(), status.vist);
+  if (!planAktiv) return;
+  // De lagrede trenger læreren og dataene; de raske står lokalt.
+  const lagret = erLaerer() && lastet ? (data[planAktiv] || []) : [];
+  const liste = [...lagret, ...raske];
+  const naa = Date.now();
+  const nye = [...forfalnePaminnelser(lagret, startMs, naa, status.vist), ...forfalnePaminnelser(raske, startMs, naa, status.vist)];
   if (nye.length) {
     status.vist.push(...nye.map((p) => p.id));
     skrivJson(nokler.status, status);
@@ -125,6 +141,32 @@ function lukk(id) {
   skrivJson(nokler.status, status);
   sjekk();
 }
+
+// --- Raske påminnelser (v6.72) ------------------------------------------------
+
+// Legger til en ren påminnelse fra raskPaminnelse (modellen). false når
+// visningen ikke har startet påminnelsene, eller taket er nådd.
+export function leggTilRask(p) {
+  if (!planAktiv || !nokler?.rask || !p || raske.length >= RASK_MAKS) return false;
+  raske = [...raske, p];
+  skrivJson(nokler.rask, raske);
+  sjekk();
+  return true;
+}
+
+export function fjernRask(id) {
+  raske = raske.filter((p) => p.id !== id);
+  if (nokler?.rask) skrivJson(nokler.rask, raske);
+  sjekk();
+}
+
+// De raske som ikke har kommet ennå, i tidsrekkefølge (for lista i panelet).
+export const ventendeRaske = () => raske
+  .filter((p) => !status.vist.includes(p.id))
+  .sort((a, b) => a.naar - b.naar)
+  .map((p) => ({ ...p, etikett: paminnelseEtikett(p) }));
+
+export const paminnelserStartet = () => !!planAktiv;
 
 // Det lerretet skal vise: åpne påminnelser merket «Vis også på lerretet».
 export function paminnelserTilLerret() {

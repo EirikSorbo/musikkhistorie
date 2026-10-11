@@ -33,7 +33,7 @@ import { getState } from "../data/app-state.js";
 import { escapeHtml } from "../felles/util.js";
 import { onAuthChange, savePlan, deletePlan } from "../data/store.js";
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange } from "./presentasjon-modell.js";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, FRI_PLAN } from "./presentasjon-modell.js";
 import { abonnerPaminnelser, vedPaminnelseEndring, paminnelserFor, paminnelserLastet, paminnelseFeil, lagrePaminnelser } from "./paminnelser.js";
 import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js";
@@ -48,7 +48,8 @@ import { apneMaal } from "../utforsk/explore-apne.js";
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
 
-let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret } — settes ved Ny/Rediger, null i lista
+let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret, fri? } — settes ved Ny/Rediger, null i lista
+// fri: true er påminnelsene for fri visning (v6.72), id FRI_PLAN: bare påminnelsesdelen vises.
 
 // Godtar både en full «Kopier lenke»-URL og en rå vis-verdi. («artist:x»
 // alene parses som URL med artist:-protokoll — uten vis-parameter faller den
@@ -147,6 +148,7 @@ async function forlatSamleokt() {
 // ----------------------------------------------------------------------------
 
 function renderListe() {
+  oppdaterFriPamKnapp();
   const el = document.getElementById("pres-adm-liste");
   if (!el) return;
   const s = getState();
@@ -219,6 +221,18 @@ function renderKladd() {
   if (liste) liste.hidden = !!kladd;
   if (!kladd) return;
 
+  // Påminnelsene for fri visning (v6.72): bare påminnelsesdelen.
+  const fri = !!kladd.fri;
+  const plandel = document.getElementById("pres-adm-plandel");
+  if (plandel) plandel.hidden = fri;
+  const pamTittel = document.getElementById("pres-adm-pam-tittel");
+  if (pamTittel) pamTittel.textContent = fri ? "Påminnelser i fri visning" : "Påminnelser";
+  const pamHint = document.getElementById("pres-adm-pam-hint");
+  if (pamHint) pamHint.textContent = fri ? PAM_HINT_FRI : PAM_HINT_PLAN;
+  const lagreKnapp = document.getElementById("pres-adm-lagre");
+  if (lagreKnapp) lagreKnapp.textContent = fri ? "Lagre påminnelsene" : "Lagre kjøreplanen";
+  if (fri) { tegnPaminnelser(); return; }
+
   const tittel = document.getElementById("pres-adm-tittel");
   if (tittel && tittel.value !== kladd.tittel) tittel.value = kladd.tittel;
 
@@ -251,6 +265,8 @@ function renderKladd() {
 }
 
 // --- Påminnelser (v6.70, brukerbestilling 2026-10-11) -------------------------
+const PAM_HINT_PLAN = "Dukker opp når denne planen spilles: et antall minutter etter at du startet den, eller på et klokkeslett. De vises bare på din skjerm, med mindre du krysser av for lerretet. Navn på artister og sjangre blir lenker.";
+const PAM_HINT_FRI = "Dukker opp hver gang du kjører fri visning: et antall minutter etter at du startet den, eller på et klokkeslett. De vises bare på din skjerm, med mindre du krysser av for lerretet. En påminnelse som bare gjelder én visning, legger du inn underveis med tasten R.";
 // Lagres for seg i samlingen notater (js/visning/paminnelser.js), ikke i selve
 // planen: planene ligger i content, som alle kan lese. Rader uten tekst
 // lagres ikke.
@@ -274,12 +290,13 @@ function tegnPaminnelser() {
       <textarea data-pam-tekst="${i}" rows="2" maxlength="1000" placeholder="Hva skal stå i påminnelsen?">${escapeHtml(p.tekst || "")}</textarea>
     </div>`).join("");
   el.innerHTML = (feil ? `<p class="pres-adm-feil">${escapeHtml(feil)}</p>` : "")
-    + (rader || `<p class="muted">Ingen påminnelser i denne planen.</p>`);
+    + (rader || `<p class="muted">${kladd.fri ? "Ingen påminnelser i fri visning." : "Ingen påminnelser i denne planen."}</p>`);
 }
 
 // Påminnelsene lander etter at editoren ble åpnet: fyll kladden, så lenge
 // læreren ikke alt har begynt å endre.
 vedPaminnelseEndring(() => {
+  oppdaterFriPamKnapp();
   if (!kladd || kladd.pamEndret) return;
   if (!kladd.pamLastet || !kladd.paminnelser.length) {
     kladd.paminnelser = paminnelserFor(kladd.id);
@@ -287,6 +304,15 @@ vedPaminnelseEndring(() => {
     tegnPaminnelser();
   }
 });
+
+// Knappen ved «Fri visning» (v6.72): bare for læreren, med antallet.
+function oppdaterFriPamKnapp() {
+  const k = document.getElementById("vis-fri-pam");
+  if (!k) return;
+  k.hidden = !erLaerer;
+  const n = paminnelserFor(FRI_PLAN).length;
+  k.textContent = n ? `Påminnelser (${n})` : "Påminnelser";
+}
 
 // Gyldige påminnelser til lagring, eller en feilmelding.
 function paminnelserTilLagring() {
@@ -355,6 +381,7 @@ function tegnKladdSok() {
 
 async function lagre() {
   if (!kladd) return;
+  if (kladd.fri) return lagreFri();
   const tittel = document.getElementById("pres-adm-tittel")?.value.trim();
   if (!tittel) { msg("Kjøreplanen trenger en tittel.", false); return; }
   if (!kladd.stopp.length) { msg("Legg til minst ett stopp før du lagrer.", false); return; }
@@ -381,6 +408,24 @@ async function lagre() {
     }
   }
   msg("Kjøreplanen er lagret.");
+}
+
+// Påminnelsene for fri visning (v6.72): ingen plan å lagre, bare lista.
+async function lagreFri() {
+  const pam = paminnelserTilLagring();
+  if (pam.feil) { msg(pam.feil, false); return; }
+  if (kladd.pamEndret) {
+    try {
+      await lagrePaminnelser(FRI_PLAN, pam.liste);
+    } catch (err) {
+      msg(`Påminnelsene ble ikke lagret (${err?.message || err}).`, false);
+      return;
+    }
+  }
+  kladd = null;
+  renderListe();
+  renderKladd();
+  msg("Påminnelsene for fri visning er lagret.");
 }
 
 function leggTilStopp() {
@@ -462,11 +507,13 @@ function byggModal() {
       <div class="vis-fri">
         <button type="button" class="btn primary" id="vis-fri">Fri visning</button>
         <span class="muted">Vis det du finner underveis, uten kjøreplan. Søk med <kbd>S</kbd>.</span>
+        <button type="button" class="btn ghost small" id="vis-fri-pam" hidden title="Påminnelser som kommer hver gang du starter fri visning">Påminnelser</button>
       </div>
       <h3 class="vis-hode">Kjøreplaner</h3>
       <div id="pres-adm-liste"></div>
     </div>
     <div id="pres-adm-rediger" hidden>
+      <div id="pres-adm-plandel">
       <div class="add-grid" style="grid-template-columns:1fr">
         <label>Tittel *
           <input type="text" id="pres-adm-tittel" maxlength="80" placeholder="F.eks. Uke 39: Blues og gospel" />
@@ -483,9 +530,10 @@ function byggModal() {
         <input type="text" id="pres-adm-lenke" placeholder="Eller lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
         <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
       </div>
+      </div>
       <div class="pres-adm-pam">
-        <h3 class="vis-hode">Påminnelser</h3>
-        <p class="muted pres-adm-hint">Dukker opp når denne planen spilles: et antall minutter etter at du startet den, eller på et klokkeslett. De vises bare på din skjerm, med mindre du krysser av for lerretet. Navn på artister og sjangre blir lenker.</p>
+        <h3 class="vis-hode" id="pres-adm-pam-tittel">Påminnelser</h3>
+        <p class="muted pres-adm-hint" id="pres-adm-pam-hint"></p>
         <div id="pres-adm-pam"></div>
         <button type="button" id="pres-adm-pam-ny" class="btn ghost small">Legg til påminnelse</button>
       </div>
@@ -570,9 +618,11 @@ function koblVindu(m) {
   let sporLukk = false;
   m._beforeClose = () => {
     if (!kladd) return true;
+    // Uendrede påminnelser for fri visning lukkes uten spørsmål.
+    if (kladd.fri && !kladd.pamEndret) { kladd = null; renderKladd(); return true; }
     if (!sporLukk) {
       sporLukk = true;
-      bekreft("Endringene i kjøreplanen går tapt.", { tittel: "Lukke uten å lagre?", ja: "Lukk uten å lagre", farlig: true })
+      bekreft(kladd.fri ? "Endringene i påminnelsene går tapt." : "Endringene i kjøreplanen går tapt.", { tittel: "Lukke uten å lagre?", ja: "Lukk uten å lagre", farlig: true })
         .then((ok) => {
           sporLukk = false;
           if (!ok) return;
@@ -589,6 +639,13 @@ function koblVindu(m) {
     const hit = (sel) => e.target.closest(sel);
 
     if (hit("#vis-fri")) return gaaTilVisning("index.html?presentasjon=1");
+    if (hit("#vis-fri-pam")) {
+      if (!erLaerer) return;
+      kladd = { id: FRI_PLAN, fri: true, tittel: "", stopp: [], paminnelser: paminnelserFor(FRI_PLAN), pamLastet: paminnelserLastet(), pamEndret: false };
+      msg("");
+      renderKladd();
+      return;
+    }
     if (hit("#vis-avslutt")) return avsluttPresentasjon();
 
     if (hit("#pres-adm-ny")) {

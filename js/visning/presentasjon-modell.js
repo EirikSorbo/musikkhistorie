@@ -774,6 +774,9 @@ export function presTast(e, { plan = false, iSkrivefelt = false, tomtFelt = fals
   // Av/på-tastene skal ikke blinke fram og tilbake når de holdes inne.
   if (e.repeat) return null;
   if (plan && (k === "t" || k === "T")) return "tilStoppet";
+  // O (v6.72, brukerønske 2026-10-11): oversikten over planen vises oppå
+  // stoppet, uten å flytte posisjonen. Samme tast lukker den igjen.
+  if (plan && (k === "o" || k === "O")) return "kikkOversikt";
   if (plan && k === "+") return "leggTil";
   if (k === "f" || k === "F") return "fullskjerm";
   if (k === "a" || k === "A") return "skala";
@@ -787,6 +790,8 @@ export function presTast(e, { plan = false, iSkrivefelt = false, tomtFelt = fals
   // Å: rett til redigering av notatet til kortet som vises (v6.51).
   if (k === "å" || k === "Å") return "notatRediger";
   if (k === "x" || k === "X") return "avslutt";
+  // R (v6.72): rask påminnelse som bare gjelder denne visningen.
+  if (k === "r" || k === "R") return "paminnelse";
   // Navn fra timen (v5.82): lærerens notatliste. Handlingen gis alltid;
   // presentasjon.js gjør ingenting med den utenfor en lærerøkt.
   if (k === "n" || k === "N") return "timeliste";
@@ -818,6 +823,7 @@ export const PRES_TASTER = [
     { taster: ["↓", "PageUp"], hva: "Forrige stopp" },
     { taster: ["Home"], hva: "Til oversikten" },
     { taster: ["End"], hva: "Til oppsummeringen" },
+    { taster: ["O"], hva: "Vis oversikten uten å forlate stoppet (O igjen eller Esc lukker)" },
     { taster: ["T"], hva: "Tilbake til stoppet etter en avstikker" },
     { taster: ["+"], hva: "Legg kortet du viser inn i kjøreplanen her", laerer: true },
   ] },
@@ -830,6 +836,7 @@ export const PRES_TASTER = [
     { taster: ["B", "."], hva: "Svart skjerm, samme tast tilbake" },
     { taster: ["M"], hva: "Vis eller skjul menyen nede til høyre (tastene virker uansett)" },
     { taster: [","], hva: "Innstillinger" },
+    { taster: ["R"], hva: "Ny påminnelse i denne visningen (om noen minutter eller på et klokkeslett)" },
     { taster: ["X"], hva: "Avslutt visningen" },
     { taster: ["Mellomrom", "K"], hva: "Spill av eller pause lytteeksempelet" },
   ] },
@@ -1019,6 +1026,12 @@ function rensEn(p, i) {
   if (!tekst) return null;
   const id = String(p.id || `p${i}`).slice(0, 40);
   const lerret = !!p.lerret;
+  // Rask påminnelse (v6.72): et fast tidspunkt i ms, bare i sessionStorage.
+  if (p.type === "naar") {
+    const naar = Number(p.naar);
+    if (!Number.isFinite(naar) || naar <= 0) return null;
+    return { id, type: "naar", naar, tekst, lerret };
+  }
   if (p.type === "klokka") {
     const kl = String(p.kl || "").trim();
     if (!KL.test(kl)) return null;
@@ -1061,7 +1074,9 @@ export function skrivPaminnelser(liste) {
 // klokkeslett gjelder starttidens dag og bare FRA starten: en påminnelse
 // kl. 10.15 i en visning som startet 10.20, kommer ikke.
 export function paminnelseTid(p, startMs) {
-  if (!p || !Number.isFinite(startMs)) return null;
+  if (!p) return null;
+  if (p.type === "naar") return Number.isFinite(p.naar) ? p.naar : null;
+  if (!Number.isFinite(startMs)) return null;
   if (p.type === "etter") return startMs + p.min * 60000;
   const m = KL.exec(p.kl || "");
   if (!m) return null;
@@ -1082,7 +1097,45 @@ export function forfalnePaminnelser(liste, startMs, naaMs, vist = []) {
     .map(({ p }) => p);
 }
 
+const toSiffer = (n) => String(n).padStart(2, "0");
+const klokkeTekst = (ms) => { const d = new Date(ms); return `${toSiffer(d.getHours())}.${toSiffer(d.getMinutes())}`; };
+
 export function paminnelseEtikett(p) {
   if (!p) return "";
+  if (p.type === "naar") return `Kl. ${klokkeTekst(p.naar)}`;
   return p.type === "klokka" ? `Kl. ${p.kl.replace(":", ".")}` : `${p.min} min etter start`;
+}
+
+// ----------------------------------------------------------------------------
+//  Påminnelser i fri visning og raske påminnelser (v6.72, brukervalg
+//  2026-10-11: «begge deler»)
+// ----------------------------------------------------------------------------
+//  Fri visning har sin egen faste liste, lagret som en plan med id FRI_PLAN
+//  (paminnelseNokkel("fri")); den redigeres i Visning-vinduet og går hver gang
+//  fri visning startes. Planenes id-er begynner med «plan-», så «fri» kan
+//  aldri kollidere med en plan.
+//  En rask påminnelse (tasten R) gjelder bare visningen som går: «om N
+//  minutter» eller «kl. HH:MM», gjort om til et fast tidspunkt (type «naar»).
+
+export const FRI_PLAN = "fri";
+export const RASK_MAKS = 20;
+
+// { p } med en ren påminnelse, eller { feil } med teksten læreren skal se.
+export function raskPaminnelse({ type, min, kl, tekst, lerret } = {}, naaMs = Date.now()) {
+  const t = String(tekst || "").trim().slice(0, PAMINNELSE_TEKST_MAKS);
+  if (!t) return { feil: "Skriv hva som skal stå i påminnelsen." };
+  let naar;
+  if (type === "kl") {
+    const m = KL.exec(String(kl || "").trim());
+    if (!m) return { feil: "Skriv et klokkeslett, for eksempel 10:30." };
+    const d = new Date(naaMs);
+    d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+    naar = d.getTime();
+    if (naar <= naaMs) return { feil: `Klokka ${m[1]}.${m[2]} har alt passert i dag.` };
+  } else {
+    const n = Number(min);
+    if (!Number.isFinite(n) || n < 1 || n > 600) return { feil: "Skriv et antall minutter fra 1 til 600." };
+    naar = naaMs + Math.round(n) * 60000;
+  }
+  return { p: { id: `r${naaMs.toString(36)}`, type: "naar", naar, tekst: t, lerret: !!lerret } };
 }

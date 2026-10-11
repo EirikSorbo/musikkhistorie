@@ -63,3 +63,87 @@ test("etiketten sier når påminnelsen kommer", () => {
   assert.equal(paminnelseEtikett({ type: "etter", min: 37 }), "37 min etter start");
   assert.equal(paminnelseEtikett({ type: "klokka", kl: "10:15" }), "Kl. 10.15");
 });
+
+// --- v6.72: fri visning, raske påminnelser (R) og oversikten oppå stoppet (O) ---
+import { readFileSync } from "node:fs";
+import {
+  raskPaminnelse, FRI_PLAN, RASK_MAKS, nyPlanId, presTast, PRES_TASTER,
+} from "../../js/visning/presentasjon-modell.js";
+
+const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+const KL1000 = new Date(2026, 9, 12, 10, 0, 0).getTime();
+
+test("fri visning har sin egen liste, og en plan-id kan aldri bli «fri»", () => {
+  assert.equal(FRI_PLAN, "fri");
+  assert.equal(paminnelseNokkel(FRI_PLAN), "paminnelser:fri");
+  for (let i = 0; i < 50; i++) assert.notEqual(nyPlanId(), FRI_PLAN);
+  assert.equal(RASK_MAKS, 20);
+});
+
+test("raskPaminnelse: «om N min» og «kl.» blir et fast tidspunkt", () => {
+  const om = raskPaminnelse({ type: "om", min: "15", tekst: " Pause ", lerret: true }, KL1000);
+  assert.deepEqual(om.p, { id: `r${KL1000.toString(36)}`, type: "naar", naar: KL1000 + 15 * 60000, tekst: "Pause", lerret: true });
+  const kl = raskPaminnelse({ type: "kl", kl: "10:45", tekst: "Spør om Motown" }, KL1000);
+  assert.equal(kl.p.naar, new Date(2026, 9, 12, 10, 45).getTime());
+  assert.equal(kl.p.lerret, false);
+});
+
+test("raskPaminnelse: sier fra om tom tekst, ugyldige minutter og passert klokkeslett", () => {
+  assert.match(raskPaminnelse({ type: "om", min: 5, tekst: "  " }, KL1000).feil, /Skriv hva/);
+  assert.match(raskPaminnelse({ type: "om", min: 0, tekst: "x" }, KL1000).feil, /1 til 600/);
+  assert.match(raskPaminnelse({ type: "om", min: 601, tekst: "x" }, KL1000).feil, /1 til 600/);
+  assert.match(raskPaminnelse({ type: "om", min: "", tekst: "x" }, KL1000).feil, /1 til 600/);
+  assert.match(raskPaminnelse({ type: "kl", kl: "09:59", tekst: "x" }, KL1000).feil, /passert/);
+  assert.match(raskPaminnelse({ type: "kl", kl: "10:00", tekst: "x" }, KL1000).feil, /passert/);
+  assert.match(raskPaminnelse({ type: "kl", kl: "", tekst: "x" }, KL1000).feil, /klokkeslett/);
+});
+
+test("en rask påminnelse (naar) forfaller på tidspunktet sitt, uansett når visningen startet", () => {
+  const { p } = raskPaminnelse({ type: "om", min: 10, tekst: "Lagre timen" }, KL1000);
+  assert.deepEqual(rensPaminnelser([p]), [p]);
+  assert.equal(paminnelseTid(p, KL1000 - 3600000), p.naar);
+  assert.equal(paminnelseTid(p, NaN), p.naar, "trenger ingen starttid");
+  assert.deepEqual(forfalnePaminnelser([p], KL1000, p.naar - 1), []);
+  assert.deepEqual(forfalnePaminnelser([p], KL1000, p.naar), [p]);
+  assert.deepEqual(forfalnePaminnelser([p], KL1000, p.naar + 5000, [p.id]), [], "vist én gang");
+  assert.equal(paminnelseEtikett(p), "Kl. 10.10");
+  assert.deepEqual(rensPaminnelser([{ id: "x", type: "naar", naar: "tull", tekst: "x" }]), []);
+});
+
+test("tastene: O viser oversikten (bare med plan), R gir ny påminnelse; ikke i skrivefelt eller holdt inne", () => {
+  const t = (key, ekstra = {}) => ({ key, ...ekstra });
+  assert.equal(presTast(t("o"), { plan: true }), "kikkOversikt");
+  assert.equal(presTast(t("O"), { plan: true }), "kikkOversikt");
+  assert.equal(presTast(t("o"), { plan: false }), null);
+  assert.equal(presTast(t("o", { repeat: true }), { plan: true }), null);
+  assert.equal(presTast(t("o"), { plan: true, iSkrivefelt: true }), null);
+  assert.equal(presTast(t("r")), "paminnelse");
+  assert.equal(presTast(t("R"), { plan: true }), "paminnelse");
+  assert.equal(presTast(t("r"), { iSkrivefelt: true }), null);
+  assert.equal(presTast(t("r", { metaKey: true })), null, "Cmd+R laster siden på nytt");
+  const taster = PRES_TASTER.flatMap((g) => g.rader.flatMap((r) => r.taster));
+  assert.ok(taster.includes("O") && taster.includes("R"));
+});
+
+test("visningen: påminnelsene starter også i fri visning, og O og R er koblet til handlingene", () => {
+  const kilde = les("js/visning/presentasjon.js");
+  assert.match(kilde, /startPaminnelser\(\{ planId: planId \|\| FRI_PLAN,[^}]*raskNokkel: LAGRING\.raskePaminnelser/);
+  assert.match(kilde, /case "kikkOversikt": return kikkOversikt\(\);/);
+  assert.match(kilde, /case "paminnelse": return erLerret \? undefined : vekslPanel\("rask"\);/);
+  // O flytter ikke posisjonen: kikkOversikt kaller aldri gaTilStopp.
+  const kikk = kilde.match(/function kikkOversikt\(\) \{[\s\S]*?\n\}/)?.[0] || "";
+  assert.ok(kikk && !/gaTilStopp/.test(kikk), "kikkOversikt skal ikke gå til et stopp");
+  // Visning-vinduet: egen redigering av påminnelsene for fri visning.
+  const vis = les("js/visning/visning.js");
+  assert.match(vis, /id="vis-fri-pam"/);
+  assert.match(vis, /lagrePaminnelser\(FRI_PLAN, pam\.liste\)/);
+});
+
+test("Oversikt-ikonet er borte fra toppfeltet (v6.72): Oversikt er en knapp i Innhold", () => {
+  for (const side of ["index.html", "teacher.html", "tre.html", "student.html", "utskrift.html"]) {
+    const nav = les(side).match(/<nav class="nav">[\s\S]*?<\/nav>/)?.[0] || "";
+    assert.ok(nav, side);
+    assert.doesNotMatch(nav, /title="Oversikt"/, side);
+  }
+  assert.match(les("teacher.html"), /id="btn-t-inn-oversikt"/, "knappen i Innhold står");
+});

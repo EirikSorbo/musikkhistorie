@@ -243,7 +243,6 @@ function startAppInner() {
   $("#btn-t-genres")?.addEventListener("click", ctx.explore.openSubgenreList);
   const btnStoreBildet = document.getElementById("btn-t-store-bildet");
   if (btnStoreBildet) btnStoreBildet.addEventListener("click", ctx.explore.openStoreBildet);
-  $("#btn-t-oversikt")?.addEventListener("click", openOversikt);
   const btnTInstr = document.getElementById("btn-t-instrumenter");
   if (btnTInstr) btnTInstr.addEventListener("click", ctx.explore.openInstrumenter);
   setupPodkastAdmin();
@@ -364,9 +363,11 @@ function startAppInner() {
   // (Oppstarts-vedlikeholdet er borte: de ni engangsmigreringene ble fjernet i
   // v4.19, og felt-oppryddingen i genreDescriptions i v4.23 — se store.js.)
 
-  // Tannhjul- og oversikt-ikonene på de andre sidene lenker hit med
-  // #innstillinger/#oversikt — åpne riktig modal når læreren er innlogget.
-  // Hashen ryddes bort, så en refresh ikke gjenåpner modalen.
+  // Tannhjulikonet på de andre sidene lenker hit med #innstillinger: åpne
+  // innstillingene når læreren er innlogget. Hashen ryddes bort, så en refresh
+  // ikke gjenåpner modalen. (Oversikt-ikonet i toppfeltet er fjernet i v6.72,
+  // brukerønske 2026-10-11: Oversikt er en knapp i Innhold. Et gammelt
+  // bokmerke med #oversikt åpner den fortsatt.)
   const hash = location.hash;
   if (hash === "#innstillinger" || hash === "#oversikt") {
     history.replaceState(null, "", location.pathname);

@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, FRI_PLAN, raskPaminnelse } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -44,7 +44,7 @@ import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
 import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet, lerretInnebygd } from "./lerret.js";
 import { initNotater, vekslNotater, redigerNotater, notaterEndret } from "./pres-notater.js";
-import { startPaminnelser, paminnelserAuthEndret, paminnelserTilLerret, visLerretPaminnelser } from "./paminnelser.js";
+import { startPaminnelser, paminnelserAuthEndret, paminnelserTilLerret, visLerretPaminnelser, leggTilRask, fjernRask, ventendeRaske, paminnelserStartet } from "./paminnelser.js";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -79,6 +79,8 @@ const LAGRING = {
   // Påminnelsene (v6.70): når planen ble startet, og hva som er vist og lukket.
   planStart: "pensumPresPlanStart",
   paminnelser: "pensumPresPaminnelser",
+  // Raske påminnelser (tasten R, v6.72): bare denne visningen.
+  raskePaminnelser: "pensumPresRaskePaminnelser",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -587,6 +589,18 @@ function visOversikt() {
   modalOpen(m);
 }
 
+// O (v6.72, brukerønske 2026-10-11): oversikten oppå stoppet, uten å flytte
+// posisjonen. O igjen, Esc eller ✕ lukker, og stoppet under står som før. Et
+// klikk på et punkt i oversikten går til det stoppet, som ellers. Står
+// visningen alt på oversikten (første eller siste posisjon), skjer ingenting.
+function kikkOversikt() {
+  if (!plan || !plan.stopp.length) return;
+  if (planPosisjon(stoppIdx, plan.stopp.length).oversikt) return;
+  const m = oversiktModal();
+  if (m.classList.contains("open")) { modalClose(m); return; }
+  visOversikt();
+}
+
 // Kalles fra sidenes snapshot-hooks. No-op til planId finnes og content har
 // landet; åpner så startposisjonen ÉN gang. Deretter tegnes et åpent
 // oversiktskort på nytt, fordi navnene i det kommer fra artist- og tech-
@@ -641,6 +655,8 @@ function wireTaster() {
       case "oversikt": return gaTilStopp(0);
       case "oppsummering": return gaTilStopp(plan.stopp.length + 1);
       case "tilStoppet": return gaTilStopp(stoppIdx);
+      case "kikkOversikt": return kikkOversikt();
+      case "paminnelse": return erLerret ? undefined : vekslPanel("rask");
       case "leggTil": return leggTilHer();
       case "fullskjerm": return vekslFullskjerm();
       case "skala": return vekslSkala();
@@ -888,6 +904,13 @@ function byggBar() {
     if (e.target.closest("#pres-tannhjul")) return vekslPanel();
     if (e.target.closest("#pres-avslutt")) return avsluttPresentasjon();
   });
+  // Esc i panelet lukker panelet, ikke kortet bak (v6.72).
+  bar.querySelector("#pres-panel")?.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    e.preventDefault();
+    e.stopPropagation();
+    skjulPanel(e.currentTarget);
+  });
 }
 
 // Menyen nede til høyre (v5.93, brukerønske 2026-09-29): M skjuler og viser
@@ -1059,12 +1082,24 @@ function aktivFlate() {
   return best?.flate || null;
 }
 
-function vekslPanel() {
+// Fokus ut av panelet når det skjules: ellers sto markøren i et skjult
+// tekstfelt, og tastene (O, piler) ble lest som skriving.
+function skjulPanel(panel) {
+  if (panel.contains(document.activeElement)) document.activeElement.blur();
+  panel.hidden = true;
+}
+
+// Panelet over verktøylinja har to innhold: innstillingene (tannhjulet, «,»)
+// og en ny rask påminnelse (R, v6.72). Samme tast lukker, den andre bytter.
+function vekslPanel(modus = "innst") {
   const panel = document.getElementById("pres-panel");
   if (!panel) return;
-  if (!panel.hidden) { panel.hidden = true; return; }
-  tegnPanel(panel);
+  if (!panel.hidden && panel.dataset.modus === modus) { skjulPanel(panel); return; }
+  panel.dataset.modus = modus;
+  if (modus === "rask") tegnRaskPanel(panel);
+  else tegnPanel(panel);
   panel.hidden = false;
+  if (modus === "rask") panel.querySelector("#pres-rask-tekst")?.focus();
 }
 
 function tegnPanel(panel) {
@@ -1085,6 +1120,7 @@ function tegnPanel(panel) {
     <label class="pres-valg pres-qa"><input type="checkbox" id="pres-qa" ${qaPaa() ? "checked" : ""}>
       Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort)</label>
     <label class="pres-valg"><input type="checkbox" id="pres-klokke-valg" ${klokkePaa() ? "checked" : ""}> Vis klokka i verktøylinja</label>
+    ${paminnelserStartet() ? `<button type="button" class="btn ghost small" id="pres-ny-pam" title="Ny påminnelse i denne visningen (R)">Ny påminnelse …</button>` : ""}
     ${kanHuske() ? `<hr class="pres-skille">
       <button type="button" class="btn ghost small" id="pres-husk" title="Lagrer nivået og unntakene som vises nå, på dette stoppet i kjøreplanen">Husk visningen på dette stoppet</button>
       <p class="pres-panel-tips">Nivået og unntakene slik de står nå, lagres på stoppet, så de gjelder neste gang planen spilles.</p>` : ""}
@@ -1112,6 +1148,85 @@ function tegnPanel(panel) {
     settKlokke(e.target.checked);
   });
   panel.querySelector("#pres-husk")?.addEventListener("click", huskVisning);
+  panel.querySelector("#pres-ny-pam")?.addEventListener("click", () => vekslPanel("rask"));
+}
+
+// ----------------------------------------------------------------------------
+//  Rask påminnelse (v6.72, brukervalg 2026-10-11): R eller «Ny påminnelse» i
+//  tannhjulet. «Om N min» eller «Kl. HH:MM», tekst og lerret. Gjelder bare
+//  denne visningen (sessionStorage, ryddes ved Avslutt). Regnes om til et
+//  fast tidspunkt i raskPaminnelse (modellen); kortet kommer som de lagrede.
+// ----------------------------------------------------------------------------
+
+const toSiffer = (n) => String(n).padStart(2, "0");
+const kortTekst = (t) => { const r = String(t || "").replace(/\s+/g, " ").trim(); return r.length > 60 ? `${r.slice(0, 57)}…` : r; };
+
+function tegnRaskPanel(panel, beskjed = "") {
+  if (!paminnelserStartet()) {
+    panel.innerHTML = `<p class="pres-panel-hode">Ny påminnelse</p><p class="pres-panel-tips">Påminnelser virker bare i ditt eget vindu, ikke på lerretet.</p>`;
+    return;
+  }
+  const om10 = new Date(Date.now() + 10 * 60000);
+  const ventende = ventendeRaske();
+  panel.innerHTML = `
+    <p class="pres-panel-hode">Ny påminnelse</p>
+    <div class="pres-rask-naar">
+      <select id="pres-rask-type" aria-label="Når påminnelsen kommer">
+        <option value="om">Om</option>
+        <option value="kl">Kl.</option>
+      </select>
+      <input type="number" id="pres-rask-min" min="1" max="600" step="1" value="10" aria-label="Minutter fra nå" />
+      <span id="pres-rask-enhet">min</span>
+      <input type="time" id="pres-rask-kl" value="${toSiffer(om10.getHours())}:${toSiffer(om10.getMinutes())}" aria-label="Klokkeslett" hidden />
+    </div>
+    <textarea id="pres-rask-tekst" rows="3" maxlength="1000" placeholder="Hva skal stå i påminnelsen?"></textarea>
+    <label class="pres-valg"><input type="checkbox" id="pres-rask-lerret"> Vis også på lerretet</label>
+    <div class="pres-rask-knapper">
+      <button type="button" class="btn primary small" id="pres-rask-legg">Legg til</button>
+      <span class="pres-rask-msg" id="pres-rask-msg" role="status">${escapeHtml(beskjed)}</span>
+    </div>
+    <p class="pres-panel-tips">Gjelder bare denne visningen. Navn på artister og sjangre blir lenker. Faste påminnelser for fri visning og kjøreplanene legger du inn i Visning-vinduet.</p>
+    ${ventende.length ? `<hr class="pres-skille">
+    <p class="pres-panel-hode">Kommer i denne visningen</p>
+    <ul class="pres-rask-liste">${ventende.map((p) => `
+      <li><span><strong>${escapeHtml(p.etikett)}</strong> ${escapeHtml(kortTekst(p.tekst))}${p.lerret ? ` <span class="muted">· også på lerretet</span>` : ""}</span>
+        <button type="button" class="pres-paminnelse-lukk" data-rask-fjern="${escapeHtml(p.id)}" title="Fjern påminnelsen" aria-label="Fjern påminnelsen">✕</button></li>`).join("")}
+    </ul>` : ""}`;
+
+  const type = panel.querySelector("#pres-rask-type");
+  type.addEventListener("change", () => {
+    const kl = type.value === "kl";
+    panel.querySelector("#pres-rask-min").hidden = kl;
+    panel.querySelector("#pres-rask-enhet").hidden = kl;
+    panel.querySelector("#pres-rask-kl").hidden = !kl;
+  });
+  const legg = () => {
+    const r = raskPaminnelse({
+      type: type.value,
+      min: panel.querySelector("#pres-rask-min").value,
+      kl: panel.querySelector("#pres-rask-kl").value,
+      tekst: panel.querySelector("#pres-rask-tekst").value,
+      lerret: panel.querySelector("#pres-rask-lerret").checked,
+    });
+    const msgEl = panel.querySelector("#pres-rask-msg");
+    if (r.feil) { msgEl.textContent = r.feil; msgEl.classList.add("feil"); return; }
+    if (!leggTilRask(r.p)) { msgEl.textContent = "Fikk ikke lagt til påminnelsen (høyst 20 i en visning)."; msgEl.classList.add("feil"); return; }
+    const d = new Date(r.p.naar);
+    tegnRaskPanel(panel, `Lagt til: kl. ${toSiffer(d.getHours())}.${toSiffer(d.getMinutes())}.`);
+    panel.querySelector("#pres-rask-tekst")?.focus();
+  };
+  panel.querySelector("#pres-rask-legg").addEventListener("click", legg);
+  // Ctrl/Cmd+Enter i teksten, Enter i tidsfeltene: legg til.
+  panel.querySelector(".pres-rask-naar").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); legg(); }
+  });
+  panel.querySelector("#pres-rask-tekst").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); legg(); }
+  });
+  panel.querySelectorAll("[data-rask-fjern]").forEach((b) => b.addEventListener("click", () => {
+    fjernRask(b.dataset.raskFjern);
+    tegnRaskPanel(panel);
+  }));
 }
 
 // ----------------------------------------------------------------------------
@@ -1309,9 +1424,10 @@ export function initPresentasjon() {
 
   // Private notater (v6.50): bare i lærerens vindu.
   if (!erLerret) initNotater({ erLaererNaa: () => erLaerer });
-  // Påminnelser i kjøreplanen (v6.70): bare i lærerens vindu, og bare med plan.
-  if (!erLerret && planId) {
-    startPaminnelser({ planId, erLaererNaa: () => erLaerer, startNokkel: LAGRING.planStart, statusNokkel: LAGRING.paminnelser, vedLerretEndring: lerretEndret });
+  // Påminnelser (v6.70): bare i lærerens vindu. Kjøreplanen har sine, fri
+  // visning sine faste under FRI_PLAN (v6.72), og de raske (R) kommer i tillegg.
+  if (!erLerret) {
+    startPaminnelser({ planId: planId || FRI_PLAN, erLaererNaa: () => erLaerer, startNokkel: LAGRING.planStart, statusNokkel: LAGRING.paminnelser, raskNokkel: LAGRING.raskePaminnelser, vedLerretEndring: lerretEndret });
   }
   // Lerret på annen skjerm (v6.50): styringen sender tilstanden, lerretet
   // bruker den. Lerretet åpner kortene selv; nivå, unntak, tekststørrelse,

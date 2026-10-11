@@ -44,7 +44,11 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   minutter etter at planen ble startet, eller et klokkeslett. De dukker opp
   som kort øverst på lærerens skjerm til de lukkes, eventuelt også på
   lerretet, og navn på artister og sjangre blir lenker. Lagres i `notater`
-  (`paminnelser:<planId>`, js/visning/paminnelser.js).
+  (`paminnelser:<planId>`, js/visning/paminnelser.js). Fri visning har sin
+  egen faste liste (v6.72, knappen «Påminnelser» ved Fri visning, lagret som
+  `paminnelser:fri`), og tasten R legger inn en rask påminnelse som bare
+  gjelder visningen som går (sessionStorage). Tasten O viser planens
+  oversikt oppå stoppet uten å flytte posisjonen.
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
   «Husk visningen» per stopp. Tasten N i visningen åpner «Navn fra timen»:
   en artist som kom opp, og hvem som foreslo den, lagres til oppfølging på
