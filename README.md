@@ -143,6 +143,16 @@ Sjangerfamilienes farger bærer mening og står i dataene, ikke her.
 `tests/unit/design-variabler.test.js` feiler hvis noen skriver fargekoder eller
 skriftnavn utenfor `:root`, eller bruker en variabel som ikke finnes.
 
+**Fargerotasjon (v6.71):** aksentfargen bytter hver dag, lik for alle, i fast
+runde: rød, skoggrønn, petrol, koboltblå, fiolett, plomme. `js/farge.js` (et
+klassisk skript i `<head>`) setter `data-farge` på `<html>` etter lokal dato,
+og blokkene `:root[data-farge="…"]` i `styles.css` setter aksentskalaen
+(`--accent-50` til `--accent-700` og `--accent-rgb`). Logoen tegnes med
+`<svg><use href="img/logo.svg?v=…#logo">`, så etiketten følger fargen.
+`?farge=kobolt` i adressen viser en bestemt farge for å prøve. En ny farge er
+et navn i `FARGER` og en blokk i stilarket. Vakttesten krever at listene er like,
+og at hver farge har minst 4,5:1 mot hvitt.
+
 ## Oppsett av Firebase (ca. 5 minutter)
 
 1. Gå til <https://console.firebase.google.com> og logg inn med Google-konto.

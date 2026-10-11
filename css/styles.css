@@ -94,7 +94,7 @@
   --white: #ffffff;
   --black: #000000;
 
-  /* A2 «Programhefte uten rammer» (v6.60): blekk, steingrå og vermilion. */
+  /* A2 «Programhefte uten rammer» (v6.60): blekk, steingrå og én aksentfarge. */
   --ink: #111111;
   --ink-2: #1d1d1d;
   --stone-50: #f6f6f3;
@@ -105,16 +105,19 @@
   --stone-400: #b5b5b0;
   --stone-500: #7a7a7a;
   --stone-600: #5c5c5c;
-  --vermilion-50: #fdeeea;
-  --vermilion-100: #fadcd4;
-  --vermilion-200: #f0b9ad;
-  --vermilion-600: #c8321a;
-  --vermilion-700: #a82a15;
+  /* Aksentskalaen: rødt her er standarden. Fargen byttes hver dag av
+     js/farge.js; blokkene :root[data-farge="…"] rett under :root setter de
+     samme seks variablene (fra v6.71, før het skalaen --vermilion-*). */
+  --accent-50: #fdeeea;
+  --accent-100: #fadcd4;
+  --accent-200: #f0b9ad;
+  --accent-600: #c8321a;
+  --accent-700: #a82a15;
 
   /* RGB-tripler for gjennomsiktige varianter: rgba(var(--x-rgb), 0.2).
-     Endres --accent, må --accent-rgb følge med. */
+     --accent-rgb følger aksentskalaen og settes også i fargeblokkene. */
   --accent-rgb: 200, 50, 26;
-  --accent-3-rgb: 200, 50, 26;
+  --accent-3-rgb: var(--accent-rgb);
   --shadow-rgb: 20, 21, 42;
   --text-rgb: 16, 26, 19;
   --black-rgb: 0, 0, 0;
@@ -127,8 +130,8 @@
   --surface: var(--white);
   --surface-2: var(--stone-100);
   --surface-soft: var(--stone-100);              /* ikonruter uten color-mix, flater i heftet */
-  --surface-accent: var(--vermilion-50);    /* aktiv rad, aktivt nav-ikon, hover på merkelapp */
-  --surface-accent-strong: var(--vermilion-100);
+  --surface-accent: var(--accent-50);    /* aktiv rad, aktivt nav-ikon, hover på merkelapp */
+  --surface-accent-strong: var(--accent-100);
   --paper: var(--white);                /* heftet og utskriften, uansett tema */
   --paper-line: #d5dfd8;                /* skillelinjer i heftet */
   --tree-bg: var(--surface);            /* slektstreets lerret */
@@ -140,8 +143,8 @@
   /* Linjer */
   --line: var(--stone-300);
   --line-strong: var(--ink);
-  --line-accent: var(--vermilion-600);
-  --line-accent-soft: var(--vermilion-200);
+  --line-accent: var(--accent-600);
+  --line-accent-soft: var(--accent-200);
   --line-cool: var(--gray-200);
   --line-step-visited: #bbe5c8;
 
@@ -150,13 +153,13 @@
   --text-body: var(--ink-2);                 /* brødtekst i beskrivelser og historier */
   --muted: var(--stone-600);
   --muted-2: var(--stone-500);
-  --text-accent: var(--vermilion-700);
+  --text-accent: var(--accent-700);
   --on-accent: var(--white);            /* tekst på farget bunn */
 
   /* Aksent (grønn → emerald → teal) */
-  --accent: var(--vermilion-600);
-  --accent-2: var(--vermilion-700);
-  --accent-3: var(--vermilion-600);
+  --accent: var(--accent-600);
+  --accent-2: var(--accent-700);
+  --accent-3: var(--accent-600);
   --grad: linear-gradient(var(--accent), var(--accent));
 
   /* Status */
@@ -193,10 +196,10 @@
   --banner-text: var(--ink);
 
   /* Viktighetsgrad (1 = mest sentral, skjult = -1) */
-  --prio-1-text: var(--vermilion-700);
-  --prio-1-bg: var(--vermilion-50);
-  --prio-1-line: var(--vermilion-600);
-  --prio-1-ring: var(--vermilion-200);
+  --prio-1-text: var(--accent-700);
+  --prio-1-bg: var(--accent-50);
+  --prio-1-line: var(--accent-600);
+  --prio-1-ring: var(--accent-200);
   --prio-2-text: var(--ink);
   --prio-2-bg: var(--stone-100);
   --prio-2-line: var(--stone-500);
@@ -215,7 +218,7 @@
   --tag-genre-bg: var(--surface);
   --tag-genre-line: var(--ink);
   --tag-genre-bg-hover: var(--stone-100);
-  --tag-genre-line-hover: var(--vermilion-600);
+  --tag-genre-line-hover: var(--accent-600);
   --tag-sub-bg: var(--surface);
   --tag-sub-bg-hover: var(--stone-100);
   --tag-sub-line: var(--stone-400);
@@ -347,6 +350,62 @@
   --z-bar: 99999;
   --z-blackout: 100000;
   --z-notes: 100001;
+}
+
+/* ----- FARGEROTASJON (v6.71, brukerønske 2026-10-11) -----
+   js/farge.js setter data-farge på <html> til dagens farge, i fast runde.
+   Hver blokk setter aksentskalaen og --accent-rgb, ingenting annet; rollene
+   i :root (--accent, --surface-accent, --prio-1-* osv.) følger med selv.
+   Alle fargene har minst 4,5:1 mot hvitt i trinn 600 og 700, så hvit tekst
+   på fargen og fargen som tekst på hvitt er lesbare (vakttesten sjekker det,
+   og at navnene er de samme som i FARGER i js/farge.js). */
+:root[data-farge="rod"] {
+  --accent-50: #fdeeea;
+  --accent-100: #fadcd4;
+  --accent-200: #f0b9ad;
+  --accent-600: #c8321a;
+  --accent-700: #a82a15;
+  --accent-rgb: 200, 50, 26;
+}
+:root[data-farge="gronn"] {
+  --accent-50: #edf5ef;
+  --accent-100: #d8eadd;
+  --accent-200: #aed2b8;
+  --accent-600: #2e6b3f;
+  --accent-700: #23532f;
+  --accent-rgb: 46, 107, 63;
+}
+:root[data-farge="petrol"] {
+  --accent-50: #e8f4f4;
+  --accent-100: #d0e8e9;
+  --accent-200: #a2d0d2;
+  --accent-600: #0f6b73;
+  --accent-700: #0b545a;
+  --accent-rgb: 15, 107, 115;
+}
+:root[data-farge="kobolt"] {
+  --accent-50: #eef1fd;
+  --accent-100: #dce3fa;
+  --accent-200: #b7c4f2;
+  --accent-600: #2643c4;
+  --accent-700: #1c3399;
+  --accent-rgb: 38, 67, 196;
+}
+:root[data-farge="fiolett"] {
+  --accent-50: #f3eefa;
+  --accent-100: #e6ddf5;
+  --accent-200: #cdbbea;
+  --accent-600: #5b2d9e;
+  --accent-700: #47237c;
+  --accent-rgb: 91, 45, 158;
+}
+:root[data-farge="plomme"] {
+  --accent-50: #f7edf4;
+  --accent-100: #efdbe9;
+  --accent-200: #dfb6d3;
+  --accent-600: #85306f;
+  --accent-700: #6a2558;
+  --accent-rgb: 133, 48, 111;
 }
 
 * { box-sizing: border-box; }
@@ -2485,7 +2544,7 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    manifest.json, som nettleseren viser i fanen og i appvinduet (brukerkrav
    2026-09-25). Navnet er nå «Musikkhistorie». */
 a.brand { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
-.brand-icon { height: 40px; width: auto; }   /* MUR114-logoen (v6.69) */
+.brand-icon { height: 40px; width: auto; aspect-ratio: 54.5 / 50.35; flex-shrink: 0; }   /* MUR114-logoen (v6.69); inline <svg><use> fra v6.71, så etiketten følger dagens farge */
 
 /* Navigasjon */
 .nav { display: flex; gap: 6px; align-items: center; }

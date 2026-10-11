@@ -5,11 +5,11 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-103 filer i 11 mapper.
+104 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
-| `js/` | Sidene og oppsettet | 10 |
+| `js/` | Sidene og oppsettet | 11 |
 | `js/utforsk/` | Utforsk | 21 |
 | `js/sjangre/` | Sjangrene og slektstreet | 13 |
 | `js/visning/` | Visning | 11 |
@@ -37,6 +37,7 @@ stopper et kart som ikke stemmer med filene.
 
 | Fil | Hva den gjør |
 |---|---|
+| `farge.js` | FARGEROTASJON — dagens aksentfarge, satt før siden tegnes |
 | `firebase-config.js` | FIREBASE-KONFIGURASJON |
 | `gate.js` | KLASSEPASSORD — enkel sperre foran appen |
 | `landing.js` | FORSIDEN (index.html) — Utforsk, dagens artist, artistsøket og stemmene |

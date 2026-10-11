@@ -1,5 +1,5 @@
 // Designvariablene (v6.59, brukerønske 2026-10-08): hele utseendet skal kunne
-// endres i :root-blokka øverst i css/styles.css. Testene holder det slik: ingen
+// endres i :root-blokka øverst i css/styles.css (og fargeblokkene rett under). Testene holder det slik: ingen
 // fargekoder, rgb()-verdier eller skriftnavn utenfor :root, og ingen var() til
 // en variabel som ikke finnes (en skrivefeil gir ellers stille feil farge).
 import { test } from "node:test";
@@ -9,11 +9,11 @@ import { readFileSync } from "node:fs";
 const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const utenKommentarer = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 
+// :root-blokka og fargeblokkene :root[data-farge="…"] (v6.71) regnes som rot.
 function delOpp(css) {
   const ren = utenKommentarer(css);
-  const i = ren.indexOf(":root");
-  const j = ren.indexOf("}", i) + 1;
-  return { rot: ren.slice(i, j), resten: ren.slice(0, i) + ren.slice(j) };
+  const blokker = ren.match(/:root[^{]*\{[^}]*\}/g) || [];
+  return { rot: blokker.join("\n"), blokker, resten: ren.replace(/:root[^{]*\{[^}]*\}/g, "") };
 }
 
 const styles = delOpp(les("css/styles.css"));
@@ -69,4 +69,46 @@ test("lagene (z-index) har uendrede verdier: koden og visningen regner med rekke
     "--z-pass-gate": 300, "--z-tooltip": 2000, "--z-drawer": 10000, "--z-canvas-frame": 99998,
     "--z-bar": 99999, "--z-blackout": 100000, "--z-notes": 100001,
   });
+});
+
+// Fargerotasjonen (v6.71, brukerønske 2026-10-11): én blokk per farge, samme
+// navn som i js/farge.js, og bare farger med nok kontrast.
+const lysstyrke = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const motHvitt = (hex) => 1.05 / (lysstyrke(hex) + 0.05);
+const fargeblokker = Object.fromEntries(styles.blokker
+  .map((b) => [b.match(/^:root\[data-farge="([a-z]+)"\]/)?.[1], b]).filter(([navn]) => navn)
+  .map(([navn, b]) => [navn, Object.fromEntries([...b.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))]));
+
+test("fargeblokkene: samme farger som js/farge.js, og hver setter de samme seks variablene", async () => {
+  const vm = await import("node:vm");
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(les("js/farge.js"), ctx);
+  assert.deepEqual(Object.keys(fargeblokker), [...ctx.pensumFarge.FARGER]);
+  for (const [navn, v] of Object.entries(fargeblokker)) {
+    assert.deepEqual(Object.keys(v).sort(),
+      ["--accent-100", "--accent-200", "--accent-50", "--accent-600", "--accent-700", "--accent-rgb"], navn);
+    const rgb = [1, 3, 5].map((i) => parseInt(v["--accent-600"].slice(i, i + 2), 16)).join(", ");
+    assert.equal(v["--accent-rgb"], rgb, `${navn}: --accent-rgb skal være trinn 600`);
+  }
+});
+
+test("fargeblokkene: trinn 600 og 700 har minst 4,5:1 mot hvitt (hvit tekst på fargen, fargen som tekst)", () => {
+  for (const [navn, v] of Object.entries(fargeblokker)) {
+    for (const trinn of ["--accent-600", "--accent-700"]) {
+      assert.ok(motHvitt(v[trinn]) >= 4.5, `${navn} ${trinn} ${v[trinn]}: ${motHvitt(v[trinn]).toFixed(2)}:1`);
+    }
+  }
+});
+
+test("standarden i :root er rød, lik blokka for rod (uten farge.js)", () => {
+  const rot = styles.blokker.find((b) => /^:root\s*\{/.test(b));
+  for (const [k, verdi] of Object.entries(fargeblokker.rod)) {
+    assert.match(rot, new RegExp(`${k}:\\s*${verdi.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")};`), k);
+  }
+  assert.doesNotMatch(utenKommentarer(les("css/styles.css")), /--vermilion-/, "skalaen heter --accent-* fra v6.71");
 });
