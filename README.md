@@ -48,8 +48,8 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   en rask påminnelse som bare gjelder visningen som går (sessionStorage),
   også i fri visning: tidsknapper for 10 til 120 minutter (pluss 15 og 45)
   og to for «2 min før hel time» som legges rett inn med teksten «Pause om
-  2 minutter» og «Timen er over om 2 minutter» (v6.74–6.75, erstatter den
-  faste lista for fri visning fra v6.72). En lenke i påminnelsen åpner kortet og lukker
+  2 minutter» og «Timen er over om 2 minutter», også på lerretet
+  (v6.74–6.76, erstatter den faste lista for fri visning fra v6.72). En lenke i påminnelsen åpner kortet og lukker
   påminnelsen. Tasten O viser planens oversikt oppå stoppet uten å flytte
   posisjonen.
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og

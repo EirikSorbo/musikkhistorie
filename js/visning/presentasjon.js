@@ -1167,7 +1167,7 @@ const kortTekst = (t) => { const r = String(t || "").replace(/\s+/g, " ").trim()
 // minutt pluss 15 og 45, opp til 120. En minuttknapp åpner skjemaet med tiden
 // fylt ut; tiden kan endres der. De to øverste legger påminnelsen rett inn med
 // fast tekst (HEL_TIME_TEKST, v6.75): «Pause om 2 minutter» og «Timen er over
-// om 2 minutter». `valg` = { type: "om" | "kl", verdi, tekst, lerret }
+// om 2 minutter». De vises også på lerretet (v6.76, brukerønske 2026-10-11). `valg` = { type: "om" | "kl", verdi, tekst, lerret }
 // eller null (bare knappene). Teksten og lerretvalget står når tiden byttes.
 const klokkeVerdi = (ms) => { const d = new Date(ms); return `${toSiffer(d.getHours())}:${toSiffer(d.getMinutes())}`; };
 
@@ -1185,7 +1185,7 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
     <p class="pres-panel-hode">Ny påminnelse</p>
     <div class="pres-rask-hel" role="group" aria-label="To minutter før hel time">
       ${hele.map((ms, i) => `<button type="button" class="pres-rask-preset pres-rask-preset-hel" data-rask-hel="${i}" data-rask-naar="${ms}"
-        title="Legger inn «${HEL_TIME_TEKST[i]}» kl. ${klokkeVerdi(ms).replace(":", ".")}">
+        title="Legger inn «${HEL_TIME_TEKST[i]}» kl. ${klokkeVerdi(ms).replace(":", ".")}, også på lerretet">
         <span class="pres-rask-preset-tid">Kl. ${klokkeVerdi(ms).replace(":", ".")}</span>
         <span class="pres-rask-preset-hint">${HEL_TIME_TEKST[i]}</span>
       </button>`).join("")}
@@ -1233,7 +1233,7 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
     tegnRaskPanel(panel, "", naaValg({ type, verdi }));
     panel.querySelector("#pres-rask-tekst")?.focus();
   };
-  // De to øverste: rett inn, med fast tekst og bare på din skjerm.
+  // De to øverste: rett inn, med fast tekst, også på lerretet (v6.76).
   panel.querySelectorAll("[data-rask-hel]").forEach((b) => b.addEventListener("click", () => {
     const tekst = HEL_TIME_TEKST[Number(b.dataset.raskHel)];
     const naar = Number(b.dataset.raskNaar);
@@ -1241,7 +1241,7 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
       tegnRaskPanel(panel, `«${tekst}» står alt inne til kl. ${klokkeVerdi(naar).replace(":", ".")}.`, naaValg());
       return;
     }
-    const r = raskPaminnelse({ type: "naar", naar, tekst, lerret: false });
+    const r = raskPaminnelse({ type: "naar", naar, tekst, lerret: true });
     const ok = !r.feil && leggTilRask(r.p);
     tegnRaskPanel(panel, ok ? `Lagt til: «${tekst}» kl. ${klokkeVerdi(naar).replace(":", ".")}.` : (r.feil || "Fikk ikke lagt til påminnelsen (høyst 20 i en visning)."), naaValg());
     if (!ok) panel.querySelector("#pres-rask-msg")?.classList.add("feil");

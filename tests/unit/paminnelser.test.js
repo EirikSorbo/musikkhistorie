@@ -186,5 +186,5 @@ test("knappene «før hel time» legger rett inn med fast tekst, også over midn
   assert.equal(raskPaminnelse({ type: "naar", naar: forste, tekst: HEL_TIME_TEKST[0] }, kl2330).p.naar, forste);
   const kilde = les("js/visning/presentasjon.js");
   assert.match(kilde, /data-rask-hel="\$\{i\}" data-rask-naar="\$\{ms\}"/);
-  assert.match(kilde, /raskPaminnelse\(\{ type: "naar", naar, tekst, lerret: false \}\)/);
+  assert.match(kilde, /raskPaminnelse\(\{ type: "naar", naar, tekst, lerret: true \}\)/, "også på lerretet (v6.76)");
 });
