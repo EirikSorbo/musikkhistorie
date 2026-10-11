@@ -146,7 +146,7 @@ test("tidsknappene: hvert tiende og hvert femtende minutt opp til 120, kvarteren
   assert.deepEqual(PAMINNELSE_PRESET_MIN, [10, 15, 20, 30, 40, 45, 50, 60, 70, 75, 80, 90, 100, 105, 110, 120]);
   for (let n = 10; n <= 120; n += 5) assert.equal(PAMINNELSE_PRESET_MIN.includes(n), n % 10 === 0 || n % 15 === 0, `${n} min`);
   assert.match(les("js/visning/presentasjon.js"), /\$\{n % 15 === 0 \? " kvarter" : ""\}/);
-  assert.match(les("css/styles.css"), /\.pres-rask-preset\.kvarter \{ border-color: var\(--accent\);/);
+  assert.match(les("css/styles.css"), /\.pres-rask-preset\.kvarter \{ color: var\(--text-accent\); font-weight: 600; \}/);
   const kilde = les("js/visning/presentasjon.js");
   assert.match(kilde, /PAMINNELSE_PRESET_MIN\.map\(/);
   assert.match(kilde, /foerHeleTimen\(naa\)/);

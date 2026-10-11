@@ -3813,9 +3813,10 @@ body.pres-lerret * { pointer-events: none !important; }
   background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-s);
 }
 .pres-rask-preset:hover { border-color: var(--line-strong); }
-/* Hvert femtende minutt (v6.77): ramme i dagens farge, to piksler uten at
-   knappen vokser. */
-.pres-rask-preset.kvarter { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+/* Hvert femtende minutt (v6.77): diskret markert fra v6.78 (brukerønske
+   2026-10-11, rammene ble for mye) med halvfet tekst i dagens farge og
+   vanlig ramme. */
+.pres-rask-preset.kvarter { color: var(--text-accent); font-weight: 600; }
 #pres-panel:focus { outline: none; }
 .pres-rask-preset-hel {
   display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 6px;
