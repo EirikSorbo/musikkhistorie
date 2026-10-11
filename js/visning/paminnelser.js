@@ -17,18 +17,18 @@
 //  omlasting eller et sidebytte (slektstreet) ikke starter klokka på nytt
 //  eller viser lukkede påminnelser igjen.
 //
-//  v6.72 (brukervalg 2026-10-11, «begge deler»):
-//   • Fri visning har en egen fast liste under planId FRI_PLAN («fri»), som
-//     redigeres i Visning-vinduet og går hver gang fri visning startes.
-//   • Raske påminnelser (tasten R) gjelder bare visningen som går. De står i
-//     sessionStorage med et fast tidspunkt (type «naar») og vises også uten
-//     innlogging; de lagrede trenger læreren (samlingen notater).
+//  v6.72: raske påminnelser (tasten R) gjelder bare visningen som går. De
+//  står i sessionStorage med et fast tidspunkt (type «naar») og vises også
+//  uten innlogging; de lagrede (kjøreplanenes) trenger læreren (samlingen
+//  notater). Fri visning har planId FRI_PLAN («fri») og ingen lagret liste:
+//  den faste lista fra v6.72 er erstattet av tidsknappene i v6.74.
+//  v6.74: et klikk på en lenke i påminnelsen åpner kortet og lukker påminnelsen.
 // ============================================================================
 
 import { subscribeNotater, lagreNotat } from "../data/store.js";
 import {
   lesPaminnelser, skrivPaminnelser, paminnelseNokkel, forfalnePaminnelser, paminnelseEtikett,
-  rensPaminnelser, RASK_MAKS,
+  rensPaminnelser, RASK_MAKS, FRI_PLAN,
 } from "./presentasjon-modell.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { wireAllLinks } from "../felles/linkify.js";
@@ -121,8 +121,9 @@ export function paminnelserAuthEndret() {
 
 function sjekk() {
   if (!planAktiv) return;
-  // De lagrede trenger læreren og dataene; de raske står lokalt.
-  const lagret = erLaerer() && lastet ? (data[planAktiv] || []) : [];
+  // De lagrede trenger læreren og dataene; de raske står lokalt. Fri visning
+  // har ingen lagret liste (v6.74), så en gammel paminnelser:fri leses ikke.
+  const lagret = erLaerer() && lastet && planAktiv !== FRI_PLAN ? (data[planAktiv] || []) : [];
   const liste = [...lagret, ...raske];
   const naa = Date.now();
   const nye = [...forfalnePaminnelser(lagret, startMs, naa, status.vist), ...forfalnePaminnelser(raske, startMs, naa, status.vist)];
@@ -189,22 +190,42 @@ function boks() {
     el.setAttribute("aria-live", "polite");
     el.addEventListener("click", (e) => {
       const knapp = e.target.closest("[data-pam-lukk]");
-      if (knapp) lukk(knapp.dataset.pamLukk);
+      if (knapp) return lukk(knapp.dataset.pamLukk);
+      lukkEtterLenke(e.target);
+    });
+    // Lenkene åpnes også med Enter og mellomrom (linkify.js).
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") lukkEtterLenke(e.target);
     });
     document.body.appendChild(el);
   }
   return el;
 }
 
+// En lenke i påminnelsen (v6.74, brukerønske 2026-10-11): kortet åpnes av
+// lenkens egen lytter (linkify.js), og påminnelsen lukkes like etter, når
+// kortet står. Bare i lærerens vindu: lerretet har ingen lukking.
+const LENKE = ".artist-link, .tech-link, .genre-link, .plateselskap-link";
+function lukkEtterLenke(mal) {
+  const lenke = mal?.closest?.(LENKE);
+  const id = lenke?.closest("[data-pam-id]")?.dataset.pamId;
+  if (!id || !planAktiv || !nokler) return;
+  setTimeout(() => lukk(id), 150);
+}
+
 let sistTegnet = "";
 
 function tegn(liste, { lukkbar }) {
-  const nokkel = JSON.stringify([liste.map((p) => [p.id, p.tekst, p.etikett || ""]), lukkbar]);
+  // Lenkene bygges av artist- og innovasjonslistene. Kom kortet før de var
+  // lastet (rett etter en omlasting eller et sidebytte), tegnes det på nytt
+  // når de er der: sjekk() kaller tegn hvert 10. sekund (v6.74).
+  const lc = liste.length ? buildLinkCtx() : null;
+  const grunnlag = lc ? [(lc.artists || []).length, (lc.techItems || []).length, !!lc.onArtistClick] : [];
+  const nokkel = JSON.stringify([liste.map((p) => [p.id, p.tekst, p.etikett || ""]), lukkbar, grunnlag]);
   if (nokkel === sistTegnet) return;
   sistTegnet = nokkel;
   const el = boks();
   if (!liste.length) { el.innerHTML = ""; return; }
-  const lc = buildLinkCtx();
   el.innerHTML = liste.map((p) => `
     <div class="pres-paminnelse" data-pam-id="${escapeHtml(p.id)}">
       <div class="pres-paminnelse-hode">

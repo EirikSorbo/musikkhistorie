@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, FRI_PLAN, raskPaminnelse } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -1099,7 +1099,7 @@ function vekslPanel(modus = "innst") {
   if (modus === "rask") tegnRaskPanel(panel);
   else tegnPanel(panel);
   panel.hidden = false;
-  if (modus === "rask") panel.querySelector("#pres-rask-tekst")?.focus();
+  if (modus === "rask") (panel.querySelector("#pres-rask-tekst") || panel.querySelector(".pres-rask-preset"))?.focus();
 }
 
 function tegnPanel(panel) {
@@ -1153,45 +1153,94 @@ function tegnPanel(panel) {
 
 // ----------------------------------------------------------------------------
 //  Rask påminnelse (v6.72, brukervalg 2026-10-11): R eller «Ny påminnelse» i
-//  tannhjulet. «Om N min» eller «Kl. HH:MM», tekst og lerret. Gjelder bare
-//  denne visningen (sessionStorage, ryddes ved Avslutt). Regnes om til et
-//  fast tidspunkt i raskPaminnelse (modellen); kortet kommer som de lagrede.
+//  tannhjulet. Tidsknapper (v6.74), så «Om N min» eller «Kl. HH:MM», tekst
+//  og lerret. Gjelder bare denne visningen (sessionStorage, ryddes ved
+//  Avslutt). Regnes om til et fast tidspunkt i raskPaminnelse (modellen);
+//  kortet kommer som de lagrede.
 // ----------------------------------------------------------------------------
 
 const toSiffer = (n) => String(n).padStart(2, "0");
 const kortTekst = (t) => { const r = String(t || "").replace(/\s+/g, " ").trim(); return r.length > 60 ? `${r.slice(0, 57)}…` : r; };
 
-function tegnRaskPanel(panel, beskjed = "") {
+// Tidsknappene (v6.74, brukerønske 2026-10-11): øverst to knapper for to
+// minutter før førstkommende hele time og timen etter, under dem hvert tiende
+// minutt pluss 15 og 45, opp til 120. En knapp åpner skjemaet med tiden fylt
+// ut; tiden kan endres der. `valg` = { type: "om" | "kl", verdi, tekst, lerret }
+// eller null (bare knappene). Teksten og lerretvalget står når tiden byttes.
+const klokkeVerdi = (ms) => { const d = new Date(ms); return `${toSiffer(d.getHours())}:${toSiffer(d.getMinutes())}`; };
+
+function tegnRaskPanel(panel, beskjed = "", valg = null) {
   if (!paminnelserStartet()) {
     panel.innerHTML = `<p class="pres-panel-hode">Ny påminnelse</p><p class="pres-panel-tips">Påminnelser virker bare i ditt eget vindu, ikke på lerretet.</p>`;
     return;
   }
-  const om10 = new Date(Date.now() + 10 * 60000);
+  const naa = Date.now();
+  const hele = foerHeleTimen(naa);
   const ventende = ventendeRaske();
+  const valgt = (type, verdi) => !!valg && valg.type === type && String(valg.verdi) === String(verdi);
+  const erKl = valg?.type === "kl";
   panel.innerHTML = `
     <p class="pres-panel-hode">Ny påminnelse</p>
-    <div class="pres-rask-naar">
-      <select id="pres-rask-type" aria-label="Når påminnelsen kommer">
-        <option value="om">Om</option>
-        <option value="kl">Kl.</option>
-      </select>
-      <input type="number" id="pres-rask-min" min="1" max="600" step="1" value="10" aria-label="Minutter fra nå" />
-      <span id="pres-rask-enhet">min</span>
-      <input type="time" id="pres-rask-kl" value="${toSiffer(om10.getHours())}:${toSiffer(om10.getMinutes())}" aria-label="Klokkeslett" hidden />
+    <div class="pres-rask-hel" role="group" aria-label="To minutter før hel time">
+      ${hele.map((ms) => {
+        const kl = klokkeVerdi(ms);
+        return `<button type="button" class="pres-rask-preset pres-rask-preset-hel${valgt("kl", kl) ? " valgt" : ""}" data-rask-kl="${kl}" aria-pressed="${valgt("kl", kl)}">
+        <span class="pres-rask-preset-tid">Kl. ${kl.replace(":", ".")}</span>
+        <span class="pres-rask-preset-hint">2 min før kl. ${toSiffer(new Date(ms + 2 * 60000).getHours())}</span>
+      </button>`;
+      }).join("")}
     </div>
-    <textarea id="pres-rask-tekst" rows="3" maxlength="1000" placeholder="Hva skal stå i påminnelsen?"></textarea>
-    <label class="pres-valg"><input type="checkbox" id="pres-rask-lerret"> Vis også på lerretet</label>
-    <div class="pres-rask-knapper">
-      <button type="button" class="btn primary small" id="pres-rask-legg">Legg til</button>
-      <span class="pres-rask-msg" id="pres-rask-msg" role="status">${escapeHtml(beskjed)}</span>
+    <div class="pres-rask-min" role="group" aria-label="Om antall minutter">
+      ${PAMINNELSE_PRESET_MIN.map((n) => `<button type="button" class="pres-rask-preset${valgt("om", n) ? " valgt" : ""}" data-rask-min="${n}" aria-pressed="${valgt("om", n)}">${n} min</button>`).join("")}
     </div>
-    <p class="pres-panel-tips">Gjelder bare denne visningen. Navn på artister og sjangre blir lenker. Faste påminnelser for fri visning og kjøreplanene legger du inn i Visning-vinduet.</p>
+    ${valg ? `
+    <div class="pres-rask-skjema">
+      <div class="pres-rask-naar">
+        <select id="pres-rask-type" aria-label="Når påminnelsen kommer">
+          <option value="om"${erKl ? "" : " selected"}>Om</option>
+          <option value="kl"${erKl ? " selected" : ""}>Kl.</option>
+        </select>
+        <input type="number" id="pres-rask-min" min="1" max="600" step="1" value="${erKl ? 10 : escapeHtml(String(valg.verdi))}" aria-label="Minutter fra nå"${erKl ? " hidden" : ""} />
+        <span id="pres-rask-enhet"${erKl ? " hidden" : ""}>min</span>
+        <input type="time" id="pres-rask-kl" value="${erKl ? escapeHtml(String(valg.verdi)) : klokkeVerdi(naa + 10 * 60000)}" aria-label="Klokkeslett"${erKl ? "" : " hidden"} />
+      </div>
+      <textarea id="pres-rask-tekst" rows="3" maxlength="1000" placeholder="Hva skal stå i påminnelsen?">${escapeHtml(valg.tekst || "")}</textarea>
+      <label class="pres-valg"><input type="checkbox" id="pres-rask-lerret"${valg.lerret ? " checked" : ""}> Vis også på lerretet</label>
+      <div class="pres-rask-knapper">
+        <button type="button" class="btn primary small" id="pres-rask-legg">Legg til</button>
+      </div>
+    </div>` : ""}
+    <p class="pres-rask-msg" id="pres-rask-msg" role="status">${escapeHtml(beskjed)}</p>
+    <p class="pres-panel-tips">${valg
+      ? "Gjelder bare denne visningen. Navn på artister og sjangre blir lenker. Ctrl/Cmd+Enter legger til."
+      : "Velg når påminnelsen skal komme. Den gjelder bare denne visningen."}</p>
     ${ventende.length ? `<hr class="pres-skille">
     <p class="pres-panel-hode">Kommer i denne visningen</p>
     <ul class="pres-rask-liste">${ventende.map((p) => `
       <li><span><strong>${escapeHtml(p.etikett)}</strong> ${escapeHtml(kortTekst(p.tekst))}${p.lerret ? ` <span class="muted">· også på lerretet</span>` : ""}</span>
         <button type="button" class="pres-paminnelse-lukk" data-rask-fjern="${escapeHtml(p.id)}" title="Fjern påminnelsen" aria-label="Fjern påminnelsen">✕</button></li>`).join("")}
     </ul>` : ""}`;
+
+  // En tidsknapp: skjemaet med tiden fylt ut, teksten og lerretvalget beholdes.
+  const velg = (type, verdi) => {
+    tegnRaskPanel(panel, "", {
+      type, verdi,
+      tekst: panel.querySelector("#pres-rask-tekst")?.value || "",
+      lerret: !!panel.querySelector("#pres-rask-lerret")?.checked,
+    });
+    panel.querySelector("#pres-rask-tekst")?.focus();
+  };
+  panel.querySelectorAll("[data-rask-kl]").forEach((b) => b.addEventListener("click", () => velg("kl", b.dataset.raskKl)));
+  panel.querySelectorAll("[data-rask-min]").forEach((b) => b.addEventListener("click", () => velg("om", b.dataset.raskMin)));
+  panel.querySelectorAll("[data-rask-fjern]").forEach((b) => b.addEventListener("click", () => {
+    fjernRask(b.dataset.raskFjern);
+    tegnRaskPanel(panel, "", valg && {
+      ...valg,
+      tekst: panel.querySelector("#pres-rask-tekst")?.value || "",
+      lerret: !!panel.querySelector("#pres-rask-lerret")?.checked,
+    });
+  }));
+  if (!valg) return;
 
   const type = panel.querySelector("#pres-rask-type");
   type.addEventListener("change", () => {
@@ -1213,7 +1262,7 @@ function tegnRaskPanel(panel, beskjed = "") {
     if (!leggTilRask(r.p)) { msgEl.textContent = "Fikk ikke lagt til påminnelsen (høyst 20 i en visning)."; msgEl.classList.add("feil"); return; }
     const d = new Date(r.p.naar);
     tegnRaskPanel(panel, `Lagt til: kl. ${toSiffer(d.getHours())}.${toSiffer(d.getMinutes())}.`);
-    panel.querySelector("#pres-rask-tekst")?.focus();
+    panel.querySelector(".pres-rask-preset")?.focus();
   };
   panel.querySelector("#pres-rask-legg").addEventListener("click", legg);
   // Ctrl/Cmd+Enter i teksten, Enter i tidsfeltene: legg til.
@@ -1223,10 +1272,6 @@ function tegnRaskPanel(panel, beskjed = "") {
   panel.querySelector("#pres-rask-tekst").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); legg(); }
   });
-  panel.querySelectorAll("[data-rask-fjern]").forEach((b) => b.addEventListener("click", () => {
-    fjernRask(b.dataset.raskFjern);
-    tegnRaskPanel(panel);
-  }));
 }
 
 // ----------------------------------------------------------------------------

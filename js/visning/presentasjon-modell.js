@@ -1107,17 +1107,31 @@ export function paminnelseEtikett(p) {
 }
 
 // ----------------------------------------------------------------------------
-//  Påminnelser i fri visning og raske påminnelser (v6.72, brukervalg
-//  2026-10-11: «begge deler»)
+//  Raske påminnelser (v6.72) med tidsknapper (v6.74, brukerønske 2026-10-11)
 // ----------------------------------------------------------------------------
-//  Fri visning har sin egen faste liste, lagret som en plan med id FRI_PLAN
-//  (paminnelseNokkel("fri")); den redigeres i Visning-vinduet og går hver gang
-//  fri visning startes. Planenes id-er begynner med «plan-», så «fri» kan
-//  aldri kollidere med en plan.
 //  En rask påminnelse (tasten R) gjelder bare visningen som går: «om N
 //  minutter» eller «kl. HH:MM», gjort om til et fast tidspunkt (type «naar»).
+//  Tidsknappene (PAMINNELSE_PRESET_MIN og foerHeleTimen) fyller ut tiden.
+//  FRI_PLAN er id-en fri visning bruker for starttiden og hva som er vist.
+//  Den faste lista for fri visning (v6.72) er tatt bort igjen i v6.74:
+//  tidsknappene erstatter den (brukervalg 2026-10-11). Planenes id-er
+//  begynner med «plan-», så «fri» kan aldri kollidere med en plan.
 
 export const FRI_PLAN = "fri";
+
+// Knappene i panelet: hvert tiende minutt, pluss 15 og 45, opp til 120.
+export const PAMINNELSE_PRESET_MIN = [10, 15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120];
+
+// De to knappene øverst: `minFoer` minutter før førstkommende hele time (kl.
+// 10.17 gir 10.58), og samme tid timen etter (11.58). Har tidspunktet alt
+// passert (kl. 10.59), er det neste time som gjelder. Tidspunkt i ms.
+export function foerHeleTimen(naaMs, minFoer = 2) {
+  const d = new Date(naaMs);
+  d.setMinutes(60 - minFoer, 0, 0);
+  let forste = d.getTime();
+  if (forste <= naaMs) forste += 3600000;
+  return [forste, forste + 3600000];
+}
 export const RASK_MAKS = 20;
 
 // { p } med en ren påminnelse, eller { feil } med teksten læreren skal se.

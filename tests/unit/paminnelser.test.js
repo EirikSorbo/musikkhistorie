@@ -67,13 +67,13 @@ test("etiketten sier når påminnelsen kommer", () => {
 // --- v6.72: fri visning, raske påminnelser (R) og oversikten oppå stoppet (O) ---
 import { readFileSync } from "node:fs";
 import {
-  raskPaminnelse, FRI_PLAN, RASK_MAKS, nyPlanId, presTast, PRES_TASTER,
+  raskPaminnelse, FRI_PLAN, RASK_MAKS, nyPlanId, presTast, PRES_TASTER, PAMINNELSE_PRESET_MIN, foerHeleTimen,
 } from "../../js/visning/presentasjon-modell.js";
 
 const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const KL1000 = new Date(2026, 9, 12, 10, 0, 0).getTime();
 
-test("fri visning har sin egen liste, og en plan-id kan aldri bli «fri»", () => {
+test("fri visning har sin egen id, og en plan-id kan aldri bli «fri»", () => {
   assert.equal(FRI_PLAN, "fri");
   assert.equal(paminnelseNokkel(FRI_PLAN), "paminnelser:fri");
   for (let i = 0; i < 50; i++) assert.notEqual(nyPlanId(), FRI_PLAN);
@@ -133,10 +133,37 @@ test("visningen: påminnelsene starter også i fri visning, og O og R er koblet 
   // O flytter ikke posisjonen: kikkOversikt kaller aldri gaTilStopp.
   const kikk = kilde.match(/function kikkOversikt\(\) \{[\s\S]*?\n\}/)?.[0] || "";
   assert.ok(kikk && !/gaTilStopp/.test(kikk), "kikkOversikt skal ikke gå til et stopp");
-  // Visning-vinduet: egen redigering av påminnelsene for fri visning.
+  // v6.74 (brukervalg 2026-10-11): tidsknappene erstatter den faste lista for
+  // fri visning. Visning-vinduet har ingen slik redigering, og en gammel
+  // paminnelser:fri leses ikke i visningen. Kjøreplanenes påminnelser står.
   const vis = les("js/visning/visning.js");
-  assert.match(vis, /id="vis-fri-pam"/);
-  assert.match(vis, /lagrePaminnelser\(FRI_PLAN, pam\.liste\)/);
+  assert.doesNotMatch(vis, /vis-fri-pam|lagreFri|FRI_PLAN/);
+  assert.match(vis, /id="pres-adm-pam-ny"/, "kjøreplanens påminnelser står");
+  assert.match(les("js/visning/paminnelser.js"), /planAktiv !== FRI_PLAN \? \(data\[planAktiv\] \|\| \[\]\) : \[\]/);
+});
+
+test("tidsknappene: hvert tiende minutt pluss 15 og 45, opp til 120", () => {
+  assert.deepEqual(PAMINNELSE_PRESET_MIN, [10, 15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120]);
+  const kilde = les("js/visning/presentasjon.js");
+  assert.match(kilde, /PAMINNELSE_PRESET_MIN\.map\(/);
+  assert.match(kilde, /foerHeleTimen\(naa\)/);
+});
+
+test("foerHeleTimen: to minutter før førstkommende hele time, og timen etter", () => {
+  const kl = (t, m, s = 0) => new Date(2026, 9, 12, t, m, s).getTime();
+  assert.deepEqual(foerHeleTimen(kl(10, 17)), [kl(10, 58), kl(11, 58)], "brukerens eksempel: 10.17 gir 10.58");
+  assert.deepEqual(foerHeleTimen(kl(10, 0)), [kl(10, 58), kl(11, 58)]);
+  assert.deepEqual(foerHeleTimen(kl(10, 57, 59)), [kl(10, 58), kl(11, 58)]);
+  assert.deepEqual(foerHeleTimen(kl(10, 58)), [kl(11, 58), kl(12, 58)], "alt passert: neste time");
+  assert.deepEqual(foerHeleTimen(kl(10, 59)), [kl(11, 58), kl(12, 58)]);
+});
+
+test("en lenke i påminnelsen lukker påminnelsen etter at kortet er åpnet (v6.74)", () => {
+  const kilde = les("js/visning/paminnelser.js");
+  assert.match(kilde, /const LENKE = "\.artist-link, \.tech-link, \.genre-link, \.plateselskap-link";/);
+  assert.match(kilde, /lukkEtterLenke\(e\.target\)/);
+  assert.match(kilde, /setTimeout\(\(\) => lukk\(id\), 150\)/);
+  assert.match(kilde, /if \(!id \|\| !planAktiv \|\| !nokler\) return;/, "aldri på lerretet");
 });
 
 test("Oversikt-ikonet er borte fra toppfeltet (v6.72): Oversikt er en knapp i Innhold", () => {

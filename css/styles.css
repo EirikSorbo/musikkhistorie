@@ -3804,6 +3804,27 @@ body.pres-lerret * { pointer-events: none !important; }
 @media (max-width: 560px) { .pres-adm-pam-rad { grid-template-columns: 1fr 1fr; } }
 
 /* Rask påminnelse i panelet over verktøylinja (tasten R, v6.72). */
+/* Tidsknappene (v6.74): de to «før hel time» øverst, i aksentfargen og
+   større; minuttknappene i et rutenett under. Valgt knapp er fylt. */
+.pres-rask-hel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.pres-rask-min { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.6em, 1fr)); gap: 4px; margin-bottom: 10px; }
+.pres-rask-preset {
+  font: inherit; font-size: 0.85em; padding: 6px 4px; cursor: pointer; text-align: center;
+  background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-s);
+}
+.pres-rask-preset:hover { border-color: var(--line-strong); }
+.pres-rask-preset-hel {
+  display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 6px;
+  border: 2px solid var(--accent); background: var(--surface-accent); color: var(--text-accent);
+}
+.pres-rask-preset-hel:hover { border-color: var(--accent-2); }
+.pres-rask-preset-tid { font-size: 1.1em; font-weight: 700; }
+.pres-rask-preset-hint { font-size: 0.8em; color: var(--muted); }
+.pres-rask-preset.valgt { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.pres-rask-preset.valgt .pres-rask-preset-hint { color: var(--on-accent); }
+.pres-rask-skjema { border-top: 1px solid var(--line); padding-top: 10px; }
+.pres-rask-msg:empty { display: none; }
+.pres-rask-msg { margin: 8px 0 0; }
 .pres-rask-naar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .pres-rask-naar input[type="number"] { width: 5.5em; }
 #pres-panel textarea#pres-rask-tekst { width: 100%; font: inherit; font-size: 0.95em; }
