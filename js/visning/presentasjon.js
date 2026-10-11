@@ -887,7 +887,7 @@ function byggBar() {
     <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger (,)" aria-label="Innstillinger">${IKON.tannhjul}</button>
     <span class="pres-klokke" id="pres-klokke" hidden aria-label="Klokka"></span>
     <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt" title="Avslutt visningen (X)">Avslutt</button>
-    <div id="pres-panel" hidden></div>`;
+    <div id="pres-panel" tabindex="-1" hidden></div>`;
   document.body.appendChild(bar);
 
   bar.addEventListener("click", (e) => {
@@ -1099,7 +1099,9 @@ function vekslPanel(modus = "innst") {
   if (modus === "rask") tegnRaskPanel(panel);
   else tegnPanel(panel);
   panel.hidden = false;
-  if (modus === "rask") (panel.querySelector("#pres-rask-tekst") || panel.querySelector(".pres-rask-preset"))?.focus();
+  // Fokus i panelet (Esc og R virker der), men ikke på en knapp: da fikk den
+  // første tidsknappen en fokusramme i en annen farge (v6.77).
+  if (modus === "rask") (panel.querySelector("#pres-rask-tekst") || panel).focus({ preventScroll: true });
 }
 
 function tegnPanel(panel) {
@@ -1191,7 +1193,7 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
       </button>`).join("")}
     </div>
     <div class="pres-rask-min" role="group" aria-label="Om antall minutter">
-      ${PAMINNELSE_PRESET_MIN.map((n) => `<button type="button" class="pres-rask-preset${valgt("om", n) ? " valgt" : ""}" data-rask-min="${n}" aria-pressed="${valgt("om", n)}">${n} min</button>`).join("")}
+      ${PAMINNELSE_PRESET_MIN.map((n) => `<button type="button" class="pres-rask-preset${n % 15 === 0 ? " kvarter" : ""}${valgt("om", n) ? " valgt" : ""}" data-rask-min="${n}" aria-pressed="${valgt("om", n)}">${n} min</button>`).join("")}
     </div>
     ${valg ? `
     <div class="pres-rask-skjema">
@@ -1273,7 +1275,7 @@ function tegnRaskPanel(panel, beskjed = "", valg = null) {
     if (!leggTilRask(r.p)) { msgEl.textContent = "Fikk ikke lagt til påminnelsen (høyst 20 i en visning)."; msgEl.classList.add("feil"); return; }
     const d = new Date(r.p.naar);
     tegnRaskPanel(panel, `Lagt til: kl. ${toSiffer(d.getHours())}.${toSiffer(d.getMinutes())}.`);
-    panel.querySelector(".pres-rask-preset")?.focus();
+    panel.focus({ preventScroll: true });
   };
   panel.querySelector("#pres-rask-legg").addEventListener("click", legg);
   // Ctrl/Cmd+Enter i teksten, Enter i tidsfeltene: legg til.

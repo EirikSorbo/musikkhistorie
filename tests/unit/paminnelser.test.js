@@ -142,8 +142,11 @@ test("visningen: påminnelsene starter også i fri visning, og O og R er koblet 
   assert.match(les("js/visning/paminnelser.js"), /planAktiv !== FRI_PLAN \? \(data\[planAktiv\] \|\| \[\]\) : \[\]/);
 });
 
-test("tidsknappene: hvert tiende minutt pluss 15 og 45, opp til 120", () => {
-  assert.deepEqual(PAMINNELSE_PRESET_MIN, [10, 15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120]);
+test("tidsknappene: hvert tiende og hvert femtende minutt opp til 120, kvarterene markert", () => {
+  assert.deepEqual(PAMINNELSE_PRESET_MIN, [10, 15, 20, 30, 40, 45, 50, 60, 70, 75, 80, 90, 100, 105, 110, 120]);
+  for (let n = 10; n <= 120; n += 5) assert.equal(PAMINNELSE_PRESET_MIN.includes(n), n % 10 === 0 || n % 15 === 0, `${n} min`);
+  assert.match(les("js/visning/presentasjon.js"), /\$\{n % 15 === 0 \? " kvarter" : ""\}/);
+  assert.match(les("css/styles.css"), /\.pres-rask-preset\.kvarter \{ border-color: var\(--accent\);/);
   const kilde = les("js/visning/presentasjon.js");
   assert.match(kilde, /PAMINNELSE_PRESET_MIN\.map\(/);
   assert.match(kilde, /foerHeleTimen\(naa\)/);

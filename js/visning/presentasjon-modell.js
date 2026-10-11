@@ -1119,8 +1119,10 @@ export function paminnelseEtikett(p) {
 
 export const FRI_PLAN = "fri";
 
-// Knappene i panelet: hvert tiende minutt, pluss 15 og 45, opp til 120.
-export const PAMINNELSE_PRESET_MIN = [10, 15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120];
+// Knappene i panelet: hvert tiende og hvert femtende minutt, opp til 120
+// (75 og 105 kom til i v6.77). Kvarterene (n % 15 === 0) får ramme i
+// aksentfargen i panelet.
+export const PAMINNELSE_PRESET_MIN = [10, 15, 20, 30, 40, 45, 50, 60, 70, 75, 80, 90, 100, 105, 110, 120];
 
 // De to knappene øverst: `minFoer` minutter før førstkommende hele time (kl.
 // 10.17 gir 10.58), og samme tid timen etter (11.58). Har tidspunktet alt
