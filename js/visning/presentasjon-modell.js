@@ -550,18 +550,22 @@ function oversiktPunkt(m, oppslag) {
 // sorteres alfabetisk (tiårene i tidsrekkefølge). Tomme kategorier utelates.
 export function planOversikt(stopp, oppslag = {}) {
   const grupper = new Map(OVERSIKT_KATEGORIER.map((k) => [k.id, []]));
-  const sett = new Set();
+  // Nøkkel → punktet: et mål som står flere ganger, er ett punkt, men husker
+  // alle plassene sine (stoppene), så «gått gjennom» gjelder hvilken som helst
+  // av dem (v6.80).
+  const sett = new Map();
   (Array.isArray(stopp) ? stopp : []).forEach((s, i) => {
     const m = parseVisVerdi(s?.vis);
     if (!m) return;
     // Tiårets samfunnsvisning har to skrivemåter (uten modus og «society»).
     const modus = m.hva === "tiår" ? (["tech", "musikk"].includes(m.modus) ? m.modus : "") : (m.modus || "");
     const nokkel = [m.hva, m.id || "", modus, m.ekstra || ""].join(":");
-    if (sett.has(nokkel)) return;
+    if (sett.has(nokkel)) { sett.get(nokkel).stoppene.push(i); return; }
     const p = oversiktPunkt(m, oppslag);
     if (!p) return;
-    sett.add(nokkel);
-    grupper.get(p.kat).push({ tekst: p.tekst, detalj: p.detalj || "", stopp: i, sort: p.sort });
+    const punkt = { tekst: p.tekst, detalj: p.detalj || "", stopp: i, stoppene: [i], sort: p.sort };
+    sett.set(nokkel, punkt);
+    grupper.get(p.kat).push(punkt);
   });
   return OVERSIKT_KATEGORIER
     .map((k) => ({
@@ -573,6 +577,17 @@ export function planOversikt(stopp, oppslag = {}) {
         .map(({ sort: _s, ...rest }) => rest),
     }))
     .filter((k) => k.punkter.length);
+}
+
+// Hvor langt visningen har kommet, for et punkt i oversikten (v6.80,
+// brukerønske 2026-10-12): «naa» når et av stoppene er det som vises,
+// «besokt» når et av dem er vist før i visningen, ellers "". `besokt` er
+// stoppenes plasser i planen (0-basert), `naa` plassen som vises (eller null).
+export function oversiktStatus(stoppene, besokt, naa) {
+  const liste = Array.isArray(stoppene) ? stoppene : [];
+  if (naa != null && liste.includes(naa)) return "naa";
+  const sett = besokt instanceof Set ? besokt : new Set(besokt || []);
+  return liste.some((i) => sett.has(i)) ? "besokt" : "";
 }
 
 // ----------------------------------------------------------------------------
@@ -823,7 +838,7 @@ export const PRES_TASTER = [
     { taster: ["↓", "PageUp"], hva: "Forrige stopp" },
     { taster: ["Home"], hva: "Til oversikten" },
     { taster: ["End"], hva: "Til oppsummeringen" },
-    { taster: ["O"], hva: "Vis oversikten uten å forlate stoppet (O igjen eller Esc lukker)" },
+    { taster: ["O"], hva: "Vis oversikten med det dere har gått gjennom, uten å forlate stoppet (O igjen eller Esc lukker)" },
     { taster: ["T"], hva: "Tilbake til stoppet etter en avstikker" },
     { taster: ["+"], hva: "Legg kortet du viser inn i kjøreplanen her", laerer: true },
   ] },

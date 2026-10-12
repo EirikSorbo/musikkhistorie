@@ -259,7 +259,11 @@ export function modalOpen(el) {
   if (el.dataset.vis) modalApnetProvider?.(el.dataset.vis, el);
   el.classList.add("open");
   histApnet(el);
-  (focusables(el)[0] || dialog)?.focus();
+  // I visningen (v6.80) tar selve dialogen fokuset: ellers fikk ←-knappen en
+  // fokusramme når kortene ble åpnet med tastaturet (pilene, O), og den sto
+  // på lerretet. Tab går videre inn i kortet som før. Ellers: første knapp.
+  const iVisning = document.body.classList.contains("presentasjon");
+  ((iVisning ? null : focusables(el)[0]) || dialog)?.focus();
 }
 
 // En modal kan sette el._beforeClose = () => boolean. Returnerer den false,

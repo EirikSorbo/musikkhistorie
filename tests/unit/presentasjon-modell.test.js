@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -367,7 +367,7 @@ test("planOversikt: alfabetisk innenfor kategorien, tiårene i tidsrekkefølge",
 
 test("planOversikt: hvert mål én gang, og punktet peker på FØRSTE forekomst", () => {
   const g = planOversikt(vis("artist:a1", "tiår:1950", "artist:a1", "tiår:1950:society", "yt:abcdefghijk::45", "yt:abcdefghijk::130"), { artister });
-  assert.deepEqual(g[0].punkter, [{ tekst: "Elvis Presley", detalj: "", stopp: 0 }]);
+  assert.deepEqual(g[0].punkter, [{ tekst: "Elvis Presley", detalj: "", stopp: 0, stoppene: [0, 2] }]);
   assert.equal(g.find((k) => k.id === "tiaar").punkter.length, 1, "uten modus og «society» er samme visning");
   // Samme video fra to ulike tidspunkt er to lyttemomenter.
   assert.deepEqual(g.find((k) => k.id === "lytteeksempler").punkter.map((p) => p.detalj), ["fra 0:45", "fra 2:10"]);
@@ -376,7 +376,7 @@ test("planOversikt: hvert mål én gang, og punktet peker på FØRSTE forekomst"
 test("planOversikt: slettede mål og ugyldige stopp utelates, tom plan gir ingen kategorier", () => {
   const g = planOversikt(vis("artist:borte", "tech:borte", "ukjent:x", "artist:a3"), { artister, tech });
   assert.deepEqual(g.map((k) => k.id), ["artister"]);
-  assert.deepEqual(g[0].punkter, [{ tekst: "Aretha Franklin", detalj: "", stopp: 3 }]);
+  assert.deepEqual(g[0].punkter, [{ tekst: "Aretha Franklin", detalj: "", stopp: 3, stoppene: [3] }]);
   assert.deepEqual(planOversikt([], { artister }), []);
   assert.deepEqual(planOversikt(undefined), []);
 });
@@ -1126,4 +1126,31 @@ test("presTast: venstre og høyre pil fra et tomt søkefelt", async () => {
   assert.equal(erTomtLinjefelt(null), false);
   const kildeP = readFileSync(new URL("../../js/visning/presentasjon.js", import.meta.url), "utf8");
   assert.match(kildeP, /tomtFelt: erTomtLinjefelt\(document\.activeElement\),/);
+});
+
+// Oversikten med O (v6.72) viser hvor langt visningen har kommet (v6.80,
+// brukerønske 2026-10-12): gått gjennom og der dere står.
+test("oversiktStatus: der dere står går foran gått gjennom; et mål som står flere ganger, teller alle plassene", () => {
+  assert.equal(oversiktStatus([3], new Set([0, 1]), 3), "naa");
+  assert.equal(oversiktStatus([3], new Set([3]), 3), "naa");
+  assert.equal(oversiktStatus([0, 5], new Set([5]), 2), "besokt");
+  assert.equal(oversiktStatus([0, 5], [0], null), "besokt", "array går også");
+  assert.equal(oversiktStatus([4], new Set([0, 1]), null), "");
+  assert.equal(oversiktStatus(undefined, undefined, null), "");
+});
+
+test("visningen husker stoppene som er vist, og nullstiller ved ny start uten ?stopp", async () => {
+  const { readFileSync } = await import("node:fs");
+  const kilde = readFileSync(new URL("../../js/visning/presentasjon.js", import.meta.url), "utf8");
+  assert.match(kilde, /besokt: "pensumPresBesokt"/);
+  assert.match(kilde, /if \(!p\.oversikt\) merkBesokt\(p\.stopp\);/);
+  assert.match(kilde, /if \(!medStopp\) \{ try \{ sessionStorage\.removeItem\(LAGRING\.besokt\); \}/);
+  assert.match(kilde, /oversiktStatus\(p\.stoppene, besokt, naa\)/);
+});
+
+test("i visningen tar dialogen fokuset, ikke ←-knappen (ingen fokusramme på lerretet, v6.80)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+  assert.match(les("js/ui/ui-modal.js"), /\(\(iVisning \? null : focusables\(el\)\[0\]\) \|\| dialog\)\?\.focus\(\);/);
+  assert.match(les("css/styles.css"), /body\.presentasjon \.modal:focus \{ outline: none; \}/);
 });

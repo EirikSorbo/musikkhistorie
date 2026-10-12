@@ -52,7 +52,8 @@ Ingen innlogging for studentene – de åpner bare lenken og bidrar.
   2 minutter» og «Timen er over om 2 minutter», også på lerretet
   (v6.74–6.76, erstatter den faste lista for fri visning fra v6.72). En lenke i påminnelsen åpner kortet og lukker
   påminnelsen. Tasten O viser planens oversikt oppå stoppet uten å flytte
-  posisjonen.
+  posisjonen, med det som er gått gjennom haket av og «her er dere» ved
+  stoppet som vises (v6.80).
   «Ta opp» logger alt læreren åpner. Editoren har søk, dra og slipp og
   «Husk visningen» per stopp. Tasten N i visningen åpner «Navn fra timen»:
   en artist som kom opp, og hvem som foreslo den, lagres til oppfølging på

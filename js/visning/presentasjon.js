@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -81,6 +81,9 @@ const LAGRING = {
   paminnelser: "pensumPresPaminnelser",
   // Raske påminnelser (tasten R, v6.72): bare denne visningen.
   raskePaminnelser: "pensumPresRaskePaminnelser",
+  // Stoppene i planen som er vist (v6.80): { plan, stopp: [plassene] }, for
+  // «gått gjennom» i oversikten. Nullstilles når planen startes på nytt.
+  besokt: "pensumPresBesokt",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -120,6 +123,11 @@ export function erPresentasjon() {
       skriv(LAGRING.plan, param);
       if (!tilbakeISammePlan) {
         let s = 0;
+        let medStopp = false;
+        try { medStopp = new URLSearchParams(window.location.search).has("stopp"); } catch (e) {}
+        // Uten ?stopp er det en ny start («Spill av»): det som var gått gjennom,
+        // nullstilles. Med ?stopp (omlasting) står det.
+        if (!medStopp) { try { sessionStorage.removeItem(LAGRING.besokt); } catch (e) {} }
         try { s = Number(new URLSearchParams(window.location.search).get("stopp")); } catch (e) {}
         skriv(LAGRING.stopp, String(Number.isFinite(s) && s > 0 ? Math.trunc(s) : 0));
       }
@@ -323,6 +331,7 @@ function gaTilStopp(i) {
 
   stoppIdx = p.pos;
   lagrePosisjon();
+  if (!p.oversikt) merkBesokt(p.stopp);
 
   // Stoppets definisjon gjelder: unntak satt i farten lever bare fram til
   // neste stoppbytte. Oversiktskortene har ingen egen definisjon.
@@ -552,6 +561,20 @@ function oversiktModal() {
   return m;
 }
 
+// Stoppene som er vist i denne planen (v6.80), som plasser i planen (0-basert).
+function besokteStopp() {
+  try {
+    const b = JSON.parse(les(LAGRING.besokt) || "null");
+    return b?.plan === planId && Array.isArray(b.stopp) ? new Set(b.stopp) : new Set();
+  } catch (e) { return new Set(); }
+}
+function merkBesokt(i) {
+  const b = besokteStopp();
+  if (b.has(i)) return;
+  b.add(i);
+  skriv(LAGRING.besokt, JSON.stringify({ plan: planId, stopp: [...b] }));
+}
+
 function tegnOversikt() {
   const m = document.getElementById("modal-pres-oversikt");
   if (!m || !plan) return;
@@ -561,10 +584,17 @@ function tegnOversikt() {
     tech: s.techItems,
     nodeNavn: (id) => GENEALOGY.find((n) => n.id === id)?.l,
   });
-  const slutt = planPosisjon(stoppIdx, plan.stopp.length).oversikt === "slutt";
+  const pos = planPosisjon(stoppIdx, plan.stopp.length);
+  const slutt = pos.oversikt === "slutt";
+  // Hvor langt dere har kommet (v6.80, brukerønske 2026-10-12): haket av når
+  // det er vist, uthevet der dere står (når oversikten vises med O).
+  const besokt = besokteStopp();
+  const naa = pos.oversikt ? null : pos.stopp;
+  // Stoppet dere står på, er ikke gått gjennom ennå.
+  const gjennom = [...besokt].filter((i) => i >= 0 && i < plan.stopp.length && i !== naa).length;
   m.querySelector("#pres-ov-tittel").textContent = plan.tittel;
   m.querySelector("#pres-ov-merke").textContent =
-    `${slutt ? "Oppsummering" : "Oversikt"} · ${plan.stopp.length} stopp`;
+    `${slutt ? "Oppsummering" : "Oversikt"} · ${plan.stopp.length} stopp${gjennom ? ` · ${gjennom} gått gjennom` : ""}`;
   // «Spill alle lytteeksemplene» (v5.75) når planen har minst to.
   const ider = lytteeksemplerIPlanen();
   const verktoy = m.querySelector("#pres-ov-verktoy");
@@ -576,9 +606,14 @@ function tegnOversikt() {
   m.querySelector("#pres-ov-grid").innerHTML = grupper.map((k) => `
     <section class="pres-ov-kat">
       <h3>${escapeHtml(k.navn)}</h3>
-      <ul>${k.punkter.map((p) => `
-        <li><button type="button" class="pres-ov-punkt" data-ov-stopp="${p.stopp}">${escapeHtml(p.tekst)}</button>${
-          p.detalj ? ` <span class="pres-ov-detalj">${escapeHtml(p.detalj)}</span>` : ""}</li>`).join("")}
+      <ul>${k.punkter.map((p) => {
+        const status = oversiktStatus(p.stoppene, besokt, naa);
+        return `
+        <li${status ? ` class="pres-ov-${status}"` : ""}><button type="button" class="pres-ov-punkt" data-ov-stopp="${p.stopp}"${
+          status === "besokt" ? ' title="Gått gjennom"' : ""}>${escapeHtml(p.tekst)}</button>${
+          p.detalj ? ` <span class="pres-ov-detalj">${escapeHtml(p.detalj)}</span>` : ""}${
+          status === "naa" ? ` <span class="pres-ov-her">her er dere</span>` : ""}</li>`;
+      }).join("")}
       </ul>
     </section>`).join("");
 }

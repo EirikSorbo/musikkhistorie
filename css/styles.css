@@ -3744,6 +3744,18 @@ body.presentasjon .pres-oversikt .modal-head h2 { font-size: 2rem; }
 }
 .pres-ov-punkt:hover { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
 .pres-ov-detalj { color: var(--muted); font-size: 0.95rem; }
+/* Hvor langt dere har kommet (v6.80): gått gjennom er dempet med hake, der
+   dere står er halvfett i dagens farge med «her er dere». */
+/* Dialogen selv tar fokuset i visningen (ui-modal.js, v6.80): ingen ramme rundt
+   hele kortet. Knappene inni har fortsatt sin fokusramme med Tab. */
+body.presentasjon .modal:focus { outline: none; }
+.pres-ov-besokt .pres-ov-punkt { color: var(--muted); }
+.pres-ov-besokt .pres-ov-punkt::before { content: "✓"; display: inline-block; width: 1.1em; color: var(--accent); font-weight: 700; }
+.pres-ov-naa .pres-ov-punkt { color: var(--text-accent); font-weight: 700; }
+.pres-ov-her {
+  margin-left: 0.4em; font-size: 0.75rem; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+}
 
 /* Svart skjerm (v5.38, tasten B eller «.»): over ALT, også verktøylinja,
    så lerretet er helt mørkt mens klassen diskuterer. Pekeren skjules. */
