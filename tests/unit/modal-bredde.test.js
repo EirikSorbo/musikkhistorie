@@ -105,3 +105,14 @@ test("lærerlista har to kort i bredden, og tegningen beholder klassen", () => {
   assert.match(ui, /el\.className = grunnKlasser;/);
   assert.doesNotMatch(ui, /el\.className = "artist-list";/);
 });
+
+// Større hvit ramme på store skjermer (v6.98, brukerønske 2026-10-13): kortet
+// blir bredere og høyere, innholdet beholder 944 px, sentrert.
+test("innholdskortene får større ramme på desktop, med innholdet i samme bredde", () => {
+  const css = les("css/styles.css");
+  const blokk = css.slice(css.indexOf("@media (min-width: 1100px) {\n  body:not(.presentasjon) .modal.modal-innhold {"));
+  assert.ok(blokk.length > 0, "fant ikke desktop-blokka");
+  assert.match(blokk, /max-width: min\(94vw, 1360px\);/);
+  assert.match(blokk, /min-height: min\(78vh, 820px\);/);
+  assert.match(blokk, /body:not\(\.presentasjon\) \.modal\.modal-innhold > \* \{\n\s*max-width: 944px;\n\s*margin-inline: auto;/);
+});

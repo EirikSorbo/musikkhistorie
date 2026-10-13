@@ -1813,6 +1813,24 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    smalere vinduer fyller kortet vinduet, slik de brede kortene alltid har
    gjort, og på mobil er alt som før. */
 .modal.modal-innhold { max-width: clamp(860px, 90vw, 1000px); }
+/* Større hvit ramme rundt innholdskortene på store skjermer (v6.98, brukerønske
+   2026-10-13): kortet dekker mer av skjermen, men innholdet beholder bredden
+   det hadde (1000 px-kortet minus margen, 944 px). Selve kortet blir bredere og
+   høyere; barna i det er avgrenset og sentrert, så tittelen, ✕ og innholdet
+   står i samme spalte som før. Gjelder ikke skjemaene (modal-wide) eller
+   lerretet (presentasjonen har egne regler). */
+@media (min-width: 1100px) {
+  body:not(.presentasjon) .modal.modal-innhold {
+    max-width: min(94vw, 1360px);
+    max-height: 92vh;
+    min-height: min(78vh, 820px);
+    padding: 40px 48px;
+  }
+  body:not(.presentasjon) .modal.modal-innhold > * {
+    max-width: 944px;
+    margin-inline: auto;
+  }
+}
 /* Brødteksten beholder en lesbar linjelengde i den brede rammen: 68ch er
    rundt 85 tegn med Inter, omtrent det beskrivelsene hadde i 640 px-kortet
    (de står under bildet, i full bredde). Tidslinjer, varmekart, lister og
