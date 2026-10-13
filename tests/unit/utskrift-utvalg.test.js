@@ -68,3 +68,29 @@ test("kortUtskriftHtml speiler tilstanden og bare synlige artister får knapp", 
   assert.match(fot, /class="btn ghost small utskrift-ikonknapp kort-utskrift er-med"/);
   assert.match(fot, /data-vis="artist:a"/);
 });
+
+// Skriverikonet går rett til utskriften (v6.81, brukerønske 2026-10-13): ingen
+// skuff eller mellomvindu med «Åpne utskriften». Lenka er vanlig, og ingen kode
+// fanger klikket.
+test("skriverikonet er en vanlig lenke til utskriftssiden, uten skuff", async () => {
+  const { readFileSync, existsSync, readdirSync } = await import("node:fs");
+  const rot = new URL("../../", import.meta.url);
+  const les = (f) => readFileSync(new URL(f, rot), "utf8");
+  assert.equal(existsSync(new URL("js/utskrift/utskrift-skuff.js", rot)), false);
+  for (const side of ["index.html", "teacher.html", "tre.html", "student.html"]) {
+    assert.match(les(side), /<a href="utskrift\.html" class="nav-icon nav-utskrift"/, side);
+    assert.doesNotMatch(les(side), /utskrift-skuff/, `${side}: importkartet`);
+  }
+  const jsFiler = [];
+  (function gaa(d) {
+    for (const e of readdirSync(new URL(d, rot), { withFileTypes: true })) {
+      if (e.name === "vendor") continue;
+      if (e.isDirectory()) gaa(`${d}${e.name}/`); else if (e.name.endsWith(".js")) jsFiler.push(`${d}${e.name}`);
+    }
+  })("js/");
+  for (const f of jsFiler) {
+    const kilde = les(f);
+    assert.doesNotMatch(kilde, /utskrift-skuff|initUtskriftSkuff/, f);
+    assert.doesNotMatch(kilde, /a\.nav-utskrift/, `${f}: ingen kode skal fange klikket på skriverikonet`);
+  }
+});

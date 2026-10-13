@@ -26,7 +26,6 @@ import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initVisning, visningTikk } from "./visning/visning.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
-import { initUtskriftSkuff } from "./utskrift/utskrift-skuff.js";
 import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 import { fetchPendingEdits } from "./data/store.js";
 import { openProposalEditor } from "./forslag/proposals.js";
@@ -99,7 +98,6 @@ export function initTrePage({ render }) {
   initVisning();
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
   initUtskriftValg({ hentData: () => state });
-  initUtskriftSkuff();
 
   // Rendereren får sidens FELLES sjangerOpts. Den bygger ikke lenger sin egen,
   // så node-klikk i kartet og sjanger-chip på et artistkort åpner identisk kort.

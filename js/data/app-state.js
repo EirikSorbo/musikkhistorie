@@ -5,7 +5,7 @@
 //  tilbakekall (onArtistClick, onCheck …) og getState, som gir sidens state
 //  (artister, innhold, sjangerbeskrivelser …). Alt som trenger tilstanden,
 //  leser den herfra. Modulen importerer ingenting, så YouTube-spilleren,
-//  visningen og utskriftsskuffen kan lese tilstanden uten å dra med seg hele
+//  visningen og utskriften kan lese tilstanden uten å dra med seg hele
 //  Utforsk-laget. (Til og med v6.28 lå dette i explore-context.js.)
 //
 //  ES-modulers live bindings gjør at `opts` satt via setOpts sees av alle

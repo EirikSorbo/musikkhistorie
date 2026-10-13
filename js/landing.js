@@ -26,7 +26,6 @@ import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initVisning, visningTikk } from "./visning/visning.js";
 import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./utforsk/explore-timer.js";
 import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift/utskrift-utvalg.js";
-import { initUtskriftSkuff } from "./utskrift/utskrift-skuff.js";
 import { askChoice, melding, modalOpen, modalCloseTop, setupModal } from "./ui/ui-modal.js";
 import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./forslag/proposals.js";
 import { currentEntityValues } from "./forslag/entity-values.js";
@@ -688,8 +687,9 @@ function init() {
   initVisning();
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
   initUtskriftValg({ hentData: () => state });
-  // Skuffen under skriverikonet (v5.76): utvalget som liste uten sidebytte.
-  initUtskriftSkuff();
+  // Skriverikonet går rett til utskriften (v6.81, brukerønske 2026-10-13):
+  // skuffen med utvalget (v5.76) er tatt bort. Lista, fjerningen og
+  // rekkefølgen står på utskriftssiden.
   // Pil-mot-skriveren i Finn artister (v5.66): alle artistene i lista slik
   // den står filtrert nå. Uten filter er det hele pensumet, så da spørres det
   // først. Ikonet er det delte, så det ser likt ut som i kortene.

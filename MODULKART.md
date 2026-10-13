@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-104 filer i 11 mapper.
+103 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -15,7 +15,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/visning/` | Visning | 11 |
 | `js/laerer/` | Lærersiden | 7 |
 | `js/forslag/` | Endringsforslag | 3 |
-| `js/utskrift/` | Utskrift | 3 |
+| `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 13 |
 | `js/data/` | Data | 8 |
 | `js/felles/` | Felles hjelpere | 13 |
@@ -146,7 +146,6 @@ Utvalget til heftet og heftets oppbygning. Selve siden er js/utskrift.js.
 | Fil | Hva den gjør |
 |---|---|
 | `utskrift-modell.js` | UTSKRIFT — ren modell (v5.56) |
-| `utskrift-skuff.js` | SKUFFEN — utskriftsutvalget under skriverikonet (v5.76) |
 | `utskrift-utvalg.js` | UTSKRIFT — utvalget i nettleseren (v5.56) |
 
 ## `js/ui/` Byggeklosser for skjermen

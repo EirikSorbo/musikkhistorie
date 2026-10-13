@@ -52,7 +52,6 @@ import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
 import { initNotater, redigerNotatForKort } from "./visning/pres-notater.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
-import { initUtskriftSkuff } from "./utskrift/utskrift-skuff.js";
 import { renderDesk } from "./laerer/teacher-desk.js";
 import { setupDataButtons, setupImportChoice } from "./laerer/teacher-import.js";
 import { setupFormatBars } from "./ui/format-bar.js";
@@ -229,7 +228,6 @@ function startAppInner() {
   initNotater({ erLaererNaa: () => true });
   // «Ta med i utskriften» i kortenes tittellinje + merket på skriverikonet (v5.56).
   initUtskriftValg({ hentData: () => state });
-  initUtskriftSkuff();
 
   // Tiår-kortet (v6.07, S1) åpner det samme tiårsvinduet som studentene ser;
   // «Rediger» i fanene fører til lærerens tiårsmodal (onDecadeEdit over).
