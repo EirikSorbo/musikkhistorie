@@ -59,5 +59,5 @@ test("Skrivebordet lagrer delene sammen med resten, og guiden har ingen Sjekk", 
   assert.match(desk, /punkter: v\.punkter,\n\s+guide: v\.guide,/, "savePage overskriver dokumentet, så guide må med i hver lagring");
   assert.match(desk, /data-guide-del="\$\{escapeHtml\(t\)\}"/);
   const innhold = fs.readFileSync(new URL("../../js/utforsk/explore-innhold.js", import.meta.url), "utf8");
-  assert.match(innhold, /sjekk: pageId !== "appGuide"/);
+  assert.match(innhold, /sjekk: !USJEKKEDE_SIDER\.includes\(pageId\)/);
 });

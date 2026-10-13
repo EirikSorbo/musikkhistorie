@@ -23,7 +23,7 @@ function modalKlasser(src, id) {
 const INNHOLDSKORT = {
   "index.html": ["modal-artister", "modal-detail"],
   "tre.html": ["modal-artist-detail"],
-  "teacher.html": ["modal-detail"],
+  "teacher.html": ["modal-detail", "modal-laerer-handbok"],
   "js/utforsk/explore-modals.js": [
     "modal-teknologi", "modal-instrumenter", "modal-podkaster", "modal-instr-tech",
     "modal-decade-view", "modal-varmekart", "modal-sjangerperioder", "modal-sjangerhimmel",

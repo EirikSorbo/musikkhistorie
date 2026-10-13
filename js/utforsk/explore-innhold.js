@@ -39,6 +39,9 @@ export function openAppGuide() {
   modalOpen(modal);
 }
 
+// Sidene uten Sjekk-knapp: bruksveiledningen og lærerhåndboken.
+const USJEKKEDE_SIDER = ["appGuide", "laererHandbok"];
+
 // Innholdssidene «Om historie» (omHistorie) og «Røtter før 1910» (rotter):
 // teksten bor i Firestore (content/<id>.body, markdown-light) og rendres ved
 // hver åpning, så import/redigering slår gjennom umiddelbart. INGEN fallback-
@@ -61,12 +64,13 @@ export function renderPage(pageId, bodyElId, extraElId) {
       : "Laster innhold …"}</p>`;
   }
   // Lærer: Sjekk + Rediger over teksten (delt knapperad). Bruksveiledningen
-  // sjekkes ikke (v6.95): den er unntatt «Bare sjekket innhold».
+  // sjekkes ikke (v6.95): den er unntatt «Bare sjekket innhold». Det er heller
+  // ikke lærerhåndboken (v7.01), som studentene aldri ser.
   injectTeacherRow(document.getElementById(extraElId), {
     category: "pages",
     id: pageId,
     onEdit: opts.onPageEdit ? () => opts.onPageEdit(pageId) : null,
-    sjekk: pageId !== "appGuide",
+    sjekk: !USJEKKEDE_SIDER.includes(pageId),
   });
 }
 

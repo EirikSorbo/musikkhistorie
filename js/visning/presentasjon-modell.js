@@ -931,8 +931,9 @@ export const LERRET_KANAL = "pensum-lerret";
 
 // Lærerens egne verktøy, som aldri vises på lerretet: «Navn fra timen» har
 // studentenes fornavn, kjøreplan-editoren og tastoversikten er styring.
-// Dialoger uten id (spørsmål og bekreftelser) holdes også utenfor.
-export const LERRET_PRIVAT = new Set(["modal-timeliste", "modal-pres-taster", "modal-visning", "modal-vk-edit", "modal-proposal"]);
+// Dialoger uten id (spørsmål og bekreftelser) holdes også utenfor. Fra v7.01
+// også innstillingene (de viser lærerkontoen) og lærerhåndboken.
+export const LERRET_PRIVAT = new Set(["modal-timeliste", "modal-pres-taster", "modal-visning", "modal-vk-edit", "modal-proposal", "modal-settings", "modal-laerer-handbok"]);
 
 // Notatene følger kortet: artist, sjanger, innovasjon og tiår. Nøkkelen er
 // dokument-id-en i notater-samlingen. Tiåret har ett notat for begge fanene,

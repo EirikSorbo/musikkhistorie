@@ -22,6 +22,7 @@ import { onGenreModelChanged } from "./sjangre/genre-model.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
 import { initExplore } from "./utforsk/explore.js";
+import { renderPage } from "./utforsk/explore-innhold.js";
 import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 
 import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./laerer/teacher-state.js";
@@ -262,6 +263,11 @@ function startAppInner() {
   // direkte som aktiv. Før gikk knappen til studentskjemaet og godkjenningskøen.
   document.getElementById("btn-ny-artist")?.addEventListener("click", () => openNyArtist());
 
+  // Lærerhåndboken (v7.01) under Innstillinger. ctx: editoren åpner den igjen
+  // etter lagring, som de andre innholdssidene.
+  document.getElementById("btn-laerer-handbok")?.addEventListener("click", openLaererHandbok);
+  ctx.openLaererHandbok = openLaererHandbok;
+
   // Frittstående referanser: står ved siden av «Ny artist», siden begge legger
   // til noe som ikke finnes fra før.
   const btnNyRef = document.getElementById("btn-ny-referanse");
@@ -317,6 +323,7 @@ function startAppInner() {
       // Åpne innholdsvisninger (sider/varmekart/instrumentsammendrag)
       // re-rendres så import/redigering slår gjennom umiddelbart.
       ctx.explore?.contentChanged?.();
+      if (document.getElementById("modal-laerer-handbok")?.classList.contains("open")) tegnLaererHandbok();
       ctx.explore?.renderInstrumenter?.();
       oppdaterOversiktPlateselskaper();
       refreshGenreAdmin();
@@ -383,6 +390,18 @@ function startAppInner() {
     if (hash === "#innstillinger") openAdminModal("modal-settings");
     else openOversikt();
   }
+}
+
+// Lærerhåndboken (v7.01, brukerønske 2026-10-14): teksten bor i
+// content/laererHandbok og tegnes som de andre innholdssidene (renderPage), med
+// Rediger i hodet. Vinduet legger seg oppå Innstillinger, så ← går tilbake dit.
+function tegnLaererHandbok() {
+  renderPage("laererHandbok", "lh-body", "lh-extra");
+}
+
+function openLaererHandbok() {
+  tegnLaererHandbok();
+  openAdminModal("modal-laerer-handbok");
 }
 
 setupGate();

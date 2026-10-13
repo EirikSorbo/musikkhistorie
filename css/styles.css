@@ -279,6 +279,7 @@
   --icon-l-sjangertre: var(--icon-mono, var(--violet-600));
   --icon-l-podkast: var(--icon-mono, var(--pink-600));
   --icon-l-referanse: var(--icon-mono, var(--blue-700));
+  --icon-l-handbok: var(--icon-mono, var(--cyan-600));
   --icon-l-konto: var(--icon-mono, var(--green-600));
   --icon-l-eksport: var(--icon-mono, var(--blue-700));
   --icon-l-import: var(--icon-mono, var(--teal-600));

@@ -839,7 +839,7 @@ export function setupReferanseEditor() {
 //  ifra om at tekst mangler. Forhåndsvisningen bruker samme renderRichText
 //  som studentvisningen — det du ser er det studentene får.
 
-const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910", appGuide: "Slik bruker du appen", skriveveiledning: "Slik skriver du beskrivelsen" };
+const PAGE_TITLES = { omHistorie: "Om historie", rotter: "Røtter før 1910", appGuide: "Slik bruker du appen", laererHandbok: "Lærerhåndbok", skriveveiledning: "Slik skriver du beskrivelsen" };
 
 // { type: "story", id: <sjanger> } eller { type: "page", id: <sideId> }
 let editorTarget = null;
@@ -973,6 +973,7 @@ export function setupStoryEditor() {
     else if (editorTarget.id === "omHistorie") ctx.explore.openOmHistorie();
     else if (editorTarget.id === "rotter") ctx.explore.openRotter();
     else if (editorTarget.id === "appGuide") ctx.explore.openAppGuide();
+    else if (editorTarget.id === "laererHandbok") ctx.openLaererHandbok?.();
   };
 
   $("#se-save").addEventListener("click", async () => {
