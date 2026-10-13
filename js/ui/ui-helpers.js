@@ -12,7 +12,7 @@
 import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "../felles/util.js";
 import { wireAllLinks, nevnteArtister } from "../felles/linkify.js";
 import { renderRichText, renderInline } from "../felles/rich-text.js";
-import { GENDERS, instrumenterFor, erSkjult } from "../felles/limits.js";
+import { GENDERS, UKJENT_KJONN, instrumenterFor, erSkjult } from "../felles/limits.js";
 import { artistSjekketOk } from "../felles/sjekket.js";
 import { askChoice, modalClose } from "./ui-modal.js";
 import { lesPunkter, punkterTilTekst, punktVarsel } from "../felles/punkter.js";
@@ -43,7 +43,7 @@ export function imgTag(url, alt, width) {
   return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async"${fallback} />`;
 }
 
-export const GENDER_LABEL = Object.fromEntries(GENDERS.map((g) => [g.value, g.label]));
+export const GENDER_LABEL = Object.fromEntries([...GENDERS, UKJENT_KJONN].map((g) => [g.value, g.label]));
 
 // Beskrivelser (artist, sjanger, kobling, innovasjon) rendres som markdown-
 // light gjennom den DELTE parseren, samme som historiene og innholdssidene.

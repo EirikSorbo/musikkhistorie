@@ -12,10 +12,10 @@ import { addPendingEdit, addTechProposal, resubmitTech, resubmitPendingEdit } fr
 import { diffFields } from "../ui/ui-edit.js";
 import { modalOpen, modalClose } from "../ui/ui-modal.js";
 import { TECH_CATEGORIES, TECH_TYPES } from "../ui/ui-tech.js";
-import { ARTIST_FIELDS } from "../data/artist-schema.js";
-import { GENDERS, INSTRUMENTS, INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "../felles/limits.js";
-import { WORK_SPEC, SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "../ui/row-editor.js";
-import { GENEALOGY_META_GENRES, GENEALOGY_MAIN_GENRES } from "../sjangre/genre-model.js";
+import { INSTRUMENT_TIMELINE_GROUPS, DECADE_OPTIONS, SAMMENDRAG_MAKS } from "../felles/limits.js";
+import { SOURCE_SPEC, musicSpecWithGenres, addRow, buildRows, collectRows, normalizeRows } from "../ui/row-editor.js";
+import { GENEALOGY_MAIN_GENRES } from "../sjangre/genre-model.js";
+import { apneArtistSkjema } from "../ui/artist-skjema.js";
 import { setupGenrePicker, fillGenrePicker, buildGenrePicker, collectGenrePicker } from "../sjangre/genre-picker.js";
 import { setupFormatBars } from "../ui/format-bar.js";
 import { TREG_SENDING_MELDING, escapeHtml } from "../felles/util.js";
@@ -26,48 +26,11 @@ import { wireCharCount } from "../ui/ui-helpers.js";
 // frosset en tom liste for alltid (samme felle som student.js dokumenterer).
 const sorterteSjangre = () => [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"));
 const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre());
-const valgListe = (verdier, tom) => [{ value: "", label: tom }, ...verdier.map((v) => ({ value: v, label: v }))];
 
-// Artistfeltene utledes fra det delte skjemaet (artist-schema.js), og skal ha
-// NØYAKTIG de samme inngangene som «Foreslå en artist» (student.html).
-// T.o.m. v4.99 falt «complex»-feltene (sentrale verk, musikkeksempler, kilder)
-// ut her: en student kunne foreslå en HELT ny artist med lytteeksempler, men
-// ikke føye ett til på en artist som alt lå inne. Nå har de samme rad-editorer
-// begge steder. Funksjon, ikke konstant: sjangre og metasjangre kommer fra
-// treet i Firestore.
-function artistSpecs() {
-  return ARTIST_FIELDS.map((f) => {
-    if (f.type === "gender") {
-      return { ...f, type: "select", options: [{ value: "", label: "Velg…" }, ...GENDERS] };
-    }
-    // Kontrollerte vokabularer, som i skjemaet for ny artist. Et fritekstfelt
-    // her lot studenten foreslå en verdi som ikke finnes noe sted i appen.
-    // En lagret verdi utenfor lista beholdes av select-koden under, så gammel
-    // data aldri mistes stille.
-    if (f.key === "metaGenre") {
-      return { ...f, type: "select", options: valgListe(GENEALOGY_META_GENRES, "Velg metasjanger …") };
-    }
-    if (f.key === "instrument") {
-      return { ...f, type: "select", options: valgListe(INSTRUMENTS, "Velg instrument …") };
-    }
-    if (f.key === "mainGenre") {
-      return { ...f, type: "genres", label: "Sjangre (fra slektstreet)", full: true };
-    }
-    if (f.key === "keyWorks") {
-      return { ...f, type: "rows", spec: () => WORK_SPEC, addLabel: "+ Legg til verk", full: true };
-    }
-    if (f.key === "musicExamples") {
-      return { ...f, type: "rows", spec: musicSpecSj, addLabel: "+ Legg til musikkeksempel", full: true };
-    }
-    if (f.key === "kilder") {
-      return { ...f, type: "rows", spec: () => SOURCE_SPEC, addLabel: "+ Legg til kilde", full: true };
-    }
-    if (f.type === "csv") {
-      return { ...f, label: `${f.label} (kommaseparert)` };
-    }
-    return { ...f };
-  });
-}
+// Artistene har sitt eget femstegs-skjema fra v6.96 (js/ui/artist-skjema.js,
+// brukervalg 2026-10-13): det samme som «Foreslå en artist» og lærerens
+// redigering. openProposalEditor sender dem dit (apneArtistForslag under);
+// feltlistene her gjelder de andre korttypene.
 
 const KILDE_FELT = { key: "kilder", label: "Kilder", type: "rows", spec: () => SOURCE_SPEC, addLabel: "+ Legg til kilde", full: true };
 
@@ -139,9 +102,9 @@ const FIELD_SPECS = {
   ],
 };
 
-// Feltene for en entityType. Artist bygges ved kall (asynkront vokabular).
+// Feltene for en entityType (artistene har eget skjema, se over).
 function fieldSpecsFor(entityType) {
-  return entityType === "artist" ? artistSpecs() : (FIELD_SPECS[entityType] || null);
+  return FIELD_SPECS[entityType] || null;
 }
 
 const TITLES = {
@@ -334,8 +297,8 @@ function lesForslagsstiller() {
 
 // En halvutfylt rad droppes stille av collectRows (den filtrerer på keepKey, og
 // tallfelter/URL-er som ikke holder mål forsvinner). Studenten skal få vite det
-// framfor å tro at raden ble sendt inn. Speiler validateExampleRows/
-// validateSourceRows i student.js.
+// framfor å tro at raden ble sendt inn. Samme regler som artistskjemaet
+// (finnFeil i js/ui/artist-skjema.js).
 function validateRows(specs) {
   for (const spec of specs) {
     if (spec.type !== "rows") continue;
@@ -360,10 +323,6 @@ function validateRows(specs) {
         if (start && !start.validity.valid) {
           return `Starttiden for ${tittel ? `«${tittel}»` : "musikkeksempelet"}: ${start.validationMessage}`;
         }
-      } else if (rowSpec === WORK_SPEC) {
-        const tittel = les("work-title"), url = les("work-url");
-        if (!tittel && url) return "Et verk har en lenke, men mangler tittel. Skriv inn tittelen.";
-        if (tittel && url && !erHttpUrl(url)) return `Verket «${tittel}» har en ugyldig lenke (må starte med https://).`;
       }
     }
   }
@@ -424,6 +383,7 @@ export function openReturInnsending(retur, currentValues) {
 // Hoved-API: åpne redigereren for en eksisterende entitet.
 // config = { entityType, entityId, entityName, currentValues, retur? }
 export function openProposalEditor(config) {
+  if (config.entityType === "artist") return apneArtistForslag(config);
   const modal = document.getElementById("modal-proposal");
   if (!modal) return;
   const alleSpecs = fieldSpecsFor(config.entityType);
@@ -551,6 +511,66 @@ export function openProposalEditor(config) {
   };
 
   modalOpen(modal);
+}
+
+// «Foreslå endring» på en artist (v6.96): det felles femstegs-skjemaet i
+// forslagsmodus. Diffen mot dagens verdier blir endringsforslaget, som før.
+// Ved retur redigerer studenten videre på sitt eget forslag: skjemaet fylles
+// med forslaget lagt oppå dagens verdier, og diffen regnes fortsatt mot dagens
+// verdier, så det som sendes er hele det gjeldende avviket.
+function apneArtistForslag(config) {
+  const retur = config.retur || null;
+  const naa = config.currentValues || {};
+  const grunnlag = retur ? { ...naa, ...(retur.proposedFields || {}) } : naa;
+  const gen = ++apneGen;
+  apneArtistSkjema({
+    modus: "forslag",
+    tittel: retur
+      ? `Lever på nytt: ${config.entityName || config.entityId || ""}`
+      : `${TITLES.artist}: ${config.entityName || ""}`,
+    // «Ditt navn» er den som foreslår nå, ikke den som la inn artisten.
+    verdier: { ...grunnlag, proposedBy: retur?.proposedBy || "" },
+    retur: retur ? {
+      html: `<strong>Tilbakemelding fra læreren:</strong> ${escapeHtml(retur.teacherFeedback || "")}`,
+      kommentar: true,
+    } : null,
+    sendTekst: retur ? "Send inn på nytt" : "Send forslag",
+    onSend: async (v, api) => {
+      const { proposedBy, studentComment, ...foreslatt } = v;
+      // Radfeltene normaliseres til formen skjemaet leverer, så en urørt
+      // kilde eller et urørt lytteeksempel ikke ser endret ut.
+      const current = {
+        ...naa,
+        musicExamples: normalizeRows(musicSpecSj(), naa.musicExamples),
+        kilder: normalizeRows(SOURCE_SPEC, naa.kilder),
+      };
+      const diff = diffFields(current, foreslatt);
+      if (!Object.keys(diff).length) {
+        return {
+          tekst: retur
+            ? "Forslaget er nå helt likt det som alt står i appen, så det er ingenting å sende inn."
+            : "Du har ikke endret noe ennå.",
+          type: "error",
+        };
+      }
+      await (retur
+        ? resubmitPendingEdit(retur.id, diff, proposedBy, retur.returKode, studentComment)
+        : addPendingEdit({
+            entityType: "artist",
+            entityId: config.entityId,
+            entityName: config.entityName,
+            proposedFields: diff,
+            proposedBy,
+          }));
+      if (retur) meldReturSendt(retur.id);
+      if (gen === apneGen) api.lukkSnart(1600);
+      return {
+        tekst: retur ? "Sendt inn på nytt. Læreren ser den i køen sin." : "Takk! Forslaget er sendt til lærer.",
+        knapp: retur ? "Sendt inn på nytt ✓" : "Forslag sendt ✓",
+        laas: true,
+      };
+    },
+  });
 }
 
 // Forslag om et helt nytt innovasjonskort. Alle felter er blanke, med mindre

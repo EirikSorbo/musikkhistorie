@@ -216,13 +216,12 @@ test("instrumentsInUse tåler tom og manglende artistliste", () => {
 
 test("skjemaene beholder HELE vokabularet — ellers låses ubrukte instrumenter ute", async () => {
   const les = (f) => lesJs(f);
-  // Innsending (student) og redigering (lærer) SETTER instrument: hele lista.
-  assert.match(les("student.js"), /fillSelect\(\$\("#in-instrument"\), INSTRUMENTS/);
-  // Lærerens select går via settSelectMedVern (v5.35, audit-funn 19), som
-  // fyller med HELE vokabularet og i tillegg bevarer en ukjent lagret verdi.
-  const ta = les("teacher-artists.js");
-  assert.match(ta, /settSelectMedVern\(\$\("#ed-instrument"\), INSTRUMENTS/);
-  assert.match(ta, /function settSelectMedVern\(sel, vokabular[^)]*\) \{\n\s*fillSelect\(sel, vokabular,/);
+  // Skjemaet som SETTER instrument (det felles artistskjemaet fra v6.96,
+  // for studenter og lærer): hele lista, via vernet som også bevarer en
+  // ukjent lagret verdi (audit v5.35 funn 19).
+  const skjema = les("artist-skjema.js");
+  assert.match(skjema, /fyllNedtrekk\(felt\("instrument"\), INSTRUMENTS,/);
+  assert.match(skjema, /fyllNedtrekk\(felt\("instrument2"\), INSTRUMENTS,/);
   // Filtrene LESER av data: bare det som er i bruk.
   assert.match(les("landing.js"), /fillSelect\(\$\("#sp-instrument"\), instrumentsInUse\(/);
   assert.match(les("teacher-state.js"), /fillSelect\(\$\("#f-instrument"\), instrumentsInUse\(/);

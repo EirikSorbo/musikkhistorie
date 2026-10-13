@@ -254,6 +254,10 @@ export function renderDesk(el) {
     const regel = hit("[data-synlig-sjekket]");
     if (regel && regel.matches("input")) return endreSjekketRegel(regel.checked, regel);
 
+    // «Foreslå» (v6.96): lærerens eget artistskjema, med navnet fylt inn.
+    const foreslaa = hit("[data-desk-foreslaa]");
+    if (foreslaa) return ctx.openNyArtist?.(foreslaa.dataset.deskForeslaa);
+
     const slett = hit("[data-desk-time-slett]");
     if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
 
@@ -440,7 +444,7 @@ function timeforslagHtml() {
       <span class="desk-time-tekst"><b>${escapeHtml(p.artist || "")}</b>${p.student ? ` <span class="muted">· foreslått av ${escapeHtml(p.student)}</span>` : ""}
         <span class="muted desk-time-meta">${[dato(p.laget), p.kontekst].filter(Boolean).map((x) => escapeHtml(x)).join(" · ")}</span></span>
       <span class="desk-time-knapper">
-        <a class="btn ghost small" href="student.html?navn=${encodeURIComponent(p.artist || "")}" title="Åpne artistskjemaet med navnet fylt inn">Foreslå</a>
+        <button type="button" class="btn ghost small" data-desk-foreslaa="${escapeHtml(p.artist || "")}" title="Åpne artistskjemaet med navnet fylt inn">Foreslå</button>
         <button type="button" class="btn ghost small" data-desk-time-slett="${escapeHtml(p.id)}">Fjern</button>
       </span>
     </li>`).join("")}</ul>

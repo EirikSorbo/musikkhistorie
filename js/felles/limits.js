@@ -158,14 +158,19 @@ export const DECADE_OPTIONS = DECADES.map((d) => ({ value: String(d), label: `${
 // Kjønnskategorier brukt i skjema og statistikk. Etikettene er det eneste
 // brukeren ser (GENDER_LABEL i ui-helpers utleder alt fra denne lista) —
 // VERDIENE ligger fast i Firestore og kan ikke endres uten en migrering.
-// Derfor heter siste kategori fortsatt «ukjent» i data, men «Annet» i
-// skjemaet (v4.95); verdien «annet» var allerede opptatt av «Gruppe».
+// Verdien «annet» er «Gruppe» (opptatt fra før v4.95).
+// «Ikke-binær» (v6.96, brukervalg 2026-10-13) erstatter valget «Annet», som
+// hadde verdien «ukjent». Den fikk egen verdi framfor nytt navn, fordi
+// «ukjent» også er bøtta statistikken legger tomme og ukjente verdier i, og
+// de skal ikke telles som ikke-binære. Ingen artist hadde «ukjent» 13.10.
 export const GENDERS = [
   { value: "kvinne", label: "Kvinne" },
   { value: "mann", label: "Mann" },
   { value: "annet", label: "Gruppe" },
-  { value: "ukjent", label: "Annet" },
+  { value: "ikkebinaer", label: "Ikke-binær" },
 ];
+// Statistikkens bøtte for alt utenfor GENDERS, også tomt felt. Ikke et valg.
+export const UKJENT_KJONN = { value: "ukjent", label: "Ukjent" };
 
 // ----------------------------------------------------------------------------
 //  TELLING OG STATISTIKK
@@ -358,7 +363,7 @@ export function computeCounts(artists) {
 // Kjønnsfordeling blant aktive forslag — { kvinne: n, mann: n, ... , total }
 export function genderDistribution(artists) {
   const active = activeArtists(artists);
-  const dist = { kvinne: 0, mann: 0, annet: 0, ukjent: 0 };
+  const dist = { kvinne: 0, mann: 0, annet: 0, ikkebinaer: 0, ukjent: 0 };
   for (const a of active) {
     if (dist[a.gender] !== undefined) dist[a.gender] += 1;
     else dist.ukjent += 1;

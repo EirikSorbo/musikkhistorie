@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-107 filer i 11 mapper.
+108 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -16,7 +16,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/laerer/` | Lærersiden | 7 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
-| `js/ui/` | Byggeklosser for skjermen | 14 |
+| `js/ui/` | Byggeklosser for skjermen | 15 |
 | `js/data/` | Data | 9 |
 | `js/felles/` | Felles hjelpere | 15 |
 | `js/vendor/` | Tredjepart | 1 |
@@ -42,7 +42,7 @@ stopper et kart som ikke stemmer med filene.
 | `gate.js` | KLASSEPASSORD — enkel sperre foran appen |
 | `landing.js` | FORSIDEN (index.html) — Utforsk, dagens artist, artistsøket og stemmene |
 | `load-guard.js` | LAST-VAKT — feilmelding når Firebase ikke laster |
-| `student.js` | STUDENTSIDEN (student.html) — foreslå artist, legg til info, se liste, stem |
+| `student.js` | STUDENTSIDEN (student.html) — foreslå en artist, og lever et returnert |
 | `teacher.js` | LÆRERSIDEN (teacher.html) — innlogging, oppstart og abonnementer |
 | `tre-page.js` | SLEKTSTRESIDEN (tre.html) — oppkoblingen: treet, sjangerkortene og dataene |
 | `tre.js` | SLEKTSTRESIDEN (tre.html) — velger rendereren; resten bor i tre-page.js |
@@ -154,6 +154,7 @@ Artistkortene og listene, modalene og meldingsboksene, tidslinjene, teknologikor
 
 | Fil | Hva den gjør |
 |---|---|
+| `artist-skjema.js` | ARTISTSKJEMAET I FEM STEG — ett skjema overalt (v6.96) |
 | `artist-strip.js` | ARTIST-STRIPE — artistens aktive periode som en liten tidslinje på kortet |
 | `format-bar.js` | FORMATLINJE — knappene over tekstfeltene |
 | `row-editor.js` | RAD-EDITOR — gjenbrukbare add/collect for verk, musikkeksempler og kilder |

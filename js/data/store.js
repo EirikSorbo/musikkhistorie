@@ -251,6 +251,13 @@ export async function addArtist(data) {
   return ref;
 }
 
+// Lærerens nye artist (v6.96, brukervalg 2026-10-13): fra femstegs-skjemaet på
+// lærersiden, lagret direkte som aktiv, uten godkjenningskøen. Samme
+// dokumentform som importen (buildArtistDoc beholder status active).
+export async function addArtistAktiv(data) {
+  return addDoc(artistsCol, artistDocWithTimestamp({ ...data, status: "active" }));
+}
+
 // Firestore tillater maks 500 operasjoner per batch. ÉN kilde (genre-migrate
 // eksporterer den, planPasserIBatch og skrivingen her leser samme tall) — to
 // uavhengige konstanter kunne drive fra hverandre, og da ville en plan passert

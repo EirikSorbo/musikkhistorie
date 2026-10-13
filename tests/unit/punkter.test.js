@@ -106,9 +106,12 @@ test("import: punkter må være en liste med tekster", () => {
 
 test("oppsettet: editorfelt, kort og skjuling utenfor presentasjonen", () => {
   const html = les("teacher.html");
-  for (const id of ["ed-punkter", "tech-punkter", "ss-punkter"]) {
+  for (const id of ["tech-punkter", "ss-punkter"]) {
     assert.match(html, new RegExp(`class="[^"]*punktfelt[^"]*"[^]*?<textarea id="${id}"[^>]*data-format="inline"`), id);
   }
+  // Artistenes punkter står i det felles skjemaet fra v6.96, bare for læreren.
+  const skjema = les("js/ui/artist-skjema.js");
+  assert.match(skjema, /\$\{laerer \? `<div class="full punktfelt">\s*<label>Oppsummering i punkter\s*<textarea data-felt="punkter"[^>]*data-format="inline"/);
   assert.match(html, /id="ss-punkter-wrap" class="punktfelt" hidden/);
   // Lenkekonteksten kan bære kortet selv (medSelv, v6.05), men punktene
   // skal fortsatt gå gjennom punkterHtml i seksjonen «punkter».
@@ -119,7 +122,7 @@ test("oppsettet: editorfelt, kort og skjuling utenfor presentasjonen", () => {
   assert.match(les("js/felles/feature-flags.js"), /classList\.toggle\("skjul-punkter", grunn\.punkter\)/);
   assert.match(les("css/styles.css"), /html\.skjul-punkter body:not\(\.presentasjon\) \[data-sekt="punkter"\] \{ display: none !important; \}/);
   // Editorene lagrer via de delte hjelperne.
-  assert.match(les("js/laerer/teacher-artists.js"), /punkter: +lesPunktfelt\(\$\("#ed-punkter"\)\)/);
+  assert.match(les("js/ui/artist-skjema.js"), /if \(felt\("punkter"\)\) v\.punkter = lesPunktfelt\(felt\("punkter"\)\);/);
   assert.match(les("js/laerer/teacher-content.js"), /data\.punkter = lesPunktfelt\(\$\("#ss-punkter"\)\)/);
   assert.match(les("js/laerer/teacher-content.js"), /lesPunktfelt\(document\.getElementById\("tech-punkter"\)\)/);
 });

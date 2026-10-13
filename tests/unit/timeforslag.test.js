@@ -52,7 +52,9 @@ test("lærersiden: abonnementet og bolken på Skrivebordet, med Foreslå og Fjer
   assert.match(les("js/laerer/teacher-state.js"), /timeforslag: \[\],\n\s*timeforslagLoaded: false,/);
   const d = les("js/laerer/teacher-desk.js");
   assert.match(d, /\$\{timeforslagHtml\(\)\}/);
-  assert.match(d, /href="student\.html\?navn=\$\{encodeURIComponent\(p\.artist \|\| ""\)\}"/);
+  // «Foreslå» åpner lærerens eget artistskjema med navnet fylt inn (v6.96).
+  assert.match(d, /data-desk-foreslaa="\$\{escapeHtml\(p\.artist \|\| ""\)\}"/);
+  assert.match(d, /if \(foreslaa\) return ctx\.openNyArtist\?\.\(foreslaa\.dataset\.deskForeslaa\);/);
   assert.match(d, /data-desk-time-slett="\$\{escapeHtml\(p\.id\)\}"/);
   assert.match(d, /async function slettTimeforslag\(id\)/);
   const css = les("css/styles.css");

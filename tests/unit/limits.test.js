@@ -57,9 +57,12 @@ test("returSporring: retur-typen ruter, kortets egen type forhåndsvelger skjema
 // v4.95, men verdien ligger fast i Firestore — bytter noen den til "annet"
 // kolliderer den med «Gruppe», og all eksisterende data mister kjønnet sitt.
 test("GENDERS: verdiene ligger fast, etikettene er de synlige", () => {
-  assert.deepEqual(GENDERS.map((g) => g.value), ["kvinne", "mann", "annet", "ukjent"]);
-  assert.equal(GENDERS.find((g) => g.value === "ukjent").label, "Annet");
+  // v6.96 (brukervalg 2026-10-13): «Ikke-binær» erstatter valget «Annet», med
+  // egen verdi. «ukjent» er bare statistikkens bøtte, ikke et valg.
+  assert.deepEqual(GENDERS.map((g) => g.value), ["kvinne", "mann", "annet", "ikkebinaer"]);
+  assert.equal(GENDERS.find((g) => g.value === "ikkebinaer").label, "Ikke-binær");
   assert.equal(GENDERS.find((g) => g.value === "annet").label, "Gruppe");
+  assert.equal(GENDERS.some((g) => g.value === "ukjent"), false);
   assert.equal(new Set(GENDERS.map((g) => g.label)).size, GENDERS.length, "etikettene må være unike");
 });
 
@@ -127,14 +130,17 @@ test("computeCounts teller kun synlige", () => {
   assert.equal(c.perDecade[1930], 1);
 });
 
-test("genderDistribution: ukjente kategorier telles som ukjent", () => {
+test("genderDistribution: ukjente kategorier telles som ukjent, ikke som ikke-binær", () => {
   const d = genderDistribution([
     { status: "active", gender: "kvinne" },
     { status: "active", gender: "noe-rart" },
+    { status: "active", gender: "" },
+    { status: "active", gender: "ikkebinaer" },
   ]);
   assert.equal(d.kvinne, 1);
-  assert.equal(d.ukjent, 1);
-  assert.equal(d.total, 2);
+  assert.equal(d.ukjent, 2);
+  assert.equal(d.ikkebinaer, 1);
+  assert.equal(d.total, 4);
 });
 
 test("vokabularene bor i koden: INSTRUMENTS-konstanten og DECADES", () => {

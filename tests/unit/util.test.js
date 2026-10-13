@@ -181,7 +181,9 @@ test("TREG_SENDING_MELDING: delt, og uten tankestrek", async () => {
   assert.ok(!TREG_SENDING_MELDING.includes("—"), "husregel: ingen tankestrek i appens tekster");
   assert.ok(TREG_SENDING_MELDING.includes("Ikke send inn på nytt"));
   // Bruken, ikke bare importen (audit v5.42 funn 22).
-  assert.match(les("student.js"), /TREG_SENDING_MELDING, "warn"/);
+  // Artistskjemaet (v6.96) varsler for alle sine moduser; proposals.js for de
+  // andre korttypene (endringer og nye innovasjonskort).
+  assert.match(les("artist-skjema.js"), /melding\(TREG_SENDING_MELDING, "warn"\)/);
   assert.equal((les("proposals.js").match(/TREG_SENDING_MELDING;/g) || []).length, 2,
     "begge forslagsflytene bruker konstanten");
   // Slettevarselet i migreringen (fjerde stedet) er skrevet om uten strek.

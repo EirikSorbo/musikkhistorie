@@ -6,8 +6,10 @@
 //   - feltspesifikasjonen i forslagseditoren (proposals.js)
 //   - eksport-/sammenlignings-felter i import/eksport (teacher-import.js)
 //   - feltlista ved innsending (store.js addArtist)
-//  HTML-skjemaene (student.html / teacher.html «Rediger artist») er fortsatt
-//  håndskrevne pga. egne rad-editorer, men bruker de samme nøklene.
+//  Skjemaet er det felles femstegs-skjemaet (js/ui/artist-skjema.js, v6.96),
+//  brukt av studentskjemaet, lærerens redigering og «Foreslå endring». Det
+//  bruker de samme nøklene. keyWorks («Sentrale verk») står ikke i skjemaet
+//  lenger (fases ut), men følger med i data, eksport og import.
 //
 //  Typer: text | number | csv (kommaseparert liste) | textarea | gender |
 //  complex (strukturerte rader — redigeres ikke i forslagseditoren).

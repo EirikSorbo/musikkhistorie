@@ -33,5 +33,9 @@ test("filter og telling ser begge instrumentene", () => {
 test("instrument2 følger med i eksport og fletting, og lærerskjemaet har feltet", () => {
   assert.ok(ARTIST_COMPARE_FIELDS.includes("instrument2"));
   assert.ok(ARTIST_EXPORT_FIELDS.includes("instrument2"));
-  assert.match(lesJs("teacher-artists.js"), /instrument2: +\$\("#ed-instrument2"\)\.value/);
+  // Fra v6.96 er lærerskjemaet det felles femstegs-skjemaet: feltet står i
+  // steg 2 bare i lærermodusene, og lesingen tar det med.
+  const skjema = lesJs("artist-skjema.js");
+  assert.match(skjema, /\$\{laerer \? `<label>Instrument 2\s*<select data-felt="instrument2">/);
+  assert.match(skjema, /if \(felt\("instrument2"\)\) v\.instrument2 = /);
 });

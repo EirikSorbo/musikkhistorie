@@ -37,7 +37,7 @@ const INNHOLDSKORT = {
 const BEHOLDER_BREDDEN = {
   "index.html": ["modal-proposal"],
   "js/utforsk/explore-modals.js": ["modal-sok", "modal-vk-edit"],
-  "teacher.html": ["modal-edit", "modal-oversikt", "modal-retur"],
+  "teacher.html": ["modal-oversikt", "modal-retur"],
   "js/laerer/teacher-genres.js": ["modal-genre-admin", "modal-genre-edit"],
 };
 

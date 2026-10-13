@@ -276,13 +276,12 @@ function renderGroup(group, tvunget = false) {
   // Artistskjemaet åpnes UTEN forhåndsvalgt instrument (brukervalg): gruppenavnene
   // «Soloinstrument» og «Trommer» er ikke gyldige artistverdier — artisten skal
   // ha det presise instrumentet (Saksofon, Trommer/perkusjon …).
-  // FORKASTET FIKS (audit-funn 47): rapporten foreslo å sende læreren til hens
-  // eget skjema via opts.onEditArtist. Det går ikke — openEditModal krever en
-  // artist som ALT finnes (den returnerer på `if (!a) return`), og lærersiden
-  // har ingen «ny artist»-form. Knappen ville blitt død. Læreren går derfor
-  // fortsatt via studentskjemaet og godkjenner sitt eget forslag; en egen
-  // opprettingsform på lærersiden er en større sak.
-  knapper.push({ side: "høyre", tekst: "Legg til artist", href: "student.html" });
+  // Læreren får det felles artistskjemaet i et vindu (v6.96, opts.onNyArtist);
+  // studentene går til skjemasiden. (Før v6.96 gikk også læreren dit og
+  // godkjente sitt eget forslag: lærersiden hadde ingen «ny artist»-form.)
+  knapper.push(opts.onNyArtist
+    ? { side: "høyre", tekst: "Legg til artist", gjør: () => opts.onNyArtist() }
+    : { side: "høyre", tekst: "Legg til artist", href: "student.html" });
 
   // data-k bærer indeksen i `knapper`, ikke i gruppen: klikk-koblingen under
   // slår opp i den samlede lista, og den må stemme uansett hvordan knappene

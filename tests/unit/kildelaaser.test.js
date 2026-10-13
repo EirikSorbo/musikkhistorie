@@ -69,11 +69,14 @@ test("funn 18: slektstre-SVG-en skjuler ikke nodeknappene for skjermlesere", () 
 // --- Bolk E (v5.35) ----------------------------------------------------------
 
 test("funn 19: kjønn, metasjanger og instrument bevarer verdier utenfor vokabularet", () => {
-  const src = les("js/laerer/teacher-artists.js");
-  for (const id of ["ed-gender", "ed-metaGenre", "ed-instrument"]) {
-    assert.match(src, new RegExp(`settSelectMedVern\\(\\$\\("#${id}"\\)`), `${id} må gå via vernet`);
+  // Fra v6.96 er lærerskjemaet det felles femstegs-skjemaet (artist-skjema.js).
+  const src = les("js/ui/artist-skjema.js");
+  for (const felt of ["gender", "metaGenre", "instrument", "instrument2"]) {
+    assert.match(src, new RegExp(`fyllNedtrekk\\(felt\\("${felt}"\\)`), `${felt} må gå via vernet`);
   }
-  assert.doesNotMatch(src, /\$\("#ed-(gender|instrument)"\)\.value = a\./,
+  // Vernet: en lagret verdi utenfor vokabularet blir et eget, merket valg.
+  assert.match(kropp(src, "function fyllNedtrekk("), /if \(naa && !liste\.some\(\(v\) => v\.value === naa\)\) valg\.push\(/);
+  assert.match(src, /for \(const k of \["gender", "metaGenre", "instrument", "instrument2"\]\) settNedtrekk\(k, a\[k\]\);/,
     "rå tilordning ga tom select, og Lagre tømte feltet stille");
 });
 
@@ -86,8 +89,13 @@ test("funn 21: lukketimerne på lærersiden huskes og avbrytes", () => {
   for (const f of ["js/laerer/teacher-artists.js", "js/laerer/teacher-content.js"]) {
     assert.doesNotMatch(les(f), /setTimeout\(\(\) => closeAdminModal\(/, `${f}: uavbrutt lukketimer`);
   }
-  assert.equal(antall(les("js/laerer/teacher-artists.js") + les("js/laerer/teacher-content.js"), /lukkEtter\("modal-/g), 5,
-    "artist, kobling, sjanger, innovasjonskort og tiår");
+  assert.equal(antall(les("js/laerer/teacher-artists.js") + les("js/laerer/teacher-content.js"), /lukkEtter\("modal-/g), 4,
+    "kobling, sjanger, innovasjonskort og tiår");
+  // Artistskjemaet (v6.96) har sitt eget vindu og sin egen vakt: timeren
+  // lukker bare skjemaet den ble satt for.
+  const skjema = les("js/ui/artist-skjema.js");
+  assert.match(skjema, /setTimeout\(\(\) => \{ if \(gen === vinduGen\) lukkArtistSkjema\(\); \}, ms\)/);
+  assert.doesNotMatch(les("js/laerer/teacher-artists.js"), /setTimeout\(lukkArtistSkjema/);
   const state = les("js/laerer/teacher-state.js");
   assert.match(kropp(state, "export function openAdminModal("), /avbrytLukkEtter\(id\);/,
     "åpning av en modal skal rydde timeren dens sentralt");

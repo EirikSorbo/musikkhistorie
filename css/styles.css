@@ -288,6 +288,7 @@
   --c-kvinne: var(--pink-500);
   --c-mann: var(--blue-500);
   --c-annet: var(--amber-500);
+  --c-ikkebinaer: var(--teal-600);
   --c-ukjent: var(--slate-400);
   --instr-blaa: var(--blue-700);
 
@@ -1198,7 +1199,20 @@ textarea { resize: vertical; }
   border-top: 1px solid var(--line);
 }
 .steg-knapper .btn { display: inline-flex; align-items: center; gap: 6px; }
-#steg-neste, #send-knapp { margin-left: auto; }
+/* Felles skjema fra v6.96 (js/ui/artist-skjema.js): klasser, ikke id-er, siden
+   skjemaet står både på student.html og i vinduer på de andre sidene. */
+.steg-knapper .as-neste, .steg-knapper .as-send { margin-left: auto; }
+/* Steg med noe som mangler etter et innsendingsforsøk. */
+.steg-knapp.feil .steg-nr { background: var(--danger); border-color: var(--danger); color: var(--on-accent); }
+.steg-knapp.feil { border-bottom-color: var(--danger); }
+.opps-mangler { color: var(--danger); font-weight: 600; white-space: nowrap; }
+/* Lukk-knappen ved tittelen på student.html (v6.96). */
+.skjema-hode { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.skjema-hode h2 { margin: 0; }
+.skjema-lukk { flex: 0 0 auto; }
+/* Vinduet for redigering og ny artist: knappelinja står fast nederst i
+   vinduet mens et langt steg rulles, som på skjemasiden. */
+.artist-skjema-vindu .steg-knapper { margin-bottom: -4px; }
 .steg-knapper .form-msg { flex: 1 1 100%; order: 3; }
 .steg-knapper .form-msg:empty { display: none; }
 .utkast-hint { margin: 6px 0 0; }

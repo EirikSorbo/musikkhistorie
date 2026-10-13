@@ -25,7 +25,7 @@ import { initExplore } from "./utforsk/explore.js";
 import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 
 import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./laerer/teacher-state.js";
-import { openDetail, addMainGenreCheckToggle, openOversikt, openMangler, oppdaterOversiktPlateselskaper, setupFilters, setupEditForm } from "./laerer/teacher-artists.js";
+import { openDetail, addMainGenreCheckToggle, openOversikt, openMangler, oppdaterOversiktPlateselskaper, setupFilters, openNyArtist } from "./laerer/teacher-artists.js";
 import {
   openSingleDecadeModal,
   openSingleSubgenreModal,
@@ -157,7 +157,6 @@ function startAppInner() {
   initVisning();
   setupDataButtons();
   setupImportChoice();
-  setupEditForm();
   setupDecadeSingleSave();
   setupPendingEditsUi();
   setupSubgenreSingleSave();
@@ -205,6 +204,8 @@ function startAppInner() {
     // Sjekk-knapp i detaljvisningene (sjanger, historie, røtter, innovasjonskort).
     onCheck: (category, id, on) => setContentCheck(category, id, on),
     onTechEdit: (t, preset) => openTechEditor(t, preset),
+    // «Legg til artist» i Instrumenter (v6.96): lærerens eget artistskjema.
+    onNyArtist: () => openNyArtist(),
     // Podkast-administrasjonen nås nå fra Podkaster-fanen under Instrumenter
     // (dashbordkortet er borte), så lærer fortsatt kan laste opp episoder.
     onPodkastAdmin: () => openPodkastAdmin(),
@@ -256,6 +257,10 @@ function startAppInner() {
     setTimeout(() => $("#f-search")?.focus({ preventScroll: true }), 300);
   });
   setupTechAdmin();
+
+  // «Ny artist» (v6.96): det felles femstegs-skjemaet i et vindu her, lagret
+  // direkte som aktiv. Før gikk knappen til studentskjemaet og godkjenningskøen.
+  document.getElementById("btn-ny-artist")?.addEventListener("click", () => openNyArtist());
 
   // Frittstående referanser: står ved siden av «Ny artist», siden begge legger
   // til noe som ikke finnes fra før.

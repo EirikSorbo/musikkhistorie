@@ -57,18 +57,18 @@ test("navnet er påkrevd i alle tre studentflatene", async () => {
   const fs = await import("node:fs");
   const les = (f) => lesJs(f);
 
-  // 1) Nytt artistforslag (student.html)
-  // Fra v6.57 (stegvis skjema) står vakten i sjekken for siste steg, med
+  // 1) Artistene (nytt forslag, retur og «Foreslå endring»): det felles
+  // femstegs-skjemaet fra v6.96 krever navnet i alle studentmodusene, med
   // trim, så et navn av bare mellomrom heller ikke slipper gjennom.
-  const student = les("student.js");
-  assert.match(student, /paakrevd\("#in-by", /,
-    "student.js mangler vakten for forslagsstillerens navn");
-  assert.match(student, /const paakrevd = \(sel, tekst\) => \(\$\(sel\)\.value\.trim\(\) \? null : /,
+  const skjema = les("artist-skjema.js");
+  assert.match(skjema, /if \(modus === "forslag"\) return new Set\(\["proposedBy"\]\);/);
+  assert.match(skjema, /return new Set\(\["name", "gender", "metaGenre", "instrument", "influenceStart", "kilder", "proposedBy"\]\);/);
+  assert.match(skjema, /const tomt = k === "kilder" \? !v\.kilder\.length : !String\(v\[k\] \?\? ""\)\.trim\(\);/,
     "påkrevd-sjekken må trimme verdien");
-  assert.doesNotMatch(student, /#in-by"\)\.value\.trim\(\) \|\| "Anonym"/,
-    "student.js skal ikke lenger falle tilbake på «Anonym» ved innsending");
+  assert.doesNotMatch(les("student.js"), /\|\| "Anonym"/,
+    "student.js skal ikke falle tilbake på «Anonym» ved innsending");
 
-  // 2 og 3) Endring på eksisterende kort OG helt nytt kort deler samme vakt.
+  // 2 og 3) Endring på andre kort OG helt nytt innovasjonskort deler samme vakt.
   const proposals = les("proposals.js");
   assert.match(proposals, /function lesForslagsstiller\(\)/,
     "proposals.js mangler den delte navnevakten");
@@ -169,8 +169,12 @@ test("skjemaets tegntak er strengere enn regelens", async () => {
 test("proposals.js: åpningsteller vokter alle innsendings-fortsettelser", async () => {
   const fs = await import("node:fs");
   const src = fs.readFileSync(new URL("../../js/forslag/proposals.js", import.meta.url), "utf8");
-  assert.equal((src.match(/const gen = \+\+apneGen;/g) || []).length, 2,
-    "begge åpningene skal bumpe apneGen");
+  // Tre åpninger fra v6.96: endring på et kort, nytt innovasjonskort, og
+  // «Foreslå endring» på en artist (det felles artistskjemaet).
+  assert.equal((src.match(/const gen = \+\+apneGen;/g) || []).length, 3,
+    "alle åpningene skal bumpe apneGen");
+  // Artistflyten: retur-merket først, og lukkingen bare for samme åpning.
+  assert.match(src, /if \(retur\) meldReturSendt\(retur\.id\);\n\s*if \(gen === apneGen\) api\.lukkSnart\(1600\);/);
   assert.equal((src.match(/if \(gen !== apneGen\) return;/g) || []).length, 6,
     "tre fortsettelser per flyt (tidsvarsel, suksess, catch) skal sjekke telleren");
   // Retur-merket gjelder DATA (skrivingen fullførte) og skal settes FØR vakten.
@@ -305,18 +309,19 @@ test("skriveveiledning: skjult til den finnes, kommentarfeltet nederst, redigerb
   assert.match(css, /^\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}/m,
     "den globale [hidden]-regelen må finnes, ellers vinner display-regler over hidden");
 
-  const html = les("student.html");
-  const iBy = html.indexOf('id="in-by"');
-  const iKommentar = html.indexOf('id="retur-comment"');
-  const iSkjema = html.indexOf('id="add-form"');
-  const iVeiledning = html.indexOf('id="skrivehjelp"');
-  const iBeskrivelse = html.indexOf('id="in-desc"');
+  // Fra v6.96 bygger det felles artistskjemaet markupen (artist-skjema.js).
+  const html = les("js/ui/artist-skjema.js");
+  const iBy = html.indexOf('data-felt="proposedBy"');
+  const iKommentar = html.indexOf('data-felt="studentComment"');
+  const iSkjema = html.indexOf('<form class="steg-skjema" novalidate>');
+  const iVeiledning = html.indexOf("data-as-skrivehjelp hidden");
+  const iBeskrivelse = html.indexOf('data-felt="description"');
   assert.ok(iBy > 0 && iKommentar > iBy, "kommentarfeltet skal stå under navnefeltet");
-  // v6.57: veiledningen flyttet fra toppen av skjemaet til beskrivelsessteget.
+  // v6.57: veiledningen står i beskrivelsessteget, ikke øverst i skjemaet.
   assert.ok(iVeiledning > iSkjema && iVeiledning < iBeskrivelse,
     "veiledningen skal stå i beskrivelsessteget, rett over tekstfeltet");
-  assert.match(html, /<details[^>]*id="skrivehjelp"[^>]*hidden/, "veiledningen starter skjult");
-  assert.match(html, /id="retur-comment-felt"[^>]*hidden/, "kommentarfeltet starter skjult");
+  assert.match(html, /<details class="[^"]*skrivehjelp" data-as-skrivehjelp hidden>/, "veiledningen starter skjult");
+  assert.match(html, /data-as-kommentarfelt hidden>/, "kommentarfeltet starter skjult");
 
   assert.match(les("js/laerer/teacher-content.js"), /skriveveiledning:\s*"Slik skriver du beskrivelsen"/);
   const dash = les("js/ui/ui-dashboard.js");

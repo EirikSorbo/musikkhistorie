@@ -34,15 +34,16 @@ const GENDER_COLORS = {
   kvinne: "var(--c-kvinne)",
   mann: "var(--c-mann)",
   annet: "var(--c-annet)",
+  ikkebinaer: "var(--c-ikkebinaer)",
   ukjent: "var(--c-ukjent)",
 };
 
 const byNo = (a, b) => a.localeCompare(b, "no");
 const byName = (a, b) => a.name.localeCompare(b.name, "no");
 // Kjønnsbøtta en artist havner i — MÅ være samme regel som genderDistribution
-// (limits.js): alt utenfor de fire verdiene, inkludert tomt felt, telles som
+// (limits.js): alt utenfor de kjente verdiene, inkludert tomt felt, telles som
 // «ukjent». Ellers ville tallet i legenden og lista bak klikket sprike.
-const GENDER_KEYS = ["kvinne", "mann", "annet", "ukjent"];
+const GENDER_KEYS = ["kvinne", "mann", "annet", "ikkebinaer", "ukjent"];
 const genderBucket = (a) => (GENDER_KEYS.includes(a.gender) ? a.gender : "ukjent");
 const byInfluenceThenName = (a, b) =>
   (a.influenceStart || 0) - (b.influenceStart || 0) || byName(a, b);
@@ -700,7 +701,7 @@ function renderGenderChart(dist) {
   if (dist.total === 0) {
     return `<p class="muted">Ingen forslag ennå.</p>`;
   }
-  const segments = ["kvinne", "mann", "annet", "ukjent"]
+  const segments = GENDER_KEYS
     .filter((k) => dist[k] > 0)
     .map(
       (k) =>
@@ -715,7 +716,9 @@ function renderGenderChart(dist) {
 
   // Tallet er lenka til artistlista, som i metasjanger-kortet — prosenten er
   // ren tekst (den har ingen egen liste bak seg).
-  const legend = ["kvinne", "mann", "annet", "ukjent"]
+  // «Ukjent» er ikke et valg i skjemaene og står bare når noen havner der.
+  const legend = GENDER_KEYS
+    .filter((k) => k !== "ukjent" || dist[k] > 0)
     .map(
       (k) => `
       <span class="legend-item">
