@@ -36,12 +36,17 @@ function prepareTargets(ctx) {
     .filter((g) => !SKIP.has(g.toLowerCase()))
     .sort((a, b) => b.length - a.length)
     .map((g) => ({ id: g, nameEsc: esc(g) }));
-  // Plateselskapene (v6.38): bare når konteksten har dem med, altså i
-  // selskapskortene selv (explore-plateselskap.js). Ellers ville «Sun» og
-  // «Savoy» blitt lenker i titler som «House of the Rising Sun» og navn som
-  // Savoy Ballroom i resten av appens tekster.
+  // Plateselskapene: fra v6.91 (brukerønske 2026-10-13) i alle tekstene, når
+  // konteksten har dem med (buildLinkCtx tar med de studentene får se). Før
+  // bare i selskapskortene, fordi «Sun» og «Savoy» også står i titler og navn.
+  // Det løses nå i linkifyAll: artistene går foran (Sun Ra), titler i «» hoppes
+  // over (Music of the Sun), og navnene må stå med stor forbokstav (volt).
+  // ikkeITekst holder ute aliaser som i tekst betyr noe annet (Berry Gordy).
   const plateselskaper = (ctx.plateselskaper || [])
-    .flatMap((p) => [p.navn, ...(p.aliaser || [])].filter(Boolean).map((n) => ({ id: p.id, nameEsc: esc(n) })))
+    .flatMap((p) => [p.navn, ...(p.aliaser || [])]
+      .filter((n) => n && !(p.ikkeITekst || []).includes(n))
+      .map((n) => ({ id: p.id, nameEsc: esc(n), genitivS: !p.utenGenitiv })))
+    .filter((x, i, alle) => alle.findIndex((y) => y.nameEsc === x.nameEsc) === i)
     .sort((a, b) => b.nameEsc.length - a.nameEsc.length);
   const prep = { artists, techItems, genres, plateselskaper };
   _targetsCache.set(ctx, prep);
@@ -69,12 +74,18 @@ export function linkifyAll(text, ctx = {}) {
   // så et kortere navn aldri kan lenkes midt inni kortets eget navn.
   const self = ctx.self || {};
   const selvSjangre = new Set([].concat(self.genre || []));
-  // Selskapene først: i et selskapskort skal «Motown» føre til Motown-kortet,
-  // ikke til sjangeren med samme navn.
-  // Uten genitiv-s: «Harold Melvin & the Blue Notes» er et band, ikke Blue Note.
-  for (const p of plateselskaper) findMatches(lower, escaped, p.nameEsc, p.id, p.id === self.plateselskap ? "self" : "plateselskap", markers, { genitivS: false });
+  // Rekkefølgen avgjør hvem som vinner et overlapp: artistene først (Sun Ra
+  // er artisten, ikke Sun), så innovasjonskortene, så selskapene, og sjangrene
+  // sist, så «Motown» i en tekst er selskapet.
   for (const a of artists) findMatches(lower, escaped, a.nameEsc, a.id, a.id === self.artist ? "self" : "artist", markers);
   for (const t of techItems) findMatches(lower, escaped, t.nameEsc, t.id, t.id === self.tech ? "self" : "tech", markers);
+  if (plateselskaper.length) {
+    const titler = [...escaped.matchAll(/«[^»]*»/g)].map((m) => [m.index, m.index + m[0].length]);
+    for (const p of plateselskaper) {
+      findMatches(lower, escaped, p.nameEsc, p.id, p.id === self.plateselskap ? "self" : "plateselskap", markers,
+        { genitivS: p.genitivS, skillStore: true, utenfor: titler });
+    }
+  }
   for (const g of genres) findMatches(lower, escaped, g.nameEsc, g.id, selvSjangre.has(g.id) ? "self" : "genre", markers);
 
   if (!markers.length) return escaped;
@@ -139,11 +150,15 @@ function isGenitiveSuffix(ch) {
   return ch === "‘" || ch === "’" || ch === "ʼ";
 }
 
-function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers, { genitivS = true } = {}) {
-  const needle = nameEsc.toLowerCase();
+// skillStore: navnet må stå med samme store og små bokstaver (plateselskapene).
+// utenfor: [start, slutt]-spenn der ingenting lenkes (titler i «»).
+function findMatches(lowerHaystack, haystack, nameEsc, id, type, markers, { genitivS = true, skillStore = false, utenfor = [] } = {}) {
+  const needle = skillStore ? nameEsc : nameEsc.toLowerCase();
+  const soekIn = skillStore ? haystack : lowerHaystack;
   let pos = 0;
-  while ((pos = lowerHaystack.indexOf(needle, pos)) !== -1) {
+  while ((pos = soekIn.indexOf(needle, pos)) !== -1) {
     const end = pos + nameEsc.length;
+    if (utenfor.some(([s, e]) => pos >= s && end <= e)) { pos = end; continue; }
     const before = pos > 0 ? lowerHaystack[pos - 1] : "";
     const after = end < lowerHaystack.length ? lowerHaystack[end] : "";
     const afterAfter = end + 1 < lowerHaystack.length ? lowerHaystack[end + 1] : "";

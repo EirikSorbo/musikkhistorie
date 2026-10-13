@@ -21,7 +21,7 @@ import { openArtistsPlaylistModal, countArtistExamples } from "../ui/ui.js";
 import { META_GENRE_COLOR } from "../sjangre/genre-model.js";
 import { modalOpen } from "../ui/ui-modal.js";
 import {
-  PLATESELSKAPER, finnSelskapId, plateselskapSideId, artisterForSelskap, selskaperSortert,
+  finnSelskapId, plateselskapSideId, artisterForSelskap, selskaperSortert,
   plateselskapeneSynlige, plateselskapSynlig, grunnlagtAar,
 } from "../felles/plateselskaper.js";
 import { buildLinkCtx, injectTeacherRow } from "./explore-context.js";
@@ -126,8 +126,8 @@ function tegnKort(tvunget = false) {
 
   const tekst = body.querySelector(".ps-tekst");
   // De andre selskapene blir lenker i teksten (v6.38), kortets eget navn ikke.
-  // Bare her: se plateselskaper i linkify.js.
-  const lc = medSelv({ ...buildLinkCtx(), plateselskaper: PLATESELSKAPER.filter((x) => plateselskapSynlig(x.id)), onPlateselskapClick: (id) => openPlateselskap(id) }, { plateselskap: p.id });
+  // Fra v6.91 tar buildLinkCtx med selskapene i alle tekstene.
+  const lc = medSelv(buildLinkCtx(), { plateselskap: p.id });
   if (side?.body?.trim()) {
     tekst.innerHTML = renderRichText(side.body, lc);
     wireLinks(tekst, lc);

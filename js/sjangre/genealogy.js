@@ -224,7 +224,7 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
     onVisITre ? `<button type="button" class="btn ghost small gx-tre-btn">Vis i slektstreet</button>` : "",
   ].filter(Boolean).join(" ");
 
-  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick, plateselskaper: opts.plateselskaper, onPlateselskapClick: opts.onPlateselskapClick };
   // Kortets egen sjanger lenkes ikke i teksten (v6.05, K7).
   const lcSelv = medSelv(lc, { genre: [n.l, n.f] });
   // Artistene i sjangeren som navneliste (v5.89, brukerønske 2026-09-29):
@@ -356,7 +356,7 @@ export function showEdgeInfo(fromId, toId, opts = {}) {
       </div>`
     : "";
 
-  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick, plateselskaper: opts.plateselskaper, onPlateselskapClick: opts.onPlateselskapClick };
   mTitle.textContent = `${a.f} → ${b.f}`;
   mBody.innerHTML = `
     <p class="gx-era">${react ? "Motreaksjon" : "Avstamning / påvirkning"} · ${escapeHtml(eraText(resolveMainDesc(genreDescs, a.l)))} → ${escapeHtml(eraText(resolveMainDesc(genreDescs, b.l)))}</p>

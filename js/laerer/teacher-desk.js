@@ -355,28 +355,30 @@ function synligNaa(v, rad) {
   return [...(rad.student || []).map((k) => !v.student[k]), ...(rad.hub || []).map((k) => !v.hub[k])].every(Boolean);
 }
 
-// Det usjekkede per kategori, som tekst: «120 artistkort, 9 sjangerhistorier».
-// Samme tall som kortene over (buildCategories).
-function usjekketTekst() {
-  return buildCategories()
-    .map((c) => ({ c, n: c.items.filter((it) => !c.checkedSet.has(it.id)).length }))
-    .filter(({ n }) => n > 0)
-    .map(({ c, n }) => `${n} ${c.label.toLowerCase()}`)
-    .join(", ");
+// Det usjekkede per kategori, alle kategoriene, også dem uten noe usjekket
+// (v6.91). Samme tall som kortene over (buildCategories).
+function usjekketPerKategori() {
+  return buildCategories().map((c) => ({
+    navn: c.label,
+    usjekket: c.items.filter((it) => !c.checkedSet.has(it.id)).length,
+    totalt: c.items.length,
+  }));
 }
 
-// «Bare sjekket innhold» (v6.89, js/felles/sjekket.js): egen bryter øverst,
-// med motsatt betydning av lista under (avhuket = det usjekkede er skjult).
+// «Bare sjekket innhold» (v6.89, js/felles/sjekket.js): egen bryter under
+// avhukingene (v6.91), med motsatt betydning av dem (avhuket = det usjekkede
+// er skjult), og en liste over hva som er usjekket i hver kategori.
 function sjekketRegelHtml(v) {
   const paa = !!v.student.usjekket;
-  const usjekket = usjekketTekst();
+  const rader = usjekketPerKategori().map((k) => `<li class="${k.usjekket ? "" : "desk-sjekket-ok"}">
+      <span>${escapeHtml(k.navn)}</span><span>${k.usjekket} usjekket av ${k.totalt}</span></li>`).join("");
   return `<div class="desk-sjekket">
     <label class="desk-synlighet-rad"><input type="checkbox" data-synlig-sjekket${paa ? " checked" : ""}> Bare sjekket innhold</label>
     <p class="muted desk-synlighet-hint">${paa
       ? "På: studentene ser bare det du har sjekket, også på lerretet. «Vis innhold som er skjult for studentene» i visningen viser alt for økta."
       : "Av: studentene ser også det du ikke har sjekket."}
-      ${usjekket ? ` Usjekket nå: ${escapeHtml(usjekket)}.` : " Alt er sjekket."}
       For sjangrene, undersjangrene og tiårene er det teksten som skjules, ikke sjangeren eller tiåret.</p>
+    <ul class="desk-sjekket-liste">${rader}</ul>
   </div>`;
 }
 
@@ -385,10 +387,10 @@ function synlighetHtml() {
   // Åpen/lukket overlever omtegningen (hvert innholds-snapshot tegner på nytt).
   return `<details class="desk-synlighet"${openPanels.has("synlighet") ? " open" : ""}>
     <summary>Synlig for studentene</summary>
-    ${sjekketRegelHtml(v)}
     <p class="muted desk-synlighet-hint">Avhuket er synlig for studentene. Du ser alltid alt selv.</p>
     <div class="desk-synlighet-liste">${SYNLIGHET_RADER.map((r) => `<label class="desk-synlighet-rad">
       <input type="checkbox" data-synlig="${r.id}"${synligNaa(v, r) ? " checked" : ""}> ${escapeHtml(r.navn)}</label>`).join("")}</div>
+    ${sjekketRegelHtml(v)}
   </details>`;
 }
 
@@ -404,9 +406,9 @@ async function endreSynlighet(id, synlig, boks) {
 
 // Slås regelen på, sies det først hva som forsvinner for studentene.
 async function endreSjekketRegel(paa, boks) {
-  const usjekket = usjekketTekst();
-  if (paa && usjekket && !(await bekreft(
-    `Studentene ser da ikke dette, som du ikke har sjekket: ${usjekket}. Det kommer tilbake etter hvert som du sjekker det.`,
+  const usjekket = usjekketPerKategori().filter((k) => k.usjekket > 0);
+  if (paa && usjekket.length && !(await bekreft(
+    `Studentene ser da ikke dette, som du ikke har sjekket:\n${usjekket.map((k) => `· ${k.navn}: ${k.usjekket} av ${k.totalt}`).join("\n")}\n\nDet kommer tilbake etter hvert som du sjekker det.`,
     { tittel: "Vise bare sjekket innhold?", ja: "Slå på" }))) {
     boks.checked = false;
     return;

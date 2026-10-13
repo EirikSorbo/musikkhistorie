@@ -42,7 +42,7 @@ import { PLATESELSKAPER, plateselskapSynlig } from "../felles/plateselskaper.js"
 // Det kjernen (explore-context.js) og «Fra timene» (explore-timer.js) må kunne
 // åpne. Fylles her, idet modulen lastes, og ikke i kjernen selv: da hang 13
 // filer i én importring (se toppteksten i explore-context.js).
-registrerNavigasjon({ openTechDetail, openTidslinje, tidslinjeHarSjanger, openArtistGalleri, openInstrumenter, apneMaal });
+registrerNavigasjon({ openTechDetail, openTidslinje, tidslinjeHarSjanger, openArtistGalleri, openInstrumenter, apneMaal, openPlateselskap });
 
 // Kalles av sidene når genreDescriptions-snapshotet endres: et åpent
 // sjangerkort skal vise den nye beskrivelsen med én gang, ikke først når

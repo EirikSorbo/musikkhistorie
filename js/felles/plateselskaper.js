@@ -34,7 +34,9 @@ export const PLATESELSKAPER = [
   { id: "victor", navn: "RCA Victor", aliaser: ["Victor", "RCA Victor", "RCA", "Bluebird"] },
   { id: "paramount", navn: "Paramount", aliaser: ["Paramount"] },
   { id: "decca", navn: "Decca", aliaser: ["Decca"] },
-  { id: "blue-note", navn: "Blue Note", aliaser: ["Blue Note"] },
+  // utenGenitiv: «Blue Notes» er også et bandnavn (Harold Melvin & the Blue
+  // Notes), så genitiven lenkes ikke i tekstene.
+  { id: "blue-note", navn: "Blue Note", aliaser: ["Blue Note"], utenGenitiv: true },
   { id: "savoy", navn: "Savoy", aliaser: ["Savoy"] },
   // Atco var Atlantics eget underselskap fra 1955 (Coasters, Bobby Darin).
   { id: "atlantic", navn: "Atlantic", aliaser: ["Atlantic", "Atco"] },
@@ -43,7 +45,9 @@ export const PLATESELSKAPER = [
   // Volt var Stax' søstermerke, og Otis Reddings plater kom der.
   { id: "stax", navn: "Stax", aliaser: ["Stax", "Volt"] },
   // Tamla og Gordy var Motowns egne merker ved siden av Motown-merket.
-  { id: "motown", navn: "Motown", aliaser: ["Motown", "Tamla", "Gordy"] },
+  // ikkeITekst: aliaser som bare gjelder plateselskapsfeltet. «Gordy» i løpende
+  // tekst er nesten alltid Berry Gordy, ikke merket (v6.91).
+  { id: "motown", navn: "Motown", aliaser: ["Motown", "Tamla", "Gordy"], ikkeITekst: ["Gordy"] },
   { id: "ecm", navn: "ECM", aliaser: ["ECM"] },
   { id: "philadelphia-international", navn: "Philadelphia International", aliaser: ["Philadelphia International", "PIR"] },
 ];

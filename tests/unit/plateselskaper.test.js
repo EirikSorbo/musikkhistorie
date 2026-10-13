@@ -148,7 +148,7 @@ test("lærersiden: faktafeltene lagres og importeres, og Oversikten har seksjone
   assert.match(lesJs("teacher-artists.js"), /setContentCheck\("plateselskaper", id, on\)/);
 });
 
-test("selskapsnavn blir lenker bare i selskapskortene, og aldri kortets eget", async () => {
+test("selskapsnavn blir lenker, men aldri kortets eget", async () => {
   const { linkifyAll, medSelv } = await import("../../js/felles/linkify.js");
   const ctx = medSelv({ plateselskaper: PLATESELSKAPER }, { plateselskap: "chess" });
   const ut = linkifyAll("Phillips startet Sun, og Chess ga ut opptaket.", ctx);
@@ -157,6 +157,30 @@ test("selskapsnavn blir lenker bare i selskapskortene, og aldri kortets eget", a
   assert.doesNotMatch(linkifyAll("Harold Melvin & the Blue Notes", ctx), /plateselskap-link/, "ingen genitiv-s på selskapsnavn");
   assert.match(linkifyAll("Elvis gikk til RCA Victor.", ctx), /data-ps-lenke="victor"[^>]*>RCA Victor</, "lengste navn vinner");
   assert.doesNotMatch(linkifyAll("House of the Rising Sun", {}), /plateselskap-link/, "uten selskapene i konteksten: ingen lenker");
+});
+
+// v6.91 (brukerønske 2026-10-13): selskapene lenkes i alle tekstene, med vern
+// mot navnene som også betyr noe annet.
+test("selskapslenker i alle tekster: artistene går foran, titler og Berry Gordy lenkes ikke", async () => {
+  const { linkifyAll } = await import("../../js/felles/linkify.js");
+  const ctx = { plateselskaper: PLATESELSKAPER, artists: [{ id: "sunra", name: "Sun Ra", status: "active" }] };
+  const sunRa = linkifyAll("Sun Ra spilte inn for Sun Records.", ctx);
+  assert.match(sunRa, /data-artist-id="sunra"[^>]*>Sun Ra<\/a>/, "artisten vinner overlappet");
+  assert.match(sunRa, /data-ps-lenke="sun"[^>]*>Sun<\/a> Records/);
+  assert.doesNotMatch(linkifyAll("albumet «Music of the Sun» kom i 2005", ctx), /plateselskap-link/, "titler i «» hoppes over");
+  const gordy = linkifyAll("Motown ble grunnlagt av Berry Gordy.", ctx);
+  assert.match(gordy, /data-ps-lenke="motown"[^>]*>Motown<\/a>/);
+  assert.equal((gordy.match(/plateselskap-link/g) || []).length, 1, "Gordy er Berry Gordy, ikke merket");
+  assert.doesNotMatch(linkifyAll("en forsterker på 220 volt", ctx), /plateselskap-link/, "små bokstaver er ikke selskapet");
+  assert.match(linkifyAll("RCA Victors svar på Columbias LP", ctx), /data-ps-lenke="columbia"[^>]*>Columbia<\/a>s LP/, "genitiven lenker navnet");
+  assert.doesNotMatch(linkifyAll("en av Blue Notes store suksesser", ctx), /data-ps-lenke="blue-note"/, "men ikke Blue Notes");
+});
+
+test("lenkekonteksten tar med selskapene studentene får se", () => {
+  const ctxKilde = lesJs("explore-context.js");
+  assert.match(ctxKilde, /PLATESELSKAPER\.filter\(\(p\) => plateselskapSynlig\(p\.id\)\)/);
+  assert.equal((ctxKilde.match(/plateselskaper: lenkeSelskaper\(\)/g) || []).length, 2, "buildLinkCtx og sjangerOpts");
+  assert.equal((ctxKilde.match(/onPlateselskapClick: \(id\) => nav\.openPlateselskap\?\.\(id\)/g) || []).length, 2);
 });
 
 test("standardnavnene er kortenes titler", () => {

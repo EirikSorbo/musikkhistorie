@@ -625,7 +625,7 @@ function showGenreLevelInfo(label, level, opts = {}) {
     ? `<button type="button" class="btn ghost small gx-see-genre-btn" style="margin-bottom:10px">Se «${escapeHtml(treeNode.l)}» (sjanger)</button>`
     : "";
 
-  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick };
+  const lc = { artists, techItems, genres, onArtistClick, onTechClick, onMainGenreClick, plateselskaper: opts.plateselskaper, onPlateselskapClick: opts.onPlateselskapClick };
   // (Meta-grenen i tittelen er fjernet: funksjonen kalles kun med level="sub".)
   mTitle.textContent = label;
   mBody.innerHTML = `

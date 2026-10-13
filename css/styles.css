@@ -4471,10 +4471,15 @@ body.presentasjon .meta-merke { display: none; }
 .desk-synlighet-hint { margin: 8px 0; font-size: 0.82rem; }
 .desk-synlighet-liste { columns: 2 18rem; column-gap: 20px; }
 .desk-synlighet-rad { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.86rem; break-inside: avoid; }
-/* «Bare sjekket innhold» (v6.89): over lista, skilt fra den med en strek. */
-.desk-sjekket { margin: 4px 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+/* «Bare sjekket innhold» (v6.89): under avhukingene fra v6.91, skilt fra dem
+   med en strek, med det usjekkede som en liste i to spalter. */
+.desk-sjekket { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .desk-sjekket .desk-synlighet-rad { font-weight: 600; }
 .desk-sjekket .desk-synlighet-hint { margin: 2px 0 0 26px; }
+.desk-sjekket-liste { list-style: none; margin: 8px 0 2px 26px; padding: 0; columns: 2 16rem; column-gap: 28px; font-size: 0.84rem; }
+.desk-sjekket-liste li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; break-inside: avoid; }
+.desk-sjekket-liste li span:last-child { color: var(--warn-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.desk-sjekket-liste li.desk-sjekket-ok span:last-child { color: var(--muted-2); }
 /* Lærersidens område Innhold (U5; Undervisning fjernet i v6.66). Fra v6.44
    er hver handling en flis med ikon, tittel og en linje om hva den gjør.
    De seks flisene står i tre kolonner på brede skjermer (to rader), og i én
