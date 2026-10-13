@@ -94,3 +94,9 @@ test("skriverikonet er en vanlig lenke til utskriftssiden, uten skuff", async ()
     assert.doesNotMatch(kilde, /a\.nav-utskrift/, `${f}: ingen kode skal fange klikket på skriverikonet`);
   }
 });
+
+test("«Tittel og innhold» står åpen når utskriftssiden åpnes (v6.82)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const html = readFileSync(new URL("../../utskrift.html", import.meta.url), "utf8");
+  assert.match(html, /<details class="utskrift-boks" open>\s*<summary>Tittel og innhold<\/summary>/);
+});

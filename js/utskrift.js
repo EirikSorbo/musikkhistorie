@@ -628,14 +628,14 @@ function tocHtml() {
 // LITE hefte (modell.liten) får tittelblokka som et hode på første side, uten
 // innholdsfortegnelse og uten sideskift: ett artistkort skal ikke koste tre
 // ark. Tidslinja følger da rett under. (Merket «historieappen.no» og «Slik er
-// heftet bygd opp» er bevisst ute, brukervalg 2026-09-25.)
+// heftet bygd opp» er bevisst ute, brukervalg 2026-09-25, og kursnavnet under
+// tittelen fra v6.82, brukerønske 2026-10-13.)
 function forsideHtml(t, farge) {
   const liten = modell.liten;
   return `<section class="h-forside${liten ? " h-forside-liten" : ""}" data-toc="forside">
     <div class="h-tittelblokk" style="--farge:${h(farge)}">
       <p class="h-overlinje">Pensumutdrag · MUR114</p>
       <h1 class="h-tittel">${h(t)}</h1>
-      <p class="h-under">Populærmusikkhistorie</p>
       <p class="h-meta">Laget <strong>${h(datoTekst())}</strong><br>Utvalg: <strong>${h(tellingerTekst(modell.tellinger))}</strong></p>
     </div>
     ${liten ? (modell.tidslinje ? tidslinjeHtml(modell.tidslinje) : "") : tocHtml()}
@@ -767,7 +767,8 @@ function settSidestil(t) {
   }
   // Sidetoppen i @page kan ikke lese CSS-variablene, så skrift og farge står her (samme som --font-body og --muted-2).
   const font = "font: 7.5pt \"Public Sans\", system-ui, sans-serif; color: #7a7a7a;";
-  st.textContent = `@page { @top-left { content: ${JSON.stringify(`Populærmusikkhistorie · ${t}`)}; ${font} }`
+  // Bare heftets tittel: kursnavnet er ute av utskriften (v6.82, brukerønske 2026-10-13).
+  st.textContent = `@page { @top-left { content: ${JSON.stringify(t)}; ${font} }`
     + ` @bottom-left { content: "historieappen.no"; ${font} } @bottom-right { content: counter(page); ${font} } }\n`
     + `@page :first { @top-left { content: none; } }`;
 }

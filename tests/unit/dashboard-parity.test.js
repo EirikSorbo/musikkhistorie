@@ -81,7 +81,8 @@ test("toppfeltet: tittelen er skjult for øyet, men finnes for skjermlesere, på
   }
   // v5.54 (brukerkrav 2026-09-25): kursnavnet er borte overalt, også fra
   // sidetitlene og appnavnet som nettleseren viser i fanen og i appvinduet.
-  for (const f of ["index.html", "tre.html", "teacher.html", "student.html", "manifest.json", "js/gate.js"]) {
+  // Utskriften (siden, heftet og PDF-sidetoppen) fulgte etter i v6.82 (brukerønske 2026-10-13).
+  for (const f of ["index.html", "tre.html", "teacher.html", "student.html", "utskrift.html", "manifest.json", "js/gate.js", "js/utskrift.js"]) {
     assert.doesNotMatch(les(f), /Populærmusikkhistorie|Del 1/, f);
   }
   assert.doesNotMatch(les("css/styles.css"), /^\s*\.brand h1 \{/m, "ingen stil som gjør tittelen synlig igjen");

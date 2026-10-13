@@ -127,7 +127,6 @@
 .h-forside-liten .h-tittelblokk { margin-top: 2mm; }
 .h-forside-liten .h-tidslinje { margin-top: 10mm; }
 .h-tittel { font-size: 30pt; line-height: 1.08; margin-bottom: 4mm; }
-.h-under { font-size: 14pt; color: var(--h-demp); font-family: var(--font-display); }
 .h-meta { margin-top: 12mm; font-size: 9.5pt; color: var(--h-demp); }
 .h-meta strong { color: var(--h-tekst); font-weight: 600; }
 
