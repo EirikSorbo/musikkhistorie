@@ -93,3 +93,15 @@ test("artistkortet: tidslinja først, så bildet, og beslektede under bildet", (
   const css = les("css/styles.css");
   assert.match(css, /body:not\(\.presentasjon\) :is\(#detail-body, #ad-body\) \.related \{ clear: right; \}/);
 });
+
+// Lærerlista i kortvisning: to kort i bredden (v6.68, rettet i v6.97).
+// Tegningen satte klassen på nytt til bare «artist-list» og visket ut
+// artist-list--to fra markupen, så regelen virket aldri.
+test("lærerlista har to kort i bredden, og tegningen beholder klassen", () => {
+  assert.match(les("teacher.html"), /id="artist-list" class="artist-list artist-list--to"/);
+  assert.match(les("css/styles.css"), /\.artist-list--to \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  const ui = les("js/ui/ui.js");
+  assert.match(ui, /if \(el\.dataset\.grunnKlasser === undefined\) el\.dataset\.grunnKlasser = el\.className \|\| "artist-list";/);
+  assert.match(ui, /el\.className = grunnKlasser;/);
+  assert.doesNotMatch(ui, /el\.className = "artist-list";/);
+});

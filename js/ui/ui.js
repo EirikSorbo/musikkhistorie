@@ -319,8 +319,15 @@ export function renderArtists(el, state) {
     list.sort((a, b) => sessionOrderKey(a.id) - sessionOrderKey(b.id));
   }
 
+  // Klassene fra markupen (artist-list--to på lærersiden, to kort i bredden fra
+  // v6.68) huskes første gang, så byttet mellom visningene ikke visker dem ut.
+  // Fram til v6.97 satte kortvisningen klassen på nytt til bare «artist-list»,
+  // og da virket to-kolonne-regelen aldri.
+  if (el.dataset.grunnKlasser === undefined) el.dataset.grunnKlasser = el.className || "artist-list";
+  const grunnKlasser = el.dataset.grunnKlasser;
+
   if (list.length === 0) {
-    el.className = "artist-list";
+    el.className = grunnKlasser;
     el.innerHTML = `<p class="muted empty">Ingen forslag matcher filteret ennå.</p>`;
     return;
   }
@@ -335,7 +342,7 @@ export function renderArtists(el, state) {
   // utvalg og rekkefølge, et klikk åpner artistkortet. Lytteren legges én
   // gang på beholderen og slår opp i den lista som sist ble tegnet.
   if (viewMode === "galleri") {
-    el.className = "artist-list artist-list--galleri";
+    el.className = `${grunnKlasser} artist-list--galleri`;
     if (el._listOnScroll) {
       document.removeEventListener("scroll", el._listOnScroll, true);
       el._listOnScroll = null;
@@ -354,7 +361,7 @@ export function renderArtists(el, state) {
     }
     return;
   }
-  el.className = "artist-list";
+  el.className = grunnKlasser;
 
   const linkCtx = state.linkCtx;
 

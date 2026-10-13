@@ -1273,8 +1273,10 @@ textarea { resize: vertical; }
   gap: 18px;
   margin-top: 18px;
 }
-/* Lærerlista i kortvisning: to kort i bredden (v6.68, brukerønske; tre ble for smalt). */
-.artist-list--to { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+/* Lærerlista i kortvisning: to kort i bredden (v6.68, brukerønske; tre ble for
+   smalt). Fast to spalter fra v6.97: med auto-fill og 420 px ble det tre på
+   brede skjermer. Under 760 px gjelder én spalte (.artist-list i media-regelen). */
+.artist-list--to { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* Galleriet i lærerlista (v6.26) har sitt eget rutenett (.ar-galleri): i
    kortenes kolonner ble det stående i én av dem, halv bredde. */
 .artist-list.artist-list--galleri { display: block; }
