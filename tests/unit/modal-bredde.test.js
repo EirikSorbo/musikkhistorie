@@ -107,15 +107,26 @@ test("lærerlista har to kort i bredden, og tegningen beholder klassen", () => {
 });
 
 // Større hvit ramme på store skjermer (v6.98, brukerønske 2026-10-13): kortet
-// blir bredere og høyere, innholdet beholder 944 px, sentrert.
+// blir bredere, innholdet beholder 944 px, sentrert.
 test("innholdskortene får større ramme på desktop, med innholdet i samme bredde", () => {
   const css = les("css/styles.css");
   const blokk = css.slice(css.indexOf("@media (min-width: 1100px) {\n  body:not(.presentasjon) .modal.modal-innhold {"));
   assert.ok(blokk.length > 0, "fant ikke desktop-blokka");
   assert.match(blokk, /max-width: min\(94vw, 1360px\);/);
-  assert.match(blokk, /min-height: min\(78vh, 820px\);/);
-  // v6.99: aldri høyere enn 85vh. Fanevinduene står 7,5vh ned, så 92vh rakk
-  // forbi bunnen av skjermen, uten uskarp ramme under.
-  assert.match(blokk, /max-height: 85vh;/);
   assert.match(blokk, /body:not\(\.presentasjon\) \.modal\.modal-innhold > \* \{\n\s*max-width: 944px;\n\s*margin-inline: auto;/);
+});
+
+// Alle innholdskortene er like store (v7.00, brukerønske 2026-10-13): fast
+// høyde på 90 % av skjermen, midt på, så vinduet ikke skifter størrelse. Ingen
+// kort har egen høyde ved siden av (tiårsvinduet hadde 85vh), og fanevinduene
+// er ikke lenger toppjustert (v6.99: med ulik høyde rakk de forbi bunnen).
+test("alle innholdskortene har samme faste høyde, 90 % av skjermen", () => {
+  const css = les("css/styles.css");
+  assert.match(css, /body:not\(\.presentasjon\) \.modal\.modal-innhold \{\n\s*height: 90vh; height: min\(90dvh, 100%\);\n\s*max-height: 90vh; max-height: min\(90dvh, 100%\);\n\}/);
+  assert.doesNotMatch(css, /min-height: min\(78vh, 820px\)/, "ingen minstehøyde ved siden av den faste");
+  assert.doesNotMatch(css, /#modal-decade-view > \.modal \{[^}]*height/, "tiårsvinduet følger den felles høyden");
+  assert.doesNotMatch(css, /\.modal\.sj-fanevindu \{ margin-top/, "fanevinduene står midt på som de andre");
+  // Listevinduene: samme ramme, smal liste inni (bare lerretet har smalt vindu).
+  assert.match(css, /body\.presentasjon :is\(#modal-artistliste, #modal-spilleliste\) > \.modal \{ max-width: 41\.25rem; \}/);
+  assert.match(css, /body:not\(\.presentasjon\) :is\(#modal-artistliste, #modal-spilleliste\) > \.modal > \* \{\n\s*max-width: calc\(41\.25rem - 56px\);/);
 });

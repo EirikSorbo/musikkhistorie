@@ -1813,21 +1813,27 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    smalere vinduer fyller kortet vinduet, slik de brede kortene alltid har
    gjort, og på mobil er alt som før. */
 .modal.modal-innhold { max-width: clamp(860px, 90vw, 1000px); }
+/* Alle innholdskortene er like store (v7.00, brukerønske 2026-10-13): høyden
+   står fast, så vinduet ikke skifter størrelse fra kort til kort. Et kort med
+   lite innhold får hvitt under seg; et langt kort ruller inne i rammen.
+   Høyden er 90 % av skjermen (brukervalg), og kortet står midt på, så det er
+   like mye uskarp ramme over og under. dvh er den synlige høyden: på telefon
+   går kortet da ikke inn under adresselinja (vh står som reserve for eldre
+   nettlesere). 100 % er bakgrunnen minus polstringen: i svært lave vinduer
+   (telefon på tvers) er det den som setter grensen. Ikke lerretet
+   (presentasjonen har egne regler) og ikke skjemaene (modal-wide). */
+body:not(.presentasjon) .modal.modal-innhold {
+  height: 90vh; height: min(90dvh, 100%);
+  max-height: 90vh; max-height: min(90dvh, 100%);
+}
 /* Større hvit ramme rundt innholdskortene på store skjermer (v6.98, brukerønske
    2026-10-13): kortet dekker mer av skjermen, men innholdet beholder bredden
-   det hadde (1000 px-kortet minus margen, 944 px). Selve kortet blir bredere og
-   høyere; barna i det er avgrenset og sentrert, så tittelen, ✕ og innholdet
-   står i samme spalte som før. Gjelder ikke skjemaene (modal-wide) eller
-   lerretet (presentasjonen har egne regler).
-   Høyden er fortsatt høyst 85vh (v6.99): fanevinduene (Sjangre, Undersjangre,
-   Varmekart …) står fast 7,5vh ned fra toppen, og med 92vh rakk de lange forbi
-   bunnen av skjermen. Med 85vh er det like mye uskarp ramme over og under, og
-   innholdet ruller inne i kortet. */
+   det hadde (1000 px-kortet minus margen, 944 px). Selve kortet blir bredere;
+   barna i det er avgrenset og sentrert, så tittelen, ✕ og innholdet står i
+   samme spalte som før. */
 @media (min-width: 1100px) {
   body:not(.presentasjon) .modal.modal-innhold {
     max-width: min(94vw, 1360px);
-    max-height: 85vh;
-    min-height: min(78vh, 820px);
     padding: 40px 48px;
   }
   body:not(.presentasjon) .modal.modal-innhold > * {
@@ -2219,8 +2225,16 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
    Spillelista har samme rene stil som artistlista: grå linjer mellom
    radene, normal vekt, dempet farge; tittel og år til venstre, artist og
    sjanger til høyre, og hele raden markeres og kan klikkes. All
-   informasjonen står. */
-:is(#modal-artistliste, #modal-spilleliste) > .modal { max-width: 41.25rem; }
+   informasjonen står.
+   Fra v7.00 har listevinduene samme ramme som de andre kortene (alle kortene
+   er like store), og det er lista inni som er smal: 41.25rem minus den gamle
+   polstringen (2 × 28 px), sentrert. På lerretet er det fortsatt vinduet som
+   er smalt. */
+body.presentasjon :is(#modal-artistliste, #modal-spilleliste) > .modal { max-width: 41.25rem; }
+body:not(.presentasjon) :is(#modal-artistliste, #modal-spilleliste) > .modal > * {
+  max-width: calc(41.25rem - 56px);
+  margin-inline: auto;
+}
 #modal-spilleliste .pl-list { margin: 0; padding: 0; list-style: none; }
 #modal-spilleliste .pl-item {
   display: flex; align-items: baseline; gap: 1rem;
@@ -4570,12 +4584,12 @@ body.presentasjon .meta-merke { display: none; }
    grensen på 68ch ga samme smale spalte som før), og kortet har alltid full
    høyde, så tiårsstripa øverst og «forrige/neste» nederst står på samme sted
    uansett hvor mye tiåret har. Tomrom under korte tiår er greit. Ikke i
-   presentasjonen, som har sin egen linjelengde og høyde. */
+   presentasjonen, som har sin egen linjelengde og høyde. Fra v7.00 har alle
+   innholdskortene fast høyde (.modal-innhold); her står bare spaltene. */
 body:not(.presentasjon) #modal-decade-view .dv-panel :is(p, .rt, .info-text) { max-width: none; }
-body:not(.presentasjon) #modal-decade-view > .modal { height: 85vh; display: flex; flex-direction: column; }
+body:not(.presentasjon) #modal-decade-view > .modal { display: flex; flex-direction: column; }
 body:not(.presentasjon) #modal-decade-view > .modal > * { flex-shrink: 0; }
 body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-top: 16px; }
-@media (max-width: 640px) { body:not(.presentasjon) #modal-decade-view > .modal { height: 92vh; } }
 .dv-panel .kilder { margin-top: 1.2rem; }
 /* Kildene i Teknologi og Samfunn er skjult (v6.18, brukervalg 2026-10-03).
    De tegnes fortsatt (explore-decade.js), så de kan slås på igjen her. */
@@ -4698,13 +4712,9 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
   .sj-fane-knapper { justify-content: flex-end; padding-bottom: 0; }
   .sj-fane-knapper:not(:has(> :not([hidden]))) { display: none; }
 }
-/* Toppen av kortet står fast når fanen byttes (kortene har ulik høyde), og
-   det nye kortet kommer uten inngangsanimasjon (modalBytt i ui-modal.js). */
-body:not(.presentasjon) .modal-backdrop:has(> .sj-fanevindu) { align-items: flex-start; }
-body:not(.presentasjon) .modal-backdrop > .modal.sj-fanevindu { margin-top: calc(7.5vh - 20px); }
-@media (max-width: 640px) {
-  body:not(.presentasjon) .modal-backdrop > .modal.sj-fanevindu { margin-top: calc(4vh - 10px); }
-}
+/* Det nye kortet kommer uten inngangsanimasjon når fanen byttes (modalBytt i
+   ui-modal.js). Fanevinduene var toppjustert fra v6.12, fordi kortene hadde
+   ulik høyde; fra v7.00 er alle innholdskortene like høye og står midt på. */
 .modal-backdrop.modal-bytt > .modal { animation: none; }
 
 /* Appens egne meldingsbokser (v6.25, brukervalg 2026-10-04): erstatter
