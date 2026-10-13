@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-106 filer i 11 mapper.
+107 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -18,7 +18,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 14 |
 | `js/data/` | Data | 9 |
-| `js/felles/` | Felles hjelpere | 14 |
+| `js/felles/` | Felles hjelpere | 15 |
 | `js/vendor/` | Tredjepart | 1 |
 
 ## Reglene koden holder seg til
@@ -192,6 +192,7 @@ Små hjelpere og vokabular som flere deler av appen bruker: tekst og lenker, kil
 | Fil | Hva den gjør |
 |---|---|
 | `feature-flags.js` | MIDLERTIDIGE BRYTERE — skjuler funksjoner i STUDENTVISNINGEN |
+| `guide-deler.js` | «SLIK BRUKER DU APPEN» I DELER (v6.95, brukervalg 2026-10-13) |
 | `kilder.js` | KILDER — vokabular, publikasjoner og aggregering |
 | `limits.js` | KONFIGURASJON, VOKABULAR OG TELLING |
 | `linkify.js` | LENKER I LØPENDE TEKST — artist-, sjanger- og innovasjonsnavn blir klikkbare |

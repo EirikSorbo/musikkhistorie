@@ -62,7 +62,6 @@ function tomtUnderRegel(id) {
     case "sb-historier": return !storyOrderSynlig(s.genreDescs).length;
     case "sb-rotter": return !pageFor("rotter", s.content)?.body?.trim();
     case "sb-om-historie": return !pageFor("omHistorie", s.content)?.body?.trim();
-    case "sb-guide": return !pageFor("appGuide", s.content)?.body?.trim();
     case "sb-plateselskaper": return !PLATESELSKAPER.some((p) => plateselskapSynlig(p.id));
     default: return false;
   }

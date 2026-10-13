@@ -107,8 +107,11 @@ export const SKJUL_I_HUBEN = {
 // ----------------------------------------------------------------------------
 //  Verdiene over er STANDARDEN. Læreren slår av og på fra Skrivebordet
 //  («Synlig for studentene»), som skriver content/synlighet:
-//    { student: { <flagg>: bool }, hub: { <kort-id>: bool }, punkter: bool }
-//  true betyr skjult, som over. Ukjente nøkler ignoreres; mangler dokumentet,
+//    { student: { <flagg>: bool }, hub: { <kort-id>: bool }, punkter: bool,
+//      guide: [<overskrift>, …] }
+//  true betyr skjult, som over. guide (v6.95) er motsatt: lista over delene av
+//  «Slik bruker du appen» som er SYNLIGE (js/felles/guide-deler.js), så en ny
+//  del er skjult til den hukes av. Ukjente nøkler ignoreres; mangler dokumentet,
 //  gjelder standarden. Siste kjente verdier speiles i localStorage, så siden
 //  ikke viser og så skjuler noe mens innholdet lastes.
 //
@@ -121,14 +124,16 @@ const STANDARD = {
   student: { ...SKJUL_I_STUDENTVISNING },
   hub: { ...SKJUL_I_HUBEN },
   punkter: PUNKTER_BARE_I_PRESENTASJON,
+  guide: [],
 };
 const SPEIL = "pensum-synlighet";
 
 // Fletter et dokument inn i standarden. Ren funksjon (testet i
 // feature-flags.test.js).
 export function synlighetVerdier(doc) {
-  const ut = { student: { ...STANDARD.student }, hub: { ...STANDARD.hub }, punkter: STANDARD.punkter };
+  const ut = { student: { ...STANDARD.student }, hub: { ...STANDARD.hub }, punkter: STANDARD.punkter, guide: [...STANDARD.guide] };
   if (!doc || typeof doc !== "object") return ut;
+  if (Array.isArray(doc.guide)) ut.guide = doc.guide.filter((t) => typeof t === "string" && t.trim());
   for (const k of Object.keys(ut.student)) if (typeof doc.student?.[k] === "boolean") ut.student[k] = doc.student[k];
   for (const k of Object.keys(ut.hub)) if (typeof doc.hub?.[k] === "boolean") ut.hub[k] = doc.hub[k];
   if (typeof doc.punkter === "boolean") ut.punkter = doc.punkter;
@@ -154,6 +159,12 @@ function brukPaaObjektene() {
 
 // Verdiene slik læreren har satt dem (eller standarden), uten QA-overstyring.
 export function synlighetGrunn() { return grunn; }
+
+// Er denne delen av «Slik bruker du appen» synlig for studentene (v6.95)?
+// QA-bryteren i visningen viser alle.
+export function guideDelSynlig(tittel) {
+  return overstyrt || grunn.guide.includes(tittel);
+}
 
 // Kalles av datalaget (shared-data.js) ved hvert innholds-snapshot.
 export function brukSynlighet(doc) {

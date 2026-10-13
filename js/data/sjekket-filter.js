@@ -77,8 +77,10 @@ export function filtrerDecades(map, sjekker = {}) {
 
 // Sidene i content som er pensuminnhold, og sjekken hver av dem følger.
 // Resten av content (sjangertreet, varmekartet, synligheten, kjøreplanene,
-// referanselista, skriveveiledningen) er utenfor regelen.
-const SIDER = ["rotter", "omHistorie", "appGuide"];
+// referanselista, skriveveiledningen) er utenfor regelen. Bruksveiledningen
+// (appGuide) er unntatt fra v6.95 (brukervalg 2026-10-13): avhukingen av
+// delene styrer den alene (js/felles/guide-deler.js).
+const SIDER = ["rotter", "omHistorie"];
 export function sideSjekk(id) {
   const s = String(id || "");
   if (SIDER.includes(s) || s.startsWith("instrument-")) return { kategori: "pages", id: s };

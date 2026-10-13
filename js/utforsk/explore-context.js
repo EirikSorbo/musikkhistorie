@@ -37,12 +37,12 @@ export function registrerNavigasjon(funksjoner) { Object.assign(nav, funksjoner)
 // beholder i en detaljmodal. Gjør ingenting for studenter (opts.onCheck
 // mangler). category/id styrer sjekk-lagringen; onEdit/onDelete kobles kun når
 // callbacken finnes (Slett bare for hele enheter, dvs. innovasjonskort).
-export function injectTeacherRow(extraEl, { category, id, onEdit = null, onDelete = null }) {
+export function injectTeacherRow(extraEl, { category, id, onEdit = null, onDelete = null, sjekk = true }) {
   if (!extraEl) return;
   extraEl.innerHTML = "";
   if (!opts.onCheck) return;
   const checked = (opts.getCheckedState?.()?.[category] || []).includes(id);
-  extraEl.innerHTML = teacherActionRow({ checked, edit: !!onEdit, del: !!onDelete });
+  extraEl.innerHTML = teacherActionRow({ checked, edit: !!onEdit, del: !!onDelete, sjekk });
   wireTeacherRow(extraEl, {
     onCheck: (on) => opts.onCheck(category, id, on),
     onEdit,

@@ -13,6 +13,8 @@ import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } fr
 import { pageFor, storyFor, stripGenrePath, storyOrderSynlig } from "../felles/story-format.js";
 import { sjekketRegelAktiv } from "../felles/sjekket.js";
 import { renderRichText } from "../felles/rich-text.js";
+import { guideDeler, guideForStudent } from "../felles/guide-deler.js";
+import { guideDelSynlig } from "../felles/feature-flags.js";
 import { genreFamilyNodes } from "../ui/ui-timeline.js";
 import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js";
 import { wireLinks } from "../ui/ui-helpers.js";
@@ -51,19 +53,35 @@ export function renderPage(pageId, bodyElId, extraElId) {
   // dokument med bare kilder (mulig via import) skal fortsatt vise hullet.
   if (page?.body?.trim()) {
     const lc = buildLinkCtx();
-    body.innerHTML = renderRichText(page.body, lc);
+    body.innerHTML = pageId === "appGuide" ? guideHtml(page.body, lc) : renderRichText(page.body, lc);
     wireLinks(body, lc);
   } else {
     body.innerHTML = `<p class="gx-missing">${s.contentLoaded
       ? "Teksten er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen."
       : "Laster innhold …"}</p>`;
   }
-  // Lærer: Sjekk + Rediger over teksten (delt knapperad).
+  // Lærer: Sjekk + Rediger over teksten (delt knapperad). Bruksveiledningen
+  // sjekkes ikke (v6.95): den er unntatt «Bare sjekket innhold».
   injectTeacherRow(document.getElementById(extraElId), {
     category: "pages",
     id: pageId,
     onEdit: opts.onPageEdit ? () => opts.onPageEdit(pageId) : null,
+    sjekk: pageId !== "appGuide",
   });
+}
+
+// «Slik bruker du appen» i deler (v6.95, js/felles/guide-deler.js). Studentene
+// og lerretet får innledningen og de avhukede delene. Læreren ser alt, med de
+// skjulte delene merket, så det synes hva studentene ikke får.
+function guideHtml(body, lc) {
+  if (!opts.onStoryEdit) return renderRichText(guideForStudent(body, guideDelSynlig), lc);
+  const { innledning, deler } = guideDeler(body);
+  return [
+    innledning ? renderRichText(innledning, lc) : "",
+    ...deler.map((d) => guideDelSynlig(d.tittel)
+      ? renderRichText(d.tekst, lc)
+      : `<div class="guide-skjult"><span class="guide-skjult-merke">Skjult for studentene</span>${renderRichText(d.tekst, lc)}</div>`),
+  ].join("");
 }
 
 export function openOmHistorie() {

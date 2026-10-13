@@ -24,6 +24,8 @@ import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
 import { PLATESELSKAPER, plateselskapSideId } from "./plateselskaper.js";
 import { erSjekket } from "./sjekket.js";
+import { guideForStudent } from "./guide-deler.js";
+import { guideDelSynlig } from "./feature-flags.js";
 import { ytMaal } from "../visning/presentasjon-modell.js";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
@@ -264,7 +266,9 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
     if (!erLærer && skjulHub[HUB_KORT[id]]) continue;
     const side = pageFor(id, content);
     if (!side) continue;
-    ut.push(post("side", id, SIDE_TITTEL[id] || id, "Det store bildet", [side.body],
+    // Bruksveiledningen: studentene søker bare i delene de får se (v6.95).
+    const tekst = id === "appGuide" && !erLærer ? guideForStudent(side.body, guideDelSynlig) : side.body;
+    ut.push(post("side", id, SIDE_TITTEL[id] || id, "Det store bildet", [tekst],
       { hva: "side", id }));
   }
 

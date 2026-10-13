@@ -27,6 +27,7 @@ import { pct } from "../ui/ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
 import { deleteTimeforslag, savePage } from "../data/store.js";
 import { synlighetVerdier } from "../felles/feature-flags.js";
+import { guideTitler } from "../felles/guide-deler.js";
 import { askChoice, melding, modalOpen, bekreft } from "../ui/ui-modal.js";
 
 const ICON = {
@@ -117,8 +118,9 @@ function buildCategories() {
     },
     {
       // Sidene som følger «Bare sjekket innhold» (v6.89, js/data/sjekket-filter.js):
-      // Røtter, Om historie, bruksveiledningen og instrumenttekstene. Bare de
-      // med tekst; en tom side har ingenting å sjekke.
+      // Røtter, Om historie og instrumenttekstene (bruksveiledningen er unntatt
+      // fra v6.95, se guide-deler.js). Bare de med tekst; en tom side har
+      // ingenting å sjekke.
       key: "pages", label: "Sider",
       items: SIDER.map(([id, name]) => ({ id, name }))
         .filter((it) => pageFor(it.id, state.content)?.body?.trim()),
@@ -137,7 +139,6 @@ function buildCategories() {
 const SIDER = [
   ["rotter", "Røtter"],
   ["omHistorie", "Om historie"],
-  ["appGuide", "Slik bruker du appen"],
   ...INSTRUMENT_TIMELINE_GROUPS.map((g) => [instrumentPageId(g), INSTRUMENT_TITLE[g] || `Utviklingen av ${g}`]),
 ];
 
@@ -248,6 +249,8 @@ export function renderDesk(el) {
     }
     const syn = hit("[data-synlig]");
     if (syn && syn.matches("input")) return endreSynlighet(syn.dataset.synlig, syn.checked, syn);
+    const guideDel = hit("[data-guide-del]");
+    if (guideDel && guideDel.matches("input")) return endreGuideDel(guideDel.dataset.guideDel, guideDel.checked, guideDel);
     const regel = hit("[data-synlig-sjekket]");
     if (regel && regel.matches("input")) return endreSjekketRegel(regel.checked, regel);
 
@@ -348,10 +351,35 @@ function synlighetHtml() {
   return `<details class="desk-synlighet"${openPanels.has("synlighet") ? " open" : ""}>
     <summary>Synlig for studentene</summary>
     <p class="muted desk-synlighet-hint">Avhuket er synlig for studentene. Du ser alltid alt selv.</p>
-    <div class="desk-synlighet-liste">${SYNLIGHET_RADER.map((r) => `<label class="desk-synlighet-rad">
-      <input type="checkbox" data-synlig="${r.id}"${synligNaa(v, r) ? " checked" : ""}> ${escapeHtml(r.navn)}</label>`).join("")}</div>
+    <div class="desk-synlighet-liste">${SYNLIGHET_RADER.map((r) => {
+      const rad = `<label class="desk-synlighet-rad">
+      <input type="checkbox" data-synlig="${r.id}"${synligNaa(v, r) ? " checked" : ""}> ${escapeHtml(r.navn)}</label>`;
+      // Guiden og delene dens holdes samlet i én spalte (v6.95).
+      return r.id === "guide" ? `<div class="desk-guide-gruppe">${rad}${guideDelerHtml(v)}</div>` : rad;
+    }).join("")}</div>
     ${sjekketRegelHtml(v)}
   </details>`;
+}
+
+// Delene av «Slik bruker du appen» (v6.95, js/felles/guide-deler.js): én
+// avhuking per overskrift i teksten, under hovedbryteren. Avhuket = synlig.
+const guideTitlerNaa = () => guideTitler(state.content?.appGuide?.body);
+
+function guideDelerHtml(v) {
+  const titler = guideTitlerNaa();
+  if (!titler.length) return "";
+  return `<div class="desk-guide-deler" role="group" aria-label="Delene av Slik bruker du appen">${titler.map((t) => `<label class="desk-synlighet-rad">
+      <input type="checkbox" data-guide-del="${escapeHtml(t)}"${v.guide.includes(t) ? " checked" : ""}> ${escapeHtml(t)}</label>`).join("")}</div>`;
+}
+
+async function endreGuideDel(tittel, synlig, boks) {
+  const v = synlighetVerdier(state.content?.synlighet);
+  const titler = guideTitlerNaa();
+  const valgt = new Set(v.guide);
+  if (synlig) valgt.add(tittel); else valgt.delete(tittel);
+  // Overskrifter som ikke står i teksten lenger, ryddes bort ved lagring.
+  v.guide = titler.filter((t) => valgt.has(t));
+  await lagreSynlighet(v, boks, () => { boks.checked = !synlig; });
 }
 
 async function endreSynlighet(id, synlig, boks) {
@@ -383,6 +411,7 @@ async function lagreSynlighet(v, boks, angre) {
     student: Object.fromEntries(PANEL_STUDENT.map((k) => [k, v.student[k]])),
     hub: Object.fromEntries(PANEL_HUB.map((k) => [k, v.hub[k]])),
     punkter: v.punkter,
+    guide: v.guide,
   };
   boks.disabled = true;
   try {
@@ -478,7 +507,6 @@ function openItem(key, id) {
     case "pages": {
       if (id === "rotter") ctx.explore?.openRotter();
       else if (id === "omHistorie") ctx.explore?.openOmHistorie();
-      else if (id === "appGuide") ctx.explore?.openAppGuide();
       else {
         const gruppe = INSTRUMENT_TIMELINE_GROUPS.find((g) => instrumentPageId(g) === id);
         if (gruppe) ctx.explore?.openInstrumenter(gruppe);

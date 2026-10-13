@@ -115,14 +115,15 @@ export function toggleCheckBtn(btn, extra = "") {
 // `notat` (v6.58): «Notater»-knappen, bare for de fire kort-typene i
 // NOTAT_TYPER (artist, sjanger, tech, tiår) — default av, så de andre
 // kallstedene (koblinger, plateselskaper …) ser ut akkurat som før.
-export function teacherActionRow({ checked = false, edit = true, del = false, notat = false } = {}) {
+// sjekk: false for innhold som ikke sjekkes (bruksveiledningen, v6.95).
+export function teacherActionRow({ checked = false, edit = true, del = false, notat = false, sjekk = true } = {}) {
   const right = [
     notat ? `<button type="button" class="icon-btn tcr-notat" title="Private notater" aria-label="Private notater">${ICONS.notat}</button>` : "",
     edit ? `<button type="button" class="icon-btn tcr-edit" title="Rediger" aria-label="Rediger">${ICONS.edit}</button>` : "",
     del ? `<button type="button" class="icon-btn danger tcr-del" title="Slett" aria-label="Slett">${ICONS.trash}</button>` : "",
   ].filter(Boolean).join("");
   return `<div class="teacher-card-actions">
-    ${checkBtnHtml(checked, "tcr-check")}
+    ${sjekk ? checkBtnHtml(checked, "tcr-check") : ""}
     <div class="spacer"></div>
     ${right}
   </div>`;

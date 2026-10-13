@@ -96,9 +96,11 @@ test("innholdssidene: pensumsidene følger sjekken, resten av content står", ()
     skriveveiledning: { body: "s" }, varmekart: { heat: {} }, genealogy: { nodes: [] }, synlighet: {}, referanser: { kilder: [] },
   };
   const ut = filtrerContent(content, { pages: ["omHistorie"], plateselskaper: ["columbia"] });
+  // Bruksveiledningen er unntatt fra v6.95: avhukingen av delene styrer den.
   assert.deepEqual(Object.keys(ut).sort(), [
-    "genealogy", "omHistorie", plateselskapSideId("columbia"), "referanser", "skriveveiledning", "synlighet", "varmekart",
+    "appGuide", "genealogy", "omHistorie", plateselskapSideId("columbia"), "referanser", "skriveveiledning", "synlighet", "varmekart",
   ].sort());
+  assert.equal(sideSjekk("appGuide"), null);
   assert.deepEqual(sideSjekk("instrument-vokal"), { kategori: "pages", id: "instrument-vokal" });
   assert.deepEqual(sideSjekk(plateselskapSideId("columbia")), { kategori: "plateselskaper", id: "columbia" });
   assert.equal(sideSjekk("skriveveiledning"), null);
