@@ -25,8 +25,7 @@ import { DECADES, isVisible, erTilModerasjon, INSTRUMENT_TIMELINE_GROUPS, INSTRU
 import { selskaperSortert, plateselskapSideId } from "../felles/plateselskaper.js";
 import { pct } from "../ui/ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
-import { deleteTimeforslag, savePage, migrerSkjulte, settTiaarskilder } from "../data/store.js";
-import { planTiaarskilder } from "./tiaarskilder-opprydding.js";
+import { deleteTimeforslag, savePage } from "../data/store.js";
 import { synlighetVerdier } from "../felles/feature-flags.js";
 import { askChoice, melding, modalOpen, bekreft } from "../ui/ui-modal.js";
 
@@ -180,82 +179,6 @@ function catCard(cat) {
   </div>`;
 }
 
-// ---------------------------------------------------------------------------
-//  SKJULINGEN I EGET FELT (v6.86, brukervalg 2026-10-13)
-// ---------------------------------------------------------------------------
-//  Før var «skjult for studentene» viktighetsgrad -1. Nå er det feltet hidden,
-//  så graden bare er en mening (forarbeid til flere sett med grader). Artistene
-//  med den gamle -1 flyttes over med én knapp her; appen leser -1 som skjult
-//  til det er gjort (erSkjult i js/felles/limits.js). Kortet forsvinner av seg
-//  selv når ingen -1 er igjen.
-const gamleSkjulte = () => state.artists.filter((a) => (a.priority || 0) === -1);
-
-function migreringHtml() {
-  const n = gamleSkjulte().length;
-  if (!n) return "";
-  return `<div class="desk-migrering" role="status">
-    <span><b>${n}</b> ${n === 1 ? "artist er" : "artister er"} skjult på den gamle måten, som viktighetsgrad −1. Skjulingen er nå et eget felt, skilt fra gradene. Flytt dem over, så blir gradene bare en vurdering.</span>
-    <button type="button" class="btn primary small" data-desk-migrer-skjulte>Flytt skjulingen</button>
-  </div>`;
-}
-
-let flytter = false;
-async function flyttSkjulingen(el) {
-  if (flytter) return;
-  const ider = gamleSkjulte().map((a) => a.id);
-  if (!ider.length) return;
-  flytter = true;
-  const knapp = el.querySelector("[data-desk-migrer-skjulte]");
-  if (knapp) { knapp.disabled = true; knapp.textContent = "Flytter …"; }
-  try {
-    const n = await migrerSkjulte(ider);
-    melding(`${n} ${n === 1 ? "artist er" : "artister er"} nå skjult med det nye feltet. Gradene deres er tomme, siden -1 ikke var noen grad.`);
-  } catch (err) {
-    melding(`Fikk ikke flyttet skjulingen (${err?.message || err}). Ingenting er tapt: appen leser fortsatt den gamle -1 som skjult.`);
-    if (knapp) { knapp.disabled = false; knapp.textContent = "Flytt skjulingen"; }
-  } finally {
-    flytter = false;
-  }
-}
-
-// ---------------------------------------------------------------------------
-//  SAMFUNNSKILDENE PÅ TIÅRENE (v6.92, brukervalg 2026-10-13)
-// ---------------------------------------------------------------------------
-//  Engangsopprydding, samme form som «Flytt skjulingen» over: kortet står så
-//  lenge noen av samfunnskildene står på et tiår, og forsvinner etterpå.
-function tiaarskilderHtml() {
-  const plan = planTiaarskilder(state.decadeDescs);
-  if (!plan.length) return "";
-  const n = plan.reduce((sum, t) => sum + t.fjernes.length, 0);
-  const unike = new Set(plan.flatMap((t) => t.fjernes.map((k) => k.url))).size;
-  return `<div class="desk-migrering" role="status">
-    <span><b>${unike}</b> kilder til tiårenes samfunnstekster skal fjernes, etter avgjørelsen din (de står ${n} steder, på ${plan.length} tiår). Teknologikildene blir stående.</span>
-    <button type="button" class="btn primary small" data-desk-tiaarskilder>Fjern samfunnskildene</button>
-  </div>`;
-}
-
-let fjernerKilder = false;
-async function fjernSamfunnskildene(el) {
-  if (fjernerKilder) return;
-  const plan = planTiaarskilder(state.decadeDescs);
-  if (!plan.length) return;
-  const titler = [...new Map(plan.flatMap((t) => t.fjernes).map((k) => [k.url, k.text || k.url])).values()];
-  if (!(await bekreft(`${titler.map((t) => `· ${t}`).join("\n")}\n\nKildene fjernes fra ${plan.map((t) => `${t.id}-tallet`).join(", ")}. Tekstene og teknologikildene røres ikke.`,
-    { tittel: `Fjerne ${titler.length} samfunnskilder?`, ja: "Fjern", farlig: true }))) return;
-  fjernerKilder = true;
-  const knapp = el.querySelector("[data-desk-tiaarskilder]");
-  if (knapp) { knapp.disabled = true; knapp.textContent = "Fjerner …"; }
-  try {
-    await settTiaarskilder(plan.map(({ id, kilder }) => ({ id, kilder })));
-    melding(`Samfunnskildene er fjernet fra ${plan.length} tiår.`);
-  } catch (err) {
-    melding(`Fikk ikke fjernet kildene (${err?.message || err}). Ingenting er endret, siden alt skrives samlet.`);
-    if (knapp) { knapp.disabled = false; knapp.textContent = "Fjern samfunnskildene"; }
-  } finally {
-    fjernerKilder = false;
-  }
-}
-
 export function renderDesk(el) {
   if (!el) return;
 
@@ -291,8 +214,6 @@ export function renderDesk(el) {
 
   el.innerHTML = `
     <p class="section-label">Skrivebord</p>
-    ${migreringHtml()}
-    ${tiaarskilderHtml()}
     ${inboxHtml}
     ${timeforslagHtml()}
     <div class="desk-grid">${cats.map(catCard).join("")}</div>
@@ -333,8 +254,6 @@ export function renderDesk(el) {
     const slett = hit("[data-desk-time-slett]");
     if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
 
-    if (hit("[data-desk-migrer-skjulte]")) return flyttSkjulingen(el);
-    if (hit("[data-desk-tiaarskilder]")) return fjernSamfunnskildene(el);
 
     const act = hit("[data-desk]");
     if (!act) return;

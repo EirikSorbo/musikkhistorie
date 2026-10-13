@@ -173,8 +173,10 @@ export const GENDERS = [
 
 // Skjult for studentene (v6.86, brukervalg 2026-10-13): eget felt `hidden`,
 // skilt ut fra viktighetsgraden, som før bar begge deler (priority -1 = skjult).
-// Fram til lærerens migrering (Skrivebordet) er kjørt, betyr den gamle
-// verdien -1 fortsatt «skjult». Alle som spør om skjuling, spør her.
+// Flyttingen er gjort (alle 83 fikk hidden, 2026-10-13), og knappen er borte
+// (v6.94). Den gamle -1 leses likevel fortsatt som skjult: en sikkerhetskopi fra
+// før v6.86 kan føre den inn igjen, og «Vis» på lærerkortet rydder den da.
+// Alle som spør om skjuling, spør her.
 export function erSkjult(a) {
   return a?.hidden === true || (a?.priority || 0) === -1;
 }

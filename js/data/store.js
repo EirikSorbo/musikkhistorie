@@ -318,21 +318,6 @@ export async function setArtistPriority(artistId, level) {
   return updateDoc(doc(db, "artists", artistId), { priority: level });
 }
 
-// Skjulingen ut av viktighetsgraden (v6.86, brukervalg 2026-10-13): artister
-// med den gamle priority -1 får hidden: true og priority 0 (de hadde ingen
-// grad). Batchet; kalles fra Skrivebordet når læreren trykker på knappen.
-export async function migrerSkjulte(ider) {
-  const liste = [...new Set(ider || [])];
-  for (let i = 0; i < liste.length; i += BATCH_LIMIT) {
-    const batch = writeBatch(db);
-    for (const id of liste.slice(i, i + BATCH_LIMIT)) {
-      batch.update(doc(db, "artists", id), { hidden: true, priority: 0 });
-    }
-    await batch.commit();
-  }
-  return liste.length;
-}
-
 // Lærer sletter et forslag permanent
 export async function teacherDelete(artistId) {
   return deleteDoc(doc(db, "artists", artistId));
@@ -493,16 +478,6 @@ export async function saveDecadeDesc(decadeId, data) {
   return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
 }
 
-// Tiårenes kildelister skrevet på nytt i én batch (v6.92, oppryddingen av
-// samfunnskildene, js/laerer/tiaarskilder-opprydding.js). endringer =
-// [{ id, kilder }]. Hele lista skrives, også tom, noe importen med vilje
-// aldri gjør. Bare kilder røres; tekstene og sjekkene står.
-export async function settTiaarskilder(endringer) {
-  const batch = writeBatch(db);
-  for (const { id, kilder } of endringer) batch.set(doc(db, "decades", String(id)), { kilder }, { merge: true });
-  await batch.commit();
-  return endringer.length;
-}
 
 // ----------------------------------------------------------------------------
 //  MIGRERING AV SJANGERTREET

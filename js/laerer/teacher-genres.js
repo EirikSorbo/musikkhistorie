@@ -33,7 +33,7 @@ import { DECADE_ROWS, FAMILIES } from "../sjangre/genre-model.js";
 import { validateTree } from "../sjangre/genre-validate.js";
 import {
   planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  planPasserIBatch, byggMetaTre, planTreeCleanup, planHeatCleanup, heatOrphanKeys,
+  planPasserIBatch, byggMetaTre, planHeatCleanup, heatOrphanKeys,
   planEdgeCleanup, edgeOrphanKeys,
 } from "../sjangre/genre-migrate.js";
 import { runMigrationPlan, saveGenealogyTree } from "../data/store.js";
@@ -71,10 +71,6 @@ export const GENRE_ADMIN_HTML = `
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       <button class="btn primary small" id="gen-ny-sjanger">Ny sjanger</button>
       <button class="btn ghost small" id="gen-ny-meta">Ny metasjanger</button>
-      <!-- Engangsflytting (fase 4). Knappen viser seg selv KUN så lenge det
-           finnes noder med epoke eller lytteforslag, og forsvinner når treet er
-           rent — da er den ferdig med jobben sin. -->
-      <button class="btn ghost small" id="gen-rydd" hidden>Flytt epoke og lytteforslag til beskrivelsene</button>
       <!-- Foreldreløse varmekart-rader: nøkler som ikke lenger peker på en
            sjanger i treet (rester etter navnebytter gjort før migreringen
            fantes). Usynlige i varmekartet, så dette er eneste vei til dem.
@@ -151,14 +147,6 @@ function renderListe() {
   }
   const metaer = [...(t.metaGenres || [])].sort((a, b) => (a.column ?? 0) - (b.column ?? 0));
   const uten = t.nodes.filter((n) => !n.g);
-
-  // Fase 4: står det igjen innhold i strukturdokumentet?
-  const rydd = $("#gen-rydd");
-  if (rydd) {
-    const igjen = t.nodes.filter((n) => String(n.era || "").trim() || n.t?.length).length;
-    rydd.hidden = igjen === 0;
-    if (igjen) rydd.textContent = `Flytt epoke og lytteforslag til beskrivelsene (${igjen})`;
-  }
 
   // Varmekart-rader uten sjanger i treet. Knappen står ALLTID: den var
   // selvskjulende først, og da var funksjonen uoppdagelig i det øyeblikket
@@ -656,9 +644,6 @@ function slettMeta() {
 export function setupGenreAdmin() {
   $("#gen-ny-sjanger")?.addEventListener("click", () => openNodeEditor(null));
   $("#gen-ny-meta")?.addEventListener("click", () => openMetaEditor(null));
-  $("#gen-rydd")?.addEventListener("click", () =>
-    visPlan("Flytt epoke og lytteforslag ut av treet", planTreeCleanup(migrasjonsState()),
-      () => planTreeCleanup(migrasjonsState())));
   $("#gen-rydd-heat")?.addEventListener("click", () =>
     visPlan("Rydd foreldreløse varmekart-rader", planHeatCleanup(migrasjonsState()),
       () => planHeatCleanup(migrasjonsState())));

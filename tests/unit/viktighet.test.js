@@ -109,16 +109,14 @@ test("erSkjult: hidden eller den gamle -1; isVisible bruker den", () => {
   assert.deepEqual(filterArtists(l, { priority: 3 }).map((a) => a.name), ["a", "c"], "graden står for seg");
 });
 
-test("skjulingen: lærerens knapper skriver hidden, flyttingen er én knapp på Skrivebordet", () => {
+test("skjulingen: lærerens knapper skriver hidden, og den gamle -1 leses fortsatt som skjult", () => {
   const st = les("js/laerer/teacher-state.js");
   assert.match(st, /remove: {6}\(id\) => guardTeacherAction\(updateArtistFields\(id, \{ hidden: true \}\)\)/);
   assert.match(st, /\{ hidden: false, priority: 0 \} : \{ hidden: false \}/, "vis igjen rydder også -1");
   assert.doesNotMatch(st, /setArtistPriority\(id, -1\)/);
-  assert.match(les("js/data/store.js"), /batch\.update\(doc\(db, "artists", id\), \{ hidden: true, priority: 0 \}\)/);
-  const desk = les("js/laerer/teacher-desk.js");
-  assert.match(desk, /const gamleSkjulte = \(\) => state\.artists\.filter\(\(a\) => \(a\.priority \|\| 0\) === -1\)/);
-  assert.match(desk, /\$\{migreringHtml\(\)\}/);
-  // Ingen kode utenom erSkjult og flyttingen tester -1 som skjult lenger.
+  // Engangsflyttingen (v6.86) er kjørt og fjernet i v6.94.
+  assert.doesNotMatch(les("js/laerer/teacher-desk.js"), /migreringHtml|Flytt skjulingen/);
+  // Ingen kode utenom erSkjult tester -1 som skjult lenger.
   for (const f of ["js/ui/ui.js", "js/ui/ui-helpers.js", "js/ui/ui-dashboard.js", "js/felles/linkify.js"]) {
     assert.doesNotMatch(les(f), /\(\w+\.priority \|\| 0\) [!=]== -1/, f);
   }

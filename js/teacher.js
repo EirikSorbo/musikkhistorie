@@ -325,8 +325,7 @@ function startAppInner() {
     onPodcasts: () => { renderPodkastAdmin(); ctx.explore?.renderInstrumenter?.(); },
     // Tiårstekstene (v6.23, Fable F2): «Rediger» i tiårsfanene lagrer oppå
     // tiårsvinduet, som skal vise den nye teksten når læreren går tilbake.
-    // Skrivebordet (v6.92): kortet «Fjern samfunnskildene» følger tiårenes kilder.
-    onDecades: () => { ctx.explore?.refreshDecadeView?.(); refreshDesk(); provVisMaal(); },
+    onDecades: () => { ctx.explore?.refreshDecadeView?.(); provVisMaal(); },
     // ?vis=-lenker til en sjangerkobling venter på koblingstekstene.
     onEdgeDescs: () => provVisMaal(),
     // Åpne teknologi-visninger (admin-lista, innovasjonskortet og en åpen
