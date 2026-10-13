@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-106 filer i 11 mapper.
+107 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -13,7 +13,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/utforsk/` | Utforsk | 21 |
 | `js/sjangre/` | Sjangrene og slektstreet | 13 |
 | `js/visning/` | Visning | 11 |
-| `js/laerer/` | Lærersiden | 7 |
+| `js/laerer/` | Lærersiden | 8 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 14 |
@@ -128,6 +128,7 @@ Skrivebordet, artistene, innholdsredigeringen, sjangertre-editoren, gjennomgange
 | `teacher-import.js` | LÆRER — IMPORT / EKSPORT / FLETTING |
 | `teacher-review.js` | LÆRER — ENDRINGSFORSLAG (review/diff) |
 | `teacher-state.js` | LÆRER — DELT KJERNE |
+| `tiaarskilder-opprydding.js` | ENGANGSOPPRYDDING: SAMFUNNSKILDENE PÅ TIÅRENE (v6.92, brukervalg 2026-10-13) |
 
 ## `js/forslag/` Endringsforslag
 

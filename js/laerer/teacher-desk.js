@@ -25,7 +25,8 @@ import { DECADES, isVisible, erTilModerasjon, INSTRUMENT_TIMELINE_GROUPS, INSTRU
 import { selskaperSortert, plateselskapSideId } from "../felles/plateselskaper.js";
 import { pct } from "../ui/ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
-import { deleteTimeforslag, savePage, migrerSkjulte } from "../data/store.js";
+import { deleteTimeforslag, savePage, migrerSkjulte, settTiaarskilder } from "../data/store.js";
+import { planTiaarskilder } from "./tiaarskilder-opprydding.js";
 import { synlighetVerdier } from "../felles/feature-flags.js";
 import { askChoice, melding, modalOpen, bekreft } from "../ui/ui-modal.js";
 
@@ -217,6 +218,44 @@ async function flyttSkjulingen(el) {
   }
 }
 
+// ---------------------------------------------------------------------------
+//  SAMFUNNSKILDENE PÅ TIÅRENE (v6.92, brukervalg 2026-10-13)
+// ---------------------------------------------------------------------------
+//  Engangsopprydding, samme form som «Flytt skjulingen» over: kortet står så
+//  lenge noen av samfunnskildene står på et tiår, og forsvinner etterpå.
+function tiaarskilderHtml() {
+  const plan = planTiaarskilder(state.decadeDescs);
+  if (!plan.length) return "";
+  const n = plan.reduce((sum, t) => sum + t.fjernes.length, 0);
+  const unike = new Set(plan.flatMap((t) => t.fjernes.map((k) => k.url))).size;
+  return `<div class="desk-migrering" role="status">
+    <span><b>${unike}</b> kilder til tiårenes samfunnstekster skal fjernes, etter avgjørelsen din (de står ${n} steder, på ${plan.length} tiår). Teknologikildene blir stående.</span>
+    <button type="button" class="btn primary small" data-desk-tiaarskilder>Fjern samfunnskildene</button>
+  </div>`;
+}
+
+let fjernerKilder = false;
+async function fjernSamfunnskildene(el) {
+  if (fjernerKilder) return;
+  const plan = planTiaarskilder(state.decadeDescs);
+  if (!plan.length) return;
+  const titler = [...new Map(plan.flatMap((t) => t.fjernes).map((k) => [k.url, k.text || k.url])).values()];
+  if (!(await bekreft(`${titler.map((t) => `· ${t}`).join("\n")}\n\nKildene fjernes fra ${plan.map((t) => `${t.id}-tallet`).join(", ")}. Tekstene og teknologikildene røres ikke.`,
+    { tittel: `Fjerne ${titler.length} samfunnskilder?`, ja: "Fjern", farlig: true }))) return;
+  fjernerKilder = true;
+  const knapp = el.querySelector("[data-desk-tiaarskilder]");
+  if (knapp) { knapp.disabled = true; knapp.textContent = "Fjerner …"; }
+  try {
+    await settTiaarskilder(plan.map(({ id, kilder }) => ({ id, kilder })));
+    melding(`Samfunnskildene er fjernet fra ${plan.length} tiår.`);
+  } catch (err) {
+    melding(`Fikk ikke fjernet kildene (${err?.message || err}). Ingenting er endret, siden alt skrives samlet.`);
+    if (knapp) { knapp.disabled = false; knapp.textContent = "Fjern samfunnskildene"; }
+  } finally {
+    fjernerKilder = false;
+  }
+}
+
 export function renderDesk(el) {
   if (!el) return;
 
@@ -253,6 +292,7 @@ export function renderDesk(el) {
   el.innerHTML = `
     <p class="section-label">Skrivebord</p>
     ${migreringHtml()}
+    ${tiaarskilderHtml()}
     ${inboxHtml}
     ${timeforslagHtml()}
     <div class="desk-grid">${cats.map(catCard).join("")}</div>
@@ -294,6 +334,7 @@ export function renderDesk(el) {
     if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
 
     if (hit("[data-desk-migrer-skjulte]")) return flyttSkjulingen(el);
+    if (hit("[data-desk-tiaarskilder]")) return fjernSamfunnskildene(el);
 
     const act = hit("[data-desk]");
     if (!act) return;

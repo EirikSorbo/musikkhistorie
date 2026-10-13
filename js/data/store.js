@@ -493,6 +493,17 @@ export async function saveDecadeDesc(decadeId, data) {
   return setDoc(doc(db, "decades", String(decadeId)), data, { merge: true });
 }
 
+// Tiårenes kildelister skrevet på nytt i én batch (v6.92, oppryddingen av
+// samfunnskildene, js/laerer/tiaarskilder-opprydding.js). endringer =
+// [{ id, kilder }]. Hele lista skrives, også tom, noe importen med vilje
+// aldri gjør. Bare kilder røres; tekstene og sjekkene står.
+export async function settTiaarskilder(endringer) {
+  const batch = writeBatch(db);
+  for (const { id, kilder } of endringer) batch.set(doc(db, "decades", String(id)), { kilder }, { merge: true });
+  await batch.commit();
+  return endringer.length;
+}
+
 // ----------------------------------------------------------------------------
 //  MIGRERING AV SJANGERTREET
 // ----------------------------------------------------------------------------
