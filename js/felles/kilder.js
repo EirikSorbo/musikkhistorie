@@ -26,8 +26,29 @@ export const KILDE_KATEGORIER = [
 const KATEGORI_ALIAS = { Tidsskrifter: "Nettsteder" };
 
 // Kilder uten (gyldig) kategori forsvinner ikke stille: de samles her, nederst
-// i kortet, så det synes straks at noe må rettes.
+// i kortet, så det synes straks at noe må rettes. Fra v6.93 bare kilder uten
+// lenke og med en kategori appen ikke kjenner (se antattKategori).
 export const UKATEGORISERT = "Ukategorisert";
+
+// Kategorien en kilde UTEN lagret kategori får (v6.93, brukerønske
+// 2026-10-13). Importene hadde lagt inn 153 lenker til SNL, Wikipedia,
+// Britannica og doi.org uten kategori, og alle sto under «Ukategorisert».
+// En kilde med lenke er et nettsted, unntatt video- og podkastvertene. Uten
+// lenke gjettes det ikke: en bok og en tidsskriftartikkel ser like ut. En
+// lagret kategori vinner alltid, så læreren kan overstyre i kildefeltet.
+const VIDEOVERTER = new Set(["youtube.com", "m.youtube.com", "youtu.be", "vimeo.com"]);
+const PODKASTVERTER = new Set(["podcasts.apple.com", "podcasts.google.com"]);
+export function antattKategori(k) {
+  const lagret = KATEGORI_ALIAS[k?.kategori] || k?.kategori;
+  if (KILDE_KATEGORIER.includes(lagret)) return lagret;
+  if (lagret) return null;
+  const url = safeUrl(k?.url);
+  if (!url) return null;
+  const vert = vertFor(url);
+  if (VIDEOVERTER.has(vert)) return "Videoer";
+  if (PODKASTVERTER.has(vert) || (vert === "open.spotify.com" && /\/(episode|show)\//.test(url))) return "Podkaster";
+  return "Nettsteder";
+}
 
 // Samme fargespråk som hub-ikonene, så kategoriene leses som en del av appen.
 const KATEGORI_FARGE = {
@@ -180,8 +201,7 @@ export function samleKilder(liste) {
     if (!tekst && !url) continue;
     totalt++;
 
-    const lagret = KATEGORI_ALIAS[k.kategori] || k.kategori;
-    const kategori = KILDE_KATEGORIER.includes(lagret) ? lagret : UKATEGORISERT;
+    const kategori = antattKategori(k) || UKATEGORISERT;
     if (!katMap.has(kategori)) katMap.set(kategori, new Map());
     const grupper = katMap.get(kategori);
 

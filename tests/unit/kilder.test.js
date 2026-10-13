@@ -4,7 +4,7 @@
 // kildeteksten er generisk, og at ingen kilde forsvinner stille.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT } from "../../js/felles/kilder.js";
+import { samleKilder, artikkelTittel, radTittel, publikasjonFor, vertFor, KILDE_KATEGORIER, UKATEGORISERT, antattKategori } from "../../js/felles/kilder.js";
 
 const nett = (text, url) => ({ text, url, kategori: "Nettsteder" });
 
@@ -111,14 +111,28 @@ test("nettsteder med færre enn tre artikler samles i «Andre nettsteder»", () 
 test("seksjonene står i vokabularets rekkefølge, ukjent kategori havner sist", () => {
   const { seksjoner } = samleKilder([
     { text: "Ted Gioia: The History of Jazz", kategori: "Bøker" },
-    { text: "Uten kategori", url: "https://x.no/a" },
-    { text: "Kilde", kategori: "Fantasikategori" },
+    { text: "Uten kategori og uten lenke" },
+    { text: "Kilde", kategori: "Fantasikategori", url: "https://x.no/b" },
     nett("SNL", "https://snl.no/A"),
   ]);
   assert.deepEqual(seksjoner.map((s) => s.navn), [...KILDE_KATEGORIER, UKATEGORISERT]);
   assert.deepEqual(KILDE_KATEGORIER, ["Bøker", "Podkaster", "Videoer", "Nettsteder"]);
   const ukat = seksjoner.find((s) => s.navn === UKATEGORISERT);
-  assert.equal(ukat.bruk, 2, "både ukjent og manglende kategori skal synes");
+  assert.equal(ukat.bruk, 2, "ukjent kategori og manglende kategori uten lenke skal synes");
+});
+
+// v6.93 (brukerønske 2026-10-13): de importerte lenkene uten kategori sto
+// under «Ukategorisert». En lenke uten kategori er nå et nettsted.
+test("en kilde med lenke og uten kategori regnes som nettsted, video eller podkast", () => {
+  assert.equal(antattKategori({ text: "SNL", url: "https://snl.no/Bebop", kategori: "" }), "Nettsteder");
+  assert.equal(antattKategori({ text: "Wikipedia", url: "https://en.wikipedia.org/wiki/Moog" }), "Nettsteder");
+  assert.equal(antattKategori({ text: "x", url: "https://www.youtube.com/watch?v=1" }), "Videoer");
+  assert.equal(antattKategori({ text: "x", url: "https://open.spotify.com/episode/abc" }), "Podkaster");
+  assert.equal(antattKategori({ text: "x", url: "https://open.spotify.com/track/abc" }), "Nettsteder");
+  assert.equal(antattKategori({ text: "x", url: "https://snl.no/A", kategori: "Bøker" }), "Bøker", "lagret kategori vinner");
+  assert.equal(antattKategori({ text: "Ted Gioia: The History of Jazz" }), null, "uten lenke gjettes det ikke");
+  const { seksjoner } = samleKilder([{ text: "Store norske leksikon.", url: "https://snl.no/Bebop", kategori: "" }]);
+  assert.deepEqual(seksjoner.filter((s) => s.unike).map((s) => s.navn), ["Nettsteder"]);
 });
 
 test("bøker, videoer og podkaster er flate lister der teksten ER referansen", () => {

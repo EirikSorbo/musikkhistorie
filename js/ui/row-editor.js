@@ -127,8 +127,9 @@ export const SOURCE_SPEC = {
     { key: "forfatter", cls: "source-forfatter", type: "text", ph: "Forfatter (valgfritt)", label: "Forfatter", always: true },
     { key: "year", cls: "source-year", type: "number", ph: "År", label: "Årstall", title: "Publiseringsår for kilden" },
     { key: "url",  cls: "source-url",  type: "url", ph: "https://… (valgfritt)", label: "Lenke (https)", always: true },
-    // Kategorien styrer hvor kilden havner i Referanser-kortet. Lagret felt,
-    // ikke gjettet: uten valg havner kilden under «Ukategorisert» der.
+    // Kategorien styrer hvor kilden havner i Referanser-kortet. Uten valg
+    // regnes en kilde med lenke som nettsted (antattKategori i kilder.js, v6.93),
+    // og en uten lenke havner under «Ukategorisert».
     { key: "kategori", cls: "source-kat", type: "select", ph: "Kategori …", label: "Kategori", title: "Hva slags kilde dette er. Styrer grupperingen i Referanser-kortet.", options: KILDE_KATEGORIER, always: true },
   ],
 };
