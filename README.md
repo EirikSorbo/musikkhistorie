@@ -136,6 +136,19 @@ studenter.
 
 ---
 
+## Viktighetsgraden
+
+Hver artist har en grad: Viktigst (3), Viktig (2), Mindre viktig (1) eller
+Skjult (-1, aldri for studentene). Filterknappene i Artister-vinduet og
+lærerlista setter ett felles nivå for appen (`js/ui/viktighet.js`, v6.85),
+trinnvis: viktigst; viktig og viktigst; alle med grad. Artister uten grad er ute
+når et nivå er valgt. Nivået gjelder artistlista og alle spillelistene som lages
+av artistene, og en firkant midt i toppfeltet viser symbolet (klikk slår av).
+Det står i localStorage, og gjelder bare når graden er synlig: alltid for
+læreren, for studentene når «Viktighetsgraden» er på under «Synlig for
+studentene». Fargene: viktigst i dagens farge, viktig i blekk, mindre viktig i
+grått.
+
 ## Design
 
 Utseendet styres fra `:root`-blokka øverst i `css/styles.css` (samlet v6.59):

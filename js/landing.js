@@ -26,6 +26,7 @@ import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initVisning, visningTikk } from "./visning/visning.js";
 import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./utforsk/explore-timer.js";
 import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift/utskrift-utvalg.js";
+import { aktivtNivaa, settNivaa, vedNivaaEndring, initViktighetsMerke } from "./ui/viktighet.js";
 import { askChoice, melding, modalOpen, modalCloseTop, setupModal } from "./ui/ui-modal.js";
 import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./forslag/proposals.js";
 import { currentEntityValues } from "./forslag/entity-values.js";
@@ -223,6 +224,7 @@ function setupExplore() {
   // (prioritetsmerket, merkeknappen) og «Fra timene» følger med.
   document.addEventListener("pensum:synlighet", () => {
     oppdaterPrioBar();
+    // (Viktighetsnivået og merket i toppfeltet følger bryteren selv, js/ui/viktighet.js.)
     renderArtistViewsIfVisible();
     renderFraTimene();
   });
@@ -500,14 +502,22 @@ function setupFilters() {
       (id === "sp-search" ? rerenderDebounced : rerender)();
     });
   });
+  // Viktighetsnivået er felles for appen (v6.85, js/ui/viktighet.js):
+  // knappene setter det, og lista, spillelistene og merket i toppfeltet følger.
+  // Samme knapp igjen slår det av.
   document.querySelectorAll("#sp-prio-bar .prio-filter-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const p = parseInt(btn.dataset.prio, 10);
-      state.filters.priority = state.filters.priority === p ? 0 : p;
-      updatePrioButtons();
-      renderFilterResults();
-      renderList();
+      settNivaa(aktivtNivaa() === p ? 0 : p);
     });
+  });
+  state.filters.priority = aktivtNivaa();
+  updatePrioButtons();
+  vedNivaaEndring((n) => {
+    state.filters.priority = n;
+    updatePrioButtons();
+    renderFilterResults();
+    renderList();
   });
   // «Vis ny artist» (seksjonen på forsiden) og «Ny artist» (modalen) deler
   // trekningen, så begge visningene alltid viser samme artist.
@@ -670,6 +680,7 @@ function setupReturPanel() {
 
 function init() {
   setupFilters();
+  initViktighetsMerke();
   setupProposeButtons();
   setupDetailModal();
   setupExplore();

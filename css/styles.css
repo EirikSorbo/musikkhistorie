@@ -166,7 +166,7 @@
   --ok: var(--emerald-500);
   --success: var(--green-600);
   --success-bg: var(--green-50);
-  --success-mark: var(--ink);           /* sjekket kort og merkelapp: blekk i A2 (v6.67), rødt er viktighetsgrad 1 */
+  --success-mark: var(--ink);           /* sjekket kort og merkelapp: blekk i A2 (v6.67), dagens farge er «Viktigst» */
   --danger: var(--red-500);
   --danger-solid: var(--red-600);
   --danger-text: var(--red-900);
@@ -195,19 +195,22 @@
   --banner-line: var(--ink);
   --banner-text: var(--ink);
 
-  /* Viktighetsgrad (1 = mest sentral, skjult = -1) */
-  --prio-1-text: var(--accent-700);
-  --prio-1-bg: var(--accent-50);
-  --prio-1-line: var(--accent-600);
-  --prio-1-ring: var(--accent-200);
+  /* Viktighetsgrad: 3 = Viktigst, 2 = Viktig, 1 = Mindre viktig, -1 = skjult
+     (PRIO_LABELS i js/ui/ui-helpers.js). Viktigst står i dagens farge, viktig
+     i blekk og mindre viktig i grått. Fra A2 (v6.60) til v6.85 var 1 og 3
+     byttet om, så «Mindre viktig» var det mest synlige. */
+  --prio-3-text: var(--accent-700);
+  --prio-3-bg: var(--accent-50);
+  --prio-3-line: var(--accent-600);
+  --prio-3-ring: var(--accent-200);
   --prio-2-text: var(--ink);
   --prio-2-bg: var(--stone-100);
   --prio-2-line: var(--stone-500);
   --prio-2-ring: var(--stone-300);
-  --prio-3-text: var(--stone-600);
-  --prio-3-bg: var(--surface);
-  --prio-3-line: var(--stone-300);
-  --prio-3-ring: var(--stone-150);
+  --prio-1-text: var(--stone-600);
+  --prio-1-bg: var(--surface);
+  --prio-1-line: var(--stone-300);
+  --prio-1-ring: var(--stone-150);
   --prio-skjult-text: var(--slate-500);
   --prio-skjult-bg: var(--slate-100);
   --prio-skjult-line: var(--slate-300);
@@ -355,7 +358,7 @@
 /* ----- FARGEROTASJON (v6.71, brukerønske 2026-10-11) -----
    js/farge.js setter data-farge på <html> til dagens farge, i fast runde.
    Hver blokk setter aksentskalaen og --accent-rgb, ingenting annet; rollene
-   i :root (--accent, --surface-accent, --prio-1-* osv.) følger med selv.
+   i :root (--accent, --surface-accent, --prio-3-* osv.) følger med selv.
    Alle fargene har minst 4,5:1 mot hvitt i trinn 600 og 700, så hvit tekst
    på fargen og fargen som tekst på hvitt er lesbare (vakttesten sjekker det,
    og at navnene er de samme som i FARGER i js/farge.js). */
@@ -453,7 +456,27 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; font-wei
   align-items: center;
   justify-content: space-between;
   padding: 15px 22px;
+  position: relative;   /* viktighetsmerket sentreres i feltet (v6.85) */
 }
+/* Viktighetsnivået (v6.85, js/ui/viktighet.js): en firkant midt i toppfeltet
+   med symbolet for nivået, i gradens farger. Klikk slår nivået av. På smale
+   skjermer står den i rekka mellom logoen og ikonene. */
+.viktighet-merke {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 40px; height: 40px; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 2px solid var(--prio-2-line); border-radius: var(--radius-m);
+  background: var(--prio-2-bg); color: var(--prio-2-text);
+}
+.viktighet-merke svg { width: 22px; height: 22px; }
+.viktighet-merke.prio-3 { border-color: var(--prio-3-line); background: var(--prio-3-bg); color: var(--prio-3-text); }
+.viktighet-merke.prio-2 { border-color: var(--prio-2-line); background: var(--prio-2-bg); color: var(--prio-2-text); }
+.viktighet-merke.prio-1 { border-color: var(--prio-1-line); background: var(--prio-1-bg); color: var(--prio-1-text); }
+@media (max-width: 560px) {
+  .viktighet-merke { position: static; transform: none; width: 34px; height: 34px; }
+}
+/* Linja øverst i en spilleliste når et nivå er aktivt (ui.js, nivaaNotatHtml). */
+.pl-nivaa { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 0.9rem; color: var(--muted); }
 
 /* ----- Oppsett-banner ----- */
 .banner {

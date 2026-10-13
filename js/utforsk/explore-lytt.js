@@ -60,7 +60,7 @@ function tegnLytt() {
   sjangerRader.forEach((x) => handlinger.set(`sjanger:${x.n.l}`, () => openPlaylistModal(x.navn, x.n, s.artists)));
 
   const tiarRader = DECADES.map((d) => ({ d, par: tiarEksempler(synlige, d) })).filter((x) => x.par.length);
-  tiarRader.forEach((x) => handlinger.set(`tiar:${x.d}`, () => openEksemplerSpilleliste(`Spilleliste: ${x.d}-tallet`, x.par)));
+  tiarRader.forEach((x) => handlinger.set(`tiar:${x.d}`, () => openEksemplerSpilleliste(`Spilleliste: ${x.d}-tallet`, x.par, { nivaa: true })));
 
   const ekstra = ekstraBolker.map((fn) => { try { return fn(s); } catch (e) { console.warn(e); return null; } })
     .filter((b) => b && b.rader?.length);

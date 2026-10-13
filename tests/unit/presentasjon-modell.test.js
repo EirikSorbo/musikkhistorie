@@ -639,7 +639,7 @@ test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort si
   // Utenfor presentasjonen skal studentenes bobler se ut som før.
   assert.match(css, /\.meta-rad \{ display: contents; \}/);
   assert.match(css, /\.meta-etikett, \.meta-skille \{ display: none; \}/);
-  assert.match(kilde("ui.js"), /sekt\("tags", `<div class="meta" style="margin-bottom:12px">\$\{metaRader\(a\)\}<\/div>`\)/);
+  assert.match(kilde("ui.js"), /sekt\("tags", `<div class="meta" style="margin-bottom:12px">\$\{prioMerkeHtml\(a\)\}\$\{metaRader\(a\)\}<\/div>`\)/);
   // Årstallsraden følger skriften: fast px-høyde lot tallene falle ned i sporet.
   const akse = css.match(/\.ai-axis \{[^}]*\}/)?.[0] || "";
   assert.match(akse, /height: 1\.3em;/);

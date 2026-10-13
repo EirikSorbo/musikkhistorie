@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-103 filer i 11 mapper.
+104 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -16,7 +16,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/laerer/` | Lærersiden | 7 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
-| `js/ui/` | Byggeklosser for skjermen | 13 |
+| `js/ui/` | Byggeklosser for skjermen | 14 |
 | `js/data/` | Data | 8 |
 | `js/felles/` | Felles hjelpere | 13 |
 | `js/vendor/` | Tredjepart | 1 |
@@ -166,6 +166,7 @@ Artistkortene og listene, modalene og meldingsboksene, tidslinjene, teknologikor
 | `ui-tech.js` | UI — TEKNOLOGI: innovasjonskortene (liste og detalj) |
 | `ui-timeline.js` | UI — TIDSLINJER |
 | `ui.js` | UI — rendering (artist- og listevisninger) |
+| `viktighet.js` | VIKTIGHETSNIVÅET — ett aktivt nivå for hele appen, med merke i toppfeltet |
 | `yt-spiller.js` | INNEBYGD YOUTUBE-SPILLER (flyttet ut av presentasjon.js i v5.28) |
 
 ## `js/data/` Data

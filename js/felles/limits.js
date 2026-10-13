@@ -257,6 +257,15 @@ export function hasActiveFilters(f = {}) {
   return !!(f.search || f.mainGenre || f.metaGenre || f.instrument || f.decade || f.subgenre || f.priority);
 }
 
+// Er artisten med på viktighetsnivået (v6.85)? 3 = bare viktigst, 2 = viktig
+// og viktigst, 1 = alle med grad (mindre viktig og over), 0 = alle. Artister
+// uten grad er ute så snart et nivå er valgt.
+export function iViktighetsnivaa(a, nivaa) {
+  const n = Number(nivaa) || 0;
+  if (n <= 0) return true;
+  return (a?.priority || 0) >= n;
+}
+
 export function filterArtists(list, filters = {}) {
   if (filters.mainGenre) {
     const sj = filters.mainGenre.toLowerCase();
@@ -272,7 +281,10 @@ export function filterArtists(list, filters = {}) {
     const sg = filters.subgenre;
     list = list.filter((a) => (a.subGenre || []).includes(sg) || (a.mainGenre || []).includes(sg));
   }
-  if (filters.priority) list = list.filter((a) => (a.priority || 0) === filters.priority);
+  // Viktighetsnivået (v6.85, brukerønske 2026-10-13) er trinnvis: nivået og
+  // alt over. «Skjult» (-1, lærerlista) treffer fortsatt bare de skjulte.
+  if (filters.priority === -1) list = list.filter((a) => (a.priority || 0) === -1);
+  else if (filters.priority) list = list.filter((a) => iViktighetsnivaa(a, filters.priority));
   if (filters.decade) {
     const d = Number(filters.decade);
     list = list.filter((a) => decadesForArtist(a).includes(d));

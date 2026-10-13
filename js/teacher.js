@@ -52,6 +52,7 @@ import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
 import { initNotater, redigerNotatForKort } from "./visning/pres-notater.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
+import { settLaererside, initViktighetsMerke } from "./ui/viktighet.js";
 import { renderDesk } from "./laerer/teacher-desk.js";
 import { setupDataButtons, setupImportChoice } from "./laerer/teacher-import.js";
 import { setupFormatBars } from "./ui/format-bar.js";
@@ -133,6 +134,9 @@ function startApp() {
 }
 
 function startAppInner() {
+  // Viktighetsnivået (v6.85): læreren ser alltid graden, og merket står i toppfeltet.
+  settLaererside(true);
+  initViktighetsMerke();
   setupFilters();
   // Sjangertre-editorens modaler injiseres FØR setupModals, som kobler lukking
   // på alle .modal-backdrop den finner.

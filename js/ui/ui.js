@@ -44,6 +44,7 @@ import { modalOpen, VISNING_SVG } from "./ui-modal.js";
 import { kortUtskriftHtml } from "../utskrift/utskrift-utvalg.js";
 import { ytMaal, ytSpillelisteUrl, ytSpillelisteIder } from "../visning/presentasjon-modell.js";
 import { wireProposeFoot } from "./ui-edit.js";
+import { etterNivaa, aktivtNivaa, NIVAA_TEKST, viktighetSynlig } from "./viktighet.js";
 
 // Memoisert på artist-array-referansen: subscribeArtists bytter referanse ved
 // hver oppdatering, så samme render-pass treffer cachen i stedet for å bygge
@@ -135,6 +136,23 @@ export function renderResultList(el, artists, onSelect) {
 }
 
 // Full innholdsvisning for detaljmodal (kun lesemodus)
+// Viktighetsmerket på artistkortet (v6.85, brukerønske 2026-10-13): alltid for
+// læreren, for studentene når bryteren «Viktighetsgraden» er på. Ingen grad
+// eller skjult (-1) gir ikke noe merke.
+function prioMerkeHtml(a) {
+  const prio = a?.priority || 0;
+  if (prio < 1 || !PRIO_ICONS[prio] || !viktighetSynlig()) return "";
+  return `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}" aria-label="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`;
+}
+
+// Linja øverst i en spilleliste når et viktighetsnivå er aktivt (v6.85): lista
+// er laget av artistene på nivået, og toppfeltets merke ligger under vinduet.
+function nivaaNotatHtml() {
+  const n = aktivtNivaa();
+  if (!n) return "";
+  return `<p class="pl-nivaa"><span class="tag tag-prio prio-${n}" aria-hidden="true">${PRIO_ICONS[n]}</span> Viktighetsnivå: ${escapeHtml(NIVAA_TEKST[n].toLowerCase())}</p>`;
+}
+
 export function renderArtistDetail(el, artist, lc) {
   const a = artist;
   const examplesHtml = musicExamplesHtml(a);
@@ -155,7 +173,7 @@ export function renderArtistDetail(el, artist, lc) {
     ${sekt("stripe", artistStripHtml(a))}
     ${sekt("bilde", artistImage(a, true))}
     ${sekt("fakta", factsLines(a))}
-    ${sekt("tags", `<div class="meta" style="margin-bottom:12px">${metaRader(a)}</div>`)}
+    ${sekt("tags", `<div class="meta" style="margin-bottom:12px">${prioMerkeHtml(a)}${metaRader(a)}</div>`)}
     ${sekt("punkter", punkterHtml(a.punkter, medSelv(lc, { artist: a.id })))}
     ${sekt("beskrivelse", a.description ? `<div class="desc rt">${linkDesc(a.description, medSelv(lc, { artist: a.id }))}</div>` : "")}
     ${sekt("verk", worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : "")}
@@ -698,7 +716,7 @@ export function openArtistListModal(title, list, onArtistClick, emptyText = "Ing
 export function openPlaylistModal(fullName, node, artists) {
   const { total, html, ider } = buildPlaylistHtml(node, artists);
   document.getElementById("pl-title").textContent = `Spilleliste: ${fullName} (${total})`;
-  document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
+  document.getElementById("pl-body").innerHTML = nivaaNotatHtml() + spillAlleHtml(ider) + html;
   kobleSpillelisteRader();
   modalOpen(document.getElementById("modal-spilleliste"));
 }
@@ -757,8 +775,8 @@ function buildPlaylistHtml(node, artists) {
     [...(a.mainGenre || []), ...(a.subGenre || [])]
       .some((s) => String(s).toLowerCase() === sj);
 
-  const genreArtists = (artists || [])
-    .filter((a) => isVisible(a) && matchesSj(a))
+  // Bare artistene på det aktive viktighetsnivået (v6.85).
+  const genreArtists = etterNivaa((artists || []).filter((a) => isVisible(a) && matchesSj(a)))
     .sort(byInfluenceThenName);
 
   return playlistRows(genreArtists, sj);
@@ -824,7 +842,7 @@ export function tiarEksempler(artists, decade) {
   const fra = Number(decade), til = fra + 9;
   const seen = new Set();
   const par = [];
-  for (const a of (artists || []).filter(isVisible)) {
+  for (const a of etterNivaa((artists || []).filter(isVisible))) {
     for (const m of (a.musicExamples || [])) {
       const y = Number(m.year || m.performanceYear) || null;
       if (!y || y < fra || y > til || !safeUrl(m.url)) continue;
@@ -838,10 +856,12 @@ export function tiarEksempler(artists, decade) {
 }
 
 // Spilleliste-popupen for et ferdig utvalg eksempler (tiårene).
-export function openEksemplerSpilleliste(title, par) {
+// `nivaa`: lista er laget av tiarEksempler (på viktighetsnivået), så linja om
+// nivået står øverst. Delte timer sender ikke flagget: de er timens egne.
+export function openEksemplerSpilleliste(title, par, { nivaa = false } = {}) {
   const { total, html, ider } = eksempelRader(par || [], "Ingen lytteeksempler ennå.");
   document.getElementById("pl-title").textContent = `${title} (${total})`;
-  document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
+  document.getElementById("pl-body").innerHTML = (nivaa ? nivaaNotatHtml() : "") + spillAlleHtml(ider) + html;
   kobleSpillelisteRader();
   modalOpen(document.getElementById("modal-spilleliste"));
 }
@@ -860,13 +880,13 @@ export function countPlaylistExamples(artists, label) {
 //  så tallet i oversikten og popupen aldri kan sprike.
 // ----------------------------------------------------------------------------
 export function countArtistExamples(list) {
-  return playlistRows([...(list || [])].sort(byInfluenceThenName)).total;
+  return playlistRows([...etterNivaa(list)].sort(byInfluenceThenName)).total;
 }
 
 export function openArtistsPlaylistModal(title, list) {
-  const { total, html, ider } = playlistRows([...(list || [])].sort(byInfluenceThenName));
+  const { total, html, ider } = playlistRows([...etterNivaa(list)].sort(byInfluenceThenName));
   document.getElementById("pl-title").textContent = `${title} (${total})`;
-  document.getElementById("pl-body").innerHTML = spillAlleHtml(ider) + html;
+  document.getElementById("pl-body").innerHTML = nivaaNotatHtml() + spillAlleHtml(ider) + html;
   kobleSpillelisteRader();
   modalOpen(document.getElementById("modal-spilleliste"));
 }

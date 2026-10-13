@@ -4,6 +4,7 @@
 //  Detalj-/sjekk-visning, rediger-artist-skjema, filtre og oversikt/dashboard.
 // ============================================================================
 
+import { aktivtNivaa, settNivaa, vedNivaaEndring } from "../ui/viktighet.js";
 import { state, ctx, openAdminModal, lukkEtter, renderList, settTeacherView, guardTeacherAction, setContentCheck } from "./teacher-state.js";
 import { updateArtistFields, setTeacherChecks } from "../data/store.js";
 import { renderArtistDetail, fillSelect, openArtistListModal, openArtistsPlaylistModal, countPlaylistExamples, countArtistExamples } from "../ui/ui.js";
@@ -156,13 +157,29 @@ export function setupFilters() {
   $("#f-subgenre").addEventListener("change", (e) => { state.filters.subgenre = e.target.value; renderList(); });
   const searchRender = debounce(renderList, 200);
   $("#f-search").addEventListener("input", (e) => { state.filters.search = e.target.value; searchRender(); });
+  // Viktigst, viktig og mindre viktig setter det felles viktighetsnivået
+  // (v6.85, js/ui/viktighet.js), som spillelistene og merket i toppfeltet også
+  // følger. «Skjult» (-1) er bare et filter i lærerlista.
   document.querySelectorAll("#t-prio-bar .prio-filter-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const p = parseInt(btn.dataset.prio, 10);
-      state.filters.priority = state.filters.priority === p ? 0 : p;
-      updatePrioButtons();
-      renderList();
+      if (p === -1) {
+        if (state.filters.priority !== -1 && aktivtNivaa()) settNivaa(0);
+        state.filters.priority = state.filters.priority === -1 ? 0 : -1;
+        updatePrioButtons();
+        renderList();
+        return;
+      }
+      settNivaa(aktivtNivaa() === p ? 0 : p);
     });
+  });
+  if (state.filters.priority !== -1) state.filters.priority = aktivtNivaa();
+  updatePrioButtons();
+  vedNivaaEndring((n) => {
+    if (state.filters.priority === -1 && !n) return;   // «Skjult» står
+    state.filters.priority = n;
+    updatePrioButtons();
+    renderList();
   });
   const showRemoved = $("#f-show-removed");
   showRemoved.checked = state.filters.showRemoved;
