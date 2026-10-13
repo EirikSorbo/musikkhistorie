@@ -95,6 +95,9 @@ test("studentene ser startsideikonet på alle sidene", async () => {
   const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
   for (const side of ["index.html", "tre.html", "student.html", "teacher.html", "utskrift.html"]) {
     assert.match(les(side), /<a href="index\.html" class="nav-icon nav-hjem( active)?" title="Startside"/, side);
+    // Først i rekka (v6.84, brukerønske 2026-10-13), foran søket.
+    const html = les(side);
+    assert.ok(html.indexOf('class="nav-icon nav-hjem') < html.indexOf('class="nav-icon nav-sok"'), `${side}: hjem før søk`);
   }
   assert.match(les("css/styles.css"), /body\.role-student \.nav \.nav-icon\.nav-hjem \{ display: inline-flex; \}/);
 });
