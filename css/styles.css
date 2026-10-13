@@ -4168,6 +4168,9 @@ body.role-student .nav .nav-icon.nav-utskrift { display: inline-flex; }
 /* Søkeikonet (v6.08, K8) står for alle, også studentene og på mobil, der
    tasten S ikke finnes. */
 body.role-student .nav .nav-icon.nav-sok { display: inline-flex; }
+/* Startside (v6.83, brukerønske 2026-10-13): studentene kom seg ikke tilbake
+   fra utskriften. Logoen lenker også dit, men ikonet er tydeligere. */
+body.role-student .nav .nav-icon.nav-hjem { display: inline-flex; }
 /* MIDLERTIDIG (js/feature-flags.js, utskrift): hele funksjonen er skjult for
    studentrollen inntil videre. Læreren (ingen role-student) ser alt. */
 html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-med, .kort-utskrift, #btn-utskrift-liste, [data-pres-utskrift]) { display: none !important; }

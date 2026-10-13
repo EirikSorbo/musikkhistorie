@@ -87,3 +87,14 @@ test("toppfeltet: tittelen er skjult for øyet, men finnes for skjermlesere, på
   }
   assert.doesNotMatch(les("css/styles.css"), /^\s*\.brand h1 \{/m, "ingen stil som gjør tittelen synlig igjen");
 });
+
+// Startsideikonet (v6.83, brukerønske 2026-10-13): studentene ser det på alle
+// sidene, så de kommer tilbake fra utskriften.
+test("studentene ser startsideikonet på alle sidene", async () => {
+  const fs = await import("node:fs");
+  const les = (f) => fs.readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
+  for (const side of ["index.html", "tre.html", "student.html", "teacher.html", "utskrift.html"]) {
+    assert.match(les(side), /<a href="index\.html" class="nav-icon nav-hjem( active)?" title="Startside"/, side);
+  }
+  assert.match(les("css/styles.css"), /body\.role-student \.nav \.nav-icon\.nav-hjem \{ display: inline-flex; \}/);
+});
