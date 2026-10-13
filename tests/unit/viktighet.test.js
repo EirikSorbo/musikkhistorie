@@ -91,3 +91,42 @@ test("fargene: viktigst i dagens farge, viktig i blekk, mindre viktig i grått",
   assert.equal(v("--prio-1-text"), "var(--stone-600)");
   assert.equal(v("--prio-1-line"), "var(--stone-300)");
 });
+
+// Skjulingen i eget felt (v6.86, brukervalg 2026-10-13): forarbeid til flere
+// sett med viktighetsgrad. «Skjult» er feltet hidden; den gamle -1 leses som
+// skjult til læreren har flyttet den over (Skrivebordet).
+import { erSkjult, isVisible } from "../../js/felles/limits.js";
+
+test("erSkjult: hidden eller den gamle -1; isVisible bruker den", () => {
+  assert.equal(erSkjult({ hidden: true, priority: 3 }), true, "skjult med grad");
+  assert.equal(erSkjult({ priority: -1 }), true, "gammel -1");
+  assert.equal(erSkjult({ priority: 0 }), false);
+  assert.equal(erSkjult({ hidden: false, priority: 2 }), false);
+  assert.equal(isVisible({ status: "active", hidden: true, priority: 3 }), false);
+  assert.equal(isVisible({ status: "active", priority: 2 }), true);
+  const l = [{ name: "a", hidden: true, priority: 3 }, { name: "b", priority: -1 }, { name: "c", priority: 3 }];
+  assert.deepEqual(filterArtists(l, { priority: -1 }).map((a) => a.name), ["a", "b"], "lærerens «Skjult»-filter");
+  assert.deepEqual(filterArtists(l, { priority: 3 }).map((a) => a.name), ["a", "c"], "graden står for seg");
+});
+
+test("skjulingen: lærerens knapper skriver hidden, flyttingen er én knapp på Skrivebordet", () => {
+  const st = les("js/laerer/teacher-state.js");
+  assert.match(st, /remove: {6}\(id\) => guardTeacherAction\(updateArtistFields\(id, \{ hidden: true \}\)\)/);
+  assert.match(st, /\{ hidden: false, priority: 0 \} : \{ hidden: false \}/, "vis igjen rydder også -1");
+  assert.doesNotMatch(st, /setArtistPriority\(id, -1\)/);
+  assert.match(les("js/data/store.js"), /batch\.update\(doc\(db, "artists", id\), \{ hidden: true, priority: 0 \}\)/);
+  const desk = les("js/laerer/teacher-desk.js");
+  assert.match(desk, /const gamleSkjulte = \(\) => state\.artists\.filter\(\(a\) => \(a\.priority \|\| 0\) === -1\)/);
+  assert.match(desk, /\$\{migreringHtml\(\)\}/);
+  // Ingen kode utenom erSkjult og flyttingen tester -1 som skjult lenger.
+  for (const f of ["js/ui/ui.js", "js/ui/ui-helpers.js", "js/ui/ui-dashboard.js", "js/felles/linkify.js"]) {
+    assert.doesNotMatch(les(f), /\(\w+\.priority \|\| 0\) [!=]== -1/, f);
+  }
+});
+
+test("normaliseringen tar med hidden bare når den er sann (studentenes forslag har ikke feltet)", async () => {
+  const kilde = les("js/data/artist-normalize.js");
+  assert.match(kilde, /\.\.\.\(n\.hidden === true \? \{ hidden: true \} : \{\}\)/);
+  assert.doesNotMatch(les("firestore.rules"), /"hidden"/, "studentenes hasOnly-liste skal ikke ha feltet");
+  assert.match(les("js/data/artist-schema.js"), /"proposedBy", "priority", "hidden", "teacherChecked", "status"/, "med i eksporten");
+});

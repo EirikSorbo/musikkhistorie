@@ -12,7 +12,7 @@
 import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl } from "../felles/util.js";
 import { wireAllLinks, nevnteArtister } from "../felles/linkify.js";
 import { renderRichText, renderInline } from "../felles/rich-text.js";
-import { GENDERS, instrumenterFor } from "../felles/limits.js";
+import { GENDERS, instrumenterFor, erSkjult } from "../felles/limits.js";
 import { askChoice, modalClose } from "./ui-modal.js";
 import { lesPunkter, punkterTilTekst, punktVarsel } from "../felles/punkter.js";
 import { selskaperIFelt, plateselskapeneSynlige } from "../felles/plateselskaper.js";
@@ -482,7 +482,7 @@ export function relatedArtists(artist, all, { limit = 5 } = {}) {
   for (const b of all) {
     if (!b || b.id === artist.id) continue;
     if (b.status && b.status !== "active") continue;   // ikke ventende
-    if ((b.priority || 0) === -1) continue;            // ikke skjulte
+    if (erSkjult(b)) continue;                          // ikke skjulte
     const bSub = Array.isArray(b.subGenre) ? b.subGenre : [];
     const bMain = Array.isArray(b.mainGenre) ? b.mainGenre : [];
     const subShared = bSub.filter((s) => sub.has(s)).length;

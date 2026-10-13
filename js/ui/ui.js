@@ -11,7 +11,7 @@
 //  escapeHtml, med seg alt ui.js importerer.
 // ============================================================================
 
-import { isVisible, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, byInfluenceThenName, instrumenterFor } from "../felles/limits.js";
+import { isVisible, erSkjult, erTilModerasjon, filterArtists, hasActiveFilters, INSTRUMENT_GROUPS, byInfluenceThenName, instrumenterFor } from "../felles/limits.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { punkterHtml } from "../felles/punkter.js";
 import { medSelv } from "../felles/linkify.js";
@@ -300,7 +300,7 @@ export function renderArtists(el, state) {
     // Hele moderasjonsuniverset: ventende OG returnerte (hos studenten).
     list = list.filter(erTilModerasjon);
   } else if (!filters.showRemoved && filters.priority !== -1) {
-    list = list.filter((a) => a.status === "active" && (a.priority || 0) !== -1);
+    list = list.filter((a) => a.status === "active" && !erSkjult(a));
   } else {
     list = list.filter((a) => a.status !== "pending" && a.status !== "returnert");
   }
@@ -421,8 +421,10 @@ export function renderArtists(el, state) {
 
 function artistCard(a, { isTeacher, clientId, linkCtx }) {
   const hasUpvoted = (a.votedUpBy || []).includes(clientId);
-  const prio = a.priority || 0;
-  const removed = prio === -1;
+  // Graden (1–3) og skjulingen er to ting fra v6.86: en skjult artist kan ha
+  // en grad, og den gamle -1 er ingen grad.
+  const prio = Math.max(0, a.priority || 0);
+  const removed = erSkjult(a);
   const pending = a.status === "pending";
   const returned = a.status === "returnert";
 
@@ -502,16 +504,17 @@ function artistCard(a, { isTeacher, clientId, linkCtx }) {
         <button class="icon-btn" data-action="edit" data-id="${escapeHtml(a.id)}" title="Rediger">${ICO_EDIT}</button>
       </div>`;
   } else if (isTeacher) {
+    // Skjulingen står til venstre, ved avhukingen, ikke blant gradene (v6.86).
     teacherBtns = `
       <div class="teacher-actions">
         <div class="ta-left">
           <button class="icon-btn ${checked ? "active" : ""}" data-action="toggleCheck" data-id="${escapeHtml(a.id)}" title="${checked ? "Fjern avhuking" : "Merk som sjekket"}">${ICO_CHECK}</button>
+          <button class="icon-btn ${removed ? "active" : ""}" data-action="${removed ? "restore" : "remove"}" data-id="${escapeHtml(a.id)}" title="${removed ? "Gjør synlig for studentene" : "Skjul for studentene"}">${ICO_BAN}</button>
         </div>
         <div class="ta-center">
           <button class="icon-btn ${prio === 3 ? "active" : ""}" data-action="priority3" data-id="${escapeHtml(a.id)}" title="Viktigst">${ICO_STAR}</button>
           <button class="icon-btn ${prio === 2 ? "active" : ""}" data-action="priority2" data-id="${escapeHtml(a.id)}" title="Viktig">${ICO_ALERT}</button>
           <button class="icon-btn ${prio === 1 ? "active" : ""}" data-action="priority1" data-id="${escapeHtml(a.id)}" title="Mindre viktig">${ICO_THUMB}</button>
-          <button class="icon-btn ${removed ? "active" : ""}" data-action="${removed ? "restore" : "remove"}" data-id="${escapeHtml(a.id)}" title="${removed ? "Gjør synlig" : "Skjul for studenter"}">${ICO_BAN}</button>
         </div>
         <div class="ta-right">
           <button class="icon-btn" data-action="notat" data-id="${escapeHtml(a.id)}" title="Private notater">${ICO_NOTAT}</button>

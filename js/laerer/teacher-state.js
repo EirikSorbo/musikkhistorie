@@ -66,8 +66,13 @@ export function guardTeacherAction(promise) {
 export const handlers = {
   approve:     (id) => guardTeacherAction(teacherApprove(id)),
   reject:      async (id) => { if (await bekreft("", { tittel: "Avvise dette forslaget?", ja: "Avvis", farlig: true })) guardTeacherAction(teacherReject(id)); },
-  remove:      (id) => guardTeacherAction(setArtistPriority(id, -1)),
-  restore:     (id) => guardTeacherAction(setArtistPriority(id, 0)),
+  // Skjulingen er eget felt fra v6.86 (hidden), ikke viktighetsgrad -1. Å vise
+  // en artist igjen rydder også den gamle -1, så den ikke står igjen som skjult.
+  remove:      (id) => guardTeacherAction(updateArtistFields(id, { hidden: true })),
+  restore:     (id) => {
+    const a = state.artists.find(x => x.id === id);
+    guardTeacherAction(updateArtistFields(id, (a?.priority || 0) === -1 ? { hidden: false, priority: 0 } : { hidden: false }));
+  },
   del:         async (id) => { if (await bekreft("Det kan ikke angres.", { tittel: "Slette dette forslaget permanent?", ja: "Slett", farlig: true })) guardTeacherAction(teacherDelete(id)); },
   edit:        (id) => ctx.openEditModal?.(id),
   sendBack:    (id) => ctx.openReturDialog?.("artist", id),

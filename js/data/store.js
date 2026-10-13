@@ -318,6 +318,21 @@ export async function setArtistPriority(artistId, level) {
   return updateDoc(doc(db, "artists", artistId), { priority: level });
 }
 
+// Skjulingen ut av viktighetsgraden (v6.86, brukervalg 2026-10-13): artister
+// med den gamle priority -1 får hidden: true og priority 0 (de hadde ingen
+// grad). Batchet; kalles fra Skrivebordet når læreren trykker på knappen.
+export async function migrerSkjulte(ider) {
+  const liste = [...new Set(ider || [])];
+  for (let i = 0; i < liste.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    for (const id of liste.slice(i, i + BATCH_LIMIT)) {
+      batch.update(doc(db, "artists", id), { hidden: true, priority: 0 });
+    }
+    await batch.commit();
+  }
+  return liste.length;
+}
+
 // Lærer sletter et forslag permanent
 export async function teacherDelete(artistId) {
   return deleteDoc(doc(db, "artists", artistId));

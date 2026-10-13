@@ -136,6 +136,9 @@ export function buildArtistDoc(data) {
     removedBy: status === "removed" ? "teacher" : null,
     teacherChecked: n.teacherChecked || false,
     priority: n.priority || 0,
+    // Skjult (v6.86) står bare med når den er sann: studentenes forslag går
+    // også hit, og reglene (hasOnly) godtar ikke feltet fra dem.
+    ...(n.hidden === true ? { hidden: true } : {}),
     // Bevar innkommende stemmer ved lærer-import (tapsfri backup/restore).
     // Studentinnsending kan IKKE smugle inn stemmer: skjemaet setter aldri
     // votedUpBy, og Firestore-reglene krever tom votedUpBy for ikke-lærere.

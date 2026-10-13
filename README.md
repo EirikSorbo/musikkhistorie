@@ -139,7 +139,12 @@ studenter.
 ## Viktighetsgraden
 
 Hver artist har en grad: Viktigst (3), Viktig (2), Mindre viktig (1) eller
-Skjult (-1, aldri for studentene). Filterknappene i Artister-vinduet og
+ingen (0). «Skjult for studentene» er et eget felt (`hidden`, v6.86), ikke en
+grad: før var det grad -1, og den gamle verdien leses som skjult til læreren har
+flyttet den over med knappen på Skrivebordet (`erSkjult` i
+`js/felles/limits.js`). Det er forarbeid til flere sett med grader (lærer,
+studenter, KI), som er planlagt, skal kunne vises for studentene og få en egen
+bryter under «Synlig for studentene». Filterknappene i Artister-vinduet og
 lærerlista setter ett felles nivå for appen (`js/ui/viktighet.js`, v6.85),
 trinnvis: viktigst; viktig og viktigst; alle med grad. Artister uten grad er ute
 når et nivå er valgt. Nivået gjelder artistlista og alle spillelistene som lages

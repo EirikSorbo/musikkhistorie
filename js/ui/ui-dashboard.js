@@ -20,6 +20,7 @@ import {
   DECADES,
   INSTRUMENTS,
   instrumenterFor,
+  erSkjult,
 } from "../felles/limits.js";
 import { GENDER_LABEL, pct, teacherActionRow, toggleCheckBtn, PRIO_ICONS, PRIO_LABELS } from "./ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
@@ -186,11 +187,11 @@ export function renderDashboard(el, {
   // samme avgrensning som spillelistene). Parentestallet i sjangerlista under
   // teller de samme eksemplene, men fordelt per sjanger.
   const exampleCount = countExamplesFor(active);
-  // Skjulte artistkort: aktive kort læreren har satt til prioritet -1. De er
+  // Skjulte artistkort: aktive kort læreren har skjult (erSkjult, v6.86). De er
   // usynlige for studentene og teller derfor ikke i noen annen statistikk her —
   // dette er eneste stedet de er synlige som tall.
   const hidden = artists
-    .filter((a) => a.status === "active" && (a.priority || 0) === -1)
+    .filter((a) => a.status === "active" && erSkjult(a))
     .sort(byName);
 
   // --- Viktighetsgrad --------------------------------------------------------

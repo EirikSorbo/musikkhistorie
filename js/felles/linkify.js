@@ -7,6 +7,7 @@
 //  (nevnteArtister, nevnerNavn). medSelv holder kortets eget navn utenfor.
 // ============================================================================
 import { escapeHtml as esc } from "./util.js";
+import { erSkjult } from "./limits.js";
 
 // Ord som ikke skal bli klikkbare linker (for vanlige/hyppige termer):
 const SKIP = new Set(["jazz", "blues", "country", "gospel"]);
@@ -22,7 +23,7 @@ function prepareTargets(ctx) {
   const cached = _targetsCache.get(ctx);
   if (cached) return cached;
   const artists = (ctx.artists || [])
-    .filter((a) => a.status === "active" && (a.priority || 0) !== -1 && a.name && !SKIP.has(a.name.toLowerCase()))
+    .filter((a) => a.status === "active" && !erSkjult(a) && a.name && !SKIP.has(a.name.toLowerCase()))
     .sort((a, b) => b.name.length - a.name.length)
     .map((a) => ({ id: a.id, nameEsc: esc(a.name) }));
   const techItems = (ctx.techItems || [])

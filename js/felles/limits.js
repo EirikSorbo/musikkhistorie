@@ -168,10 +168,18 @@ export const GENDERS = [
 //  TELLING OG STATISTIKK
 // ----------------------------------------------------------------------------
 
-// Synlig for studenter: aktiv status og ikke lærer-skjult (priority -1).
+// Skjult for studentene (v6.86, brukervalg 2026-10-13): eget felt `hidden`,
+// skilt ut fra viktighetsgraden, som før bar begge deler (priority -1 = skjult).
+// Fram til lærerens migrering (Skrivebordet) er kjørt, betyr den gamle
+// verdien -1 fortsatt «skjult». Alle som spør om skjuling, spør her.
+export function erSkjult(a) {
+  return a?.hidden === true || (a?.priority || 0) === -1;
+}
+
+// Synlig for studenter: aktiv status og ikke lærer-skjult (erSkjult).
 // Delt predikat — brukes av alle student-visninger og tellinger.
 export function isVisible(a) {
-  return a.status === "active" && (a.priority || 0) !== -1;
+  return a.status === "active" && !erSkjult(a);
 }
 
 // Hos læreren til moderasjon: ventende, ELLER sendt tilbake til studenten.
@@ -282,8 +290,8 @@ export function filterArtists(list, filters = {}) {
     list = list.filter((a) => (a.subGenre || []).includes(sg) || (a.mainGenre || []).includes(sg));
   }
   // Viktighetsnivået (v6.85, brukerønske 2026-10-13) er trinnvis: nivået og
-  // alt over. «Skjult» (-1, lærerlista) treffer fortsatt bare de skjulte.
-  if (filters.priority === -1) list = list.filter((a) => (a.priority || 0) === -1);
+  // alt over. «Skjult» (-1, lærerlista) er filteret for de skjulte (erSkjult).
+  if (filters.priority === -1) list = list.filter(erSkjult);
   else if (filters.priority) list = list.filter((a) => iViktighetsnivaa(a, filters.priority));
   if (filters.decade) {
     const d = Number(filters.decade);

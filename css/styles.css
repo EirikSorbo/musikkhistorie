@@ -1654,7 +1654,8 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .card.is-prio-3 { border-left: 3px solid var(--prio-3-line); }
 .card.is-prio-2 { border-left: 3px solid var(--prio-2-line); }
 .card.is-prio-1 { border-left: 3px solid var(--prio-1-line); }
-.card.is-prio--1 { border-left: 3px solid var(--prio-skjult-line); opacity: 0.6; }
+/* Skjult (eget felt fra v6.86): grå kant, uansett grad. */
+.card.is-removed { border-left: 3px solid var(--prio-skjult-line); }
 .card.is-checked { border-left: 3px solid var(--success-mark); }
 .tag.is-checked { outline: 2px solid var(--success-mark); outline-offset: -2px; }
 
@@ -2250,6 +2251,13 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 
 /* ----- Skrivebord (lærer-arbeidsflyt øverst) ----- */
 .desk-inbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+/* Engangsflyttingen av skjulingen (v6.86, teacher-desk.js). */
+.desk-migrering {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: space-between;
+  margin-bottom: 12px; padding: 12px 14px; font-size: 0.92rem;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-m); background: var(--surface-2);
+}
+.desk-migrering span { flex: 1 1 22rem; }
 .desk-item {
   display: flex;
   align-items: center;

@@ -24,7 +24,7 @@ import { storyOrder } from "../felles/story-format.js";
 import { DECADES, isVisible, erTilModerasjon } from "../felles/limits.js";
 import { pct } from "../ui/ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
-import { deleteTimeforslag, savePage } from "../data/store.js";
+import { deleteTimeforslag, savePage, migrerSkjulte } from "../data/store.js";
 import { synlighetVerdier } from "../felles/feature-flags.js";
 import { askChoice, melding, modalOpen } from "../ui/ui-modal.js";
 
@@ -155,6 +155,44 @@ function catCard(cat) {
   </div>`;
 }
 
+// ---------------------------------------------------------------------------
+//  SKJULINGEN I EGET FELT (v6.86, brukervalg 2026-10-13)
+// ---------------------------------------------------------------------------
+//  Før var «skjult for studentene» viktighetsgrad -1. Nå er det feltet hidden,
+//  så graden bare er en mening (forarbeid til flere sett med grader). Artistene
+//  med den gamle -1 flyttes over med én knapp her; appen leser -1 som skjult
+//  til det er gjort (erSkjult i js/felles/limits.js). Kortet forsvinner av seg
+//  selv når ingen -1 er igjen.
+const gamleSkjulte = () => state.artists.filter((a) => (a.priority || 0) === -1);
+
+function migreringHtml() {
+  const n = gamleSkjulte().length;
+  if (!n) return "";
+  return `<div class="desk-migrering" role="status">
+    <span><b>${n}</b> ${n === 1 ? "artist er" : "artister er"} skjult på den gamle måten, som viktighetsgrad −1. Skjulingen er nå et eget felt, skilt fra gradene. Flytt dem over, så blir gradene bare en vurdering.</span>
+    <button type="button" class="btn primary small" data-desk-migrer-skjulte>Flytt skjulingen</button>
+  </div>`;
+}
+
+let flytter = false;
+async function flyttSkjulingen(el) {
+  if (flytter) return;
+  const ider = gamleSkjulte().map((a) => a.id);
+  if (!ider.length) return;
+  flytter = true;
+  const knapp = el.querySelector("[data-desk-migrer-skjulte]");
+  if (knapp) { knapp.disabled = true; knapp.textContent = "Flytter …"; }
+  try {
+    const n = await migrerSkjulte(ider);
+    melding(`${n} ${n === 1 ? "artist er" : "artister er"} nå skjult med det nye feltet. Gradene deres er tomme, siden -1 ikke var noen grad.`);
+  } catch (err) {
+    melding(`Fikk ikke flyttet skjulingen (${err?.message || err}). Ingenting er tapt: appen leser fortsatt den gamle -1 som skjult.`);
+    if (knapp) { knapp.disabled = false; knapp.textContent = "Flytt skjulingen"; }
+  } finally {
+    flytter = false;
+  }
+}
+
 export function renderDesk(el) {
   if (!el) return;
 
@@ -190,6 +228,7 @@ export function renderDesk(el) {
 
   el.innerHTML = `
     <p class="section-label">Skrivebord</p>
+    ${migreringHtml()}
     ${inboxHtml}
     ${timeforslagHtml()}
     <div class="desk-grid">${cats.map(catCard).join("")}</div>
@@ -227,6 +266,8 @@ export function renderDesk(el) {
 
     const slett = hit("[data-desk-time-slett]");
     if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
+
+    if (hit("[data-desk-migrer-skjulte]")) return flyttSkjulingen(el);
 
     const act = hit("[data-desk]");
     if (!act) return;
