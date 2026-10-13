@@ -22,7 +22,7 @@ import { META_GENRE_COLOR } from "../sjangre/genre-model.js";
 import { modalOpen } from "../ui/ui-modal.js";
 import {
   PLATESELSKAPER, finnSelskapId, plateselskapSideId, artisterForSelskap, selskaperSortert,
-  plateselskapeneSynlige, grunnlagtAar,
+  plateselskapeneSynlige, plateselskapSynlig, grunnlagtAar,
 } from "../felles/plateselskaper.js";
 import { buildLinkCtx, injectTeacherRow } from "./explore-context.js";
 import { medSelv } from "../felles/linkify.js";
@@ -127,7 +127,7 @@ function tegnKort(tvunget = false) {
   const tekst = body.querySelector(".ps-tekst");
   // De andre selskapene blir lenker i teksten (v6.38), kortets eget navn ikke.
   // Bare her: se plateselskaper i linkify.js.
-  const lc = medSelv({ ...buildLinkCtx(), plateselskaper: PLATESELSKAPER, onPlateselskapClick: (id) => openPlateselskap(id) }, { plateselskap: p.id });
+  const lc = medSelv({ ...buildLinkCtx(), plateselskaper: PLATESELSKAPER.filter((x) => plateselskapSynlig(x.id)), onPlateselskapClick: (id) => openPlateselskap(id) }, { plateselskap: p.id });
   if (side?.body?.trim()) {
     tekst.innerHTML = renderRichText(side.body, lc);
     wireLinks(tekst, lc);
@@ -152,7 +152,7 @@ function tegnKort(tvunget = false) {
 }
 
 export function openPlateselskap(id) {
-  if (!plateselskapeneSynlige()) return;
+  if (!plateselskapSynlig(id)) return;
   const p = finnSelskapId(id);
   const modal = document.getElementById("modal-plateselskap");
   if (!p || !modal) return;
@@ -167,7 +167,7 @@ export function openPlateselskap(id) {
 function tegnOversikt() {
   const el = document.getElementById("pss-body");
   if (!el) return;
-  const kort = selskaperSortert(sideFor).map((p) => {
+  const kort = selskaperSortert(sideFor).filter((p) => plateselskapSynlig(p.id)).map((p) => {
     const f = sideFor(p.id)?.fakta || {};
     const aar = grunnlagtAar(sideFor(p.id));
     const n = artisterPaaKortet(p.id).filter(isVisible).length;

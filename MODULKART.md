@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-104 filer i 11 mapper.
+106 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -17,8 +17,8 @@ stopper et kart som ikke stemmer med filene.
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 14 |
-| `js/data/` | Data | 8 |
-| `js/felles/` | Felles hjelpere | 13 |
+| `js/data/` | Data | 9 |
+| `js/felles/` | Felles hjelpere | 14 |
 | `js/vendor/` | Tredjepart | 1 |
 
 ## Reglene koden holder seg til
@@ -182,6 +182,7 @@ Firestore (store.js er den eneste fila som snakker med databasen), den delte dat
 | `import-format.js` | IMPORT-FORMAT — ren parselogikk for JSON-filene |
 | `shared-data.js` | DELT DATAROT — alle sider abonnerer på de delte samlingene herfra |
 | `shared.js` | DELTE HJELPERE — brukes av alle sider |
+| `sjekket-filter.js` | SJEKKET-FILTRENE — studentenes utgave av de delte samlingene (v6.89) |
 | `store.js` | DATALAG — Firebase Firestore |
 
 ## `js/felles/` Felles hjelpere
@@ -199,6 +200,7 @@ Små hjelpere og vokabular som flere deler av appen bruker: tekst og lenker, kil
 | `punkter.js` | OPPSUMMERINGSPUNKTER (v5.50) — 3–5 korte punkter per beskrivelse |
 | `rich-text.js` | RIK TEKST — markdown-light for ALL løpende tekst i appen |
 | `search.js` | SØK — én indeks over alt innholdet i appen |
+| `sjekket.js` | BARE SJEKKET INNHOLD FOR STUDENTENE (v6.89, brukervalg 2026-10-13) |
 | `story-format.js` | SJANGERHISTORIER OG INNHOLDSSIDER — oppslag |
 | `timeline-lanes.js` | TIDSLINJE-BANER — ren logikk for artist-aktivitets-tidslinjen |
 | `util.js` | SMÅ DELTE HJELPERE |

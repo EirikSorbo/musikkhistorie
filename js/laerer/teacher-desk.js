@@ -4,7 +4,7 @@
 //  To deler: innboksen (nye artistforslag + endringsforslag → eksisterende
 //  flater) og sjekk-fremdrift per innholdskategori (artistkort, sjangre,
 //  undersjangre, sjangerhistorier, innovasjonskort, tiår (samfunn), tiår
-//  (teknologi), sjangerkoblinger) —
+//  (teknologi), sjangerkoblinger, og fra v6.89 sidene og plateselskapene) —
 //  x/y sjekket med utvidbar liste over de usjekkede. Artistkort sjekkes via
 //  teacherChecked på artist-dokumentet; alle andre kategorier er navnelister
 //  i config/teacherChecks (config/* er lærer-skrivbart, så ingen regelendring).
@@ -20,13 +20,14 @@ import { renderPendingEditsList } from "./teacher-review.js";
 import { openDetail } from "./teacher-artists.js";
 import { openSingleEdgeModal, openSingleDecadeModal } from "./teacher-content.js";
 import { GENEALOGY_EDGES, GENEALOGY_MAIN_GENRES, edgeKey, isMainGenre, genreNodeById } from "../sjangre/genre-model.js";
-import { storyOrder } from "../felles/story-format.js";
-import { DECADES, isVisible, erTilModerasjon } from "../felles/limits.js";
+import { storyOrder, pageFor } from "../felles/story-format.js";
+import { DECADES, isVisible, erTilModerasjon, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId } from "../felles/limits.js";
+import { selskaperSortert, plateselskapSideId } from "../felles/plateselskaper.js";
 import { pct } from "../ui/ui-helpers.js";
 import { escapeHtml } from "../felles/util.js";
 import { deleteTimeforslag, savePage, migrerSkjulte } from "../data/store.js";
 import { synlighetVerdier } from "../felles/feature-flags.js";
-import { askChoice, melding, modalOpen } from "../ui/ui-modal.js";
+import { askChoice, melding, modalOpen, bekreft } from "../ui/ui-modal.js";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -114,8 +115,31 @@ function buildCategories() {
       })),
       checkedSet: set("edges"),
     },
+    {
+      // Sidene som følger «Bare sjekket innhold» (v6.89, js/data/sjekket-filter.js):
+      // Røtter, Om historie, bruksveiledningen og instrumenttekstene. Bare de
+      // med tekst; en tom side har ingenting å sjekke.
+      key: "pages", label: "Sider",
+      items: SIDER.map(([id, name]) => ({ id, name }))
+        .filter((it) => pageFor(it.id, state.content)?.body?.trim()),
+      checkedSet: set("pages"),
+    },
+    {
+      key: "plateselskaper", label: "Plateselskaper",
+      items: selskaperSortert((id) => state.content?.[plateselskapSideId(id)] || null)
+        .map((p) => ({ id: p.id, name: p.navn })),
+      checkedSet: set("plateselskaper"),
+    },
   ];
 }
+
+// Sidene i kategorien «Sider», i rekkefølge: [content-id, navn].
+const SIDER = [
+  ["rotter", "Røtter"],
+  ["omHistorie", "Om historie"],
+  ["appGuide", "Slik bruker du appen"],
+  ...INSTRUMENT_TIMELINE_GROUPS.map((g) => [instrumentPageId(g), INSTRUMENT_TITLE[g] || `Utviklingen av ${g}`]),
+];
 
 function catCard(cat) {
   const total = cat.items.length;
@@ -263,6 +287,8 @@ export function renderDesk(el) {
     }
     const syn = hit("[data-synlig]");
     if (syn && syn.matches("input")) return endreSynlighet(syn.dataset.synlig, syn.checked, syn);
+    const regel = hit("[data-synlig-sjekket]");
+    if (regel && regel.matches("input")) return endreSjekketRegel(regel.checked, regel);
 
     const slett = hit("[data-desk-time-slett]");
     if (slett) return slettTimeforslag(slett.dataset.deskTimeSlett);
@@ -320,7 +346,8 @@ const SYNLIGHET_RADER = [
 // (storeBildet, de åpne hubkortene), og da slo en senere endring av
 // standarden i feature-flags.js aldri gjennom for dem. savePage overskriver
 // dokumentet, så gamle nøkler uten bryter forsvinner ved neste lagring.
-const PANEL_STUDENT = [...new Set(SYNLIGHET_RADER.flatMap((r) => r.student || []))];
+// «usjekket» har sin egen bryter over lista (v6.89), men lagres sammen med dem.
+const PANEL_STUDENT = [...new Set([...SYNLIGHET_RADER.flatMap((r) => r.student || []), "usjekket"])];
 const PANEL_HUB = [...new Set(SYNLIGHET_RADER.flatMap((r) => r.hub || []))];
 
 function synligNaa(v, rad) {
@@ -328,11 +355,37 @@ function synligNaa(v, rad) {
   return [...(rad.student || []).map((k) => !v.student[k]), ...(rad.hub || []).map((k) => !v.hub[k])].every(Boolean);
 }
 
+// Det usjekkede per kategori, som tekst: «120 artistkort, 9 sjangerhistorier».
+// Samme tall som kortene over (buildCategories).
+function usjekketTekst() {
+  return buildCategories()
+    .map((c) => ({ c, n: c.items.filter((it) => !c.checkedSet.has(it.id)).length }))
+    .filter(({ n }) => n > 0)
+    .map(({ c, n }) => `${n} ${c.label.toLowerCase()}`)
+    .join(", ");
+}
+
+// «Bare sjekket innhold» (v6.89, js/felles/sjekket.js): egen bryter øverst,
+// med motsatt betydning av lista under (avhuket = det usjekkede er skjult).
+function sjekketRegelHtml(v) {
+  const paa = !!v.student.usjekket;
+  const usjekket = usjekketTekst();
+  return `<div class="desk-sjekket">
+    <label class="desk-synlighet-rad"><input type="checkbox" data-synlig-sjekket${paa ? " checked" : ""}> Bare sjekket innhold</label>
+    <p class="muted desk-synlighet-hint">${paa
+      ? "På: studentene ser bare det du har sjekket, også på lerretet. «Vis innhold som er skjult for studentene» i visningen viser alt for økta."
+      : "Av: studentene ser også det du ikke har sjekket."}
+      ${usjekket ? ` Usjekket nå: ${escapeHtml(usjekket)}.` : " Alt er sjekket."}
+      For sjangrene, undersjangrene og tiårene er det teksten som skjules, ikke sjangeren eller tiåret.</p>
+  </div>`;
+}
+
 function synlighetHtml() {
   const v = synlighetVerdier(state.content?.synlighet);
   // Åpen/lukket overlever omtegningen (hvert innholds-snapshot tegner på nytt).
   return `<details class="desk-synlighet"${openPanels.has("synlighet") ? " open" : ""}>
     <summary>Synlig for studentene</summary>
+    ${sjekketRegelHtml(v)}
     <p class="muted desk-synlighet-hint">Avhuket er synlig for studentene. Du ser alltid alt selv.</p>
     <div class="desk-synlighet-liste">${SYNLIGHET_RADER.map((r) => `<label class="desk-synlighet-rad">
       <input type="checkbox" data-synlig="${r.id}"${synligNaa(v, r) ? " checked" : ""}> ${escapeHtml(r.navn)}</label>`).join("")}</div>
@@ -346,6 +399,24 @@ async function endreSynlighet(id, synlig, boks) {
   if (rad.punkter) v.punkter = !synlig;
   (rad.student || []).forEach((k) => { v.student[k] = !synlig; });
   (rad.hub || []).forEach((k) => { v.hub[k] = !synlig; });
+  await lagreSynlighet(v, boks, () => { boks.checked = !synlig; });
+}
+
+// Slås regelen på, sies det først hva som forsvinner for studentene.
+async function endreSjekketRegel(paa, boks) {
+  const usjekket = usjekketTekst();
+  if (paa && usjekket && !(await bekreft(
+    `Studentene ser da ikke dette, som du ikke har sjekket: ${usjekket}. Det kommer tilbake etter hvert som du sjekker det.`,
+    { tittel: "Vise bare sjekket innhold?", ja: "Slå på" }))) {
+    boks.checked = false;
+    return;
+  }
+  const v = synlighetVerdier(state.content?.synlighet);
+  v.student.usjekket = !!paa;
+  await lagreSynlighet(v, boks, () => { boks.checked = !paa; });
+}
+
+async function lagreSynlighet(v, boks, angre) {
   const lagre = {
     student: Object.fromEntries(PANEL_STUDENT.map((k) => [k, v.student[k]])),
     hub: Object.fromEntries(PANEL_HUB.map((k) => [k, v.hub[k]])),
@@ -355,7 +426,7 @@ async function endreSynlighet(id, synlig, boks) {
   try {
     await savePage("synlighet", lagre);
   } catch (e) {
-    boks.checked = !synlig;
+    angre();
     melding(`Fikk ikke lagret (${e?.message || e}).`);
   } finally {
     boks.disabled = false;
@@ -441,6 +512,20 @@ function openItem(key, id) {
       openSingleEdgeModal(from, to);
       break;
     }
+    // Sidene og plateselskapene åpnes slik studentene ser dem, med Sjekk-knappen.
+    case "pages": {
+      if (id === "rotter") ctx.explore?.openRotter();
+      else if (id === "omHistorie") ctx.explore?.openOmHistorie();
+      else if (id === "appGuide") ctx.explore?.openAppGuide();
+      else {
+        const gruppe = INSTRUMENT_TIMELINE_GROUPS.find((g) => instrumentPageId(g) === id);
+        if (gruppe) ctx.explore?.openInstrumenter(gruppe);
+      }
+      break;
+    }
+    case "plateselskaper":
+      ctx.explore?.openPlateselskap(id);
+      break;
   }
 }
 

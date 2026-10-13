@@ -20,6 +20,7 @@
 //  på denne rekkefølgen.
 // ============================================================================
 import { SKJUL_I_HUBEN } from "./feature-flags.js";
+import { sjekketOk } from "./sjekket.js";
 import { opts } from "../data/app-state.js";
 
 // `navn` er STANDARDNAVNET (v6.38, brukervalg 2026-10-05): kortets tittel og
@@ -133,4 +134,11 @@ export function selskaperSortert(sideFor = () => null) {
 // gjelder hubkortet, søket, lenkene på artistkortene og ?vis=-lenkene.
 export function plateselskapeneSynlige() {
   return !SKJUL_I_HUBEN["sb-plateselskaper"] || !!opts?.onStoryEdit;
+}
+
+// Ett bestemt selskap (v6.89): som over, og med «Bare sjekket innhold» på
+// bare de sjekkede (js/felles/sjekket.js). Kortet, lenkene på artistkortene,
+// lenkene i teksten, søket og ?vis=-lenkene spør her.
+export function plateselskapSynlig(id) {
+  return plateselskapeneSynlige() && (!!opts?.onStoryEdit || sjekketOk("plateselskaper", id));
 }

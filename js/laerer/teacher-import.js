@@ -32,6 +32,7 @@ import { INSTRUMENTS } from "../felles/limits.js";
 import { rensFakta } from "../felles/plateselskaper.js";
 import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc, erDelpost } from "../data/import-format.js";
 import { melding, bekreft, sporTekst } from "../ui/ui-modal.js";
+import { sjekkerEndretAvImport, sjekkerUten } from "../data/sjekket-filter.js";
 
 // Feltlister og etiketter kommer fra det delte artist-skjemaet.
 const EXPORT_FIELDS = ARTIST_EXPORT_FIELDS;
@@ -39,6 +40,23 @@ const MERGE_LABELS = ARTIST_LABELS;
 const COMPARE_FIELDS = ARTIST_COMPARE_FIELDS;
 
 const mergeState = { queue: [], newArtists: [], index: 0, ferdig: null };
+
+// Sjekk faller bort når en import endrer teksten (v6.89, brukervalg
+// 2026-10-13): den nye teksten er ikke lest. fjern = { kategori: Set(id) }
+// fra sjekkerEndretAvImport, regnet ut FØR skrivingen. Gir antallet som ble
+// fjernet. Artistene har sjekken på kortet og håndteres i finishMerge.
+async function fjernSjekker(fjern) {
+  const { data, antall } = sjekkerUten(state.teacherChecks || {}, fjern);
+  if (!antall) return 0;
+  try {
+    await setTeacherChecks(data);
+    return antall;
+  } catch (e) {
+    console.error("Fikk ikke fjernet sjekkene etter importen:", e);
+    return 0;
+  }
+}
+const sjekkMerknad = (n) => (n ? ` Sjekk er fjernet på ${n} av dem, siden teksten er endret.` : "");
 
 // Konfliktdialogen løses av læreren LENGE etter at handleMergeFile returnerer.
 // Uten dette løftet fortsatte importen med beskrivelser, teknologi, sider,
@@ -481,6 +499,8 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
     .filter(([, data]) => data && (data.description || (data.kilder || []).length))
     .map(([id, data]) => ({ id, data }));
 
+  const fjern = sjekkerEndretAvImport({ decades, genreDescriptions, edgeDescriptions }, state);
+
   // Batchet skriving (saveDocsBulk) i stedet for dokument-for-dokument.
   // En batch er alt-eller-ingenting, så feiltelling skjer per samling.
   let ok = 0, fail = 0;
@@ -494,7 +514,7 @@ async function importDescriptions({ decades, genreDescriptions, edgeDescriptions
   if (fail > 0) {
     melding(`${fail} beskrivelse(r) kunne ikke lagres.\n\nSannsynlig årsak: Firestore-reglene tillater ikke skriving til 'genreDescriptions', 'edgeDescriptions' eller 'decades'.\n\nGå til Firebase Console → Firestore → Rules og publiser oppdaterte regler.`);
   } else if (ok > 0) {
-    melding(`${ok} beskrivelse(r) importert.`);
+    melding(`${ok} beskrivelse(r) importert.${sjekkMerknad(await fjernSjekker(fjern))}`);
   }
 }
 
@@ -536,7 +556,12 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       return { id, data };
     });
   if (pageEntries.length) {
-    try { await saveDocsBulk("content", pageEntries); done.push(`${pageEntries.length} innholdsside(r)`); }
+    const fjern = sjekkerEndretAvImport({ pages: Object.fromEntries(pageEntries.map((e) => [e.id, e.data])) }, state);
+    try {
+      await saveDocsBulk("content", pageEntries);
+      const n = await fjernSjekker(fjern);
+      done.push(`${pageEntries.length} innholdsside(r)${n ? ` (sjekk fjernet på ${n}, siden teksten er endret)` : ""}`);
+    }
     catch (e) { console.error("Side-import feilet:", e); failed.push("innholdssidene"); }
   }
 
@@ -675,6 +700,7 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
 // Promise.allSettled, som beholder feilrapportering per dokument.
 async function importTechItems(techArray) {
   if (!techArray || !techArray.length) return;
+  const fjern = sjekkerEndretAvImport({ tech: techArray.filter((item) => item.name) }, state);
   const jobs = techArray
     .filter((item) => item.name)
     .map((item) => {
@@ -696,7 +722,10 @@ async function importTechItems(techArray) {
     }
   });
   if (fail) melding(`${fail} teknologikort kunne ikke lagres (se konsollen).`);
-  if (added || updated) melding(`Teknologi: ${added} nye, ${updated} oppdaterte.`);
+  if (added || updated) {
+    const n = updated ? await fjernSjekker(fjern) : 0;
+    melding(`Teknologi: ${added} nye, ${updated} oppdaterte.${n ? ` Sjekk er fjernet på ${n}, siden teksten er endret.` : ""}`);
+  }
 }
 
 // Erstatter hele artistsamlingen. Lista er allerede validert i
@@ -909,15 +938,23 @@ async function finishMerge() {
     const added = await addArtistsBulk(
       mergeState.newArtists.map((a) => ({ proposedBy: "Eirik Sørbø", status: "active", ...a }))
     );
+    let avsjekket = 0;
     for (const item of mergeState.queue) {
       if (Object.keys(item.resolved).length) {
-        await updateArtistFields(item.existing.id, item.resolved);
+        // Endret kort = ulest kort (v6.89): sjekken faller bort, med mindre
+        // fila selv setter den (en sikkerhetskopi som gjenoppretter).
+        const felt = { ...item.resolved };
+        if (!("teacherChecked" in felt) && item.existing.teacherChecked === true) {
+          felt.teacherChecked = false;
+          avsjekket++;
+        }
+        await updateArtistFields(item.existing.id, felt);
         updated++;
       }
     }
     const parts = [];
     if (added)   parts.push(`${added} nye artister lagt til`);
-    if (updated) parts.push(`${updated} artister oppdatert`);
+    if (updated) parts.push(`${updated} artister oppdatert${avsjekket ? ` (sjekk fjernet på ${avsjekket}, siden kortet er endret)` : ""}`);
     if (parts.length) melding(parts.join(", ") + ".");
   } catch (err) {
     // Uten denne ville en skrivefeil midt i flettingen vært helt stille

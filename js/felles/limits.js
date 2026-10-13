@@ -11,6 +11,7 @@
 // ============================================================================
 
 import { resolveSpan } from "./timeline-lanes.js";
+import { artistSjekketOk } from "./sjekket.js";
 
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
@@ -176,10 +177,12 @@ export function erSkjult(a) {
   return a?.hidden === true || (a?.priority || 0) === -1;
 }
 
-// Synlig for studenter: aktiv status og ikke lærer-skjult (erSkjult).
-// Delt predikat — brukes av alle student-visninger og tellinger.
+// Synlig for studenter: aktiv status, ikke lærer-skjult (erSkjult) og, når
+// «Bare sjekket innhold» er på, sjekket (v6.89, js/felles/sjekket.js; alltid
+// sann på lærersiden). Delt predikat — brukes av alle student-visninger og
+// tellinger.
 export function isVisible(a) {
-  return a.status === "active" && !erSkjult(a);
+  return a.status === "active" && !erSkjult(a) && artistSjekketOk(a);
 }
 
 // Hos læreren til moderasjon: ventende, ELLER sendt tilbake til studenten.

@@ -39,8 +39,11 @@ test("synlighetVerdier: kjente boolske nøkler overstyrer, resten følger standa
 // hubkortene). Før skrev første lagring hele standardobjektet.
 test("bryterpanelet lagrer bare nøklene det har en bryter for", () => {
   const src = kilde("js/laerer/teacher-desk.js");
-  const start = src.indexOf("async function endreSynlighet");
+  // Fra v6.89 lagrer begge bryterne (lista og «Bare sjekket innhold») via
+  // lagreSynlighet, så det er den som må holde seg til panelets nøkler.
+  const start = src.indexOf("async function lagreSynlighet");
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
+  assert.match(src.slice(src.indexOf("async function endreSynlighet"), start), /lagreSynlighet\(v,/);
   assert.match(kropp, /PANEL_STUDENT\.map/);
   assert.match(kropp, /PANEL_HUB\.map/);
   assert.match(kropp, /savePage\("synlighet", lagre\)/);

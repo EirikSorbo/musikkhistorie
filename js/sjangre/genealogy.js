@@ -14,6 +14,7 @@
 
 import { wireAllLinks, medSelv } from "../felles/linkify.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
+import { koblingSjekketOk } from "../felles/sjekket.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { punkterHtml } from "../felles/punkter.js";
 import { escapeHtml, buildKilderList } from "../felles/util.js";
@@ -190,7 +191,9 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   // for læreren (onEdit). Bare der koblingen faktisk finnes i treet.
   const visKoblinger = !SKJUL_I_STUDENTVISNING.koblingsbeskrivelser || !!onEdit;
   const KOBLING_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1 1"/><path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1-1"/></svg>';
-  const koblingKnapp = (fra, til) => (visKoblinger && map[fra] && map[til] && edgeExists(edgeKey(fra, til)))
+  // «Bare sjekket innhold» (v6.89): bare koblinger med sjekket tekst.
+  const koblingKnapp = (fra, til) => (visKoblinger && map[fra] && map[til] && edgeExists(edgeKey(fra, til))
+      && (!!onEdit || koblingSjekketOk(edgeKey(fra, til), opts.edgeDescs)))
     ? ` <button type="button" class="gx-kobling-lenke" data-kobling-fra="${escapeHtml(fra)}" data-kobling-til="${escapeHtml(til)}" title="Les om koblingen ${escapeHtml(map[fra].l)} → ${escapeHtml(map[til].l)}" aria-label="Les om koblingen ${escapeHtml(map[fra].l)} til ${escapeHtml(map[til].l)}">${KOBLING_SVG}</button>`
     : "";
   const inf = n.p.map((p) => sjLenke(map[p], p) + koblingKnapp(p, n.id)).join(", ");
@@ -323,6 +326,8 @@ export function showEdgeInfo(fromId, toId, opts = {}) {
   // dokumentet). Popupen tegnet da glatt en «Avstamning / påvirkning» treet
   // ikke lenger viser.
   if (!edgeExists(edgeKey(fromId, toId))) return false;
+  // «Bare sjekket innhold» (v6.89): uten sjekket tekst er det ingenting å vise.
+  if (!opts.onEdit && !koblingSjekketOk(edgeKey(fromId, toId), edgeDescs)) return false;
   const modal = root.querySelector("#modal-sjanger");
   const mTitle = root.querySelector("#sj-title");
   const mBody = root.querySelector("#sj-body");

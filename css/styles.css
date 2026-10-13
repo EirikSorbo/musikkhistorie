@@ -2306,7 +2306,9 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 /* Sjekk-fremdrift per innholdskategori */
 .desk-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Ti kategorier fra v6.89 (Sider og Plateselskaper kom til): fem per rad
+     gir to fulle rader, og to per rad under 1000 px gir fem. */
+  grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   margin-top: 14px;
 }
@@ -2369,11 +2371,8 @@ body.laerer-okt.samler-plukk .modal-head .modal-lenke { display: none; }
 .desk-item.active { border-color: var(--accent); background: var(--surface-accent); }
 /* Må stå ETTER basisregelen — regler med lik spesifisitet vinner på rekkefølge,
    media query eller ei (720px-blokka øverst i fila taper mot basis her nede).
-   4 kort per rad på brede skjermer, trappes ned til 1 på mobil. */
+   5 kort per rad på brede skjermer, 2 under 1000 px, 1 på mobil. */
 @media (max-width: 1000px) {
-  .desk-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 720px) {
   .desk-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
@@ -4472,6 +4471,10 @@ body.presentasjon .meta-merke { display: none; }
 .desk-synlighet-hint { margin: 8px 0; font-size: 0.82rem; }
 .desk-synlighet-liste { columns: 2 18rem; column-gap: 20px; }
 .desk-synlighet-rad { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.86rem; break-inside: avoid; }
+/* «Bare sjekket innhold» (v6.89): over lista, skilt fra den med en strek. */
+.desk-sjekket { margin: 4px 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.desk-sjekket .desk-synlighet-rad { font-weight: 600; }
+.desk-sjekket .desk-synlighet-hint { margin: 2px 0 0 26px; }
 /* Lærersidens område Innhold (U5; Undervisning fjernet i v6.66). Fra v6.44
    er hver handling en flis med ikon, tittel og en linje om hva den gjør.
    De seks flisene står i tre kolonner på brede skjermer (to rader), og i én

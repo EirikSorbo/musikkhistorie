@@ -25,7 +25,7 @@ import { pageFor } from "../felles/story-format.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { wireLinks, wireRelated, renderPodcastList, wirePlayerCloseGuard } from "../ui/ui-helpers.js";
 import { META_GENRE_COLOR } from "../sjangre/genre-model.js";
-import { buildLinkCtx } from "./explore-context.js";
+import { buildLinkCtx, injectTeacherRow } from "./explore-context.js";
 import { opts, getState } from "../data/app-state.js";
 import { kobleFanePiler, visValgtFane, modalOpen } from "../ui/ui-modal.js";
 import { openTechDetail } from "./explore-tech.js";
@@ -219,8 +219,12 @@ function renderGroup(group, tvunget = false) {
   }
 
   // Rediger (lærer) eller Foreslå endring (student) på sammendraget.
+  // Med tekst får læreren Sjekk og Rediger (v6.89): instrumenttekstene følger
+  // «Bare sjekket innhold» som de andre sidene (teacherChecks.pages).
   const sumActions = body.querySelector(".instr-sum-actions");
-  if (opts.onPageEdit) {
+  if (opts.onPageEdit && harTekst && opts.onCheck) {
+    injectTeacherRow(sumActions, { category: "pages", id: pageId, onEdit: () => opts.onPageEdit(pageId) });
+  } else if (opts.onPageEdit) {
     sumActions.innerHTML = `<button type="button" class="btn ghost small">Skriv sammendrag</button>`;
     sumActions.querySelector("button").addEventListener("click", () => opts.onPageEdit(pageId));
   } else if (opts.onProposeEdit) {

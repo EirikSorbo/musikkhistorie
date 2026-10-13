@@ -35,6 +35,9 @@ import { openPlateselskap, openPlateselskaper, renderPlateselskaper } from "./ex
 import { openSok, wireSok } from "./explore-search.js";
 import { apneMaal } from "./explore-apne.js";
 import { erPresentasjon } from "../visning/presentasjon.js";
+import { sjekketRegelAktiv } from "../felles/sjekket.js";
+import { storyOrderSynlig, pageFor } from "../felles/story-format.js";
+import { PLATESELSKAPER, plateselskapSynlig } from "../felles/plateselskaper.js";
 
 // Det kjernen (explore-context.js) og «Fra timene» (explore-timer.js) må kunne
 // åpne. Fylles her, idet modulen lastes, og ikke i kjernen selv: da hang 13
@@ -45,7 +48,28 @@ registrerNavigasjon({ openTechDetail, openTidslinje, tidslinjeHarSjanger, openAr
 // sjangerkort skal vise den nye beskrivelsen med én gang, ikke først når
 // kortet lukkes og åpnes igjen. (Egen inngang fordi beskrivelsene bor i sin
 // egen samling — content-snapshotet fyrer ikke når de endres.)
+// Inngangene som kan stå tomme under «Bare sjekket innhold» (v6.89): knappen
+// «Sjangerhistorier» og hubkortene. initExplore setter den; data som lander
+// etter oppstarten, kan gjøre en tom inngang fylt.
+let oppdaterInnganger = () => {};
+
+// Hubkort med innhold som ikke er sjekket, er tomme for studentene når regelen
+// er på, og tas ut av griden som de skjulte (se ordneHubKort).
+function tomtUnderRegel(id) {
+  if (!sjekketRegelAktiv()) return false;
+  const s = getState();
+  switch (id) {
+    case "sb-historier": return !storyOrderSynlig(s.genreDescs).length;
+    case "sb-rotter": return !pageFor("rotter", s.content)?.body?.trim();
+    case "sb-om-historie": return !pageFor("omHistorie", s.content)?.body?.trim();
+    case "sb-guide": return !pageFor("appGuide", s.content)?.body?.trim();
+    case "sb-plateselskaper": return !PLATESELSKAPER.some((p) => plateselskapSynlig(p.id));
+    default: return false;
+  }
+}
+
 export function genreDescsChanged() {
+  oppdaterInnganger();
   refreshSjangerInfo(sjangerOpts());
   // Sjangre-vinduet viser periodene fra beskrivelsene (v6.11). Bare
   // innholdet tegnes (v6.23): vinduet heves ikke og fokuset flyttes ikke,
@@ -69,6 +93,7 @@ export function contentChanged() {
   // ville lukket sirkelen. Dette er første og eneste snapshot-punktet, så linja
   // på kortet er fersk fra første lasting og etter hver redigering.
   setHeatData(getState().content?.varmekart?.heat || null);
+  oppdaterInnganger();
   // Står et sjangerkort åpent, tegnes det på nytt — da følger varmelinja med når
   // læreren endrer nivåer, i stedet for å vise gamle tall til kortet lukkes.
   // sjangerOpts() sendes med så omtegningen leser GJELDENDE state: de fangede
@@ -176,7 +201,9 @@ function wireModals() {
     { id: "tidslinje", navn: "Artisttidslinje", modal: "modal-tidslinje", apne: () => openTidslinje() },
     { id: "undersjangre", navn: "Undersjangre", modal: "modal-undersjangre", apne: () => openUndersjangre() },
   ];
-  const visHistorier = () => !SKJUL_I_STUDENTVISNING.metasjangerhistorier || !!opts.onStoryEdit;
+  // Med «Bare sjekket innhold» på (v6.89) også bare når minst én historie er sjekket.
+  const visHistorier = () => !!opts.onStoryEdit
+    || (!SKJUL_I_STUDENTVISNING.metasjangerhistorier && storyOrderSynlig(getState().genreDescs).length > 0);
   document.querySelectorAll("[data-sj-faner]").forEach((rad) => {
     const her = rad.dataset.sjFaner;
     const vindu = rad.closest(".modal-backdrop");
@@ -202,9 +229,9 @@ function wireModals() {
     rad.querySelector("[data-sj-historier]").addEventListener("click", () => openHistorier());
   });
   // Bryteren kan endres mens siden står åpen (v6.10, U4).
-  document.addEventListener("pensum:synlighet", () => {
+  const oppdaterHistorieKnapp = () =>
     document.querySelectorAll("[data-sj-historier]").forEach((b) => { b.hidden = !visHistorier(); });
-  });
+  document.addEventListener("pensum:synlighet", oppdaterHistorieKnapp);
 
   // «Det store bildet»-hub: mål-modalene åpnes OPPÅ huben (modaler stables),
   // så ← i undermodalen går naturlig tilbake hit. Slektstreet bor på egen side
@@ -252,10 +279,13 @@ function wireModals() {
         if (ved === "oppstart") alleKort.forEach((k) => { if (SKJUL_I_HUBEN[k.id]) k.hidden = true; });
         return;
       }
-      grid.replaceChildren(...alleKort.filter((k) => !SKJUL_I_HUBEN[k.id]));
+      grid.replaceChildren(...alleKort.filter((k) => !SKJUL_I_HUBEN[k.id] && !tomtUnderRegel(k.id)));
     };
     ordneHubKort("oppstart");
     document.addEventListener("pensum:synlighet", () => ordneHubKort("endring"));
+    oppdaterInnganger = () => { oppdaterHistorieKnapp(); ordneHubKort("endring"); };
+  } else {
+    oppdaterInnganger = oppdaterHistorieKnapp;
   }
 
   // Ligger i kategorirad-en (se MODAL_HTML) — samme knappestørrelse som fanene.

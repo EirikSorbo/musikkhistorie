@@ -288,6 +288,8 @@ function startAppInner() {
 
   subscribeSharedData(state, {
     keepPendingTech: true,
+    // Læreren ser alltid det usjekkede (v6.89, js/felles/sjekket.js).
+    laererside: true,
     onArtists: () => {
       refreshControls();
       renderAll();

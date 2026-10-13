@@ -23,6 +23,7 @@ import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edg
 import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
 import { PLATESELSKAPER, plateselskapSideId } from "./plateselskaper.js";
+import { erSjekket } from "./sjekket.js";
 import { ytMaal } from "../visning/presentasjon-modell.js";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
@@ -281,6 +282,8 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
   // en bakvei rundt den. Skrivemåtene (Volt, Tamla, RCA …) er med i teksten.
   if (erLærer || !skjulHub["sb-plateselskaper"]) {
     for (const p of PLATESELSKAPER) {
+      // «Bare sjekket innhold» (v6.89): bare de sjekkede selskapene.
+      if (!erLærer && skjul.usjekket && !erSjekket("plateselskaper", p.id)) continue;
       const d = content[plateselskapSideId(p.id)] || {};
       const f = d.fakta || {};
       ut.push(post("plateselskap", p.id, p.navn, "Plateselskap",

@@ -767,6 +767,12 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
 
   const targetRef = pendingEditTargetRef(data.entityType, data.entityId, genreEditLevel(data));
   if (targetRef && Object.keys(toApply).length) {
+    // Godkjent endring = ny tekst som ikke er lest (v6.89, brukervalg
+    // 2026-10-13): sjekken faller bort, og med «Bare sjekket innhold» på er
+    // innholdet borte for studentene til læreren har sjekket det igjen.
+    // Artistens sjekk står på kortet og skrives i samme omgang; de andre
+    // står i config/teacherChecks (sjekkVedGodkjenning under).
+    if (data.entityType === "artist") toApply.teacherChecked = false;
     // artist/tech MÅ finnes fra før — ellers ville merge opprettet et tomt
     // spøkelsesdokument (uten navn/status) hvis forslaget godkjennes etter at
     // målet er slettet. genreDescriptions/decades kan derimot opprettes ved
@@ -777,8 +783,32 @@ export async function approvePendingEdit(pendingEditId, approvedKeys) {
       if (!targetSnap.exists()) { await deleteDoc(editRef); return; }
     }
     await setDoc(targetRef, toApply, { merge: true });
+    const sjekk = sjekkVedGodkjenning(data);
+    if (sjekk) {
+      await setDoc(teacherChecksRef, { [sjekk.kategori]: arrayRemove(...sjekk.ider) }, { merge: true })
+        .catch((e) => console.warn("Fikk ikke fjernet sjekken etter godkjenningen:", e));
+    }
   }
   await deleteDoc(editRef);
+}
+
+// Hvilken sjekk i config/teacherChecks et godkjent forslag gjør ugyldig.
+// Treets sjangre sjekkes under nodens etikett, så det fulle navnet og
+// etiketten fjernes begge. Eksportert for testen.
+export function sjekkVedGodkjenning(data) {
+  const id = String(data?.entityId || "");
+  switch (data?.entityType) {
+    case "tech": return { kategori: "tech", ider: [id] };
+    case "instrument": return { kategori: "pages", ider: [id] };
+    case "decade-society": return { kategori: "decades", ider: [id] };
+    case "decade-tech": return { kategori: "decadesTech", ider: [id] };
+    case "subgenre": {
+      if (genreEditLevel(data) === "sub") return { kategori: "subgenres", ider: [id] };
+      const node = findTreeGenreNode(id);
+      return { kategori: "genres", ider: [...new Set([id, node?.l].filter(Boolean))] };
+    }
+    default: return null;
+  }
 }
 
 // Lærer avviser hele forslaget uten å lagre noe.

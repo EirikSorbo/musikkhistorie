@@ -13,9 +13,10 @@ import { escapeHtml, buildKilderList, safeUrl, wikimediaThumb, dropboxDirectUrl 
 import { wireAllLinks, nevnteArtister } from "../felles/linkify.js";
 import { renderRichText, renderInline } from "../felles/rich-text.js";
 import { GENDERS, instrumenterFor, erSkjult } from "../felles/limits.js";
+import { artistSjekketOk } from "../felles/sjekket.js";
 import { askChoice, modalClose } from "./ui-modal.js";
 import { lesPunkter, punkterTilTekst, punktVarsel } from "../felles/punkter.js";
-import { selskaperIFelt, plateselskapeneSynlige } from "../felles/plateselskaper.js";
+import { selskaperIFelt, plateselskapeneSynlige, plateselskapSynlig } from "../felles/plateselskaper.js";
 
 // Bilde-fallback: når en skalert Wikimedia-thumbnail ikke lar seg hente
 // (Wikimedia avviser enkelte ferske bredder), bytt <img> tilbake til
@@ -483,6 +484,7 @@ export function relatedArtists(artist, all, { limit = 5 } = {}) {
     if (!b || b.id === artist.id) continue;
     if (b.status && b.status !== "active") continue;   // ikke ventende
     if (erSkjult(b)) continue;                          // ikke skjulte
+    if (!artistSjekketOk(b)) continue;                  // ikke usjekkede (v6.89)
     const bSub = Array.isArray(b.subGenre) ? b.subGenre : [];
     const bMain = Array.isArray(b.mainGenre) ? b.mainGenre : [];
     const subShared = bSub.filter((s) => sub.has(s)).length;
@@ -647,7 +649,7 @@ function plateselskapHtml(felt) {
   if (!plateselskapeneSynlige()) return escapeHtml(felt);
   const deler = selskaperIFelt(felt);
   if (!deler.some((d) => d.selskap)) return escapeHtml(felt);
-  return deler.map(({ tekst, selskap }) => selskap
+  return deler.map(({ tekst, selskap }) => selskap && plateselskapSynlig(selskap.id)
     ? `<button type="button" class="facts-link" data-plateselskap="${escapeHtml(selskap.id)}">${escapeHtml(tekst)}</button>`
     : escapeHtml(tekst)).join(" / ");
 }

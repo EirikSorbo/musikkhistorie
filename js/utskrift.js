@@ -26,6 +26,7 @@ import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./data/sh
 import { onAuthChange, savePlan } from "./data/store.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, synlighetGrunn } from "./felles/feature-flags.js";
+import { settSjekketLaerer } from "./felles/sjekket.js";
 import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift/utskrift-modell.js";
 import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift/utskrift-utvalg.js";
 import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./felles/search.js";
@@ -1089,6 +1090,8 @@ function init() {
       if (ny === erLaerer) return;
       erLaerer = ny;
       state.isTeacher = ny;
+      // Innlogget lærer ser også det usjekkede (v6.89), som ellers i utskriften.
+      settSjekketLaerer(ny);
       planleggTegning();
     });
     subscribeSharedData(state, {

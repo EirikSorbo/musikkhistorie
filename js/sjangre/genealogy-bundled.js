@@ -20,7 +20,8 @@
 
 import { showSjangerInfo, showEdgeInfo } from "./genealogy.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
-import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX } from "./genre-model.js";
+import { koblingSjekketOk } from "../felles/sjekket.js";
+import { GENEALOGY, DECADE_ROWS, nodeColor, layoutX, edgeKey } from "./genre-model.js";
 import { attachCamera } from "./gx-camera.js";
 import { LAYOUT_WIDTH } from "./genre-layout.js";
 
@@ -453,7 +454,10 @@ export function renderGenealogyBundled({ root = document, getOpts }) {
     || !!(getOpts() || {}).onEdit;
   edgeHits.forEach((h) => {
     const pid = h.dataset.p, cid = h.dataset.c;
-    if (!kanApneKobling) { h.style.cursor = "default"; h.style.pointerEvents = "none"; return; }
+    // «Bare sjekket innhold» (v6.89): også en kobling uten sjekket tekst er bare strek.
+    const o = getOpts() || {};
+    const sjekketOk = !!o.onEdit || koblingSjekketOk(edgeKey(pid, cid), o.edgeDescs);
+    if (!kanApneKobling || !sjekketOk) { h.style.cursor = "default"; h.style.pointerEvents = "none"; return; }
     h.addEventListener("mouseenter", () => { if (!selectedId) lightEdge(pid, cid); });
     h.addEventListener("mouseleave", () => { if (!selectedId) clearLight(); });
     h.addEventListener("click", (ev) => {

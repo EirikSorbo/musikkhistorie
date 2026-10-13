@@ -33,7 +33,8 @@ import { openLytt } from "./explore-lytt.js";
 import { openTime, timeTilgjengelig } from "./explore-timer.js";
 import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js";
 import { openPlateselskap, openPlateselskaper } from "./explore-plateselskap.js";
-import { finnSelskapId, plateselskapeneSynlige } from "../felles/plateselskaper.js";
+import { finnSelskapId, plateselskapeneSynlige, plateselskapSynlig } from "../felles/plateselskaper.js";
+import { artistSjekketOk } from "../felles/sjekket.js";
 
 // Tittel for et yt-stopp: let etter lytteeksempelet blant artistene, så
 // spilleren kan vise «Hotel California (Eagles)» i stedet for «Avspilling».
@@ -50,7 +51,7 @@ export function apneMaal(apne) {
   switch (apne.hva) {
     case "artist": {
       const a = (s.artists || []).find((x) => x.id === apne.id);
-      if (a && opts.onArtistClick) opts.onArtistClick(a);
+      if (a && artistSjekketOk(a) && opts.onArtistClick) opts.onArtistClick(a);
       return;
     }
     case "sjanger": return onMainGenreClick(apne.id);
@@ -113,9 +114,13 @@ export function apneMaal(apne) {
 // gammel lenke) — da droppes det med en stille advarsel i konsollen.
 function klarFor(apne, s) {
   switch (apne.hva) {
-    case "artist":
-      if ((s.artists || []).some((x) => x.id === apne.id)) return "klar";
+    case "artist": {
+      const a = (s.artists || []).find((x) => x.id === apne.id);
+      // «Bare sjekket innhold» (v6.89): en lenke til et usjekket kort åpner
+      // ingenting for studentene (og på lerretet, til QA-bryteren slås på).
+      if (a) return artistSjekketOk(a) ? "klar" : "finnes-ikke";
       return s.artistsLoaded ? "finnes-ikke" : "vent";
+    }
     case "tech":
       // techLoaded (v5.35) skiller «ikke landet ennå» fra «kortet er slettet».
       if ((s.techItems || []).some((x) => x.id === apne.id)) return "klar";
@@ -169,7 +174,8 @@ function klarFor(apne, s) {
     case "plateselskap": case "plateselskaper":
       if (!(s.contentLoaded && s.artistsLoaded)) return "vent";
       if (!plateselskapeneSynlige()) return "finnes-ikke";
-      return apne.hva === "plateselskaper" || finnSelskapId(apne.id) ? "klar" : "finnes-ikke";
+      if (apne.hva === "plateselskaper") return "klar";
+      return finnSelskapId(apne.id) && plateselskapSynlig(apne.id) ? "klar" : "finnes-ikke";
     default:
       return "klar";   // podkaster: modalen tegnes på nytt når episodene lander
   }

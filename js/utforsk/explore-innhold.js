@@ -10,7 +10,8 @@ import { modalOpen, kobleFanePiler, visValgtFane } from "../ui/ui-modal.js";
 import { escapeHtml } from "../felles/util.js";
 import { isVisible } from "../felles/limits.js";
 import { META_GENRE_COLOR, FAMILIES, GENEALOGY_ROOT_GENRES, MAIN_GENRE_INFO } from "../sjangre/genre-model.js";
-import { pageFor, storyFor, stripGenrePath, storyOrder } from "../felles/story-format.js";
+import { pageFor, storyFor, stripGenrePath, storyOrderSynlig } from "../felles/story-format.js";
+import { sjekketRegelAktiv } from "../felles/sjekket.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { genreFamilyNodes } from "../ui/ui-timeline.js";
 import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js";
@@ -209,7 +210,11 @@ export function openHistorier(genre) {
   // (storyOrder følger navnebytter i treet) og fargene (META_GENRE_COLOR er en
   // live binding som byttes ved hvert rebuild) skal være ferske. En engangs-
   // bygging med dataset.filled frøs grå farger fra før treet hadde landet.
-  const rekkefolge = storyOrder(getState().genreDescs);
+  const rekkefolge = storyOrderSynlig(getState().genreDescs);
+  // «Bare sjekket innhold» (v6.89): ingen sjekkede historier, ingenting å åpne.
+  // Inngangene er skjult da (explore.js), men en lenke kan fortsatt peke hit.
+  if (!rekkefolge.length) return;
+  const regel = sjekketRegelAktiv();
   // Faner (v6.34, brukervalg 2026-10-04), som Tiår, Sjangre og Instrumenter.
   // Hver metasjanger bærer sin egen farge fra slektstreet (META_GENRE_COLOR),
   // så fanene, treet, varmekartet og himmelen snakker samme fargespråk:
@@ -228,7 +233,7 @@ export function openHistorier(genre) {
     oversiktKnapp.dataset.koblet = "1";
     oversiktKnapp.addEventListener("click", () => { if (currentStoryGenre) openMetaOversikt(currentStoryGenre); });
   }
-  const valgt = typeof genre === "string" ? genre
+  const valgt = typeof genre === "string" && (!regel || rekkefolge.includes(genre)) ? genre
     : (rekkefolge.includes(currentStoryGenre) ? currentStoryGenre : rekkefolge[0]);
   renderHistorie(valgt);
   modalOpen(modal);

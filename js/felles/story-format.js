@@ -14,6 +14,7 @@
 // ============================================================================
 
 import { GENEALOGY_META_GENRES, META_GENRE_ORDER } from "../sjangre/genre-model.js";
+import { sjekketRegelAktiv } from "./sjekket.js";
 
 // Metasjangrenes rekkefølge (struktur, ikke innhold). ÉN rekkefølge i hele
 // appen fra v6.05 (brukervalg 2026-10-03, strukturgjennomgangen S4): den
@@ -51,6 +52,14 @@ export function storyOrder(genreDescs = {}) {
     if (!ut.includes(g) && !skjult(g) && storyFor(g, genreDescs)) ut.push(g);
   }
   return ut;
+}
+
+// Historiene studentene får se (v6.89): med «Bare sjekket innhold» på bare de
+// som har tekst, og datalaget har da allerede tatt bort de usjekkede
+// (js/data/sjekket-filter.js). Ellers samme liste som storyOrder.
+export function storyOrderSynlig(genreDescs = {}) {
+  const alle = storyOrder(genreDescs);
+  return sjekketRegelAktiv() ? alle.filter((g) => storyFor(g, genreDescs)) : alle;
 }
 
 // Oppslaget: historien er den lærer-lagrede/importerte teksten på

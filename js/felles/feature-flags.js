@@ -37,6 +37,11 @@
 //                          er ikke i bruk nå, og uten knappen får
 //                          utskriftsknappen plass på samme linje som «Vis i
 //                          tidslinje» / «Foreslå endring». Læreren ser den.
+//    usjekket              alt innhold læreren ikke har sjekket (v6.89,
+//                          js/felles/sjekket.js). Standarden er false, altså
+//                          vises det usjekkede til læreren slår på «Bare
+//                          sjekket innhold»: slått på fra start ville alle
+//                          usjekkede artistkort forsvunnet ved lansering.
 // ============================================================================
 
 // Oppsummeringspunktene (v5.50, js/felles/punkter.js) vises bare i presentasjonen,
@@ -58,6 +63,8 @@ export const SKJUL_I_STUDENTVISNING = {
   // «Fra timene» (v6.10, U1): timene læreren deler, på forsiden og i Lytt.
   // Skjult til læreren slår det på (brukervalg 2026-10-03).
   fraTimene:            true,
+  // «Bare sjekket innhold» (v6.89): true = det usjekkede er skjult.
+  usjekket:             false,
 };
 
 // Kortene INNE i «Det store bildet» (js/utforsk/explore.js). Huben ble åpnet for
@@ -163,12 +170,16 @@ export function brukSynlighet(doc) {
 
 // Presentasjonens QA-bryter: på = alt synlig for økta; av = lærerens verdier.
 export function settSynlighetOverstyrt(paa) {
+  const var_ = overstyrt;
   overstyrt = !!paa;
   if (overstyrt) {
     for (const k of Object.keys(SKJUL_I_STUDENTVISNING)) SKJUL_I_STUDENTVISNING[k] = false;
     for (const k of Object.keys(SKJUL_I_HUBEN)) SKJUL_I_HUBEN[k] = false;
   }
   brukPaaObjektene();
+  // Fra v6.89 slår bryteren også av «Bare sjekket innhold», og datalaget må da
+  // gi lerretet det usjekkede tilbake (shared-data.js lytter på hendelsen).
+  if (var_ !== overstyrt && typeof document !== "undefined") document.dispatchEvent(new CustomEvent("pensum:synlighet"));
 }
 
 // Ved oppstart: siste kjente verdier fra speilet, så standarden aldri blinker

@@ -1158,7 +1158,7 @@ function tegnPanel(panel) {
       <hr class="pres-skille">`
     : `<p class="pres-panel-hode">Åpne et kort for å velge seksjoner.</p>`}
     <label class="pres-valg pres-qa"><input type="checkbox" id="pres-qa" ${qaPaa() ? "checked" : ""}>
-      Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort)</label>
+      Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort, usjekket innhold)</label>
     <label class="pres-valg"><input type="checkbox" id="pres-klokke-valg" ${klokkePaa() ? "checked" : ""}> Vis klokka i verktøylinja</label>
     ${paminnelserStartet() ? `<button type="button" class="btn ghost small" id="pres-ny-pam" title="Ny påminnelse i denne visningen (R)">Ny påminnelse …</button>` : ""}
     ${kanHuske() ? `<hr class="pres-skille">
