@@ -2,10 +2,10 @@
 //  UI — OVERSIKT (lærer)
 // ----------------------------------------------------------------------------
 //  Pensum-oversikten: FORM (hva pensumet inneholder — tiår, sjangre, kjønn,
-//  instrument) og HULL (hvor det er tynt). MANGLER (innhold som ikke er
-//  skrevet ennå, med PLATESELSKAPENE som ett av punktene: ett kort per selskap
-//  med Sjekk og Rediger) står fra v6.66 i et eget vindu (manglerEl). Ingen
-//  arbeidsflyt-tall her — moderering bor i forslags-flyten.
+//  instrument). MANGLER (innhold som ikke er skrevet ennå, med PLATESELSKAPENE
+//  som ett av punktene: ett kort per selskap med Sjekk og Rediger) står fra
+//  v6.66 i et eget vindu (manglerEl), og HULL (hvor det er tynt) nederst der
+//  fra v6.87. Ingen arbeidsflyt-tall her — moderering bor i forslags-flyten.
 //
 //  All klikk-håndtering går via ETT delegert onclick per flate (tilordning, ikke
 //  addEventListener — modalen re-rendres ved hver åpning, og en lytter per
@@ -357,6 +357,7 @@ export function renderDashboard(el, {
   const edgesFilled = GENEALOGY_EDGES.length - gaps.edgeDesc.length;
   const edgeX = expandList(edgeRows, GENEALOGY_EDGES.length);
 
+  const psTall = plateselskapTelling({ content, teacherChecks });
   const oversiktHtml = `
     <div class="ov-kick">Pensumets form</div>
     <div class="ov-kpis">
@@ -391,6 +392,10 @@ export function renderDashboard(el, {
         <span class="ov-prio-i">${PRIO_ICONS[p]}</span>
         <span class="ov-kpi-n">${prioLists[p].length}</span>
       </button>`).join("")}
+      <button type="button" class="ov-kpi ov-click" data-ov-open="plateselskaper" title="Åpner plateselskapene slik studentene ser dem">
+        <span class="ov-kpi-n">${psTall.antall}</span>
+        <span class="ov-kpi-l">Plateselskaper</span>
+      </button>
     </div>
 
     <div class="stat-card ov-block">
@@ -430,32 +435,8 @@ export function renderDashboard(el, {
       }).join("")}</div>
     </div>
 
-    <div class="ov-kick">Hull og skjevheter</div>
-    <div class="ov-gaps">
-      <div class="ov-gap">
-        <div class="ov-gap-t">Tynne tiår <span>${thinDecades.length}</span></div>
-        ${thinDecades.length
-          ? `<div class="ov-chips">${thinDecades.map((d) =>
-              `<button type="button" class="ov-chip ov-zero" data-ov-decade="${d}">${d} <strong>${counts.perDecade[d] || 0}</strong></button>`).join("")}</div>`
-          : `<p class="muted">Ingen. Alle tiår har minst to artister.</p>`}
-      </div>
-      <div class="ov-gap">
-        <div class="ov-gap-t">Artister uten sjanger <span>${artistsNoSjanger.length}</span></div>
-        ${artistsNoSjanger.length
-          ? `<button type="button" class="btn ghost small" ${noSjangerX.btn}>Vis</button>${noSjangerX.panel}`
-          : `<p class="muted">Ingen. Alle artister er plassert.</p>`}
-      </div>
-      <div class="ov-gap">
-        <div class="ov-gap-t">Undersjangre uten artistkort <span>${orphanedSubgenres.length}</span></div>
-        ${orphanedSubgenres.length
-          ? `<button type="button" class="btn ghost small" ${orphanX.btn}>Vis</button>${orphanX.panel}`
-          : `<p class="muted">Ingen.</p>`}
-      </div>
-    </div>
-
   `;
 
-  const psTall = plateselskapTelling({ content, teacherChecks });
   const manglerHtml = `
     <div class="ov-miss">
       <div class="ov-miss-item">
@@ -496,6 +477,29 @@ export function renderDashboard(el, {
         artistRows(gaps.badInstrument, (a) => instrumenterFor(a).map((i) => `<span class="tag">${escapeHtml(i)}</span>`).join("")))}
       ${missItem("Artister uten kilder", noSources.length, artistRows(noSources))}
       ${missItem("Artister uten viktighetsgrad", utenPrio.length, artistRows(utenPrio))}
+    </div>
+
+    <div class="ov-kick">Hull og skjevheter</div>
+    <div class="ov-gaps">
+      <div class="ov-gap">
+        <div class="ov-gap-t">Tynne tiår <span>${thinDecades.length}</span></div>
+        ${thinDecades.length
+          ? `<div class="ov-chips">${thinDecades.map((d) =>
+              `<button type="button" class="ov-chip ov-zero" data-ov-decade="${d}">${d} <strong>${counts.perDecade[d] || 0}</strong></button>`).join("")}</div>`
+          : `<p class="muted">Ingen. Alle tiår har minst to artister.</p>`}
+      </div>
+      <div class="ov-gap">
+        <div class="ov-gap-t">Artister uten sjanger <span>${artistsNoSjanger.length}</span></div>
+        ${artistsNoSjanger.length
+          ? `<button type="button" class="btn ghost small" ${noSjangerX.btn}>Vis</button>${noSjangerX.panel}`
+          : `<p class="muted">Ingen. Alle artister er plassert.</p>`}
+      </div>
+      <div class="ov-gap">
+        <div class="ov-gap-t">Undersjangre uten artistkort <span>${orphanedSubgenres.length}</span></div>
+        ${orphanedSubgenres.length
+          ? `<button type="button" class="btn ghost small" ${orphanX.btn}>Vis</button>${orphanX.panel}`
+          : `<p class="muted">Ingen.</p>`}
+      </div>
     </div>
   `;
   if (manglerEl) {
@@ -610,6 +614,7 @@ export function renderDashboard(el, {
       switch (open.dataset.ovOpen) {
         case "tech": return explore?.openTeknologi();
         case "subgenres": return explore?.openSubgenreList();
+        case "plateselskaper": return explore?.openPlateselskaper?.();
         // Koblingene har ingen egen visning: nøkkeltallet åpner Mangler (der
         // lista står), folder den ut og ruller ned til den.
         case "edges": {
@@ -656,12 +661,13 @@ export function plateselskapSeksjonHtml({ content = {}, teacherChecks = {} }) {
     <div class="ov-ps-grid">${kort}</div>`;
 }
 
-// «Sjekket X/Y» på plateselskap-punktet i Mangler.
+// «Sjekket X/Y» på plateselskap-punktet i Mangler, og antallet selskaper til
+// nøkkeltallet i Oversikten.
 function plateselskapTelling({ content = {}, teacherChecks = {} }) {
   const sjekket = new Set(teacherChecks.plateselskaper || []);
   const liste = selskaperSortert((id) => content?.[plateselskapSideId(id)] || null);
   const n = liste.filter((p) => sjekket.has(p.id)).length;
-  return { tekst: `${n}/${liste.length}`, ok: liste.length > 0 && n === liste.length };
+  return { tekst: `${n}/${liste.length}`, ok: liste.length > 0 && n === liste.length, antall: liste.length };
 }
 
 export function oppdaterPlateselskapSeksjon(el, data) {
