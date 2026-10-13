@@ -107,3 +107,32 @@ test("«Hull og skjevheter» står nederst i Mangler, ikke i Oversikten", () => 
   assert.ok(i > mangler.innerHTML.indexOf("Artister uten viktighetsgrad"), "hullene skal stå etter siste mangler-punkt");
   assert.match(mangler.innerHTML.slice(i), /Tynne tiår[\s\S]*Artister uten sjanger[\s\S]*Undersjangre uten artistkort/);
 });
+
+test("Sjangerhistorier, Kilder og Instrumenter fyller tredje rad og åpner hver sin visning", () => {
+  const el = { innerHTML: "", onclick: null };
+  const aapnet = [];
+  const explore = {
+    antallKilder: () => 42,
+    openHistorier: () => aapnet.push("historier"),
+    openReferanser: () => aapnet.push("kilder"),
+    openInstrumenter: () => aapnet.push("instrumenter"),
+  };
+  renderDashboard(el, { artists: ARTISTER, manglerEl: { innerHTML: "", onclick: null }, explore });
+  const tall = (navn) => {
+    const m = el.innerHTML.match(new RegExp(`<span class="ov-kpi-n">(\\d+)</span>\\s*<span class="ov-kpi-l">${navn}<`));
+    assert.ok(m, `fant ikke nøkkeltallet ${navn}`);
+    return Number(m[1]);
+  };
+  assert.equal(tall("Kilder"), 42);
+  assert.equal(tall("Instrumenter"), 1, "alle testartistene spiller trompet");
+  assert.equal(tall("Sjangerhistorier"), 0);
+  for (const hva of ["historier", "kilder", "instrumenter"]) {
+    const knapp = { dataset: { ovOpen: hva } };
+    el.onclick({ target: { closest: (sel) => (sel === "[data-ov-open]" ? knapp : null) }, currentTarget: el });
+  }
+  assert.deepEqual(aapnet, ["historier", "kilder", "instrumenter"]);
+  // 10 hele nøkkeltall à to spor + 4 halve = 24 spor: tre fulle rader à åtte.
+  const hele = (el.innerHTML.match(/class="ov-kpi(?: ov-click)?"/g) || []).length;
+  const halve = (el.innerHTML.match(/class="ov-kpi ov-kpi-half/g) || []).length;
+  assert.equal(hele * 2 + halve, 24);
+});

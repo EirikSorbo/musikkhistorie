@@ -25,7 +25,7 @@ import { openTechDetail, refreshTechDetail, openTeknologi, renderTeknologiList, 
 import { openDecadeList, openDecade, refreshDecadeView } from "./explore-decade.js";
 import { openLytt } from "./explore-lytt.js";
 import { openTime } from "./explore-timer.js";
-import { openReferanser, renderReferanser } from "./explore-referanser.js";
+import { openReferanser, renderReferanser, antallKilder } from "./explore-referanser.js";
 import { openSubgenreList, openUndersjangre, openSubgenreInfo, tegnSjangre } from "./explore-sjanger.js";
 import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel, renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
 import { openVisningssider, openArtistGalleri } from "./explore-visningssider.js";
@@ -354,6 +354,9 @@ export function initExplore(options) {
     openInstrumenter,
     openPodkaster,
     renderInstrumenter,
+    // Nøkkeltallet «Kilder» i lærerens Oversikt (v6.88) åpner Referanser.
+    openReferanser,
+    antallKilder,
     openPlateselskap,
     openPlateselskaper,
     renderPlateselskaper,

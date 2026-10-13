@@ -65,6 +65,12 @@ function alleKilder() {
   return ut;
 }
 
+// Antall kilder, samme tall som ingressen i Referanser viser. Brukes av
+// nøkkeltallet «Kilder» i lærerens Oversikt (v6.88).
+export function antallKilder() {
+  return samleKilder(alleKilder()).unike;
+}
+
 // Åpner kortet en kilde er brukt på. Modalene stables oppå Referanser, så ←
 // går tilbake hit.
 function apneOpphav(o) {

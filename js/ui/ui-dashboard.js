@@ -396,6 +396,18 @@ export function renderDashboard(el, {
         <span class="ov-kpi-n">${psTall.antall}</span>
         <span class="ov-kpi-l">Plateselskaper</span>
       </button>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="historier" title="Skrevne sjangerhistorier. Åpner historiene">
+        <span class="ov-kpi-n">${historieListe.length - storiesMissing.length}</span>
+        <span class="ov-kpi-l">Sjangerhistorier</span>
+      </button>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="kilder" title="Åpner Referanser">
+        <span class="ov-kpi-n">${explore?.antallKilder?.() ?? 0}</span>
+        <span class="ov-kpi-l">Kilder</span>
+      </button>
+      <button type="button" class="ov-kpi ov-click" data-ov-open="instrumenter" title="Instrumenter i bruk. Åpner Instrumenter">
+        <span class="ov-kpi-n">${instruments.length}</span>
+        <span class="ov-kpi-l">Instrumenter</span>
+      </button>
     </div>
 
     <div class="stat-card ov-block">
@@ -615,6 +627,9 @@ export function renderDashboard(el, {
         case "tech": return explore?.openTeknologi();
         case "subgenres": return explore?.openSubgenreList();
         case "plateselskaper": return explore?.openPlateselskaper?.();
+        case "historier": return explore?.openHistorier?.();
+        case "kilder": return explore?.openReferanser?.();
+        case "instrumenter": return explore?.openInstrumenter?.();
         // Koblingene har ingen egen visning: nøkkeltallet åpner Mangler (der
         // lista står), folder den ut og ruller ned til den.
         case "edges": {
