@@ -6,7 +6,8 @@
 // ============================================================================
 
 import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts } from "../data/store.js";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts, runMigrationPlan } from "../data/store.js";
+import { planSubRename } from "../sjangre/genre-migrate.js";
 import { flyttPodkast } from "../felles/podkast-rekkefolge.js";
 import { resolveMainDesc } from "../sjangre/genealogy.js";
 import { dropboxDirectUrl, escapeHtml, buildKilderList } from "../felles/util.js";
@@ -28,7 +29,7 @@ const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" 
 import { wireAllLinks } from "../felles/linkify.js";
 import { $ } from "../data/shared.js";
 import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "../ui/row-editor.js";
-import { melding, bekreft, setupModal, modalOpen } from "../ui/ui-modal.js";
+import { melding, bekreft, setupModal, modalOpen, sporTekst } from "../ui/ui-modal.js";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -179,6 +180,10 @@ export function openSingleSubgenreModal(subgenreId, level = "sub") {
     if (level === "main") $("#ss-lytt").value = (resolved.lytt || []).join("\n");
   }
   buildUsikreRows(Array.isArray(resolved.usikre) ? resolved.usikre : []);
+  // Navnebytte (v6.90) bare for frie undersjangre; treets sjangre bytter navn
+  // i sjangertre-editoren.
+  const rename = $("#ss-rename");
+  if (rename) rename.hidden = level !== "sub";
   const modal = $("#modal-subgenre-single");
   modal.dataset.subgenre = subgenreId;
   modal.dataset.level = level;
@@ -312,6 +317,8 @@ export function setupSubgenreSingleSave() {
     if (!usikreRows.children.length) $("#ss-usikre-wrap").hidden = true;
   });
 
+  $("#ss-rename")?.addEventListener("click", () => gaNyttNavnUndersjanger($("#modal-subgenre-single").dataset.subgenre));
+
   $("#ss-save").addEventListener("click", async () => {
     const modal = $("#modal-subgenre-single");
     const subgenreId = modal.dataset.subgenre;
@@ -351,6 +358,37 @@ export function setupSubgenreSingleSave() {
       msg.className = "form-msg error";
     }
   });
+}
+
+// Navnebytte på en fri undersjanger (v6.90, brukervalg 2026-10-13: «Motown» ble
+// «Motown Sound», så den ikke deler navn med plateselskapet). Planen
+// (planSubRename) vises før noe skrives, og alt skrives i én atomisk batch,
+// som navnebyttet i sjangertre-editoren.
+async function gaNyttNavnUndersjanger(fra) {
+  if (!fra) return;
+  const til = await sporTekst(`Nytt navn på undersjangeren «${fra}». Artistene, beskrivelsen, sjekken og notatene følger med.`, fra,
+    { tittel: "Gi nytt navn", ok: "Vis hva som endres" });
+  if (til == null || String(til).trim() === fra) return;
+  const plan = planSubRename({
+    tree: state.content?.genealogy || null,
+    artists: state.artists || [],
+    genreDescs: state.genreDescs || {},
+    content: state.content || {},
+    teacherChecks: state.teacherChecks || {},
+    pendingEdits: state.pendingEdits || [],
+    notater: state.notater || {},
+  }, fra, til);
+  if (plan.feil.length) { melding(plan.feil.join("\n\n")); return; }
+  const linjer = plan.ops.map((o) => `· ${o.hva}`).join("\n");
+  const tillegg = plan.advarsler.length ? `\n\n${plan.advarsler.join("\n\n")}` : "";
+  if (!(await bekreft(`${linjer}${tillegg}`, { tittel: `«${fra}» blir «${String(til).trim()}»`, ja: "Bytt navn" }))) return;
+  try {
+    await runMigrationPlan(plan.ops);
+    closeAdminModal("modal-subgenre-single");
+    melding(`Undersjangeren heter nå «${String(til).trim()}».`);
+  } catch (err) {
+    melding(`Navnebyttet ble ikke gjort (${err?.message || err}). Ingenting er endret, siden alt skrives samlet.`);
+  }
 }
 
 export function setupDecadeSingleSave() {

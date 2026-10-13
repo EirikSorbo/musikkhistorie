@@ -301,6 +301,138 @@ export function planGenreRename(state, fra, til) {
 }
 
 // ----------------------------------------------------------------------------
+//  Navnebytte på en FRI undersjanger (v6.90, brukervalg 2026-10-13)
+// ----------------------------------------------------------------------------
+//  Frie undersjangre har ingen node i treet, men navnet er like fullt en
+//  identitet:
+//    · artists             subGenre-taggene (og mainGenre, der frie tagger også står)
+//    · artists             lytteeksemplenes genre
+//    · genreDescriptions   dokument-ID-en (sub-nivået)
+//    · config/teacherChecks  subgenres (sjekken følger med)
+//    · pendingEdits        beskrivelsesforslag (entityId) og artistforslagenes tagger
+//    · notater             «undersjanger:<navn>» og «sjanger:<navn>»
+//  Første bruk: «Motown» ble «Motown Sound», så undersjangeren ikke lenger
+//  deler navn med plateselskapet og tar lenkene fra det i tekstene.
+//  Lærerens sjekk på artistkortene røres ikke: bare navnet på taggen endres.
+export function planSubRename(state, fra, til) {
+  const feil = [], advarsler = [], ops = [];
+  const gammelt = String(fra ?? "").trim();
+  const nyttNavn = String(til ?? "").trim();
+  const artister = state?.artists || [];
+  const noder = Array.isArray(state?.tree?.nodes) ? state.tree.nodes : [];
+  const descs = state?.genreDescs || {};
+  const tagger = (a) => [...(Array.isArray(a.mainGenre) ? a.mainGenre : []), ...(Array.isArray(a.subGenre) ? a.subGenre : [])];
+
+  const tagget = artister.filter((a) => tagger(a).some((g) => lik(g, gammelt)));
+  const eksempler = artister.filter((a) =>
+    (Array.isArray(a.musicExamples) ? a.musicExamples : []).some((e) => lik(e?.genre, gammelt)));
+  const descNokkel = Object.keys(descs).find((k) => lik(k, gammelt) && descs[k]?.sub) || null;
+
+  if (!nyttNavn) feil.push("Det nye navnet er tomt.");
+  if (nyttNavn.includes("/")) feil.push("Navnet kan ikke inneholde «/»: navnet er dokument-ID i genreDescriptions, og Firestore forbyr det. Bruk «&».");
+  if (gammelt === nyttNavn) feil.push("Det nye navnet er det samme som det gamle.");
+  if (noder.some((n) => lik(n.l, gammelt))) feil.push(`«${gammelt}» er en sjanger i treet. Den får nytt navn i sjangertre-editoren.`);
+  if (!tagget.length && !eksempler.length && !descNokkel) feil.push(`Fant ingen undersjanger som heter «${gammelt}».`);
+  const kollisjon = noder.find((n) => lik(n.l, nyttNavn) || lik(n.g, nyttNavn));
+  if (kollisjon) feil.push(`«${nyttNavn}» er allerede navnet på en sjanger i treet.`);
+  if (Object.keys(descs).some((k) => lik(k, nyttNavn) && descs[k]?.sub)
+      || artister.some((a) => tagger(a).some((g) => lik(g, nyttNavn)))) {
+    feil.push(`«${nyttNavn}» finnes allerede som undersjanger. Slå dem sammen for hånd først.`);
+  }
+  if (feil.length) return { ops: [], feil, advarsler };
+
+  const bytt = (liste) => {
+    const ut = [];
+    for (const g of liste) { const v = lik(g, gammelt) ? nyttNavn : g; if (!ut.includes(v)) ut.push(v); }
+    return ut;
+  };
+
+  // 1) Beskrivelsen. Bare sub-nivået flyttes; har dokumentet andre nivåer
+  //    (en sjanger eller metasjanger med samme navn), blir de stående.
+  if (descNokkel) {
+    const d = descs[descNokkel];
+    ops.push(op("doc.merge", "genreDescriptions", nyttNavn, { sub: d.sub },
+      `Beskrivelsen flyttes til «${nyttNavn}»`));
+    if (d.main || d.meta || d.story) {
+      ops.push(op("field.delete", "genreDescriptions", descNokkel, { felt: "sub" },
+        `«${descNokkel}» beholdes for de andre nivåene på samme navn`));
+    } else {
+      ops.push(op("doc.delete", "genreDescriptions", descNokkel, null,
+        `Det gamle beskrivelsesdokumentet «${descNokkel}» slettes`));
+    }
+  } else {
+    advarsler.push(`«${gammelt}» har ingen beskrivelse ennå. Ingenting å flytte.`);
+  }
+
+  // 2) Artistene: taggene og lytteeksemplene, i én skriving per artist.
+  for (const a of new Set([...tagget, ...eksempler])) {
+    const data = {};
+    if ((a.mainGenre || []).some((g) => lik(g, gammelt))) data.mainGenre = bytt(a.mainGenre);
+    if ((a.subGenre || []).some((g) => lik(g, gammelt))) data.subGenre = bytt(a.subGenre);
+    if ((a.musicExamples || []).some((e) => lik(e?.genre, gammelt))) {
+      data.musicExamples = a.musicExamples.map((e) => (lik(e?.genre, gammelt) ? { ...e, genre: nyttNavn } : e));
+    }
+    ops.push(op("doc.merge", "artists", a.id, data, `Artist: ${a.name}`));
+  }
+
+  // 3) Sjekken følger med.
+  const sjekket = state?.teacherChecks?.subgenres || [];
+  if (sjekket.some((g) => lik(g, gammelt))) {
+    ops.push(op("doc.merge", "config", "teacherChecks", { subgenres: bytt(sjekket) },
+      "Sjekken følger med"));
+  }
+
+  // 4) Forslag i køen.
+  for (const e of state?.pendingEdits || []) {
+    if (e.entityType === "subgenre" && lik(e.entityId, gammelt)) {
+      ops.push(op("doc.merge", "pendingEdits", e.id, { entityId: nyttNavn, entityName: nyttNavn },
+        "Åpent beskrivelsesforslag følger med"));
+      continue;
+    }
+    if (e.entityType !== "artist") continue;
+    const f = e.proposedFields || {};
+    const felter = {};
+    for (const k of ["mainGenre", "subGenre"]) {
+      if (Array.isArray(f[k]) && f[k].some((g) => lik(g, gammelt))) felter[k] = bytt(f[k]);
+    }
+    if (Array.isArray(f.musicExamples) && f.musicExamples.some((m) => lik(m?.genre, gammelt))) {
+      felter.musicExamples = f.musicExamples.map((m) => (lik(m?.genre, gammelt) ? { ...m, genre: nyttNavn } : m));
+    }
+    if (Object.keys(felter).length) {
+      ops.push(op("doc.merge", "pendingEdits", e.id, { proposedFields: { ...f, ...felter } },
+        `Artistforslag «${e.entityName || e.entityId}» får det nye navnet`));
+    }
+  }
+
+  // 5) Lærerens private notater til kortet (nøkkelen er notatNokkel i
+  //    presentasjon-modell.js: typen og navnet, URI-kodet).
+  const notater = state?.notater || {};
+  for (const type of ["undersjanger", "sjanger"]) {
+    const gammelNokkel = `${type}:${encodeURIComponent(gammelt)}`;
+    if (!notater[gammelNokkel]) continue;
+    const nyNokkel = `${type}:${encodeURIComponent(nyttNavn)}`;
+    if (notater[nyNokkel]) {
+      advarsler.push(`Det finnes allerede et notat på «${nyttNavn}», så notatet på «${gammelt}» blir liggende.`);
+      continue;
+    }
+    ops.push(op("doc.replace", "notater", nyNokkel, notater[gammelNokkel], "Notatet ditt følger med"));
+    ops.push(op("doc.delete", "notater", gammelNokkel, null, "Det gamle notatet slettes"));
+  }
+
+  // 6) Kjøreplanene skrives ikke om; et stopp som peker på det gamle navnet,
+  //    står som «finnes ikke lenger» i visningen. Si fra om det.
+  const planer = state?.content?.presentasjoner?.planer || {};
+  const stopp = Object.values(planer)
+    .flatMap((p) => (Array.isArray(p?.stopp) ? p.stopp : []))
+    .map((x) => (typeof x === "string" ? x : x?.vis))
+    .filter((vis) => typeof vis === "string" && /^(under)?sjanger:/.test(vis) && lik(vis.slice(vis.indexOf(":") + 1), gammelt))
+    .length;
+  if (stopp) advarsler.push(`${stopp} stopp i kjøreplanene peker på «${gammelt}». Bytt dem i kjøreplanen etterpå.`);
+
+  return { ops, feil, advarsler };
+}
+
+// ----------------------------------------------------------------------------
 //  Navnebytte på en METASJANGER
 // ----------------------------------------------------------------------------
 export function planMetaRename(state, fra, til) {

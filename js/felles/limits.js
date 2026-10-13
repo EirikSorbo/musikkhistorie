@@ -30,13 +30,15 @@ import { artistSjekketOk } from "./sjekket.js";
 //  ingen underinndeling.
 export const INSTRUMENT_GROUPS = {
   "Vokal": ["Vokal"],
-  "Gitar": ["Gitar", "Banjo"],
+  // Mandolin flyttet hit fra Soloinstrument i v6.90 (brukervalg 2026-10-13):
+  // strengeinstrument med bånd, som banjoen, og de hører sammen i bluegrass.
+  "Gitar": ["Gitar", "Banjo", "Mandolin"],
   "Tangenter": ["Tangenter"],
   "Bass": ["Bass"],
   "Trommer": ["Trommer/perkusjon"],
   "Soloinstrument": [
     "Saksofon", "Trompet", "Strykeinstrumenter",
-    "Klarinett", "Trombone", "Munnspill", "Mandolin",
+    "Klarinett", "Trombone", "Munnspill",
   ],
   "Produksjon": ["Produksjon"],
   "Låtskriving": ["Låtskriving"],
