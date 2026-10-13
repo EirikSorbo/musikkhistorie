@@ -1818,11 +1818,15 @@ body.role-student a.btn.student-back { display: inline-flex; margin-bottom: 14px
    det hadde (1000 px-kortet minus margen, 944 px). Selve kortet blir bredere og
    høyere; barna i det er avgrenset og sentrert, så tittelen, ✕ og innholdet
    står i samme spalte som før. Gjelder ikke skjemaene (modal-wide) eller
-   lerretet (presentasjonen har egne regler). */
+   lerretet (presentasjonen har egne regler).
+   Høyden er fortsatt høyst 85vh (v6.99): fanevinduene (Sjangre, Undersjangre,
+   Varmekart …) står fast 7,5vh ned fra toppen, og med 92vh rakk de lange forbi
+   bunnen av skjermen. Med 85vh er det like mye uskarp ramme over og under, og
+   innholdet ruller inne i kortet. */
 @media (min-width: 1100px) {
   body:not(.presentasjon) .modal.modal-innhold {
     max-width: min(94vw, 1360px);
-    max-height: 92vh;
+    max-height: 85vh;
     min-height: min(78vh, 820px);
     padding: 40px 48px;
   }

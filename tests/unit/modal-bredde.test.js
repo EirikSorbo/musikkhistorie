@@ -114,5 +114,8 @@ test("innholdskortene får større ramme på desktop, med innholdet i samme bred
   assert.ok(blokk.length > 0, "fant ikke desktop-blokka");
   assert.match(blokk, /max-width: min\(94vw, 1360px\);/);
   assert.match(blokk, /min-height: min\(78vh, 820px\);/);
+  // v6.99: aldri høyere enn 85vh. Fanevinduene står 7,5vh ned, så 92vh rakk
+  // forbi bunnen av skjermen, uten uskarp ramme under.
+  assert.match(blokk, /max-height: 85vh;/);
   assert.match(blokk, /body:not\(\.presentasjon\) \.modal\.modal-innhold > \* \{\n\s*max-width: 944px;\n\s*margin-inline: auto;/);
 });
