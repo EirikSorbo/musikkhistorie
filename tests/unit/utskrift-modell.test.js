@@ -670,3 +670,11 @@ test("alleUnder: metasjangeren tar med artistene i sjangrene sine, uansett metas
   for (const v of utvidet) if (v !== "metasjanger:Blues") assert.ok(under.includes(v), `${v} mangler i alleUnder`);
   assert.deepEqual(alleUnder("sjanger:Electric blues", artister).sort(), ["artist:gjest", "artist:muddy"]);
 });
+
+// Audit v5.93 funn 3: en avhuket metasjanger telles ikke med.
+test("tellingen av metasjangre tar ikke med de avhukede", () => {
+  const m = settSammen({ valg: ["metasjanger:Blues"], fravalg: ["metasjanger:Blues"] }, { artists: SYNLIGE, genreDescs: {}, decadeDescs: {}, techItems: [], content: {}, edgeDescs: {} });
+  assert.equal(m.tellinger.metasjangre, 0);
+  const med = settSammen({ valg: ["metasjanger:Blues"], fravalg: [] }, { artists: SYNLIGE, genreDescs: {}, decadeDescs: {}, techItems: [], content: {}, edgeDescs: {} });
+  assert.equal(med.tellinger.metasjangre, 1);
+});

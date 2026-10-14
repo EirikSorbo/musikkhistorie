@@ -37,9 +37,9 @@ import { escapeHtml, wikimediaThumb } from "./felles/util.js";
 import { heatColor, HEAT_NODATA } from "./sjangre/heat-strip.js";
 import { artistStripHtml } from "./ui/artist-strip.js";
 import { DECADES, isVisible } from "./felles/limits.js";
-import { askChoice, kopierTilUtklipp, visLenke } from "./ui/ui-modal.js";
+import { askChoice, kopierTilUtklipp, visLenke, modalCloseTop } from "./ui/ui-modal.js";
 import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./sjangre/genre-model.js";
-import { ytSpillelisteUrl, nyPlanId } from "./visning/presentasjon-modell.js";
+import { ytSpillelisteUrl, ytSpillelisteIder, nyPlanId } from "./visning/presentasjon-modell.js";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -251,6 +251,14 @@ function tegnDel(u) {
   const kode = qrSvg(delLenke(u), 34);
   qr.innerHTML = kode;
   qr.hidden = !kode;
+  // Uten kode (lenka er for lang for en QR-kode, f.eks. etter «Velg alt») skal
+  // teksten ikke be om skanning (audit v5.93 funn 15).
+  const tekst = $("utskrift-del-tekst");
+  if (tekst) {
+    tekst.textContent = kode
+      ? "Vil du skrive ut fra en annen enhet? Kopier lenka og åpne den der, eller skann koden med mobilen. Utvalget og tittelen følger med."
+      : "Vil du skrive ut fra en annen enhet? Kopier lenka og åpne den der. Utvalget og tittelen følger med. Utvalget er for stort til en QR-kode.";
+  }
 }
 
 // Utvalget fra en delt lenke (?u=…&x=…&t=…): skrives inn i nettleseren og
@@ -726,12 +734,15 @@ function siderHtml() {
 // deles lenka (YouTubes tak), én kode per del.
 function spillAlleHtml() {
   const ider = modell.lytteliste.map((l) => l.video).filter(Boolean);
-  if (ider.length < 2) return "";
+  // Ulike videoer, ikke rader: to kort med samme video ga «1 videoer», og hver
+  // del oppga totalen («96 videoer» på delene med 50 og 46). Tallet står nå
+  // per del (audit v5.93 funn 5).
+  if (new Set(ider).size < 2) return "";
   const lenker = ytSpillelisteUrl(ider);
-  const antall = new Set(ider).size;
   return `<div class="h-lytte-alle">${lenker.map((url, i) => {
     const kode = qrSvg(url, 26);
     const del = lenker.length > 1 ? ` (del ${i + 1} av ${lenker.length})` : "";
+    const antall = (ytSpillelisteIder(url) || []).length;
     return `<div class="h-qr-rad">${kode}<div><p class="h-lytte-alle-tekst"><strong>Spill hele lista${del}</strong> ${antall} videoer på YouTube${kode ? ": skann koden med mobilen." : "."}</p>${kode ? "" : `<p class="h-url">${h(kortUrl(url))}</p>`}</div></div>`;
   }).join("")}</div>`;
 }
@@ -1084,6 +1095,9 @@ function init() {
   lesUtvalgFraUrl();
   initUtskriftValg({ hentData: () => state });
   koble();
+  // Esc lukker øverste dialog, som på de andre sidene («Tømme utskriften?»,
+  // «Velg alt», «Lag kjøreplan»). Siden manglet lytteren (audit v5.93 funn 13).
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") modalCloseTop(); });
   document.addEventListener(UTSKRIFT_HENDELSE, planleggTegning);
   onGenreModelChanged(planleggTegning);
   planleggTegning();

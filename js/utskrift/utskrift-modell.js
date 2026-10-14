@@ -880,7 +880,9 @@ export function settSammen(utvalg, data = {}, valg = {}) {
   ].sort((a, b) => rekke.get(a.vis) - rekke.get(b.vis));
 
   const tellinger = {
-    metasjangre: metaValgt.length,
+    // Bare metasjangrene som er med: en avhuket telte også, og forsiden og
+    // statuslinja sa «2 metasjangre» når én var med (audit v5.93 funn 3).
+    metasjangre: metaValgt.filter((n) => !bort.has(`${META_PREFIKS}${n}`)).length,
     sjangre: medBare(sjangerKort).length, artister: medBare(artistKort).length, undersjangre: medBare(underValgt).length,
     tiaar: tiaarMed.length, innovasjoner: medBare(techKort).length, instrumenter: instrMed.length,
     historier: familieListe.filter((F) => F.historie).length, sider: sideMed.length,
