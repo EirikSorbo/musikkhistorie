@@ -25,6 +25,7 @@
 // ============================================================================
 
 import { STORY_ORDER, STORY_SKJULT } from "../felles/story-format.js";
+import { BATCH_MAX } from "../felles/limits.js";
 
 const lower = (s) => String(s ?? "").trim().toLowerCase();
 const lik = (a, b) => lower(a) === lower(b) && lower(a) !== "";
@@ -872,8 +873,8 @@ export function byggMetaTre(t, { gammel, navn, fam, kartPlass, hintPlass }) {
 // trygge endringene er lettere å holde riktig enn to.
 
 // Firestore tar maks 500 operasjoner i én batch. En plan over det kan ikke
-// utføres atomisk, og da vil vi heller si fra enn å skrive halvveis.
-export const BATCH_MAX = 500;
+// utføres atomisk, og da vil vi heller si fra enn å skrive halvveis. Tallet
+// (BATCH_MAX) bor i js/felles/limits.js fra v7.03.
 export function planPasserIBatch(plan) {
   return (plan?.ops?.length || 0) <= BATCH_MAX;
 }

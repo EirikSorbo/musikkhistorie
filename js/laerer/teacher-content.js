@@ -56,18 +56,9 @@ function renderDecadeSingleSections(decadeId, desc, isSociety) {
   if (kilderEl) kilderEl.innerHTML = buildKilderList(desc.kilder, "Kilder");
 }
 
-// Sist viste tiår — huskes innen økten, så Samfunn/Teknologi-kortene åpner
-// der læreren slapp (samme oppførsel som studentsiden).
-let lastDecade = null;
-
-export function openDecadeAdmin(mode) {
-  openSingleDecadeModal(lastDecade ?? DECADES[0], mode);
-}
-
 export function openSingleDecadeModal(decadeId, mode) {
   if (mode) teacherContextMode = mode;
   const d = Number(decadeId);
-  lastDecade = d;
   const desc = state.decadeDescs[String(d)] || {};
   const modal = $("#modal-decade-single");
   const isSociety = teacherContextMode === "society";

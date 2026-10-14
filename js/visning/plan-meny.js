@@ -276,6 +276,12 @@ async function leggTil(planId, vis) {
 
 export function initPlanMeny() {
   aktivId = lesAktiv();
+  // En plan valgt i en tidligere sidevisning har vært i state før, så «borte»
+  // betyr slettet med en gang planene er lastet (v7.03, audit v5.93 funn 4).
+  // Uten dette ble aktivSett aldri sann for en slettet plan, og pilla sto på
+  // «laster …» på hver side. Bare «Ny + bygg på» (settAktivPlan) trenger
+  // ventetiden til snapshotet har tatt igjen skrivingen.
+  aktivSett = !!aktivId;
   onAuthChange((user) => {
     erLaerer = erLaererBruker(user);
     // Visningsknappen i modalhodene vises bare i en lærerøkt (CSS).

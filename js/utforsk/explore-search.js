@@ -140,6 +140,14 @@ export function wireSok() {
     document.addEventListener("keydown", (e) => {
       if (!erSokHurtigtast(e, erSkrivefelt(document.activeElement))) return;
       e.preventDefault();
+      // Står søket alt åpent (fokus på et treff), går S tilbake til feltet med
+      // søket urørt. openSok() tømte det (v7.03, audit v5.93 funn 21).
+      const felt = document.getElementById("sok-felt");
+      if (felt && document.getElementById("modal-sok")?.classList.contains("open")) {
+        felt.focus();
+        felt.setSelectionRange?.(felt.value.length, felt.value.length);
+        return;
+      }
       openSok();
     });
   }

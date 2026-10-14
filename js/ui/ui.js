@@ -805,7 +805,9 @@ function playlistRows(list, sj = null) {
   for (const a of list) {
     const nameLow = a.name.toLowerCase();
     for (const m of (a.musicExamples || [])) {
-      if (!exOk(m)) continue;
+      // Bare lenker som kan spilles (http/https), som tiårslistene under: en
+      // adresse som «javascript:» ble ellers en klikkbar lenke i lista.
+      if (!exOk(m) || !safeUrl(m.url)) continue;
       const key = `${nameLow}|${(m.label || m.url).toLowerCase()}`;
       if (seen.has(key)) continue;
       seen.add(key);

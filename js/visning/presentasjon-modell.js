@@ -605,6 +605,23 @@ export function innsettingsIndeks(pos, antall) {
   return Math.min(planPosisjon(pos, n).pos, n);
 }
 
+// Stopp som er lagt til planen et annet sted mens editoren sto åpen (v7.03,
+// audit v5.93 funn 5): «Bygg på», plussknappen eller tasten + fra et kort som
+// er åpnet med «Vis». Editoren lagrer hele lista, så uten dette forsvant de
+// uten varsel. `grunnlag` er stoppene (vis) planen hadde da kladden ble tatt,
+// `naa` planens stopp nå, `kladd` editorens stopp. Et stopp regnes som nytt
+// når det verken var der fra før eller står i kladden.
+export function stoppLagtTilSiden(grunnlag, naa, kladd) {
+  const kjent = new Set([...(grunnlag || []), ...(kladd || []).map((s) => s?.vis)]);
+  const ut = [];
+  for (const s of naa || []) {
+    if (!s?.vis || kjent.has(s.vis)) continue;
+    kjent.add(s.vis);
+    ut.push({ ...s });
+  }
+  return ut;
+}
+
 // Planene med `stopp` satt inn i planen `planId` på plass `indeks` (klemmes
 // til lista). Nye objekter, inndata røres ikke, så avspillerens egen kopi og
 // state-snapshotet aldri endres i det stille. Kaster når planen er borte.

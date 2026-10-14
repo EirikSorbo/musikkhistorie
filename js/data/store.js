@@ -45,8 +45,7 @@ import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "../felle
 import { PROPOSABLE_KEYS } from "../forslag/proposal-fields.js";
 import { sorterPodkaster } from "../felles/podkast-rekkefolge.js";
 import { mergeHeatRows } from "./import-format.js";
-import { BATCH_MAX } from "../sjangre/genre-migrate.js";
-import { DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "../felles/limits.js";
+import { BATCH_MAX, DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "../felles/limits.js";
 
 // Normaliserings-/bygge-logikken bor i artist-normalize.js (ren modul,
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den

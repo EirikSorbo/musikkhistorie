@@ -24,7 +24,7 @@
 //  vise riktig tilstand også for kort som følger med en metasjanger.
 // ============================================================================
 
-import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, barnAv } from "./utskrift-modell.js";
+import { kanoniskVis, normaliserUtvalg, normaliserLagret, normaliserTittel, planTilUtvalg, utvidUtvalg, alleUnder } from "./utskrift-modell.js";
 import { isVisible } from "../felles/limits.js";
 import { escapeHtml } from "../felles/util.js";
 
@@ -93,14 +93,14 @@ export function harMed(vis) {
 }
 
 // Legger til ett eller flere mål. Et nytt valg opphever bortvalget av posten
-// og av det den drar med seg (barnAv). Returnerer hvor mange som var nye.
+// og av det den drar med seg (alleUnder). Returnerer hvor mange som var nye.
 export function leggTil(vis) {
   const liste = normaliserUtvalg(Array.isArray(vis) ? vis : [vis]);
   const u = lesUtvalg();
   const nye = normaliserUtvalg([...u.valg, ...liste]);
   const lagt = nye.length - u.valg.length;
   const artister = synligeArtister();
-  const opphev = new Set(liste.flatMap((v) => [v, ...barnAv(v, artister)]));
+  const opphev = new Set(liste.flatMap((v) => [v, ...alleUnder(v, artister)]));
   const fravalg = u.fravalg.filter((v) => !opphev.has(v));
   if (lagt || fravalg.length !== u.fravalg.length) {
     u.valg = nye;
@@ -111,8 +111,8 @@ export function leggTil(vis) {
 }
 
 // Avkryssingen i utskriftspanelet (v5.59). Av: posten og alt den drar med
-// seg (barnAv: sjangrene og artistene til en metasjanger, artistene til en
-// sjanger) huskes som bortvalgt. Posten blir stående i valget, så den og
+// seg (alleUnder: sjangrene til en metasjanger og artistene til sjangrene og
+// metasjangeren, artistene til en sjanger) huskes som bortvalgt. Posten blir stående i valget, så den og
 // barna står igjen i lista som avhukede alternativer. På: bortvalget
 // oppheves for posten og barna; `eksplisitt` (metasjangerraden, som aldri
 // utledes) legger posten inn i valget om den ikke alt står der.
@@ -120,7 +120,7 @@ export function huk(vis, paa, { eksplisitt = false } = {}) {
   const k = kanoniskVis(vis);
   if (!k) return;
   const u = lesUtvalg();
-  const berort = new Set([k, ...barnAv(k, synligeArtister())]);
+  const berort = new Set([k, ...alleUnder(k, synligeArtister())]);
   if (paa) {
     u.fravalg = u.fravalg.filter((v) => !berort.has(v));
     if (eksplisitt && !u.valg.includes(k)) u.valg = [...u.valg, k];

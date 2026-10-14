@@ -152,5 +152,5 @@ test("delposter (v5.51): navn + punkter er en delpost, et ekte kort er det ikke"
   // artister av dem.
   const imp = les("js/laerer/teacher-import.js");
   assert.match(imp, /const delposter = toAdd\.filter\(erDelpost\);\n  if \(delposter\.length\) \{[^]*?return false;/);
-  assert.match(imp, /if \(erDelpost\(imp\)\) uteliggere\.push\(imp\.name\);\n      else mergeState\.newArtists\.push\(imp\);/);
+  assert.match(imp, /if \(erDelpost\(imp\) \|\| !String\(imp\.metaGenre \?\? ""\)\.trim\(\)\) uteliggere\.push\(imp\.name\);\n      else mergeState\.newArtists\.push\(imp\);/);
 });

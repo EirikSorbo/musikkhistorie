@@ -283,7 +283,9 @@ function oppdaterTeller() {
 // huske planen. Navnet slås opp med samme etikett som editoren bruker;
 // etter siste stopp står oppsummeringskortet, og på det står ingenting.
 function oppdaterNeste() {
-  const el = document.getElementById("pres-neste");
+  // Egen id (v7.03, audit v5.93 funn 6): med samme id som ›-knappen fant
+  // getElementById knappen, og pila ble byttet ut med «neste: …».
+  const el = document.getElementById("pres-neste-tekst");
   if (!el) return;
   if (!plan || !plan.stopp.length) { el.hidden = true; return; }
   const p = planPosisjon(stoppIdx, plan.stopp.length);
@@ -911,7 +913,7 @@ function byggBar() {
       <button type="button" class="pres-knapp pres-teller-knapp" id="pres-teller" title="Til stoppet (T)">…</button>
       <button type="button" class="pres-knapp" id="pres-neste" title="Neste stopp (PageDown / ↑)" aria-label="Neste stopp">›</button>
       <button type="button" class="pres-knapp pres-leggtil" id="pres-leggtil" hidden aria-label="Legg til i kjøreplanen her">${IKON.pluss}</button>
-      <span class="pres-neste" id="pres-neste" hidden></span>
+      <span class="pres-neste" id="pres-neste-tekst" hidden></span>
     </span>
     <span class="pres-nivaa" role="group" aria-label="Detaljnivå">
       ${[1, 2, 3].map((n) => `<button type="button" class="pres-knapp" data-nivaa="${n}" title="${NIVAA_NAVN[n]} (tast ${n})">${n}</button>`).join("")}

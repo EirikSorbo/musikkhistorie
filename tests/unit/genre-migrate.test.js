@@ -19,8 +19,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   findReferences, planGenreRename, planMetaRename, planGenreDelete, planMetaDelete,
-  planPasserIBatch, BATCH_MAX, byggMetaTre, planHeatCleanup,
+  planPasserIBatch, byggMetaTre, planHeatCleanup,
 } from "../../js/sjangre/genre-migrate.js";
+import { BATCH_MAX } from "../../js/felles/limits.js";
 
 // --- En liten, men komplett verden ------------------------------------------
 function lagState(overstyr = {}) {

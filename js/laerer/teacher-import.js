@@ -799,8 +799,11 @@ async function handleMergeFile(data) {
     );
     if (!existing) {
       // En delpost uten treff blir IKKE en ny artist (v5.51): navnet er
-      // trolig stavet ulikt, og kortet ville bare hatt feltene fra fila.
-      if (erDelpost(imp)) uteliggere.push(imp.name);
+      // trolig stavet ulikt, og kortet ville bare hatt feltene fra fila. Fra
+      // v7.03 (audit v5.93 funn 24) kreves også metasjanger: en rettefil med
+      // beskrivelse, men feilstavet navn, ga ellers et nytt AKTIVT kort uten
+      // metasjanger, sjanger, kjønn og instrument, synlig for studentene.
+      if (erDelpost(imp) || !String(imp.metaGenre ?? "").trim()) uteliggere.push(imp.name);
       else mergeState.newArtists.push(imp);
       continue;
     }
@@ -825,7 +828,7 @@ async function handleMergeFile(data) {
   }
 
   if (uteliggere.length) {
-    melding(`${uteliggere.length} navn i fila finnes ikke blant artistene og har for lite innhold til å bli nye artister. ` +
+    melding(`${uteliggere.length} navn i fila finnes ikke blant artistene og har for lite innhold til å bli nye artister (en ny artist må ha metasjanger). ` +
       `De hoppes over:\n\n${uteliggere.slice(0, 20).join(", ")}${uteliggere.length > 20 ? " …" : ""}` +
       "\n\nSjekk stavemåten i fila. Resten importeres som vanlig.");
   }

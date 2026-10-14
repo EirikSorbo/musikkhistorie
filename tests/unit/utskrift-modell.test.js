@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   kanoniskVis, normaliserUtvalg, planTilUtvalg, normaliserLagret, normaliserTittel,
-  settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, heltPensum,
+  settSammen, foreslaaTittel, tellingerTekst, utvidUtvalg, barnAv, alleUnder, heltPensum,
   DELER, STANDARD_DELER, TITTEL_MAKS, UNDERSJANGRE_LOSE, ROTTER,
 } from "../../js/utskrift/utskrift-modell.js";
 import { isVisible } from "../../js/felles/limits.js";
@@ -654,4 +654,19 @@ test("en historie valgt som eget kort står én gang, også med valget på", () 
   const m = settSammen(["historie:Blues", "metasjanger:Blues"], DATA, { ...LAERER, deler: { "meta.historie": true } });
   assert.equal(m.familier.filter((F) => F.historie).length, 1);
   assert.equal(m.tellinger.historier, 1);
+});
+
+// Audit v5.93 funn 1: å huke av en hel metasjanger skal ta alt utvidelsen la
+// til, også artister med en annen metasjanger som har en sjanger i familien
+// (Sheila E. og Louis Jordan sto igjen avkrysset under Jazz). alleUnder er
+// samme mengde som utvidUtvalg, og bortvalget bruker den.
+test("alleUnder: metasjangeren tar med artistene i sjangrene sine, uansett metasjanger", () => {
+  const gjest = { id: "gjest", name: "Gjest", status: "active", metaGenre: "R&B", mainGenre: ["Electric blues"], subGenre: [] };
+  const artister = [...SYNLIGE, gjest];
+  assert.ok(!barnAv("metasjanger:Blues", artister).includes("artist:gjest"), "barnAv er bare første ledd");
+  const under = alleUnder("metasjanger:Blues", artister);
+  assert.ok(under.includes("artist:gjest"));
+  const utvidet = [...utvidUtvalg(["metasjanger:Blues"], [], artister).kilde.keys()].filter((v) => !v.startsWith("tiår:"));
+  for (const v of utvidet) if (v !== "metasjanger:Blues") assert.ok(under.includes(v), `${v} mangler i alleUnder`);
+  assert.deepEqual(alleUnder("sjanger:Electric blues", artister).sort(), ["artist:gjest", "artist:muddy"]);
 });

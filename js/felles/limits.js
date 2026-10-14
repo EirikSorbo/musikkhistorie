@@ -13,6 +13,12 @@
 import { resolveSpan } from "./timeline-lanes.js";
 import { artistSjekketOk } from "./sjekket.js";
 
+// Firestore tar maks 500 operasjoner i én batch (v7.03: flyttet hit fra
+// js/sjangre/genre-migrate.js). store.js og migreringsplanene leser samme tall,
+// og store.js slipper å dra hele migreringsmodulen (46 kB) inn på alle sidene
+// bare for denne konstanten.
+export const BATCH_MAX = 500;
+
 // ----------------------------------------------------------------------------
 //  INSTRUMENT-VOKABULARET — to nivåer, som sjangertreet
 // ----------------------------------------------------------------------------

@@ -111,3 +111,26 @@ test("student.html har lukk-knappen og beholderen, ikke det gamle skjemaet", () 
   assert.match(html, /<div id="artist-skjema">/);
   assert.doesNotMatch(html, /id="add-form"/);
 });
+
+// Lengdegrensene i skjemaet (v7.03) må være de samme som i firestore.rules:
+// over grensen avviser reglene innsendingen, og studenten fikk bare en
+// uforståelig feilmelding. Testen leser begge filene, så en endring i den ene
+// uten den andre feiler.
+test("skjemaets lengdegrenser for studenter følger firestore.rules", () => {
+  const skjema = readFileSync(new URL("../../js/ui/artist-skjema.js", import.meta.url), "utf8");
+  const regler = readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8");
+  const blokk = skjema.slice(skjema.indexOf("const STUDENT_MAKS = {"), skjema.indexOf("const STUDENT_MAKS_UNDERSJANGRE"));
+  const grenser = Object.fromEntries([...blokk.matchAll(/(\w+): \{ maks: (\d+)/g)].map((m) => [m[1], Number(m[2])]));
+  assert.deepEqual(Object.keys(grenser).sort(), ["description", "geography", "imageCredit", "imageUrl", "name", "recordLabel"]);
+  const artist = regler.slice(regler.indexOf("function artistInnholdOk"), regler.indexOf("function erReturInnsending"));
+  assert.match(artist, new RegExp(`name\\.size\\(\\) <= ${grenser.name}`));
+  for (const k of ["description", "geography", "recordLabel", "imageUrl", "imageCredit"]) {
+    assert.match(artist, new RegExp(`strOk\\("${k}", ${grenser[k]}\\)`), `artists: ${k}`);
+  }
+  const forslag = regler.slice(regler.indexOf("function forslagOk"));
+  for (const k of ["name", "description", "geography", "recordLabel", "imageUrl", "imageCredit"]) {
+    assert.match(forslag, new RegExp(`capOk\\("${k}", ${grenser[k]}\\)`), `pendingEdits: ${k}`);
+  }
+  assert.match(skjema, /const STUDENT_MAKS_UNDERSJANGRE = 20;/);
+  assert.match(artist, /listOk\("subGenre", 20\)/);
+});

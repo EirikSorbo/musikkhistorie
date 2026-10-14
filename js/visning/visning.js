@@ -33,7 +33,7 @@ import { getState } from "../data/app-state.js";
 import { escapeHtml } from "../felles/util.js";
 import { onAuthChange, savePlan, deletePlan } from "../data/store.js";
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange } from "./presentasjon-modell.js";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, stoppLagtTilSiden } from "./presentasjon-modell.js";
 import { abonnerPaminnelser, vedPaminnelseEndring, paminnelserFor, paminnelserLastet, paminnelseFeil, lagrePaminnelser } from "./paminnelser.js";
 import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js";
@@ -359,10 +359,13 @@ async function lagre() {
   if (!tittel) { msg("Kjøreplanen trenger en tittel.", false); return; }
   if (!kladd.stopp.length) { msg("Legg til minst ett stopp før du lagrer.", false); return; }
   if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }   // kladden beholdes
+  // Stopp lagt til planen mens editoren sto åpen, tas med sist i stedet for
+  // å bli skrevet over (audit v5.93 funn 5).
+  const lagtTil = stoppLagtTilSiden(kladd.grunnlag, planerNaa()[kladd.id]?.stopp, kladd.stopp);
   const plan = {
     tittel,
     laget: planerNaa()[kladd.id]?.laget || new Date().toISOString(),
-    stopp: kladd.stopp,
+    stopp: [...kladd.stopp, ...lagtTil],
   };
   const pam = paminnelserTilLagring();
   if (pam.feil) { msg(pam.feil, false); return; }
@@ -380,7 +383,9 @@ async function lagre() {
       return;
     }
   }
-  msg("Kjøreplanen er lagret.");
+  msg(lagtTil.length
+    ? `Kjøreplanen er lagret. ${lagtTil.length === 1 ? "Ett stopp" : `${lagtTil.length} stopp`} som ble lagt til mens du redigerte, står sist i planen.`
+    : "Kjøreplanen er lagret.");
 }
 
 function leggTilStopp() {
@@ -610,7 +615,7 @@ function koblVindu(m) {
       }
       const p = planerNaa()[id];
       if (!p) return;
-      kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false };
+      kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })), grunnlag: p.stopp.map((s) => s.vis), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false };
       renderKladd();
       return;
     }

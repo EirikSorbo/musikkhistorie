@@ -224,6 +224,21 @@ const FELTNAVN = {
 // Steget hvert obligatorisk felt står i.
 const FELTSTEG = { name: 0, gender: 0, metaGenre: 1, instrument: 1, influenceStart: 1, kilder: 4, proposedBy: 4 };
 
+// Lengdegrensene i firestore.rules for studentenes innsendinger og
+// endringsforslag (artistInnholdOk og forslagOk). Over grensen avviser reglene
+// skrivingen, og studenten fikk bare «Missing or insufficient permissions».
+// Sjekkes derfor her, med en melding som sier hva som er for langt (v7.03).
+// Læreren skriver uten disse grensene.
+const STUDENT_MAKS = {
+  name: { maks: 120, navn: "Navn", steg: 0 },
+  geography: { maks: 200, navn: "Geografisk tilhørighet", steg: 0 },
+  recordLabel: { maks: 200, navn: "Plateselskap", steg: 1 },
+  description: { maks: 5000, navn: "Begrunnelsen", steg: 2 },
+  imageUrl: { maks: 2000, navn: "Bilde-URL", steg: 4 },
+  imageCredit: { maks: 300, navn: "Bildekrediteringen", steg: 4 },
+};
+const STUDENT_MAKS_UNDERSJANGRE = 20;
+
 // Utkast fra skjemaet i v6.57–v6.95 (feltene lagret med student.html-id-ene).
 // Oversettes, så ingen student mister et halvferdig forslag ved oppdateringen.
 const V1_FELT = {
@@ -378,6 +393,13 @@ export function lagArtistSkjema(beholder, cfg) {
         }
       }
     });
+    if (!laerer) {
+      for (const [k, g] of Object.entries(STUDENT_MAKS)) {
+        const n = String(v[k] ?? "").length;
+        if (n > g.maks) legg(felt(k), `${g.navn} kan være høyst ${g.maks} tegn (er ${n}).`, g.steg);
+      }
+      if (v.subGenre.length > STUDENT_MAKS_UNDERSJANGRE) legg(felt("subGenre"), `Høyst ${STUDENT_MAKS_UNDERSJANGRE} undersjangre (er ${v.subGenre.length}).`, 1);
+    }
     if (v.birthYear && v.deathYear && v.deathYear < v.birthYear) legg(felt("deathYear"), "Dødsår kan ikke være før fødselsår.", 0);
     if (v.influenceStart && v.influenceEnd && v.influenceEnd < v.influenceStart) legg(felt("influenceEnd"), "«Innflytelse til»-året kan ikke være før «fra»-året.", 1);
     // Rader med innhold, men uten gyldig lenke eller tekst, ville blitt

@@ -558,10 +558,6 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); }
 .btn.ghost:hover { color: var(--text); }
 .btn.small { padding: 6px 11px; font-size: 0.82rem; border-radius: calc(var(--radius-m) - 1px); }
-/* .compact: for knapperader med tre like brede knapper (f.eks. Undersjangre/
-   Tidslinje/Varmekart i sjanger-kortet) — mindre padding/tekst og min-width:0
-   så de tre får plass på smale skjermer (iPhone) uten at siste går ut. */
-.btn.compact { padding: 9px 8px; font-size: 0.86rem; min-width: 0; white-space: nowrap; }
 .btn.danger { color: var(--danger); border-color: var(--danger-line-soft); }
 .btn.danger:hover { border-color: var(--danger); background: var(--danger-bg-soft); }
 
@@ -2294,9 +2290,6 @@ body:not(.presentasjon) :is(#modal-artistliste, #modal-spilleliste) > .modal > *
 /* Skyver en knapp helt ut til høyre i raden (f.eks. «Foreslå en artist»). */
 .filter-actions .push-right { margin-left: auto; }
 
-/* Sjanger-/undersjanger-boblene: luft både til sidene og mellom radene — de lå
-   tidligere klistret inntil hverandre (lista hadde ingen egen regel). */
-.subgenre-tag-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
 /* Seksjonene har verken ramme (A2, v6.60) eller strek over etiketten (v6.61, brukerønske): luften skiller dem. */
 .section-label { font-size: 0.8rem; color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin: 0 0 10px; }
@@ -2463,13 +2456,6 @@ body:not(.presentasjon) :is(#modal-artistliste, #modal-spilleliste) > .modal > *
   .dash-grid:has(> :nth-child(6):last-child) { grid-template-columns: minmax(150px, 240px); }
 }
 
-/* «Rediger pensumet» i Oversikt-modalen: få kort (Sjangertreet, Kjøreplaner)
-   som ellers ville strukket seg over hele modalbredden og lest som bannere.
-   Samme tak (240 px) som seks-korts-griden, side om side og venstrestilt
-   under kickeren. Var én kolonne mens det bare fantes ett kort; da kom
-   Kjøreplaner (v5.25) under i stedet for ved siden av (rettet v5.39).
-   MÅ stå etter .dash-grid: lik spesifisitet, så kilderekkefølgen avgjør. */
-.dash-grid--smale { grid-template-columns: repeat(auto-fill, minmax(150px, 240px)); justify-content: start; }
 /* Fire kort: studentenes hub fra v5.20 (tidslinje, slektstre, varmekart og
    sjangerperioder). auto-fit ga 3+1 i hub-modalen, der 584 px innhold har plass
    til tre kort à 150 px. To og to gir like rader, med samme tak som over.
@@ -2920,7 +2906,6 @@ body.is-teacher #gate { display: none; }
   .modal { padding: 16px 14px; }
   .btn { padding: 8px 13px; }
   .btn.small { padding: 5px 9px; font-size: 0.78rem; }
-  .btn.compact { padding: 8px 5px; font-size: 0.79rem; }
 }
 
 .artist-link, .tech-link, .genre-link, .plateselskap-link { cursor: pointer; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
@@ -4056,6 +4041,10 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .yt-tidrad input.yt-tid-feil { border-color: var(--danger); }
 .yt-tid-hint { font-size: 0.8rem; }
 .yt-tidrad[hidden] { display: none; }
+/* Starttiden er et planleggingsverktøy for kjøreplanene («la stoppet starte
+   der»), så raden står bare i lærerøkter (body.laerer-okt, plan-meny.js).
+   Studentene så den på hvert lytteeksempel (v7.03, audit v5.93 funn 20). */
+body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
 
 /* Kjøreplan-editoren (v5.25, lærersiden) og telleren i verktøylinja. */
 .pres-adm-rad {

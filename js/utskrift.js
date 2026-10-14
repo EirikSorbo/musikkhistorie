@@ -848,6 +848,15 @@ function tegnHefte(u) {
   ].join("");
   settSidestil(t);
   pdfTittel = `${t} – Utskrift`;
+  oppdaterAnslag();
+}
+
+// Sidetallene i innholdsfortegnelsen, statuslinja og knappeteksten, målt på
+// heftet slik det står. Skilt ut fra tegnHefte (v7.03, audit v5.93 funn 2):
+// «Lagre som PDF» måler på nytt når bildene er lastet, uten å tegne heftet
+// på nytt. En ny tegning satte miniatyradressene tilbake på bildene, og de
+// som bare finnes i full størrelse, ble tomme rammer i PDF-en.
+function oppdaterAnslag() {
   const anslag = sideanslag();
   fyllSidetall(anslag);
   const sider = anslag?.sider || null;
@@ -877,7 +886,7 @@ async function skrivUt() {
   })));
   await Promise.race([ventet, new Promise((r) => setTimeout(r, 8000))]);
   if (knapp) knapp.disabled = false;
-  tegnHefte(lesUtvalg());   // knappeteksten (sideanslaget) tilbake
+  oppdaterAnslag();   // knappeteksten tilbake, og sidetall med bildene på plass
   window.print();
 }
 

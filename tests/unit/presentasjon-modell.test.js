@@ -645,10 +645,10 @@ test("finpussen er koblet: rader på artistkortet, skalerende tidslinje, kort si
   assert.match(akse, /height: 1\.3em;/);
   assert.doesNotMatch(akse, /height: \d+px/);
   assert.match(css, /\.ai-track \{[^}]*height: 0\.75rem;/);
-  // «Rediger pensumet»: kortene side om side, ikke én kolonne.
-  assert.match(css, /\.dash-grid--smale \{ grid-template-columns: repeat\(auto-fill, minmax\(150px, 240px\)\);/);
   // v6.55 (brukerønske 2026-10-07): «Rediger pensumet» er borte fra Oversikten.
-  // Sjangertre-editoren åpnes fra sin egen flis under Innhold.
+  // Sjangertre-editoren åpnes fra sin egen flis under Innhold. Regelen for de
+  // små kortene der (.dash-grid--smale) ble fjernet som død CSS i v7.03.
+  assert.doesNotMatch(css, /\.dash-grid--smale/);
   const laererHtml = readFileSync(new URL("../../teacher.html", import.meta.url), "utf8");
   assert.doesNotMatch(laererHtml, /id="btn-t-sjangertre"|Rediger pensumet<\/div>/);
   assert.match(laererHtml, /id="btn-t-inn-sjangertre"/);
@@ -1153,4 +1153,44 @@ test("i visningen tar dialogen fokuset, ikke ←-knappen (ingen fokusramme på l
   const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
   assert.match(les("js/ui/ui-modal.js"), /\(\(iVisning \? null : focusables\(el\)\[0\]\) \|\| dialog\)\?\.focus\(\);/);
   assert.match(les("css/styles.css"), /body\.presentasjon \.modal:focus \{ outline: none; \}/);
+});
+
+// Audit v5.93 funn 6: ›-knappen og «neste: …»-feltet hadde samme id, og
+// teksten havnet i knappen. Ingen id skal stå to ganger i verktøylinja.
+test("verktøylinja i visningen har ingen doble id-er", () => {
+  const src = readFileSync(new URL("../../js/visning/presentasjon.js", import.meta.url), "utf8");
+  const ider = [...src.matchAll(/\bid="([a-z0-9-]+)"/g)].map((m) => m[1]);
+  const doble = ider.filter((x, i) => ider.indexOf(x) !== i);
+  assert.deepEqual([...new Set(doble)], []);
+  assert.match(src, /getElementById\("pres-neste-tekst"\)/);
+});
+
+// Audit v5.93 funn 4: en aktiv kjøreplan husket fra en tidligere sidevisning
+// regnes som sett, så en slettet plan avslutter byggingen når planene er
+// lastet, i stedet for å stå på «laster …» for alltid.
+test("en husket aktiv kjøreplan som er slettet, avslutter byggingen", () => {
+  const src = readFileSync(new URL("../../js/visning/plan-meny.js", import.meta.url), "utf8");
+  const init = src.slice(src.indexOf("export function initPlanMeny()"));
+  assert.match(init, /aktivId = lesAktiv\(\);\n[\s\S]*?aktivSett = !!aktivId;/);
+  assert.match(src, /if \(aktivId && aktivSett && planeneLastet\(\) && !plan\) \{ settAktivPlan\(null\); return; \}/);
+});
+
+// Audit v5.93 funn 5: stopp lagt til planen mens editoren sto åpen, skal ikke
+// skrives over når editoren lagrer hele lista.
+test("stoppLagtTilSiden finner stoppene som kom til mens editoren sto åpen", async () => {
+  const { stoppLagtTilSiden } = await import("../../js/visning/presentasjon-modell.js");
+  const grunnlag = ["artist:a", "artist:b"];
+  const naa = [{ vis: "artist:a" }, { vis: "artist:b" }, { vis: "artist:c", nivaa: 2 }, { vis: "artist:c" }];
+  // Kladden har flyttet og fjernet b, og lagt til d selv.
+  const kladd = [{ vis: "artist:a" }, { vis: "artist:d" }];
+  assert.deepEqual(stoppLagtTilSiden(grunnlag, naa, kladd), [{ vis: "artist:c", nivaa: 2 }]);
+  // b ble fjernet i kladden og skal ikke komme tilbake.
+  assert.ok(!stoppLagtTilSiden(grunnlag, naa, kladd).some((s) => s.vis === "artist:b"));
+  // En ny plan (uten grunnlag og uten plan i state) gir ingenting.
+  assert.deepEqual(stoppLagtTilSiden(undefined, undefined, kladd), []);
+  // Stopp kladden alt har, regnes ikke som nye.
+  assert.deepEqual(stoppLagtTilSiden(["artist:a"], [{ vis: "artist:a" }, { vis: "artist:d" }], kladd), []);
+  const src = readFileSync(new URL("../../js/visning/visning.js", import.meta.url), "utf8");
+  assert.match(src, /grunnlag: p\.stopp\.map\(\(s\) => s\.vis\)/);
+  assert.match(src, /stopp: \[\.\.\.kladd\.stopp, \.\.\.lagtTil\]/);
 });

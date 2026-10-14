@@ -386,6 +386,20 @@ export function barnAv(vis, artists) {
   return ut;
 }
 
+// Alt et valg drar inn, i begge ledd: en metasjanger tar med sjangrene sine,
+// og hver sjanger tar med artistene sine, uansett artistens metasjanger. Det
+// er samme mengde som utvidUtvalg bygger, så å huke av hele metasjangeren
+// fjerner alt den la til (audit v5.93 funn 1: Sheila E. og Louis Jordan sto
+// igjen avkrysset under Jazz). barnAv selv er bare første ledd, fordi den også
+// avgjør hvilket opphav en kandidat får.
+export function alleUnder(vis, artists) {
+  const ut = new Set(barnAv(vis, artists));
+  for (const b of [...ut]) {
+    if (parseUtskriftVis(b)?.hva === "sjanger") for (const x of barnAv(b, artists)) ut.add(x);
+  }
+  return [...ut];
+}
+
 // Alle kandidatene med opphav, i rekkefølge: de valgte først (i valgets
 // rekkefølge), så det metasjangrene drar inn, så det sjangrene drar inn, så
 // tiårene. `artists` er de synlige artistene. Returnerer

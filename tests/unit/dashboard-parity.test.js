@@ -41,11 +41,11 @@ test("sjangerraden teller treets sjanger, ikke metasjangeren", async () => {
   const { artistsInGenre } = await import("../../js/felles/limits.js");
   const artister = [
     { id: "1", name: "Tidlig", status: "active", metaGenre: "Jazz",
-      mainGenre: ["Jazz"], subGenre: [], musicExamples: [{ label: "a", url: "u1" }] },
+      mainGenre: ["Jazz"], subGenre: [], musicExamples: [{ label: "a", url: "https://youtu.be/u1" }] },
     { id: "2", name: "Bebop", status: "active", metaGenre: "Jazz",
-      mainGenre: ["Bebop"], subGenre: [], musicExamples: [{ label: "b", url: "u2" }] },
+      mainGenre: ["Bebop"], subGenre: [], musicExamples: [{ label: "b", url: "https://youtu.be/u2" }] },
     { id: "3", name: "Cool", status: "active", metaGenre: "Jazz",
-      mainGenre: ["Cool jazz"], subGenre: [], musicExamples: [{ label: "c", url: "u3" }] },
+      mainGenre: ["Cool jazz"], subGenre: [], musicExamples: [{ label: "c", url: "https://youtu.be/u3" }] },
   ];
   assert.deepEqual(artistsInGenre(artister, "Jazz").map((a) => a.name), ["Tidlig"]);
   assert.equal(countPlaylistExamples(artister, "Jazz"), 1, "spillelista følger samme regel som lista");
@@ -58,9 +58,9 @@ test("tellingen og lista bak klikket er fortsatt samme regnestykke", async () =>
   const { artistsInGenre } = await import("../../js/felles/limits.js");
   const artister = [
     { id: "1", name: "A", status: "active", metaGenre: "R&B", mainGenre: ["Soul"], subGenre: [],
-      musicExamples: [{ label: "x", url: "u1" }, { label: "y", url: "u2", genre: "Funk" }] },
+      musicExamples: [{ label: "x", url: "https://youtu.be/u1" }, { label: "y", url: "https://youtu.be/u2", genre: "Funk" }] },
     { id: "2", name: "B", status: "active", metaGenre: "R&B", mainGenre: ["R&B"], subGenre: [],
-      musicExamples: [{ label: "z", url: "u3" }] },
+      musicExamples: [{ label: "z", url: "https://youtu.be/u3" }] },
   ];
   assert.equal(artistsInGenre(artister, "R&B").length, 1);
   assert.equal(countPlaylistExamples(artister, "R&B"), 1);
@@ -100,4 +100,24 @@ test("studentene ser startsideikonet på alle sidene", async () => {
     assert.ok(html.indexOf('class="nav-icon nav-hjem') < html.indexOf('class="nav-icon nav-sok"'), `${side}: hjem før søk`);
   }
   assert.match(les("css/styles.css"), /body\.role-student \.nav \.nav-icon\.nav-hjem \{ display: inline-flex; \}/);
+});
+
+// Spillelistene (v7.03): bare lytteeksempler med http(s)-adresse blir rader,
+// som i tiårslistene. En «javascript:»-adresse fra et forslag skal aldri bli
+// en klikkbar lenke i lista.
+test("spillelista tar bare med eksempler med trygg adresse", async () => {
+  const { countPlaylistExamples, buildPlaylistHtml } = await import("../../js/ui/ui.js");
+  const artister = [
+    { id: "1", name: "A", status: "active", metaGenre: "Jazz", mainGenre: ["Bebop"], subGenre: [],
+      musicExamples: [
+        { label: "trygg", url: "https://youtu.be/abc" },
+        { label: "farlig", url: "javascript:alert(1)" },
+        { label: "tom", url: "" },
+      ] },
+  ];
+  assert.equal(countPlaylistExamples(artister, "Bebop"), 1);
+  if (typeof buildPlaylistHtml === "function") {
+    const html = JSON.stringify(buildPlaylistHtml(artister, "Bebop"));
+    assert.doesNotMatch(html, /javascript:/);
+  }
 });

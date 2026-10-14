@@ -578,10 +578,6 @@ export function artistImage(a, big = false) {
   </figure>`;
 }
 
-function splitLines(text) {
-  return text.split("\n").map(l => l.replace(/^[•\-–]\s*/, "").trim()).filter(Boolean);
-}
-
 // Tiårstekstene ble skrevet FØR appen kunne formatere: ett punkt per linje,
 // uten noen markering, og formatInfoText gjorde hver linje til et kulepunkt.
 // Elleve slike felter ligger fortsatt i Firestore (alle «teknologi»-feltene fra
@@ -603,10 +599,6 @@ export function formatInfoText(text, lc) {
   const gammel = gammelLinjeliste(String(text));
   if (gammel) return `<ul>${gammel.map((l) => `<li>${renderInline(l, lc)}</li>`).join("")}</ul>`;
   return renderRichText(text, lc);
-}
-
-export function extractBullets(text) {
-  return splitLines(text);
 }
 
 export function pct(n, max) {

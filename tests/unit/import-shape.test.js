@@ -141,3 +141,13 @@ test("importen venter på flettedialogen før resten skrives", async () => {
   assert.match(src, /if \(mergeCommitting\) return;/,
     "vakten må la finishMerge melde selv, ellers starter resten midt i skrivingen");
 });
+
+// Audit v5.93 funn 24: i flettingen blir en rad uten treff en ny artist bare
+// når den har metasjanger. En rettefil med beskrivelse og feilstavet navn ga
+// ellers et nytt, aktivt kort uten metasjanger, synlig for studentene.
+test("flettingen lager bare nye artister som har metasjanger", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/laerer/teacher-import.js", import.meta.url), "utf8");
+  const flett = src.slice(src.indexOf("async function handleMergeFile"));
+  assert.match(flett, /if \(erDelpost\(imp\) \|\| !String\(imp\.metaGenre \?\? ""\)\.trim\(\)\) uteliggere\.push\(imp\.name\);\n\s*else mergeState\.newArtists\.push\(imp\);/);
+});
