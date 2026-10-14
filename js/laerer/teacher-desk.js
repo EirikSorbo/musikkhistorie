@@ -247,6 +247,12 @@ export function renderDesk(el) {
       setTimeout(() => (d.open ? openPanels.add("synlighet") : openPanels.delete("synlighet")));
       return;
     }
+    const guideSum = hit(".desk-guide-deler > summary");
+    if (guideSum) {
+      const d = guideSum.parentElement;
+      setTimeout(() => (d.open ? openPanels.add("guide") : openPanels.delete("guide")));
+      return;
+    }
     const syn = hit("[data-synlig]");
     if (syn && syn.matches("input")) return endreSynlighet(syn.dataset.synlig, syn.checked, syn);
     const guideDel = hit("[data-guide-del]");
@@ -367,13 +373,20 @@ function synlighetHtml() {
 
 // Delene av «Slik bruker du appen» (v6.95, js/felles/guide-deler.js): én
 // avhuking per overskrift i teksten, under hovedbryteren. Avhuket = synlig.
+// Fra v7.02 (brukerønske 2026-10-14) ligger de i en nedtrekk som er lukket
+// som standard: med 27 deler tok lista hele panelet. Overskriften viser hvor
+// mange som er synlige, og åpen/lukket overlever omtegningen (openPanels).
 const guideTitlerNaa = () => guideTitler(state.content?.appGuide?.body);
 
 function guideDelerHtml(v) {
   const titler = guideTitlerNaa();
   if (!titler.length) return "";
-  return `<div class="desk-guide-deler" role="group" aria-label="Delene av Slik bruker du appen">${titler.map((t) => `<label class="desk-synlighet-rad">
-      <input type="checkbox" data-guide-del="${escapeHtml(t)}"${v.guide.includes(t) ? " checked" : ""}> ${escapeHtml(t)}</label>`).join("")}</div>`;
+  const synlige = titler.filter((t) => v.guide.includes(t)).length;
+  return `<details class="desk-guide-deler"${openPanels.has("guide") ? " open" : ""}>
+    <summary>Delene: ${synlige} av ${titler.length} synlige</summary>
+    <div class="desk-guide-liste" role="group" aria-label="Delene av Slik bruker du appen">${titler.map((t) => `<label class="desk-synlighet-rad">
+      <input type="checkbox" data-guide-del="${escapeHtml(t)}"${v.guide.includes(t) ? " checked" : ""}> ${escapeHtml(t)}</label>`).join("")}</div>
+  </details>`;
 }
 
 async function endreGuideDel(tittel, synlig, boks) {

@@ -61,3 +61,14 @@ test("Skrivebordet lagrer delene sammen med resten, og guiden har ingen Sjekk", 
   const innhold = fs.readFileSync(new URL("../../js/utforsk/explore-innhold.js", import.meta.url), "utf8");
   assert.match(innhold, /sjekk: !USJEKKEDE_SIDER\.includes\(pageId\)/);
 });
+
+// v7.02 (brukerønske 2026-10-14): delene ligger i en nedtrekk, lukket som
+// standard, så 27 avhukinger ikke tar hele panelet. Åpen/lukket overlever
+// omtegningen av Skrivebordet.
+test("delene ligger i en lukket nedtrekk som husker om den er åpen", () => {
+  const desk = fs.readFileSync(new URL("../../js/laerer/teacher-desk.js", import.meta.url), "utf8");
+  assert.match(desk, /<details class="desk-guide-deler"\$\{openPanels\.has\("guide"\) \? " open" : ""\}>/);
+  assert.match(desk, /<summary>Delene: \$\{synlige\} av \$\{titler\.length\} synlige<\/summary>/);
+  assert.match(desk, /hit\("\.desk-guide-deler > summary"\)/);
+  assert.match(desk, /openPanels\.add\("guide"\) : openPanels\.delete\("guide"\)/);
+});
