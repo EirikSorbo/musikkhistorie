@@ -13,7 +13,9 @@ test("askChoice: en knapp med tast velges av tasten, bare når dialogen står ø
   assert.match(kode, /topOpenModal\(\) !== backdrop/);
   assert.match(kode, /e\.ctrlKey \|\| e\.metaKey \|\| e\.altKey \|\| e\.repeat/);
   assert.match(kode, /x\.tast && String\(x\.tast\)\.toLowerCase\(\) === String\(e\.key\)\.toLowerCase\(\)/);
-  assert.match(kode, /hint\.className = "valg-tast"/);
+  // Snarveien vises ikke på knappen, men står i aria-keyshortcuts
+  assert.doesNotMatch(kode, /valg-tast/);
+  assert.match(kode, /setAttribute\("aria-keyshortcuts"/);
 });
 
 test("avslutt visning: U velger «Avslutt uten å lagre», og Lagre og Fortsett har ikke samme tast", () => {
@@ -21,8 +23,4 @@ test("avslutt visning: U velger «Avslutt uten å lagre», og Lagre og Fortsett 
   assert.match(kode, /\{ label: "Avslutt uten å lagre", value: "nei", tast: "u" \}/);
   const blokk = kode.slice(kode.indexOf('title: "Lagre det du viste som en time?"'), kode.indexOf("dismissValue: \"fortsett\""));
   assert.equal((blokk.match(/tast:/g) || []).length, 1);
-});
-
-test("snarveien står i stilarket", () => {
-  assert.match(les("css/styles.css"), /\.valg-tast\s*\{/);
 });

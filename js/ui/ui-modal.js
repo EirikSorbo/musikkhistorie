@@ -474,9 +474,9 @@ if (IS_BROWSER) {
 //  bortkommen Escape havner på.
 //
 //  En knapp kan ha `tast` (én bokstav): da velger den tasten knappen mens
-//  dialogen står øverst, og bokstaven vises på knappen (v7.09, f.eks. U for
-//  «Avslutt uten å lagre» når visningen avsluttes). Tasten fanges før resten
-//  av appens hurtigtaster, så den aldri utløser noe annet.
+//  dialogen står øverst (v7.09, f.eks. U for «Avslutt uten å lagre» når
+//  visningen avsluttes). Bokstaven vises ikke på knappen. Tasten fanges før
+//  resten av appens hurtigtaster, så den aldri utløser noe annet.
 export function askChoice({ title, text = "", buttons = [], dismissValue = null }) {
   return new Promise((resolve) => {
     const backdrop = document.createElement("div");
@@ -534,14 +534,8 @@ export function askChoice({ title, text = "", buttons = [], dismissValue = null 
       knapp.type = "button";
       knapp.className = `btn ${b.className || "ghost"}`;
       knapp.textContent = b.label;
-      if (b.tast) {
-        const hint = document.createElement("kbd");
-        hint.className = "valg-tast";
-        hint.textContent = String(b.tast).toUpperCase();
-        hint.setAttribute("aria-hidden", "true");
-        knapp.append(" ", hint);
-        knapp.setAttribute("aria-keyshortcuts", String(b.tast).toUpperCase());
-      }
+      // Snarveien vises ikke på knappen (brukervalg 2026-10-15), men skjermlesere får den.
+      if (b.tast) knapp.setAttribute("aria-keyshortcuts", String(b.tast).toUpperCase());
       knapp.addEventListener("click", () => avslutt(b.value));
       foot.append(knapp);
     }
