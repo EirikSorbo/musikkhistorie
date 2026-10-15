@@ -5,23 +5,26 @@
 //  med markdown (appens vanlige formatering, samme formatlinje som elles).
 //  Lagring og lesing: js/visning/slides.js (samlingen notater, bare læreren).
 //
-//  Bolken er ETT varig element som Skrivebordet setter inn i stedet for en
-//  plassholder (monterSlides), for Skrivebordet tegnes på nytt ved hver
-//  endring i dataene, og et felt midt i skrivingen må ikke rives ned. Lista
+//  Flisen «Slides» under Innhold på lærersiden åpner vinduet #modal-slides
+//  (teacher.html), som viser lista og skjemaet. Innholdet er ETT varig element,
+//  så en slide midt i skrivingen står igjen hvis vinduet lukkes og åpnes. Lista
 //  tegnes på nytt når slidene endrer seg; selve redigeringen røres aldri av det.
+//  «Vis slide» åpner sliden som kortet i visningen (slide-kort.js), så du ser
+//  hvordan den tar seg ut.
 // ============================================================================
 
 import { escapeHtml } from "../felles/util.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { setupFormatBars } from "../ui/format-bar.js";
 import { askChoice, melding } from "../ui/ui-modal.js";
+import { openAdminModal } from "./teacher-state.js";
+import { openSlide } from "../visning/slide-kort.js";
 import { slider, slidesLastet, slidesFeil, onSlidesEndret } from "../visning/slides-liste.js";
 import { lagreSlide, slettSlide } from "../visning/slides.js";
 import { slideForLang, skrivSlide, SLIDE_TITTEL_MAKS, SLIDE_LAGRING_MAKS } from "../visning/slides-modell.js";
 
 let el = null;            // den varige bolken
 let redigerer = null;     // { id: string|null, tittel, innhold, opprinnelig } mens læreren skriver
-let sistFokus = null;     // { id, start, slutt }: huskes så fokus kan komme tilbake etter en ny tegning av Skrivebordet
 let lagrer = false;
 
 export const slideRedigererNaa = () => !!redigerer;
@@ -37,6 +40,7 @@ function listeHtml() {
   return `<ul class="desk-slides-liste">${liste.map((s) => `<li class="desk-slide-rad${redigerer?.id === s.id ? " redigeres" : ""}">
       <span class="desk-slide-tekst"><b>${escapeHtml(s.tittel)}</b>${s.innhold ? `<span class="muted desk-slide-utdrag">${escapeHtml(utdrag(s.innhold))}</span>` : ""}</span>
       <span class="desk-time-knapper">
+        <button type="button" class="btn ghost small" data-slide-vis="${escapeHtml(s.id)}" title="Åpne sliden slik den ser ut i visningen">Vis slide</button>
         <button type="button" class="btn ghost small" data-slide-rediger="${escapeHtml(s.id)}">Rediger</button>
         <button type="button" class="btn ghost small" data-slide-slett="${escapeHtml(s.id)}">Slett</button>
       </span>
@@ -103,37 +107,24 @@ function sikreEl() {
   el = document.createElement("div");
   el.className = "desk-slides";
   el.innerHTML = `
-    <div class="desk-cat-top"><span class="desk-cat-h">Slides</span>
-      <button type="button" class="btn small" data-slide-ny title="Lag en egen side til visningen">Ny slide</button></div>
-    <p class="muted desk-slides-hint">Egne sider i visningen, utenfor pensum: innleveringer, kursinfo og annen generell info. Bare du ser dem. Søk dem opp i visningen, eller legg dem inn som stopp i en kjøreplan.</p>
+    <p class="muted desk-slides-hint">Egne sider i visningen, utenfor pensum: innleveringer, kursinfo og annen generell info. Bare du ser dem. Søk dem opp i visningen (tasten S), eller legg dem inn som stopp i en kjøreplan.</p>
+    <div class="desk-slide-topp"><button type="button" class="btn small" data-slide-ny title="Lag en egen side til visningen">Ny slide</button></div>
     <div class="desk-slide-editor-slot"></div>
     <div class="desk-slides-liste-slot"></div>`;
   el.addEventListener("click", klikk);
   el.addEventListener("input", skriv);
-  const husk = (e) => {
-    const f = e.target;
-    if (f && f.id && ("selectionStart" in f)) sistFokus = { id: f.id, start: f.selectionStart, slutt: f.selectionEnd };
-  };
-  el.addEventListener("focusin", husk);
-  el.addEventListener("keyup", husk);
-  el.addEventListener("click", husk);
   onSlidesEndret(() => { if (el) tegnListe(); });
   return el;
 }
 
-// Setter bolken inn i Skrivebordet i stedet for plassholderen. Kalles ved hver
-// tegning av Skrivebordet; samme element hver gang, så en redigering overlever.
-export function monterSlides(slot) {
-  if (!slot) return;
+// Åpner vinduet (flisen «Slides»). Elementet settes inn første gang og står der siden.
+export function openSlides() {
   const e = sikreEl();
-  const hadde = redigerer && e.contains(document.activeElement) ? document.activeElement.id : "";
-  slot.replaceWith(e);
+  const body = document.getElementById("slides-body");
+  if (!body) return;
+  if (e.parentNode !== body) body.appendChild(e);
   tegnListe();
-  // Fokus går tapt når elementet flyttes; sett det tilbake der læreren skrev.
-  if (hadde || (redigerer && sistFokus)) {
-    const m = sistFokus && e.querySelector(`#${sistFokus.id}`);
-    if (m) { m.focus(); try { m.setSelectionRange(sistFokus.start, sistFokus.slutt); } catch (err) { /* ikke et tekstfelt */ } }
-  }
+  openAdminModal("modal-slides");
 }
 
 function skriv(e) {
@@ -214,6 +205,8 @@ async function klikk(e) {
     tegnListe();
     return;
   }
+  const vis = hit("[data-slide-vis]");
+  if (vis) return void openSlide(vis.dataset.slideVis);
   const sl = hit("[data-slide-slett]");
   if (sl) return slett(sl.dataset.slideSlett);
   if (hit("[data-slide-lagre]")) return lagre();

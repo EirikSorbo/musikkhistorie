@@ -465,6 +465,7 @@ ${TECH_DETAIL_MODAL_HTML}
       <div class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
+    <hr class="slide-strek">
     <div class="slide-kropp rt"></div>
   </div>
 </div>

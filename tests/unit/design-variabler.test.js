@@ -22,7 +22,9 @@ const definert = new Set([...styles.rot.matchAll(/(--[\w-]+)\s*:/g)].map((m) => 
 
 // Variabler som settes lokalt (i en regel eller fra JS/HTML per element), ikke i :root.
 const LOKALE = new Set(["--farge", "--fam", "--ikon", "--vs-farge", "--tl-color", "--stolpe", "--stem",
-  "--sj-farge", "--ref-farge", "--mo-farge", "--mo-mork", "--hist-color", "--dr-cols", "--icon-mono"]);
+  "--sj-farge", "--ref-farge", "--mo-farge", "--mo-mork", "--hist-color", "--dr-cols", "--icon-mono",
+  // Slidekortet (v7.06): innrykket fra venstre og høyre, satt på .modal-slide
+  "--slide-venstre", "--slide-hoyre"]);
 for (const m of utskrift.matchAll(/(--h-[\w-]+)\s*:/g)) LOKALE.add(m[1]);
 
 test("ingen fargekoder eller rgb()-verdier utenfor :root", () => {

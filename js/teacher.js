@@ -52,6 +52,7 @@ import { initPlanMeny } from "./visning/plan-meny.js";
 import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
 import { initNotater, redigerNotatForKort } from "./visning/pres-notater.js";
 import { startSlides } from "./visning/slides.js";
+import { openSlides } from "./laerer/teacher-slides.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
 import { settLaererside, initViktighetsMerke } from "./ui/viktighet.js";
@@ -152,7 +153,8 @@ function startAppInner() {
   document.getElementById("btn-t-inn-sjangertre")?.addEventListener("click", openGenreAdmin);
   document.getElementById("btn-t-inn-oversikt")?.addEventListener("click", openOversikt);
   document.getElementById("btn-t-inn-mangler")?.addEventListener("click", openMangler);
-  document.getElementById("btn-t-inn-tech")?.addEventListener("click", () => openTechAdmin());
+  // Slides (v7.06) har overtatt flisen til Innovasjonskort (de finnes andre steder, se onTechAdmin under).
+  document.getElementById("btn-t-inn-slides")?.addEventListener("click", () => openSlides());
   document.getElementById("btn-t-inn-podkast")?.addEventListener("click", () => openPodkastAdmin());
   // Visning-vinduet bak presentasjonsikonet (v5.41): kjøreplanene og
   // editoren bor der nå, ikke i Oversikt.

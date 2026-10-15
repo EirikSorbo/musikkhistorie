@@ -278,6 +278,7 @@
   --icon-l-mangler: var(--icon-mono, var(--amber-700));
   --icon-l-sjangertre: var(--icon-mono, var(--violet-600));
   --icon-l-podkast: var(--icon-mono, var(--pink-600));
+  --icon-l-slides: var(--icon-mono, var(--teal-600));
   --icon-l-referanse: var(--icon-mono, var(--blue-700));
   --icon-l-handbok: var(--icon-mono, var(--cyan-600));
   --icon-l-konto: var(--icon-mono, var(--green-600));
@@ -2339,6 +2340,7 @@ body:not(.presentasjon) :is(#modal-artistliste, #modal-spilleliste) > .modal > *
 /* Slides på Skrivebordet (v7.06) */
 .desk-slides { margin: 12px 0 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .desk-slides-hint { margin: 4px 0 8px; font-size: 0.85rem; }
+.desk-slide-topp { margin: 0 0 10px; }
 .desk-slides-liste { list-style: none; margin: 0; padding: 0; }
 .desk-slide-rad { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
 .desk-slide-rad:first-child { border-top: 0; }
@@ -4744,9 +4746,20 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 .melding-felt[readonly] { background: var(--surface-2); }
 .melding-knapper { gap: 8px; margin-top: 18px; }
 
-/* Slide (v7.06): lærerens egne sider i visningen. Større tekst enn på vanlige kort, siden den vises på lerretet. */
-.modal-slide .slide-tittel { font-size: 1.6rem; }
-.modal-slide .slide-kropp { font-size: 1.3rem; line-height: 1.55; padding: 0.5rem 1.25rem 1.5rem; }
+/* Slide (v7.06): lærerens egne sider i visningen. Større tekst enn på vanlige kort, siden den
+   vises på lerretet. Overskrift og tekst er skjøvet inn fra venstre (ikke midtstilt, men mer mot
+   midten), og en strek i aksentfarge skiller overskriften fra teksten. Reglene begynner med
+   «body» for å slå .modal-innhold-reglene (68ch, sentrert spalte på 944 px) og presentasjonens
+   egne størrelser. Hodet, streken og teksten får samme bredde, så venstrekantene står likt. */
+.modal-slide {
+  --slide-venstre: clamp(1.5rem, 7vw, 6rem);
+  --slide-hoyre: clamp(1rem, 3vw, 2.5rem);
+}
+body .modal.modal-slide.modal-innhold > * { max-width: none; margin-inline: 0; }
+body .modal.modal-slide .modal-head { margin-bottom: 0.3rem; padding-left: var(--slide-venstre); }
+body .modal.modal-slide .slide-tittel { font-size: clamp(2.3rem, 4.5vw, 3.6rem); line-height: 1.12; letter-spacing: -0.01em; }
+body .modal.modal-slide .slide-strek { border: 0; border-top: 3px solid var(--accent); margin: 0.3rem var(--slide-hoyre) 1.4rem var(--slide-venstre); }
+body .modal.modal-slide .slide-kropp.rt { font-size: 1.3rem; line-height: 1.55; max-width: none; padding: 0 var(--slide-hoyre) 1.5rem var(--slide-venstre); }
 .modal-slide .slide-kropp h3 { font-size: 1.5rem; margin: 1.1em 0 0.4em; }
 .modal-slide .slide-kropp ul, .modal-slide .slide-kropp ol { padding-left: 1.4em; }
 .modal-slide .slide-kropp li { margin: 0.25em 0; }
