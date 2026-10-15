@@ -1083,7 +1083,7 @@ export async function avsluttPresentasjon() {
         : `${stopp.length} kort ble vist (lytteeksemplene regnet med). En time kan deles med studentene under «Fra timene» (Visning-vinduet).`,
       buttons: [
         { label: "Lagre som time", value: "lagre", className: "primary" },
-        { label: "Avslutt uten å lagre", value: "nei" },
+        { label: "Avslutt uten å lagre", value: "nei", tast: "u" },
         { label: "Fortsett visningen", value: "fortsett" },
       ],
       dismissValue: "fortsett",

@@ -3988,6 +3988,12 @@ body.pres-lerret * { pointer-events: none !important; }
   font: inherit; font-size: 0.85em; text-align: center; line-height: 1.5;
 }
 .pres-panel-tips { margin: 10px 0 0; font-size: 0.85em; color: var(--muted); }
+/* Snarveien på en knapp i en valgdialog (askChoice, v7.09), f.eks. U for «Avslutt uten å lagre» */
+.valg-tast {
+  display: inline-block; min-width: 1.4em; padding: 0 0.35em;
+  border: 1px solid currentColor; border-radius: var(--radius-xs);
+  font: inherit; font-size: 0.8em; text-align: center; line-height: 1.4; opacity: 0.7;
+}
 
 /* Verktøylinja nede til høyre. z-index over modalene (de starter på 100 og
    teller oppover per åpning — 99999 er utenfor rekkevidde i praksis). */

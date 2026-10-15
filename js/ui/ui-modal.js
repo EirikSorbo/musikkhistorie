@@ -472,6 +472,11 @@ if (IS_BROWSER) {
 //  Returnerer valgets `value`. Escape og klikk på bakgrunnen gir
 //  `dismissValue` — sett den til det ufarlige valget, siden det er dét en
 //  bortkommen Escape havner på.
+//
+//  En knapp kan ha `tast` (én bokstav): da velger den tasten knappen mens
+//  dialogen står øverst, og bokstaven vises på knappen (v7.09, f.eks. U for
+//  «Avslutt uten å lagre» når visningen avsluttes). Tasten fanges før resten
+//  av appens hurtigtaster, så den aldri utløser noe annet.
 export function askChoice({ title, text = "", buttons = [], dismissValue = null }) {
   return new Promise((resolve) => {
     const backdrop = document.createElement("div");
@@ -508,16 +513,35 @@ export function askChoice({ title, text = "", buttons = [], dismissValue = null 
       ferdig = true;
       backdrop._beforeClose = null;
       backdrop._skipBeforeClose = true;
+      document.removeEventListener("keydown", valgTast, true);
       modalClose(backdrop);
       backdrop.remove();
       resolve(value);
     };
+    const valgTast = (e) => {
+      if (ferdig || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      if (topOpenModal() !== backdrop) return;
+      const b = buttons.find((x) => x.tast && String(x.tast).toLowerCase() === String(e.key).toLowerCase());
+      if (!b) return;
+      e.preventDefault();
+      e.stopPropagation();
+      avslutt(b.value);
+    };
+    document.addEventListener("keydown", valgTast, true);
 
     for (const b of buttons) {
       const knapp = document.createElement("button");
       knapp.type = "button";
       knapp.className = `btn ${b.className || "ghost"}`;
       knapp.textContent = b.label;
+      if (b.tast) {
+        const hint = document.createElement("kbd");
+        hint.className = "valg-tast";
+        hint.textContent = String(b.tast).toUpperCase();
+        hint.setAttribute("aria-hidden", "true");
+        knapp.append(" ", hint);
+        knapp.setAttribute("aria-keyshortcuts", String(b.tast).toUpperCase());
+      }
       knapp.addEventListener("click", () => avslutt(b.value));
       foot.append(knapp);
     }
