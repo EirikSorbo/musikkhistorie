@@ -678,3 +678,23 @@ test("tellingen av metasjangre tar ikke med de avhukede", () => {
   const med = settSammen({ valg: ["metasjanger:Blues"], fravalg: [] }, { artists: SYNLIGE, genreDescs: {}, decadeDescs: {}, techItems: [], content: {}, edgeDescs: {} });
   assert.equal(med.tellinger.metasjangre, 1);
 });
+
+// Audit v5.93 funn 7: utvalget har et tak og dedupliseres i ett gjennomløp.
+test("normaliserUtvalg: tak på antall poster, duplikater fjernet, rekkefølgen beholdt", async () => {
+  const { UTVALG_MAKS } = await import("../../js/utskrift/utskrift-modell.js");
+  assert.deepEqual(normaliserUtvalg(["artist:b", "artist:a", "artist:b"]), ["artist:b", "artist:a"]);
+  const mange = Array.from({ length: UTVALG_MAKS + 500 }, (_, i) => `artist:x${i}`);
+  const t0 = Date.now();
+  assert.equal(normaliserUtvalg(mange).length, UTVALG_MAKS);
+  assert.ok(Date.now() - t0 < 500, "lineær, ikke kvadratisk");
+});
+
+// Audit v5.93 funn 8: søket på utskriftssiden tilbyr bare artister som kan stå
+// i heftet, også for læreren.
+test("utskriftssøket indekserer bare synlige artister", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/utskrift.js", import.meta.url), "utf8");
+  const fn = src.slice(src.indexOf("function hentIndeks()"), src.indexOf("const MAKS_TREFF"));
+  assert.match(fn, /const artister = s\.artists\.filter\(isVisible\);/);
+  assert.match(fn, /byggIndeks\(\{ \.\.\.s, artists: artister \}/);
+});

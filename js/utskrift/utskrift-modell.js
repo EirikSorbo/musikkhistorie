@@ -117,13 +117,20 @@ export function kanoniskVis(vis) {
 
 // Vasker en liste (fra localStorage, en lenke eller en kjøreplan): bare
 // gyldige mål, hvert én gang, i den rekkefølgen de først sto.
+// Tak på antall poster (v7.11, audit v5.93 funn 7): hele pensumet er under
+// tusen kort, og en håndlaget delelenke med tusenvis av poster gjorde siden
+// treg, fordi normaliseringen kjøres for hvert kort som tegnes. Settet gjør
+// dedupliseringen lineær.
+export const UTVALG_MAKS = 2000;
+
 export function normaliserUtvalg(raa) {
-  const ut = [];
+  const sett = new Set();
   for (const v of Array.isArray(raa) ? raa : []) {
+    if (sett.size >= UTVALG_MAKS) break;
     const k = kanoniskVis(typeof v === "string" ? v : v?.vis);
-    if (k && !ut.includes(k)) ut.push(k);
+    if (k) sett.add(k);
   }
-  return ut;
+  return [...sett];
 }
 
 // En kjøreplans stopp som utvalg. Et lytteeksempel-stopp («yt:<video>»)

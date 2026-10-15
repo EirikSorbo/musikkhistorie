@@ -95,19 +95,28 @@ export function harMed(vis) {
 // Legger til ett eller flere mål. Et nytt valg opphever bortvalget av posten
 // og av det den drar med seg (alleUnder). Returnerer hvor mange som var nye.
 export function leggTil(vis) {
-  const liste = normaliserUtvalg(Array.isArray(vis) ? vis : [vis]);
   const u = lesUtvalg();
-  const nye = normaliserUtvalg([...u.valg, ...liste]);
-  const lagt = nye.length - u.valg.length;
-  const artister = synligeArtister();
-  const opphev = new Set(liste.flatMap((v) => [v, ...alleUnder(v, artister)]));
-  const fravalg = u.fravalg.filter((v) => !opphev.has(v));
+  const { valg, fravalg } = etterLeggTil(u, vis);
+  const lagt = valg.length - u.valg.length;
   if (lagt || fravalg.length !== u.fravalg.length) {
-    u.valg = nye;
+    u.valg = valg;
     u.fravalg = fravalg;
     lagreUtvalg(u);
   }
   return lagt;
+}
+
+// Utvalget slik det blir etter leggTil(vis), uten å lagre. «Velg alt» regner
+// anslaget sitt herfra (v7.11, audit v5.93 funn 4): før regnet det med
+// bortvalgene, som leggTil opphever, og lovet 114 sider for et hefte på 154.
+export function etterLeggTil(u, vis) {
+  const liste = normaliserUtvalg(Array.isArray(vis) ? vis : [vis]);
+  const artister = synligeArtister();
+  const opphev = new Set(liste.flatMap((v) => [v, ...alleUnder(v, artister)]));
+  return {
+    valg: normaliserUtvalg([...u.valg, ...liste]),
+    fravalg: u.fravalg.filter((v) => !opphev.has(v)),
+  };
 }
 
 // Avkryssingen i utskriftspanelet (v5.59). Av: posten og alt den drar med

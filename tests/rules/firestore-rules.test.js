@@ -622,3 +622,33 @@ test("notater: bare læreren leser og skriver, med to felt og tak", async () => 
   await assertFails(teacherDb().collection("notater").doc("artist:y").set({ ...notat, tekst: "x".repeat(10001) }), "for langt");
   await assertFails(teacherDb().collection("notater").doc("artist:y").set({ ...notat, tekst: 42 }), "typevakt");
 });
+
+// Audit v5.93 funn 25: timeforslag-testen prøvde ikke liste-lesing, oppdatering
+// eller sletting for andre enn læreren, og hadde én typevakt. Fornavnene er
+// personopplysninger, så en regel som åpnet dem for alle innloggede, skulle
+// falt her.
+test("timeforslag: ingen andre kan liste, endre eller slette, og typevaktene holder", async () => {
+  const post = { artist: "Big Mama Thornton", student: "Ola", kontekst: "Blues · stopp 2", laget: "2026-10-15T10:00:00.000Z" };
+  await assertSucceeds(teacherDb().collection("timeforslag").doc("t9").set(post));
+  for (const db of [anonDb(), unauthDb(), otherUserDb()]) {
+    await assertFails(db.collection("timeforslag").get());
+    await assertFails(db.collection("timeforslag").doc("t9").update({ artist: "Endret" }));
+    await assertFails(db.collection("timeforslag").doc("t9").delete());
+  }
+  await assertSucceeds(teacherDb().collection("timeforslag").doc("t9").update({ kontekst: "Blues · stopp 3" }));
+  await assertFails(teacherDb().collection("timeforslag").doc("t10").set({ ...post, kontekst: { a: 1 } }), "typevakt kontekst");
+  await assertFails(teacherDb().collection("timeforslag").doc("t10").set({ ...post, laget: 42 }), "typevakt laget");
+  const { artist: _a, ...utenArtist } = post;
+  await assertFails(teacherDb().collection("timeforslag").doc("t10").set(utenArtist), "artist mangler");
+  await assertFails(teacherDb().collection("timeforslag").doc("t10").set({ ...post, student: "x".repeat(61) }), "for langt fornavn");
+});
+
+// Slides (v7.06) ligger i notater under slide:<id>. Samme vern som notatene.
+test("notater: slidene er like private som notatene", async () => {
+  const slide = { tekst: "Innleveringer\n\n- Oppgave 1: **15. nov**", oppdatert: "2026-10-15T10:00:00.000Z" };
+  await assertSucceeds(teacherDb().collection("notater").doc("slide:sabc123").set(slide));
+  for (const db of [anonDb(), unauthDb(), otherUserDb()]) {
+    await assertFails(db.collection("notater").doc("slide:sabc123").get());
+    await assertFails(db.collection("notater").doc("slide:sabc123").set(slide));
+  }
+});

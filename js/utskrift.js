@@ -28,7 +28,7 @@ import { TEACHER_EMAILS } from "./firebase-config.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, synlighetGrunn } from "./felles/feature-flags.js";
 import { settSjekketLaerer } from "./felles/sjekket.js";
 import { settSammen, foreslaaTittel, tellingerTekst, heltPensum, pensumMetasjangre, anslagSider, planFraModell, DELER, TYPE_ETIKETT, META_PREFIKS, normaliserTittel, normaliserLagret, kanoniskVis, TITTEL_MAKS } from "./utskrift/utskrift-modell.js";
-import { lesUtvalg, lagreUtvalg, leggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift/utskrift-utvalg.js";
+import { lesUtvalg, lagreUtvalg, leggTil, etterLeggTil, huk, hukFlere, toem, initUtskriftValg, UTSKRIFT_HENDELSE } from "./utskrift/utskrift-utvalg.js";
 import { byggIndeks, sok, normaliser, TYPE_LABEL } from "./felles/search.js";
 import { byggVisVerdi } from "./felles/vis-lenke.js";
 import { renderRichText, renderInline } from "./felles/rich-text.js";
@@ -358,12 +358,17 @@ document.addEventListener("pensum:synlighet", () => { indeks = null; });
 
 function hentIndeks() {
   const s = state;
+  // Bare artister som kan stå i heftet (v7.11, audit v5.93 funn 8). Lærerens
+  // indeks tar ellers med skjulte og ventende kort, og de ble rader med rå
+  // dokument-id og «finnes ikke lenger». Antallet synlige står i avtrykket,
+  // så en artist som skjules eller vises, gir ny indeks.
+  const artister = s.artists.filter(isVisible);
   const avtrykk = [
-    s.artists.length, Object.keys(s.genreDescs).length, s.techItems.length,
+    artister.length, Object.keys(s.genreDescs).length, s.techItems.length,
     Object.keys(s.decadeDescs).length, Object.keys(s.content).length, erLaerer,
   ].join("|");
   if (!indeks || avtrykk !== indeksAvtrykk) {
-    indeks = byggIndeks(s, { erLærer: erLaerer, skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN });
+    indeks = byggIndeks({ ...s, artists: artister }, { erLærer: erLaerer, skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN });
     indeksAvtrykk = avtrykk;
   }
   return indeks;
@@ -990,7 +995,7 @@ function koble() {
     if (!klar()) return;
     const alt = heltPensum(state);
     const u0 = lesUtvalg();
-    const hele = settSammen({ valg: [...u0.valg, ...alt], fravalg: u0.fravalg }, state, {
+    const hele = settSammen(etterLeggTil(u0, alt), state, {
       deler: u0.deler, form: u0.form, erLaerer,
       skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN, punkterSkjult: synlighetGrunn().punkter,
     });

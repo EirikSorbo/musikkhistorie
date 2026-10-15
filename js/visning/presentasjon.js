@@ -731,6 +731,10 @@ function wireTaster() {
   // fasen stopper tastetrykket før sidenes egne Esc-lyttere ser det.
   document.addEventListener("keydown", (e) => {
     if (!erSvart() || e.ctrlKey || e.metaKey || e.altKey) return;
+    // L (lytt) og S (søk) gjør ingenting mens skjermen er svart (v7.11, audit
+    // v5.93 funn 22): L startet lyd bak den svarte flaten, og S åpnet søket
+    // under den. Bildet kommer ikke tilbake av dem heller.
+    if (["l", "L", "s", "S"].includes(e.key)) { e.preventDefault(); e.stopPropagation(); return; }
     if (!["b", "B", ".", "Escape", "ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "PageDown", "PageUp", " "].includes(e.key)) return;
     e.preventDefault();
     e.stopPropagation();

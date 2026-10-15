@@ -100,3 +100,18 @@ test("«Tittel og innhold» står åpen når utskriftssiden åpnes (v6.82)", asy
   const html = readFileSync(new URL("../../utskrift.html", import.meta.url), "utf8");
   assert.match(html, /<details class="utskrift-boks" open>\s*<summary>Tittel og innhold<\/summary>/);
 });
+
+// Audit v5.93 funn 4: «Velg alt» regner anslaget fra utvalget slik leggTil gjør
+// det, med bortvalgene under det som legges til opphevet.
+test("etterLeggTil: samme utvalg som leggTil gir, uten å lagre", async () => {
+  const { etterLeggTil } = await import("../../js/utskrift/utskrift-utvalg.js");
+  const u = { valg: ["artist:a"], fravalg: ["artist:a", "artist:b"] };
+  const etter = etterLeggTil(u, ["artist:a"]);
+  assert.deepEqual(etter.valg, ["artist:a"]);
+  assert.deepEqual(etter.fravalg, ["artist:b"]);
+  assert.deepEqual(u.fravalg, ["artist:a", "artist:b"], "inndata røres ikke");
+  toem();
+  const foer = JSON.stringify(lesUtvalg());
+  etterLeggTil(lesUtvalg(), ["artist:x"]);
+  assert.equal(JSON.stringify(lesUtvalg()), foer, "ingenting lagres");
+});

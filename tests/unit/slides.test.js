@@ -124,3 +124,12 @@ test("markdown: overskrift, fet, lister og lenker (appens vanlige), uten artistl
   assert.match(html, /<a href="https:\/\/example.com"/);
   assert.doesNotMatch(html, /data-artist|class="artist-link/);
 });
+
+// Fra timene (v7.11): oversikten hopper over slide-stopp (studentene kan ikke
+// lese dem), og «N kort» skal stemme med det som vises.
+test("Fra timene teller ikke slide-stopp", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync(new URL("../../js/utforsk/explore-timer.js", import.meta.url), "utf8");
+  assert.match(src, /const antallKort = \(plan\) => \(plan\.stopp \|\| \[\]\)\.filter\(\(st\) => !erSlideVis\(st\.vis\)\)\.length;/);
+  assert.doesNotMatch(src, /\.stopp\.length\} kort/);
+});

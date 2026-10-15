@@ -80,7 +80,13 @@ function setupGate() {
     });
   });
 
-  $("#logout").addEventListener("click", () => signOutTeacher());
+  // Siden lastes på nytt etter utloggingen (v7.11, audit v5.93 funn 19). De
+  // lærerlesbare lytterne (Navn fra timene, notatene, slidene) fikk ellers
+  // permission-denied, og banneret sa feilaktig at reglene måtte publiseres.
+  // En ny innlogging i samme fane startet heller ikke lytterne på nytt.
+  $("#logout").addEventListener("click", async () => {
+    try { await signOutTeacher(); } finally { location.reload(); }
+  });
 
   onAuthChange((user) => {
     if (user && TEACHER_EMAILS.includes(user.email)) {

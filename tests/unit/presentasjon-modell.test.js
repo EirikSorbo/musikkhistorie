@@ -1194,3 +1194,11 @@ test("stoppLagtTilSiden finner stoppene som kom til mens editoren sto åpen", as
   assert.match(src, /grunnlag: p\.stopp\.map\(\(s\) => s\.vis\)/);
   assert.match(src, /stopp: \[\.\.\.kladd\.stopp, \.\.\.lagtTil\]/);
 });
+
+// Audit v5.93 funn 22: L og S gjør ingenting mens skjermen er svart.
+test("svart skjerm sperrer L og S", () => {
+  const src = readFileSync(new URL("../../js/visning/presentasjon.js", import.meta.url), "utf8");
+  const blokk = src.slice(src.indexOf("Mens skjermen er svart"), src.indexOf("function erSvart()"));
+  assert.match(blokk, /if \(\["l", "L", "s", "S"\]\.includes\(e\.key\)\) \{ e\.preventDefault\(\); e\.stopPropagation\(\); return; \}/);
+  assert.match(blokk, /\}, true\);/, "capture-fasen, før appens egne taster");
+});

@@ -21,6 +21,7 @@ import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
 import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "../visning/presentasjon-modell.js";
 import { parseVisVerdi } from "../felles/vis-lenke.js";
+import { erSlideVis } from "../visning/slides-modell.js";
 import { opts, getState } from "../data/app-state.js";
 // Ruteren (explore-apne.js) nås gjennom nav: den importerer denne fila
 // (openTime, timeTilgjengelig), så en import tilbake ville gitt en importring.
@@ -94,7 +95,7 @@ export function openTime(planId) {
   });
   const par = timeEksempler(plan, s.artists);
   const body = document.getElementById("tm-body");
-  body.innerHTML = `<p class="mo-tall">${escapeHtml([datoTekst(plan.dato), `${plan.stopp.length} kort`].filter(Boolean).join(" · "))}</p>`
+  body.innerHTML = `<p class="mo-tall">${escapeHtml([datoTekst(plan.dato), `${antallKort(plan)} kort`].filter(Boolean).join(" · "))}</p>`
     + (par.length ? `<p><button type="button" class="btn ghost small" data-tm-spill>Spill lytteeksemplene fra timen (${par.length})</button></p>` : "")
     + `<div class="sj-familier">${grupper.map((g) => `<section class="sj-familie"><div class="sj-fam-hode"><h3 class="sj-fam-navn">${escapeHtml(g.navn)}</h3><span class="sj-fam-tall">${g.punkter.length}</span></div>
         ${g.punkter.map((p) => `<button type="button" class="sj-rad" data-tm-vis="${escapeHtml(plan.stopp[p.stopp]?.vis || "")}"><span class="sj-rad-navn">${escapeHtml(p.tekst)}${p.detalj ? `<span class="sj-rad-aar">${escapeHtml(p.detalj)}</span>` : ""}</span></button>`).join("")}
@@ -104,11 +105,15 @@ export function openTime(planId) {
   modalOpen(modal);
 }
 
+// Kortene studentene ser i en time. Slides (v7.06) er lærerens private sider:
+// oversikten hopper over dem (planOversikt), og tallet skal stemme med den.
+const antallKort = (plan) => (plan.stopp || []).filter((st) => !erSlideVis(st.vis)).length;
+
 // Radene for forsiden og Lytt: nyeste time først.
 export function fraTimeneRaderHtml(timer) {
   return timer.map((t) => `<button type="button" class="sj-rad" data-time-id="${escapeHtml(t.id)}">
     <span class="sj-rad-navn">${escapeHtml(t.tittel)}${t.dato ? `<span class="sj-rad-aar">${escapeHtml(datoTekst(t.dato))}</span>` : ""}</span>
-    <span class="sj-rad-aar">${t.stopp.length} kort</span>
+    <span class="sj-rad-aar">${antallKort(t)} kort</span>
   </button>`).join("");
 }
 
