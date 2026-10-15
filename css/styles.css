@@ -4748,7 +4748,7 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 
 /* Slide (v7.06): lærerens egne sider i visningen. Større tekst enn på vanlige kort, siden den
    vises på lerretet. Overskrift og tekst er skjøvet inn fra venstre (ikke midtstilt, men mer mot
-   midten), og en strek i aksentfarge skiller overskriften fra teksten. Reglene begynner med
+   midten), og en tynn svart strek skiller overskriften fra teksten. Reglene begynner med
    «body» for å slå .modal-innhold-reglene (68ch, sentrert spalte på 944 px) og presentasjonens
    egne størrelser. Hodet, streken og teksten får samme bredde, så venstrekantene står likt. */
 .modal-slide {
@@ -4758,7 +4758,7 @@ body:not(.presentasjon) #modal-decade-view .dv-nav { margin-top: auto; padding-t
 body .modal.modal-slide.modal-innhold > * { max-width: none; margin-inline: 0; }
 body .modal.modal-slide .modal-head { margin-bottom: 0.3rem; padding-left: var(--slide-venstre); }
 body .modal.modal-slide .slide-tittel { font-size: clamp(2.3rem, 4.5vw, 3.6rem); line-height: 1.12; letter-spacing: -0.01em; }
-body .modal.modal-slide .slide-strek { border: 0; border-top: 3px solid var(--accent); margin: 0.3rem var(--slide-hoyre) 1.4rem var(--slide-venstre); }
+body .modal.modal-slide .slide-strek { border: 0; border-top: 2px solid var(--black); margin: 1.1rem var(--slide-hoyre) 1.4rem var(--slide-venstre); }
 body .modal.modal-slide .slide-kropp.rt { font-size: 1.3rem; line-height: 1.55; max-width: none; padding: 0 var(--slide-hoyre) 1.5rem var(--slide-venstre); }
 .modal-slide .slide-kropp h3 { font-size: 1.5rem; margin: 1.1em 0 0.4em; }
 .modal-slide .slide-kropp ul, .modal-slide .slide-kropp ol { padding-left: 1.4em; }
