@@ -28,6 +28,7 @@ import {
   metaRader,
   musicExampleLabel,
   musicExamplesHtml,
+  sentralMerke,
   relatedArtistsHtml, metaMerkeHtml,
   wireRelated,
   keyWorksText,
@@ -841,7 +842,7 @@ function eksempelRader(par, tomTekst) {
     // brukerønske 2026-10-01), som navn og år i artistlista. Sjangerboblen
     // står foran artistnavnet fra v6.35 (brukervalg 2026-10-04), så navnene
     // står på linje helt til høyre.
-    return `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre">${rowTag} <span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`;
+    return `<li class="pl-item"><a class="lytt-lenke" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${sentralMerke(m)}${escapeHtml(m.label || m.url)}${yInfo}</a><span class="pl-hoyre">${rowTag} <span class="pl-artist">${escapeHtml(a.name)}</span></span></li>`;
   });
   if (!items.length) return { total: 0, html: `<p class="muted empty">${escapeHtml(tomTekst)}</p>`, ider: [] };
   return { total: items.length, html: `<ul class="pl-list">${items.join("")}</ul>`, ider };

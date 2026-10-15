@@ -41,7 +41,13 @@ export const MUSIC_SPEC = {
     // Sjangeren står ØVERST og på egen linje (v4.95): den gjelder HELE raden,
     // og bakerst i rekka ble den lett oversett — et lytteeksempel uten sjanger
     // faller ut av spillelistene. breakAfter tvinger linjeskift, se rowInnerHtml.
-    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til. Styrer hvilken spilleliste det vises i, viktig for artister med flere sjangre.", options: [], breakAfter: true },
+    { key: "genre", cls: "me-genre", type: "select", ph: "Sjanger …", label: "Sjanger (for spillelister)", title: "Hvilken tre-sjanger dette lytteeksempelet hører til. Styrer hvilken spilleliste det vises i, viktig for artister med flere sjangre.", options: [] },
+    // To nivåer (brukervalg 2026-10-15): sentrale lytteeksempler får en fylt prikk
+    // i visningen, kontekst-eksemplene (uten merke) står som før. Bare læreren
+    // setter det (musicSpecWithGenres skjuler feltet ellers), men feltet står
+    // alltid i raden så et studentforslag ikke mister merket ved lagring.
+    // `check`: lagres som true, aldri som false (fraværende = kontekst).
+    { key: "sentral", cls: "me-sentral", type: "check", label: "Sentralt eksempel", tekst: "Sentralt", title: "Sentralt lytteeksempel: får en fylt prikk i visningen. Uten merke er eksempelet kontekst.", breakAfter: true },
     { key: "label", cls: "me-label", type: "text", ph: "Tittel (f.eks. «Hellhound on My Trail»)", label: "Tittel", always: true },
     { key: "year",  cls: "me-year",  type: "number", ph: "Årstall", label: "Årstall" },
     { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
@@ -107,11 +113,14 @@ export function kobleStarttid(row) {
 // MUSIC_SPEC med sjangervalgene fylt inn i genre-selecten. Holder row-editor
 // avhengighetsfri: kalleren sender inn gyldige tre-sjangre (typisk
 // GENEALOGY_MAIN_GENRES fra genealogy.js).
-export function musicSpecWithGenres(genres) {
+// `laerer` viser «Sentralt»-avkrysningen; ellers står den skjult i raden.
+export function musicSpecWithGenres(genres, { laerer = false } = {}) {
   return {
     ...MUSIC_SPEC,
     fields: MUSIC_SPEC.fields.map((f) =>
-      f.key === "genre" ? { ...f, options: [...(genres || [])] } : f
+      f.key === "genre" ? { ...f, options: [...(genres || [])] }
+        : f.key === "sentral" ? { ...f, skjult: !laerer }
+        : f
     ),
   };
 }
@@ -153,6 +162,10 @@ export function normalizeRows(spec, list) {
     const ut = {};
     for (const f of spec.fields) {
       if (f.ui) continue;
+      if (f.type === "check") {
+        if (kilde[f.key] === true) ut[f.key] = true;
+        continue;
+      }
       if (f.type === "number") {
         const n = parseInt(kilde[f.key], 10);
         if (Number.isFinite(n)) ut[f.key] = n;
@@ -173,6 +186,14 @@ export function normalizeSources(v) {
 }
 
 function inputHtml(f, values) {
+  if (f.type === "check") {
+    // Avkrysning (lagres som true, aldri false). `skjult` beholder feltet i raden
+    // uten å vise det, så verdien følger med ved lagring.
+    let html = `<label class="row-check ${f.cls}-wrap"${f.skjult ? " hidden" : ""}><input type="checkbox" class="${f.cls}"${values[f.key] === true ? " checked" : ""}`;
+    if (f.label) html += ` aria-label="${escapeHtml(f.label)}"`;
+    if (f.title) html += ` title="${escapeHtml(f.title)}"`;
+    return html + `> <span>${escapeHtml(f.tekst || f.label || "")}</span></label>`;
+  }
   const v = f.verdi ? f.verdi(values) : (values[f.key] == null ? "" : values[f.key]);
   if (f.type === "select") {
     // Eksisterende verdi som ikke står i options beholdes som eget valg,
@@ -232,6 +253,10 @@ export function collectRows(wrapEl, spec) {
     const out = {};
     for (const f of spec.fields) {
       if (f.ui) continue;
+      if (f.type === "check") {
+        if (r.querySelector("." + f.cls)?.checked) out[f.key] = true;
+        continue;
+      }
       const v = r.querySelector("." + f.cls).value.trim();
       if (f.type === "number") {
         const n = parseInt(v, 10);
@@ -255,6 +280,10 @@ export function collectRawRows(wrapEl, spec) {
     const out = {};
     for (const f of spec.fields) {
       if (f.ui) continue;
+      if (f.type === "check") {
+        if (r.querySelector("." + f.cls)?.checked) out[f.key] = true;
+        continue;
+      }
       const v = r.querySelector("." + f.cls)?.value ?? "";
       if (v.trim()) out[f.key] = v;
     }

@@ -31,7 +31,8 @@ test("musikkeksempel: sjangervelgeren står først, med linjeskift etter seg", (
   const me = rowInnerHtml(MUSIC_SPEC, {});
   assert.ok(me.indexOf('class="me-genre"') < me.indexOf('class="me-label"'),
     "sjangeren skal ligge foran tittelen i markupen");
-  assert.match(me, /<select class="me-genre"[\s\S]*?<\/select><span class="row-break"/);
+  // «Sentralt»-avkrysningen (2026-10-15) står på samme linje som sjangeren, før linjeskiftet.
+  assert.match(me, /<select class="me-genre"[\s\S]*?<\/select>(?:<label class="row-check[\s\S]*?<\/label>)?<span class="row-break"/);
 });
 
 // v5.88: starttiden bor i lenka (t=). Feltet står rett etter lenka, viser

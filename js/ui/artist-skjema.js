@@ -39,7 +39,9 @@ const STUDENTMODUS = ["ny", "retur", "forslag"];
 const LAERERMODUS = ["laerer", "laerer-ny"];
 
 const sorterteSjangre = () => [...GENEALOGY_MAIN_GENRES].sort((a, b) => a.localeCompare(b, "no"));
-const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre());
+// «Sentralt»-avkrysningen på lytteeksempler vises bare i lærermodus; settes når skjemaet startes.
+let musikkLaerer = false;
+const musicSpecSj = () => musicSpecWithGenres(sorterteSjangre(), { laerer: musikkLaerer });
 
 // Obligatoriske felt per modus. Lærerens skjema krevde aldri instrument eller
 // kilder, og et endringsforslag krever bare navnet på den som foreslår: det
@@ -279,6 +281,7 @@ export function fraUtkastV1(u) {
 export function lagArtistSkjema(beholder, cfg) {
   const modus = cfg.modus || "ny";
   const laerer = LAERERMODUS.includes(modus);
+  musikkLaerer = laerer;
   const paakrevd = paakrevdeFor(modus);
   beholder.innerHTML = markup(modus);
   beholder.classList.add("artist-skjema");

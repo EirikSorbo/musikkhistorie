@@ -410,6 +410,12 @@ function yearLabel(w) {
   return "";
 }
 
+// Sentralt lytteeksempel (brukervalg 2026-10-15): en fylt prikk i aksentfarge foran
+// tittelen. Kontekst-eksempler har ingen markering. Står INNE i lenka, så
+// radene i listene beholder oppsettet sitt.
+export const SENTRAL_MERKE = `<span class="sentral-merke" role="img" aria-label="Sentralt lytteeksempel" title="Sentralt lytteeksempel"></span>`;
+export const sentralMerke = (m) => (m && m.sentral === true ? SENTRAL_MERKE : "");
+
 export function musicExampleLabel(m) {
   const y = m.year || null;
   const p = m.performanceYear || null;
@@ -435,7 +441,7 @@ export function musicExamplesHtml(a) {
   return items.map((m) => {
     const label = escapeHtml(m.label || "Lytt");
     const url = escapeHtml(safeUrl(m.url));
-    return `<a class="lytt-lenke" href="${url}" target="_blank" rel="noopener">${label}</a>${musicExampleLabel(m)}`;
+    return `<a class="lytt-lenke" href="${url}" target="_blank" rel="noopener">${sentralMerke(m)}${label}</a>${musicExampleLabel(m)}`;
   }).join(", ");
 }
 

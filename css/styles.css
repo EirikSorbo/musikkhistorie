@@ -1053,6 +1053,11 @@ textarea { resize: vertical; }
 .me-row .me-start:invalid { border-color: var(--danger); }
 .me-row .me-perf-year { flex: 0 0 110px; }
 .me-row .me-note { flex: 1 1 100%; }
+.me-row .row-check { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
+.me-row .row-check[hidden] { display: none; }
+.me-row .row-check input { margin: 0; accent-color: var(--accent); }
+/* Sentralt lytteeksempel (brukervalg 2026-10-15): fylt prikk i aksentfarge, ingen merke på kontekst */
+.sentral-merke { display: inline-block; width: 0.55em; height: 0.55em; margin-right: 0.45em; border-radius: 50%; background: var(--accent); vertical-align: 0.05em; }
 .me-row .me-genre { flex: 0 0 240px; }
 /* Fjern-knappen kapper eksempelet øverst til høyre, ved siden av sjangeren:
    etter at sjangeren flyttet opp (v4.95) ble knappen ellers stående mutters
