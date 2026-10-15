@@ -37,6 +37,9 @@ export const VIS_TYPER = new Set([
   "lytt", "sjangre", "undersjangre", "artister",
   // En delt time (v6.10, U1): «time:<planId>».
   "time",
+  // En slide (v7.06): «slide:<id>», lærerens egne sider i visningen. Bare
+  // læreren kan lese dem (samlingen notater); for andre finnes de ikke.
+  "slide",
   // Plateselskapene (v6.37): ett kort («plateselskap:<id>») og oversikten.
   "plateselskap", "plateselskaper",
 ]);

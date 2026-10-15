@@ -42,6 +42,8 @@ import { getState } from "../data/app-state.js";
 import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "../data/store.js";
 import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
+import { startSlides } from "./slides.js";
+import { erSlideVis } from "./slides-modell.js";
 import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet, lerretInnebygd } from "./lerret.js";
 import { initNotater, vekslNotater, redigerNotater, notaterEndret } from "./pres-notater.js";
 import { startPaminnelser, paminnelserAuthEndret, paminnelserTilLerret, visLerretPaminnelser, leggTilRask, fjernRask, ventendeRaske, paminnelserStartet } from "./paminnelser.js";
@@ -324,8 +326,18 @@ function forhaandslast(i) {
 // Gå til en posisjon: lukk det som står åpent, sett stoppets nivå og unntak,
 // og åpne målet når dataene dets er klare (eller oversiktskortet, først og
 // sist). Kalles også som «Til stoppet» etter en avstikker (samme posisjon).
+// Slides (v7.06) er lærerens private sider: studenter kan ikke lese dem, så et
+// slide-stopp hoppes stille over (samme retning som de gikk). authAvklart hindrer
+// at læreren selv hoppes over de første sekundene, før innloggingen er kjent.
+let authAvklart = false;
+const stoppEtikettErSlide = (pos) => {
+  const p = planPosisjon(pos, plan.stopp.length);
+  return !p.oversikt && erSlideVis(plan.stopp[p.stopp]?.vis);
+};
+
 function gaTilStopp(i) {
   if (!plan || !plan.stopp.length) return;
+  if (authAvklart && !erLaerer && stoppEtikettErSlide(i)) { gaTilStopp(i + (i >= stoppIdx ? 1 : -1)); return; }
   const p = planPosisjon(i, plan.stopp.length);
 
   // Lukk alt først (lyd stoppes, et kort som nekter, avbryter byttet).
@@ -1484,7 +1496,14 @@ export function initPresentasjon() {
   });
   // Lærerøkta følger innloggingen også i fri visning (v5.82): «Navn fra
   // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
+  // Slidene (v7.06, lærerens private sider) hentes når en lærer er innlogget, også på lerretet.
+  startSlides();
   onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); paminnelserAuthEndret(); });
+  // Står en student på et slide-stopp (omlasting midt i en delt time), går det videre.
+  onAuthChange(() => {
+    authAvklart = true;
+    if (!erLaerer && plan && stoppEtikettErSlide(stoppIdx)) gaTilStopp(stoppIdx + 1);
+  });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
     if (planUi) planUi.hidden = false;

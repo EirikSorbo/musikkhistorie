@@ -456,6 +456,19 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
+<!-- En slide (v7.06): lærerens egne sider i visningen, utenfor pensum. Teksten
+     (overskrift og markdown) kommer fra slides.js og finnes bare for læreren. -->
+<div class="modal-backdrop" id="modal-slide">
+  <div class="modal modal-innhold modal-slide">
+    <div class="modal-head">
+      <h2 class="slide-tittel"></h2>
+      <div class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div class="slide-kropp rt"></div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-rotter" data-vis="side:rotter">
   <div class="modal modal-innhold">
     <div class="modal-head">

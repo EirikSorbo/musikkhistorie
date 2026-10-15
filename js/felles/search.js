@@ -47,6 +47,7 @@ export const TYPE_LABEL = {
   oversikt: "Metasjanger",
   galleri: "Artistgalleri",
   plateselskap: "Plateselskap",
+  slide: "Slide",
 };
 
 // Overskriften over en gruppe treff.
@@ -68,13 +69,14 @@ export const TYPE_FLERTALL = {
   oversikt: "Metasjangre",
   galleri: "Artistgallerier",
   plateselskap: "Plateselskaper",
+  slide: "Slides",
 };
 
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
   "artist", "lytteeksempel", "oversikt", "sjanger", "rot", "undersjanger", "tech", "hendelse",
-  "historie", "galleri", "side", "instrument", "plateselskap", "samfunn", "teknologi", "kobling", "podkast",
+  "historie", "galleri", "side", "instrument", "plateselskap", "samfunn", "teknologi", "kobling", "podkast", "slide",
 ];
 
 const SIDE_TITTEL = { rotter: "Røtter før 1910", omHistorie: "Om historie", appGuide: "Slik bruker du appen" };
@@ -170,6 +172,14 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
       e.yt?.video
         ? { hva: "yt", id: e.yt.video, modus: e.yt.list || "", ekstra: e.yt.start ? String(e.yt.start) : "" }
         : { hva: "artist", id: e.a.id }));
+  }
+
+  // --- Slides (v7.06) ---------------------------------------------------------
+  // Lærerens egne sider i visningen. Lista kommer fra slides.js og er tom for alle
+  // andre enn en innlogget lærer, så studentene aldri får dem som treff. De kan
+  // også bli stopp i en kjøreplan (slide:<id>).
+  for (const sl of state.slides || []) {
+    ut.push(post("slide", sl.id, sl.tittel, "Slide", [sl.innhold], { hva: "slide", id: sl.id }));
   }
 
   // --- Sjangre og røtter (treets noder) -------------------------------------

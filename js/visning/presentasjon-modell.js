@@ -535,6 +535,10 @@ function oversiktPunkt(m, oppslag) {
       return { kat: "oversikter", tekst: m.id ? `Varmekartet: ${m.id}` : "Varmekartet" };
     case "side":
       return { kat: "oversikter", tekst: SIDE_NAVN[m.id] || "Slik bruker du appen" };
+    // Slides (v7.06) er lærerens private sider og står aldri på oversikten
+    // (den vises også for studenter og på lerretet).
+    case "slide":
+      return null;
     // Plateselskapene (v6.37) står blant oversiktene, med navnet fra lista.
     case "plateselskap":
       return { kat: "oversikter", tekst: `Plateselskap: ${finnSelskapId(m.id)?.navn || m.id || "?"}` };

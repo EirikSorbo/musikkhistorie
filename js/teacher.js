@@ -51,6 +51,7 @@ import { initVisning, visningTikk } from "./visning/visning.js";
 import { initPlanMeny } from "./visning/plan-meny.js";
 import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
 import { initNotater, redigerNotatForKort } from "./visning/pres-notater.js";
+import { startSlides } from "./visning/slides.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
 import { settLaererside, initViktighetsMerke } from "./ui/viktighet.js";
@@ -365,6 +366,9 @@ function startAppInner() {
   // Private notater (v6.50): med i sikkerhetskopien. Er reglene ikke
   // publisert ennå, blir lista bare tom; resten av lærersiden går som før.
   subscribeNotater((n) => { state.notater = n || {}; }, () => {});
+  // Slidene (v7.06) ligger i de samme notatene (nøkkel slide:<id>). De leses av slides.js
+  // med eget abonnement, så notat-linja over beholder sin form (testet i kildekoden).
+  startSlides();
   subscribePendingEdits((edits) => { state.pendingEdits = edits; renderPendingEditsList(); refreshDesk(); });
 
   // Tegn Skrivebordet med en gang (tomt/nullstilt) så panelet ikke står blankt

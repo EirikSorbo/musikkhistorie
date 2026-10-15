@@ -31,6 +31,8 @@ import { openMetaOversikt } from "./explore-metaoversikt.js";
 import { openArtistGalleri } from "./explore-visningssider.js";
 import { openLytt } from "./explore-lytt.js";
 import { openTime, timeTilgjengelig } from "./explore-timer.js";
+import { openSlide } from "../visning/slide-kort.js";
+import { finnSlide, slidesLastet, onSlidesEndret } from "../visning/slides-liste.js";
 import { openSubgenreList, openUndersjangre } from "./explore-sjanger.js";
 import { openPlateselskap, openPlateselskaper } from "./explore-plateselskap.js";
 import { finnSelskapId, plateselskapeneSynlige, plateselskapSynlig } from "../felles/plateselskaper.js";
@@ -104,6 +106,7 @@ export function apneMaal(apne) {
     // Artister-vinduet bor på forsiden (landing.js), som gir åpneren.
     case "artister": return void opts.onOpenArtister?.();
     case "time": return openTime(apne.id);
+    case "slide": return void openSlide(apne.id);
     case "plateselskap": return openPlateselskap(apne.id);
     case "plateselskaper": return openPlateselskaper();
   }
@@ -147,6 +150,11 @@ function klarFor(apne, s) {
       // En time som ikke er delt (eller med «Fra timene» av) finnes ikke for
       // studenten, så presentasjonen får varselet sitt (Fable F6).
       return timeTilgjengelig(normaliserPlaner(s.content?.presentasjoner?.planer)[apne.id]) ? "klar" : "finnes-ikke";
+    // En slide (v7.06) bor i lærerens private notater. Uten lærerkonto lander
+    // den aldri, så et mål for en student blir stående som «vent» uten å åpne noe.
+    case "slide":
+      if (finnSlide(apne.id)) return "klar";
+      return slidesLastet() ? "finnes-ikke" : "vent";
     // Oversikten tegnes av treet, periodene (genreDescriptions) og artistene.
     case "oversikt":
       return isGenreModelReady() && s.artistsLoaded && s.genreDescsLoaded ? "klar" : "vent";
@@ -223,4 +231,4 @@ export function provVisMaal() {
 
 // Sjangertreet lander som egen hendelse (genre-model), ikke som et av sidens
 // snapshot-hooks — sjanger-/tre-mål trenger dette dyttet.
-if (typeof document !== "undefined") onGenreModelChanged(() => provVisMaal());
+if (typeof document !== "undefined") { onGenreModelChanged(() => provVisMaal()); onSlidesEndret(() => provVisMaal()); }

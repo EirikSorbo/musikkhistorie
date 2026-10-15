@@ -19,6 +19,7 @@ import { lytteeksempelNavn } from "./presentasjon-modell.js";
 import { GENEALOGY, GENEALOGY_META_GENRES, edgeExists } from "../sjangre/genre-model.js";
 import { INSTRUMENT_TIMELINE_GROUPS, isVisible } from "../felles/limits.js";
 import { finnSelskapId } from "../felles/plateselskaper.js";
+import { finnSlide, slidesLastet } from "./slides-liste.js";
 
 export const TYPE_NAVN = {
   artist: "Artist", sjanger: "Sjanger", undersjanger: "Undersjanger",
@@ -32,6 +33,7 @@ export const TYPE_NAVN = {
   // Lytt heter Spillelister i appen fra v6.31.
   sjangre: "Sjangre", undersjangre: "Undersjangre", artister: "Artister", lytt: "Spillelister",
   plateselskap: "Plateselskap", plateselskaper: "Plateselskaper",
+  slide: "Slide",
 };
 
 export const DOD = "finnes ikke lenger";
@@ -97,6 +99,13 @@ export function stoppEtikett(stopp) {
       return ut(type);
     case "tiår":
       return ut(`${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})`);
+    // Slide (v7.06): bare læreren kan lese dem. For andre står bare «Slide».
+    case "slide": {
+      const sl = finnSlide(m.id);
+      if (sl) return ut(sl.tittel);
+      if (slidesLastet()) return ut(m.id, { feil: DOD });
+      return s.isTeacher ? ut("laster …", { laster: true }) : { tekst: type, navn: type };
+    }
     // Lytteeksempel (v5.28): slå opp tittelen blant artistenes egne eksempler.
     case "yt": {
       const tittel = lytteeksempelNavn(m.id, s.artists);

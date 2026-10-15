@@ -44,6 +44,7 @@ import { stoppEtikett, dodeStopp } from "./stopp-etikett.js";
 import { byggIndeks, sok, TYPE_LABEL } from "../felles/search.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "../felles/feature-flags.js";
 import { apneMaal } from "../utforsk/explore-apne.js";
+import { slider } from "./slides-liste.js";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -308,8 +309,9 @@ let kladdIndeks = null;
 let kladdAvtrykk = "";
 
 function kladdIndeksNaa() {
-  const s = getState();
+  const s = { ...getState(), slides: slider() };   // slidene (v7.06): tom liste utenfor en lærerøkt
   const avtrykk = [
+    s.slides.map((x) => `${x.id}@${x.oppdatert}`).join(","),
     (s.artists || []).length, Object.keys(s.genreDescs || {}).length, (s.techItems || []).length,
     Object.keys(s.decadeDescs || {}).length, Object.keys(s.content || {}).length,
     Object.keys(s.edgeDescs || {}).length, !!s.isTeacher,

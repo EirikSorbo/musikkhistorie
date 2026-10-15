@@ -5,15 +5,15 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-108 filer i 11 mapper.
+113 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
 | `js/` | Sidene og oppsettet | 11 |
 | `js/utforsk/` | Utforsk | 21 |
 | `js/sjangre/` | Sjangrene og slektstreet | 13 |
-| `js/visning/` | Visning | 11 |
-| `js/laerer/` | Lærersiden | 7 |
+| `js/visning/` | Visning | 15 |
+| `js/laerer/` | Lærersiden | 8 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 15 |
@@ -112,6 +112,10 @@ Presentasjonsvisningen på lerretet, kjøreplanene og Visning-vinduet bak presen
 | `pres-sjanger.js` | SJANGERKORTETS LERRET (v5.89) — oppsettet i presentasjonsvisningen |
 | `presentasjon-modell.js` | PRESENTASJONSVISNING — ren modell (v5.24) |
 | `presentasjon.js` | PRESENTASJONSVISNING — browser-delen (v5.24) |
+| `slide-kort.js` | SLIDEKORTET — åpner en slide i visningen (v7.06) |
+| `slides-liste.js` | SLIDE-LISTA — det som er lest, uten Firebase (v7.06) |
+| `slides-modell.js` | SLIDES — lærerens egne sider i visningen, utenfor pensum (v7.06) |
+| `slides.js` | SLIDES — kjøring: abonnement og lagring (v7.06) |
 | `stopp-etikett.js` | STOPP-ETIKETT — menneskelig navn på et kjøreplan-stopp (v5.75) |
 | `visning.js` | VISNING — vinduet bak presentasjonsikonet (v5.41) |
 
@@ -127,6 +131,7 @@ Skrivebordet, artistene, innholdsredigeringen, sjangertre-editoren, gjennomgange
 | `teacher-genres.js` | LÆRER — SJANGERTRE-EDITOR |
 | `teacher-import.js` | LÆRER — IMPORT / EKSPORT / FLETTING |
 | `teacher-review.js` | LÆRER — ENDRINGSFORSLAG (review/diff) |
+| `teacher-slides.js` | SLIDES PÅ SKRIVEBORDET — lag, rediger og slett (v7.06) |
 | `teacher-state.js` | LÆRER — DELT KJERNE |
 
 ## `js/forslag/` Endringsforslag

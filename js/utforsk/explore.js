@@ -141,7 +141,7 @@ function wireModals() {
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
    "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier",
    "modal-meta-oversikt", "modal-visningssider", "modal-galleri",
-   "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt", "modal-time",
+   "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt", "modal-time", "modal-slide",
    "modal-plateselskaper", "modal-plateselskap"].forEach((id) => setupModal(id));
 
   // Søkefeltet i Utforsk-kortet står i sidenes egen markup med faste ID-er, så

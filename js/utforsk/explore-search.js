@@ -16,6 +16,7 @@ import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "../felles/feature-flags.j
 import { byggIndeks, sok, utdrag, marker } from "../felles/search.js";
 import { getState } from "../data/app-state.js";
 import { apneMaal } from "./explore-apne.js";
+import { slider } from "../visning/slides-liste.js";
 import { erSkrivefelt, erSokHurtigtast } from "../felles/vis-lenke.js";
 
 // Så mange treff vises per gruppe før «Vis alle» — nok til å se mønsteret,
@@ -38,7 +39,10 @@ if (typeof document !== "undefined") {
 }
 
 function hentIndeks(s, { tvingNy = false } = {}) {
+  // Slidene (v7.06): tom liste for alle andre enn en innlogget lærer.
+  s = { ...s, slides: slider() };
   const avtrykk = [
+    s.slides.map((x) => `${x.id}@${x.oppdatert}`).join(","),
     (s.artists || []).length,
     Object.keys(s.genreDescs || {}).length,
     (s.techItems || []).length,
