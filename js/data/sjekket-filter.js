@@ -12,7 +12,7 @@
 // ============================================================================
 
 import { GENEALOGY } from "../sjangre/genre-model.js";
-import { plateselskapForSide } from "../felles/plateselskaper.js";
+import { plateselskapIdForSide } from "../felles/plateselskaper.js";
 
 const lik = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
 const har = (liste, navn) => Array.isArray(liste) && liste.some((x) => lik(x, navn));
@@ -84,8 +84,10 @@ const SIDER = ["rotter", "omHistorie"];
 export function sideSjekk(id) {
   const s = String(id || "");
   if (SIDER.includes(s) || s.startsWith("instrument-")) return { kategori: "pages", id: s };
-  const selskap = plateselskapForSide(s);
-  if (selskap) return { kategori: "plateselskaper", id: selskap.id };
+  // Bare dokument-id-en (v7.12): lista bygges av de samme dokumentene, så den
+  // finnes ikke ennå når rådataene filtreres.
+  const selskapId = plateselskapIdForSide(s);
+  if (selskapId) return { kategori: "plateselskaper", id: selskapId };
   return null;
 }
 

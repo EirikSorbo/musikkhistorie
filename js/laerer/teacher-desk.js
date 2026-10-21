@@ -128,7 +128,7 @@ function buildCategories() {
     },
     {
       key: "plateselskaper", label: "Plateselskaper",
-      items: selskaperSortert((id) => state.content?.[plateselskapSideId(id)] || null)
+      items: selskaperSortert((id) => state.content?.[plateselskapSideId(id)] || null, state.content || {})
         .map((p) => ({ id: p.id, name: p.navn })),
       checkedSet: set("plateselskaper"),
     },

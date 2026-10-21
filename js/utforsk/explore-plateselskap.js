@@ -19,7 +19,7 @@ import { renderRichText } from "../felles/rich-text.js";
 import { wireLinks, wireRelated, factsHtml } from "../ui/ui-helpers.js";
 import { openArtistsPlaylistModal, countArtistExamples } from "../ui/ui.js";
 import { META_GENRE_COLOR } from "../sjangre/genre-model.js";
-import { modalOpen } from "../ui/ui-modal.js";
+import { modalOpen, modalClose } from "../ui/ui-modal.js";
 import {
   finnSelskapId, plateselskapSideId, artisterForSelskap, selskaperSortert,
   plateselskapeneSynlige, plateselskapSynlig, grunnlagtAar,
@@ -56,6 +56,9 @@ let sisteSignatur = null;
 function tegnKort(tvunget = false) {
   const p = finnSelskapId(aapentId);
   const body = document.getElementById("ps-body");
+  // Slettet (v7.12, læreren styrer lista): kortet lukkes i stedet for å stå
+  // igjen med det som var.
+  if (!p && erApen("modal-plateselskap")) { modalClose(document.getElementById("modal-plateselskap")); return; }
   if (!p || !body) return;
   const s = getState();
   const sideId = plateselskapSideId(p.id);
@@ -180,9 +183,18 @@ function tegnOversikt() {
       </span>
     </button></li>`;
   }).join("");
-  el.innerHTML = `<ol class="pss-liste">${kort}</ol>`;
+  el.innerHTML = kort ? `<ol class="pss-liste">${kort}</ol>`
+    : `<p class="gx-missing">${getState().contentLoaded ? "Ingen plateselskaper ennå." : "Laster innhold …"}</p>`;
   el.querySelectorAll("[data-ps-id]").forEach((b) =>
     b.addEventListener("click", () => openPlateselskap(b.dataset.psId)));
+  // Læreren legger til selskaper her (v7.12, brukervalg 2026-10-21). Navn,
+  // skrivemåter og sletting står i Rediger på hvert kort.
+  const extra = document.getElementById("pss-extra");
+  if (extra) {
+    extra.innerHTML = opts?.onNyttPlateselskap
+      ? `<button type="button" class="btn ghost small" data-ps-ny>Nytt plateselskap</button>` : "";
+    extra.querySelector("[data-ps-ny]")?.addEventListener("click", () => opts.onNyttPlateselskap());
+  }
 }
 
 export function openPlateselskaper() {

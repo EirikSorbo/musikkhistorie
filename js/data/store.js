@@ -613,6 +613,13 @@ export async function savePage(pageId, data) {
     { ...data, updatedAt: data.updatedAt || new Date().toISOString() });
 }
 
+// Fletter felt inn i en innholdsside uten å røre resten (v7.12): overgangen
+// som skriver plateselskapenes navn og skrivemåter inn i dokumentene, ved
+// siden av teksten som står der.
+export async function oppdaterSide(pageId, felt) {
+  return setDoc(doc(db, "content", pageId), felt, { merge: true });
+}
+
 // Sletter en innholdsside — vises som manglende til ny tekst lagres/importeres.
 export async function deletePage(pageId) {
   return deleteDoc(doc(db, "content", pageId));

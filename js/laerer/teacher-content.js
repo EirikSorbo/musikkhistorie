@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts, runMigrationPlan } from "../data/store.js";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, oppdaterSide, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts, runMigrationPlan } from "../data/store.js";
 import { planSubRename } from "../sjangre/genre-migrate.js";
 import { flyttPodkast } from "../felles/podkast-rekkefolge.js";
 import { resolveMainDesc } from "../sjangre/genealogy.js";
@@ -22,14 +22,17 @@ import { resolveDesc } from "../sjangre/genre-descriptions.js";
 import { renderPodcastList, wirePlayerCloseGuard, wireCharCount, checkBtnHtml, toggleCheckBtn, teacherActionRow, wireTeacherRow, techFactsLines, ICONS, fyllPunktfelt, lesPunktfelt } from "../ui/ui-helpers.js";
 import { redigerNotatForKort } from "../visning/pres-notater.js";
 import { DECADES, DECADE_OPTIONS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, SAMMENDRAG_MAKS } from "../felles/limits.js";
-import { FAKTA_FELT, rensFakta, plateselskapForSide } from "../felles/plateselskaper.js";
+import {
+  FAKTA_FELT, rensFakta, plateselskapForSide, plateselskapIdForSide, plateselskapSideId, finnSelskapId,
+  rensSelskapsfelt, skrivemaateIBruk, nyttSelskapId, artisterForSelskap, SELSKAPER_FOR_V712,
+} from "../felles/plateselskaper.js";
 import { heatRow, getHeatData } from "../sjangre/heat-strip.js";
 
 const LEVEL_LABEL = { meta: "metasjanger", main: "sjanger", sub: "undersjanger" };
 import { wireAllLinks } from "../felles/linkify.js";
 import { $ } from "../data/shared.js";
 import { SOURCE_SPEC, addRow, buildRows, collectRows, normalizeSources } from "../ui/row-editor.js";
-import { melding, bekreft, setupModal, modalOpen, sporTekst } from "../ui/ui-modal.js";
+import { melding, bekreft, setupModal, modalOpen, modalClose, sporTekst } from "../ui/ui-modal.js";
 
 // ----------------------------------------------------------------------------
 //  Tiår- og sjangerbeskrivelser (enkeltmodaler)
@@ -866,6 +869,20 @@ function byggFaktafelt(fakta) {
     <input type="text" data-fakta-felt="${escapeHtml(f.key)}" maxlength="${f.key === "grunnlagt" ? 4 : 120}" placeholder="${escapeHtml(f.hint)}" value="${escapeHtml(String(fakta?.[f.key] ?? ""))}">
   </label>`).join("");
 }
+// Navnet og de andre skrivemåtene (v7.12). Verdiene står i dokumentet, eller
+// i overgangslista for et av de 13 første selskapene som ikke er skrevet inn ennå.
+function byggSelskapsfelt(selskap) {
+  const el = $("#se-selskap");
+  if (!el) return;
+  const andre = (selskap?.aliaser || []).filter((a) => a !== selskap?.navn);
+  el.innerHTML = `<label>Navn
+    <input type="text" id="se-selskap-navn" maxlength="80" placeholder="f.eks. Stax" value="${escapeHtml(selskap?.navn || "")}">
+  </label>
+  <label>Andre skrivemåter
+    <input type="text" id="se-selskap-aliaser" maxlength="300" placeholder="f.eks. Volt, Stax Records" value="${escapeHtml(andre.join(", "))}">
+  </label>`;
+}
+
 function lesFaktafelt() {
   const ut = {};
   document.querySelectorAll("#se-fakta [data-fakta-felt]").forEach((i) => { ut[i.dataset.faktaFelt] = i.value; });
@@ -884,8 +901,16 @@ function openContentEditor(target, title, existing) {
   editorFakta = target?.type === "page" ? rensFakta(state.content?.[target.id]?.fakta) : null;
   const medFakta = erPlateselskapside(target);
   $("#se-fakta-wrap").hidden = !medFakta;
-  if (medFakta) byggFaktafelt(editorFakta);
-  else $("#se-fakta").innerHTML = "";
+  if (medFakta) {
+    byggSelskapsfelt(finnSelskapId(plateselskapIdForSide(target.id), state.content));
+    byggFaktafelt(editorFakta);
+  } else {
+    $("#se-selskap").innerHTML = "";
+    $("#se-fakta").innerHTML = "";
+  }
+  // Et plateselskap slettes som helhet (v7.12). Teksten alene tømmes ved å
+  // lagre et tomt tekstfelt, så «Slett teksten» trengs ikke der.
+  $("#se-slett-selskap").hidden = !medFakta;
   // Radene tømmes for sider uten kildefelt, så forrige instruments kilder ikke
   // blir stående i et skjult felt og forvirre neste gang det åpnes.
   if (medKilder) buildRows($("#se-kilder"), SOURCE_SPEC, editorKilder);
@@ -905,7 +930,7 @@ function openContentEditor(target, title, existing) {
   $("#se-status").textContent = harTekst
     ? "Lagret tekst. Endringene vises for studentene idet du lagrer."
     : "Ingen tekst lagret ennå. Teksten vises som manglende til du lagrer (eller importerer innholdsfilen).";
-  $("#se-reset").style.display = existing ? "" : "none";
+  $("#se-reset").style.display = existing && !medFakta ? "" : "none";
   renderStoryPreview();
   openAdminModal("modal-story-edit");
 }
@@ -919,6 +944,75 @@ export function openStoryEditor(genre) {
     return;
   }
   openContentEditor({ type: "story", id: genre }, `historien om ${genre}`, storyFor(genre, state.genreDescs));
+}
+
+// ---------------------------------------------------------------------------
+//  Plateselskapene: nytt, slett og overgangen (v7.12, brukervalg 2026-10-21)
+// ---------------------------------------------------------------------------
+
+// «Nytt plateselskap» i oversikten: navnet først, så åpnes redigeringen der
+// teksten, faktaene, kildene og skrivemåtene fylles inn. Id-en lages av navnet
+// og står fast etterpå.
+export async function nyttPlateselskap() {
+  if (!innholdKlart()) return;
+  const navn = (await sporTekst("Navnet slik det skal stå på kortet, for eksempel «Stax».", "", { tittel: "Nytt plateselskap", ok: "Opprett" }))?.replace(/\s+/g, " ").trim();
+  if (!navn) return;
+  const kollisjon = skrivemaateIBruk({ id: null, navn, aliaser: [] }, state.content);
+  if (kollisjon) {
+    melding(`«${kollisjon.skrivemaate}» brukes alt av ${kollisjon.selskap.navn}.`);
+    return;
+  }
+  const id = nyttSelskapId(navn, (x) => !!state.content?.[plateselskapSideId(x)]);
+  try {
+    await savePage(plateselskapSideId(id), { navn });
+  } catch (err) {
+    melding(`Fikk ikke opprettet plateselskapet (${err?.message || err}).`);
+    return;
+  }
+  openPageEditor(plateselskapSideId(id));
+}
+
+// «Slett plateselskapet» i redigeringen: kortet, teksten, faktaene, kildene og
+// sjekken. Plateselskapsfeltet på artistene står som vanlig tekst.
+async function slettPlateselskap(id) {
+  const p = id && finnSelskapId(id, state.content);
+  if (!p) return;
+  const n = artisterForSelskap(state.artists, id).length;
+  const ok = await bekreft(
+    `Kortet, teksten, faktaene og kildene slettes for godt. ${n ? `${n} ${n === 1 ? "artist har" : "artister har"} ${p.navn} i plateselskapsfeltet. Det blir stående som vanlig tekst.` : ""} Kjøreplaner med kortet som stopp får et stopp som ikke finnes lenger.`,
+    { tittel: `Slette ${p.navn}?`, ja: "Slett plateselskapet", farlig: true });
+  if (!ok) return;
+  try {
+    await deletePage(plateselskapSideId(id));
+  } catch (err) {
+    melding(`Fikk ikke slettet plateselskapet (${err?.message || err}).`);
+    return;
+  }
+  setContentCheck("plateselskaper", id, false);
+  closeAdminModal("modal-story-edit");
+  const kort = document.getElementById("modal-plateselskap");
+  if (kort?.classList.contains("open")) modalClose(kort);
+}
+
+// Overgangen: de 13 selskapene som sto i koden, får navn og skrivemåter skrevet
+// inn i dokumentene sine (fletting, teksten står). Kjøres når lærersiden har
+// innholdet, én gang per sidevisning, og bare for dokumenter uten navn.
+let migrert = false;
+export async function migrerPlateselskaper() {
+  if (migrert || !state.contentLoaded) return;
+  migrert = true;
+  const mangler = SELSKAPER_FOR_V712.filter((p) => {
+    const dok = state.content?.[plateselskapSideId(p.id)];
+    return dok && !dok.navn;
+  });
+  for (const p of mangler) {
+    try {
+      await oppdaterSide(plateselskapSideId(p.id), rensSelskapsfelt(p));
+    } catch (err) {
+      console.warn("Fikk ikke skrevet inn plateselskapet", p.id, err);
+      migrert = false;   // prøves igjen ved neste innholds-snapshot
+    }
+  }
 }
 
 export function openPageEditor(pageId) {
@@ -970,7 +1064,32 @@ export function setupStoryEditor() {
   $("#se-save").addEventListener("click", async () => {
     const body = ta.value.trim();
     const msg = $("#se-msg");
-    if (!body) {
+    // Plateselskapet (v7.12): navnet må stå, og ingen andre selskaper kan bruke
+    // de samme skrivemåtene. Teksten kan være tom: kortet viser da artistene.
+    let selskap = null;
+    if (erPlateselskapside(editorTarget)) {
+      const id = plateselskapIdForSide(editorTarget.id);
+      const dok = state.content?.[editorTarget.id] || {};
+      const gml = SELSKAPER_FOR_V712.find((p) => p.id === id) || {};
+      selskap = rensSelskapsfelt({
+        navn: $("#se-selskap-navn").value,
+        aliaser: $("#se-selskap-aliaser").value,
+        // Feltene uten egne inndatafelt følger med fra dokumentet (eller overgangslista).
+        utenGenitiv: dok.navn ? dok.utenGenitiv : gml.utenGenitiv,
+        ikkeITekst: dok.navn ? dok.ikkeITekst : gml.ikkeITekst,
+      });
+      const feil = !selskap.navn ? "Plateselskapet må ha et navn."
+        : (() => {
+          const kollisjon = skrivemaateIBruk({ id, navn: selskap.navn, aliaser: selskap.aliaser || [] }, state.content);
+          return kollisjon ? `«${kollisjon.skrivemaate}» brukes alt av ${kollisjon.selskap.navn}. Hver skrivemåte kan bare høre til ett selskap.` : "";
+        })();
+      if (feil) {
+        msg.textContent = feil;
+        msg.className = "form-msg error";
+        return;
+      }
+    }
+    if (!body && !selskap) {
       msg.textContent = "Teksten kan ikke være tom. Bruk «Slett teksten» i stedet.";
       msg.className = "form-msg error";
       return;
@@ -991,7 +1110,8 @@ export function setupStoryEditor() {
         // savePage ERSTATTER hele dokumentet (ingen merge), så kildene må
         // skrives med hver gang de finnes. Sider uten kildefelt får ikke et
         // tomt kilder-felt påført, men beholder det de eventuelt hadde.
-        const data = { body };
+        const data = body ? { body } : {};
+        if (selskap) Object.assign(data, selskap);
         if (harKildefelt(editorTarget)) data.kilder = collectRows($("#se-kilder"), SOURCE_SPEC);
         else if (editorKilder.length) data.kilder = editorKilder;
         // Plateselskapene: faktaene fra feltene. Tomme felt gir ingen fakta.
@@ -1007,6 +1127,8 @@ export function setupStoryEditor() {
       msg.className = "form-msg error";
     }
   });
+
+  $("#se-slett-selskap").addEventListener("click", () => slettPlateselskap(plateselskapIdForSide(editorTarget?.id)));
 
   $("#se-reset").addEventListener("click", async () => {
     if (!(await bekreft("Den vises som manglende til ny tekst lagres eller importeres. Det finnes ingen reservetekst.", { tittel: "Slette teksten?", ja: "Slett", farlig: true }))) return;

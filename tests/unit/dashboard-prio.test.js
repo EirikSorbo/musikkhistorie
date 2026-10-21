@@ -85,11 +85,14 @@ test("skjulte kort teller ikke som «uten viktighetsgrad»", () => {
 // v6.87 (brukerønske 2026-10-13): «Plateselskaper» er et nøkkeltall i
 // Pensumets form, og «Hull og skjevheter» står nederst i Mangler-vinduet.
 test("Plateselskaper er et nøkkeltall som åpner plateselskapene", async () => {
-  const { PLATESELSKAPER } = await import("../../js/felles/plateselskaper.js");
+  const { SELSKAPER_FOR_V712, plateselskapSideId } = await import("../../js/felles/plateselskaper.js");
+  // Fra v7.12 er lista dokumentene i content (plateselskap-<id>).
+  const content = Object.fromEntries(SELSKAPER_FOR_V712.map((p) => [plateselskapSideId(p.id), {}]));
+  const PLATESELSKAPER = SELSKAPER_FOR_V712;
   const el = { innerHTML: "", onclick: null };
   const mangler = { innerHTML: "", onclick: null };
   let aapnet = 0;
-  renderDashboard(el, { artists: ARTISTER, manglerEl: mangler, explore: { openPlateselskaper: () => { aapnet++; } } });
+  renderDashboard(el, { artists: ARTISTER, content, manglerEl: mangler, explore: { openPlateselskaper: () => { aapnet++; } } });
   const m = el.innerHTML.match(/data-ov-open="plateselskaper"[^>]*>\s*<span class="ov-kpi-n">(\d+)<\/span>\s*<span class="ov-kpi-l">Plateselskaper</);
   assert.ok(m, "fant ikke nøkkeltallet Plateselskaper");
   assert.equal(Number(m[1]), PLATESELSKAPER.length);

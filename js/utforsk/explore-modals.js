@@ -396,6 +396,7 @@ ${TECH_DETAIL_MODAL_HTML}
   <div class="modal modal-innhold">
     <div class="modal-head">
       <h2>Plateselskaper</h2>
+      <div id="pss-extra" class="head-actions"></div>
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="pss-body"></div>

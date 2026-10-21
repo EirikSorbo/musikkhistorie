@@ -8,13 +8,23 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  PLATESELSKAPER, finnPlateselskap, selskaperIFelt, delSelskapsfelt, artisterForSelskap,
+  finnPlateselskap, selskaperIFelt, delSelskapsfelt, artisterForSelskap,
   selskaperSortert, grunnlagtAar, rensFakta, plateselskapSideId, plateselskapForSide,
+  alleSelskaper, SELSKAPER_FOR_V712, rensSelskapsfelt, nyttSelskapId, skrivemaateIBruk,
+  plateselskapIdForSide, finnSelskapId,
 } from "../../js/felles/plateselskaper.js";
+import { setOpts } from "../../js/data/app-state.js";
 import { byggIndeks } from "../../js/felles/search.js";
 import { VIS_TYPER } from "../../js/felles/vis-lenke.js";
 import { TYPE_NAVN } from "../../js/visning/stopp-etikett.js";
 import { lesJs } from "../helpers/js-filer.js";
+
+// Fra v7.12 er lista dokumentene i content (plateselskap-<id>). De 13 første
+// har ennå ikke navn i dokumentene og får det fra overgangslista, slik live-
+// dataene er før lærersiden har skrevet dem inn.
+const INNHOLD = Object.fromEntries(SELSKAPER_FOR_V712.map((p) => [plateselskapSideId(p.id), { body: "" }]));
+setOpts({ getState: () => ({ content: INNHOLD }) });
+const PLATESELSKAPER = alleSelskaper();
 
 const id = (navn) => finnPlateselskap(navn)?.id ?? null;
 
@@ -99,7 +109,7 @@ test("rensFakta beholder bare kjente felt med innhold", () => {
 });
 
 test("søket: alle tretten for læreren, ingen for studentene mens hubkortet er skjult", () => {
-  const state = { content: { "plateselskap-stax": { body: "Soul fra Memphis.", fakta: { sted: "Memphis" } } } };
+  const state = { content: { ...INNHOLD, "plateselskap-stax": { body: "Soul fra Memphis.", fakta: { sted: "Memphis" } } } };
   const laerer = byggIndeks(state, { erLærer: true, skjulHub: { "sb-plateselskaper": true } }).filter((p) => p.type === "plateselskap");
   assert.equal(laerer.length, 13);
   const stax = laerer.find((p) => p.id === "stax");
@@ -178,7 +188,7 @@ test("selskapslenker i alle tekster: artistene går foran, titler og Berry Gordy
 
 test("lenkekonteksten tar med selskapene studentene får se", () => {
   const ctxKilde = lesJs("explore-context.js");
-  assert.match(ctxKilde, /PLATESELSKAPER\.filter\(\(p\) => plateselskapSynlig\(p\.id\)\)/);
+  assert.match(ctxKilde, /alleSelskaper\(\)\.filter\(\(p\) => plateselskapSynlig\(p\.id\)\)/);
   assert.equal((ctxKilde.match(/plateselskaper: lenkeSelskaper\(\)/g) || []).length, 2, "buildLinkCtx og sjangerOpts");
   assert.equal((ctxKilde.match(/onPlateselskapClick: \(id\) => nav\.openPlateselskap\?\.\(id\)/g) || []).length, 2);
 });
@@ -186,4 +196,80 @@ test("lenkekonteksten tar med selskapene studentene får se", () => {
 test("standardnavnene er kortenes titler", () => {
   assert.equal(PLATESELSKAPER.find((p) => p.id === "victor").navn, "RCA Victor");
   for (const p of PLATESELSKAPER) assert.ok(p.aliaser.includes(p.navn), `${p.id}: standardnavnet skal også treffe`);
+});
+
+// ---------------------------------------------------------------------------
+//  v7.12 (brukervalg 2026-10-21): læreren styrer lista selv
+// ---------------------------------------------------------------------------
+
+test("lista er dokumentene: navnet i dokumentet går foran overgangslista, nye selskaper kommer med", () => {
+  const content = {
+    ...INNHOLD,
+    "plateselskap-motown": { body: "", navn: "Motown Records", aliaser: ["Tamla"] },
+    "plateselskap-vee-jay": { navn: "Vee-Jay", aliaser: "VJ, Vee Jay" },
+    "plateselskap-uten-navn": { body: "Ingen navn og ikke i overgangslista." },
+    "instrument-gitar": { body: "Ikke et selskap." },
+  };
+  const liste = alleSelskaper(content);
+  assert.equal(liste.length, 14, "de 13 og Vee-Jay, ikke dokumentet uten navn");
+  const motown = finnSelskapId("motown", content);
+  assert.equal(motown.navn, "Motown Records");
+  assert.deepEqual(motown.aliaser, ["Motown Records", "Tamla"], "skrivemåtene fra dokumentet, ikke overgangslistas");
+  assert.equal(finnPlateselskap("Gordy", content), null, "Gordy er ikke lenger en skrivemåte for Motown");
+  assert.equal(finnPlateselskap("VJ", content)?.id, "vee-jay", "kommaseparert tekst godtas");
+  assert.equal(finnPlateselskap("Vee-Jay Records", content)?.id, "vee-jay");
+  // Slettet dokument: borte fra lista, også for de 13 første.
+  const utenSun = { ...INNHOLD };
+  delete utenSun["plateselskap-sun"];
+  assert.equal(finnSelskapId("sun", utenSun), null);
+  assert.equal(alleSelskaper(utenSun).length, 12);
+});
+
+test("rensSelskapsfelt: navnet trimmes, skrivemåtene er unike og uten navnet", () => {
+  assert.deepEqual(rensSelskapsfelt({ navn: "  Stax ", aliaser: "Volt, stax, Volt ,  ", utenGenitiv: false, ukjent: 1 }),
+    { navn: "Stax", aliaser: ["Volt"] });
+  assert.deepEqual(rensSelskapsfelt({ navn: "Motown", aliaser: ["Tamla", "Gordy"], ikkeITekst: ["Gordy"] }),
+    { navn: "Motown", aliaser: ["Tamla", "Gordy"], ikkeITekst: ["Gordy"] });
+  assert.deepEqual(rensSelskapsfelt({ navn: "Blue Note", utenGenitiv: true }), { navn: "Blue Note", utenGenitiv: true });
+  assert.deepEqual(rensSelskapsfelt({}), {});
+});
+
+test("nyttSelskapId: av navnet, uten æøå og tegn, og unik", () => {
+  assert.equal(nyttSelskapId("Philadelphia International"), "philadelphia-international");
+  assert.equal(nyttSelskapId("Grønland Records"), "gronland-records");
+  assert.equal(nyttSelskapId("Vee-Jay!"), "vee-jay");
+  assert.equal(nyttSelskapId("!!!"), "selskap");
+  const tatt = new Set(["stax", "stax-2"]);
+  assert.equal(nyttSelskapId("Stax", (x) => tatt.has(x)), "stax-3");
+});
+
+test("skrivemaateIBruk: en skrivemåte kan bare høre til ett selskap", () => {
+  const treff = skrivemaateIBruk({ id: null, navn: "Volt Records", aliaser: [] }, INNHOLD);
+  assert.equal(treff?.selskap.id, "stax", "Volt (Records) er Stax");
+  assert.equal(skrivemaateIBruk({ id: "stax", navn: "Stax", aliaser: ["Volt"] }, INNHOLD), null, "selskapets egne skrivemåter er ikke en kollisjon");
+  assert.equal(skrivemaateIBruk({ id: null, navn: "Vee-Jay", aliaser: ["VJ"] }, INNHOLD), null);
+});
+
+test("plateselskapIdForSide er ren og trenger ikke lista", () => {
+  assert.equal(plateselskapIdForSide("plateselskap-vee-jay"), "vee-jay");
+  assert.equal(plateselskapIdForSide("plateselskap-"), null);
+  assert.equal(plateselskapIdForSide("instrument-gitar"), null);
+  assert.match(lesJs("sjekket-filter.js"), /const selskapId = plateselskapIdForSide\(s\);/);
+});
+
+test("lærersiden: navn og skrivemåter lagres, importeres og eksporteres med, og overgangen fletter", () => {
+  const innhold = lesJs("teacher-content.js");
+  assert.match(innhold, /if \(selskap\) Object\.assign\(data, selskap\);/, "savePage skriver hele dokumentet");
+  assert.match(innhold, /skrivemaateIBruk\(\{ id, navn: selskap\.navn, aliaser: selskap\.aliaser \|\| \[\] \}, state\.content\)/);
+  assert.match(innhold, /await oppdaterSide\(plateselskapSideId\(p\.id\), rensSelskapsfelt\(p\)\);/);
+  assert.match(innhold, /return dok && !dok\.navn;/, "overgangen rører bare dokumenter uten navn");
+  const imp = lesJs("teacher-import.js");
+  assert.match(imp, /Object\.assign\(data, rensSelskapsfelt\(d\.navn \? d : state\.content\?\.\[id\] \|\| \{\}\)\);/);
+  assert.match(imp, /\|\| \(plateselskapIdForSide\(id\) && docData\.navn\)\);/, "eksporten tar med selskaper uten tekst");
+  assert.match(lesJs("store.js"), /setDoc\(doc\(db, "content", pageId\), felt, \{ merge: true \}\)/);
+  const html = readFileSync(new URL("../../teacher.html", import.meta.url), "utf8");
+  assert.match(html, /id="se-selskap"/);
+  assert.match(html, /id="se-slett-selskap"/);
+  assert.match(lesJs("explore-plateselskap.js"), /opts\?\.onNyttPlateselskap/);
+  assert.match(lesJs("teacher.js"), /onNyttPlateselskap: \(\) => nyttPlateselskap\(\)/);
 });

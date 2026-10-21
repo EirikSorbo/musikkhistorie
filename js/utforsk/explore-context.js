@@ -21,11 +21,11 @@ import { showSjangerInfo } from "../sjangre/genealogy.js";
 import { teacherActionRow, wireTeacherRow } from "../ui/ui-helpers.js";
 import { INSTRUMENT_GROUPS, INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, artistsInGenre } from "../felles/limits.js";
 import { opts, getState } from "../data/app-state.js";
-import { PLATESELSKAPER, plateselskapSynlig } from "../felles/plateselskaper.js";
+import { alleSelskaper, plateselskapSynlig } from "../felles/plateselskaper.js";
 
 // Plateselskapene som lenkes i tekstene (v6.91): de studentene får se
 // (plateselskapSynlig: bryteren og, med «Bare sjekket innhold», sjekken).
-const lenkeSelskaper = () => PLATESELSKAPER.filter((p) => plateselskapSynlig(p.id));
+const lenkeSelskaper = () => alleSelskaper().filter((p) => plateselskapSynlig(p.id));
 
 // Funksjonene kjernen og featurene bruker for å åpne hverandre. explore.js
 // fyller dem (registrerNavigasjon) idet modulen lastes, altså før noen side har

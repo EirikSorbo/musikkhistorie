@@ -45,6 +45,8 @@ import {
   setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
+  nyttPlateselskap,
+  migrerPlateselskaper,
 } from "./laerer/teacher-content.js";
 import { renderPendingEditsList, setupPendingEditsUi } from "./laerer/teacher-review.js";
 import { initVisning, visningTikk } from "./visning/visning.js";
@@ -189,6 +191,8 @@ function startAppInner() {
     onNotat: (hva, id, navn) => redigerNotatForKort(hva, id, navn),
     onStoryEdit: (genre) => openStoryEditor(genre),
     onPageEdit: (pageId) => openPageEditor(pageId),
+    // «Nytt plateselskap» i oversikten (v7.12): læreren styrer lista selv.
+    onNyttPlateselskap: () => nyttPlateselskap(),
     // Frittstående referanser har ikke noe kort å åpne fra Referanser-lista;
     // læreren får redigeringslista i stedet, med den valgte raden uthevet.
     onReferanseEdit: (fokus) => openReferanseEditor(fokus),
@@ -333,6 +337,9 @@ function startAppInner() {
       // re-rendres så import/redigering slår gjennom umiddelbart.
       ctx.explore?.contentChanged?.();
       if (document.getElementById("modal-laerer-handbok")?.classList.contains("open")) tegnLaererHandbok();
+      // Overgangen (v7.12): de 13 første plateselskapene får navn og skrivemåter
+      // skrevet inn i dokumentene sine. Én gang per sidevisning.
+      migrerPlateselskaper();
       ctx.explore?.renderInstrumenter?.();
       oppdaterOversiktPlateselskaper();
       refreshGenreAdmin();

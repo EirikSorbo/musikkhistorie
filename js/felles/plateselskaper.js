@@ -1,14 +1,16 @@
 // ============================================================================
 //  PLATESELSKAPENE — lista, skrivemåtene og koblingen til artistene
 // ----------------------------------------------------------------------------
-//  Plateselskapene med eget kort (v6.37, brukervalg 2026-10-04). Lista er
-//  vokabular, som instrumentgruppene i limits.js: id, navn og skrivemåtene
-//  artistenes plateselskapsfelt (recordLabel) bruker. «Victor», «RCA Victor»
-//  og «RCA» er samme selskap, og hver av dem skal finne kortet.
+//  Plateselskapene med eget kort (v6.37, brukervalg 2026-10-04). Fra v7.12
+//  (brukervalg 2026-10-21) styrer læreren lista selv: hvert selskap er ett
+//  dokument, content/plateselskap-<id>, med navnet og de andre skrivemåtene
+//  (aliaser) ved siden av teksten, faktaene og kildene. Lista er de
+//  dokumentene som har et navn. «Victor», «RCA Victor» og «RCA» er samme
+//  selskap, og hver av dem skal finne kortet.
 //
-//  Selve innholdet (tekst, fakta og kilder) bor i Firestore som
-//  content/plateselskap-<id>, på samme måte som instrumentsammendragene, og
-//  det finnes ingen reservetekst i koden.
+//  Id-en står fast fra selskapet opprettes (den står i kjøreplanstopp,
+//  ?vis=-lenker og sjekkene), mens navnet kan endres. Det finnes ingen
+//  reservetekst i koden.
 //
 //  Feltet kan bære flere selskaper («Columbia / Atlantic»). delSelskapsfelt
 //  deler det, og hver del slås opp for seg. Treffet er eksakt, uten forskjell
@@ -23,10 +25,15 @@ import { SKJUL_I_HUBEN } from "./feature-flags.js";
 import { sjekketOk } from "./sjekket.js";
 import { opts } from "../data/app-state.js";
 
+// OVERGANGEN (v7.12): de 13 selskapene som sto i koden til v7.11. Dokumentene
+// deres hadde bare tekst, fakta og kilder. Et dokument uten navn får navn og
+// skrivemåter herfra, og lærersiden skriver dem inn i dokumentene første gang
+// den åpnes (migrerPlateselskaper i teacher-content.js). Når alle dokumentene
+// har navn, kan lista fjernes.
 // `navn` er STANDARDNAVNET (v6.38, brukervalg 2026-10-05): kortets tittel og
-// skrivemåten artistenes plateselskapsfelt skal ha. Aliasene står til feltene
-// er ryddet, og fanger også underselskapene (Volt, Tamla, Atco, Bluebird).
-export const PLATESELSKAPER = [
+// skrivemåten artistenes plateselskapsfelt skal ha. Aliasene fanger også
+// underselskapene (Volt, Tamla, Atco, Bluebird).
+export const SELSKAPER_FOR_V712 = [
   { id: "columbia", navn: "Columbia", aliaser: ["Columbia"] },
   // Bluebird var RCA Victors rimelige merke fra 1930-årene (kortet sier det).
   // «RCA Victor» er standardnavnet (v6.38): det dekker både Victor før 1929
@@ -54,11 +61,79 @@ export const PLATESELSKAPER = [
 
 const PREFIKS = "plateselskap-";
 export const plateselskapSideId = (id) => `${PREFIKS}${id}`;
-export function plateselskapForSide(sideId) {
+// Id-en til et plateselskapsdokument, ut fra dokument-id-en alene, eller null.
+// Ren, så sjekk-filteret kan bruke den på rådataene før lista er bygd.
+export function plateselskapIdForSide(sideId) {
   const s = String(sideId || "");
-  return s.startsWith(PREFIKS) ? finnSelskapId(s.slice(PREFIKS.length)) : null;
+  return s.startsWith(PREFIKS) && s.length > PREFIKS.length ? s.slice(PREFIKS.length) : null;
 }
-export const finnSelskapId = (id) => PLATESELSKAPER.find((p) => p.id === id) || null;
+export function plateselskapForSide(sideId, content) {
+  const id = plateselskapIdForSide(sideId);
+  return id ? finnSelskapId(id, content) : null;
+}
+
+// Feltene som gjør et dokument til et selskap, ved siden av tekst, fakta og
+// kilder. Lagringen og importen skriver hele dokumentet, så disse må følge med.
+export const SELSKAP_FELT = ["navn", "aliaser", "utenGenitiv", "ikkeITekst"];
+
+const tekstListe = (v) => (Array.isArray(v) ? v : String(v ?? "").split(","))
+  .map((x) => String(x ?? "").replace(/\s+/g, " ").trim()).filter(Boolean);
+const unikeUtenStore = (liste) => liste.filter((x, i) => liste.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i);
+
+// Selskapsfeltene fra et dokument, rensket. Bare feltene med innhold; aliaser
+// uten selve navnet og uten duplikater.
+export function rensSelskapsfelt(dok) {
+  const ut = {};
+  const navn = String(dok?.navn ?? "").replace(/\s+/g, " ").trim();
+  if (navn) ut.navn = navn;
+  const aliaser = unikeUtenStore(tekstListe(dok?.aliaser)).filter((a) => a.toLowerCase() !== navn.toLowerCase());
+  if (aliaser.length) ut.aliaser = aliaser;
+  if (dok?.utenGenitiv === true) ut.utenGenitiv = true;
+  const ikke = unikeUtenStore(tekstListe(dok?.ikkeITekst));
+  if (ikke.length) ut.ikkeITekst = ikke;
+  return ut;
+}
+
+// Lista, bygd av dokumentene. Hvert selskap: { id, navn, aliaser (med navnet
+// først), utenGenitiv, ikkeITekst }. Mellomlagret per content-objekt: hvert
+// snapshot gir et nytt objekt, og alt annet slår opp mange ganger per tegning.
+let sistInnhold = null;
+let sistListe = [];
+let sistAlias = new Map();
+const innholdNaa = () => opts?.getState?.()?.content || {};
+
+function bygg(content) {
+  const liste = [];
+  for (const [dokId, dok] of Object.entries(content || {})) {
+    const id = plateselskapIdForSide(dokId);
+    if (!id || !dok) continue;
+    const gml = SELSKAPER_FOR_V712.find((p) => p.id === id);
+    const felt = rensSelskapsfelt(dok.navn ? dok : { ...gml, ...dok });
+    if (!felt.navn) continue;
+    liste.push({
+      id,
+      navn: felt.navn,
+      aliaser: [felt.navn, ...(felt.aliaser || [])],
+      utenGenitiv: !!felt.utenGenitiv,
+      ikkeITekst: felt.ikkeITekst || [],
+    });
+  }
+  // Grunnrekkefølgen: overgangslistas (grunnleggelsesåret), så navnet.
+  const plass = (id) => { const i = SELSKAPER_FOR_V712.findIndex((p) => p.id === id); return i < 0 ? 999 : i; };
+  liste.sort((a, b) => plass(a.id) - plass(b.id) || a.navn.localeCompare(b.navn, "no"));
+  return liste;
+}
+
+export function alleSelskaper(content = innholdNaa()) {
+  if (content !== sistInnhold) {
+    sistInnhold = content;
+    sistListe = bygg(content);
+    sistAlias = new Map(sistListe.flatMap((p) => p.aliaser.map((a) => [normaliserSelskap(a), p])));
+  }
+  return sistListe;
+}
+
+export const finnSelskapId = (id, content) => alleSelskaper(content).find((p) => p.id === id) || null;
 
 // «Decca Records» og «Blue Note Records» skal treffe som «Decca» og «Blue Note».
 const ENDELSE = /\s+(?:records?|recordings?|records?\s+inc\.?|company|co\.)$/i;
@@ -72,9 +147,33 @@ export function delSelskapsfelt(felt) {
   return String(felt || "").split(/[\/;]/).map((s) => s.trim()).filter(Boolean);
 }
 
-const ALIAS = new Map(PLATESELSKAPER.flatMap((p) => p.aliaser.map((a) => [normaliserSelskap(a), p])));
-export function finnPlateselskap(navn) {
-  return ALIAS.get(normaliserSelskap(navn)) || null;
+export function finnPlateselskap(navn, content) {
+  alleSelskaper(content);
+  return sistAlias.get(normaliserSelskap(navn)) || null;
+}
+
+// Ny id for et selskap: navnet i små bokstaver, uten æøå og tegn, og med et
+// tall bak når id-en er tatt. «Philadelphia International» → philadelphia-international.
+export function nyttSelskapId(navn, opptatt = () => false) {
+  const grunn = String(navn || "").toLowerCase()
+    .replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "selskap";
+  let id = grunn;
+  for (let n = 2; opptatt(id); n++) id = `${grunn}-${n}`;
+  return id;
+}
+
+// Et annet selskap som alt bruker navnet eller en av skrivemåtene, eller null.
+// Da ville artistene og lenkene ikke visst hvilket kort de hører til.
+export function skrivemaateIBruk({ id, navn, aliaser = [] }, content) {
+  const mine = [navn, ...aliaser].map(normaliserSelskap).filter(Boolean);
+  for (const p of alleSelskaper(content)) {
+    if (p.id === id) continue;
+    const treff = p.aliaser.find((a) => mine.includes(normaliserSelskap(a)));
+    if (treff) return { selskap: p, skrivemaate: treff };
+  }
+  return null;
 }
 
 // Feltet som deler med selskapet til hver del (null når selskapet ikke har
@@ -124,9 +223,10 @@ export function grunnlagtAar(side) {
 }
 
 // Selskapene i visningsrekkefølge: etter grunnleggelsesåret når det er lagt
-// inn, ellers listas rekkefølge. `sideFor(id)` gir content-dokumentet.
-export function selskaperSortert(sideFor = () => null) {
-  return PLATESELSKAPER
+// inn, ellers listas rekkefølge (overgangslista, så navnet). `sideFor(id)`
+// gir content-dokumentet.
+export function selskaperSortert(sideFor = () => null, content) {
+  return alleSelskaper(content)
     .map((p, i) => ({ p, i, aar: grunnlagtAar(sideFor(p.id)) }))
     .sort((a, b) => (a.aar ?? 9999) - (b.aar ?? 9999) || a.i - b.i)
     .map((x) => x.p);

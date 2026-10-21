@@ -29,7 +29,7 @@ import { GENEALOGY_META_GENRES, isMainGenre } from "../sjangre/genre-model.js";
 import { validateTree } from "../sjangre/genre-validate.js";
 import { ARTIST_LABELS, ARTIST_COMPARE_FIELDS, ARTIST_EXPORT_FIELDS } from "../data/artist-schema.js";
 import { INSTRUMENTS } from "../felles/limits.js";
-import { rensFakta } from "../felles/plateselskaper.js";
+import { rensFakta, rensSelskapsfelt, plateselskapIdForSide } from "../felles/plateselskaper.js";
 import { validateArtistsForImport, normalizeImportFile, CONTENT_KEYS, decadeDoc, erDelpost } from "../data/import-format.js";
 import { melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 import { sjekkerEndretAvImport, sjekkerUten } from "../data/sjekket-filter.js";
@@ -191,7 +191,10 @@ function buildExportData() {
   for (const [id, docData] of Object.entries(state.content || {})) {
     // Samme predikat som pageFor: en side med kilder men uten tekst er ekte
     // innhold og skal med i sikkerhetskopien.
-    const harInnhold = docData && (docData.body || (Array.isArray(docData.kilder) && docData.kilder.length));
+    // Et plateselskap med navn (v7.12) er innhold også før teksten er skrevet:
+    // uten det ville et nytt selskap falt ut av sikkerhetskopien.
+    const harInnhold = docData && (docData.body || (Array.isArray(docData.kilder) && docData.kilder.length)
+      || (plateselskapIdForSide(id) && docData.navn));
     if (id !== "varmekart" && harInnhold) pages[id] = docData;
   }
   const varmekart = state.content?.varmekart?.heat
@@ -540,7 +543,8 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
   const pageEntries = Object.entries(pages || {})
     .filter(([id, d]) => id !== "varmekart" && d
       && ((typeof d.body === "string" && d.body.trim())
-        || (Array.isArray(d.kilder) && d.kilder.length)))
+        || (Array.isArray(d.kilder) && d.kilder.length)
+        || (plateselskapIdForSide(id) && typeof d.navn === "string" && d.navn.trim())))
     // kilder tas MED (instrumentsammendragene har dem): uten dette ville en
     // eksport→import stille tømt kildelistene, siden saveDocsBulk skriver hele
     // dokumentet og ikke fletter. Sider uten kilder får ikke feltet påført.
@@ -553,6 +557,12 @@ async function importExtras({ pages, varmekart, referanser, podcasts, teacherChe
       // feltet med fordi eksporten tar hele dokumentet.
       const fakta = rensFakta(d.fakta);
       if (fakta) data.fakta = fakta;
+      // Plateselskapets navn og skrivemåter (v7.12). Importen skriver hele
+      // dokumentet, så en fil uten dem (en eldre tekstfil) beholder dem som
+      // står i appen. Ellers ville selskapet forsvunnet fra lista.
+      if (plateselskapIdForSide(id)) {
+        Object.assign(data, rensSelskapsfelt(d.navn ? d : state.content?.[id] || {}));
+      }
       return { id, data };
     });
   if (pageEntries.length) {

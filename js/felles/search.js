@@ -22,7 +22,7 @@ import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisib
 import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "../sjangre/genre-model.js";
 import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
-import { PLATESELSKAPER, plateselskapSideId } from "./plateselskaper.js";
+import { alleSelskaper, plateselskapSideId } from "./plateselskaper.js";
 import { erSjekket } from "./sjekket.js";
 import { guideForStudent } from "./guide-deler.js";
 import { guideDelSynlig } from "./feature-flags.js";
@@ -291,11 +291,12 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
   }
 
   // --- Plateselskapene (v6.37) ---------------------------------------------
-  // Alle tretten, også før teksten er skrevet: kortet viser artistene uansett.
+  // Alle selskapene (lista bor i Firestore fra v7.12), også før teksten er
+  // skrevet: kortet viser artistene uansett.
   // Skjult for studentene med samme bryter som hubkortet, så søket ikke blir
   // en bakvei rundt den. Skrivemåtene (Volt, Tamla, RCA …) er med i teksten.
   if (erLærer || !skjulHub["sb-plateselskaper"]) {
-    for (const p of PLATESELSKAPER) {
+    for (const p of alleSelskaper(content)) {
       // «Bare sjekket innhold» (v6.89): bare de sjekkede selskapene.
       if (!erLærer && skjul.usjekket && !erSjekket("plateselskaper", p.id)) continue;
       const d = content[plateselskapSideId(p.id)] || {};

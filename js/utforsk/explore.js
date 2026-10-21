@@ -37,7 +37,7 @@ import { apneMaal } from "./explore-apne.js";
 import { erPresentasjon } from "../visning/presentasjon.js";
 import { sjekketRegelAktiv } from "../felles/sjekket.js";
 import { storyOrderSynlig, pageFor } from "../felles/story-format.js";
-import { PLATESELSKAPER, plateselskapSynlig } from "../felles/plateselskaper.js";
+import { alleSelskaper, plateselskapSynlig } from "../felles/plateselskaper.js";
 
 // Det kjernen (explore-context.js) og «Fra timene» (explore-timer.js) må kunne
 // åpne. Fylles her, idet modulen lastes, og ikke i kjernen selv: da hang 13
@@ -62,7 +62,7 @@ function tomtUnderRegel(id) {
     case "sb-historier": return !storyOrderSynlig(s.genreDescs).length;
     case "sb-rotter": return !pageFor("rotter", s.content)?.body?.trim();
     case "sb-om-historie": return !pageFor("omHistorie", s.content)?.body?.trim();
-    case "sb-plateselskaper": return !PLATESELSKAPER.some((p) => plateselskapSynlig(p.id));
+    case "sb-plateselskaper": return !alleSelskaper(s.content).some((p) => plateselskapSynlig(p.id));
     default: return false;
   }
 }

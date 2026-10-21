@@ -662,7 +662,7 @@ export function renderDashboard(el, {
 export function plateselskapSeksjonHtml({ content = {}, teacherChecks = {} }) {
   const sjekket = new Set(teacherChecks.plateselskaper || []);
   const sideFor = (id) => content?.[plateselskapSideId(id)] || null;
-  const liste = selskaperSortert(sideFor);
+  const liste = selskaperSortert(sideFor, content);
   const kort = liste.map((p) => `<div class="ov-ps-kort" data-ov-ps="${escapeHtml(p.id)}">
       <span class="ov-ps-navn">${escapeHtml(p.navn)}</span>
       ${teacherActionRow({ checked: sjekket.has(p.id), edit: true, del: false })}
@@ -681,7 +681,7 @@ export function plateselskapSeksjonHtml({ content = {}, teacherChecks = {} }) {
 // nøkkeltallet i Oversikten.
 function plateselskapTelling({ content = {}, teacherChecks = {} }) {
   const sjekket = new Set(teacherChecks.plateselskaper || []);
-  const liste = selskaperSortert((id) => content?.[plateselskapSideId(id)] || null);
+  const liste = selskaperSortert((id) => content?.[plateselskapSideId(id)] || null, content);
   const n = liste.filter((p) => sjekket.has(p.id)).length;
   return { tekst: `${n}/${liste.length}`, ok: liste.length > 0 && n === liste.length, antall: liste.length };
 }
