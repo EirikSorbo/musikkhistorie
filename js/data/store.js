@@ -9,6 +9,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   initializeFirestore,
+  connectFirestoreEmulator,
   persistentLocalCache,
   persistentMultipleTabManager,
   collection,
@@ -35,9 +36,12 @@ import {
   signInAnonymously,
   signOut,
   onAuthStateChanged,
+  connectAuthEmulator,
+  signInWithCredential,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "../firebase-config.js";
+import { emulatorModus, EMULATOR_KONFIG, EMULATOR_FIRESTORE, EMULATOR_AUTH } from "./emulator.js";
 import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "../sjangre/genre-model.js";
 import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js";
 import { RETUR_FELTER } from "./artist-schema.js";
@@ -51,7 +55,11 @@ import { BATCH_MAX, DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from
 // enhetstestbar) og importeres direkte der den trengs — store.js bruker den
 // internt (subscribeArtists/buildArtistDoc).
 
-const app = initializeApp(firebaseConfig);
+// Nettlesertestene (v7.13, js/data/emulator.js): på localhost med ?emulator=1
+// kjører appen mot Firebase-emulatoren under demo-pensum, med minne-cache, og
+// aldri mot det ekte prosjektet.
+const EMULATOR = emulatorModus();
+const app = initializeApp(EMULATOR ? EMULATOR_KONFIG : firebaseConfig);
 
 // Persistent lokal cache: Firestore lagrer dokumentene i IndexedDB og gjenopptar
 // lyttere med resume-token, slik at kun ENDREDE dokumenter faktureres ved
@@ -61,16 +69,32 @@ const app = initializeApp(firebaseConfig);
 // minne-cache i nettlesere uten IndexedDB (f.eks. eldre Safari privat modus),
 // så appen alltid initialiserer.
 let db;
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  });
-} catch (e) {
-  console.warn("Persistent Firestore-cache utilgjengelig – bruker minne-cache:", e?.message || e);
+if (EMULATOR) {
   db = getFirestore(app);
+  connectFirestoreEmulator(db, EMULATOR_FIRESTORE.host, EMULATOR_FIRESTORE.port);
+} else {
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch (e) {
+    console.warn("Persistent Firestore-cache utilgjengelig – bruker minne-cache:", e?.message || e);
+    db = getFirestore(app);
+  }
 }
 
 const auth = getAuth(app);
+if (EMULATOR) {
+  connectAuthEmulator(auth, EMULATOR_AUTH, { disableWarnings: true });
+  // Testinnloggingen finnes bare i emulatoren: et Google-bevis uten signatur,
+  // som bare emulatoren godtar. Testene logger inn som lærer med den.
+  if (typeof window !== "undefined") {
+    window.__pensumTest = {
+      loggInn: (email, sub = "laerer-test") =>
+        signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email, email_verified: true }))),
+    };
+  }
+}
 const googleProvider = new GoogleAuthProvider();
 
 const artistsCol = collection(db, "artists");

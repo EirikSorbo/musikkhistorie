@@ -17,3 +17,9 @@ node_modules/
 
 # Obsidian-oppsettet (editor-tilstand, ble committet ved et uhell i v6.12)
 .obsidian/
+
+# Nettlesertestene (v7.13): resultater og spor fra Playwright
+test-results/
+playwright-report/
+firestore-debug.log
+firebase-debug.log

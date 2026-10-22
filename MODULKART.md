@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-113 filer i 11 mapper.
+114 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -17,7 +17,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 15 |
-| `js/data/` | Data | 9 |
+| `js/data/` | Data | 10 |
 | `js/felles/` | Felles hjelpere | 15 |
 | `js/vendor/` | Tredjepart | 1 |
 
@@ -185,6 +185,7 @@ Firestore (store.js er den eneste fila som snakker med databasen), den delte dat
 | `artist-cache.js` | ARTIST-CACHE — delt localStorage-lag for artistlista |
 | `artist-normalize.js` | ARTIST-NORMALISERING — ren datalogikk, uten Firebase-avhengigheter |
 | `artist-schema.js` | ARTIST-SKJEMA — én sannhetskilde for artistfeltene |
+| `emulator.js` | EMULATORBRYTEREN — appen mot Firebase-emulatoren i nettlesertestene (v7.13) |
 | `import-format.js` | IMPORT-FORMAT — ren parselogikk for JSON-filene |
 | `shared-data.js` | DELT DATAROT — alle sider abonnerer på de delte samlingene herfra |
 | `shared.js` | DELTE HJELPERE — brukes av alle sider |

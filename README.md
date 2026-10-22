@@ -111,7 +111,7 @@ js/                   Modulene, i mapper etter område (alle filene: MODULKART.m
   felles/             Hjelpere og vokabular som flere deler av appen bruker
   vendor/             Tredjepartskode (QR-koder)
 MODULKART.md          Alle filene i js/, én linje hver, laget av tools/modulkart.js
-tests/                Enhetstester (node --test) + regeltester (emulator)
+tests/                Enhetstester (node --test), regeltester og nettlesertester (emulator)
 tools/                check-imports, find-stale-refs, importkart, modulkart,
                       check-versjon, seed-genealogy, build-genealogy-doc, dump-genre-fixture
 firestore.rules       Sikkerhetsregler for databasen
@@ -282,6 +282,16 @@ mest: bruk tre urelaterte ord, aldri et passord du bruker andre steder.
 - **Regeltester** (Firestore-emulator): `npm run test:rules` — krever
   `npm install` (henter `firebase-tools` og `@firebase/rules-unit-testing`)
   og Java. Verifiserer at `firestore.rules` tillater/avviser riktig.
+- **Nettlesertester** (v7.13, Playwright + Firebase-emulatoren):
+  `npm run test:e2e` kjører hele appen i en nettleser mot emulatoren
+  (prosjekt `demo-pensum`, firestore + auth) og klikker seg gjennom student-
+  og lærerflytene i `tests/e2e/`: innsending, godkjenning, returflyten med
+  kode, endringsforslag, Rediger og Ny artist, synligheten, plateselskapene,
+  «Gi nytt navn», import, slides og en røykprøve av alle vinduene. Krever
+  Java. Lokalt brukes Chrome som er installert; i CI Playwrights Chromium.
+  Appen kobles til emulatoren bare på localhost med `?emulator=1`
+  (`js/data/emulator.js`), og læreren logges inn med emulatorens
+  testinnlogging, som ikke virker mot det ekte prosjektet.
 - **Importsjekken**: `node tools/check-imports.js` finner brutte, ukjente og
   ubrukte importer, foreldreløse moduler, importringer (filer som importerer
   hverandre i ring) og videresending (en modul som eksporterer noe den selv

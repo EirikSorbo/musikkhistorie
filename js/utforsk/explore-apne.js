@@ -230,5 +230,13 @@ export function provVisMaal() {
 }
 
 // Sjangertreet lander som egen hendelse (genre-model), ikke som et av sidens
-// snapshot-hooks — sjanger-/tre-mål trenger dette dyttet.
-if (typeof document !== "undefined") { onGenreModelChanged(() => provVisMaal()); onSlidesEndret(() => provVisMaal()); }
+// snapshot-hooks — sjanger-/tre-mål trenger dette dyttet. Treet bygges MIDT i
+// innholds-snapshotet, før synligheten er brukt og state.content er satt
+// (shared-data.js). Forsøket venter derfor til snapshotet er ferdig behandlet
+// (v7.13, funnet av nettlesertestene): ellers ble en ?vis=plateselskap:…-lenke
+// avvist som «finnes ikke», fordi lista (fra v7.12 bygd av content) og
+// bryteren for plateselskapene ennå ikke var på plass.
+if (typeof document !== "undefined") {
+  onGenreModelChanged(() => queueMicrotask(provVisMaal));
+  onSlidesEndret(() => provVisMaal());
+}
