@@ -135,6 +135,10 @@ for (const f of filer) {
   // Mal-uttrykkene legges tilbake — se malUttrykk for hvorfor.
   const utenImport = s.replace(IMPORT_RE, " ").replace(BARE_RE, " ");
   const kropp = utenStrenger(utenImport) + " ; " + malUttrykk(utenImport);
+  // Utsatte importer (v7.14): fila må finnes, som for de statiske.
+  for (const m of s.matchAll(/\bimport\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g)) {
+    if (!kilde[losSti(f, m[1])]) ukjent.push(`${f} → ${m[1]} (utsatt)`);
+  }
   for (const m of s.matchAll(IMPORT_RE)) {
     const spec = m[2];
     if (!spec.startsWith("./") && !spec.startsWith("../")) continue;   // eksterne (Firebase) hoppes over
@@ -235,6 +239,13 @@ const skriv = (tittel, liste) => {
 const importerFra = (f) => [...new Set(
   [...utenKommentarer(kilde[f]).matchAll(/(?:from|import)\s+["'](\.{1,2}\/[^"'?]+\.js)/g)]
     .map((m) => losSti(f, m[1])))];
+// Pluss modulene som lastes ved behov, `import("./x.js")` (v7.14): de er ikke
+// foreldreløse, men de er ingen kant i ringsjekken, for en utsatt import kan
+// ikke stoppe oppstarten.
+const importerFraMedUtsatte = (f) => [...new Set([
+  ...importerFra(f),
+  ...[...utenKommentarer(kilde[f]).matchAll(/\bimport\(\s*["'](\.{1,2}\/[^"'?]+\.js)["']\s*\)/g)].map((m) => losSti(f, m[1])),
+])];
 const erFroet = (f) => path.basename(f) === "genealogy-data.js";
 
 // genealogy-data-regelen: appen har MED VILJE ingen kopi av pensumet i koden.
@@ -243,7 +254,7 @@ const regelbrudd = dataImportorer.map((f) =>
   `${f}: importerer js/sjangre/genealogy-data.js — frøet er KUN for tools/ og tests/`);
 
 // Foreldreløse moduler: verken importert av en js-fil eller lastet fra HTML.
-const importerte = new Set(filer.flatMap(importerFra));
+const importerte = new Set(filer.flatMap(importerFraMedUtsatte));
 // Importkartet (tools/importkart.js) nevner ALLE modulene. Telles det med, ser
 // hver modul ut som om en side laster den, og vakta blir blind.
 let htmlKilde = "";

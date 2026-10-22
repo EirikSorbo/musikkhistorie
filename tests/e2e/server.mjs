@@ -9,6 +9,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const ROT = fileURLToPath(new URL("../../", import.meta.url));
 const PORT = Number(process.env.E2E_PORT || 8099);
@@ -27,7 +28,14 @@ createServer(async (req, res) => {
       return;
     }
     const data = await readFile(fil);
-    res.writeHead(200, { "content-type": TYPER[extname(fil)] || "application/octet-stream", "cache-control": "no-store" });
+    const hoder = { "content-type": TYPER[extname(fil)] || "application/octet-stream", "cache-control": "no-store" };
+    // Komprimert som på GitHub Pages, når målingene ber om det (E2E_GZIP=1).
+    if (process.env.E2E_GZIP && /gzip/.test(req.headers["accept-encoding"] || "") && /\.(js|mjs|css|html|json|svg)$/.test(fil)) {
+      res.writeHead(200, { ...hoder, "content-encoding": "gzip" });
+      res.end(gzipSync(data));
+      return;
+    }
+    res.writeHead(200, hoder);
     res.end(data);
   } catch {
     res.writeHead(404).end();

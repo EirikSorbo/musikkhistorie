@@ -93,7 +93,7 @@ export function apneMaal(apne) {
     case "podkaster": case "podkast": return openPodkaster();
     case "tidslinje": return openTidslinje();
     case "sjangerperioder": return openSjangerperioder();
-    case "himmel": return openSjangerhimmel();
+    case "himmel": return void openSjangerhimmel();
     case "referanser": return openReferanser();
     case "store-bildet": return openStoreBildet();
     case "teknologi": return openTeknologi(apne.id || "");

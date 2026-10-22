@@ -28,7 +28,10 @@ import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./utforsk/ex
 import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift/utskrift-utvalg.js";
 import { aktivtNivaa, settNivaa, vedNivaaEndring, initViktighetsMerke } from "./ui/viktighet.js";
 import { askChoice, melding, modalOpen, modalCloseTop, setupModal } from "./ui/ui-modal.js";
-import { openProposalEditor, openNewTechProposal, openReturInnsending } from "./forslag/proposals.js";
+// Forslagsskjemaene lastes først når noen trenger dem (v7.14): proposals.js med
+// artistskjemaet, radeditoren og sjangervelgeren er rundt 100 kB, og de fleste
+// besøk foreslår ingenting. Importkartet har modulen, så ?v= følger med.
+const forslag = () => import("./forslag/proposals.js");
 import { currentEntityValues } from "./forslag/entity-values.js";
 import { loadArtists, saveArtists } from "./data/artist-cache.js";
 
@@ -65,7 +68,7 @@ async function openProposalEditorGuarded(cfg) {
     melding("Det ligger allerede et endringsforslag til vurdering for denne. Vent til læreren har behandlet det.");
     return;
   }
-  openProposalEditor(cfg);
+  (await forslag()).openProposalEditor(cfg);
 }
 
 // Feil ved stemming skal ikke svelges stille — da tror studenten at stemmen
@@ -183,7 +186,7 @@ function setupExplore() {
     onProposeEdit: (cfg) => openProposalEditorGuarded(cfg),
     // preset settes av Instrumenter-seksjonen ({ instrument, category }), så
     // skjemaet åpner riktig utfylt. Teknologiseksjonen sender ingenting.
-    onProposeNewTech: (preset) => openNewTechProposal(preset),
+    onProposeNewTech: (preset) => forslag().then((m) => m.openNewTechProposal(preset)),
     // ?vis=artister (v6.08, S7): Artister-vinduet bor her, ikke i utforsk-laget.
     onOpenArtister: () => openArtistModal(),
     hasPendingEdit,
@@ -607,7 +610,7 @@ function aapneRetur(r) {
     location.href = "student.html?retur=" + encodeURIComponent(r.id);
     return;
   }
-  openReturInnsending(r, r.type === "edit" ? currentEntityValues(state, r) : null);
+  forslag().then((m) => m.openReturInnsending(r, r.type === "edit" ? currentEntityValues(state, r) : null));
 }
 
 function setupReturPanel() {

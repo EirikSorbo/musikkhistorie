@@ -29,7 +29,6 @@ import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
 import { initViktighetsMerke } from "./ui/viktighet.js";
 import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 import { fetchPendingEdits } from "./data/store.js";
-import { openProposalEditor } from "./forslag/proposals.js";
 import { melding, setupModal, modalCloseTop, modalOpen } from "./ui/ui-modal.js";
 
 export function initTrePage({ render }) {
@@ -69,7 +68,8 @@ export function initTrePage({ render }) {
     } catch (err) {
       console.warn("Kunne ikke sjekke ventende endringsforslag:", err?.message || err);
     }
-    openProposalEditor(cfg);
+    // Lastes ved første forslag (v7.14), som på forsiden.
+    (await import("./forslag/proposals.js")).openProposalEditor(cfg);
   }
 
   const explore = initExplore({
