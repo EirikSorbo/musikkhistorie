@@ -29,9 +29,9 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, nyPlanId, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
-import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding, sporTekst } from "../ui/ui-modal.js";
+import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
 import { ordneArtistLerret, flyttLevetid, ryddArtistLerret } from "./pres-artist.js";
 import { ordneSjangerLerret } from "./pres-sjanger.js";
@@ -39,7 +39,7 @@ import { veksleYtAvspilling, apneYtSpiller } from "../ui/yt-spiller.js";
 import { escapeHtml, safeUrl, wikimediaThumb } from "../felles/util.js";
 import { apneVisNaarKlart, setVisMaalFeilProvider } from "../utforsk/explore-apne.js";
 import { getState } from "../data/app-state.js";
-import { onAuthChange, addTimeforslag, deleteTimeforslag, savePlan } from "../data/store.js";
+import { onAuthChange, addTimeforslag, deleteTimeforslag } from "../data/store.js";
 import { erLaererBruker, settInnStopp, oppdaterStopp } from "./plan-meny.js";
 import { stoppEtikett } from "./stopp-etikett.js";
 import { startSlides } from "./slides.js";
@@ -47,6 +47,9 @@ import { erSlideVis } from "./slides-modell.js";
 import { lerretRolle, startLerret, apneLerret, lerretEndret, lerretSlutt, lerretTilkoblet, lerretInnebygd } from "./lerret.js";
 import { initNotater, vekslNotater, redigerNotater, notaterEndret } from "./pres-notater.js";
 import { startPaminnelser, paminnelserAuthEndret, paminnelserTilLerret, visLerretPaminnelser, leggTilRask, fjernRask, ventendeRaske, paminnelserStartet } from "./paminnelser.js";
+import { kopierVisning, slettKopi } from "./visningskopi.js";
+import { nyOktId, isoDato } from "./visningskopi-modell.js";
+import { lagreSomTime } from "./lagre-time.js";
 
 // Hvilken modal som viser hvilken flate-type (modal-artist-detail er
 // slektstresidens artistkort; resten bor på forsiden).
@@ -86,6 +89,10 @@ const LAGRING = {
   // Stoppene i planen som er vist (v6.80): { plan, stopp: [plassene] }, for
   // «gått gjennom» i oversikten. Nullstilles når planen startes på nytt.
   besokt: "pensumPresBesokt",
+  // Sikkerhetskopien (v7.15): økta har en id og et starttidspunkt, og det som
+  // er vist, skrives til lærerens notater underveis (js/visning/visningskopi.js).
+  okt: "pensumPresOkt",
+  oktStart: "pensumPresOktStart",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -418,6 +425,32 @@ function loggTime(vis) {
   if (logg[logg.length - 1] === vis) return;
   logg.push(vis);
   skriv(LAGRING.timelogg, JSON.stringify(logg));
+  // Økta får id og starttid ved det første som vises (v7.15).
+  if (!les(LAGRING.okt)) {
+    skriv(LAGRING.okt, nyOktId());
+    skriv(LAGRING.oktStart, new Date().toISOString());
+  }
+  sikkerhetskopier(logg);
+}
+
+// Sikkerhetskopien (v7.15): bare lærerens eget vindu skriver, ikke lerretet,
+// og bare når økta har en id (sessionStorage virker). Kalles også når
+// innloggingen er avklart, så det som ble vist før det, kommer med.
+function sikkerhetskopier(logg = null) {
+  if (!erLaerer || erLerret) return;
+  const okt = les(LAGRING.okt);
+  if (!okt) return;
+  if (!logg) {
+    try { logg = JSON.parse(les(LAGRING.timelogg) || "[]"); } catch (e) { logg = []; }
+  }
+  const stopp = timeStopp(logg).map((s) => s.vis);
+  if (!stopp.length) return;
+  kopierVisning(okt, { start: les(LAGRING.oktStart) || "", plan: les(LAGRING.plan) || null, stopp });
+}
+
+// Økta i denne fanen: Visning-vinduet regner ikke den som ulagret.
+export function aktivOkt() {
+  return erPresentasjon() ? les(LAGRING.okt) || null : null;
 }
 
 function registrerSide(vis = toppMaal()) {
@@ -1095,23 +1128,26 @@ export async function avsluttPresentasjon() {
     if (valg === "fortsett") return;
     if (valg === "lagre") {
       const idag = new Date();
-      const dato = `${idag.getFullYear()}-${String(idag.getMonth() + 1).padStart(2, "0")}-${String(idag.getDate()).padStart(2, "0")}`;
       // Etter en kjøreplan foreslås planens tittel; datoen står ved timen.
       const forslag = kjoreplan && kjoreplan.tittel !== "(uten tittel)"
         ? kjoreplan.tittel
         : `Time ${idag.toLocaleDateString("nb-NO", { day: "numeric", month: "long" })}`;
-      // Avbryt i tittelspørsmålet lagrer ingenting, og visningen står åpen
-      // (som ved lagringsfeil), så læreren kan velge på nytt (v6.23, Fable F9).
-      const svar = await sporTekst("Datoen lagres ved siden av tittelen.", forslag, { tittel: "Tittel på timen", ok: "Lagre timen" });
-      if (svar === null) return;
-      const tittel = svar.trim() || forslag;
+      // Avbryt i tittel- eller gruppespørsmålet lagrer ingenting, og visningen
+      // står åpen (som ved lagringsfeil), så læreren kan velge på nytt (v6.23,
+      // Fable F9). Spørsmålene bor i lagre-time.js (v7.15, med gruppen).
       try {
-        await savePlan(nyPlanId(), { tittel, laget: idag.toISOString(), dato, stopp });
+        if (!(await lagreSomTime({ stopp, dato: isoDato(idag), tittelForslag: forslag, gruppeForslag: kjoreplan?.gruppe || "" }))) return;
       } catch (err) {
         melding(`Fikk ikke lagret timen (${err?.message || err}). Visningen står åpen, så du kan prøve igjen.`);
         return;
       }
     }
+  }
+  // Avsluttet, lagret eller ikke: sikkerhetskopien trengs ikke lenger (v7.15).
+  // Venter litt på slettingen før sida byttes, ellers kan den bli borte.
+  const okt = les(LAGRING.okt);
+  if (erLaerer && okt) {
+    await Promise.race([slettKopi(okt).catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
   }
   lerretSlutt();
   for (const k of Object.values(LAGRING)) { try { sessionStorage.removeItem(k); } catch (e) {} }
@@ -1502,7 +1538,7 @@ export function initPresentasjon() {
   // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
   // Slidene (v7.06, lærerens private sider) hentes når en lærer er innlogget, også på lerretet.
   startSlides();
-  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); paminnelserAuthEndret(); });
+  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); paminnelserAuthEndret(); sikkerhetskopier(); });
   // Står en student på et slide-stopp (omlasting midt i en delt time), går det videre.
   onAuthChange(() => {
     authAvklart = true;

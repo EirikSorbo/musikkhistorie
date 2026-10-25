@@ -106,7 +106,7 @@ test("funn 1 og 2: samleøkta skriver ikke per kort, og aldri en kø av gamle ko
 test("funn 4: hver skriving rører bare sin egen plan, og ingenting skrives før planene er lastet", () => {
   const store = kilde("store.js");
   assert.doesNotMatch(store, /savePresentasjoner/, "hele-dokumentet-skrivingen er borte");
-  assert.match(store, /\{ planer: \{ \[id\]: plan \}, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}/);
+  assert.match(store, /\{ planer: \{ \[id\]: utenNull\(plan\) \}, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}/);
   assert.match(store, /\{ planer: \{ \[id\]: deleteField\(\) \}, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}/);
   for (const f of ["visning.js", "plan-meny.js", "plan-innsamling.js", "presentasjon.js"]) {
     assert.doesNotMatch(kilde(f), /savePresentasjoner/, f);

@@ -1,0 +1,183 @@
+// ============================================================================
+//  VISNINGEN (v7.15), innlogget som lærer i emulatoren
+// ----------------------------------------------------------------------------
+//  Presentasjonsmodusen (nivå og svart skjerm), sikkerhetskopien av det som
+//  vises, Avslutt med «Lagre som time» i en gruppe, spørsmålet om visninger
+//  som ble lukket uten Avslutt, og gruppene med oversikten «Gått gjennom».
+// ============================================================================
+import { test, expect } from "@playwright/test";
+import { såFrø, lesDok, lesSamling, skrivDok, rydd } from "./frø.mjs";
+import { forbered, apne, loggInnSomLaerer, appFeil } from "./hjelp.mjs";
+import { skrivKopi } from "../../js/visning/visningskopi-modell.js";
+
+test.beforeEach(async () => { await såFrø(); });
+test.afterAll(async () => { await rydd(); });
+
+// Appens egne dialoger: meldingsboksene (tekstfelt) og valgboksene.
+const oeverst = (page) => page.locator(".modal-backdrop.open .modal-melding, .modal-backdrop.open .modal-valg").last();
+async function svar(page, knapp, tekst) {
+  const d = oeverst(page);
+  await expect(d).toBeVisible();
+  if (tekst != null) await d.locator(".melding-felt").fill(tekst);
+  await d.getByRole("button", { name: knapp, exact: true }).click();
+}
+const kopier = async () => (await lesSamling("notater")).filter((n) => n.id.startsWith("visning:"));
+const planer = async () => (await lesDok("content", "presentasjoner"))?.planer || {};
+const idag = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+
+test("visningen: nivå og svart skjerm, kopi underveis, og Avslutt lagrer timen i en gruppe", async ({ page }) => {
+  // Læreren har valgt rolle på forsiden før (ellers står rollevelgeren der).
+  const feil = await forbered(page, { rolle: "teacher" });
+  await loggInnSomLaerer(page);
+  await apne(page, "/index.html?presentasjon=1");
+  await expect(page.locator("body")).toHaveClass(/presentasjon/);
+  // Modusen følger fanen over sidelastene, som når læreren blar.
+  await apne(page, "/index.html?vis=artist:muddy");
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+  await page.keyboard.press("1");
+  await expect(page.locator("body")).toHaveAttribute("data-pres-nivaa", "1");
+  await page.keyboard.press("3");
+  await expect(page.locator("body")).toHaveAttribute("data-pres-nivaa", "3");
+  await page.keyboard.press("b");
+  await expect(page.locator("#pres-svart")).toBeVisible();
+  await page.keyboard.press("b");
+  await expect(page.locator("#pres-svart")).toHaveCount(0);
+
+  // Sikkerhetskopien skrives mens læreren viser, uten at noe avsluttes.
+  await expect.poll(async () => (await kopier()).map((k) => k.tekst).join(" "), { timeout: 20000 }).toContain("artist:muddy");
+  await apne(page, "/index.html?vis=tiår:1950:society");
+  await expect(page.locator("#modal-decade-view")).toHaveClass(/open/);
+  await expect.poll(async () => (await kopier()).map((k) => k.tekst).join(" "), { timeout: 25000 }).toContain("tiår:1950:society");
+  expect((await kopier()).length).toBe(1);
+
+  // Avslutt: tittel og gruppe, og kopien er borte etterpå.
+  await page.keyboard.press("x");
+  await svar(page, "Lagre som time");
+  await svar(page, "Videre", "Bluestime");
+  await svar(page, "Lagre timen", "Klassen høst 2026");
+  await expect(page).not.toHaveURL(/presentasjon/);
+  await expect(page.locator("body")).not.toHaveClass(/presentasjon/);
+  const timer = Object.values(await planer());
+  expect(timer).toHaveLength(1);
+  expect(timer[0]).toMatchObject({ tittel: "Bluestime", gruppe: "Klassen høst 2026", dato: idag() });
+  expect(timer[0].stopp.map((s) => s.vis)).toEqual(expect.arrayContaining(["artist:muddy", "tiår:1950:society"]));
+  await expect.poll(async () => (await kopier()).length).toBe(0);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("en visning lukket uten Avslutt: appen spør neste gang, og timen får visningens dato", async ({ page }) => {
+  const start = new Date(Date.now() - 3 * 86400000);
+  await skrivDok("notater", "visning:otest123", {
+    tekst: skrivKopi({ start: start.toISOString(), stopp: ["artist:muddy", "artist:bessie"] }),
+    oppdatert: new Date(start.getTime() + 3600000).toISOString(),
+  });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await expect(oeverst(page)).toContainText("En visning ble ikke lagret");
+  await expect(oeverst(page)).toContainText("2 kort vist");
+  await svar(page, "Lagre som time");
+  await svar(page, "Videre");   // tittelforslaget («Time <dato>») står
+  await svar(page, "Lagre timen", "Klassen");
+  await svar(page, "OK");
+  const [time] = Object.values(await planer());
+  const d = start;
+  expect(time).toMatchObject({ gruppe: "Klassen", dato: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` });
+  expect(time.tittel).toMatch(/^Time /);
+  expect(time.stopp.map((s) => s.vis)).toEqual(["artist:muddy", "artist:bessie"]);
+  await expect.poll(async () => (await kopier()).length).toBe(0);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("flere ulagrede visninger: «Senere» spør ikke igjen i økta, og lista har Forkast og Lagre som time", async ({ page }) => {
+  const gammel = (dager) => new Date(Date.now() - dager * 86400000).toISOString();
+  await skrivDok("notater", "visning:oaaaa11", { tekst: skrivKopi({ start: gammel(9), stopp: ["artist:otis"] }), oppdatert: gammel(9) });
+  await skrivDok("notater", "visning:obbbb22", { tekst: skrivKopi({ start: gammel(2), stopp: ["artist:muddy"] }), oppdatert: gammel(2) });
+  // En kopi skrevet for et øyeblikk siden kan høre til en visning som pågår: ikke spurt om, men i lista.
+  await skrivDok("notater", "visning:occcc33", { tekst: skrivKopi({ start: gammel(0.01), stopp: ["artist:bessie"] }), oppdatert: new Date().toISOString() });
+  await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await expect(oeverst(page)).toContainText("2 visninger ble ikke lagret");
+  await svar(page, "Senere");
+  await apne(page, "/teacher.html");
+  await expect(page.locator("body")).toHaveClass(/is-teacher/);
+  await page.waitForTimeout(2000);
+  await expect(page.locator(".modal-backdrop.open .modal-valg")).toHaveCount(0);
+
+  await page.locator("a[data-visning]").click();
+  const rader = page.locator("#vis-ulagrede .pres-adm-rad");
+  await expect(rader).toHaveCount(3);
+  await expect(rader.first()).toContainText("kan fortsatt pågå et annet sted");
+  await page.locator('[data-kopi-forkast="oaaaa11"]').click();
+  await svar(page, "Forkast");
+  await expect(rader).toHaveCount(2);
+  await page.locator('[data-kopi-lagre="obbbb22"]').click();
+  await svar(page, "Videre", "Muddy-timen");
+  await svar(page, "Lagre timen", "");
+  await svar(page, "OK");
+  await expect(rader).toHaveCount(1);
+  const [time] = Object.values(await planer());
+  expect(time.tittel).toBe("Muddy-timen");
+  expect(time.gruppe).toBeUndefined();
+  expect((await kopier()).map((k) => k.id)).toEqual(["visning:occcc33"]);
+});
+
+test("gruppene: oversikten «Gått gjennom», filtrene, nytt navn og gruppefeltet i editoren", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    t1: { tittel: "Blues 1", dato: "2026-10-03", laget: "2026-10-03T10:00:00.000Z", gruppe: "Klassen", stopp: [{ vis: "artist:bessie" }, { vis: "tiår:1950:society" }] },
+    t2: { tittel: "Blues 2", dato: "2026-10-10", laget: "2026-10-10T10:00:00.000Z", gruppe: "Klassen", stopp: [{ vis: "yt:abcdefghijk::20" }] },
+    soul: { tittel: "Soul", laget: "2026-10-12T10:00:00.000Z", stopp: [{ vis: "artist:otis" }] },
+  } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator("a[data-visning]").click();
+  const gruppe = page.locator('.vis-gruppe[data-gruppe="Klassen"]');
+  await expect(gruppe).toContainText("2 timer");
+  await expect(page.locator(".vis-uten-gruppe")).toBeVisible();
+
+  // Oversikten: Bessie er vist, Muddy bare lyttet (lytteeksempelet), Otis ikke.
+  await gruppe.locator("[data-gruppe-oversikt]").click();
+  const gj = page.locator("#modal-gjennomgang");
+  await expect(gj).toHaveClass(/open/);
+  await expect(gj.locator("#gj-tittel")).toHaveText("Gått gjennom i «Klassen»");
+  await gj.locator('[data-gj-status="gjennomgatt"]').click();
+  await gj.locator('[data-gj-type="artist"]').click();
+  await expect(gj.locator(".gj-vist")).toContainText(["Bessie Smith"]);
+  await expect(gj.locator(".gj-lyttet")).toContainText(["Muddy Waters"]);
+  await expect(gj.locator(".gj-lyttet .gj-merke")).toHaveText("bare lyttet");
+  await expect(gj.locator("#gj-liste")).not.toContainText("Otis Redding");
+  await gj.locator('[data-gj-status="ikke"]').click();
+  await expect(gj.locator("#gj-liste")).toContainText("Otis Redding");
+  await expect(gj.locator("#gj-liste")).not.toContainText("Bessie Smith");
+  // Bare viktigst: Otis har ingen grad og er ute.
+  await gj.locator("#gj-nivaa").selectOption("3");
+  await expect(gj.locator("#gj-liste")).not.toContainText("Otis Redding");
+  await gj.locator("#gj-nivaa").selectOption("0");
+  // Tiårene: samfunn er vist, teknologi ikke.
+  await gj.locator('[data-gj-type="samfunn"]').click();
+  await expect(gj.locator("#gj-liste")).toContainText("Alt her er gått gjennom.");
+  await gj.locator('[data-gj-type="alt"]').click();
+  // Et klikk åpner kortet oppå oversikten.
+  await gj.locator(".gj-apne", { hasText: "Otis Redding" }).click();
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+  await expect(page.locator("#modal-detail")).toContainText("Otis Redding");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+
+  // Nytt navn på gruppen: begge planene følger med, planen uten gruppe står.
+  await gruppe.locator("[data-gruppe-navn]").click();
+  await svar(page, "Gi nytt navn", "Klassen 2026");
+  await expect.poll(async () => { const p = await planer(); return [p.t1.gruppe, p.t2.gruppe, p.soul.gruppe]; })
+    .toEqual(["Klassen 2026", "Klassen 2026", undefined]);
+
+  // Gruppefeltet i editoren: legg Soul i gruppen, og ta den ut igjen.
+  await page.locator('[data-pres-rediger="soul"]').click();
+  await page.locator("#pres-adm-gruppe").fill("Klassen 2026");
+  await page.locator("#pres-adm-lagre").click();
+  await expect.poll(async () => (await planer()).soul.gruppe).toBe("Klassen 2026");
+  await expect(page.locator('.vis-gruppe[data-gruppe="Klassen 2026"]')).toContainText("2 timer og 1 kjøreplan");
+  await page.locator('[data-pres-rediger="soul"]').click();
+  await page.locator("#pres-adm-gruppe").fill("");
+  await page.locator("#pres-adm-lagre").click();
+  await expect.poll(async () => "gruppe" in (await planer()).soul).toBe(false);
+  expect(appFeil(feil)).toEqual([]);
+});

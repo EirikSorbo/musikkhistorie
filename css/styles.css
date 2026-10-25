@@ -4156,6 +4156,73 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
 .vis-aktiv-plan .pres-adm-navn strong { color: var(--accent-2); }
 .vis-tips { font-size: 0.85rem; margin: 12px 0 0; }
 
+/* Gruppene i Visning (v7.15): en nedtrekk per gruppe, med trekanten foran
+   navnet og knappene til høyre i tittellinja. */
+.vis-gruppe { border-bottom: 1px solid var(--line); }
+.vis-gruppe > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0; cursor: pointer; list-style: none;
+}
+.vis-gruppe > summary::-webkit-details-marker { display: none; }
+.vis-gruppe-hode { flex: 1; min-width: 200px; }
+.vis-gruppe-hode::before {
+  content: ""; display: inline-block; width: 0; height: 0; margin-right: 8px; vertical-align: 0.1em;
+  border-left: 6px solid var(--muted); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent;
+  transition: transform 0.15s ease;
+}
+.vis-gruppe[open] .vis-gruppe-hode::before { transform: rotate(90deg); }
+.vis-gruppe > .pres-adm-rad { padding-left: 16px; }
+.vis-gruppe > .pres-adm-rad:last-child { border-bottom: 0; }
+.vis-uten-gruppe { margin: 16px 0 0; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+.pres-adm-hode { grid-template-columns: 1fr; }
+@media (min-width: 640px) { .pres-adm-hode { grid-template-columns: 3fr 2fr; } }
+
+/* Visningene som ikke ble lagret (v7.15): over kjøreplanene, markert. */
+.vis-ulagrede {
+  margin: 4px 0 16px; padding: 10px 14px; border-left: 3px solid var(--accent);
+  background: var(--surface-2, var(--bg)); border-radius: var(--radius-s);
+}
+.vis-ulagrede .vis-tips { margin: 2px 0 4px; }
+.vis-ulagrede .pres-adm-rad:last-child { border-bottom: 0; }
+
+/* «Gått gjennom» (v7.15): oversikten for en gruppe. */
+.gj-sammendrag { margin: 0 0 12px; }
+/* Linjene står i spalta som filtrene, ikke sentrert som brødtekst (68ch). */
+body:not(.presentasjon) #modal-gjennomgang .modal-innhold > p { max-width: 944px; }
+.gj-filtre { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 8px; }
+.gj-status { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.gj-status .btn.active { background: var(--text); border-color: var(--text); color: var(--surface); }
+.gj-felt { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+.gj-felt select { font: inherit; font-size: 0.85rem; padding: 4px 6px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--surface); color: var(--text); }
+.gj-merknad { font-size: 0.8rem; margin: 0 0 8px; }
+.gj-typer { border-bottom: 1px solid var(--line); margin: 4px 0 14px; flex-wrap: wrap; column-gap: 18px; overflow: visible; }
+.gj-typer .dv-fane.active { font-weight: inherit; }
+.gj-tall { font-size: 0.78em; color: var(--muted-2, var(--muted)); font-variant-numeric: tabular-nums; }
+.gj-seksjon + .gj-seksjon { margin-top: 18px; }
+.gj-hode { margin: 0 0 6px; font-size: 0.95rem; }
+.gj-hode .muted { font-weight: 400; font-size: 0.82rem; margin-left: 6px; }
+.gj-poster { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 0 24px; }
+@media (min-width: 900px) { .gj-poster { grid-template-columns: 1fr 1fr; } }
+.gj-post {
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 0.9rem;
+}
+.gj-sjekk { flex: none; width: 13px; color: var(--accent-2, var(--accent)); align-self: center; }
+.gj-apne { border: 0; background: none; padding: 0; font: inherit; color: var(--text); cursor: pointer; text-align: left; }
+.gj-apne:hover { text-decoration: underline; }
+.gj-ikke .gj-apne { color: var(--muted); }
+.gj-prio { display: inline-flex; align-self: center; }
+.gj-prio svg { width: 13px; height: 13px; }
+.gj-prio.prio-3 { color: var(--prio-3-text); }
+.gj-prio.prio-2 { color: var(--prio-2-text); }
+.gj-prio.prio-1 { color: var(--prio-1-text); }
+.gj-sti, .gj-hvor { font-size: 0.78rem; }
+.gj-hvor { margin-left: auto; white-space: nowrap; }
+.gj-merke {
+  font-size: 0.72rem; padding: 0 6px; border-radius: 999px;
+  border: 1px solid var(--line-strong, var(--line)); color: var(--muted);
+}
+
 /* «Legg til i kjøreplan»-menyen på lenkeknappen (v5.26, kun lærer-innlogging).
    Ankres i .modal-head (position:relative) og legger seg under tittellinja. */
 .lenke-meny {

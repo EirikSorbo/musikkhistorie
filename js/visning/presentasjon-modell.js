@@ -264,6 +264,13 @@ function normaliserStoppliste(raa) {
 // Vasker hele planer-feltet fra Firestore. Dokumentet er offentlig lesbart og
 // skrives av editoren, men avspilleren skal aldri knekke på et håndredigert
 // eller halvgammelt dokument: ødelagte planer og stopp droppes stille.
+// Gruppenavnet på en plan (v7.15): én linje, høyst GRUPPE_MAKS tegn. Tomt
+// betyr ingen gruppe.
+export const GRUPPE_MAKS = 60;
+export function normaliserGruppe(g) {
+  return typeof g === "string" ? g.replace(/\s+/g, " ").trim().slice(0, GRUPPE_MAKS).trim() : "";
+}
+
 export function normaliserPlaner(raa) {
   const ut = {};
   if (!raa || typeof raa !== "object") return ut;
@@ -279,6 +286,10 @@ export function normaliserPlaner(raa) {
     // studentene under «Fra timene». Bare gyldige verdier følger med.
     if (typeof plan.dato === "string" && /^\d{4}-\d{2}-\d{2}$/.test(plan.dato)) ut[id].dato = plan.dato;
     if (plan.delt === true) ut[id].delt = true;
+    // Gruppen (v7.15): høyst én per plan, for eksempel «Klassen høst 2026».
+    // Gruppens oversikt over det som er gått gjennom: js/visning/gjennomgang.js.
+    const gruppe = normaliserGruppe(plan.gruppe);
+    if (gruppe) ut[id].gruppe = gruppe;
     // Samleøktenes merker (v5.43): { <øktId>: løpenummer }, se brukSamleOps.
     if (plan.samle && typeof plan.samle === "object" && !Array.isArray(plan.samle)) {
       const merker = Object.fromEntries(Object.entries(plan.samle).filter(([, n]) => Number.isInteger(n) && n > 0));

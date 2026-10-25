@@ -135,7 +135,9 @@ test("Avslutt tilbyr «Lagre som time» også etter en kjøreplan, som en egen p
   const kropp = src.slice(start, src.indexOf("\n}\n", start));
   assert.match(kropp, /if \(erLaerer && stopp\.length\) \{/);
   assert.doesNotMatch(kropp, /!aktivPlanId\(\)/);
-  assert.match(kropp, /savePlan\(nyPlanId\(\), \{ tittel, laget: idag\.toISOString\(\), dato, stopp \}\)/);
+  // Fra v7.15 spør lagre-time.js om tittel og gruppe og lagrer timen.
+  assert.match(kropp, /lagreSomTime\(\{ stopp, dato: isoDato\(idag\), tittelForslag: forslag, gruppeForslag: kjoreplan\?\.gruppe \|\| "" \}\)/);
+  assert.match(kilde("js/visning/lagre-time.js"), /savePlan\(nyPlanId\(\), \{ tittel, laget: new Date\(\)\.toISOString\(\), dato, stopp,/);
   assert.match(kropp, /kjoreplan\.tittel/);
 });
 

@@ -31,20 +31,25 @@
 
 import { getState } from "../data/app-state.js";
 import { escapeHtml } from "../felles/util.js";
-import { onAuthChange, savePlan, deletePlan } from "../data/store.js";
+import { onAuthChange, savePlan, savePlaner, deletePlan } from "../data/store.js";
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, stoppLagtTilSiden } from "./presentasjon-modell.js";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, stoppLagtTilSiden, normaliserGruppe, GRUPPE_MAKS } from "./presentasjon-modell.js";
 import { abonnerPaminnelser, vedPaminnelseEndring, paminnelserFor, paminnelserLastet, paminnelseFeil, lagrePaminnelser } from "./paminnelser.js";
 import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js";
 import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js";
-import { erPresentasjon, aktivPlanId, avsluttPresentasjon } from "./presentasjon.js";
+import { erPresentasjon, aktivPlanId, avsluttPresentasjon, aktivOkt } from "./presentasjon.js";
 import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "../utskrift/utskrift-utvalg.js";
 import { stoppEtikett, dodeStopp } from "./stopp-etikett.js";
 import { byggIndeks, sok, TYPE_LABEL } from "../felles/search.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "../felles/feature-flags.js";
 import { apneMaal } from "../utforsk/explore-apne.js";
 import { slider } from "./slides-liste.js";
+import { lagreSomTime } from "./lagre-time.js";
+import { grupperPlaner, gruppeNavn, planTelling } from "./gjennomgang-modell.js";
+import { apneGjennomgang, gjennomgangTikk } from "./gjennomgang.js";
+import { startKopivakt, ulagrede, kopierLastet, vedKopiEndring, slettKopi } from "./visningskopi.js";
+import { erFersk, kopiDato } from "./visningskopi-modell.js";
 
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
@@ -151,12 +156,6 @@ function renderListe() {
   const el = document.getElementById("pres-adm-liste");
   if (!el) return;
   const s = getState();
-  // Nyeste først (v5.75): «laget» lagres på hver plan, og et semester av
-  // planer leses bedre i tidsrekkefølge enn alfabetisk. Like datoer (og
-  // planer uten dato, bakerst) sorteres på tittel.
-  const planer = Object.entries(planerNaa())
-    .sort(([, a], [, b]) => String(b.laget || "").localeCompare(String(a.laget || ""))
-      || a.tittel.localeCompare(b.tittel, "no"));
   const aktiv = aktivPlanId();
   const samles = aktivSamleokt()?.planId;
   const bygges = aktivPlan();
@@ -167,13 +166,12 @@ function renderListe() {
   const tomTekst = !s.contentLoaded ? "Laster kjøreplanene …"
     : erLaerer ? "Ingen kjøreplaner ennå. Lag den første under."
     : "Ingen kjøreplaner ennå.";
-  el.innerHTML = `
-    ${planer.length ? planer.map(([id, p]) => {
-      const merker = [`${p.stopp.length} stopp`];
-      // En time (v6.10, U1) har en dato; den står først.
-      if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
-      const dode = dataKlar ? dodeStopp(p) : 0;
-      return `
+  const rad = ([id, p]) => {
+    const merker = [`${p.stopp.length} stopp`];
+    // En time (v6.10, U1) har en dato; den står først.
+    if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
+    const dode = dataKlar ? dodeStopp(p) : 0;
+    return `
       <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
           <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · bygges på" : ""}</span>${
@@ -192,18 +190,172 @@ function renderListe() {
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
       </div>`;
-    }).join("")
-    : `<p class="muted">${tomTekst}</p>`}
+  };
+  // Gruppene (v7.15) står først, hver som en nedtrekk med trekant, nyeste
+  // gruppe øverst; planene uten gruppe etter dem. Nyeste plan først (v5.75):
+  // et semester av planer leses bedre i tidsrekkefølge enn alfabetisk.
+  const { grupper, uten } = grupperPlaner(planerNaa());
+  const lukket = lukkedeGrupper();
+  el.innerHTML = `
+    ${grupper.map((g) => `
+    <details class="vis-gruppe" data-gruppe="${escapeHtml(g.navn)}"${lukket.has(g.navn) ? "" : " open"}>
+      <summary><span class="vis-gruppe-hode"><strong>${escapeHtml(g.navn)}</strong> <span class="muted">${escapeHtml(planTelling(g.planer))}</span></span>${erLaerer ? `
+        <span class="pres-adm-knapper">
+          <button type="button" class="btn ghost small" data-gruppe-oversikt="${escapeHtml(g.navn)}" title="Hva planene i gruppen har vist til sammen, og hva de ikke har vist">Gått gjennom</button>
+          <button type="button" class="btn ghost small" data-gruppe-navn="${escapeHtml(g.navn)}">Gi nytt navn</button>
+        </span>` : ""}</summary>
+      ${g.planer.map(rad).join("")}
+    </details>`).join("")}
+    ${grupper.length && uten.length ? `<h4 class="vis-uten-gruppe">Uten gruppe</h4>` : ""}
+    ${uten.map(rad).join("")}
+    ${!grupper.length && !uten.length ? `<p class="muted">${tomTekst}</p>` : ""}
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
       <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
       <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og bygg på den mens du blar" ${lastet ? "" : "disabled"}>Ny + bygg på …</button>
     </div>
-    <p class="muted vis-tips">Raskest: «Bygg på» en plan, så legger visningsknappen på kortene, plussknappen på radene og tasten + kortet rett inn med ett klikk. Pila ved knappen gir menyen med de andre planene.</p>`
+    <p class="muted vis-tips">Raskest: «Bygg på» en plan, så legger visningsknappen på kortene, plussknappen på radene og tasten + kortet rett inn med ett klikk. Pila ved knappen gir menyen med de andre planene. Under Rediger legger du planen i en gruppe, for eksempel «Klassen høst 2026».</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
+  renderUlagrede();
   // Står visningen alt på, kan den avsluttes herfra.
   const paa = document.getElementById("vis-paa");
   if (paa) paa.hidden = !erPresentasjon();
+}
+
+// --- Gruppene (v7.15) ----------------------------------------------------------
+// Hvilke grupper som er lukket, huskes i nettleseren (bare for den som ser på).
+const LUKKET_NOKKEL = "pensum-vis-lukkede-grupper";
+function lukkedeGrupper() {
+  try {
+    const l = JSON.parse(localStorage.getItem(LUKKET_NOKKEL) || "[]");
+    return new Set(Array.isArray(l) ? l.filter((x) => typeof x === "string") : []);
+  } catch (e) { return new Set(); }
+}
+function huskLukket(navn, lukket) {
+  const sett = lukkedeGrupper();
+  if (lukket) sett.add(navn); else sett.delete(navn);
+  try { localStorage.setItem(LUKKET_NOKKEL, JSON.stringify([...sett])); } catch (e) { /* huskes ikke */ }
+}
+
+async function gruppeNyttNavn(gammel) {
+  const svar = await sporTekst("Planene i gruppen får det nye navnet. Har en annen gruppe det navnet, slås de sammen.", gammel,
+    { tittel: "Gi gruppen nytt navn", ok: "Gi nytt navn", forslag: gruppeNavn(planerNaa()).filter((g) => g !== gammel) });
+  if (svar === null) return;
+  const ny = normaliserGruppe(svar);
+  if (ny === gammel) return;
+  if (!ny && !(await bekreft("Planene blir liggende, men uten gruppe.", { tittel: `Ta planene ut av «${gammel}»?`, ja: "Ta ut av gruppen" }))) return;
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+  const ids = Object.entries(planerNaa()).filter(([, p]) => p.gruppe === gammel).map(([id]) => id);
+  if (!ids.length) return;
+  // Én skriving for hele gruppen: én lesing per tilkoblet student, ikke én per plan.
+  if (!(await vakt(savePlaner(Object.fromEntries(ids.map((id) => [id, { gruppe: ny || null }])))))) return;
+  if (ny && lukkedeGrupper().has(gammel)) { huskLukket(gammel, false); huskLukket(ny, true); }
+  msg(ny ? `Gruppen heter nå «${ny}».` : "Planene er tatt ut av gruppen.");
+}
+
+// --- Visninger som ikke ble lagret (v7.15) --------------------------------------
+// Sikkerhetskopiene (js/visning/visningskopi.js): en visning som ble lukket uten
+// Avslutt. Står over kjøreplanene, med «Lagre som time» og «Forkast».
+const naarTekst = (k) => {
+  const t = Date.parse(k.start || k.oppdatert);
+  return Number.isFinite(t)
+    ? new Date(t).toLocaleString("nb-NO", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
+    : "Ukjent tidspunkt";
+};
+const kopiPlan = (k) => (k.plan ? planerNaa()[k.plan] || null : null);
+function kopiBeskrivelse(k) {
+  const p = kopiPlan(k);
+  return `${k.stopp.length} kort vist${p ? `, fra kjøreplanen «${p.tittel}»` : ""}${k.avkortet ? " (bare de første fikk plass)" : ""}`;
+}
+
+function renderUlagrede() {
+  const el = document.getElementById("vis-ulagrede");
+  if (!el) return;
+  const liste = erLaerer ? ulagrede() : [];
+  el.hidden = !liste.length;
+  if (!liste.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `
+    <h3 class="vis-hode">Ikke lagret</h3>
+    <p class="muted vis-tips">Visninger som ble lukket uten Avslutt. Det som ble vist, ble tatt vare på underveis.</p>
+    ${liste.map((k) => `
+    <div class="pres-adm-rad">
+      <span class="pres-adm-navn"><strong>${escapeHtml(naarTekst(k))}</strong>
+        <span class="muted">${escapeHtml(kopiBeskrivelse(k))}${erFersk(k) ? " · kan fortsatt pågå et annet sted" : ""}</span></span>
+      <span class="pres-adm-knapper">
+        <button type="button" class="btn primary small" data-kopi-lagre="${escapeHtml(k.okt)}">Lagre som time</button>
+        <button type="button" class="btn ghost small danger" data-kopi-forkast="${escapeHtml(k.okt)}">Forkast</button>
+      </span>
+    </div>`).join("")}`;
+}
+
+async function lagreKopi(k) {
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+  const p = kopiPlan(k);
+  const dato = kopiDato(k);
+  const forslag = p && p.tittel !== "(uten tittel)"
+    ? p.tittel
+    : `Time ${new Date(`${dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "long" })}`;
+  let lagret = null;
+  try {
+    lagret = await lagreSomTime({ stopp: k.stopp, dato, tittelForslag: forslag, gruppeForslag: p?.gruppe || "" });
+  } catch (err) {
+    melding(`Fikk ikke lagret timen (${err?.message || err}). Visningen står fortsatt under «Ikke lagret».`);
+    return;
+  }
+  if (!lagret) return;
+  await slettKopi(k.okt).catch(() => {});
+  melding(`Timen «${lagret.tittel}» er lagret${lagret.gruppe ? ` i gruppen «${lagret.gruppe}»` : ""}.`);
+}
+
+async function forkastKopi(k) {
+  if (!(await bekreft("Det som ble vist, kan ikke hentes tilbake etterpå.", { tittel: `Forkaste visningen ${naarTekst(k)}?`, ja: "Forkast", farlig: true }))) return;
+  try { await slettKopi(k.okt); } catch (err) { melding(`Fikk ikke forkastet visningen (${err?.message || err}).`); }
+}
+
+// Spør én gang per økt i nettleseren, når kopiene og planene har landet, og
+// aldri midt i en visning (foran klassen). En kopi skrevet nylig kan høre til
+// en visning som pågår et annet sted; den står bare i lista.
+const SPURT_NOKKEL = "pensumKopiSpurt";
+const spurtNaa = new Set();
+let sporer = false;
+async function sporOmKopier() {
+  if (sporer || !erLaerer || erPresentasjon() || !kopierLastet() || !planeneLastet()) return;
+  try { JSON.parse(sessionStorage.getItem(SPURT_NOKKEL) || "[]").forEach((o) => spurtNaa.add(o)); } catch (e) { /* bare minnet */ }
+  const nye = ulagrede().filter((k) => !erFersk(k) && !spurtNaa.has(k.okt));
+  if (!nye.length) return;
+  nye.forEach((k) => spurtNaa.add(k.okt));
+  try { sessionStorage.setItem(SPURT_NOKKEL, JSON.stringify([...spurtNaa])); } catch (e) { /* bare minnet */ }
+  sporer = true;
+  try {
+    if (nye.length === 1) {
+      const k = nye[0];
+      const valg = await askChoice({
+        title: "En visning ble ikke lagret",
+        text: `Visningen ${naarTekst(k)} ble lukket uten Avslutt: ${kopiBeskrivelse(k)}. Vil du lagre den som en time?`,
+        buttons: [
+          { label: "Lagre som time", value: "lagre", className: "primary" },
+          { label: "Forkast", value: "forkast" },
+          { label: "Senere", value: "senere" },
+        ],
+        dismissValue: "senere",
+      });
+      if (valg === "lagre") await lagreKopi(k);
+      else if (valg === "forkast") await forkastKopi(k);
+    } else {
+      const valg = await askChoice({
+        title: `${nye.length} visninger ble ikke lagret`,
+        text: "De ble lukket uten Avslutt. Det som ble vist, er tatt vare på, og du kan lagre dem som timer i Visning-vinduet.",
+        buttons: [
+          { label: "Åpne Visning", value: "se", className: "primary" },
+          { label: "Senere", value: "senere" },
+        ],
+        dismissValue: "senere",
+      });
+      if (valg === "se") apneVisning();
+    }
+  } finally {
+    sporer = false;
+  }
 }
 
 // Står det «laster …» på et stopp, tegnes kladden på nytt når dataene lander.
@@ -222,6 +374,11 @@ function renderKladd() {
 
   const tittel = document.getElementById("pres-adm-tittel");
   if (tittel && tittel.value !== kladd.tittel) tittel.value = kladd.tittel;
+  // Gruppen (v7.15): forslagene er gruppene som finnes.
+  const gruppe = document.getElementById("pres-adm-gruppe");
+  if (gruppe && gruppe.value !== kladd.gruppe) gruppe.value = kladd.gruppe || "";
+  const grupper = document.getElementById("pres-adm-grupper");
+  if (grupper) grupper.innerHTML = gruppeNavn(planerNaa()).map((g) => `<option value="${escapeHtml(g)}"></option>`).join("");
 
   const el = document.getElementById("pres-adm-stopp");
   kladdVenter = false;
@@ -368,6 +525,8 @@ async function lagre() {
     tittel,
     laget: planerNaa()[kladd.id]?.laget || new Date().toISOString(),
     stopp: [...kladd.stopp, ...lagtTil],
+    // Tomt felt tar planen ut av gruppen (null sletter feltet, v7.15).
+    gruppe: normaliserGruppe(document.getElementById("pres-adm-gruppe")?.value || "") || null,
   };
   const pam = paminnelserTilLagring();
   if (pam.feil) { msg(pam.feil, false); return; }
@@ -470,13 +629,18 @@ function byggModal() {
         <button type="button" class="btn primary" id="vis-fri">Fri visning</button>
         <span class="muted">Vis det du finner underveis, uten kjøreplan. Søk med <kbd>S</kbd>.</span>
       </div>
+      <div id="vis-ulagrede" class="vis-ulagrede" hidden></div>
       <h3 class="vis-hode">Kjøreplaner</h3>
       <div id="pres-adm-liste"></div>
     </div>
     <div id="pres-adm-rediger" hidden>
-      <div class="add-grid" style="grid-template-columns:1fr">
+      <div class="add-grid pres-adm-hode">
         <label>Tittel *
           <input type="text" id="pres-adm-tittel" maxlength="80" placeholder="F.eks. Uke 39: Blues og gospel" />
+        </label>
+        <label>Gruppe
+          <input type="text" id="pres-adm-gruppe" maxlength="${GRUPPE_MAKS}" list="pres-adm-grupper" autocomplete="off" placeholder="F.eks. Klassen høst 2026" />
+          <datalist id="pres-adm-grupper"></datalist>
         </label>
       </div>
       <div id="pres-adm-stopp" style="margin-top:10px"></div>
@@ -531,6 +695,8 @@ export function visningTikk() {
   // Pilla for den aktive planen følger snapshotene (antall stopp, slettet
   // plan), uansett om vinduet står åpent.
   oppdaterAktiv();
+  gjennomgangTikk();
+  sporOmKopier();
   const m = document.getElementById(MODAL_ID);
   if (!m?.classList.contains("open")) return;
   // En åpen kladd tegnes bare på nytt når den venter på data (etiketter som
@@ -553,6 +719,9 @@ export function initVisning() {
     if (erLaerer) abonnerPaminnelser();
     visningTikk();
   });
+  // Sikkerhetskopiene av visningene (v7.15): lista og spørsmålet om dem.
+  startKopivakt({ unntatt: aktivOkt });
+  vedKopiEndring(() => visningTikk());
   // «samles nå» følger økta: Ferdig i linja kan trykkes mens vinduet står åpent.
   vedSamleEndring(() => visningTikk());
   // «bygges på» følger den aktive planen (Ferdig i pilla nede til venstre).
@@ -570,6 +739,11 @@ export function initVisning() {
 }
 
 function koblVindu(m) {
+  // Åpne og lukkede grupper huskes (toggle bobler ikke, derfor fanget her).
+  m.addEventListener("toggle", (e) => {
+    const d = e.target;
+    if (d?.matches?.(".vis-gruppe")) huskLukket(d.dataset.gruppe, !d.open);
+  }, true);
 
   // Ulagrede endringer skal ikke forsvinne på en bortkommen Escape. Fra
   // v6.25 spør appens egen dialog (svaret kommer etterpå): lukkingen avbrytes
@@ -598,9 +772,25 @@ function koblVindu(m) {
     if (hit("#vis-fri")) return gaaTilVisning("index.html?presentasjon=1");
     if (hit("#vis-avslutt")) return avsluttPresentasjon();
 
+    // Gruppene (v7.15). Knappene står i nedtrekkens tittellinje, så klikket
+    // skal ikke også åpne eller lukke gruppen.
+    const oversikt = hit("[data-gruppe-oversikt]");
+    if (oversikt) { e.preventDefault(); apneGjennomgang(oversikt.dataset.gruppeOversikt); return; }
+    const nyttNavn = hit("[data-gruppe-navn]");
+    if (nyttNavn) { e.preventDefault(); await gruppeNyttNavn(nyttNavn.dataset.gruppeNavn); return; }
+    // Visningene som ikke ble lagret (v7.15).
+    const kopiLagre = hit("[data-kopi-lagre]");
+    const kopiForkast = hit("[data-kopi-forkast]");
+    if (kopiLagre || kopiForkast) {
+      const okt = (kopiLagre || kopiForkast).dataset[kopiLagre ? "kopiLagre" : "kopiForkast"];
+      const k = ulagrede().find((x) => x.okt === okt);
+      if (k) await (kopiLagre ? lagreKopi(k) : forkastKopi(k));
+      return;
+    }
+
     if (hit("#pres-adm-ny")) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
-      kladd = { id: nyPlanId(), tittel: "", stopp: [], paminnelser: [], pamLastet: true, pamEndret: false };
+      kladd = { id: nyPlanId(), tittel: "", gruppe: "", stopp: [], paminnelser: [], pamLastet: true, pamEndret: false };
       renderKladd();
       document.getElementById("pres-adm-tittel")?.focus();
       return;
@@ -617,7 +807,7 @@ function koblVindu(m) {
       }
       const p = planerNaa()[id];
       if (!p) return;
-      kladd = { id, tittel: p.tittel, stopp: p.stopp.map((s) => ({ ...s })), grunnlag: p.stopp.map((s) => s.vis), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false };
+      kladd = { id, tittel: p.tittel, gruppe: p.gruppe || "", stopp: p.stopp.map((s) => ({ ...s })), grunnlag: p.stopp.map((s) => s.vis), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false };
       renderKladd();
       return;
     }
@@ -841,6 +1031,10 @@ function koblVindu(m) {
   // (audit v5.42 funn 13).
   m.querySelector("#pres-adm-tittel")?.addEventListener("input", (e) => {
     if (kladd) kladd.tittel = e.target.value;
+  });
+  // Gruppen likeså (v7.15).
+  m.querySelector("#pres-adm-gruppe")?.addEventListener("input", (e) => {
+    if (kladd) kladd.gruppe = e.target.value;
   });
 
   // Påminnelsene (v6.70): feltene skriver rett i kladden; typebyttet tegner raden på nytt.

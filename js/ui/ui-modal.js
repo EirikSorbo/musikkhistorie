@@ -563,6 +563,7 @@ export function askChoice({ title, text = "", buttons = [], dismissValue = null 
 //  Tekst med linjeskift (\n) vises med linjeskift.
 const FELT = Symbol("felt");
 
+let forslagNr = 0;
 function dialogBoks({ tittel = "", tekst = "", felt = null, knapper = [], avbrytVerdi = null }) {
   return new Promise((resolve) => {
     const backdrop = document.createElement("div");
@@ -597,6 +598,18 @@ function dialogBoks({ tittel = "", tekst = "", felt = null, knapper = [], avbryt
       if (felt.lesbar) input.readOnly = true;
       if (tekst) input.setAttribute("aria-label", tekst);
       dialog.append(input);
+      // Forslag under feltet (v7.15, gruppenavnene i Visning).
+      if (Array.isArray(felt.forslag) && felt.forslag.length) {
+        const liste = document.createElement("datalist");
+        liste.id = `melding-forslag-${++forslagNr}`;
+        for (const f of felt.forslag) {
+          const o = document.createElement("option");
+          o.value = f;
+          liste.append(o);
+        }
+        input.setAttribute("list", liste.id);
+        dialog.append(liste);
+      }
     }
 
     const foot = document.createElement("div");
@@ -658,8 +671,9 @@ export function bekreft(tekst, { tittel = "", ja = "OK", nei = "Avbryt", farlig 
 }
 
 // prompt: teksten i feltet, eller null ved Avbryt/Escape/bakgrunnen.
-export function sporTekst(tekst, verdi = "", { tittel = "", ok = "OK", avbryt = "Avbryt" } = {}) {
-  return dialogBoks({ tittel, tekst, felt: { verdi }, avbrytVerdi: null, knapper: [
+// `forslag`: verdier å velge blant i feltet (en datalist); alt annet kan skrives.
+export function sporTekst(tekst, verdi = "", { tittel = "", ok = "OK", avbryt = "Avbryt", forslag = null } = {}) {
+  return dialogBoks({ tittel, tekst, felt: { verdi, forslag }, avbrytVerdi: null, knapper: [
     { tekst: avbryt, verdi: null, klasse: "ghost" },
     { tekst: ok, verdi: FELT, klasse: "primary", hoved: true },
   ] });

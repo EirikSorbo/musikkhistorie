@@ -24,7 +24,7 @@ test("funn 5: kjøreplanene er med i eksporten og slipper gjennom importens hvit
   assert.match(imp, /if \(await bekreft\(`\$\{vis\}[^`]*`, \{ tittel: "Kjøreplaner i fila"/);
   // Én skriving for alle planene (kontrollrunden for v5.45).
   assert.match(imp, /await savePlaner\(Object\.fromEntries\(\[\.\.\.nye, \.\.\.erstattes\]\)\);/);
-  assert.match(kilde("store.js"), /export async function savePlaner\(planer\) \{\n\s*return setDoc\(presentasjonerRef\(\),\n\s*\{ planer, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}\);/);
+  assert.match(kilde("store.js"), /export async function savePlaner\(planer\) \{\n[\s\S]*?utenNull\(p\)\]\)\);\n\s*return setDoc\(presentasjonerRef\(\),\n\s*\{ planer: ut, updatedAt: new Date\(\)\.toISOString\(\) \}, \{ merge: true \}\);/);
 });
 
 test("forslag 1: «Dupliser» lager en ny plan med kopi av stoppene", () => {

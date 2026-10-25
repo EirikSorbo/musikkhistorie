@@ -658,16 +658,22 @@ export async function deletePage(pageId) {
 // (audit v5.42, funn 4).
 const presentasjonerRef = () => doc(db, "content", "presentasjoner");
 
+// Et felt med verdien null slettes fra planen (v7.15: en plan tas ut av
+// gruppen sin). Resten flettes inn som før.
+const utenNull = (plan) => Object.fromEntries(Object.entries(plan || {})
+  .map(([k, v]) => [k, v === null ? deleteField() : v]));
+
 export async function savePlan(id, plan) {
   return setDoc(presentasjonerRef(),
-    { planer: { [id]: plan }, updatedAt: new Date().toISOString() }, { merge: true });
+    { planer: { [id]: utenNull(plan) }, updatedAt: new Date().toISOString() }, { merge: true });
 }
 
-// Flere planer i ÉN skriving (importen): én lesing per tilkoblet klient i
-// stedet for én per plan, og alt-eller-ingenting.
+// Flere planer i ÉN skriving (importen, ny navn på en gruppe): én lesing per
+// tilkoblet klient i stedet for én per plan, og alt-eller-ingenting.
 export async function savePlaner(planer) {
+  const ut = Object.fromEntries(Object.entries(planer || {}).map(([id, p]) => [id, utenNull(p)]));
   return setDoc(presentasjonerRef(),
-    { planer, updatedAt: new Date().toISOString() }, { merge: true });
+    { planer: ut, updatedAt: new Date().toISOString() }, { merge: true });
 }
 
 export async function deletePlan(id) {
