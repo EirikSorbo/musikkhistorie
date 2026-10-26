@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { normaliserPlaner, normaliserGruppe, GRUPPE_MAKS } from "../../js/visning/presentasjon-modell.js";
 import {
-  grupperPlaner, gruppeNavn, planTelling, dekningsNokkel, postNokkel, beregnGjennomgang, filtrerGjennomgang,
+  grupperPlaner, gruppeNavn, planTelling, dekningsNokkel, postNokkel, beregnGjennomgang, filtrerGjennomgang, referanseFor,
 } from "../../js/visning/gjennomgang-modell.js";
 
 test("normaliserGruppe og normaliserPlaner: én linje, tak på lengden, tomt er ingen gruppe", () => {
@@ -123,4 +123,57 @@ test("filtrerGjennomgang: status, type, viktighetsgrad og sentrale eksempler", (
   const bareArtister = filtrerGjennomgang(res, { type: "artist" });
   assert.deepEqual(bareArtister.valgt.map((t) => t.type), ["artist"]);
   assert.equal(gj.totalt, res.typer.reduce((s, t) => s + t.poster.length, 0));
+});
+
+// v7.16 (brukerbestilling 2026-10-26): én plan i gruppen kan være referansen
+// de andre måles mot.
+const MED_REF = normaliserPlaner({
+  ...Object.fromEntries(Object.entries(PLANER).map(([id, p]) => [id, { ...p }])),
+  ref: { tittel: "Soul og blues: alt", laget: "2026-09-01", gruppe: "Klassen", referanse: true,
+    stopp: [{ vis: "artist:muddy" }, { vis: "artist:otis" }, { vis: "yt:abcdefghijk" }, { vis: "tidslinje" }, { vis: "artist:borte" }] },
+  ref2: { tittel: "Nyere referanse", laget: "2026-10-20", gruppe: "Klassen", referanse: true, stopp: [{ vis: "artist:bessie" }] },
+  løs: { tittel: "Uten gruppe", laget: "2026-10-21", referanse: true, stopp: [] },
+});
+
+test("referanseFor og grupperPlaner: én referanse per gruppe, den eldste ved flere, øverst i gruppen", () => {
+  assert.ok(!("referanse" in MED_REF.løs), "uten gruppe er det ingen referanse");
+  assert.equal(referanseFor(MED_REF, "Klassen")[0], "ref");
+  assert.equal(referanseFor(MED_REF, "Soul"), null);
+  const { grupper } = grupperPlaner(MED_REF);
+  const klassen = grupper.find((g) => g.navn === "Klassen");
+  assert.equal(klassen.referanse, "ref");
+  assert.equal(klassen.planer[0][0], "ref");
+  assert.equal(planTelling(klassen.planer.filter(([id]) => id !== "ref2")), "2 timer og referansen");
+});
+
+test("mot referansen: bare kortene i den, de andre planene teller, og referansen selv teller aldri", () => {
+  const res = beregnGjennomgang({ planer: MED_REF, gruppe: "Klassen", indeks: INDEKS, artister: ARTISTER });
+  assert.equal(res.mot, "referanse");
+  assert.deepEqual(res.referanse, { id: "ref", tittel: "Soul og blues: alt" });
+  assert.ok(!res.planer.some((p) => p.id === "ref"), "referansen er ikke en av timene");
+  const typer = Object.fromEntries(res.typer.map((t) => [t.type, t.poster.map((p) => `${p.tittel}:${p.status}`)]));
+  assert.deepEqual(typer.artist, ["Muddy Waters:vist", "Otis Redding:ikke"], "Bessie er ikke i referansen");
+  assert.deepEqual(typer.lytteeksempel, ["Hoochie:ikke"], "referansens eksempel er ikke spilt i timene");
+  assert.ok(!typer.sjanger, "bare typene referansen har");
+  assert.equal(res.ukjente, 2, "tidslinjen og en artist som ikke finnes");
+  // Utenom referansen: vist i timene, men ikke med i den.
+  const utenom = Object.fromEntries(res.utenom.map((t) => [t.type, t.poster.map((p) => p.tittel)]));
+  assert.deepEqual(utenom.artist, ["Bessie Smith"]);
+  assert.deepEqual(utenom.lytteeksempel, ["St. Louis"]);
+  assert.deepEqual(utenom.sjanger, ["Electric blues"]);
+  const f = filtrerGjennomgang(res, { type: "artist" });
+  assert.deepEqual(f.utenom.map((t) => t.type), ["artist"], "typefanen gjelder også utenom");
+  assert.equal(f.totalt, 3, "tellingen gjelder referansen: to artister og ett eksempel");
+});
+
+test("Alt i appen med en referanse: det gamle, men referansen teller fortsatt ikke", () => {
+  const res = beregnGjennomgang({ planer: MED_REF, gruppe: "Klassen", indeks: INDEKS, artister: ARTISTER, mot: "alt" });
+  assert.equal(res.mot, "alt");
+  assert.ok(res.referanse);
+  const otis = res.typer.find((t) => t.type === "artist").poster.find((p) => p.tittel === "Otis Redding");
+  assert.equal(otis.status, "ikke", "Otis står bare i referansen");
+  assert.ok(res.typer.some((t) => t.type === "sjanger"));
+  assert.deepEqual(res.utenom, []);
+  const uten = beregnGjennomgang({ planer: PLANER, gruppe: "Klassen", indeks: INDEKS, artister: ARTISTER });
+  assert.equal(uten.mot, "alt", "uten referanse måles det mot alt");
 });

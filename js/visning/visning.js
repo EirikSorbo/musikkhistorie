@@ -46,7 +46,7 @@ import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "../felles/feature-flags.j
 import { apneMaal } from "../utforsk/explore-apne.js";
 import { slider } from "./slides-liste.js";
 import { lagreSomTime } from "./lagre-time.js";
-import { grupperPlaner, gruppeNavn, planTelling } from "./gjennomgang-modell.js";
+import { grupperPlaner, gruppeNavn, planTelling, referanseFor } from "./gjennomgang-modell.js";
 import { apneGjennomgang, gjennomgangTikk } from "./gjennomgang.js";
 import { startKopivakt, ulagrede, kopierLastet, vedKopiEndring, slettKopi } from "./visningskopi.js";
 import { erFersk, kopiDato } from "./visningskopi-modell.js";
@@ -166,8 +166,10 @@ function renderListe() {
   const tomTekst = !s.contentLoaded ? "Laster kjøreplanene …"
     : erLaerer ? "Ingen kjøreplaner ennå. Lag den første under."
     : "Ingen kjøreplaner ennå.";
-  const rad = ([id, p]) => {
+  const rad = ([id, p], refId = null) => {
     const merker = [`${p.stopp.length} stopp`];
+    // Gruppens referanse (v7.16) merkes; den står øverst i gruppen.
+    if (id === refId) merker.unshift("referanse");
     // En time (v6.10, U1) har en dato; den står først.
     if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
     const dode = dataKlar ? dodeStopp(p) : 0;
@@ -186,6 +188,9 @@ function renderListe() {
           <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Ta opp alt du åpner som stopp, til du trykker Ferdig">Ta opp</button>
           <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
           <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
+          ${p.gruppe ? `<button type="button" class="btn ghost small${id === refId ? " vis-ref-paa" : ""}" data-pres-referanse="${escapeHtml(id)}" aria-pressed="${id === refId}" title="${id === refId
+            ? "«Gått gjennom» måler nå de andre planene i gruppen mot denne. Klikk for å slutte med det."
+            : "La «Gått gjennom» måle de andre planene i gruppen mot denne"}">${id === refId ? "Referanse" : "Gjør til referanse"}</button>` : ""}
           <label class="vis-del" title="Vis planen for studentene under «Fra timene» på forsiden og i Spillelister"><input type="checkbox" data-pres-del="${escapeHtml(id)}"${p.delt ? " checked" : ""}> Del med studentene</label>
           <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
         </span>
@@ -204,10 +209,10 @@ function renderListe() {
           <button type="button" class="btn ghost small" data-gruppe-oversikt="${escapeHtml(g.navn)}" title="Hva planene i gruppen har vist til sammen, og hva de ikke har vist">Gått gjennom</button>
           <button type="button" class="btn ghost small" data-gruppe-navn="${escapeHtml(g.navn)}">Gi nytt navn</button>
         </span>` : ""}</summary>
-      ${g.planer.map(rad).join("")}
+      ${g.planer.map((r) => rad(r, g.referanse)).join("")}
     </details>`).join("")}
     ${grupper.length && uten.length ? `<h4 class="vis-uten-gruppe">Uten gruppe</h4>` : ""}
-    ${uten.map(rad).join("")}
+    ${uten.map((r) => rad(r)).join("")}
     ${!grupper.length && !uten.length ? `<p class="muted">${tomTekst}</p>` : ""}
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
@@ -251,6 +256,25 @@ async function gruppeNyttNavn(gammel) {
   if (!(await vakt(savePlaner(Object.fromEntries(ids.map((id) => [id, { gruppe: ny || null }])))))) return;
   if (ny && lukkedeGrupper().has(gammel)) { huskLukket(gammel, false); huskLukket(ny, true); }
   msg(ny ? `Gruppen heter nå «${ny}».` : "Planene er tatt ut av gruppen.");
+}
+
+// Gjør planen til gruppens referanse, eller slutt med det hvis den alt er det.
+// Én skriving for hele gruppen.
+async function byttReferanse(id) {
+  const planer = planerNaa();
+  const p = planer[id];
+  if (!p?.gruppe) return;
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+  const varRef = referanseFor(planer, p.gruppe)?.[0] === id;
+  const endring = {};
+  for (const [pid, q] of Object.entries(planer)) {
+    if (q.gruppe === p.gruppe && q.referanse && pid !== id) endring[pid] = { referanse: null };
+  }
+  endring[id] = { referanse: varRef ? null : true };
+  if (!(await vakt(savePlaner(endring)))) return;
+  msg(varRef
+    ? `«${p.tittel}» er ikke lenger referanse. «Gått gjennom» måler mot alt i appen.`
+    : `«${p.tittel}» er referansen for «${p.gruppe}». «Gått gjennom» måler de andre planene mot den.`);
 }
 
 // --- Visninger som ikke ble lagret (v7.15) --------------------------------------
@@ -528,6 +552,10 @@ async function lagre() {
     // Tomt felt tar planen ut av gruppen (null sletter feltet, v7.15).
     gruppe: normaliserGruppe(document.getElementById("pres-adm-gruppe")?.value || "") || null,
   };
+  // En referanse hører til gruppen sin (v7.16): flyttes planen, er den ikke
+  // lenger referanse.
+  const foer = planerNaa()[kladd.id];
+  if (foer?.referanse && (foer.gruppe || null) !== plan.gruppe) plan.referanse = null;
   const pam = paminnelserTilLagring();
   if (pam.feil) { msg(pam.feil, false); return; }
   const id = kladd.id;
@@ -776,6 +804,9 @@ function koblVindu(m) {
     // skal ikke også åpne eller lukke gruppen.
     const oversikt = hit("[data-gruppe-oversikt]");
     if (oversikt) { e.preventDefault(); apneGjennomgang(oversikt.dataset.gruppeOversikt); return; }
+    // Referansen (v7.16): én per gruppe. Det som var referanse før, slutter å være det.
+    const ref = hit("[data-pres-referanse]");
+    if (ref) { await byttReferanse(ref.dataset.presReferanse); return; }
     const nyttNavn = hit("[data-gruppe-navn]");
     if (nyttNavn) { e.preventDefault(); await gruppeNyttNavn(nyttNavn.dataset.gruppeNavn); return; }
     // Visningene som ikke ble lagret (v7.15).

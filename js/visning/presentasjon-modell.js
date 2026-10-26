@@ -290,6 +290,9 @@ export function normaliserPlaner(raa) {
     // Gruppens oversikt over det som er gått gjennom: js/visning/gjennomgang.js.
     const gruppe = normaliserGruppe(plan.gruppe);
     if (gruppe) ut[id].gruppe = gruppe;
+    // Gruppens referanse (v7.16): planen «Gått gjennom» måler de andre mot.
+    // Bare meningsfull i en gruppe.
+    if (gruppe && plan.referanse === true) ut[id].referanse = true;
     // Samleøktenes merker (v5.43): { <øktId>: løpenummer }, se brukSamleOps.
     if (plan.samle && typeof plan.samle === "object" && !Array.isArray(plan.samle)) {
       const merker = Object.fromEntries(Object.entries(plan.samle).filter(([, n]) => Number.isInteger(n) && n > 0));

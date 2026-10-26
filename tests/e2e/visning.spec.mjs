@@ -181,3 +181,40 @@ test("gruppene: oversikten «Gått gjennom», filtrene, nytt navn og gruppefelte
   await expect.poll(async () => "gruppe" in (await planer()).soul).toBe(false);
   expect(appFeil(feil)).toEqual([]);
 });
+
+test("referansen: gruppen måles mot den, med «Alt i appen» og det som er vist utenom", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    t1: { tittel: "Soul 1", dato: "2026-10-03", laget: "2026-10-03T10:00:00.000Z", gruppe: "Soul", stopp: [{ vis: "artist:otis" }, { vis: "artist:bessie" }] },
+    ref: { tittel: "Alt om soul", laget: "2026-09-01T10:00:00.000Z", gruppe: "Soul", stopp: [{ vis: "artist:otis" }, { vis: "artist:muddy" }] },
+  } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator("a[data-visning]").click();
+  await page.locator('[data-pres-referanse="ref"]').click();
+  await expect.poll(async () => (await planer()).ref.referanse).toBe(true);
+  const gruppe = page.locator('.vis-gruppe[data-gruppe="Soul"]');
+  await expect(gruppe).toContainText("1 time og referansen");
+  await expect(gruppe.locator(".pres-adm-rad").first()).toContainText("Alt om soul");
+
+  await gruppe.locator("[data-gruppe-oversikt]").click();
+  const gj = page.locator("#modal-gjennomgang");
+  await expect(gj.locator("#gj-sammendrag")).toContainText("målt mot referansen «Alt om soul». 1 av 2 er gått gjennom");
+  await gj.locator('[data-gj-status="alle"]').click();
+  await expect(gj.locator(".gj-vist").first()).toContainText("Otis Redding");
+  await expect(gj.locator(".gj-ikke")).toContainText(["Muddy Waters"]);
+  // Bessie ble vist i timen, men står ikke i referansen.
+  await expect(gj.locator(".gj-utenom")).toContainText("Bessie Smith");
+  // Alt i appen: det gamle, og referansen teller ikke.
+  await gj.locator('[data-gj-mot="alt"]').click();
+  await expect(gj.locator("#gj-sammendrag")).toContainText("referansen «Alt om soul» teller ikke");
+  await expect(gj.locator(".gj-utenom")).toHaveCount(0);
+  await gj.locator('[data-gj-mot="referanse"]').click();
+  await page.keyboard.press("Escape");
+
+  // Flyttes referansen ut av gruppen, er den ikke lenger referanse.
+  await page.locator('[data-pres-rediger="ref"]').click();
+  await page.locator("#pres-adm-gruppe").fill("Annet");
+  await page.locator("#pres-adm-lagre").click();
+  await expect.poll(async () => { const p = (await planer()).ref; return [p.gruppe, "referanse" in p]; }).toEqual(["Annet", false]);
+  expect(appFeil(feil)).toEqual([]);
+});

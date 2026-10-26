@@ -6,6 +6,8 @@
 //  gruppens planer, med filter på status, type og viktighetsgrad, og hvilke
 //  timer som viste hva. Beregningen og valgene bak den: gjennomgang-modell.js.
 //  Et klikk åpner kortet oppå vinduet. Filtrene huskes i nettleseren.
+//  Har gruppen en referanse (v7.16), måles det mot den, med bryteren «Alt i
+//  appen» for resten, og det timene viste utenom referansen står nederst.
 // ============================================================================
 
 import { getState } from "../data/app-state.js";
@@ -25,6 +27,7 @@ const MODAL_ID = "modal-gjennomgang";
 const FILTER_NOKKEL = "pensum-gj-filter";
 const NAVN = { ...TYPE_FLERTALL, samfunn: "Tiår: samfunn", teknologi: "Tiår: teknologi" };
 const STATUSER = [["gjennomgatt", "Gått gjennom"], ["ikke", "Ikke gått gjennom"], ["alle", "Alle"]];
+const MOT = [["referanse", "Mot referansen"], ["alt", "Alt i appen"]];
 const SJEKK_SVG = '<svg class="gj-sjekk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
 
 let gruppe = "";
@@ -40,6 +43,7 @@ function lesFilter() {
     type: typeof f.type === "string" ? f.type : "alt",
     nivaa: [0, 1, 2, 3].includes(f.nivaa) ? f.nivaa : aktivtNivaa(),
     bareSentrale: f.bareSentrale === true,
+    mot: f.mot === "alt" ? "alt" : "referanse",
   };
 }
 function lagreFilter() {
@@ -57,7 +61,7 @@ function beregn() {
     techItems: (s.techItems || []).filter((t) => (t.status || "active") === "active"),
   };
   const indeks = byggIndeks(tilstand, { erLærer: true, skjul: SKJUL_I_STUDENTVISNING, skjulHub: SKJUL_I_HUBEN });
-  return beregnGjennomgang({ planer: normaliserPlaner(s.content?.presentasjoner?.planer), gruppe, indeks, artister });
+  return beregnGjennomgang({ planer: normaliserPlaner(s.content?.presentasjoner?.planer), gruppe, indeks, artister, mot: filter.mot });
 }
 
 const kortDato = (d) => new Date(`${d}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short" });
@@ -98,7 +102,23 @@ function tegn() {
   m.querySelector("#gj-tittel").textContent = `Gått gjennom i «${gruppe}»`;
   const planTekst = res.planer.length ? planTelling(res.planer.map((p) => [p.id, p])) : "Ingen planer";
   const pst = f.totalt ? Math.round((100 * f.gjennomgatt) / f.totalt) : 0;
-  m.querySelector("#gj-sammendrag").textContent = `${planTekst} i gruppen. ${f.gjennomgatt} av ${f.totalt} er gått gjennom (${pst}\u00a0%).`;
+  const ref = res.referanse;
+  const motTekst = !ref ? "" : res.mot === "referanse"
+    ? `, målt mot referansen «${ref.tittel}»`
+    : `, målt mot alt i appen (referansen «${ref.tittel}» teller ikke)`;
+  m.querySelector("#gj-sammendrag").textContent = `${planTekst} i gruppen${motTekst}. ${f.gjennomgatt} av ${f.totalt} er gått gjennom (${pst}\u00a0%).`;
+  const motRad = m.querySelector("#gj-mot");
+  motRad.hidden = !ref;
+  motRad.querySelectorAll("[data-gj-mot]").forEach((b) => {
+    const paa = b.dataset.gjMot === res.mot;
+    b.classList.toggle("active", paa);
+    b.setAttribute("aria-pressed", String(paa));
+  });
+  const ukjente = m.querySelector("#gj-ukjente");
+  ukjente.hidden = !(res.mot === "referanse" && res.ukjente);
+  ukjente.textContent = res.ukjente === 1
+    ? "Ett stopp i referansen kan ikke telles: kortet finnes ikke lenger, er skjult, eller stoppet er en visning uten kort (som tidslinjen)."
+    : `${res.ukjente} stopp i referansen kan ikke telles: kortene finnes ikke lenger, er skjult, eller stoppene er visninger uten kort (som tidslinjen).`;
 
   m.querySelectorAll("[data-gj-status]").forEach((b) => {
     const paa = b.dataset.gjStatus === filter.status;
@@ -121,7 +141,17 @@ function tegn() {
       <h3 class="gj-hode">${escapeHtml(NAVN[t.type] || t.type)} <span class="muted">${t.gjennomgatt} av ${t.totalt} gått gjennom</span></h3>
       ${t.poster.length ? `<ul class="gj-poster">${t.poster.map(postHtml).join("")}</ul>` : `<p class="muted">${tom}</p>`}
     </section>`).join("");
-  m.querySelector("#gj-liste").innerHTML = seksjoner || `<p class="muted">${res.planer.length ? tom : "Gruppen har ingen planer."}</p>`;
+  // Utenom referansen: det timene viste som ikke står i den (alt der er vist).
+  const utenom = res.mot === "referanse" && filter.status !== "ikke" && f.utenom.length ? `
+    <section class="gj-seksjon gj-utenom">
+      <h3 class="gj-hode">Utenom referansen <span class="muted">vist i timene, men ikke med i referansen</span></h3>
+      ${f.utenom.map((t) => `
+      <h4 class="gj-underhode">${escapeHtml(NAVN[t.type] || t.type)} <span class="muted">${t.poster.length}</span></h4>
+      <ul class="gj-poster">${t.poster.map(postHtml).join("")}</ul>`).join("")}
+    </section>` : "";
+  const tomListe = !res.planer.length ? "Gruppen har ingen planer ennå, bortsett fra referansen."
+    : res.mot === "referanse" && !f.totalt ? "Referansen har ingen kort som kan telles." : tom;
+  m.querySelector("#gj-liste").innerHTML = (seksjoner || `<p class="muted">${res.planer.length || ref ? tomListe : "Gruppen har ingen planer."}</p>`) + utenom;
 }
 
 function byggModal() {
@@ -134,6 +164,9 @@ function byggModal() {
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <p class="muted gj-sammendrag" id="gj-sammendrag"></p>
+    <div class="gj-status gj-mot" id="gj-mot" role="group" aria-label="Hva det måles mot" hidden>
+      ${MOT.map(([v, navn]) => `<button type="button" class="btn ghost small" data-gj-mot="${v}" aria-pressed="false">${navn}</button>`).join("")}
+    </div>
     <div class="gj-filtre">
       <div class="gj-status" role="group" aria-label="Hva som vises">
         ${STATUSER.map(([s, navn]) => `<button type="button" class="btn ghost small" data-gj-status="${s}" aria-pressed="false">${navn}</button>`).join("")}
@@ -146,6 +179,7 @@ function byggModal() {
       </label>
       <label class="gj-felt"><input type="checkbox" id="gj-sentrale" /> Bare sentrale lytteeksempler</label>
     </div>
+    <p class="muted gj-merknad" id="gj-ukjente" hidden></p>
     <p class="muted gj-merknad" id="gj-merknad" hidden>Viktighetsgraden gjelder artistene og lytteeksemplene deres. Resten har ingen grad og vises uansett.</p>
     <div class="sj-fanerad gj-typer" id="gj-typer" role="group" aria-label="Type"></div>
     <div id="gj-liste"></div>
@@ -156,6 +190,8 @@ function byggModal() {
   setupModal(m);
   initModalHeaders();
   m.addEventListener("click", (e) => {
+    const mot = e.target.closest("[data-gj-mot]");
+    if (mot) { filter.mot = mot.dataset.gjMot; lagreFilter(); res = beregn(); tegn(); return; }
     const status = e.target.closest("[data-gj-status]");
     if (status) { filter.status = status.dataset.gjStatus; lagreFilter(); tegn(); return; }
     const type = e.target.closest("[data-gj-type]");
