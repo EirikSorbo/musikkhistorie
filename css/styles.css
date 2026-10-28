@@ -4173,6 +4173,16 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
 .vis-gruppe[open] .vis-gruppe-hode::before { transform: rotate(90deg); }
 .vis-gruppe > .pres-adm-rad { padding-left: 16px; }
 .vis-gruppe > .pres-adm-rad:last-child { border-bottom: 0; }
+/* Dra planene mellom gruppene (v7.17): målet får en stiplet ramme, og sonene
+   «ta ut av gruppen» og «ny gruppe» vises bare mens en plan dras. */
+.vis-plan-rad[draggable="true"] { cursor: grab; }
+.vis-plan-rad.pres-adm-drar { opacity: 0.45; }
+.vis-slipp-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: var(--radius-s); }
+.vis-slippsone {
+  display: none; margin: 10px 0 0; padding: 12px; text-align: center; font-size: 0.85rem;
+  color: var(--muted); border: 1px dashed var(--line-strong, var(--line)); border-radius: var(--radius-s);
+}
+.vis-drar .vis-slippsone { display: block; }
 /* Referansen i en gruppe (v7.16): knappen står trykket inn. */
 .btn.vis-ref-paa { background: var(--text); border-color: var(--text); color: var(--surface); }
 .vis-uten-gruppe { margin: 16px 0 0; font-size: 0.85rem; font-weight: 600; color: var(--muted); }

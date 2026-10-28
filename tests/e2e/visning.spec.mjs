@@ -218,3 +218,41 @@ test("referansen: gruppen måles mot den, med «Alt i appen» og det som er vist
   await expect.poll(async () => { const p = (await planer()).ref; return [p.gruppe, "referanse" in p]; }).toEqual(["Annet", false]);
   expect(appFeil(feil)).toEqual([]);
 });
+
+// Dra og slipp med musa: dragstart kommer først når musa flytter seg med knappen nede.
+async function dra(page, fra, til) {
+  await fra.hover();
+  await page.mouse.down();
+  const b = await fra.boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2 + 14, { steps: 4 });
+  await til.hover();
+  await page.mouse.up();
+}
+
+test("dra planene mellom gruppene: inn i en gruppe, ut av den, og til en ny", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    a: { tittel: "Plan A", laget: "2026-10-01T10:00:00.000Z", gruppe: "Soul", stopp: [{ vis: "artist:otis" }] },
+    ref: { tittel: "Referansen", laget: "2026-09-01T10:00:00.000Z", gruppe: "Soul", referanse: true, stopp: [{ vis: "artist:otis" }] },
+    c: { tittel: "Plan C", laget: "2026-10-05T10:00:00.000Z", stopp: [{ vis: "artist:bessie" }] },
+  } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator("a[data-visning]").click();
+  const rad = (id) => page.locator(`[data-plan-id="${id}"]`);
+
+  // Inn i gruppen.
+  await dra(page, rad("c"), page.locator('.vis-gruppe[data-gruppe="Soul"] > summary'));
+  await expect.poll(async () => (await planer()).c.gruppe).toBe("Soul");
+  await expect(page.locator('.vis-gruppe[data-gruppe="Soul"]')).toContainText("Plan C");
+
+  // Ut av gruppen: referansen mister merket når den forlater gruppen sin.
+  await dra(page, rad("ref"), page.locator(".vis-uten .vis-slippsone"));
+  await expect.poll(async () => { const p = (await planer()).ref; return ["gruppe" in p, "referanse" in p]; }).toEqual([false, false]);
+
+  // Til en ny gruppe.
+  await dra(page, rad("a"), page.locator(".vis-ny-gruppe"));
+  await svar(page, "Lag gruppen", "Jazz");
+  await expect.poll(async () => (await planer()).a.gruppe).toBe("Jazz");
+  await expect(page.locator('.vis-gruppe[data-gruppe="Jazz"]')).toContainText("Plan A");
+  expect(appFeil(feil)).toEqual([]);
+});

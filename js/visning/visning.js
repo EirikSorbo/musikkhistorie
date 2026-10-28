@@ -173,8 +173,10 @@ function renderListe() {
     // En time (v6.10, U1) har en dato; den står først.
     if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
     const dode = dataKlar ? dodeStopp(p) : 0;
+    // Læreren drar planene mellom gruppene i grepet (v7.17).
     return `
-      <div class="pres-adm-rad${id === aktiv ? " vis-aktiv-plan" : ""}">
+      <div class="pres-adm-rad vis-plan-rad${id === aktiv ? " vis-aktiv-plan" : ""}"${erLaerer ? ` draggable="true" data-plan-id="${escapeHtml(id)}"` : ""}>
+        ${erLaerer ? `<span class="pres-adm-grep" title="Dra til en annen gruppe">${GREP_SVG}</span>` : ""}
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
           <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · bygges på" : ""}</span>${
           dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} ${dode === 1 ? "stopp finnes" : "stopp finnes"} ikke lenger</span>` : ""}</span>
@@ -203,7 +205,7 @@ function renderListe() {
   const lukket = lukkedeGrupper();
   el.innerHTML = `
     ${grupper.map((g) => `
-    <details class="vis-gruppe" data-gruppe="${escapeHtml(g.navn)}"${lukket.has(g.navn) ? "" : " open"}>
+    <details class="vis-gruppe" data-gruppe="${escapeHtml(g.navn)}" data-slipp-gruppe="${escapeHtml(g.navn)}"${lukket.has(g.navn) ? "" : " open"}>
       <summary><span class="vis-gruppe-hode"><strong>${escapeHtml(g.navn)}</strong> <span class="muted">${escapeHtml(planTelling(g.planer))}</span></span>${erLaerer ? `
         <span class="pres-adm-knapper">
           <button type="button" class="btn ghost small" data-gruppe-oversikt="${escapeHtml(g.navn)}" title="Hva planene i gruppen har vist til sammen, og hva de ikke har vist">Gått gjennom</button>
@@ -211,15 +213,20 @@ function renderListe() {
         </span>` : ""}</summary>
       ${g.planer.map((r) => rad(r, g.referanse)).join("")}
     </details>`).join("")}
-    ${grupper.length && uten.length ? `<h4 class="vis-uten-gruppe">Uten gruppe</h4>` : ""}
-    ${uten.map((r) => rad(r)).join("")}
+    ${grupper.length || uten.length ? `
+    <div class="vis-uten" data-slipp-gruppe="">
+      ${grupper.length && uten.length ? `<h4 class="vis-uten-gruppe">Uten gruppe</h4>` : ""}
+      ${uten.map((r) => rad(r)).join("")}
+      ${erLaerer && grupper.length && !uten.length ? `<p class="vis-slippsone">Slipp her for å ta planen ut av gruppen</p>` : ""}
+    </div>
+    ${erLaerer ? `<div class="vis-slippsone vis-ny-gruppe" data-slipp-ny>Slipp her for å lage en ny gruppe</div>` : ""}` : ""}
     ${!grupper.length && !uten.length ? `<p class="muted">${tomTekst}</p>` : ""}
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
       <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
       <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og bygg på den mens du blar" ${lastet ? "" : "disabled"}>Ny + bygg på …</button>
     </div>
-    <p class="muted vis-tips">Raskest: «Bygg på» en plan, så legger visningsknappen på kortene, plussknappen på radene og tasten + kortet rett inn med ett klikk. Pila ved knappen gir menyen med de andre planene. Under Rediger legger du planen i en gruppe, for eksempel «Klassen høst 2026».</p>`
+    <p class="muted vis-tips">Raskest: «Bygg på» en plan, så legger visningsknappen på kortene, plussknappen på radene og tasten + kortet rett inn med ett klikk. Pila ved knappen gir menyen med de andre planene. Dra en plan i grepet til venstre for å legge den i en gruppe, for eksempel «Klassen høst 2026», eller velg gruppe under Rediger.</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
   renderUlagrede();
   // Står visningen alt på, kan den avsluttes herfra.
@@ -256,6 +263,36 @@ async function gruppeNyttNavn(gammel) {
   if (!(await vakt(savePlaner(Object.fromEntries(ids.map((id) => [id, { gruppe: ny || null }])))))) return;
   if (ny && lukkedeGrupper().has(gammel)) { huskLukket(gammel, false); huskLukket(ny, true); }
   msg(ny ? `Gruppen heter nå «${ny}».` : "Planene er tatt ut av gruppen.");
+}
+
+// --- Dra planene mellom gruppene (v7.17) ------------------------------------------
+// Brukerbestilling 2026-10-28: å gå via Rediger for å bytte gruppe var knotete.
+// Lista tegnes ikke på nytt midt i en draing (et snapshot ville byttet ut både
+// raden og målet); det tas igjen når draingen er slutt.
+let drarPlan = null;
+let listeVenter = false;
+
+async function flyttTilGruppe(id, navn) {
+  const p = planerNaa()[id];
+  const ny = normaliserGruppe(navn || "") || null;
+  if (!p || (p.gruppe || null) === ny) return;
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+  const endring = { gruppe: ny };
+  // En referanse hører til gruppen sin (v7.16).
+  if (p.referanse) endring.referanse = null;
+  if (!(await vakt(savePlan(id, endring)))) return;
+  // Gruppen planen havnet i, åpnes, så den synes der.
+  if (ny) huskLukket(ny, false);
+  msg(ny ? `«${p.tittel}» ligger nå i «${ny}».` : `«${p.tittel}» er tatt ut av «${p.gruppe}».`);
+}
+
+async function flyttTilNyGruppe(id) {
+  if (!planerNaa()[id]) return;
+  const svar = await sporTekst("Planen flyttes dit. Har en gruppe det navnet fra før, havner den der.", "",
+    { tittel: "Ny gruppe", ok: "Lag gruppen", forslag: gruppeNavn(planerNaa()) });
+  if (svar === null) return;
+  const navn = normaliserGruppe(svar);
+  if (navn) await flyttTilGruppe(id, navn);
 }
 
 // Gjør planen til gruppens referanse, eller slutt med det hvis den alt er det.
@@ -730,6 +767,7 @@ export function visningTikk() {
   // En åpen kladd tegnes bare på nytt når den venter på data (etiketter som
   // sier «laster …»); ellers skal ingenting rykke i lærerens redigering.
   if (kladd) { if (kladdVenter) renderKladd(); return; }
+  if (drarPlan) { listeVenter = true; return; }
   renderListe();
 }
 
@@ -1014,6 +1052,49 @@ function koblVindu(m) {
     if (n >= 1 && n <= 3) kladd.stopp[i].nivaa = n;
     else delete kladd.stopp[i].nivaa;
   });
+
+  // Dra planene mellom gruppene (v7.17): til en gruppe, til «Uten gruppe» eller
+  // til en ny gruppe. Feltet Gruppe under Rediger gjør det samme uten mus.
+  const listeEl = m.querySelector("#pres-adm-liste");
+  const slippMaal = (e) => e.target.closest?.("[data-slipp-gruppe], [data-slipp-ny]");
+  const sluttDra = () => {
+    drarPlan = null;
+    listeEl?.classList.remove("vis-drar");
+    listeEl?.querySelectorAll(".pres-adm-drar, .vis-slipp-over").forEach((x) => x.classList.remove("pres-adm-drar", "vis-slipp-over"));
+    if (listeVenter) { listeVenter = false; renderListe(); }
+  };
+  listeEl?.addEventListener("dragstart", (e) => {
+    const rad = e.target.closest?.("[data-plan-id]");
+    if (!rad || !erLaerer) return;
+    drarPlan = rad.dataset.planId;
+    rad.classList.add("pres-adm-drar");
+    listeEl.classList.add("vis-drar");
+    try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", drarPlan); } catch (x) {}
+  });
+  // Både dragenter og dragover sier «her kan du slippe» og markerer målet.
+  const over = (e) => {
+    const maal = drarPlan && slippMaal(e);
+    if (!maal) return;
+    e.preventDefault();
+    listeEl.querySelectorAll(".vis-slipp-over").forEach((x) => { if (x !== maal) x.classList.remove("vis-slipp-over"); });
+    maal.classList.add("vis-slipp-over");
+  };
+  listeEl?.addEventListener("dragenter", over);
+  listeEl?.addEventListener("dragover", over);
+  listeEl?.addEventListener("dragleave", (e) => {
+    const maal = slippMaal(e);
+    if (maal && !maal.contains(e.relatedTarget)) maal.classList.remove("vis-slipp-over");
+  });
+  listeEl?.addEventListener("drop", async (e) => {
+    const maal = drarPlan && slippMaal(e);
+    if (!maal) return;
+    e.preventDefault();
+    const id = drarPlan;
+    sluttDra();
+    if ("slippNy" in maal.dataset) await flyttTilNyGruppe(id);
+    else await flyttTilGruppe(id, maal.dataset.slippGruppe);
+  });
+  listeEl?.addEventListener("dragend", sluttDra);
 
   // Dra og slipp i stopplista (v5.75). Pilene består for tastaturet.
   const stoppEl = m.querySelector("#pres-adm-stopp");
