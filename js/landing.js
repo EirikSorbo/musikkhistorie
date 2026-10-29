@@ -230,6 +230,7 @@ function setupExplore() {
     // (Viktighetsnivået og merket i toppfeltet følger bryteren selv, js/ui/viktighet.js.)
     renderArtistViewsIfVisible();
     renderFraTimene();
+    renderDagensSection();
   });
 
   const btnArtister = document.getElementById("btn-artister");
@@ -330,20 +331,16 @@ function renderDagensSection() {
     if (state.artistsLoaded) {
       section.style.display = "none";
       el.innerHTML = "";
-      delete el.dataset.dagensSig;
     }
     return;
   }
   section.style.display = "";
-  // Kortet bygges via innerHTML (bildet gjenskapes), og seksjonen tegnes på nytt
-  // for hvert snapshot under lasting (config/artister/tech) + ved hver stemme.
-  // Hopp over når verken artisten eller tech-lenkene ville endret seg — ellers
-  // blinker kortet 2–3 ganger ved sidelast. tech-lengden fanger «tech kom etter
-  // kortet», da linkene legges til (jf. subscribeTech under).
-  const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
-  if (el.dataset.dagensSig === sig) return;
+  // Seksjonen tegnes på nytt for hvert snapshot under lasting og ved hver
+  // stemme. renderSpotlightCards maler bare når HTML-en faktisk er endret, så
+  // kortet blinker ikke. Fra v7.21 er kortet artistkortet fra søket, og det
+  // avhenger også av sjangertreet (metasjangeren, fargen) og bryterne for hva
+  // studentene ser; en egen signatur på artist og tech-lengde fanget ikke det.
   renderSpotlightCards(el, [artist], explore.buildLinkCtx());
-  el.dataset.dagensSig = sig;
 }
 
 // «Artister» uten søk og filter (v6.05, brukervalg 2026-10-03, D3): bare
@@ -353,18 +350,16 @@ function renderDagensIArtister(el) {
   const artist = dagensArtist();
   if (!artist) {
     el.innerHTML = `<p class="muted empty">${state.artistsLoaded ? "Ingen artister ennå." : "Laster forslag …"}</p>`;
-    delete el.dataset.dagensSig;
     return;
   }
-  // Samme vakt som renderDagensSection: ikke bygg kortet (og bildet) på nytt
-  // når verken artist eller tech-lenker har endret seg.
-  const sig = artist.id + "|" + (state.techItems ? state.techItems.length : -1);
-  if (el.dataset.dagensSig === sig) return;
-  el.innerHTML = `<div class="dagens-head"><p class="section-label" style="margin:0">Dagens artist</p>
+  // Rammen (overskriften og «Ny artist») bygges bare når den mangler. Selve
+  // kortet males bare når HTML-en er endret (renderSpotlightCards), som på forsiden.
+  if (!el.querySelector("[data-dagens-kort]")) {
+    el.innerHTML = `<div class="dagens-head"><p class="section-label" style="margin:0">Dagens artist</p>
     <button type="button" class="btn ghost small" data-dagens-ny>Ny artist</button></div>
     <div class="spotlight-grid" data-dagens-kort></div>`;
+  }
   renderSpotlightCards(el.querySelector("[data-dagens-kort]"), [artist], explore.buildLinkCtx());
-  el.dataset.dagensSig = sig;
 }
 
 function renderFilterResults() {
@@ -380,7 +375,6 @@ function renderFilterResults() {
     renderDagensIArtister(el);
     return;
   }
-  delete el.dataset.dagensSig;
   if (filterView === "kort") {
     el.innerHTML = "";
     return;
@@ -834,7 +828,7 @@ function init() {
   // Sjangervokabularet kommer fra Firestore og lander ETTER at filtrene ble
   // fylt første gang. Fyll dem på nytt når treet er der, ellers står
   // Sjanger- og Metasjanger-nedtrekkene tomme.
-  onGenreModelChanged(() => refreshFilterControls());
+  onGenreModelChanged(() => { refreshFilterControls(); renderDagensSection(); });
 
   applyIncomingFilter();
   // ?vis=-lenkene (v5.22): generisk dyp lenke til alt søket kan åpne.

@@ -154,8 +154,10 @@ function nivaaNotatHtml() {
   return `<p class="pl-nivaa"><span class="tag tag-prio prio-${n}" aria-hidden="true">${PRIO_ICONS[n]}</span> Viktighetsnivå: ${escapeHtml(NIVAA_TEKST[n].toLowerCase())}</p>`;
 }
 
-export function renderArtistDetail(el, artist, lc) {
-  const a = artist;
+// Innholdet i artistkortet. Delt av kortet som åpnes (renderArtistDetail) og
+// «Dagens artist» (spotlightCard, v7.21, brukervalg 2026-10-30: samme oppsett
+// begge steder, med tidslinja øverst og det store bildet til høyre).
+function artistKortHtml(a, lc) {
   const examplesHtml = musicExamplesHtml(a);
   const worksHtml = keyWorksText(a.keyWorks);
 
@@ -169,7 +171,7 @@ export function renderArtistDetail(el, artist, lc) {
   // under boblene, måtte den vente til bildet var slutt (clear:right), og det
   // ga et tomt felt under boblene. Nå flyter faktalinjene og teksten ved siden
   // av bildet, og stripa står på samme sted på hvert kort.
-  el.innerHTML = `
+  return `
     ${GENEALOGY_META_GENRES.includes(a.metaGenre) ? metaMerkeHtml(a.metaGenre, META_GENRE_COLOR[a.metaGenre]) : ""}
     ${sekt("stripe", artistStripHtml(a))}
     ${sekt("bilde", artistImage(a, true))}
@@ -182,6 +184,10 @@ export function renderArtistDetail(el, artist, lc) {
     ${sekt("kilder", kilderHtml(a.kilder))}
     ${sekt("beslektede", relatedHtml)}
   `;
+}
+
+export function renderArtistDetail(el, artist, lc) {
+  el.innerHTML = artistKortHtml(artist, lc);
   wireLinks(el, lc);
   wireRelated(el, lc);
 }
@@ -215,34 +221,13 @@ export function renderSpotlightCards(el, artists, lc) {
   wireRelated(el, lc);
 }
 
+// «Dagens artist» (v7.21): samme innhold og oppsett som artistkortet som åpnes
+// fra søket, med navnet som overskrift og knappene under.
 function spotlightCard(a, lc) {
-  const examplesHtml = musicExamplesHtml(a);
-  const worksHtml = keyWorksText(a.keyWorks);
-  // Viktighetsgraden er MIDLERTIDIG skjult for studenter (feature-flags.js).
-  // Spotlight-kortene vises kun på forsiden, altså aldri for læreren.
-  const prio = SKJUL_I_STUDENTVISNING.viktighetsgrad ? 0 : (a.priority || 0);
-  const prioTag = prio
-    ? `<span class="tag tag-prio prio-${prio}" title="${PRIO_LABELS[prio]}">${PRIO_ICONS[prio]}</span>`
-    : "";
-
   return `
-    <article class="card">
-      <header class="card-head">
-        ${artistImage(a)}
-        <h3>${escapeHtml(a.name)}</h3>
-        ${factsLines(a)}
-        <div class="meta">
-          ${prioTag}
-          ${instrumenterFor(a).map((i) => `<button class="tag tag-instrument" data-instrument="${escapeHtml(i)}">${escapeHtml(i)}</button>`).join("")}
-          ${genreTags(a)}
-        </div>
-        ${artistStripHtml(a)}
-      </header>
-      ${a.description ? `<div class="desc rt">${linkDesc(a.description, medSelv(lc, { artist: a.id }))}</div>` : ""}
-      ${worksHtml ? `<p class="works"><strong>Sentrale verk:</strong> ${worksHtml}</p>` : ""}
-      ${examplesHtml ? `<p class="works"><strong>Lytteeksempler:</strong> ${examplesHtml}</p>` : ""}
-      ${kilderHtml(a.kilder)}
-      ${relatedArtistsHtml(a, lc)}
+    <article class="card dagens-kort">
+      <h3 class="dagens-navn">${escapeHtml(a.name)}</h3>
+      <div class="dagens-kropp">${artistKortHtml(a, lc)}</div>
       <footer class="card-foot">
         <div class="spacer"></div>
         <button class="btn ghost small" data-timeline-id="${escapeHtml(a.id)}">Vis i tidslinje</button>

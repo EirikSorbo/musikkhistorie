@@ -1856,8 +1856,13 @@ body:not(.presentasjon) .modal.modal-innhold :is(p, .rt, .info-text) { max-width
    640 px-blokka). */
 @media (min-width: 641px) {
   body:not(.presentasjon) .modal.modal-innhold .artist-image.big,
+  body:not(.presentasjon) .dagens-kropp .artist-image.big,
   body:not(.presentasjon) #modal-tech-detail .artist-image { width: 240px; }
 }
+/* «Dagens artist» (v7.21) er artistkortet fra søket, også på forsiden: samme
+   lesbare linjelengde ved siden av bildet, og navnet som overskrift. */
+.dagens-kropp :is(p, .rt) { max-width: 68ch; }
+.dagens-navn { margin: 0 0 16px; font-size: 1.1rem; }
 .modal-head {
   display: flex;
   justify-content: space-between;
@@ -3026,10 +3031,10 @@ body.is-teacher #gate { display: none; }
 /* Detaljkortet (v6.04): stripa rett under hodet, og luft under den før bildet
    og faktalinjene, som begynner på samme linje. På lerretet flyttes stripa ut
    av kroppen (pres-artist.js), så regelen gjelder bare appen. */
-:is(#detail-body, #ad-body) > [data-sekt="stripe"] > .ai-strip { margin: 0 0 20px; }
+:is(#detail-body, #ad-body, .dagens-kropp) > [data-sekt="stripe"] > .ai-strip { margin: 0 0 20px; }
 /* Beslektede artister står under bildet, så skillelinja aldri går inn under
    det når teksten er kortere enn bildet. */
-body:not(.presentasjon) :is(#detail-body, #ad-body) .related { clear: right; }
+body:not(.presentasjon) :is(#detail-body, #ad-body, .dagens-kropp) .related { clear: right; }
 /* Høyden følger skriften (em), ikke piksler (v5.39): med fast høyde på 13 px
    vokste årstallene ut av raden og ned i sporet så snart teksten ble
    forstørret (A+/A++ i presentasjonen). Sporet og polstringen følger rot-

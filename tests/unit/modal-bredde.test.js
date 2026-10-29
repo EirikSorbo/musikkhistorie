@@ -86,12 +86,14 @@ test("alle modalene i den delte markupen er registrert (← og ✕ virker)", () 
 // venter på bildet, så skillelinja ikke går inn under det.
 test("artistkortet: tidslinja først, så bildet, og beslektede under bildet", () => {
   const ui = les("js/ui/ui.js");
-  const start = ui.indexOf("export function renderArtistDetail");
-  const kropp = ui.slice(start, ui.indexOf("wireLinks(el, lc);", start));
+  // Innholdet bor fra v7.21 i artistKortHtml, delt med «Dagens artist».
+  const start = ui.indexOf("function artistKortHtml(a, lc)");
+  const kropp = ui.slice(start, ui.indexOf("export function renderArtistDetail", start));
   const sekter = [...kropp.matchAll(/sekt\("([a-z]+)"/g)].map((m) => m[1]);
   assert.deepEqual(sekter.slice(0, 3), ["stripe", "bilde", "fakta"]);
+  assert.match(ui, /export function renderArtistDetail\(el, artist, lc\) \{\n\s*el\.innerHTML = artistKortHtml\(artist, lc\);/);
   const css = les("css/styles.css");
-  assert.match(css, /body:not\(\.presentasjon\) :is\(#detail-body, #ad-body\) \.related \{ clear: right; \}/);
+  assert.match(css, /body:not\(\.presentasjon\) :is\(#detail-body, #ad-body, \.dagens-kropp\) \.related \{ clear: right; \}/);
 });
 
 // Lærerlista i kortvisning: to kort i bredden (v6.68, rettet i v6.97).
@@ -129,4 +131,15 @@ test("alle innholdskortene har samme faste høyde, 90 % av skjermen", () => {
   // Listevinduene: samme ramme, smal liste inni (bare lerretet har smalt vindu).
   assert.match(css, /body\.presentasjon :is\(#modal-artistliste, #modal-spilleliste\) > \.modal \{ max-width: 41\.25rem; \}/);
   assert.match(css, /body:not\(\.presentasjon\) :is\(#modal-artistliste, #modal-spilleliste\) > \.modal > \* \{\n\s*max-width: calc\(41\.25rem - 56px\);/);
+});
+
+// v7.21 (brukervalg 2026-10-30): «Dagens artist» er artistkortet fra søket,
+// på forsiden og i Artister-vinduet.
+test("Dagens artist bruker artistkortets innhold, med stort bilde også på forsiden", () => {
+  const ui = les("js/ui/ui.js");
+  const kort = ui.slice(ui.indexOf("function spotlightCard(a, lc)"), ui.indexOf("// Én tilfeldig sorteringsnøkkel"));
+  assert.match(kort, /<div class="dagens-kropp">\$\{artistKortHtml\(a, lc\)\}<\/div>/);
+  assert.match(kort, /data-timeline-id=/);
+  assert.match(kort, /data-propose-type="artist"/);
+  assert.match(les("css/styles.css"), /body:not\(\.presentasjon\) \.dagens-kropp \.artist-image\.big,/);
 });
