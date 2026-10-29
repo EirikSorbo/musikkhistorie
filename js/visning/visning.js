@@ -169,11 +169,11 @@ function renderListe() {
   const rad = ([id, p], refId = null) => {
     const merker = [`${p.stopp.length} stopp`];
     // Gruppens referanse (v7.16) merkes; den står øverst i gruppen.
-    if (id === refId) merker.unshift("referanse");
+    if (erLaerer && id === refId) merker.unshift("referanse");
     // En time (v6.10, U1) har en dato; den står først.
     if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
     const dode = dataKlar ? dodeStopp(p) : 0;
-    if (p.delt) merker.push("delt");
+    if (erLaerer && p.delt) merker.push("delt");
     // Én linje per plan (v7.18, brukerbestilling 2026-10-29): «Spill av» og en
     // meny med resten. Læreren drar planene mellom gruppene i grepet (v7.17).
     return `
@@ -360,7 +360,9 @@ async function gruppeNyttNavn(gammel) {
   const ids = Object.entries(planerNaa()).filter(([, p]) => p.gruppe === gammel).map(([id]) => id);
   if (!ids.length) return;
   // Én skriving for hele gruppen: én lesing per tilkoblet student, ikke én per plan.
-  if (!(await vakt(savePlaner(Object.fromEntries(ids.map((id) => [id, { gruppe: ny || null }])))))) return;
+  // Tas planene ut av gruppen, mister referansen merket (det ville ellers
+  // dukket opp igjen den dagen planen havner i en ny gruppe).
+  if (!(await vakt(savePlaner(Object.fromEntries(ids.map((id) => [id, ny ? { gruppe: ny } : { gruppe: null, referanse: null }])))))) return;
   if (ny && lukkedeGrupper().has(gammel)) { huskLukket(gammel, false); huskLukket(ny, true); }
   msg(ny ? `Gruppen heter nå «${ny}».` : "Planene er tatt ut av gruppen.");
 }
@@ -377,9 +379,10 @@ async function flyttTilGruppe(id, navn) {
   const ny = normaliserGruppe(navn || "") || null;
   if (!p || (p.gruppe || null) === ny) return;
   if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
-  const endring = { gruppe: ny };
-  // En referanse hører til gruppen sin (v7.16).
-  if (p.referanse) endring.referanse = null;
+  // En referanse hører til gruppen sin (v7.16). Merket slettes alltid ved
+  // flytting: et gammelt merke i dokumentet kan stå der selv om den
+  // normaliserte planen (uten gruppe) ikke viser det.
+  const endring = { gruppe: ny, referanse: null };
   if (!(await vakt(savePlan(id, endring)))) return;
   // Gruppen planen havnet i, åpnes, så den synes der.
   if (ny) huskLukket(ny, false);
@@ -464,7 +467,8 @@ async function lagreKopi(k) {
     return;
   }
   if (!lagret) return;
-  await slettKopi(k.okt).catch(() => {});
+  // Slettingen bekreftes først når nettet svarer; lista oppdateres med en gang.
+  slettKopi(k.okt).catch(() => {});
   melding(`Timen «${lagret.tittel}» er lagret${lagret.gruppe ? ` i gruppen «${lagret.gruppe}»` : ""}.`);
 }
 
@@ -692,7 +696,7 @@ async function lagre() {
   // En referanse hører til gruppen sin (v7.16): flyttes planen, er den ikke
   // lenger referanse.
   const foer = planerNaa()[kladd.id];
-  if (foer?.referanse && (foer.gruppe || null) !== plan.gruppe) plan.referanse = null;
+  if (foer && (foer.gruppe || null) !== plan.gruppe) plan.referanse = null;
   const pam = paminnelserTilLagring();
   if (pam.feil) { msg(pam.feil, false); return; }
   const id = kladd.id;

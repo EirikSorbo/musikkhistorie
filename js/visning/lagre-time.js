@@ -33,7 +33,10 @@ export async function lagreSomTime({ stopp, dato, tittelForslag, gruppeForslag =
   if (svar === null) return null;
   const tittel = (svar.trim() || tittelForslag).slice(0, 80);
   const grupper = gruppeNavn(normaliserPlaner(getState().content?.presentasjoner?.planer));
-  const forslag = sistGruppe() || normaliserGruppe(gruppeForslag);
+  // Den forrige timens gruppe bare om den fortsatt finnes: etter et nytt navn
+  // ville Enter ellers laget den gamle gruppen på nytt (kontrollrunden 29.10).
+  const sist = sistGruppe();
+  const forslag = (grupper.includes(sist) ? sist : "") || normaliserGruppe(gruppeForslag);
   const g = await sporTekst(
     "Timene i samme gruppe får en felles oversikt over det som er gått gjennom. La feltet stå tomt for ingen gruppe.",
     forslag, { tittel: "Gruppe", ok: "Lagre timen", forslag: grupper });

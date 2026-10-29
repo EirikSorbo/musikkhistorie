@@ -100,3 +100,29 @@ test("Visning spør om ulagrede kopier, men aldri midt i en visning, og bare én
   assert.match(fn, /!erFersk\(k\) && !spurtNaa\.has\(k\.okt\)/);
   assert.match(v, /startKopivakt\(\{ unntatt: aktivOkt \}\);/);
 });
+
+// Kontrollrunden 2026-10-29.
+test("en slettet kopi skrives aldri på nytt i samme fane", () => {
+  const k = les("js/visning/visningskopi.js");
+  assert.match(k, /export function kopierVisning\(okt, data\) \{\n\s*if \(!okt \|\| slettede\.has\(okt\)\) return;/);
+  assert.match(k, /export function slettKopi\(okt\) \{\n\s*slettede\.add\(okt\);/);
+});
+
+test("kopiene er ikke med i eksporten, og importen hopper over dem", () => {
+  const imp = les("js/laerer/teacher-import.js");
+  assert.match(imp, /const notater = utenKopier\(state\.notater\);\n\s*if \(Object\.keys\(notater\)\.length\) out\.notater = notater;/);
+  assert.match(imp, /erKopiNokkel\(nokkel\) \|\| typeof v\?\.tekst !== "string"/);
+});
+
+test("Lagre som time foreslår forrige gruppe bare om den fortsatt finnes", () => {
+  const t = les("js/visning/lagre-time.js");
+  assert.match(t, /const forslag = \(grupper\.includes\(sist\) \? sist : ""\) \|\| normaliserGruppe\(gruppeForslag\);/);
+});
+
+test("en plan som bytter gruppe, mister referansemerket i dokumentet", () => {
+  const v = les("js/visning/visning.js");
+  assert.match(v, /const endring = \{ gruppe: ny, referanse: null \};/, "draingen");
+  assert.match(v, /if \(foer && \(foer\.gruppe \|\| null\) !== plan\.gruppe\) plan\.referanse = null;/, "editoren");
+  assert.match(v, /ny \? \{ gruppe: ny \} : \{ gruppe: null, referanse: null \}/, "nytt navn til tomt");
+  assert.match(v, /\{ gruppe: null, referanse: null \}\]\)\)\)\)\)\) return;\n\s*msg\(`Gruppen «\$\{navn\}» er oppløst\.`\)/, "oppløs");
+});

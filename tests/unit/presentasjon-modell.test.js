@@ -1061,7 +1061,8 @@ test("P er notatene, bare for læreren, og lærerens egne verktøy vises aldri p
 
 test("de private notatene er med i lærerens sikkerhetskopi, og importen skriver dem tilbake", () => {
   const imp = readFileSync(new URL("../../js/laerer/teacher-import.js", import.meta.url), "utf8");
-  assert.match(imp, /if \(Object\.keys\(state\.notater \|\| \{\}\)\.length\) out\.notater = state\.notater;/);
+  // Fra v7.19 uten sikkerhetskopiene av visningene (visningskopi.test.js).
+  assert.match(imp, /const notater = utenKopier\(state\.notater\);\n\s*if \(Object\.keys\(notater\)\.length\) out\.notater = notater;/);
   assert.match(imp, /const KNOWN_IMPORT_KEYS = new Set\(\[[^\]]*"notater"/);
   assert.match(imp, /await lagreNotat\(nokkel, v\.tekst\);/);
   assert.match(imp, /nokkel\.includes\("\/"\)/, "ingen understier i Firestore");

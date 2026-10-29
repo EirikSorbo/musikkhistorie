@@ -23,11 +23,15 @@ let venter = null;   // { okt, data }: det som skal skrives neste gang
 let timer = null;
 let sistSkrevet = 0;
 let sistTekst = "";
+// Økter som er avsluttet eller forkastet i denne fanen (kontrollrunden
+// 2026-10-29): noe som logges i sekundene mellom slettingen og sidebyttet,
+// skal ikke lage kopien på nytt, og da spørre om en time som alt er lagret.
+const slettede = new Set();
 
 // Ber om en skriving av økta. Den første skjer med en gang, de neste høyst
 // hvert tiende sekund (siste tilstand vinner).
 export function kopierVisning(okt, data) {
-  if (!okt) return;
+  if (!okt || slettede.has(okt)) return;
   venter = { okt, data };
   if (timer) return;
   timer = setTimeout(skrivNaa, Math.max(0, sistSkrevet + INTERVALL_MS - Date.now()));
@@ -52,6 +56,7 @@ export function skrivNaa() {
 // Avslutt (lagret eller ikke) og «Forkast»: kopien slettes, og en ventende
 // skriving av SAMME økt glemmes, så den ikke lager kopien på nytt.
 export function slettKopi(okt) {
+  slettede.add(okt);
   if (venter?.okt === okt) {
     clearTimeout(timer);
     timer = null;
