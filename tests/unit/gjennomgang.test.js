@@ -177,3 +177,10 @@ test("Alt i appen med en referanse: det gamle, men referansen teller fortsatt ik
   const uten = beregnGjennomgang({ planer: PLANER, gruppe: "Klassen", indeks: INDEKS, artister: ARTISTER });
   assert.equal(uten.mot, "alt", "uten referanse måles det mot alt");
 });
+
+// v7.20 (brukervalg 2026-10-30): artistene står uten metasjanger og instrument.
+test("«Gått gjennom» viser ikke metasjanger og instrument ved artistene", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../../js/visning/gjennomgang.js", import.meta.url), "utf8");
+  assert.match(src, /\$\{p\.sti && p\.type !== "artist" \? `<span class="muted gj-sti">/);
+});

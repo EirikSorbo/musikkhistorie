@@ -75,6 +75,8 @@ function hvor(ids) {
   return { kort, lang };
 }
 
+// Undertittelen fra søket (sjangeren, artisten bak et lytteeksempel). Ikke for
+// artistene: metasjanger og instrument var bare støy i lista (brukervalg 2026-10-30).
 function postHtml(p) {
   const i = viste.push(p) - 1;
   const gjennom = p.status !== "ikke";
@@ -85,7 +87,7 @@ function postHtml(p) {
     ${gjennom ? SJEKK_SVG : '<span class="gj-sjekk"></span>'}
     <button type="button" class="gj-apne" data-gj-i="${i}">${p.sentral ? sentralMerke({ sentral: true }) : ""}${escapeHtml(p.tittel)}</button>
     ${prio}
-    ${p.sti ? `<span class="muted gj-sti">${escapeHtml(p.sti)}</span>` : ""}
+    ${p.sti && p.type !== "artist" ? `<span class="muted gj-sti">${escapeHtml(p.sti)}</span>` : ""}
     ${p.status === "lyttet" ? '<span class="gj-merke" title="Et lytteeksempel er spilt, men kortet er ikke vist">bare lyttet</span>' : ""}
     ${h?.kort ? `<span class="muted gj-hvor" title="${escapeHtml(h.lang)}">${escapeHtml(h.kort)}</span>` : ""}
   </li>`;
