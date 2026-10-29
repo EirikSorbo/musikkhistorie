@@ -164,17 +164,20 @@ test("gruppene: oversikten «Gått gjennom», filtrene, nytt navn og gruppefelte
   await page.keyboard.press("Escape");
 
   // Nytt navn på gruppen: begge planene følger med, planen uten gruppe står.
-  await gruppe.locator("[data-gruppe-navn]").click();
+  await gruppe.locator("[data-gruppe-meny]").click();
+  await page.locator(".vis-meny [data-gruppe-navn]").click();
   await svar(page, "Gi nytt navn", "Klassen 2026");
   await expect.poll(async () => { const p = await planer(); return [p.t1.gruppe, p.t2.gruppe, p.soul.gruppe]; })
     .toEqual(["Klassen 2026", "Klassen 2026", undefined]);
 
   // Gruppefeltet i editoren: legg Soul i gruppen, og ta den ut igjen.
+  await page.locator('[data-plan-meny="soul"]').click();
   await page.locator('[data-pres-rediger="soul"]').click();
   await page.locator("#pres-adm-gruppe").fill("Klassen 2026");
   await page.locator("#pres-adm-lagre").click();
   await expect.poll(async () => (await planer()).soul.gruppe).toBe("Klassen 2026");
   await expect(page.locator('.vis-gruppe[data-gruppe="Klassen 2026"]')).toContainText("2 timer og 1 kjøreplan");
+  await page.locator('[data-plan-meny="soul"]').click();
   await page.locator('[data-pres-rediger="soul"]').click();
   await page.locator("#pres-adm-gruppe").fill("");
   await page.locator("#pres-adm-lagre").click();
@@ -190,6 +193,7 @@ test("referansen: gruppen måles mot den, med «Alt i appen» og det som er vist
   const feil = await forbered(page, { rolle: null });
   await loggInnSomLaerer(page);
   await page.locator("a[data-visning]").click();
+  await page.locator('[data-plan-meny="ref"]').click();
   await page.locator('[data-pres-referanse="ref"]').click();
   await expect.poll(async () => (await planer()).ref.referanse).toBe(true);
   const gruppe = page.locator('.vis-gruppe[data-gruppe="Soul"]');
@@ -212,6 +216,7 @@ test("referansen: gruppen måles mot den, med «Alt i appen» og det som er vist
   await page.keyboard.press("Escape");
 
   // Flyttes referansen ut av gruppen, er den ikke lenger referanse.
+  await page.locator('[data-plan-meny="ref"]').click();
   await page.locator('[data-pres-rediger="ref"]').click();
   await page.locator("#pres-adm-gruppe").fill("Annet");
   await page.locator("#pres-adm-lagre").click();
@@ -254,5 +259,43 @@ test("dra planene mellom gruppene: inn i en gruppe, ut av den, og til en ny", as
   await svar(page, "Lag gruppen", "Jazz");
   await expect.poll(async () => (await planer()).a.gruppe).toBe("Jazz");
   await expect(page.locator('.vis-gruppe[data-gruppe="Jazz"]')).toContainText("Plan A");
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("menyene på radene: valgene, Del med studentene, Escape og Oppløs gruppen", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    a: { tittel: "Plan A", laget: "2026-10-01T10:00:00.000Z", gruppe: "Soul", stopp: [{ vis: "artist:otis" }] },
+    b: { tittel: "Plan B", laget: "2026-10-02T10:00:00.000Z", gruppe: "Soul", referanse: true, stopp: [{ vis: "artist:otis" }] },
+  } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator("a[data-visning]").click();
+  // Én linje per plan: bare Spill av og menyen er synlige.
+  const rad = page.locator('[data-plan-id="a"]');
+  await expect(rad.locator("button:visible")).toHaveCount(2);
+  // Menyen: valgene i rekkefølge, og Escape lukker bare den, ikke vinduet.
+  await rad.locator("[data-plan-meny]").click();
+  const meny = page.locator(".vis-meny");
+  await expect(meny.locator(".vis-meny-valg")).toHaveText(["Rediger", "Bygg på", "Ta opp", "Dupliser", "Til utskrift", "Gjør til referanse", "Del med studentene", "Slett"]);
+  await expect(meny.locator(".vis-meny-valg").first()).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(meny.locator(".vis-meny-valg").nth(1)).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(meny).toHaveCount(0);
+  await expect(page.locator("#modal-visning")).toHaveClass(/open/);
+  // Del med studentene: av og på fra menyen, med merket «delt» på raden.
+  await rad.locator("[data-plan-meny]").click();
+  await page.locator('[data-pres-del-valg="a"]').click();
+  await expect.poll(async () => (await planer()).a.delt).toBe(true);
+  await expect(page.locator('[data-plan-id="a"]')).toContainText("delt");
+  // Et klikk utenfor lukker menyen.
+  await page.locator('[data-plan-id="a"] [data-plan-meny]').click();
+  await page.locator("#modal-visning h2").click();
+  await expect(page.locator(".vis-meny")).toHaveCount(0);
+  // Oppløs gruppen: planene står igjen uten gruppe, og referansen mister merket.
+  await page.locator('[data-gruppe-meny="Soul"]').click();
+  await page.locator(".vis-meny [data-gruppe-opplos]").click();
+  await svar(page, "Oppløs gruppen");
+  await expect.poll(async () => { const p = await planer(); return ["gruppe" in p.a, "gruppe" in p.b, "referanse" in p.b]; }).toEqual([false, false, false]);
   expect(appFeil(feil)).toEqual([]);
 });

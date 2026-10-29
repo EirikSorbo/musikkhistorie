@@ -173,28 +173,21 @@ function renderListe() {
     // En time (v6.10, U1) har en dato; den står først.
     if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
     const dode = dataKlar ? dodeStopp(p) : 0;
-    // Læreren drar planene mellom gruppene i grepet (v7.17).
+    if (p.delt) merker.push("delt");
+    // Én linje per plan (v7.18, brukerbestilling 2026-10-29): «Spill av» og en
+    // meny med resten. Læreren drar planene mellom gruppene i grepet (v7.17).
     return `
       <div class="pres-adm-rad vis-plan-rad${id === aktiv ? " vis-aktiv-plan" : ""}"${erLaerer ? ` draggable="true" data-plan-id="${escapeHtml(id)}"` : ""}>
         ${erLaerer ? `<span class="pres-adm-grep" title="Dra til en annen gruppe">${GREP_SVG}</span>` : ""}
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
           <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · bygges på" : ""}</span>${
-          dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} ${dode === 1 ? "stopp finnes" : "stopp finnes"} ikke lenger</span>` : ""}</span>
+          dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} stopp finnes ikke lenger</span>` : ""}</span>
         <span class="pres-adm-knapper">
+          ${erLaerer && id === bygges ? `<button type="button" class="btn primary small" data-pres-bygg-ferdig="1" title="Slutt å bygge på denne planen">Ferdig med å bygge</button>` : ""}
           <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
-          <button type="button" class="btn ghost small utskrift-ikonknapp" data-pres-utskrift="${escapeHtml(id)}" title="Kjøreplanen til utskriften (PDF)" aria-label="Kjøreplanen til utskriften">${TIL_UTSKRIFT_SVG}</button>
-          ${erLaerer ? `
-          ${id === bygges
-            ? `<button type="button" class="btn primary small" data-pres-bygg-ferdig="1" title="Slutt å bygge på denne planen">Ferdig med å bygge</button>`
-            : `<button type="button" class="btn ghost small" data-pres-bygg="${escapeHtml(id)}" title="Gjør planen aktiv: visningsknappen på kortene legger til her med ett klikk">Bygg på</button>`}
-          <button type="button" class="btn ghost small" data-pres-samle="${escapeHtml(id)}" title="Ta opp alt du åpner som stopp, til du trykker Ferdig">Ta opp</button>
-          <button type="button" class="btn ghost small" data-pres-rediger="${escapeHtml(id)}">Rediger</button>
-          <button type="button" class="btn ghost small" data-pres-dupliser="${escapeHtml(id)}" title="Lag en kopi, for eksempel til neste kull">Dupliser</button>
-          ${p.gruppe ? `<button type="button" class="btn ghost small${id === refId ? " vis-ref-paa" : ""}" data-pres-referanse="${escapeHtml(id)}" aria-pressed="${id === refId}" title="${id === refId
-            ? "«Gått gjennom» måler nå de andre planene i gruppen mot denne. Klikk for å slutte med det."
-            : "La «Gått gjennom» måle de andre planene i gruppen mot denne"}">${id === refId ? "Referanse" : "Gjør til referanse"}</button>` : ""}
-          <label class="vis-del" title="Vis planen for studentene under «Fra timene» på forsiden og i Spillelister"><input type="checkbox" data-pres-del="${escapeHtml(id)}"${p.delt ? " checked" : ""}> Del med studentene</label>
-          <button type="button" class="btn ghost small danger" data-pres-slett="${escapeHtml(id)}">Slett</button>` : ""}
+          ${erLaerer
+            ? menyKnapp(`data-plan-meny="${escapeHtml(id)}"`, `Mer for «${p.tittel}»`)
+            : `<button type="button" class="btn ghost small utskrift-ikonknapp" data-pres-utskrift="${escapeHtml(id)}" title="Kjøreplanen til utskriften (PDF)" aria-label="Kjøreplanen til utskriften">${TIL_UTSKRIFT_SVG}</button>`}
         </span>
       </div>`;
   };
@@ -209,7 +202,7 @@ function renderListe() {
       <summary><span class="vis-gruppe-hode"><strong>${escapeHtml(g.navn)}</strong> <span class="muted">${escapeHtml(planTelling(g.planer))}</span></span>${erLaerer ? `
         <span class="pres-adm-knapper">
           <button type="button" class="btn ghost small" data-gruppe-oversikt="${escapeHtml(g.navn)}" title="Hva planene i gruppen har vist til sammen, og hva de ikke har vist">Gått gjennom</button>
-          <button type="button" class="btn ghost small" data-gruppe-navn="${escapeHtml(g.navn)}">Gi nytt navn</button>
+          ${menyKnapp(`data-gruppe-meny="${escapeHtml(g.navn)}"`, `Mer for gruppen «${g.navn}»`)}
         </span>` : ""}</summary>
       ${g.planer.map((r) => rad(r, g.referanse)).join("")}
     </details>`).join("")}
@@ -226,12 +219,110 @@ function renderListe() {
       <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
       <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og bygg på den mens du blar" ${lastet ? "" : "disabled"}>Ny + bygg på …</button>
     </div>
-    <p class="muted vis-tips">Raskest: «Bygg på» en plan, så legger visningsknappen på kortene, plussknappen på radene og tasten + kortet rett inn med ett klikk. Pila ved knappen gir menyen med de andre planene. Dra en plan i grepet til venstre for å legge den i en gruppe, for eksempel «Klassen høst 2026», eller velg gruppe under Rediger.</p>`
+    <p class="muted vis-tips">Dra en plan i grepet for å flytte den mellom gruppene. Mer om kjøreplanene står i lærerhåndboka under Innstillinger.</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
   renderUlagrede();
   // Står visningen alt på, kan den avsluttes herfra.
   const paa = document.getElementById("vis-paa");
   if (paa) paa.hidden = !erPresentasjon();
+}
+
+// --- Menyene på radene og gruppene (v7.18) ---------------------------------------
+// Brukerbestilling 2026-10-29: lista var rotete med opptil ni knapper per plan.
+// Resten av knappene står i en meny bak tre prikker. Valgene har de samme
+// data-attributtene som knappene hadde, så klikkhåndteringen i koblVindu er
+// den samme. Menyen henger i raden (position: absolute) og åpner oppover når
+// det ikke er plass under. Lista tegnes ikke på nytt mens en meny står åpen.
+const PRIKKER_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+const BOKS_SVG = (paa) => `<span class="vis-meny-boks" aria-hidden="true">${paa ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ""}</span>`;
+
+function menyKnapp(attr, etikett) {
+  return `<span class="vis-meny-wrap"><button type="button" class="btn ghost small vis-meny-knapp" ${attr} aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(etikett)}" title="Mer">${PRIKKER_SVG}</button></span>`;
+}
+
+const menyValg = (attr, tekst, { farlig = false, tittel = "" } = {}) =>
+  `<button type="button" role="menuitem" class="vis-meny-valg${farlig ? " vis-meny-farlig" : ""}" ${attr}${tittel ? ` title="${escapeHtml(tittel)}"` : ""}>${escapeHtml(tekst)}</button>`;
+
+function planMenyHtml(id) {
+  const planer = planerNaa();
+  const p = planer[id];
+  if (!p) return "";
+  const e = escapeHtml(id);
+  const erRef = !!p.gruppe && referanseFor(planer, p.gruppe)?.[0] === id;
+  return `<div class="vis-meny" role="menu" aria-label="${escapeHtml(`Mer for «${p.tittel}»`)}">
+    ${menyValg(`data-pres-rediger="${e}"`, "Rediger")}
+    ${aktivPlan() === id ? "" : menyValg(`data-pres-bygg="${e}"`, "Bygg på", { tittel: "Gjør planen aktiv: visningsknappen på kortene legger til her med ett klikk" })}
+    ${menyValg(`data-pres-samle="${e}"`, "Ta opp", { tittel: "Ta opp alt du åpner som stopp, til du trykker Ferdig" })}
+    ${menyValg(`data-pres-dupliser="${e}"`, "Dupliser", { tittel: "Lag en kopi, for eksempel til neste kull" })}
+    ${menyValg(`data-pres-utskrift="${e}"`, "Til utskrift", { tittel: "Kjøreplanen til utskriften (PDF)" })}
+    ${p.gruppe ? menyValg(`data-pres-referanse="${e}"`, erRef ? "Ikke referanse lenger" : "Gjør til referanse",
+      { tittel: erRef ? "«Gått gjennom» måler da mot alt i appen" : "La «Gått gjennom» måle de andre planene i gruppen mot denne" }) : ""}
+    <button type="button" role="menuitemcheckbox" aria-checked="${!!p.delt}" class="vis-meny-valg" data-pres-del-valg="${e}" title="Vis planen for studentene under «Fra timene» på forsiden og i Spillelister">${BOKS_SVG(!!p.delt)}Del med studentene</button>
+    <div class="vis-meny-skille" role="separator"></div>
+    ${menyValg(`data-pres-slett="${e}"`, "Slett", { farlig: true })}
+  </div>`;
+}
+
+function gruppeMenyHtml(navn) {
+  const e = escapeHtml(navn);
+  return `<div class="vis-meny" role="menu" aria-label="${escapeHtml(`Mer for gruppen «${navn}»`)}">
+    ${menyValg(`data-gruppe-navn="${e}"`, "Gi nytt navn")}
+    ${menyValg(`data-gruppe-opplos="${e}"`, "Oppløs gruppen", { tittel: "Planene blir liggende, men uten gruppe" })}
+  </div>`;
+}
+
+let apenMeny = null;   // { el, knapp }
+
+function lukkMeny({ fokus = false } = {}) {
+  if (!apenMeny) return;
+  const { el, knapp } = apenMeny;
+  apenMeny = null;
+  el.remove();
+  knapp.setAttribute("aria-expanded", "false");
+  if (fokus && knapp.isConnected) knapp.focus();
+  if (listeVenter && !drarPlan) { listeVenter = false; renderListe(); }
+}
+
+function apneMeny(knapp, html) {
+  const samme = apenMeny?.knapp === knapp;
+  lukkMeny();
+  if (samme || !html) return;   // et nytt klikk på samme knapp lukker
+  const wrap = knapp.closest(".vis-meny-wrap");
+  wrap.insertAdjacentHTML("beforeend", html);
+  const el = wrap.lastElementChild;
+  // Oppover bare når det ikke er plass under, men er plass over. Ellers nedover:
+  // vinduet ruller nedover, men aldri over toppen, der menyen ville blitt klippet.
+  const ramme = knapp.closest(".modal")?.getBoundingClientRect();
+  const b = knapp.getBoundingClientRect();
+  const h = el.offsetHeight + 8;
+  const under = Math.min(ramme?.bottom ?? Infinity, window.innerHeight) - b.bottom;
+  const over = b.top - Math.max(ramme?.top ?? 0, 0);
+  if (under < h && over >= h) el.classList.add("vis-meny-opp");
+  knapp.setAttribute("aria-expanded", "true");
+  apenMeny = { el, knapp };
+  el.scrollIntoView({ block: "nearest" });
+  el.querySelector(".vis-meny-valg")?.focus({ preventScroll: true });
+}
+
+if (typeof document !== "undefined") {
+  // Et klikk utenfor lukker. Valgene lukker selv (koblVindu).
+  document.addEventListener("click", (e) => {
+    if (apenMeny && !apenMeny.el.contains(e.target) && !apenMeny.knapp.contains(e.target)) lukkMeny();
+  });
+  // Escape lukker MENYEN, ikke vinduet bak (capture, som menyen i plan-meny.js).
+  // Pilene og Home/End flytter mellom valgene; Tab lukker.
+  document.addEventListener("keydown", (e) => {
+    if (!apenMeny) return;
+    if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); lukkMeny({ fokus: true }); return; }
+    if (e.key === "Tab") { lukkMeny(); return; }
+    if (!apenMeny.el.contains(document.activeElement)) return;
+    const alle = [...apenMeny.el.querySelectorAll(".vis-meny-valg")];
+    const i = alle.indexOf(document.activeElement);
+    const til = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: alle.length - 1 }[e.key];
+    if (til === undefined) return;
+    e.preventDefault();
+    alle[(til + alle.length) % alle.length]?.focus();
+  }, true);
 }
 
 // --- Gruppene (v7.15) ----------------------------------------------------------
@@ -247,6 +338,15 @@ function huskLukket(navn, lukket) {
   const sett = lukkedeGrupper();
   if (lukket) sett.add(navn); else sett.delete(navn);
   try { localStorage.setItem(LUKKET_NOKKEL, JSON.stringify([...sett])); } catch (e) { /* huskes ikke */ }
+}
+
+async function opplosGruppe(navn) {
+  if (!(await bekreft("Planene blir liggende, men uten gruppe.", { tittel: `Oppløse gruppen «${navn}»?`, ja: "Oppløs gruppen" }))) return;
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+  const ids = Object.entries(planerNaa()).filter(([, p]) => p.gruppe === navn).map(([id]) => id);
+  if (!ids.length) return;
+  if (!(await vakt(savePlaner(Object.fromEntries(ids.map((id) => [id, { gruppe: null, referanse: null }])))))) return;
+  msg(`Gruppen «${navn}» er oppløst.`);
 }
 
 async function gruppeNyttNavn(gammel) {
@@ -767,7 +867,7 @@ export function visningTikk() {
   // En åpen kladd tegnes bare på nytt når den venter på data (etiketter som
   // sier «laster …»); ellers skal ingenting rykke i lærerens redigering.
   if (kladd) { if (kladdVenter) renderKladd(); return; }
-  if (drarPlan) { listeVenter = true; return; }
+  if (drarPlan || apenMeny) { listeVenter = true; return; }
   renderListe();
 }
 
@@ -838,6 +938,31 @@ function koblVindu(m) {
     if (hit("#vis-fri")) return gaaTilVisning("index.html?presentasjon=1");
     if (hit("#vis-avslutt")) return avsluttPresentasjon();
 
+    // Menyene (v7.18). Knappen på gruppen står i nedtrekkens tittellinje, så
+    // klikket skal ikke også åpne eller lukke gruppen. Et valg lukker menyen
+    // først og håndteres så som knappen det erstatter.
+    const planMeny = hit("[data-plan-meny]");
+    if (planMeny) { apneMeny(planMeny, planMenyHtml(planMeny.dataset.planMeny)); return; }
+    const gruppeMeny = hit("[data-gruppe-meny]");
+    if (gruppeMeny) { e.preventDefault(); apneMeny(gruppeMeny, gruppeMenyHtml(gruppeMeny.dataset.gruppeMeny)); return; }
+    if (hit(".vis-meny")) {
+      e.preventDefault();
+      if (!hit(".vis-meny-valg")) return;
+      lukkMeny();
+    }
+    const delValg = hit("[data-pres-del-valg]");
+    if (delValg) {
+      const id = delValg.dataset.presDelValg;
+      const p = planerNaa()[id];
+      if (!p) return;
+      savePlan(id, { delt: !p.delt }).then(() => msg(p.delt
+        ? `«${p.tittel}» er ikke lenger delt med studentene.`
+        : `«${p.tittel}» er delt med studentene under «Fra timene».`))
+        .catch((err) => melding(`Fikk ikke lagret (${err?.message || err}).`));
+      return;
+    }
+    const opplos = hit("[data-gruppe-opplos]");
+    if (opplos) { await opplosGruppe(opplos.dataset.gruppeOpplos); return; }
     // Gruppene (v7.15). Knappene står i nedtrekkens tittellinje, så klikket
     // skal ikke også åpne eller lukke gruppen.
     const oversikt = hit("[data-gruppe-oversikt]");
@@ -881,16 +1006,9 @@ function koblVindu(m) {
       return;
     }
     // «Del med studentene» (v6.10, U1): merge på planer.<id>.delt, så resten
-    // av planen står urørt. «Fra timene» vises for studentene først når
-    // bryteren «Fra timene» er slått på (Skrivebordet, Synlig for studentene).
-    const del = hit("[data-pres-del]");
-    if (del) {
-      savePlan(del.dataset.presDel, { delt: del.checked }).catch((err) => {
-        del.checked = !del.checked;
-        melding(`Fikk ikke lagret (${err?.message || err}).`);
-      });
-      return;
-    }
+    // av planen står urørt. Fra v7.18 et valg i menyen (data-pres-del-valg over).
+    // «Fra timene» vises for studentene først når bryteren «Fra timene» er slått
+    // på (Skrivebordet, Synlig for studentene).
     // Dupliser (v5.44, forslag 1 i audit v5.42): en kopi med alle stoppene,
     // nivåene og unntakene, som ny plan. Planene gjenbrukes fra år til år.
     const dupliser = hit("[data-pres-dupliser]");

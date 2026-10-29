@@ -29,7 +29,8 @@ test("funn 5: kjøreplanene er med i eksporten og slipper gjennom importens hvit
 
 test("forslag 1: «Dupliser» lager en ny plan med kopi av stoppene", () => {
   const vis = kilde("visning.js");
-  assert.match(vis, /data-pres-dupliser="\$\{escapeHtml\(id\)\}"/);
+  // Fra v7.18 et valg i menyen på raden.
+  assert.match(vis, /menyValg\(`data-pres-dupliser="\$\{e\}"`, "Dupliser"/);
   assert.match(vis, /const kopi = \{ tittel, laget: new Date\(\)\.toISOString\(\), stopp: p\.stopp\.map\(\(x\) => \(\{ \.\.\.x \}\)\) \};/);
   assert.match(vis, /if \(!\(await vakt\(savePlan\(nyPlanId\(\), kopi\)\)\)\) return;/);
   // Samles planen, avsluttes økta først, så kopien har med alt.

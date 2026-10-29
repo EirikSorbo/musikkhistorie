@@ -4183,8 +4183,36 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
   color: var(--muted); border: 1px dashed var(--line-strong, var(--line)); border-radius: var(--radius-s);
 }
 .vis-drar .vis-slippsone { display: block; }
-/* Referansen i en gruppe (v7.16): knappen står trykket inn. */
-.btn.vis-ref-paa { background: var(--text); border-color: var(--text); color: var(--surface); }
+/* Menyene på radene og gruppene (v7.18): tre prikker, og valgene i en boks
+   som henger i raden (samme uttrykk som lenkemenyen). */
+.vis-meny-wrap { position: relative; display: inline-flex; }
+.vis-meny-knapp { padding-inline: 8px; display: inline-flex; align-items: center; }
+.vis-meny-knapp svg { pointer-events: none; }
+.vis-meny {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: var(--z-menu);
+  min-width: 230px; padding: 6px; display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-l); box-shadow: var(--shadow-popover); cursor: default;
+}
+.vis-meny.vis-meny-opp { top: auto; bottom: calc(100% + 4px); }
+.vis-meny-valg {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  font: inherit; font-size: 0.88rem; font-weight: 400; padding: 7px 8px; border: 0; background: none;
+  border-radius: var(--radius-s); cursor: pointer; color: var(--text); white-space: nowrap;
+}
+.vis-meny-valg:hover, .vis-meny-valg:focus-visible { background: var(--surface-2); outline: none; }
+.vis-meny-farlig { color: var(--danger); }
+.vis-meny-skille { height: 1px; background: var(--line); margin: 5px 2px; }
+.vis-meny-boks {
+  flex: none; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1.5px solid currentColor; border-radius: 3px;
+}
+/* Én linje per plan: knappene står til høyre og brytes bare på smale skjermer. */
+.vis-plan-rad { flex-wrap: nowrap; }
+.vis-plan-rad .pres-adm-navn { min-width: 0; }
+.vis-plan-rad .pres-adm-knapper { flex: none; flex-wrap: nowrap; }
+@media (max-width: 640px) { .vis-plan-rad .pres-adm-navn > .muted { display: block; } }
+@media (max-width: 520px) { .vis-plan-rad { flex-wrap: wrap; } }
 .vis-uten-gruppe { margin: 16px 0 0; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
 .pres-adm-hode { grid-template-columns: 1fr; }
 @media (min-width: 640px) { .pres-adm-hode { grid-template-columns: 3fr 2fr; } }
@@ -4605,7 +4633,6 @@ body.presentasjon .meta-merke { display: none; }
    Strukturgjennomgangen 3.10, runde 5 (v6.10)
    =========================================================================== */
 /* «Del med studentene» per plan i Visning-vinduet (U1). */
-.vis-del { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 /* «Fra timene» på forsiden (U1). */
 .fra-timene-liste { display: flex; flex-direction: column; }
 .fra-timene-liste .sj-rad { padding: 6px 4px; }

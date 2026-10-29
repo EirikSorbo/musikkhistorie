@@ -787,8 +787,12 @@ test("kjøreplanene er flyttet fra lærerens Oversikt inn i vinduet", () => {
     assert.ok(vis.includes(del), `vinduet mangler ${del}`);
   }
   // Redigeringsknappene bare i lærerøkter; Spill av for alle.
-  // Lærerknappene per plan (v5.76: «Bygg på» først, så «Ta opp», Rediger, Dupliser, Slett).
-  assert.match(vis, /\$\{erLaerer \? `[^]*?data-pres-bygg="\$\{escapeHtml\(id\)\}"[^]*?data-pres-samle="\$\{escapeHtml\(id\)\}"/);
+  // Lærerknappene per plan står fra v7.18 i menyen på raden (bare for læreren):
+  // Rediger, Bygg på, Ta opp, Dupliser, Til utskrift, referansen, deling og Slett.
+  assert.match(vis, /\$\{erLaerer\n\s*\? menyKnapp\(`data-plan-meny="\$\{escapeHtml\(id\)\}"`/);
+  const meny = vis.slice(vis.indexOf("function planMenyHtml("), vis.indexOf("function gruppeMenyHtml("));
+  const rekke = ["data-pres-rediger", "data-pres-bygg", "data-pres-samle", "data-pres-dupliser", "data-pres-utskrift", "data-pres-referanse", "data-pres-del-valg", "data-pres-slett"].map((a) => meny.indexOf(a));
+  assert.ok(rekke.every((x, i) => x > 0 && (i === 0 || x > rekke[i - 1])), `menyen i rekkefølge: ${rekke}`);
   assert.match(vis, /erLaerer = erLaererBruker\(user\);/);
   // Ærlig lagring: kladden beholdes når skrivingen feiler.
   assert.match(vis, /if \(!\(await vakt\(savePlan\(kladd\.id, plan\)\)\)\) return;   \/\/ kladden beholdes/);
