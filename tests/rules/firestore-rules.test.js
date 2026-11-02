@@ -63,8 +63,10 @@ after(async () => { await env.cleanup(); });
 function unauthDb() { return env.unauthenticatedContext().firestore(); }
 // Anonymt innlogget student: uid uten e-postclaim.
 function anonDb(uid = "anon-1") { return env.authenticatedContext(uid).firestore(); }
+// Læreren logger inn med Google, med bekreftet adresse.
+const LAERER_TOKEN = { email: "eirik.sorbo@gmail.com", email_verified: true, firebase: { sign_in_provider: "google.com" } };
 function teacherDb() {
-  return env.authenticatedContext("teacher-uid", { email: "eirik.sorbo@gmail.com" }).firestore();
+  return env.authenticatedContext("teacher-uid", LAERER_TOKEN).firestore();
 }
 function otherUserDb() {
   return env.authenticatedContext("other-uid", { email: "ikke-laerer@example.com" }).firestore();
@@ -651,4 +653,30 @@ test("notater: slidene er like private som notatene", async () => {
     await assertFails(db.collection("notater").doc("slide:sabc123").get());
     await assertFails(db.collection("notater").doc("slide:sabc123").set(slide));
   }
+});
+
+// Lærerregelen (2026-11-02): riktig e-postadresse er ikke nok. Innloggingen må
+// komme fra Google, og adressen må være bekreftet.
+test("lærerens adresse uten Google-innlogging eller bekreftelse gir ingen lærerrett", async () => {
+  await seedArtist("laererregel");
+  const falske = [
+    { email: "eirik.sorbo@gmail.com", email_verified: true, firebase: { sign_in_provider: "password" } },
+    { email: "eirik.sorbo@gmail.com", email_verified: false, firebase: { sign_in_provider: "password" } },
+    { email: "eirik.sorbo@gmail.com", email_verified: false, firebase: { sign_in_provider: "google.com" } },
+    { email: "eirik.sorbo@gmail.com", firebase: { sign_in_provider: "google.com" } },
+    { email: "eirik.sorbo@gmail.com", email_verified: true },
+    { email: "eirik.sorbo@gmail.com" },
+    { email: "ikke-laerer@example.com", email_verified: true, firebase: { sign_in_provider: "google.com" } },
+  ];
+  for (const token of falske) {
+    const db = env.authenticatedContext("falsk-uid", token).firestore();
+    await assertFails(db.collection("artists").doc("laererregel").update({ status: "removed" }));
+    await assertFails(db.collection("artists").doc("laererregel").delete());
+    await assertFails(db.collection("content").doc("synlighet").set({ punkter: false }));
+    await assertFails(db.collection("notater").doc("slide:sfalsk").get());
+  }
+  // Den ekte læreren slipper gjennom, og en anonym student kan fortsatt lese.
+  await assertSucceeds(teacherDb().collection("artists").doc("laererregel").update({ status: "removed" }));
+  await assertSucceeds(teacherDb().collection("notater").doc("slide:sfalsk").get());
+  await assertSucceeds(anonDb().collection("artists").doc("laererregel").get());
 });

@@ -20,9 +20,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Godkjente lærerkontoer (må matche TEACHER_EMAILS i firebase-config.js)
+    // Godkjente lærerkontoer (må matche TEACHER_EMAILS i firebase-config.js).
+    // Innloggingen må komme fra Google og adressen være bekreftet (2026-11-02):
+    // før holdt det at e-postadressen i innloggingen stemte, uansett hvordan
+    // kontoen var laget. Lærerrettighetene skal ikke hvile på at E-post/passord
+    // er slått av i prosjektet.
     function isTeacher() {
       return request.auth != null &&
+        request.auth.token.firebase.sign_in_provider == "google.com" &&
+        request.auth.token.email_verified == true &&
         request.auth.token.email in [
           "eirik.sorbo@gmail.com"
         ];
