@@ -43,7 +43,7 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gst
 
 import { firebaseConfig } from "../firebase-config.js";
 import { emulatorModus, EMULATOR_KONFIG, EMULATOR_FIRESTORE, EMULATOR_AUTH } from "./emulator.js";
-import { appCheckSkalBrukes, APP_CHECK_NOKKEL } from "./app-check.js";
+import { appCheckModus, APP_CHECK_NOKKEL } from "./app-check.js";
 import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "../sjangre/genre-model.js";
 import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js";
 import { RETUR_FELTER } from "./artist-schema.js";
@@ -66,8 +66,12 @@ const app = initializeApp(EMULATOR ? EMULATOR_KONFIG : firebaseConfig);
 // App Check (v7.22, js/data/app-check.js) MÅ startes før Firestore og Auth,
 // ellers går de første forespørslene ut uten bevis. Feiler den, kjører appen
 // videre uten: så lenge håndhevingen er av, merkes forespørslene bare ukjente.
-if (!EMULATOR && appCheckSkalBrukes()) {
+// På localhost brukes feilsøkingsbeviset (se app-check.js), og flagget MÅ
+// settes før initializeAppCheck.
+const APP_CHECK = EMULATOR ? null : appCheckModus();
+if (APP_CHECK) {
   try {
+    if (APP_CHECK === "feilsoking") self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(APP_CHECK_NOKKEL),
       isTokenAutoRefreshEnabled: true,

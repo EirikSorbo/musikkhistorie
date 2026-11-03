@@ -9,8 +9,14 @@
 //
 //  Foreløpig bare OVERVÅKING: håndhevingen («Enforce» i Firebase-konsollen)
 //  er av, så forespørsler uten bevis slipper fortsatt gjennom. Slås den på,
-//  stenges alt annet enn historieappen.no ute, også localhost mot det ekte
-//  prosjektet. Da trengs et feilsøkingsbevis (debug token) for lokal testing.
+//  stenges alt annet enn historieappen.no ute.
+//
+//  Localhost mot det ekte prosjektet (v7.23) får et feilsøkingsbevis i stedet
+//  for reCAPTCHA. Biblioteket lager det selv første gang, lagrer det i
+//  nettleseren for den adressen (localhost:8077 er en annen enn :8731) og
+//  skriver det i konsollen. Det virker først når det er lagt inn under App
+//  Check → Apps → ⋮ → Manage debug tokens. Beviset står aldri i koden: det
+//  ville gitt alle som leser repoet en vei forbi håndhevingen.
 //
 //  Nøkkelen er offentlig (den sendes til alle nettlesere), og den virker bare
 //  på domenet historieappen.no med underdomener.
@@ -21,9 +27,14 @@
 export const APP_CHECK_NOKKEL = "6LeuyQ4uAAAAAAKhxwhYMYNLShg78Duw5bp4z9VA";
 
 const VERTER = new Set(["historieappen.no", "www.historieappen.no"]);
+const LOKALE = new Set(["localhost", "127.0.0.1"]);
 
-// Bare på det ekte domenet: på localhost ville reCAPTCHA avvist nøkkelen og
-// fylt konsollen med feil, og nettlesertestene kjører mot emulatoren uansett.
-export function appCheckSkalBrukes(sted = globalThis.location) {
-  return VERTER.has(String(sted?.hostname || "").toLowerCase());
+// «ekte» på historieappen.no, «feilsoking» på localhost, ellers ingen: på
+// andre adresser ville reCAPTCHA avvist nøkkelen. Emulatormodus (også
+// localhost) sjekkes i store.js, der App Check aldri startes.
+export function appCheckModus(sted = globalThis.location) {
+  const vert = String(sted?.hostname || "").toLowerCase();
+  if (VERTER.has(vert)) return "ekte";
+  if (LOKALE.has(vert)) return "feilsoking";
+  return null;
 }
