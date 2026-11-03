@@ -17,7 +17,7 @@ const SIDER = ["index.html", "teacher.html", "tre.html", "student.html", "utskri
 test("Firebase forhåndslastes på alle sidene, etter importkartet og med versjonen i store.js", () => {
   const store = les("js/data/store.js");
   const brukt = [...store.matchAll(/from "(https:\/\/www\.gstatic\.com\/firebasejs\/[^"]+)"/g)].map((m) => m[1]).sort();
-  assert.equal(brukt.length, 3, "store.js henter app, firestore og auth");
+  assert.equal(brukt.length, 4, "store.js henter app, firestore, auth og app-check");
   for (const side of SIDER) {
     const html = les(side);
     const lenker = [...html.matchAll(/<link rel="modulepreload" href="([^"]+)" crossorigin>/g)].map((m) => m[1]).sort();

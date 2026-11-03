@@ -39,9 +39,11 @@ import {
   connectAuthEmulator,
   signInWithCredential,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
 
 import { firebaseConfig } from "../firebase-config.js";
 import { emulatorModus, EMULATOR_KONFIG, EMULATOR_FIRESTORE, EMULATOR_AUTH } from "./emulator.js";
+import { appCheckSkalBrukes, APP_CHECK_NOKKEL } from "./app-check.js";
 import { isMainGenre, GENEALOGY_MAIN_GENRES, GENEALOGY_META_GENRES, findTreeGenreNode } from "../sjangre/genre-model.js";
 import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-normalize.js";
 import { RETUR_FELTER } from "./artist-schema.js";
@@ -60,6 +62,20 @@ import { BATCH_MAX, DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from
 // aldri mot det ekte prosjektet.
 const EMULATOR = emulatorModus();
 const app = initializeApp(EMULATOR ? EMULATOR_KONFIG : firebaseConfig);
+
+// App Check (v7.22, js/data/app-check.js) MÅ startes før Firestore og Auth,
+// ellers går de første forespørslene ut uten bevis. Feiler den, kjører appen
+// videre uten: så lenge håndhevingen er av, merkes forespørslene bare ukjente.
+if (!EMULATOR && appCheckSkalBrukes()) {
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(APP_CHECK_NOKKEL),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (e) {
+    console.warn("App Check kunne ikke startes:", e?.message || e);
+  }
+}
 
 // Persistent lokal cache: Firestore lagrer dokumentene i IndexedDB og gjenopptar
 // lyttere med resume-token, slik at kun ENDREDE dokumenter faktureres ved

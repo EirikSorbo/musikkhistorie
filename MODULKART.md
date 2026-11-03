@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-119 filer i 11 mapper.
+120 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -17,7 +17,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 15 |
-| `js/data/` | Data | 10 |
+| `js/data/` | Data | 11 |
 | `js/felles/` | Felles hjelpere | 15 |
 | `js/vendor/` | Tredjepart | 1 |
 
@@ -186,6 +186,7 @@ Firestore (store.js er den eneste fila som snakker med databasen), den delte dat
 
 | Fil | Hva den gjør |
 |---|---|
+| `app-check.js` | APP CHECK — bevis på at forespørslene kommer fra historieappen.no (v7.22) |
 | `app-state.js` | APPENS TILSTAND OG SIDENS VALG |
 | `artist-cache.js` | ARTIST-CACHE — delt localStorage-lag for artistlista |
 | `artist-normalize.js` | ARTIST-NORMALISERING — ren datalogikk, uten Firebase-avhengigheter |
