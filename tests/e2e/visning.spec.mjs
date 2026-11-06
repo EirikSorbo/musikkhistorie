@@ -171,13 +171,11 @@ test("gruppene: oversikten «Gått gjennom», filtrene, nytt navn og gruppefelte
     .toEqual(["Klassen 2026", "Klassen 2026", undefined]);
 
   // Gruppefeltet i editoren: legg Soul i gruppen, og ta den ut igjen.
-  await page.locator('[data-plan-meny="soul"]').click();
   await page.locator('[data-pres-rediger="soul"]').click();
   await page.locator("#pres-adm-gruppe").fill("Klassen 2026");
   await page.locator("#pres-adm-lagre").click();
   await expect.poll(async () => (await planer()).soul.gruppe).toBe("Klassen 2026");
   await expect(page.locator('.vis-gruppe[data-gruppe="Klassen 2026"]')).toContainText("2 timer og 1 kjøreplan");
-  await page.locator('[data-plan-meny="soul"]').click();
   await page.locator('[data-pres-rediger="soul"]').click();
   await page.locator("#pres-adm-gruppe").fill("");
   await page.locator("#pres-adm-lagre").click();
@@ -216,7 +214,6 @@ test("referansen: gruppen måles mot den, med «Alt i appen» og det som er vist
   await page.keyboard.press("Escape");
 
   // Flyttes referansen ut av gruppen, er den ikke lenger referanse.
-  await page.locator('[data-plan-meny="ref"]').click();
   await page.locator('[data-pres-rediger="ref"]').click();
   await page.locator("#pres-adm-gruppe").fill("Annet");
   await page.locator("#pres-adm-lagre").click();
@@ -270,19 +267,33 @@ test("menyene på radene: valgene, Del med studentene, Escape og Oppløs gruppen
   const feil = await forbered(page, { rolle: null });
   await loggInnSomLaerer(page);
   await page.locator("a[data-visning]").click();
-  // Én linje per plan: bare Spill av og menyen er synlige.
+  // Én linje per plan (v7.25): Spill av, Rediger, Legg til og Slett som
+  // ikoner, og menyen med resten.
   const rad = page.locator('[data-plan-id="a"]');
-  await expect(rad.locator("button:visible")).toHaveCount(2);
+  await expect(rad.locator("button:visible")).toHaveCount(5);
+  await expect(rad.locator(".vis-ikon")).toHaveText(["", "", "", ""]);
+  expect(await rad.locator(".vis-ikon").evaluateAll((k) => k.map((b) => b.getAttribute("aria-label"))))
+    .toEqual(["Spill av", "Rediger", "Legg til: visningsknappen på kortene legger dem rett inn i planen", "Slett"]);
   // Menyen: valgene i rekkefølge, og Escape lukker bare den, ikke vinduet.
   await rad.locator("[data-plan-meny]").click();
   const meny = page.locator(".vis-meny");
-  await expect(meny.locator(".vis-meny-valg")).toHaveText(["Rediger", "Bygg på", "Ta opp", "Dupliser", "Til utskrift", "Gjør til referanse", "Del med studentene", "Slett"]);
+  await expect(meny.locator(".vis-meny-valg")).toHaveText(["Ta opp", "Dupliser", "Til utskrift", "Gjør til referanse", "Del med studentene"]);
   await expect(meny.locator(".vis-meny-valg").first()).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(meny.locator(".vis-meny-valg").nth(1)).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(meny).toHaveCount(0);
   await expect(page.locator("#modal-visning")).toHaveClass(/open/);
+  // Legg til: planen blir aktiv og vinduet lukkes. Ikonet er farget til et nytt
+  // klikk gjør læreren ferdig.
+  await rad.locator('[data-pres-bygg="a"]').click();
+  await expect(page.locator("#aktiv-plan-pille")).toContainText("Plan A");
+  await page.locator("a[data-visning]").click();
+  const paa = page.locator('[data-plan-id="a"] [data-pres-bygg-ferdig]');
+  await expect(paa).toHaveAttribute("aria-pressed", "true");
+  await paa.click();
+  await expect(page.locator("#aktiv-plan-pille")).toHaveCount(0);
+  await expect(page.locator('[data-plan-id="a"] [data-pres-bygg="a"]')).toHaveAttribute("aria-pressed", "false");
   // Del med studentene: av og på fra menyen, med merket «delt» på raden.
   await rad.locator("[data-plan-meny]").click();
   await page.locator('[data-pres-del-valg="a"]').click();
@@ -297,6 +308,10 @@ test("menyene på radene: valgene, Del med studentene, Escape og Oppløs gruppen
   await page.locator(".vis-meny [data-gruppe-opplos]").click();
   await svar(page, "Oppløs gruppen");
   await expect.poll(async () => { const p = await planer(); return ["gruppe" in p.a, "gruppe" in p.b, "referanse" in p.b]; }).toEqual([false, false, false]);
+  // Slett: spør først, og bare planen på raden forsvinner.
+  await page.locator('[data-pres-slett="a"]').click();
+  await svar(page, "Slett");
+  await expect.poll(async () => Object.keys(await planer())).toEqual(["b"]);
   expect(appFeil(feil)).toEqual([]);
 });
 
@@ -311,8 +326,8 @@ test("Rediger i linja nede til venstre: stopp flyttes uten å slutte å bygge p�
   // Bygg på: Otis havner sist, og Rediger i pilla flytter ham først.
   await apne(page, "/index.html");
   await page.locator("a[data-visning]").click();
-  await page.locator('[data-plan-meny="p"]').click();
-  await page.locator('.vis-meny [data-pres-bygg="p"]').click();
+  await page.locator('[data-pres-bygg="p"]').click();
+  await expect(page.locator("#modal-visning")).not.toHaveClass(/open/);
   await apne(page, "/index.html?vis=artist:otis");
   await expect(page.locator("#modal-detail")).toHaveClass(/open/);
   await page.locator("#modal-detail .modal-head .modal-lenke").click();

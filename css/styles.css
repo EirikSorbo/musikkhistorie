@@ -4191,6 +4191,12 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
 /* Menyene på radene og gruppene (v7.18): tre prikker, og valgene i en boks
    som henger i raden (samme uttrykk som lenkemenyen). */
 .vis-meny-wrap { position: relative; display: inline-flex; }
+/* Ikonene på planradene (v7.25): Spill av, Rediger, Legg til og Slett.
+   Legg til er farget mens planen bygges på (aria-pressed). */
+.btn.vis-ikon { display: inline-flex; align-items: center; justify-content: center; padding: 5px 8px; min-width: 32px; }
+.btn.vis-ikon svg { display: block; pointer-events: none; }
+.btn.vis-ikon.vis-ikon-paa { background: var(--accent-2); border-color: var(--accent-2); color: var(--on-accent); }
+.btn.vis-ikon.vis-ikon-farlig:hover { color: var(--danger); border-color: var(--danger); }
 .vis-meny-knapp { padding-inline: 8px; display: inline-flex; align-items: center; }
 .vis-meny-knapp svg { pointer-events: none; }
 .vis-meny {
@@ -4206,8 +4212,6 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
   border-radius: var(--radius-s); cursor: pointer; color: var(--text); white-space: nowrap;
 }
 .vis-meny-valg:hover, .vis-meny-valg:focus-visible { background: var(--surface-2); outline: none; }
-.vis-meny-farlig { color: var(--danger); }
-.vis-meny-skille { height: 1px; background: var(--line); margin: 5px 2px; }
 .vis-meny-boks {
   flex: none; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;
   border: 1.5px solid currentColor; border-radius: 3px;

@@ -178,8 +178,11 @@ function renderListe() {
     if (p.dato) merker.unshift(new Date(`${p.dato}T12:00:00`).toLocaleDateString("nb-NO", { day: "numeric", month: "short", year: "numeric" }));
     const dode = dataKlar ? dodeStopp(p) : 0;
     if (erLaerer && p.delt) merker.push("delt");
-    // Én linje per plan (v7.18, brukerbestilling 2026-10-29): «Spill av» og en
-    // meny med resten. Læreren drar planene mellom gruppene i grepet (v7.17).
+    // Én linje per plan (v7.18, brukerbestilling 2026-10-29). Fra v7.25
+    // (brukerbestilling 2026-11-06) står Spill av, Rediger, Legg til (bygg på)
+    // og Slett som ikoner på raden, og resten i menyen. Legg til er farget mens
+    // planen bygges på, og et nytt klikk gjør læreren ferdig. Læreren drar
+    // planene mellom gruppene i grepet (v7.17).
     return `
       <div class="pres-adm-rad vis-plan-rad${id === aktiv ? " vis-aktiv-plan" : ""}"${erLaerer ? ` draggable="true" data-plan-id="${escapeHtml(id)}"` : ""}>
         ${erLaerer ? `<span class="pres-adm-grep" title="Dra til en annen gruppe">${GREP_SVG}</span>` : ""}
@@ -187,10 +190,14 @@ function renderListe() {
           <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · bygges på" : ""}</span>${
           dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} stopp finnes ikke lenger</span>` : ""}</span>
         <span class="pres-adm-knapper">
-          ${erLaerer && id === bygges ? `<button type="button" class="btn primary small" data-pres-bygg-ferdig="1" title="Slutt å bygge på denne planen">Ferdig med å bygge</button>` : ""}
-          <button type="button" class="btn ${erLaerer ? "ghost" : "primary"} small" data-pres-spill="${escapeHtml(id)}">Spill av</button>
-          ${erLaerer
-            ? menyKnapp(`data-plan-meny="${escapeHtml(id)}"`, `Mer for «${p.tittel}»`)
+          ${ikonKnapp(`data-pres-spill="${escapeHtml(id)}"`, SPILL_SVG, "Spill av")}
+          ${erLaerer ? `
+          ${ikonKnapp(`data-pres-rediger="${escapeHtml(id)}"`, REDIGER_SVG, "Rediger")}
+          ${id === bygges
+            ? ikonKnapp(`data-pres-bygg-ferdig="1" aria-pressed="true"`, LEGG_TIL_SVG, "Ferdig med å legge til i planen", { klasse: "vis-ikon-paa" })
+            : ikonKnapp(`data-pres-bygg="${escapeHtml(id)}" aria-pressed="false"`, LEGG_TIL_SVG, "Legg til: visningsknappen på kortene legger dem rett inn i planen")}
+          ${ikonKnapp(`data-pres-slett="${escapeHtml(id)}"`, SLETT_SVG, "Slett", { klasse: "vis-ikon-farlig" })}
+          ${menyKnapp(`data-plan-meny="${escapeHtml(id)}"`, `Mer for «${p.tittel}»`)}`
             : `<button type="button" class="btn ghost small utskrift-ikonknapp" data-pres-utskrift="${escapeHtml(id)}" title="Kjøreplanen til utskriften (PDF)" aria-label="Kjøreplanen til utskriften">${TIL_UTSKRIFT_SVG}</button>`}
         </span>
       </div>`;
@@ -240,12 +247,23 @@ function renderListe() {
 const PRIKKER_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
 const BOKS_SVG = (paa) => `<span class="vis-meny-boks" aria-hidden="true">${paa ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ""}</span>`;
 
+// Ikonene på planradene (v7.25). Etiketten er både verktøytips og navnet
+// skjermlesere leser.
+const SPILL_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.2-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z"/></svg>';
+const REDIGER_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+const LEGG_TIL_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+const SLETT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+
+function ikonKnapp(attr, svg, etikett, { klasse = "" } = {}) {
+  return `<button type="button" class="btn ghost small vis-ikon${klasse ? ` ${klasse}` : ""}" ${attr} title="${escapeHtml(etikett)}" aria-label="${escapeHtml(etikett)}">${svg}</button>`;
+}
+
 function menyKnapp(attr, etikett) {
   return `<span class="vis-meny-wrap"><button type="button" class="btn ghost small vis-meny-knapp" ${attr} aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(etikett)}" title="Mer">${PRIKKER_SVG}</button></span>`;
 }
 
-const menyValg = (attr, tekst, { farlig = false, tittel = "" } = {}) =>
-  `<button type="button" role="menuitem" class="vis-meny-valg${farlig ? " vis-meny-farlig" : ""}" ${attr}${tittel ? ` title="${escapeHtml(tittel)}"` : ""}>${escapeHtml(tekst)}</button>`;
+const menyValg = (attr, tekst, { tittel = "" } = {}) =>
+  `<button type="button" role="menuitem" class="vis-meny-valg" ${attr}${tittel ? ` title="${escapeHtml(tittel)}"` : ""}>${escapeHtml(tekst)}</button>`;
 
 function planMenyHtml(id) {
   const planer = planerNaa();
@@ -253,17 +271,14 @@ function planMenyHtml(id) {
   if (!p) return "";
   const e = escapeHtml(id);
   const erRef = !!p.gruppe && referanseFor(planer, p.gruppe)?.[0] === id;
+  // Rediger, Legg til (bygg på) og Slett står som ikoner på raden (v7.25).
   return `<div class="vis-meny" role="menu" aria-label="${escapeHtml(`Mer for «${p.tittel}»`)}">
-    ${menyValg(`data-pres-rediger="${e}"`, "Rediger")}
-    ${aktivPlan() === id ? "" : menyValg(`data-pres-bygg="${e}"`, "Bygg på", { tittel: "Gjør planen aktiv: visningsknappen på kortene legger til her med ett klikk" })}
     ${menyValg(`data-pres-samle="${e}"`, "Ta opp", { tittel: "Ta opp alt du åpner som stopp, til du trykker Ferdig" })}
     ${menyValg(`data-pres-dupliser="${e}"`, "Dupliser", { tittel: "Lag en kopi, for eksempel til neste kull" })}
     ${menyValg(`data-pres-utskrift="${e}"`, "Til utskrift", { tittel: "Kjøreplanen til utskriften (PDF)" })}
     ${p.gruppe ? menyValg(`data-pres-referanse="${e}"`, erRef ? "Ikke referanse lenger" : "Gjør til referanse",
       { tittel: erRef ? "«Gått gjennom» måler da mot alt i appen" : "La «Gått gjennom» måle de andre planene i gruppen mot denne" }) : ""}
     <button type="button" role="menuitemcheckbox" aria-checked="${!!p.delt}" class="vis-meny-valg" data-pres-del-valg="${e}" title="Vis planen for studentene under «Fra timene» på forsiden og i Spillelister">${BOKS_SVG(!!p.delt)}Del med studentene</button>
-    <div class="vis-meny-skille" role="separator"></div>
-    ${menyValg(`data-pres-slett="${e}"`, "Slett", { farlig: true })}
   </div>`;
 }
 

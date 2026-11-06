@@ -787,12 +787,17 @@ test("kjøreplanene er flyttet fra lærerens Oversikt inn i vinduet", () => {
     assert.ok(vis.includes(del), `vinduet mangler ${del}`);
   }
   // Redigeringsknappene bare i lærerøkter; Spill av for alle.
-  // Lærerknappene per plan står fra v7.18 i menyen på raden (bare for læreren):
-  // Rediger, Bygg på, Ta opp, Dupliser, Til utskrift, referansen, deling og Slett.
-  assert.match(vis, /\$\{erLaerer\n\s*\? menyKnapp\(`data-plan-meny="\$\{escapeHtml\(id\)\}"`/);
+  // Fra v7.25 står Spill av (alle), Rediger, Legg til (bygg på) og Slett som
+  // ikoner på raden, og resten i menyen (bare for læreren): Ta opp, Dupliser,
+  // Til utskrift, referansen og deling.
+  const rad = vis.slice(vis.indexOf("const rad = ([id, p]"), vis.indexOf("// Gruppene (v7.15) står først"));
+  const ikoner = ["data-pres-spill", "data-pres-rediger", "data-pres-bygg-ferdig", "data-pres-bygg=", "data-pres-slett", "data-plan-meny"].map((a) => rad.indexOf(a));
+  assert.ok(ikoner.every((x, i) => x > 0 && (i === 0 || x > ikoner[i - 1])), `ikonene i rekkefølge: ${ikoner}`);
+  assert.match(rad, /ikonKnapp\(`data-pres-bygg-ferdig="1" aria-pressed="true"`, LEGG_TIL_SVG, "Ferdig med å legge til i planen", \{ klasse: "vis-ikon-paa" \}\)/);
   const meny = vis.slice(vis.indexOf("function planMenyHtml("), vis.indexOf("function gruppeMenyHtml("));
-  const rekke = ["data-pres-rediger", "data-pres-bygg", "data-pres-samle", "data-pres-dupliser", "data-pres-utskrift", "data-pres-referanse", "data-pres-del-valg", "data-pres-slett"].map((a) => meny.indexOf(a));
+  const rekke = ["data-pres-samle", "data-pres-dupliser", "data-pres-utskrift", "data-pres-referanse", "data-pres-del-valg"].map((a) => meny.indexOf(a));
   assert.ok(rekke.every((x, i) => x > 0 && (i === 0 || x > rekke[i - 1])), `menyen i rekkefølge: ${rekke}`);
+  for (const ute of ["data-pres-rediger", "data-pres-bygg", "data-pres-slett"]) assert.ok(!meny.includes(ute), `${ute} står på raden, ikke i menyen`);
   assert.match(vis, /erLaerer = erLaererBruker\(user\);/);
   // Ærlig lagring: kladden beholdes når skrivingen feiler.
   assert.match(vis, /if \(!\(await vakt\(savePlan\(kladd\.id, plan\)\)\)\) return;   \/\/ kladden beholdes/);
