@@ -12,7 +12,10 @@
 //  Økta startes fra Visning-vinduet (visning.js, bak presentasjonsikonet), bæres
 //  av sessionStorage over alle sidene (samme mønster som presentasjons-
 //  modusen), og vises som en linje nede til VENSTRE (presentasjonslinja bor
-//  til høyre): plan, modus, stopptall, Angre siste og Ferdig.
+//  til høyre): plan, modus, stopptall, Angre siste, Rediger og Ferdig.
+//
+//  Rediger (v7.24) åpner editoren uten å avslutte økta: opptaket hviler
+//  mens editoren står åpen (se hvilForRedigering).
 //
 //  Skriving (v5.43, audit v5.42 funn 1–3). Content-samlingen abonneres av
 //  alle sider, så hver skriving koster én lesing per tilkoblet klient. Økta
@@ -296,7 +299,7 @@ let sisteInnslag = null;
 // en åpen modal under opptak — læreren VALGTE noe: sjangergruppe i
 // varmekartet, instrumentfane, historie-chip), "plukk" (plussknappen).
 function leggTil(vis, kilde) {
-  if (!økt || (kilde !== "plukk" && økt.modus !== "opptak")) return;
+  if (!økt || økt.hviler || (kilde !== "plukk" && økt.modus !== "opptak")) return;
   const siste = sisteVis(økt);
   // Samme mål to ganger på rad er én hendelse (omtegninger, dobbeltklikk).
   if (kilde !== "plukk" && siste === vis) return;
@@ -326,7 +329,7 @@ function leggTil(vis, kilde) {
 // fjernet forberedte stopp). Er tillegget ikke sendt, glemmes det bare
 // (ingen skriving). Uten noe å angre er knappen av.
 function angreSiste() {
-  if (!økt || !økt.egne.length) return;
+  if (!økt || økt.hviler || !økt.egne.length) return;
   const vis = økt.egne.pop();
   const op = økt.nye[økt.nye.length - 1];
   if (op?.t === "legg" && op.vis === vis) økt.nye.pop();
@@ -377,13 +380,14 @@ function oppdaterBar() {
   if (!status || !økt) return;
   const plan = planSomØktaSer(økt);
   if (!plan) { status.textContent = "laster …"; return; }
-  const tillegg = økt.modus === "opptak" && spillerPlan() ? ", tar ikke opp mens en kjøreplan spilles"
+  const tillegg = økt.hviler ? ", tar ikke opp mens du redigerer"
+    : økt.modus === "opptak" && spillerPlan() ? ", tar ikke opp mens en kjøreplan spilles"
     : økt.feilet && harUsendt(økt) ? ", lagring feilet"
     : økt.nye.length ? ", lagres snart"
     : økt.sendt.some((b) => b.live) ? ", lagrer …" : "";
   status.textContent = `${plan.length} stopp${tillegg}`;
   const angre = document.getElementById("samle-angre");
-  if (angre) angre.disabled = !økt.egne.length;
+  if (angre) angre.disabled = !økt.egne.length || !!økt.hviler;
 }
 
 function visBar() {
@@ -399,6 +403,7 @@ function visBar() {
       «${escapeHtml(økt.tittel)}»</span>
     <span id="samle-status" class="muted"></span>
     <button type="button" class="pres-knapp" id="samle-angre" title="Fjern siste stopp (Ctrl/Cmd+Z)">Angre</button>
+    <button type="button" class="pres-knapp" data-rediger-plan="${escapeHtml(økt.planId)}" title="Endre rekkefølgen og resten av planen. Opptaket fortsetter etterpå.">Rediger</button>
     <button type="button" class="pres-knapp" id="samle-ferdig">Ferdig</button>`;
   document.body.appendChild(bar);
   bar.addEventListener("click", (e) => {
@@ -518,8 +523,47 @@ export function forkastSamlinger(planId) {
   }
 }
 
+// ----------------------------------------------------------------------------
+//  Rediger uten å avslutte (v7.24)
+// ----------------------------------------------------------------------------
+// Brukerbestilling 2026-11-06: å flytte et stopp midt i et opptak krevde
+// Ferdig, Rediger, Lagre og et nytt opptak. Nå hviler opptaket mens editoren
+// står åpen: det samlede sendes først, så kladden har med alt, og ingenting
+// tas opp imens («Vis» i editoren åpner kort, og Angre ville fjernet et stopp
+// kladden har). Etter Lagre legger økta nye stopp oppå den redigerte planen
+// (brukSamleOps). Kommer det samlede ikke fram innen fristen (uten nett),
+// avsluttes økta som før (funn 3): ellers kunne den sendt handlinger planen
+// alt har fått, oppå redigeringen. Hvilen bor bare i minnet, så et sidebytte
+// tar opp igjen.
+//   Svar: "hviler", "avsluttet", eller null når planen ikke tas opp her.
+export async function hvilForRedigering(planId, fristMs = 4000) {
+  const ø = økt;
+  if (!ø || ø.planId !== planId) return null;
+  ø.hviler = true;
+  sisteInnslag = null;
+  oppdaterBar();
+  // Rett etter et sidebytte spør økta de andre fanene om de eier den (se
+  // sjekkEier), og sender ingenting før svaret: vent det ut innen fristen.
+  const frist = Date.now() + fristMs;
+  const vent = (ms) => new Promise((r) => setTimeout(r, ms));
+  while (ø.venterEier && Date.now() < frist) await vent(50);
+  await Promise.race([lagreNaa(ø), vent(Math.max(0, frist - Date.now()))]);
+  if (ø !== økt) return null;   // avsluttet imens (Ferdig, planen slettet)
+  if (!ø.nye.length && lastet() && !ventende(ø).length && !ø.sendt.some((b) => b.live)) return "hviler";
+  avsluttInnsamling();
+  return "avsluttet";
+}
+
+// Editoren er lukket (Lagre, Avbryt, lukket vindu): opptaket tar opp igjen.
+export function fortsettOpptak() {
+  if (!økt?.hviler) return;
+  økt.hviler = false;
+  sisteInnslag = null;
+  oppdaterBar();
+}
+
 // Økta som pågår i denne fanen, eller null. For Visning-vinduet: «samles nå»
-// i lista, og at Rediger, Slett og Spill av avslutter den først.
+// i lista, og at Slett og Spill av avslutter den først.
 export function aktivSamleokt() {
   return økt ? { planId: økt.planId, tittel: økt.tittel, modus: økt.modus } : null;
 }
@@ -576,9 +620,11 @@ function åpneKanal() {
   try { kanal = new BroadcastChannel("pensum-samle"); } catch (e) { return; }
   kanal.onmessage = (e) => {
     const m = e.data || {};
-    if (!økt) return;
-    if (m.spør === økt.øktId && !økt.venterEier) kanal.postMessage({ eier: m.spør });
-    if (m.eier === økt.øktId && økt.venterEier) erKopi(økt);
+    if (økt && m.spør === økt.øktId && !økt.venterEier) kanal.postMessage({ eier: m.spør });
+    // Svaret gjelder også en økt som er avsluttet mens den ventet (Ferdig
+    // rett etter sidebyttet, v7.24).
+    const ventende = [økt, ...etterslep].find((ø) => ø?.venterEier && ø.øktId === m.eier);
+    if (ventende) erKopi(ventende);
   };
 }
 
@@ -592,6 +638,7 @@ function erKopi(ø) {
   ø.fraForrige = false;
   lagreLokalt(ø);
   oppdaterBar();
+  if (ø.avsluttet && etterslep.includes(ø)) lagreNaa(ø);
 }
 
 function sjekkEier(ø) {
@@ -604,8 +651,11 @@ function sjekkEier(ø) {
   setTimeout(() => {
     if (!ø.venterEier) return;
     ø.venterEier = false;
-    // Ingen andre har økta: det forrige side lot ligge, sendes nå.
-    if (ø === økt && ø.synket && ø.fraForrige && harUsendt(ø)) lagreNaa(ø);
+    // Ingen andre har økta: det forrige side lot ligge, sendes nå. Er økta
+    // avsluttet imens (Ferdig rett etter sidebyttet), ble ingenting sendt da,
+    // så det sendes nå (v7.24; før ble det liggende til neste side).
+    if (ø.avsluttet) { if (etterslep.includes(ø)) lagreNaa(ø); }
+    else if (ø === økt && ø.synket && ø.fraForrige && harUsendt(ø)) lagreNaa(ø);
   }, EIER_FRIST_MS);
 }
 

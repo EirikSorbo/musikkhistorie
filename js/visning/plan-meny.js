@@ -12,7 +12,9 @@
 //  «Bygg på» i Visning-vinduet, og fra da av legger visningsknappen kortet
 //  rett inn i den planen med ett klikk, uten meny. En pille nede til venstre
 //  viser «Bygger på «Uke 39» · 8 stopp · Ferdig». Menyen med de andre planene
-//  ligger bak en liten pil ved siden av knappen. Plussknappen på radene i
+//  ligger bak en liten pil ved siden av knappen. Rediger i pilla (v7.24)
+//  åpner editoren for planen uten å slutte å bygge (js/visning/visning.js
+//  tar klikket på data-rediger-plan). Plussknappen på radene i
 //  artistlistene (kort-pluss) og +-tasten virker som i plukk-modus. Valget
 //  bor i localStorage (lærerens nettleser) til «Ferdig», eller til planen
 //  slettes. Dette erstatter samleøktas plukk-modus, som krevde en dialog og
@@ -157,6 +159,7 @@ function tegnPille(plan, paa) {
     el = document.createElement("div");
     el.id = "aktiv-plan-pille";
     el.innerHTML = `${VISNING_SVG}<span class="aktiv-plan-tekst"></span>` +
+      `<button type="button" class="pres-knapp" id="aktiv-plan-rediger" title="Endre rekkefølgen og resten av planen. Du bygger videre etterpå.">Rediger</button>` +
       `<button type="button" class="pres-knapp" id="aktiv-plan-ferdig" title="Slutt å bygge på planen. Planen beholdes.">Ferdig</button>`;
     document.body.appendChild(el);
     el.querySelector("#aktiv-plan-ferdig").addEventListener("click", () => settAktivPlan(null));
@@ -166,6 +169,10 @@ function tegnPille(plan, paa) {
     ? `Bygger på «<strong>${escapeHtml(plan.tittel)}</strong>» · ${plan.stopp.length} stopp`
     : "Bygger på en kjøreplan · laster …";
   el.title = plan ? "Visningsknappen på kortene og + legger kortet rett inn i denne planen" : "";
+  const rediger = el.querySelector("#aktiv-plan-rediger");
+  rediger.disabled = !plan;
+  if (plan) rediger.dataset.redigerPlan = aktivId;
+  else delete rediger.dataset.redigerPlan;
 }
 
 // Haken i knappen som la til, med tittel som sier hvor det havnet.

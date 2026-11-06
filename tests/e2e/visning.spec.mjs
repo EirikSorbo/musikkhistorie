@@ -299,3 +299,72 @@ test("menyene på radene: valgene, Del med studentene, Escape og Oppløs gruppen
   await expect.poll(async () => { const p = await planer(); return ["gruppe" in p.a, "gruppe" in p.b, "referanse" in p.b]; }).toEqual([false, false, false]);
   expect(appFeil(feil)).toEqual([]);
 });
+
+test("Rediger i linja nede til venstre: stopp flyttes uten å slutte å bygge på eller ta opp (v7.24)", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    p: { tittel: "Blues", laget: "2026-10-01T10:00:00.000Z", stopp: [{ vis: "artist:muddy" }, { vis: "artist:bessie" }] },
+  } });
+  const feil = await forbered(page, { rolle: "teacher" });
+  await loggInnSomLaerer(page);
+  const rekke = async () => (await planer()).p.stopp.map((s) => s.vis);
+
+  // Bygg på: Otis havner sist, og Rediger i pilla flytter ham først.
+  await apne(page, "/index.html");
+  await page.locator("a[data-visning]").click();
+  await page.locator('[data-plan-meny="p"]').click();
+  await page.locator('.vis-meny [data-pres-bygg="p"]').click();
+  await apne(page, "/index.html?vis=artist:otis");
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+  await page.locator("#modal-detail .modal-head .modal-lenke").click();
+  const pille = page.locator("#aktiv-plan-pille");
+  await expect(pille).toContainText("Bygger på «Blues» · 3 stopp");
+  await pille.locator("#aktiv-plan-rediger").click();
+  await expect(page.locator("#pres-adm-rediger")).toBeVisible();
+  await expect(page.locator(".pres-adm-stopprad")).toHaveCount(3);
+  await page.locator('[data-pres-opp="2"]').click();
+  await page.locator('[data-pres-opp="1"]').click();
+  await page.locator("#pres-adm-lagre").click();
+  // Tilbake der læreren var: vinduet lukket, kortet åpent, og byggingen står.
+  await expect(page.locator("#modal-visning")).not.toHaveClass(/open/);
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+  await expect(pille).toContainText("Bygger på «Blues» · 3 stopp");
+  await expect.poll(rekke).toEqual(["artist:otis", "artist:muddy", "artist:bessie"]);
+  // Avbryt lukker også vinduet og lar planen stå.
+  await pille.locator("#aktiv-plan-rediger").click();
+  await page.locator("#pres-adm-avbryt").click();
+  await expect(page.locator("#modal-visning")).not.toHaveClass(/open/);
+  await expect(pille).toBeVisible();
+  await pille.locator("#aktiv-plan-ferdig").click();
+  await expect(pille).toHaveCount(0);
+
+  // Ta opp: opptaket hviler mens editoren står åpen («Vis» tas ikke opp), og
+  // tar opp igjen etter Lagre.
+  await page.keyboard.press("Escape");
+  await page.locator("a[data-visning]").click();
+  await page.locator('[data-plan-meny="p"]').click();
+  await page.locator('.vis-meny [data-pres-samle="p"]').click();
+  await svar(page, "Start opptaket");
+  await apne(page, "/index.html?vis=tiår:1950:society");
+  await expect(page.locator("#modal-decade-view")).toHaveClass(/open/);
+  const linje = page.locator("#samle-bar");
+  await expect(linje).toContainText("4 stopp");
+  await linje.locator("[data-rediger-plan]").click();
+  await expect(page.locator(".pres-adm-stopprad")).toHaveCount(4);
+  await expect(linje).toContainText("tar ikke opp mens du redigerer");
+  await page.locator('[data-pres-vis="0"]').click();
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#modal-detail")).not.toHaveClass(/open/);
+  await expect(page.locator(".pres-adm-stopprad")).toHaveCount(4);
+  await page.locator('[data-pres-opp="3"]').click();
+  await page.locator("#pres-adm-lagre").click();
+  await expect(page.locator("#modal-visning")).not.toHaveClass(/open/);
+  await expect(linje).not.toContainText("tar ikke opp");
+  await expect.poll(rekke).toEqual(["artist:otis", "artist:muddy", "tiår:1950:society", "artist:bessie"]);
+  await apne(page, "/index.html?vis=artist:muddy");
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+  await expect(linje).toContainText("5 stopp");
+  await linje.locator("#samle-ferdig").click();
+  await expect.poll(rekke).toEqual(["artist:otis", "artist:muddy", "tiår:1950:society", "artist:bessie", "artist:muddy"]);
+  expect(appFeil(feil)).toEqual([]);
+});

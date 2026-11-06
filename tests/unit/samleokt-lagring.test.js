@@ -136,10 +136,25 @@ test("funn 6: en kjøreplan som spilles, tas ikke opp; fri visning tar opp som f
   assert.match(samle, /if \(erTreSide && modus === "opptak" && !spillerPlan\(\)\)/);
 });
 
-test("funn 3: Rediger og Slett på planen som samles avslutter økta først", () => {
+test("funn 3: Rediger lar opptaket hvile (v7.24), Slett avslutter økta først", () => {
   const vis = kilde("visning.js");
-  assert.match(vis, /if \(aktivSamleokt\(\)\?\.planId === id\) \{\n\s*await medFrist\(avsluttInnsamling\(\), 4000\);/,
+  assert.match(vis, /async function startRedigering\(id, \{ fraLinja = false \} = \{\}\) \{\n\s*const hvile = await hvilForRedigering\(id\);\n\s*const p = planerNaa\(\)\[id\];/,
     "Rediger: det samlede sendes før kladden lages");
+  assert.match(vis, /if \(rediger\) \{ await startRedigering\(rediger\.dataset\.presRediger\); return; \}/);
+  assert.match(vis, /function lukkKladd\(\) \{\n\s*const fraLinja = !!kladd\?\.fraLinja;\n\s*kladd = null;\n\s*fortsettOpptak\(\);/,
+    "opptaket tar opp igjen når kladden lukkes");
+  assert.equal((vis.match(/^\s*kladd = null;/gm) || []).length, 1, "kladden lukkes bare gjennom lukkKladd");
+  const samle = kilde("plan-innsamling.js");
+  assert.match(samle, /while \(ø\.venterEier && Date\.now\(\) < frist\) await vent\(50\);\n\s*await Promise\.race\(\[lagreNaa\(ø\), vent\(Math\.max\(0, frist - Date\.now\(\)\)\)\]\);/,
+    "rett etter et sidebytte: vent på eiersjekken før det samlede sendes");
+  assert.match(samle, /if \(!ø\.nye\.length && lastet\(\) && !ventende\(ø\)\.length && !ø\.sendt\.some\(\(b\) => b\.live\)\) return "hviler";\n\s*avsluttInnsamling\(\);/,
+    "hviler bare når alt er kommet fram, ellers avsluttes økta som før");
+  assert.match(samle, /function leggTil\(vis, kilde\) \{\n\s*if \(!økt \|\| økt\.hviler \|\|/, "ingenting tas opp mens editoren står åpen");
+  assert.match(samle, /function angreSiste\(\) \{\n\s*if \(!økt \|\| økt\.hviler \|\|/, "Angre fjerner ikke et stopp kladden har");
+  // Ferdig rett etter et sidebytte (mens eiersjekken pågår) sendes når den er over.
+  assert.match(samle, /if \(ø\.avsluttet\) \{ if \(etterslep\.includes\(ø\)\) lagreNaa\(ø\); \}/);
+  assert.match(samle, /const ventende = \[økt, \.\.\.etterslep\]\.find\(\(ø\) => ø\?\.venterEier && ø\.øktId === m\.eier\);/,
+    "en avsluttet kopi gjenkjennes også, så den ikke sender den andre fanens stopp");
   assert.match(vis, /forkastSamlinger\(id\);\n\s*if \(aktivPlan\(\) === id\) settAktivPlan\(null\);\n\s*if \(!\(await vakt\(deletePlan\(id\)\)\)\) return;/,
     "Slett: ingenting sendes, heller ikke fra avsluttede økter, ellers lages planen på nytt");
   assert.match(vis, /\$\{id === samles \? " · samles nå" : ""\}/);
@@ -169,7 +184,7 @@ test("kontrollrunden: overlevering til ny fane bare for lærer, og lista følger
 test("kontrollrunde 3: én fane per økt, og tilbake fra bfcache lastes sida på nytt", () => {
   const samle = kilde("plan-innsamling.js");
   assert.match(samle, /new BroadcastChannel\("pensum-samle"\)/);
-  assert.match(samle, /if \(m\.eier === økt\.øktId && økt\.venterEier\) erKopi\(økt\);/);
+  assert.match(samle, /const ventende = \[økt, \.\.\.etterslep\]\.find\(\(ø\) => ø\?\.venterEier && ø\.øktId === m\.eier\);\n\s*if \(ventende\) erKopi\(ventende\);/);
   assert.match(samle, /ø\.øktId = nyØktId\(\);\n\s*ø\.n = 0;\n\s*ø\.sendt = \[\];\n\s*ø\.nye = ø\.nye\.slice\(ø\.nyeVedStart \|\| 0\);/,
     "en kopi sender ikke den andre fanens handlinger");
   assert.match(samle, /if \(ø\.forkastet \|\| !lastet\(\) \|\| ø\.venterEier\) return null;/, "ingen skriving før eierskapet er avklart");

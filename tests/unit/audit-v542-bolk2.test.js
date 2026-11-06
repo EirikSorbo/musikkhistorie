@@ -76,7 +76,8 @@ test("funn 18: dype lenker venter på dataene kortet tegnes av, og tech-snapshot
 
 test("funn 27: Angre fjerner bare øktas egne stopp, og knappen er av uten noe å angre", () => {
   const samle = kilde("plan-innsamling.js");
-  assert.match(samle, /if \(!økt \|\| !økt\.egne\.length\) return;\n\s*const vis = økt\.egne\.pop\(\);/);
-  assert.match(samle, /if \(angre\) angre\.disabled = !økt\.egne\.length;/);
+  // v7.24: Angre er også av mens opptaket hviler for editoren.
+  assert.match(samle, /if \(!økt \|\| økt\.hviler \|\| !økt\.egne\.length\) return;\n\s*const vis = økt\.egne\.pop\(\);/);
+  assert.match(samle, /if \(angre\) angre\.disabled = !økt\.egne\.length \|\| !!økt\.hviler;/);
   assert.match(samle, /økt\.nye\.push\(\{ t: "legg", vis \}\);\n\s*økt\.egne\.push\(vis\);/);
 });

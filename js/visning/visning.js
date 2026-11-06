@@ -27,6 +27,10 @@
 //  «bare rot»), og planer med stopp som ikke finnes lenger, varsles før
 //  avspilling. Etikettene bor i
 //  js/visning/stopp-etikett.js, delt med verktøylinja i presentasjonen.
+//
+//  v7.24: Rediger i linja nede til venstre (planen det bygges på, eller
+//  opptaket) åpner editoren rett fra der læreren står. Lagre og Avbryt lukker
+//  vinduet igjen, og byggingen eller opptaket fortsetter.
 // ============================================================================
 
 import { getState } from "../data/app-state.js";
@@ -36,7 +40,7 @@ import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
 import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, stoppLagtTilSiden, normaliserGruppe, GRUPPE_MAKS } from "./presentasjon-modell.js";
 import { abonnerPaminnelser, vedPaminnelseEndring, paminnelserFor, paminnelserLastet, paminnelseFeil, lagrePaminnelser } from "./paminnelser.js";
 import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "../ui/ui-modal.js";
-import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger } from "./plan-innsamling.js";
+import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger, hvilForRedigering, fortsettOpptak } from "./plan-innsamling.js";
 import { erLaererBruker, planeneLastet, aktivPlan, settAktivPlan, oppdaterAktiv, vedAktivPlanEndring } from "./plan-meny.js";
 import { erPresentasjon, aktivPlanId, avsluttPresentasjon, aktivOkt } from "./presentasjon.js";
 import { settFraPlan, antall as antallIUtskrift, TIL_UTSKRIFT_SVG } from "../utskrift/utskrift-utvalg.js";
@@ -54,7 +58,7 @@ import { erFersk, kopiDato } from "./visningskopi-modell.js";
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
 
-let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret } — settes ved Ny/Rediger, null i lista
+let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret, fraLinja } — settes ved Ny/Rediger, null i lista
 
 // Godtar både en full «Kopier lenke»-URL og en rå vis-verdi. («artist:x»
 // alene parses som URL med artist:-protokoll — uten vis-parameter faller den
@@ -702,7 +706,7 @@ async function lagre() {
   const id = kladd.id;
   const pamEndret = kladd.pamEndret;
   if (!(await vakt(savePlan(kladd.id, plan)))) return;   // kladden beholdes
-  kladd = null;
+  const fraLinja = lukkKladd();
   renderListe();
   renderKladd();
   if (pamEndret) {
@@ -713,9 +717,55 @@ async function lagre() {
       return;
     }
   }
+  // Fra linja: tilbake dit læreren var. Stopp lagt til imens sies fra om i
+  // vinduet, for de havnet sist og ikke der læreren kanskje dro dem.
+  if (fraLinja && !lagtTil.length) { lukkVindu(); return; }
   msg(lagtTil.length
     ? `Kjøreplanen er lagret. ${lagtTil.length === 1 ? "Ett stopp" : `${lagtTil.length} stopp`} som ble lagt til mens du redigerte, står sist i planen.`
     : "Kjøreplanen er lagret.");
+}
+
+// Kladden for én plan. Tas planen opp i denne fanen, hviler opptaket mens
+// editoren står åpen (v7.24), eller avsluttes hvis det samlede ikke kom fram
+// (funn 3). false når planen ikke finnes.
+async function startRedigering(id, { fraLinja = false } = {}) {
+  const hvile = await hvilForRedigering(id);
+  const p = planerNaa()[id];
+  if (!p) { fortsettOpptak(); return false; }
+  kladd = { id, tittel: p.tittel, gruppe: p.gruppe || "", stopp: p.stopp.map((s) => ({ ...s })), grunnlag: p.stopp.map((s) => s.vis), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false, fraLinja };
+  renderKladd();
+  msg(hvile === "avsluttet" ? "Opptaket er avsluttet, for det siste du tok opp er ikke kommet fram ennå. Det lagres når nettet er tilbake. Start opptaket igjen når du har lagret planen." : "");
+  return true;
+}
+
+// Kladden lukkes (Lagre, Avbryt, lukket vindu): et opptak som hvilte, tar
+// opp igjen. true når editoren ble åpnet fra linja nede til venstre.
+function lukkKladd() {
+  const fraLinja = !!kladd?.fraLinja;
+  kladd = null;
+  fortsettOpptak();
+  return fraLinja;
+}
+
+function lukkVindu() {
+  const m = document.getElementById(MODAL_ID);
+  if (m?.classList.contains("open")) modalClose(m);
+}
+
+// Rediger i linja nede til venstre (v7.24, brukerbestilling 2026-11-06): å
+// flytte en artist fram i planen midt i innsamlingen krevde Ferdig, Rediger,
+// Lagre og en ny start. Nå åpner editoren seg rett over kortet som står
+// åpent, med enden av lista i synet (der de nye stoppene står).
+async function redigerFraLinja(id) {
+  if (!erLaerer || !planerNaa()[id]) return;
+  const m = document.getElementById(MODAL_ID) || byggModal();
+  const varApen = m.classList.contains("open");
+  if (varApen && kladd) return;   // står alt i en redigering
+  const sokFelt = document.getElementById("pres-adm-sok");
+  if (sokFelt) sokFelt.value = "";
+  if (!(await startRedigering(id, { fraLinja: true }))) return;
+  if (!varApen) modalOpen(m);
+  document.querySelector("#pres-adm-stopp .pres-adm-stopprad:last-child")?.scrollIntoView({ block: "nearest" });
 }
 
 function leggTilStopp() {
@@ -848,7 +898,7 @@ function byggModal() {
 // Åpner vinduet med lista (aldri midt i en gammel kladd).
 export function apneVisning() {
   const m = document.getElementById(MODAL_ID) || byggModal();
-  kladd = null;
+  lukkKladd();
   const sokFelt = document.getElementById("pres-adm-sok");
   if (sokFelt) sokFelt.value = "";
   renderListe();
@@ -896,6 +946,12 @@ export function initVisning() {
   vedSamleEndring(() => visningTikk());
   // «bygges på» følger den aktive planen (Ferdig i pilla nede til venstre).
   vedAktivPlanEndring(() => visningTikk());
+  // Rediger i linja nede til venstre: pilla for planen det bygges på
+  // (plan-meny.js) og opptakslinja (plan-innsamling.js).
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest?.("[data-rediger-plan]");
+    if (b) redigerFraLinja(b.dataset.redigerPlan);
+  });
   let vis = null;
   try { vis = new URLSearchParams(window.location.search).get("visning"); } catch (e) {}
   if (vis !== null) {
@@ -927,7 +983,7 @@ function koblVindu(m) {
         .then((ok) => {
           sporLukk = false;
           if (!ok) return;
-          kladd = null;
+          lukkKladd();
           renderKladd();
           m._skipBeforeClose = true;
           modalClose(m);
@@ -994,21 +1050,7 @@ function koblVindu(m) {
       return;
     }
     const rediger = hit("[data-pres-rediger]");
-    if (rediger) {
-      const id = rediger.dataset.presRediger;
-      // Samles planen, avsluttes økta først (og det samlede sendes), så
-      // kladden har med alt, og økta ikke skriver over redigeringen etterpå
-      // (funn 3).
-      if (aktivSamleokt()?.planId === id) {
-        await medFrist(avsluttInnsamling(), 4000);
-        msg("Samleøkta er avsluttet, så planen kan redigeres.");
-      }
-      const p = planerNaa()[id];
-      if (!p) return;
-      kladd = { id, tittel: p.tittel, gruppe: p.gruppe || "", stopp: p.stopp.map((s) => ({ ...s })), grunnlag: p.stopp.map((s) => s.vis), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false };
-      renderKladd();
-      return;
-    }
+    if (rediger) { await startRedigering(rediger.dataset.presRediger); return; }
     // «Del med studentene» (v6.10, U1): merge på planer.<id>.delt, så resten
     // av planen står urørt. Fra v7.18 et valg i menyen (data-pres-del-valg over).
     // «Fra timene» vises for studentene først når bryteren «Fra timene» er slått
@@ -1116,10 +1158,11 @@ function koblVindu(m) {
     if (hit("#pres-adm-legg")) return leggTilStopp();
     if (hit("#pres-adm-lagre")) return lagre();
     if (hit("#pres-adm-avbryt")) {
-      kladd = null;
+      const fraLinja = lukkKladd();
       renderListe();
       renderKladd();
       msg("");
+      if (fraLinja) lukkVindu();
       return;
     }
     // Søketreff (v5.75): treffet blir et stopp sist i planen.
