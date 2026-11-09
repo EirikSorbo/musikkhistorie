@@ -9,9 +9,10 @@
 //  editoren består som reserve.
 //
 //  AKTIV KJØREPLAN (v5.76, brukerbestilling 2026-09-27): læreren velger
-//  «Bygg på» i Visning-vinduet, og fra da av legger visningsknappen kortet
-//  rett inn i den planen med ett klikk, uten meny. En pille nede til venstre
-//  viser «Bygger på «Uke 39» · 8 stopp · Ferdig». Menyen med de andre planene
+//  «Legg til» i Visning-vinduet (het «Bygg på» til v7.26), og fra da av
+//  legger visningsknappen kortet rett inn i den planen med ett klikk, uten
+//  meny. En pille nede til venstre viser «Legger til i «Uke 39» · 8 stopp ·
+//  Ferdig». Menyen med de andre planene
 //  ligger bak en liten pil ved siden av knappen. Rediger i pilla (v7.24)
 //  åpner editoren for planen uten å slutte å bygge (js/visning/visning.js
 //  tar klikket på data-rediger-plan). Plussknappen på radene i
@@ -112,7 +113,7 @@ const HAKE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" st
 
 let aktivId = null;
 // Er planen sett i state siden den ble valgt? Bare da betyr «borte» slettet;
-// rett etter «Ny + bygg på» kan snapshotet ligge et øyeblikk etter.
+// rett etter «Ny + legg til» kan snapshotet ligge et øyeblikk etter.
 let aktivSett = false;
 const aktivLyttere = [];
 
@@ -128,7 +129,7 @@ export function aktivPlan() {
 export function vedAktivPlanEndring(fn) { aktivLyttere.push(fn); }
 
 // Velg planen (id) eller avslutt (null). Visning-vinduet kaller den fra
-// «Bygg på» og «Ferdig»; pilla nede til venstre fra sin Ferdig-knapp.
+// «Legg til» og «Ferdig»; pilla nede til venstre fra sin Ferdig-knapp.
 export function settAktivPlan(id) {
   aktivId = id || null;
   aktivSett = false;
@@ -159,15 +160,15 @@ function tegnPille(plan, paa) {
     el = document.createElement("div");
     el.id = "aktiv-plan-pille";
     el.innerHTML = `${VISNING_SVG}<span class="aktiv-plan-tekst"></span>` +
-      `<button type="button" class="pres-knapp" id="aktiv-plan-rediger" title="Endre rekkefølgen og resten av planen. Du bygger videre etterpå.">Rediger</button>` +
-      `<button type="button" class="pres-knapp" id="aktiv-plan-ferdig" title="Slutt å bygge på planen. Planen beholdes.">Ferdig</button>`;
+      `<button type="button" class="pres-knapp" id="aktiv-plan-rediger" title="Endre rekkefølgen og resten av planen. Etterpå fortsetter du å legge til.">Rediger</button>` +
+      `<button type="button" class="pres-knapp" id="aktiv-plan-ferdig" title="Slutt å legge til i planen. Planen beholdes.">Ferdig</button>`;
     document.body.appendChild(el);
     el.querySelector("#aktiv-plan-ferdig").addEventListener("click", () => settAktivPlan(null));
   }
   const tekst = el.querySelector(".aktiv-plan-tekst");
   tekst.innerHTML = plan
-    ? `Bygger på «<strong>${escapeHtml(plan.tittel)}</strong>» · ${plan.stopp.length} stopp`
-    : "Bygger på en kjøreplan · laster …";
+    ? `Legger til i «<strong>${escapeHtml(plan.tittel)}</strong>» · ${plan.stopp.length} stopp`
+    : "Legger til i en kjøreplan · laster …";
   el.title = plan ? "Visningsknappen på kortene og + legger kortet rett inn i denne planen" : "";
   const rediger = el.querySelector("#aktiv-plan-rediger");
   rediger.disabled = !plan;
@@ -233,7 +234,7 @@ function visMeny(knapp, { meny: baraMeny = false } = {}) {
     <p class="lenke-meny-hode">Legg til som stopp i</p>
     ${planer.map(([id, p]) => `
       <button type="button" class="lenke-meny-valg" data-plan="${escapeHtml(id)}">
-        ${escapeHtml(p.tittel)} <span class="muted">· ${p.stopp.length} stopp${id === aktiv ? " · bygger på" : ""}</span>
+        ${escapeHtml(p.tittel)} <span class="muted">· ${p.stopp.length} stopp${id === aktiv ? " · legger til her" : ""}</span>
       </button>`).join("")}
     <button type="button" class="lenke-meny-valg lenke-meny-ny" data-plan="">Ny kjøreplan …</button>
     <button type="button" class="lenke-meny-valg lenke-meny-ny" data-kopier="1">Kopier lenke</button>`;
@@ -286,7 +287,7 @@ export function initPlanMeny() {
   // En plan valgt i en tidligere sidevisning har vært i state før, så «borte»
   // betyr slettet med en gang planene er lastet (v7.03, audit v5.93 funn 4).
   // Uten dette ble aktivSett aldri sann for en slettet plan, og pilla sto på
-  // «laster …» på hver side. Bare «Ny + bygg på» (settAktivPlan) trenger
+  // «laster …» på hver side. Bare «Ny + legg til» (settAktivPlan) trenger
   // ventetiden til snapshotet har tatt igjen skrivingen.
   aktivSett = !!aktivId;
   onAuthChange((user) => {

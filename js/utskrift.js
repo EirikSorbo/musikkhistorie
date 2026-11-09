@@ -39,7 +39,7 @@ import { artistStripHtml } from "./ui/artist-strip.js";
 import { DECADES, isVisible } from "./felles/limits.js";
 import { askChoice, kopierTilUtklipp, visLenke, modalCloseTop } from "./ui/ui-modal.js";
 import { onGenreModelChanged, GENEALOGY, META_GENRE_ORDER } from "./sjangre/genre-model.js";
-import { ytSpillelisteUrl, ytSpillelisteIder, nyPlanId } from "./visning/presentasjon-modell.js";
+import { ytSpillelisteUrl, ytSpillelisteIder, nyPlanId, normaliserPlaner, planMedTittel } from "./visning/presentasjon-modell.js";
 
 const state = { ...sharedStateDefaults(), isTeacher: false };
 let erLaerer = false;
@@ -1063,14 +1063,32 @@ function koble() {
     if (!stopp.length) return;
     if (!state.contentLoaded) { melding("Kjøreplanene er ikke lastet ennå. Vent litt og prøv igjen.", false); return; }
     const tittel = tittelNaa();
-    const ok = await askChoice({
+    // Finnes tittelen fra før (v7.26), er det trolig samme utvalg en gang til:
+    // læreren velger mellom å erstatte stoppene i den gamle og å lage en ny.
+    const gammel = planMedTittel(normaliserPlaner(state.content?.presentasjoner?.planer), tittel);
+    const valg = await askChoice(gammel ? {
+      title: "Lag kjøreplan av utvalget",
+      text: `Du har en kjøreplan som heter «${gammel[1].tittel}» fra før, med ${gammel[1].stopp.length} stopp. Vil du erstatte stoppene i den med de ${stopp.length} i heftet, eller lage en ny plan?`,
+      buttons: [
+        { label: "Erstatt stoppene", value: "erstatt", className: "primary" },
+        { label: "Lag en ny", value: "ny" },
+        { label: "Avbryt", value: null },
+      ],
+      dismissValue: null,
+    } : {
       title: "Lag kjøreplan av utvalget",
       text: `«${tittel}» får ${stopp.length} stopp i heftets rekkefølge. Du finner den under Visning etterpå, og kan endre den der.`,
-      buttons: [{ label: "Lag kjøreplanen", value: true, className: "primary" }, { label: "Avbryt", value: false }],
-      dismissValue: false,
+      buttons: [{ label: "Lag kjøreplanen", value: "ny", className: "primary" }, { label: "Avbryt", value: null }],
+      dismissValue: null,
     });
-    if (!ok) return;
+    if (!valg) return;
     try {
+      if (valg === "erstatt") {
+        // Tittel, gruppe og resten av planen står; bare stoppene byttes.
+        await savePlan(gammel[0], { stopp });
+        melding(`Stoppene i «${gammel[1].tittel}» er erstattet med heftets ${stopp.length}. Åpne Visning (ikonet i toppmenyen) for å spille den.`);
+        return;
+      }
       await savePlan(nyPlanId(), { tittel, laget: new Date().toISOString(), stopp });
       melding(`Kjøreplanen «${tittel}» er lagret. Åpne Visning (ikonet i toppmenyen) for å spille den.`);
     } catch (e) {

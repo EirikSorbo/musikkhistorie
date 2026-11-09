@@ -28,16 +28,21 @@
 //  avspilling. Etikettene bor i
 //  js/visning/stopp-etikett.js, delt med verktøylinja i presentasjonen.
 //
-//  v7.24: Rediger i linja nede til venstre (planen det bygges på, eller
+//  v7.24: Rediger i linja nede til venstre (planen det legges til i, eller
 //  opptaket) åpner editoren rett fra der læreren står. Lagre og Avbryt lukker
 //  vinduet igjen, og byggingen eller opptaket fortsetter.
+//
+//  v7.26 (brukerbestilling 2026-11-09, etter vurderingen av visningen):
+//  nummeret foran et stopp flytter det til en plass du skriver inn, vinduet
+//  spør bare om å lukke når noe er endret, en sletting kan angres i ti
+//  sekunder, og nivået per stopp ligger bak en knapp med en meny.
 // ============================================================================
 
 import { getState } from "../data/app-state.js";
 import { escapeHtml } from "../felles/util.js";
 import { onAuthChange, savePlan, savePlaner, deletePlan } from "../data/store.js";
 import { parseVisVerdi, byggVisVerdi } from "../felles/vis-lenke.js";
-import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, stoppLagtTilSiden, normaliserGruppe, GRUPPE_MAKS } from "./presentasjon-modell.js";
+import { normaliserPlaner, nyPlanId, NIVAA_NAVN, paminnelserForLange, stoppLagtTilSiden, normaliserGruppe, GRUPPE_MAKS, plassFraTekst } from "./presentasjon-modell.js";
 import { abonnerPaminnelser, vedPaminnelseEndring, paminnelserFor, paminnelserLastet, paminnelseFeil, lagrePaminnelser } from "./paminnelser.js";
 import { askChoice, modalOpen, modalClose, setupModal, initModalHeaders, melding, bekreft, sporTekst } from "../ui/ui-modal.js";
 import { startInnsamling, avsluttInnsamling, aktivSamleokt, medOvertakelse, vedSamleEndring, forkastSamlinger, hvilForRedigering, fortsettOpptak } from "./plan-innsamling.js";
@@ -58,7 +63,7 @@ import { erFersk, kopiDato } from "./visningskopi-modell.js";
 const MODAL_ID = "modal-visning";
 let erLaerer = false;
 
-let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret, fraLinja } — settes ved Ny/Rediger, null i lista
+let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret, fraLinja, start } — settes ved Ny/Rediger, null i lista
 
 // Godtar både en full «Kopier lenke»-URL og en rå vis-verdi. («artist:x»
 // alene parses som URL med artist:-protokoll — uten vis-parameter faller den
@@ -187,7 +192,7 @@ function renderListe() {
       <div class="pres-adm-rad vis-plan-rad${id === aktiv ? " vis-aktiv-plan" : ""}"${erLaerer ? ` draggable="true" data-plan-id="${escapeHtml(id)}"` : ""}>
         ${erLaerer ? `<span class="pres-adm-grep" title="Dra til en annen gruppe">${GREP_SVG}</span>` : ""}
         <span class="pres-adm-navn"><strong>${escapeHtml(p.tittel)}</strong>
-          <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · bygges på" : ""}</span>${
+          <span class="muted">${escapeHtml(merker.join(" · "))}${id === aktiv ? " · spilles nå" : ""}${id === samles ? " · samles nå" : ""}${id === bygges ? " · legger til her" : ""}</span>${
           dode ? ` <span class="pres-adm-feil" title="Åpne Rediger for å se hvilke">${dode} stopp finnes ikke lenger</span>` : ""}</span>
         <span class="pres-adm-knapper">
           ${ikonKnapp(`data-pres-spill="${escapeHtml(id)}"`, SPILL_SVG, "Spill av")}
@@ -228,7 +233,7 @@ function renderListe() {
     ${erLaerer ? `
     <div class="add-actions" style="margin-top:10px">
       <button type="button" class="btn primary small" id="pres-adm-ny" ${lastet ? "" : "disabled"}>Ny kjøreplan</button>
-      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og bygg på den mens du blar" ${lastet ? "" : "disabled"}>Ny + bygg på …</button>
+      <button type="button" class="btn ghost small" id="pres-adm-ny-samle" title="Lag en ny plan og legg til i den mens du blar" ${lastet ? "" : "disabled"}>Ny + legg til …</button>
     </div>
     <p class="muted vis-tips">Dra en plan i grepet for å flytte den mellom gruppene. Mer om kjøreplanene står i lærerhåndboka under Innstillinger.</p>`
     : `<p class="muted vis-tips">Logg inn som lærer i denne nettleseren for å lage og endre kjøreplaner.</p>`}`;
@@ -279,6 +284,27 @@ function planMenyHtml(id) {
     ${p.gruppe ? menyValg(`data-pres-referanse="${e}"`, erRef ? "Ikke referanse lenger" : "Gjør til referanse",
       { tittel: erRef ? "«Gått gjennom» måler da mot alt i appen" : "La «Gått gjennom» måle de andre planene i gruppen mot denne" }) : ""}
     <button type="button" role="menuitemcheckbox" aria-checked="${!!p.delt}" class="vis-meny-valg" data-pres-del-valg="${e}" title="Vis planen for studentene under «Fra timene» på forsiden og i Spillelister">${BOKS_SVG(!!p.delt)}Del med studentene</button>
+  </div>`;
+}
+
+// Nivået på ett stopp i redigeringen (v7.26). Nedtrekkslista sto på hver rad
+// og ble ikke husket (vurderingen 2026-11-09); nå er den en knapp med samme
+// slags meny som planradene. Unntakene fjernes fra samme meny.
+const HAKE_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+
+function nivaaMenyHtml(i) {
+  const s = kladd?.stopp[i];
+  if (!s) return "";
+  const naa = s.nivaa || 0;
+  const valg = (n, tekst, tittel = "") =>
+    `<button type="button" role="menuitemradio" aria-checked="${naa === n}" class="vis-meny-valg" data-pres-nivaa-valg="${i}:${n}"${tittel ? ` title="${escapeHtml(tittel)}"` : ""}><span class="vis-meny-hake" aria-hidden="true">${naa === n ? HAKE_SVG : ""}</span>${escapeHtml(tekst)}</button>`;
+  const nUnntak = Object.keys(s.unntak || {}).length;
+  return `<div class="vis-meny" role="menu" aria-label="Nivå på stoppet">
+    ${valg(0, "Uendret", "Stoppet vises på nivået du har når du kommer dit")}
+    ${[1, 2, 3].map((n) => valg(n, `Nivå ${n}: ${NIVAA_NAVN[n]}`)).join("")}
+    ${nUnntak ? `<div class="vis-meny-skille" role="separator"></div>
+    ${menyValg(`data-pres-unntak="${i}"`, nUnntak === 1 ? "Fjern unntaket" : `Fjern de ${nUnntak} unntakene`,
+      { tittel: "Seksjonene du har slått av eller på for dette stoppet, glemmes, så nivået gjelder alene" })}` : ""}
   </div>`;
 }
 
@@ -570,17 +596,17 @@ function renderKladd() {
     const { tekst, feil, laster } = stoppEtikett(s);
     if (laster) kladdVenter = true;
     const nUnntak = Object.keys(s.unntak || {}).length;
+    // Nummeret er en knapp (v7.26): skriv inn plassen stoppet skal til. Nivået
+    // og unntakene ligger bak knappen «Nivå» (nivaaMenyHtml).
     return `
     <div class="pres-adm-rad pres-adm-stopprad" draggable="true" data-pres-i="${i}">
       <span class="pres-adm-grep" title="Dra for å flytte">${GREP_SVG}</span>
-      <span class="pres-adm-navn">${i + 1}. ${escapeHtml(tekst)}
+      <span class="pres-adm-navn"><button type="button" class="pres-adm-plass" data-pres-plass="${i}" title="Flytt til en annen plass" aria-label="Plass ${i + 1}: flytt til en annen plass">${i + 1}.</button> ${escapeHtml(tekst)}
         ${feil ? `<span class="pres-adm-feil">(${escapeHtml(feil)})</span>` : ""}${
-        nUnntak ? ` <span class="muted">· ${nUnntak} unntak</span> <button type="button" class="pres-adm-lenkeknapp" data-pres-unntak="${i}" title="Fjern unntakene på dette stoppet, så nivået gjelder alene">fjern</button>` : ""}</span>
+        nUnntak ? ` <span class="muted">· ${nUnntak} unntak</span>` : ""}</span>
       <span class="pres-adm-knapper">
-        <select data-pres-nivaa="${i}" title="Detaljnivå på dette stoppet" aria-label="Detaljnivå">
-          <option value="">Nivå: uendret</option>
-          ${[1, 2, 3].map((n) => `<option value="${n}" ${s.nivaa === n ? "selected" : ""}>Nivå ${n}: ${NIVAA_NAVN[n]}</option>`).join("")}
-        </select>
+        <span class="vis-meny-wrap"><button type="button" class="btn ghost small pres-nivaa-knapp${s.nivaa ? " pres-nivaa-satt" : ""}" data-pres-nivaa-knapp="${i}" aria-haspopup="menu" aria-expanded="false"
+          title="Detaljnivået på dette stoppet når planen spilles" aria-label="Nivå: ${s.nivaa ? `${s.nivaa}, ${NIVAA_NAVN[s.nivaa]}` : "uendret"}">${s.nivaa ? `Nivå ${s.nivaa}` : "Nivå"}</button></span>
         <button type="button" class="btn ghost small" data-pres-vis="${i}" title="Åpne stoppet oppå editoren, så du ser hva det er">Vis</button>
         <button type="button" class="btn ghost small" data-pres-opp="${i}" title="Flytt opp" aria-label="Flytt opp" ${i === 0 ? "disabled" : ""}>↑</button>
         <button type="button" class="btn ghost small" data-pres-ned="${i}" title="Flytt ned" aria-label="Flytt ned" ${i === kladd.stopp.length - 1 ? "disabled" : ""}>↓</button>
@@ -749,8 +775,21 @@ async function startRedigering(id, { fraLinja = false } = {}) {
   if (!p) { fortsettOpptak(); return false; }
   kladd = { id, tittel: p.tittel, gruppe: p.gruppe || "", stopp: p.stopp.map((s) => ({ ...s })), grunnlag: p.stopp.map((s) => s.vis), paminnelser: paminnelserFor(id), pamLastet: paminnelserLastet(), pamEndret: false, fraLinja };
   renderKladd();
+  kladd.start = kladdBilde();
   msg(hvile === "avsluttet" ? "Opptaket er avsluttet, for det siste du tok opp er ikke kommet fram ennå. Det lagres når nettet er tilbake. Start opptaket igjen når du har lagret planen." : "");
   return true;
+}
+
+// Er noe endret siden editoren ble åpnet (v7.26)? Bildet er tittelen,
+// gruppen og stoppene med nivå og unntak; påminnelsene har sitt eget flagg.
+// Lukkes vinduet uten endringer, spør det ikke (2.3 i vurderingen 9.11:
+// etter v7.24 åpnes editoren ofte bare for å se).
+function kladdBilde() {
+  if (!kladd) return "";
+  return JSON.stringify([String(kladd.tittel || "").trim(), normaliserGruppe(kladd.gruppe || ""), kladd.stopp]);
+}
+function kladdEndret() {
+  return !!kladd && (kladd.pamEndret || kladdBilde() !== kladd.start);
 }
 
 // Kladden lukkes (Lagre, Avbryt, lukket vindu): et opptak som hvilte, tar
@@ -805,6 +844,67 @@ function flyttStopp(fra, til) {
   renderKladd();
 }
 
+// «Flytt til plass» (v7.26): med 62 og 71 stopp i planene var ↑ og ↓ og dra
+// og slipp for tungt. Nummeret foran stoppet spør om den nye plassen, og raden
+// markeres kort der den havnet.
+async function flyttTilPlass(fra) {
+  const s = kladd?.stopp[fra];
+  if (!s) return;
+  const n = kladd.stopp.length;
+  const svar = await sporTekst(`Skriv 1 for øverst og ${n} for nederst.`, String(fra + 1),
+    { tittel: `Flytt «${stoppEtikett(s).tekst}»`, ok: "Flytt" });
+  if (svar === null || !kladd) return;
+  const naa = kladd.stopp.indexOf(s);
+  if (naa < 0) return;
+  const til = plassFraTekst(svar, kladd.stopp.length);
+  if (til === null) { msg(`Skriv et tall fra 1 til ${kladd.stopp.length}.`, false); return; }
+  msg("");
+  flyttStopp(naa, til);
+  const rad = document.querySelector(`#pres-adm-stopp [data-pres-i="${til}"]`);
+  if (!rad) return;
+  rad.classList.add("pres-adm-flyttet");
+  rad.scrollIntoView({ block: "nearest" });
+  rad.querySelector("[data-pres-plass]")?.focus({ preventScroll: true });
+}
+
+// --- Angre en sletting (v7.26) -------------------------------------------------
+// Slett står ett klikk unna på raden (v7.25). Planen og påminnelsene huskes i
+// minnet i ti sekunder, og «Angre» i meldingslinja skriver dem tilbake.
+const ANGRE_MS = 10000;
+let angre = null;   // { id, plan, pam, tid }
+
+function tilbyAngre(id, plan, pam) {
+  clearTimeout(angre?.tid);
+  const tid = setTimeout(() => {
+    if (angre?.tid !== tid) return;
+    angre = null;
+    if (document.querySelector("#pres-adm-msg [data-pres-angre]")) msg("");
+  }, ANGRE_MS);
+  angre = { id, plan, pam, tid };
+  const el = document.getElementById("pres-adm-msg");
+  if (!el) return;
+  el.className = "form-msg ok";
+  el.innerHTML = `Kjøreplanen «${escapeHtml(plan.tittel || "(uten tittel)")}» er slettet. <button type="button" class="pres-adm-lenkeknapp" data-pres-angre>Angre</button>`;
+}
+
+async function angreSletting() {
+  const a = angre;
+  if (!a) return;
+  clearTimeout(a.tid);
+  angre = null;
+  if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+  if (!(await vakt(savePlan(a.id, a.plan)))) return;
+  if (a.pam.length) {
+    try {
+      await lagrePaminnelser(a.id, a.pam);
+    } catch (err) {
+      msg(`Kjøreplanen er tilbake, men påminnelsene ble ikke lagret (${err?.message || err}).`, false);
+      return;
+    }
+  }
+  msg(`Kjøreplanen «${a.plan.tittel || "(uten tittel)"}» er tilbake.`);
+}
+
 // Opptak (v5.27, fra v5.76 uten modusvalg): alt læreren åpner blir stopp, i
 // rekkefølge, til Ferdig i linja nede til venstre. Plukk-modusen er
 // erstattet av den aktive kjøreplanen («Bygg på», js/visning/plan-meny.js), så
@@ -819,7 +919,7 @@ async function startOpptak(planId) {
   }
   const ok = await askChoice({
     title: `Ta opp til «${navn}»`,
-    text: "Alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre. Vil du heller velge kort selv, bruk «Bygg på».",
+    text: "Alt du åpner blir stopp, i rekkefølge, til du trykker Ferdig i linja nede til venstre. Vil du heller velge kort selv, bruk «Legg til».",
     buttons: [{ label: "Start opptaket", value: true, className: "primary" }, { label: "Avbryt", value: false }],
     dismissValue: false,
   });
@@ -831,8 +931,9 @@ async function startOpptak(planId) {
   if (m) modalClose(m);
 }
 
-// «Bygg på» (v5.76): planen blir den aktive, og vinduet lukkes så læreren
-// kan finne fram i appen. Et opptak som står på, avsluttes først.
+// «Legg til» (v5.76, het «Bygg på» til v7.26): planen blir den aktive, og
+// vinduet lukkes så læreren kan finne fram i appen. Et opptak som står på,
+// avsluttes først.
 async function byggPaa(planId) {
   if (!planerNaa()[planId]) return;
   if (aktivSamleokt()) await medFrist(avsluttInnsamling(), 4000);
@@ -935,7 +1036,8 @@ export function visningTikk() {
   if (!m?.classList.contains("open")) return;
   // En åpen kladd tegnes bare på nytt når den venter på data (etiketter som
   // sier «laster …»); ellers skal ingenting rykke i lærerens redigering.
-  if (kladd) { if (kladdVenter) renderKladd(); return; }
+  // Nivåmenyen på et stopp (v7.26) skal heller ikke rives vekk mens den står åpen.
+  if (kladd) { if (kladdVenter && !apenMeny) renderKladd(); return; }
   if (drarPlan || apenMeny) { listeVenter = true; return; }
   renderListe();
 }
@@ -989,9 +1091,12 @@ function koblVindu(m) {
   // Ulagrede endringer skal ikke forsvinne på en bortkommen Escape. Fra
   // v6.25 spør appens egen dialog (svaret kommer etterpå): lukkingen avbrytes
   // først, og vinduet lukkes selv hvis læreren svarer ja (_skipBeforeClose).
+  // Er ingenting endret (v7.26), lukkes det uten spørsmål, og et opptak som
+  // hviler, tar opp igjen (lukkKladd).
   let sporLukk = false;
   m._beforeClose = () => {
     if (!kladd) return true;
+    if (!kladdEndret()) { lukkKladd(); renderKladd(); return true; }
     if (!sporLukk) {
       sporLukk = true;
       bekreft("Endringene i kjøreplanen går tapt.", { tittel: "Lukke uten å lagre?", ja: "Lukk uten å lagre", farlig: true })
@@ -1061,6 +1166,7 @@ function koblVindu(m) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       kladd = { id: nyPlanId(), tittel: "", gruppe: "", stopp: [], paminnelser: [], pamLastet: true, pamEndret: false };
       renderKladd();
+      kladd.start = kladdBilde();
       document.getElementById("pres-adm-tittel")?.focus();
       return;
     }
@@ -1092,8 +1198,8 @@ function koblVindu(m) {
     const bygg = hit("[data-pres-bygg]");
     if (bygg) return byggPaa(bygg.dataset.presBygg);
     if (hit("[data-pres-bygg-ferdig]")) { settAktivPlan(null); renderListe(); return; }
-    // «Ny + bygg på …» (v5.76): planen skrives tom med en gang, så tilleggene
-    // fra kortene har et dokument å gå til.
+    // «Ny + legg til …» (v5.76, «Ny + bygg på» til v7.26): planen skrives tom
+    // med en gang, så tilleggene fra kortene har et dokument å gå til.
     if (hit("#pres-adm-ny-samle")) {
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
       const tittel = await sporTekst("Navn på den nye kjøreplanen:", "", { ok: "Lag kjøreplan" });
@@ -1141,19 +1247,25 @@ function koblVindu(m) {
     if (slett) {
       const id = slett.dataset.presSlett;
       const p = planerNaa()[id];
-      if (!p || !(await bekreft("Dette kan ikke angres.", { tittel: `Slette kjøreplanen «${p.tittel}»?`, ja: "Slett", farlig: true }))) return;
+      if (!p || !(await bekreft("Du kan angre i ti sekunder etterpå.", { tittel: `Slette kjøreplanen «${p.tittel}»?`, ja: "Slett", farlig: true }))) return;
       if (!planeneLastet()) { msg(IKKE_LASTET, false); return; }
+      // Til Angre (v7.26): planen slik den står i dokumentet, med gruppe, dato,
+      // deling og referanse, men uten samleøktenes merker (øktene forkastes
+      // under), og påminnelsene.
+      const { samle, ...raa } = JSON.parse(JSON.stringify(getState().content?.presentasjoner?.planer?.[id] || p));
+      const pam = paminnelserFor(id);
       // Samleøkter på planen (også avsluttede som ikke er kommet fram)
       // forkastes: ellers ville neste lagring laget planen på nytt.
       forkastSamlinger(id);
       if (aktivPlan() === id) settAktivPlan(null);
       if (!(await vakt(deletePlan(id)))) return;
       // Påminnelsene til planen ryddes bort (de ligger i notater).
-      if (paminnelserFor(id).length) lagrePaminnelser(id, []).catch(() => {});
+      if (pam.length) lagrePaminnelser(id, []).catch(() => {});
       renderListe();
-      msg("Kjøreplanen er slettet.");
+      tilbyAngre(id, raa, pam);
       return;
     }
+    if (hit("[data-pres-angre]")) { await angreSletting(); return; }
 
     if (!kladd) return;
     if (hit("#pres-adm-pam-ny")) {
@@ -1195,10 +1307,29 @@ function koblVindu(m) {
       if (s) apneMaal(parseVisVerdi(s.vis));
       return;
     }
+    // Flytt til plass (v7.26): nummeret foran stoppet.
+    const plass = hit("[data-pres-plass]");
+    if (plass) { await flyttTilPlass(Number(plass.dataset.presPlass)); return; }
+    // Nivået (v7.26): knappen åpner menyen, valget setter nivået på stoppet.
+    const nivaaKnapp = hit("[data-pres-nivaa-knapp]");
+    if (nivaaKnapp) { apneMeny(nivaaKnapp, nivaaMenyHtml(Number(nivaaKnapp.dataset.presNivaaKnapp))); return; }
+    const nivaaValg = hit("[data-pres-nivaa-valg]");
+    if (nivaaValg) {
+      const [i, n] = nivaaValg.dataset.presNivaaValg.split(":").map(Number);
+      const s = kladd.stopp[i];
+      if (!s) return;
+      if (n >= 1 && n <= 3) s.nivaa = n;
+      else delete s.nivaa;
+      renderKladd();
+      document.querySelector(`[data-pres-nivaa-knapp="${i}"]`)?.focus();
+      return;
+    }
+    // Fra v7.26 et valg i nivåmenyen.
     const unntak = hit("[data-pres-unntak]");
     if (unntak) {
-      const s = kladd.stopp[Number(unntak.dataset.presUnntak)];
-      if (s) { delete s.unntak; renderKladd(); }
+      const i = Number(unntak.dataset.presUnntak);
+      const s = kladd.stopp[i];
+      if (s) { delete s.unntak; renderKladd(); document.querySelector(`[data-pres-nivaa-knapp="${i}"]`)?.focus(); }
       return;
     }
     const opp = hit("[data-pres-opp]");
@@ -1221,16 +1352,6 @@ function koblVindu(m) {
       renderKladd();
       return;
     }
-  });
-
-  // Nivå-nedtrekket per stopp (change, ikke click).
-  m.addEventListener("change", (e) => {
-    const sel = e.target.closest("[data-pres-nivaa]");
-    if (!sel || !kladd) return;
-    const i = Number(sel.dataset.presNivaa);
-    const n = Number(sel.value);
-    if (n >= 1 && n <= 3) kladd.stopp[i].nivaa = n;
-    else delete kladd.stopp[i].nivaa;
   });
 
   // Dra planene mellom gruppene (v7.17): til en gruppe, til «Uten gruppe» eller

@@ -4112,6 +4112,23 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
 .pres-adm-stopprad.pres-adm-over { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: var(--radius-s); }
 .pres-adm-grep { flex: none; color: var(--muted-2); display: inline-flex; align-items: center; padding: 0 2px; }
 .pres-adm-lenkeknapp { font: inherit; font-size: 0.8rem; color: var(--accent-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+#pres-adm-msg .pres-adm-lenkeknapp { font-size: inherit; font-weight: 600; margin-left: 4px; }
+/* Flytt til plass (v7.26): nummeret foran stoppet er en knapp, og raden som
+   ble flyttet, lyser kort opp der den havnet. */
+.pres-adm-plass {
+  font: inherit; color: inherit; font-variant-numeric: tabular-nums; cursor: pointer;
+  background: none; border: 1px solid var(--line); border-radius: var(--radius-s); padding: 0 5px; margin-right: 2px;
+}
+.pres-adm-plass:hover, .pres-adm-plass:focus-visible { border-color: var(--accent); color: var(--accent-2); outline: none; }
+.pres-adm-stopprad.pres-adm-flyttet { animation: pres-adm-flyttet 1.8s ease-out; }
+@keyframes pres-adm-flyttet {
+  from { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+  to { background: transparent; }
+}
+/* Nivået per stopp (v7.26): en knapp med meny i stedet for nedtrekkslista.
+   Et satt nivå er uthevet, så planens nivåskift synes i lista. */
+.btn.pres-nivaa-knapp { min-width: 4.6em; }
+.btn.pres-nivaa-knapp.pres-nivaa-satt { border-color: var(--accent); color: var(--accent-2); font-weight: 600; }
 .pres-adm-sok { margin-top: 12px; }
 .pres-adm-sok .sok-felt { width: 100%; }
 .pres-adm-sok-treff { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
@@ -4216,6 +4233,9 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
   flex: none; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;
   border: 1.5px solid currentColor; border-radius: 3px;
 }
+/* Haken foran valget som gjelder (nivåmenyen, v7.26), og en skillelinje. */
+.vis-meny-hake { flex: none; width: 14px; display: inline-flex; align-items: center; justify-content: center; color: var(--accent-2); }
+.vis-meny-skille { height: 1px; margin: 4px 2px; background: var(--line); }
 /* Én linje per plan: knappene står til høyre og brytes bare på smale skjermer. */
 .vis-plan-rad { flex-wrap: nowrap; }
 .vis-plan-rad .pres-adm-navn { min-width: 0; }

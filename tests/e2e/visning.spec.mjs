@@ -323,7 +323,7 @@ test("Rediger i linja nede til venstre: stopp flyttes uten å slutte å bygge p�
   await loggInnSomLaerer(page);
   const rekke = async () => (await planer()).p.stopp.map((s) => s.vis);
 
-  // Bygg på: Otis havner sist, og Rediger i pilla flytter ham først.
+  // Legg til: Otis havner sist, og Rediger i pilla flytter ham først.
   await apne(page, "/index.html");
   await page.locator("a[data-visning]").click();
   await page.locator('[data-pres-bygg="p"]').click();
@@ -332,7 +332,7 @@ test("Rediger i linja nede til venstre: stopp flyttes uten å slutte å bygge p�
   await expect(page.locator("#modal-detail")).toHaveClass(/open/);
   await page.locator("#modal-detail .modal-head .modal-lenke").click();
   const pille = page.locator("#aktiv-plan-pille");
-  await expect(pille).toContainText("Bygger på «Blues» · 3 stopp");
+  await expect(pille).toContainText("Legger til i «Blues» · 3 stopp");
   await pille.locator("#aktiv-plan-rediger").click();
   await expect(page.locator("#pres-adm-rediger")).toBeVisible();
   await expect(page.locator(".pres-adm-stopprad")).toHaveCount(3);
@@ -342,7 +342,7 @@ test("Rediger i linja nede til venstre: stopp flyttes uten å slutte å bygge p�
   // Tilbake der læreren var: vinduet lukket, kortet åpent, og byggingen står.
   await expect(page.locator("#modal-visning")).not.toHaveClass(/open/);
   await expect(page.locator("#modal-detail")).toHaveClass(/open/);
-  await expect(pille).toContainText("Bygger på «Blues» · 3 stopp");
+  await expect(pille).toContainText("Legger til i «Blues» · 3 stopp");
   await expect.poll(rekke).toEqual(["artist:otis", "artist:muddy", "artist:bessie"]);
   // Avbryt lukker også vinduet og lar planen stå.
   await pille.locator("#aktiv-plan-rediger").click();
@@ -381,5 +381,120 @@ test("Rediger i linja nede til venstre: stopp flyttes uten å slutte å bygge p�
   await expect(linje).toContainText("5 stopp");
   await linje.locator("#samle-ferdig").click();
   await expect.poll(rekke).toEqual(["artist:otis", "artist:muddy", "tiår:1950:society", "artist:bessie", "artist:muddy"]);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("redigeringen (v7.26): flytt til plass, nivået bak en knapp, ingen spørsmål uten endringer, og Angre etter Slett", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    p: { tittel: "Blues", laget: "2026-10-01T10:00:00.000Z", gruppe: "Klassen", delt: true, stopp: [
+      { vis: "tiår:1950:society", nivaa: 2, unntak: { "tiår.teknologi": true } },
+      { vis: "artist:muddy" }, { vis: "artist:bessie" }, { vis: "artist:otis" },
+    ] },
+  } });
+  await skrivDok("notater", "paminnelser:p", {
+    tekst: JSON.stringify([{ id: "p1", type: "etter", min: 10, tekst: "Husk pausen", lerret: false }]),
+    oppdatert: new Date().toISOString(),
+  });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  const vindu = page.locator("#modal-visning");
+  const rader = page.locator(".pres-adm-stopprad");
+
+  // Åpnet bare for å se: Escape lukker uten å spørre.
+  await page.locator("a[data-visning]").click();
+  await page.locator('[data-pres-rediger="p"]').click();
+  await expect(rader).toHaveCount(4);
+  await page.keyboard.press("Escape");
+  await expect(vindu).not.toHaveClass(/open/);
+  await expect(oeverst(page)).toHaveCount(0);
+
+  // Flytt til plass: Otis (4) til 1, og raden lyser opp der den havnet.
+  await page.locator("a[data-visning]").click();
+  await page.locator('[data-pres-rediger="p"]').click();
+  await page.locator('[data-pres-plass="3"]').click();
+  await expect(oeverst(page)).toContainText("Skriv 1 for øverst og 4 for nederst.");
+  await svar(page, "Flytt", "1");
+  await expect(rader.first()).toContainText("Otis Redding");
+  await expect(rader.first()).toHaveClass(/pres-adm-flyttet/);
+  await expect(rader.first().locator("[data-pres-plass]")).toBeFocused();
+  // Et tall utenfor planen havner nederst.
+  await page.locator('[data-pres-plass="0"]').click();
+  await svar(page, "Flytt", "99");
+  await expect(rader.last()).toContainText("Otis Redding");
+
+  // Nivået bak en knapp: Muddy (nå 2) får nivå 3, og tiåret mister unntaket.
+  const knapp = (i) => page.locator(`[data-pres-nivaa-knapp="${i}"]`);
+  await expect(knapp(0)).toHaveText("Nivå 2");
+  await expect(knapp(1)).toHaveText("Nivå");
+  await knapp(1).click();
+  const meny = page.locator(".vis-meny");
+  await expect(meny.locator(".vis-meny-valg")).toHaveText(["Uendret", "Nivå 1: Overskrift", "Nivå 2: Kjerne", "Nivå 3: Alt"]);
+  await expect(meny.locator('[aria-checked="true"]')).toHaveText("Uendret");
+  await meny.locator('[data-pres-nivaa-valg="1:3"]').click();
+  await expect(meny).toHaveCount(0);
+  await expect(knapp(1)).toHaveText("Nivå 3");
+  await expect(knapp(1)).toBeFocused();
+  await expect(rader.first()).toContainText("1 unntak");
+  await knapp(0).click();
+  await meny.locator("[data-pres-unntak]").click();
+  await expect(rader.first()).not.toContainText("unntak");
+  // Escape lukker menyen, ikke vinduet.
+  await knapp(2).click();
+  await page.keyboard.press("Escape");
+  await expect(meny).toHaveCount(0);
+  await expect(vindu).toHaveClass(/open/);
+
+  // Med endringer spør vinduet før det lukkes.
+  await page.keyboard.press("Escape");
+  await expect(oeverst(page)).toContainText("Lukke uten å lagre?");
+  await svar(page, "Avbryt");
+  await page.locator("#pres-adm-lagre").click();
+  await expect.poll(async () => (await planer()).p.stopp).toEqual([
+    { vis: "tiår:1950:society", nivaa: 2 }, { vis: "artist:muddy", nivaa: 3 }, { vis: "artist:bessie" }, { vis: "artist:otis" },
+  ]);
+
+  // Slett, og Angre: planen og påminnelsen er tilbake.
+  const pam = async () => (await lesSamling("notater")).find((n) => n.id === "paminnelser:p")?.tekst || "";
+  await page.locator('[data-pres-slett="p"]').click();
+  await expect(oeverst(page)).toContainText("Du kan angre i ti sekunder etterpå.");
+  await svar(page, "Slett");
+  await expect.poll(async () => Object.keys(await planer())).toEqual([]);
+  await expect.poll(pam).toBe("");
+  await page.locator("#pres-adm-msg [data-pres-angre]").click();
+  await expect(page.locator("#pres-adm-msg")).toHaveText("Kjøreplanen «Blues» er tilbake.");
+  await expect.poll(async () => (await planer()).p).toMatchObject({ tittel: "Blues", gruppe: "Klassen", delt: true, laget: "2026-10-01T10:00:00.000Z" });
+  expect((await planer()).p.stopp).toHaveLength(4);
+  await expect.poll(pam).toContain("Husk pausen");
+  await expect(page.locator('.vis-gruppe[data-gruppe="Klassen"]')).toContainText("Blues");
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("Lag kjøreplan på utskriftssiden: en tittel som finnes, spør om stoppene skal erstattes (v7.26)", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    p: { tittel: "Blues", laget: "2026-10-01T10:00:00.000Z", gruppe: "Klassen", stopp: [{ vis: "artist:otis", nivaa: 2 }] },
+  } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await apne(page, "/utskrift.html?u=artist:muddy|artist:bessie&t=blues");
+  const lag = page.locator("#utskrift-plan");
+  await expect(page.locator("#hefte")).not.toContainText("Laster innholdet", { timeout: 15000 });
+  await expect(lag).toBeVisible();
+  await expect(lag).toBeEnabled();
+  // Avbryt: ingenting skjer.
+  await lag.click();
+  await expect(oeverst(page)).toContainText("Du har en kjøreplan som heter «Blues» fra før, med 1 stopp.");
+  await svar(page, "Avbryt");
+  expect(Object.keys(await planer())).toEqual(["p"]);
+  // Erstatt stoppene: tittel og gruppe står, bare stoppene er byttet.
+  await lag.click();
+  await svar(page, "Erstatt stoppene");
+  await expect.poll(async () => (await planer()).p.stopp.map((s) => s.vis).sort()).toEqual(expect.arrayContaining(["artist:bessie", "artist:muddy"]));
+  const p = (await planer()).p;
+  expect(p).toMatchObject({ tittel: "Blues", gruppe: "Klassen" });
+  expect(p.stopp.map((s) => s.vis)).not.toContain("artist:otis");
+  // Lag en ny: to planer.
+  await lag.click();
+  await svar(page, "Lag en ny");
+  await expect.poll(async () => Object.keys(await planer()).length).toBe(2);
   expect(appFeil(feil)).toEqual([]);
 });

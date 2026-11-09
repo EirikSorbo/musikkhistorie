@@ -1212,3 +1212,59 @@ test("svart skjerm sperrer L og S", () => {
   assert.match(blokk, /if \(\["l", "L", "s", "S"\]\.includes\(e\.key\)\) \{ e\.preventDefault\(\); e\.stopPropagation\(\); return; \}/);
   assert.match(blokk, /\}, true\);/, "capture-fasen, før appens egne taster");
 });
+
+// ---------------------------------------------------------------------------
+//  v7.26: små forbedringer i Visning (vurderingen 2026-11-09)
+// ---------------------------------------------------------------------------
+
+test("planMedTittel finner planen med samme tittel, uansett store bokstaver og mellomrom", async () => {
+  const { planMedTittel } = await import("../../js/visning/presentasjon-modell.js");
+  const planer = {
+    a: { tittel: "R&B 1954–1985", laget: "2026-11-06T10:00:00.000Z", stopp: [] },
+    b: { tittel: "r&b  1954–1985 ", laget: "2026-11-06T10:10:00.000Z", stopp: [{ vis: "artist:x" }] },
+    c: { tittel: "Soul", laget: "2026-11-07T10:00:00.000Z", stopp: [] },
+  };
+  // Den nyeste av to like vinner.
+  assert.deepEqual(planMedTittel(planer, "R&B 1954–1985"), ["b", planer.b]);
+  assert.equal(planMedTittel(planer, "SOUL")[0], "c");
+  assert.equal(planMedTittel(planer, "Blues"), null);
+  assert.equal(planMedTittel(planer, "  "), null);
+  assert.equal(planMedTittel(null, "Soul"), null);
+  // Utskriftssiden spør før den lager en plan med en tittel som finnes.
+  const ut = readFileSync(new URL("../../js/utskrift.js", import.meta.url), "utf8");
+  assert.match(ut, /const gammel = planMedTittel\(normaliserPlaner\(state\.content\?\.presentasjoner\?\.planer\), tittel\);/);
+  assert.match(ut, /await savePlan\(gammel\[0\], \{ stopp \}\);/, "Erstatt rører bare stoppene");
+});
+
+test("plassFraTekst: 1 er øverst, for store og små tall klemmes, annet gir null", async () => {
+  const { plassFraTekst } = await import("../../js/visning/presentasjon-modell.js");
+  assert.equal(plassFraTekst("1", 62), 0);
+  assert.equal(plassFraTekst(" 62 ", 62), 61);
+  assert.equal(plassFraTekst("99", 62), 61);
+  assert.equal(plassFraTekst("0", 62), 0);
+  assert.equal(plassFraTekst("-4", 62), 0);
+  for (const feil of ["", "tre", "2.5", "1e2", null, undefined]) assert.equal(plassFraTekst(feil, 62), null, String(feil));
+  assert.equal(plassFraTekst("1", 0), null);
+});
+
+test("redigeringen: nivået bak en knapp, nummeret flytter, og angre etter sletting", () => {
+  const vis = readFileSync(new URL("../../js/visning/visning.js", import.meta.url), "utf8");
+  assert.doesNotMatch(vis, /<select data-pres-nivaa=/, "nedtrekkslista er borte");
+  assert.match(vis, /data-pres-nivaa-knapp="\$\{i\}"/);
+  assert.match(vis, /data-pres-plass="\$\{i\}"/);
+  // Lukking uten endringer spør ikke, men slipper et hvilende opptak løs.
+  assert.match(vis, /if \(!kladd\) return true;\n\s*if \(!kladdEndret\(\)\) \{ lukkKladd\(\); renderKladd\(\); return true; \}/);
+  assert.match(vis, /kladd\.start = kladdBilde\(\);/);
+  // Angre: planen huskes uten samleøktenes merker, og påminnelsene med den.
+  assert.match(vis, /const \{ samle, \.\.\.raa \} = JSON\.parse/);
+  assert.match(vis, /tilbyAngre\(id, raa, pam\);/);
+  assert.match(vis, /if \(!\(await vakt\(savePlan\(a\.id, a\.plan\)\)\)\) return;/);
+  // Ett navn: «Legg til i», ikke «Bygg på», i det læreren ser.
+  const meny = readFileSync(new URL("../../js/visning/plan-meny.js", import.meta.url), "utf8");
+  assert.match(meny, /`Legger til i «<strong>\$\{escapeHtml\(plan\.tittel\)\}<\/strong>» · \$\{plan\.stopp\.length\} stopp`/);
+  assert.match(vis, />Ny \+ legg til …<\/button>/);
+  for (const [navn, src] of [["visning.js", vis], ["plan-meny.js", meny]]) {
+    const synlig = src.split("\n").filter((l) => !/^\s*\/\//.test(l)).join("\n");
+    assert.doesNotMatch(synlig, /[Bb]ygg(er|es)? på/, `${navn}: «bygg på» i teksten læreren ser`);
+  }
+});

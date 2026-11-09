@@ -48,7 +48,8 @@ test("funn 8: editoren sjekker hvert mål mot det åpneren slår opp i, og vente
   }
   assert.match(v, /edgeExists\(m\.id\) \? \{\} : \{ feil: DOD \}/);
   assert.match(v, /return s\.artistsLoaded \? ut\(m\.id, \{ feil: DOD \}\) : ut\("laster …", \{ laster: true \}\);/);
-  assert.match(kilde("visning.js"), /if \(kladd\) \{ if \(kladdVenter\) renderKladd\(\); return; \}/);
+  // Fra v7.26 venter tegningen også mens nivåmenyen på et stopp står åpen.
+  assert.match(kilde("visning.js"), /if \(kladd\) \{ if \(kladdVenter && !apenMeny\) renderKladd\(\); return; \}/);
   assert.doesNotMatch(v, /GENEALOGY_MAIN_GENRES/, "det smale vokabularet ga de falske varslene");
   assert.doesNotMatch(kilde("visning.js"), /GENEALOGY_MAIN_GENRES/);
   for (const f of ["landing.js", "tre-page.js", "teacher.js"]) {

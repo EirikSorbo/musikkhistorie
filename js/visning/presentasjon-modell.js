@@ -302,6 +302,31 @@ export function normaliserPlaner(raa) {
   return ut;
 }
 
+// Planen som alt heter `tittel` (v7.26), som [id, plan], eller null. Store og
+// små bokstaver og mellomrom teller ikke. Har flere samme tittel, gjelder den
+// nyeste. «Lag kjøreplan» på utskriftssiden spør da om stoppene skal erstattes
+// (to like «R&B 1954–1985» ble laget med ti minutters mellomrom 6.11).
+const tittelNokkel = (t) => String(t || "").replace(/\s+/g, " ").trim().toLocaleLowerCase("nb");
+export function planMedTittel(planer, tittel) {
+  const n = tittelNokkel(tittel);
+  if (!n) return null;
+  let funnet = null;
+  for (const [id, p] of Object.entries(planer || {})) {
+    if (!p || tittelNokkel(p.tittel) !== n) continue;
+    if (!funnet || String(p.laget || "") > String(funnet[1].laget || "")) funnet = [id, p];
+  }
+  return funnet;
+}
+
+// «Flytt til plass» i redigeringen (v7.26): teksten læreren skrev, som indeks
+// i en plan med `antall` stopp. 1 er øverst; for stort tall gir nederst og 0
+// eller mindre øverst. Ikke et helt tall gir null.
+export function plassFraTekst(tekst, antall) {
+  const t = String(tekst ?? "").trim();
+  if (!/^-?\d+$/.test(t) || !(antall >= 1)) return null;
+  return Math.min(antall, Math.max(1, Number(t))) - 1;
+}
+
 // Neste stoppindeks: klemmes i [0, antall-1], ingen rundgang — etter siste
 // stopp blir man stående der (en forelesning skal ikke hoppe til start ved
 // ett tastetrykk for mye).
