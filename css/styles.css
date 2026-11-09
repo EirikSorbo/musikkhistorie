@@ -1414,6 +1414,11 @@ button.tag.tag-instrument:hover { border-color: var(--tag-instr-line-hover); col
 /* Den usynlige halvfete kopien (som holder bredden) må også ha plass til
    prikken, ellers flytter fanene seg når en blir valgt. */
 .hist-faner .dv-fane[data-tekst]::after { padding-left: 14px; }
+/* Lærerhåndboken i faner (v7.27, js/felles/side-faner.js): samme fanerad,
+   rulles sidelengs på smale skjermer. */
+.side-faner { gap: 18px; margin: 0 0 16px; overflow-x: auto; scrollbar-width: none; }
+.side-faner::-webkit-scrollbar { display: none; }
+.side-faner .dv-fane { flex: none; white-space: nowrap; margin-bottom: 0; }
 /* Formatert tekst (markdown-light fra js/rich-text.js). `.story-body` er
    historiene og innholdssidene; `.rt` er de vanlige beskrivelsene (artist,
    sjanger, kobling, innovasjon). Begge får samme typografi, for det er samme

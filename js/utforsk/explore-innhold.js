@@ -14,6 +14,7 @@ import { pageFor, storyFor, stripGenrePath, storyOrderSynlig } from "../felles/s
 import { sjekketRegelAktiv } from "../felles/sjekket.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { guideDeler, guideForStudent } from "../felles/guide-deler.js";
+import { sideFaner, valgtFaneIndeks } from "../felles/side-faner.js";
 import { guideDelSynlig } from "../felles/feature-flags.js";
 import { genreFamilyNodes } from "../ui/ui-timeline.js";
 import { heatBlockHtml, heatAxisRowHtml, heatRowsHtml, wireHeatRows } from "./heat-rows.js";
@@ -55,8 +56,13 @@ export function renderPage(pageId, bodyElId, extraElId) {
   // dokument med bare kilder (mulig via import) skal fortsatt vise hullet.
   if (page?.body?.trim()) {
     const lc = buildLinkCtx();
-    body.innerHTML = pageId === "appGuide" ? guideHtml(page.body, lc) : renderRichText(page.body, lc);
-    wireLinks(body, lc);
+    const deler = FANESIDER[pageId] ? sideFaner(page.body) : null;
+    if (deler?.faner.length) {
+      tegnFaner(body, pageId, deler, lc);
+    } else {
+      body.innerHTML = pageId === "appGuide" ? guideHtml(page.body, lc) : renderRichText(page.body, lc);
+      wireLinks(body, lc);
+    }
   } else {
     body.innerHTML = `<p class="gx-missing">${s.contentLoaded
       ? "Teksten er ikke lagt inn ennå. Læreren legger den inn via innholds-importen eller Rediger-knappen."
@@ -71,6 +77,37 @@ export function renderPage(pageId, bodyElId, extraElId) {
     onEdit: opts.onPageEdit ? () => opts.onPageEdit(pageId) : null,
     sjekk: !USJEKKEDE_SIDER.includes(pageId),
   });
+}
+
+// Sidene som deles i faner med `## ` (v7.27, js/felles/side-faner.js), med
+// navnet skjermlesere får på fanerada. Den valgte fanen huskes per side mens
+// siden er lastet, så håndboken åpner der du var sist.
+const FANESIDER = { laererHandbok: "Delene av lærerhåndboken" };
+const valgtFane = {};
+
+function tegnFaner(body, pageId, { innledning, faner }, lc) {
+  const i = valgtFaneIndeks(faner, valgtFane[pageId]);
+  const id = `${body.id}-fane`;
+  body.innerHTML = [
+    innledning ? renderRichText(innledning, lc) : "",
+    `<div class="dv-faner side-faner" role="tablist" aria-label="${escapeHtml(FANESIDER[pageId])}">`,
+    ...faner.map((f, j) =>
+      `<button type="button" class="dv-fane${j === i ? " active" : ""}" role="tab" id="${id}-${j}" aria-controls="${id}-panel" aria-selected="${j === i}" tabindex="${j === i ? 0 : -1}" data-side-fane="${j}" data-tekst="${escapeHtml(f.tittel)}">${escapeHtml(f.tittel)}</button>`),
+    `</div>`,
+    `<div class="side-fanepanel" role="tabpanel" id="${id}-panel" aria-labelledby="${id}-${i}">${renderRichText(faner[i].tekst, lc)}</div>`,
+  ].join("");
+  const rad = body.querySelector(".side-faner");
+  rad.querySelectorAll("[data-side-fane]").forEach((b) => b.addEventListener("click", () => {
+    const j = Number(b.dataset.sideFane);
+    if (j === i) return;
+    valgtFane[pageId] = faner[j].tittel;
+    tegnFaner(body, pageId, { innledning, faner }, lc);
+    // Fanene tegnes på nytt, så fokuset flyttes til den nye (piltastene).
+    body.querySelector(`[data-side-fane="${j}"]`)?.focus({ preventScroll: true });
+  }));
+  kobleFanePiler(rad);
+  visValgtFane(rad);
+  wireLinks(body, lc);
 }
 
 // «Slik bruker du appen» i deler (v6.95, js/felles/guide-deler.js). Studentene

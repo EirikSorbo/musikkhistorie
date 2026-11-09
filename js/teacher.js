@@ -414,6 +414,7 @@ function startAppInner() {
 // Lærerhåndboken (v7.01, brukerønske 2026-10-14): teksten bor i
 // content/laererHandbok og tegnes som de andre innholdssidene (renderPage), med
 // Rediger i hodet. Vinduet legger seg oppå Innstillinger, så ← går tilbake dit.
+// Fra v7.27 deler `## `-linjene i teksten håndboken i faner (renderPage).
 function tegnLaererHandbok() {
   renderPage("laererHandbok", "lh-body", "lh-extra");
 }

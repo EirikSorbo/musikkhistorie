@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-120 filer i 11 mapper.
+121 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -18,7 +18,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 15 |
 | `js/data/` | Data | 11 |
-| `js/felles/` | Felles hjelpere | 15 |
+| `js/felles/` | Felles hjelpere | 16 |
 | `js/vendor/` | Tredjepart | 1 |
 
 ## Reglene koden holder seg til
@@ -214,6 +214,7 @@ Små hjelpere og vokabular som flere deler av appen bruker: tekst og lenker, kil
 | `punkter.js` | OPPSUMMERINGSPUNKTER (v5.50) — 3–5 korte punkter per beskrivelse |
 | `rich-text.js` | RIK TEKST — markdown-light for ALL løpende tekst i appen |
 | `search.js` | SØK — én indeks over alt innholdet i appen |
+| `side-faner.js` | LÆRERHÅNDBOKEN I FANER (v7.27, brukerønske 2026-11-09) |
 | `sjekket.js` | BARE SJEKKET INNHOLD FOR STUDENTENE (v6.89, brukervalg 2026-10-13) |
 | `story-format.js` | SJANGERHISTORIER OG INNHOLDSSIDER — oppslag |
 | `timeline-lanes.js` | TIDSLINJE-BANER — ren logikk for artist-aktivitets-tidslinjen |

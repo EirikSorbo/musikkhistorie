@@ -6,7 +6,7 @@
 //  undersjanger, importen og lærerhåndboken.
 // ============================================================================
 import { test, expect } from "@playwright/test";
-import { såFrø, lesDok, rydd } from "./frø.mjs";
+import { såFrø, lesDok, skrivDok, rydd } from "./frø.mjs";
 import { forbered, loggInnSomLaerer, appFeil } from "./hjelp.mjs";
 
 test.beforeEach(async () => { await såFrø(); });
@@ -114,9 +114,66 @@ test("import av en innholdsfil, og lærerhåndboken under Innstillinger", async 
   await page.locator('[data-open-modal="modal-settings"]').click();
   await page.locator("#btn-laerer-handbok").click();
   await expect(page.locator("#lh-body")).toContainText("Håndboken for læreren");
+  // En tekst uten `## ` har ingen faner (v7.27).
+  await expect(page.locator('#lh-body [role="tablist"]')).toHaveCount(0);
   await page.locator("#modal-laerer-handbok .modal-close").click();
-  const fil = { pages: { omHistorie: { body: "Historie er tolkning av fortiden." } } };
+  const fil ={ pages: { omHistorie: { body: "Historie er tolkning av fortiden." } } };
   await page.locator("#input-import").setInputFiles({ name: "innhold.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(fil)) });
   await svar(page, "Importer");
   await ventPaa("content", "omHistorie", (d) => d?.body === "Historie er tolkning av fortiden.");
+});
+
+test("lærerhåndboken i faner: `## ` lager en fane, og den valgte står når teksten endres (v7.27)", async ({ page }) => {
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator('[data-open-modal="modal-settings"]').click();
+  await page.locator("#btn-laerer-handbok").click();
+  await expect(page.locator("#lh-body")).toContainText("Håndboken for læreren");
+  // Teksten endres mens håndboken står åpen: den tegnes på nytt, nå i faner.
+  await skrivDok("content", "laererHandbok", {
+    body: "Over fanene.\n\n## Lærersiden\n### Skrivebordet\nSlik bruker du Skrivebordet.\n\n## Visning\n### Kjøreplaner\nSlik lager du en kjøreplan.\n\n## Timene\n### Gått gjennom\nSlik ser du hva som er gått gjennom.",
+  });
+  const body = page.locator("#lh-body");
+  const faner = body.locator('[role="tablist"] [role="tab"]');
+  await expect(faner).toHaveText(["Lærersiden", "Visning", "Timene"]);
+  await expect(faner.nth(0)).toHaveAttribute("aria-selected", "true");
+  await expect(body.locator(":scope > p").first()).toHaveText("Over fanene.");
+  const panel = body.locator('[role="tabpanel"]');
+  await expect(panel).toContainText("Slik bruker du Skrivebordet.");
+  await expect(panel).not.toContainText("Slik lager du en kjøreplan.");
+  // Fanelinja er ikke en mellomtittel i teksten.
+  await expect(body.locator("h3")).toHaveText(["Skrivebordet"]);
+
+  await faner.nth(1).click();
+  await expect(faner.nth(1)).toHaveAttribute("aria-selected", "true");
+  await expect(panel).toContainText("Slik lager du en kjøreplan.");
+  await expect(panel).not.toContainText("Slik bruker du Skrivebordet.");
+  await expect(panel).toHaveAttribute("aria-labelledby", await faner.nth(1).getAttribute("id"));
+
+  // Piltastene flytter mellom fanene, og fokuset følger med.
+  await page.keyboard.press("ArrowRight");
+  await expect(faner.nth(2)).toBeFocused();
+  await expect(panel).toContainText("Slik ser du hva som er gått gjennom.");
+  await page.keyboard.press("ArrowRight");
+  await expect(faner.nth(0)).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(faner.nth(2)).toHaveAttribute("aria-selected", "true");
+
+  // En lagring som endrer en annen fane, beholder den valgte.
+  await skrivDok("content", "laererHandbok", {
+    body: "Over fanene.\n\n## Lærersiden\n### Skrivebordet\nNy tekst om Skrivebordet.\n\n## Visning\n### Kjøreplaner\nSlik lager du en kjøreplan.\n\n## Timene\n### Gått gjennom\nSlik ser du hva som er gått gjennom.",
+  });
+  await expect(faner.nth(2)).toHaveAttribute("aria-selected", "true");
+  await expect(panel).toContainText("Slik ser du hva som er gått gjennom.");
+
+  // Lukket og åpnet igjen: håndboken åpner der du var.
+  await page.locator("#modal-laerer-handbok .modal-close").click();
+  await page.locator("#btn-laerer-handbok").click();
+  await expect(faner.nth(2)).toHaveAttribute("aria-selected", "true");
+
+  // Forsvinner fanen, velges den første.
+  await skrivDok("content", "laererHandbok", { body: "## Lærersiden\nBare én fane." });
+  await expect(faner).toHaveText(["Lærersiden"]);
+  await expect(panel).toHaveText("Bare én fane.");
+  expect(appFeil(feil)).toEqual([]);
 });
