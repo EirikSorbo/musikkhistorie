@@ -498,3 +498,33 @@ test("Lag kjøreplan på utskriftssiden: en tittel som finnes, spør om stoppene
   await expect.poll(async () => Object.keys(await planer()).length).toBe(2);
   expect(appFeil(feil)).toEqual([]);
 });
+
+test("slidene er treff på forsiden og slektstresiden også, i søket og som stopp (v7.29)", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    p: { tittel: "Blues", laget: "2026-10-01T10:00:00.000Z", stopp: [{ vis: "artist:muddy" }] },
+  } });
+  await skrivDok("notater", "slide:skurs01", { tekst: "Kursinfo\n\nFrister for innleveringene", oppdatert: new Date().toISOString() });
+  const feil = await forbered(page, { rolle: "teacher" });
+  await loggInnSomLaerer(page);
+
+  // Forsiden, uten visningsmodus: søket for å legge til stopp finner sliden.
+  await apne(page, "/index.html");
+  await page.locator("a[data-visning]").first().click();
+  await page.locator('[data-pres-rediger="p"]').click();
+  await page.locator("#pres-adm-sok").fill("kursinfo");
+  const treff = page.locator('[data-pres-legg="slide:skurs01"]');
+  await expect(treff).toContainText("Slide");
+  await expect(treff).toContainText("Kursinfo");
+  await treff.click();
+  await expect(page.locator(".pres-adm-stopprad")).toHaveCount(2);
+  await expect(page.locator(".pres-adm-stopprad").last()).toContainText("Kursinfo");
+  await page.locator("#pres-adm-lagre").click();
+  await expect.poll(async () => (await planer()).p?.stopp.map((s) => s.vis)).toEqual(["artist:muddy", "slide:skurs01"]);
+
+  // Slektstresiden: det vanlige søket finner sliden på innholdet.
+  await apne(page, "/tre.html");
+  await page.locator("[data-sok]").first().click();
+  await page.locator("#sok-felt").fill("innleveringene");
+  await expect(page.locator('#sok-treff [data-sok-gruppe="slide"]')).toContainText("Kursinfo");
+  expect(appFeil(feil)).toEqual([]);
+});

@@ -53,7 +53,8 @@ import { stoppEtikett, dodeStopp } from "./stopp-etikett.js";
 import { byggIndeks, sok, TYPE_LABEL } from "../felles/search.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN } from "../felles/feature-flags.js";
 import { apneMaal } from "../utforsk/explore-apne.js";
-import { slider } from "./slides-liste.js";
+import { slider, onSlidesEndret } from "./slides-liste.js";
+import { startSlides } from "./slides.js";
 import { lagreSomTime } from "./lagre-time.js";
 import { grupperPlaner, gruppeNavn, planTelling, referanseFor } from "./gjennomgang-modell.js";
 import { apneGjennomgang, gjennomgangTikk } from "./gjennomgang.js";
@@ -1056,6 +1057,13 @@ export function initVisning() {
     if (erLaerer) abonnerPaminnelser();
     visningTikk();
   });
+  // Slidene (v7.29): søket og redigeringen av kjøreplanene skal finne dem på
+  // alle sidene med Visning. Før ble de bare hentet på lærersiden og i
+  // visningsmodus, så på forsiden og slektstresiden var lista tom. startSlides
+  // er trygg å kalle flere ganger og abonnerer bare for en lærerkonto.
+  startSlides();
+  // Lander slidene etter at læreren har skrevet i søkefeltet, kommer de med.
+  onSlidesEndret(() => tegnKladdSok());
   // Sikkerhetskopiene av visningene (v7.15): lista og spørsmålet om dem.
   startKopivakt({ unntatt: aktivOkt });
   vedKopiEndring(() => visningTikk());

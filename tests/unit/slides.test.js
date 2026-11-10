@@ -133,3 +133,13 @@ test("Fra timene teller ikke slide-stopp", async () => {
   assert.match(src, /const antallKort = \(plan\) => \(plan\.stopp \|\| \[\]\)\.filter\(\(st\) => !erSlideVis\(st\.vis\)\)\.length;/);
   assert.doesNotMatch(src, /\.stopp\.length\} kort/);
 });
+
+test("slidene hentes på alle sidene med Visning (v7.29), ikke bare lærersiden og visningsmodus", async () => {
+  const { lesJs } = await import("../helpers/js-filer.js");
+  const v = lesJs("visning.js");
+  const init = v.slice(v.indexOf("export function initVisning"));
+  assert.match(init, /^\s*startSlides\(\);/m, "initVisning starter slidene");
+  assert.match(init, /onSlidesEndret\(\(\) => tegnKladdSok\(\)\);/, "søket i redigeringen tegnes på nytt når slidene lander");
+  // initVisning kjøres av alle tre sidene med Visning.
+  for (const f of ["teacher.js", "landing.js", "tre-page.js"]) assert.match(lesJs(f), /^\s*initVisning\(\);/m, f);
+});
