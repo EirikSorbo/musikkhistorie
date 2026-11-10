@@ -18,7 +18,7 @@
 //  og ytMaal fra presentasjon-modell), så modulen kan enhetstestes i Node.
 // ============================================================================
 
-import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible, instrumenterFor } from "./limits.js";
+import { INSTRUMENT_TIMELINE_GROUPS, INSTRUMENT_TITLE, instrumentPageId, isVisible, instrumenterFor, DECADES } from "./limits.js";
 import { GENEALOGY, GENEALOGY_ROOT_GENRES, genreNodeById, findTreeGenreNode, edgeExists } from "../sjangre/genre-model.js";
 import { storyOrder, storyFor, pageFor } from "./story-format.js";
 import { escapeHtml } from "./util.js";
@@ -26,7 +26,8 @@ import { alleSelskaper, plateselskapSideId } from "./plateselskaper.js";
 import { erSjekket } from "./sjekket.js";
 import { guideForStudent } from "./guide-deler.js";
 import { guideDelSynlig } from "./feature-flags.js";
-import { ytMaal } from "../visning/presentasjon-modell.js";
+import { ytMaal, VISNING_NAVN } from "../visning/presentasjon-modell.js";
+import { TECH_CATEGORIES } from "../ui/ui-tech.js";
 
 // Etikettene som vises på treffene. Nøkkelen er postens `type`.
 export const TYPE_LABEL = {
@@ -48,6 +49,8 @@ export const TYPE_LABEL = {
   galleri: "Artistgalleri",
   plateselskap: "Plateselskap",
   slide: "Slide",
+  musikk: "Musikk",
+  visning: "Visning",
 };
 
 // Overskriften over en gruppe treff.
@@ -70,13 +73,15 @@ export const TYPE_FLERTALL = {
   galleri: "Artistgallerier",
   plateselskap: "Plateselskaper",
   slide: "Slides",
+  musikk: "Musikk",
+  visning: "Visninger",
 };
 
 // Uavgjort mellom to grupper med like sterkt beste-treff: det man oftest leter
 // etter først.
 export const TYPE_ORDER = [
   "artist", "lytteeksempel", "oversikt", "sjanger", "rot", "undersjanger", "tech", "hendelse",
-  "historie", "galleri", "side", "instrument", "plateselskap", "samfunn", "teknologi", "kobling", "podkast", "slide",
+  "historie", "galleri", "side", "instrument", "plateselskap", "samfunn", "teknologi", "musikk", "kobling", "podkast", "slide", "visning",
 ];
 
 const SIDE_TITTEL = { rotter: "Røtter før 1910", omHistorie: "Om historie", appGuide: "Slik bruker du appen" };
@@ -107,6 +112,8 @@ export function delOppSok(q) {
 }
 
 const MIN_LENGDE = 2;
+
+const byggNokkel = (apne) => [apne.hva, apne.id || ""].join(":");
 
 function post(type, id, tittel, sti, biter, apne) {
   const tekst = biter.filter(Boolean).map((b) => String(b).trim()).filter(Boolean).join(" · ");
@@ -242,6 +249,26 @@ export function byggIndeks(state = {}, { erLærer = false, skjul = {}, skjulHub 
         ut.push(post("galleri", n.l, `Artistgalleri: ${n.f || n.l}`, `Visningsmodus · ${meta}`,
           [n.l, n.f, "galleri bilder"], { hva: "galleri", id: n.l }));
       }
+    }
+    // Helvisningene og musikkfanen på tiårene (v7.32, brukervalg 2026-11-10):
+    // før kunne de bare legges inn med lim-inn-feltet, som er fjernet. Navnene
+    // er de samme som på oversikten (VISNING_NAVN), og ordene i teksten er
+    // det læreren kan tenkes å skrive.
+    const SOKEORD = {
+      tidslinje: "tidslinje", himmel: "himmel", referanser: "kilder",
+      "store-bildet": "huben", lytt: "lytt spillelister", artister: "alle artistene",
+      sjangre: "alle sjangrene", undersjangre: "alle undersjangrene",
+    };
+    const visning = (tittel, apne, ord = "") => ut.push(post("visning", byggNokkel(apne), tittel, "", [ord], apne));
+    for (const [hva, navn] of Object.entries(VISNING_NAVN)) visning(navn, { hva }, SOKEORD[hva]);
+    visning("Sjangerhistoriene", { hva: "historie" }, "historier");
+    visning("Varmekartet", { hva: "varmekart" }, "varmekart");
+    for (const meta of storyOrder(genreDescs)) visning(`Varmekartet: ${meta}`, { hva: "varmekart", id: meta }, "varmekart");
+    visning("Teknologioversikten", { hva: "teknologi" }, "innovasjoner");
+    for (const k of TECH_CATEGORIES) visning(`Teknologi: ${k}`, { hva: "teknologi", id: k }, "innovasjoner");
+    for (const d of DECADES) {
+      ut.push(post("musikk", String(d), `${d}-tallet`, "Musikk i tiåret", ["musikk sjangre artister"],
+        { hva: "tiår", id: String(d), modus: "musikk" }));
     }
   }
 

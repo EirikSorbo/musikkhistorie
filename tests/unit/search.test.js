@@ -235,3 +235,44 @@ test("søk på artisten viser eksemplene også, men artisten står først", () =
   assert.equal(res.grupper[0].type, "artist");
   assert.ok(res.grupper.some((g) => g.type === "lytteeksempel" && g.treff.some((t) => t.tittel === "Mannish Boy")));
 });
+
+// v7.32 (brukervalg 2026-11-10): lim-inn-feltet i Visning-editoren er fjernet.
+// Det eneste det kunne legge til fra redigeringen, var helvisningene og
+// musikkfanen på tiårene, så de står nå i editorens søk (visningsflater).
+test("Visning-editoren: helvisningene og musikkfanen på tiårene er treff, og blir gyldige stopp", async () => {
+  const { byggVisVerdi, parseVisVerdi } = await import("../../js/felles/vis-lenke.js");
+  const { VISNING_NAVN } = await import("../../js/visning/presentasjon-modell.js");
+  const { DECADES } = await import("../../js/felles/limits.js");
+  const { TECH_CATEGORIES } = await import("../../js/ui/ui-tech.js");
+  const indeks = byggIndeks(STATE, { erLærer: true, visningsflater: true });
+  const vis = (type) => indeks.filter((p) => p.type === type).map((p) => byggVisVerdi(p.apne));
+  const visninger = vis("visning");
+  for (const hva of Object.keys(VISNING_NAVN)) assert.ok(visninger.includes(hva), hva);
+  for (const v of ["historie", "varmekart", "varmekart:Blues", "teknologi", ...TECH_CATEGORIES.map((k) => `teknologi:${k}`)]) {
+    assert.ok(visninger.includes(v), v);
+  }
+  assert.deepEqual(vis("musikk"), DECADES.map((d) => `tiår:${d}:musikk`));
+  assert.ok([...visninger, ...vis("musikk")].every((v) => v && parseVisVerdi(v)), "alle kan bli stopp");
+  assert.equal(new Set(visninger).size, visninger.length, "hver visning én gang");
+  // Søkeordene læreren skriver.
+  const forste = (q) => sok(indeks, q).grupper[0]?.treff[0];
+  assert.equal(forste("tidslinje").apne.hva, "tidslinje");
+  assert.equal(forste("spilleliste").apne.hva, "lytt");
+  assert.deepEqual(forste("1960 musikk").apne, { hva: "tiår", id: "1960", modus: "musikk" });
+  // Ikke i det vanlige søket, verken for læreren eller studentene.
+  for (const erLærer of [true, false]) {
+    const t = typer(byggIndeks(STATE, { erLærer }));
+    assert.equal(t.visning, undefined);
+    assert.equal(t.musikk, undefined);
+  }
+});
+
+test("lim-inn-feltet er borte fra Visning-editoren, og musikkfanen har eget navn på stoppet", async () => {
+  const { lesJs } = await import("../helpers/js-filer.js");
+  const v = lesJs("visning.js");
+  for (const borte of ['id="pres-adm-lenke"', 'id="pres-adm-legg"', "lesVisFraTekst", "leggTilStopp"]) assert.ok(!v.includes(borte), borte);
+  const { stoppEtikett } = await import("../../js/visning/stopp-etikett.js");
+  assert.equal(stoppEtikett({ vis: "tiår:1960:musikk" }).tekst, "Tiår: 1960-tallet (musikk)");
+  assert.equal(stoppEtikett({ vis: "tiår:1960:tech" }).tekst, "Tiår: 1960-tallet (teknologi)");
+  assert.equal(stoppEtikett({ vis: "tiår:1960" }).tekst, "Tiår: 1960-tallet (samfunn)");
+});

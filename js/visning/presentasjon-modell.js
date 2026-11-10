@@ -516,7 +516,7 @@ export const OVERSIKT_KATEGORIER = [
   { id: "tiaar", navn: "Tiår" },
 ];
 
-const VISNING_NAVN = {
+export const VISNING_NAVN = {
   tidslinje: "Tidslinjen", sjangerperioder: "Sjangerperiodene",
   himmel: "Sjangerhimmelen", referanser: "Referansene",
   "store-bildet": "Det store bildet", slektstre: "Slektstreet",

@@ -4109,8 +4109,6 @@ body:not(.laerer-okt) #modal-yt .yt-tidrad { display: none; }
 .pres-adm-knapper { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .pres-adm-knapper select { font: inherit; font-size: 0.82rem; padding: 5px 6px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--surface); color: var(--text); }
 .pres-adm-feil { color: var(--danger); font-size: 0.85em; margin-left: 6px; }
-.pres-adm-leggtil { display: flex; gap: 8px; margin-top: 12px; }
-.pres-adm-leggtil input { flex: 1; }
 .pres-plan { display: inline-flex; gap: 4px; align-items: center; padding-right: 4px; border-right: 1px solid var(--line); }
 .pres-teller-knapp { font-variant-numeric: tabular-nums; font-size: 0.82em; }
 .pres-adm-hint { font-size: 0.85rem; margin: 10px 0 0; }

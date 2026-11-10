@@ -528,3 +528,32 @@ test("slidene er treff på forsiden og slektstresiden også, i søket og som sto
   await expect(page.locator('#sok-treff [data-sok-gruppe="slide"]')).toContainText("Kursinfo");
   expect(appFeil(feil)).toEqual([]);
 });
+
+test("redigeringen (v7.32): visningene og musikkfanen søkes opp som stopp, og lim-inn-feltet er borte", async ({ page }) => {
+  await skrivDok("content", "presentasjoner", { planer: {
+    p: { tittel: "Blues", laget: "2026-10-01T10:00:00.000Z", stopp: [{ vis: "artist:muddy" }] },
+  } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator("a[data-visning]").click();
+  await page.locator('[data-pres-rediger="p"]').click();
+  await expect(page.locator("#pres-adm-lenke")).toHaveCount(0);
+  await expect(page.locator("#pres-adm-legg")).toHaveCount(0);
+  const sok = page.locator("#pres-adm-sok");
+  await sok.fill("tidslinje");
+  await page.locator('[data-pres-legg="tidslinje"]').click();
+  await sok.fill("varmekartet blues");
+  await page.locator('[data-pres-legg="varmekart:Blues"]').click();
+  await sok.fill("1960 musikk");
+  await expect(page.locator('[data-pres-legg="tiår:1960:musikk"]')).toContainText("Musikk");
+  await page.locator('[data-pres-legg="tiår:1960:musikk"]').click();
+  const rader = page.locator(".pres-adm-stopprad");
+  await expect(rader).toHaveCount(4);
+  await expect(rader.nth(1)).toContainText("Tidslinje");
+  await expect(rader.nth(2)).toContainText("Varmekart: Blues");
+  await expect(rader.nth(3)).toContainText("1960-tallet (musikk)");
+  await page.locator("#pres-adm-lagre").click();
+  await expect.poll(async () => (await planer()).p?.stopp.map((s) => s.vis))
+    .toEqual(["artist:muddy", "tidslinje", "varmekart:Blues", "tiår:1960:musikk"]);
+  expect(appFeil(feil)).toEqual([]);
+});

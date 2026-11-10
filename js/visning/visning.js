@@ -66,19 +66,6 @@ let erLaerer = false;
 
 let kladd = null;   // { id, tittel, stopp, paminnelser, pamLastet, pamEndret, fraLinja, start } — settes ved Ny/Rediger, null i lista
 
-// Godtar både en full «Kopier lenke»-URL og en rå vis-verdi. («artist:x»
-// alene parses som URL med artist:-protokoll — uten vis-parameter faller den
-// videre til rå-tolkningen, så begge formene ender riktig.)
-function lesVisFraTekst(t) {
-  t = String(t || "").trim();
-  if (!t) return null;
-  try {
-    const v = new URL(t, window.location.href).searchParams.get("vis");
-    if (v) return parseVisVerdi(v) ? v : null;
-  } catch (e) {}
-  return parseVisVerdi(t) ? t : null;
-}
-
 function msg(tekst, ok = true) {
   const el = document.getElementById("pres-adm-msg");
   if (!el) return;
@@ -670,8 +657,10 @@ function paminnelserTilLagring() {
 
 // --- Søk for å legge til stopp (v5.75) ----------------------------------------
 // Samme indeks som søket i appen (js/felles/search.js) og samme mønster som
-// utskriftssidens «Legg til». Treffene blir stopp med ett klikk; lim-inn-
-// feltet består som reserve for lenker søket ikke dekker.
+// utskriftssidens «Legg til». Treffene blir stopp med ett klikk. Lim-inn-
+// feltet for «Kopier lenke»-adresser er fjernet (v7.32, brukervalg
+// 2026-11-10): søket finner nå også helvisningene og musikkfanen på tiårene,
+// som var det eneste feltet kunne legge til fra redigeringen.
 
 let kladdIndeks = null;
 let kladdAvtrykk = "";
@@ -823,20 +812,6 @@ async function redigerFraLinja(id) {
   document.querySelector("#pres-adm-stopp .pres-adm-stopprad:last-child")?.scrollIntoView({ block: "nearest" });
 }
 
-function leggTilStopp() {
-  const felt = document.getElementById("pres-adm-lenke");
-  const vis = lesVisFraTekst(felt?.value);
-  if (!vis) {
-    msg("Fant ingen gyldig lenke. Bruk «Kopier lenke»-knappen i et kort, og lim inn hele adressen.", false);
-    return;
-  }
-  kladd.stopp.push({ vis });
-  felt.value = "";
-  msg("");
-  renderKladd();
-  felt.focus();
-}
-
 // Flytter stoppet på plass `fra` til plass `til` i kladden (dra og slipp).
 function flyttStopp(fra, til) {
   if (!kladd || fra === til || !(fra >= 0 && fra < kladd.stopp.length) || !(til >= 0 && til < kladd.stopp.length)) return;
@@ -983,12 +958,8 @@ function byggModal() {
            der læreren begynner, og en lang plan skjøv det langt ned. -->
       <div class="pres-adm-sok">
         <input type="search" id="pres-adm-sok" class="sok-felt" autocomplete="off" enterkeyhint="search"
-          placeholder="Legg til stopp: søk etter artist, sjanger, tiår, innovasjon …" aria-label="Legg til stopp" />
+          placeholder="Legg til stopp: søk etter artist, sjanger, tiår, visning …" aria-label="Legg til stopp" />
         <div id="pres-adm-sok-treff" class="pres-adm-sok-treff" aria-live="polite"></div>
-      </div>
-      <div class="pres-adm-leggtil">
-        <input type="text" id="pres-adm-lenke" placeholder="Eller lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
-        <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
       </div>
       <div id="pres-adm-stopp" style="margin-top:14px"></div>
       <p class="muted pres-adm-hint">Et oversiktskort over innholdet, gruppert etter oversikter, sjangre, artister, lytteeksempler og så videre, legges automatisk først og sist i avspillingen. Dra radene for å endre rekkefølgen.</p>
@@ -1292,7 +1263,6 @@ function koblVindu(m) {
       tegnPaminnelser();
       return;
     }
-    if (hit("#pres-adm-legg")) return leggTilStopp();
     if (hit("#pres-adm-lagre")) return lagre();
     if (hit("#pres-adm-avbryt")) {
       const fraLinja = lukkKladd();
@@ -1483,11 +1453,6 @@ function koblVindu(m) {
   };
   m.addEventListener("input", pamFelt);
   m.addEventListener("change", pamFelt);
-
-  // Enter i lim-inn-feltet = «Legg til stopp» (raskere flyt med mange lenker).
-  m.querySelector("#pres-adm-lenke")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); if (kladd) leggTilStopp(); }
-  });
 
   // Ctrl/Cmd+S lagrer kladden (v5.38), også med markøren i tittelfeltet: det
   // er lagre-tastens vanlige betydning, og nettleserens «Lagre side» er aldri

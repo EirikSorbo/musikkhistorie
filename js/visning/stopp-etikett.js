@@ -98,7 +98,7 @@ export function stoppEtikett(stopp) {
     case "plateselskaper":
       return ut(type);
     case "tiår":
-      return ut(`${m.id}-tallet (${m.modus === "tech" ? "teknologi" : "samfunn"})`);
+      return ut(`${m.id}-tallet (${m.modus === "tech" ? "teknologi" : m.modus === "musikk" ? "musikk" : "samfunn"})`);
     // Slide (v7.06): bare læreren kan lese dem. For andre står bare «Slide».
     case "slide": {
       const sl = finnSlide(m.id);
