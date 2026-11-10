@@ -349,7 +349,7 @@ test("lytteeksempelNavn: tittel og artist, eller null når videoen er ukjent", (
 
 test("planOversikt: grupperer etter kategori i fast rekkefølge, ikke etter planen", () => {
   const g = planOversikt(vis("tiår:1960:tech", "artist:a2", "tech:t1", "yt:abcdefghijk", "sjanger:Rock", "instrument:Gitar", "varmekart"), { artister, tech });
-  assert.deepEqual(g.map((k) => k.id), ["artister", "lytteeksempler", "sjangre", "tiaar", "teknologi", "instrumenter", "oversikter"]);
+  assert.deepEqual(g.map((k) => k.id), ["oversikter", "sjangre", "artister", "lytteeksempler", "teknologi", "instrumenter", "tiaar"]);
   assert.deepEqual(OVERSIKT_KATEGORIER.map((k) => k.id), g.map((k) => k.id), "alle kategoriene er i bruk her");
   assert.equal(g.find((k) => k.id === "teknologi").punkter[0].tekst, "Elektrisk gitar");
   assert.equal(g.find((k) => k.id === "oversikter").punkter[0].tekst, "Varmekartet");

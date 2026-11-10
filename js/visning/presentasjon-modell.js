@@ -502,14 +502,18 @@ export function tellerTekst(i, antall) {
   return `${p.stopp + 1}/${antall}`;
 }
 
+// Kolonnene på oversikten og oppsummeringen, fra venstre. Rekkefølgen er
+// brukervalg 2026-11-10 (v7.30): fra det store bildet og ned til det enkelte,
+// med tiårene sist. Før var det artister, lytteeksempler, sjangre, tiår,
+// teknologi, instrumenter og oversikter.
 export const OVERSIKT_KATEGORIER = [
+  { id: "oversikter", navn: "Oversikter" },
+  { id: "sjangre", navn: "Sjangre" },
   { id: "artister", navn: "Artister" },
   { id: "lytteeksempler", navn: "Lytteeksempler" },
-  { id: "sjangre", navn: "Sjangre" },
-  { id: "tiaar", navn: "Tiår" },
   { id: "teknologi", navn: "Teknologi" },
   { id: "instrumenter", navn: "Instrumenter" },
-  { id: "oversikter", navn: "Oversikter" },
+  { id: "tiaar", navn: "Tiår" },
 ];
 
 const VISNING_NAVN = {
