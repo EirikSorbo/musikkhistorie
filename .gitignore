@@ -23,3 +23,7 @@ test-results/
 playwright-report/
 firestore-debug.log
 firebase-debug.log
+# Emulatoren lager «firebase-debug 2.log» osv. når den forrige står (v7.28):
+# de inneholder et miljødump og skal aldri inn.
+firestore-debug*.log
+firebase-debug*.log
