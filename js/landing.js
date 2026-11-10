@@ -786,6 +786,8 @@ function init() {
       explore?.renderPlateselskaper?.();
       // Et åpent tiårsvindu (Musikk-fanen bygges av artistene).
       explore?.refreshDecadeView?.();
+      // Et åpent sjangerkort (de sentrale lytteeksemplene, v7.28).
+      explore?.artistsChanged?.();
       // Utenom throttlingen: deep-linkene skal åpnes straks data finnes
       // (no-op når det ikke venter noen). provVisMaal er ?vis=-ruteren.
       applyPendingDeepLink();

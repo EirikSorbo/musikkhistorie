@@ -5,15 +5,15 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-121 filer i 11 mapper.
+123 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
 | `js/` | Sidene og oppsettet | 11 |
 | `js/utforsk/` | Utforsk | 21 |
-| `js/sjangre/` | Sjangrene og slektstreet | 13 |
+| `js/sjangre/` | Sjangrene og slektstreet | 14 |
 | `js/visning/` | Visning | 20 |
-| `js/laerer/` | Lærersiden | 8 |
+| `js/laerer/` | Lærersiden | 9 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 15 |
@@ -96,6 +96,7 @@ Sjangermodellen (treet bor i Firestore, og alt annet avledes av det), beskrivels
 | `genre-validate.js` | VALIDERING AV SJANGERTREET |
 | `gx-camera.js` | KARTKAMERA — panorering, zoom og pinch for slektstre-flatene |
 | `heat-strip.js` | VARMESTRIPE — den glidende linja, delt mellom varmekartet og sjangerkortet |
+| `sjanger-sentrale.js` | SENTRALE LYTTEEKSEMPLER FOR SJANGEREN (v7.28, brukerønske 2026-11-10) |
 
 ## `js/visning/` Visning
 
@@ -130,6 +131,7 @@ Skrivebordet, artistene, innholdsredigeringen, sjangertre-editoren, gjennomgange
 
 | Fil | Hva den gjør |
 |---|---|
+| `sjanger-sentrale-velger.js` | «VELG SENTRALE» PÅ SJANGERKORTET (v7.28, brukerønske 2026-11-10) |
 | `teacher-artists.js` | LÆRER — ARTISTER |
 | `teacher-content.js` | LÆRER — INNHOLDSREDIGERING |
 | `teacher-desk.js` | LÆRER — SKRIVEBORD (arbeidsflyt øverst på lærersiden) |

@@ -104,6 +104,8 @@ export function sjangerOpts() {
     // av teacher.js. Går IKKE via genealogy.js' egen import — se merknaden
     // der om Firestore-SDK-en i importgrafen til node-testene.
     onNotat: opts.onNotat,
+    // «Velg sentrale» (v7.28): satt bare av teacher.js, som onNotat.
+    onVelgSentrale: opts.onVelgSentrale,
     onPropose: opts.onProposeEdit,
     hasPendingEdit: opts.hasPendingEdit,
     onMainGenreCheck: opts.onMainGenreCheck,

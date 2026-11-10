@@ -47,7 +47,12 @@ export const MUSIC_SPEC = {
     // setter det (musicSpecWithGenres skjuler feltet ellers), men feltet står
     // alltid i raden så et studentforslag ikke mister merket ved lagring.
     // `check`: lagres som true, aldri som false (fraværende = kontekst).
-    { key: "sentral", cls: "me-sentral", type: "check", label: "Sentralt eksempel", tekst: "Sentralt", title: "Sentralt lytteeksempel: får en fylt prikk i visningen. Uten merke er eksempelet kontekst.", breakAfter: true },
+    // Tre nivåer fra v7.28 (brukervalg 2026-11-10): sentral for artisten og
+    // sentral for sjangeren er to avkrysninger, så et eksempel kan ha begge.
+    // Ingen av dem = kontekst. Sjangeren er den i raden over (se
+    // js/sjangre/sjanger-sentrale.js).
+    { key: "sentral", cls: "me-sentral", type: "check", label: "Sentral for artisten", tekst: "Sentral for artisten", title: "Sentral for artisten: får en fylt prikk på artistkortet og i spillelistene. Uten avkrysning er eksempelet kontekst." },
+    { key: "sjangersentral", cls: "me-sjangersentral", type: "check", label: "Sentral for sjangeren", tekst: "Sentral for sjangeren", title: "Sentral for sjangeren: står under «Sentrale lytteeksempler» på sjangerkortet for sjangeren i raden.", breakAfter: true },
     { key: "label", cls: "me-label", type: "text", ph: "Tittel (f.eks. «Hellhound on My Trail»)", label: "Tittel", always: true },
     { key: "year",  cls: "me-year",  type: "number", ph: "Årstall", label: "Årstall" },
     { key: "url",   cls: "me-url",   type: "url", ph: "https://youtube.com/…", label: "Lenke (https)", always: true },
@@ -113,13 +118,14 @@ export function kobleStarttid(row) {
 // MUSIC_SPEC med sjangervalgene fylt inn i genre-selecten. Holder row-editor
 // avhengighetsfri: kalleren sender inn gyldige tre-sjangre (typisk
 // GENEALOGY_MAIN_GENRES fra genealogy.js).
-// `laerer` viser «Sentralt»-avkrysningen; ellers står den skjult i raden.
+// `laerer` viser de to sentral-avkrysningene; ellers står de skjult i raden.
+const LAERERFELT = new Set(["sentral", "sjangersentral"]);
 export function musicSpecWithGenres(genres, { laerer = false } = {}) {
   return {
     ...MUSIC_SPEC,
     fields: MUSIC_SPEC.fields.map((f) =>
       f.key === "genre" ? { ...f, options: [...(genres || [])] }
-        : f.key === "sentral" ? { ...f, skjult: !laerer }
+        : LAERERFELT.has(f.key) ? { ...f, skjult: !laerer }
         : f
     ),
   };

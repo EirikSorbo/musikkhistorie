@@ -6,8 +6,8 @@
 //  undersjanger, importen og lærerhåndboken.
 // ============================================================================
 import { test, expect } from "@playwright/test";
-import { såFrø, lesDok, skrivDok, rydd } from "./frø.mjs";
-import { forbered, loggInnSomLaerer, appFeil } from "./hjelp.mjs";
+import { såFrø, lesDok, skrivDok, rydd, ARTISTER } from "./frø.mjs";
+import { forbered, loggInnSomLaerer, appFeil, apne } from "./hjelp.mjs";
 
 test.beforeEach(async () => { await såFrø(); });
 test.afterAll(async () => { await rydd(); });
@@ -175,5 +175,87 @@ test("lærerhåndboken i faner: `## ` lager en fane, og den valgte står når te
   await skrivDok("content", "laererHandbok", { body: "## Lærersiden\nBare én fane." });
   await expect(faner).toHaveText(["Lærersiden"]);
   await expect(panel).toHaveText("Bare én fane.");
+  expect(appFeil(feil)).toEqual([]);
+});
+
+// Sentrale lytteeksempler for sjangeren (v7.28): tre eksempler i Electric blues.
+const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
+const MUDDY_EKS = [
+  { label: "Hoochie Coochie Man", year: 1954, url: yt("abcdefghijk"), genre: "Electric blues", sentral: true },
+  { label: "Mannish Boy", year: 1955, url: yt("bcdefghijkl"), genre: "Electric blues", note: "Hør på riffet." },
+  { label: "Rollin' Stone", year: 1950, url: yt("cdefghijklm"), genre: "Electric blues" },
+];
+
+test("Velg sentrale på sjangerkortet: valgene lagres på lytteeksemplene, og Rediger lar dem stå (v7.28)", async ({ page }) => {
+  const feil = await forbered(page, { rolle: null });
+  await skrivDok("artists", "muddy", { ...ARTISTER.muddy, musicExamples: MUDDY_EKS });
+  await loggInnSomLaerer(page);
+  await apne(page, "/teacher.html?vis=sjanger:Electric%20blues");
+  const kort = page.locator("#modal-sjanger");
+  await expect(kort).toHaveClass(/open/);
+  const seksjon = kort.locator('[data-sekt="sentrale"] .gx-sentrale');
+  await expect(seksjon).toContainText("Ingen er valgt ennå.");
+
+  await seksjon.getByRole("button", { name: "Velg sentrale" }).click();
+  const velger = page.locator(".modal-backdrop.open .sentrale-velger");
+  await expect(velger.locator("h2")).toHaveText("Sentrale lytteeksempler for Electric blues");
+  // Etter årstall, med artisten, og ingen er valgt.
+  const rader = velger.locator(".sentrale-velger-liste li");
+  await expect(rader).toHaveText(["Rollin' Stone (1950) · Muddy Waters", "Hoochie Coochie Man (1954) · Muddy Waters", "Mannish Boy (1955) · Muddy Waters"]);
+  await expect(velger.locator("input:checked")).toHaveCount(0);
+  await rader.nth(0).locator("input").check();
+  await rader.nth(2).locator("input").check();
+  // Escape med endringer spør først; Avbryt lar velgeren stå.
+  await page.keyboard.press("Escape");
+  await svar(page, "Avbryt");
+  await expect(velger).toBeVisible();
+  await velger.getByRole("button", { name: "Lagre", exact: true }).click();
+  await expect(velger).toHaveCount(0);
+
+  const a = await ventPaa("artists", "muddy", (d) => (d?.musicExamples || []).filter((m) => m.sjangersentral === true).length === 2);
+  expect(a.musicExamples).toEqual([
+    { label: "Hoochie Coochie Man", year: 1954, url: yt("abcdefghijk"), genre: "Electric blues", sentral: true },
+    { label: "Mannish Boy", year: 1955, url: yt("bcdefghijkl"), genre: "Electric blues", note: "Hør på riffet.", sjangersentral: true },
+    { label: "Rollin' Stone", year: 1950, url: yt("cdefghijklm"), genre: "Electric blues", sjangersentral: true },
+  ]);
+  expect(a.teacherChecked).toBe(true, "sjekken står");
+  // Kortet følger med, etter årstall.
+  await expect(seksjon.locator("li")).toHaveText(["Rollin' Stone (1950) · Muddy Waters", "Mannish Boy (1955) · Muddy Waters"]);
+  await seksjon.getByRole("button", { name: "Muddy Waters" }).first().click();
+  await expect(page.locator("#modal-detail")).toHaveClass(/open/);
+
+  // Rediger viser de to avkrysningene, og en lagring lar merkene stå.
+  await apne(page, "/teacher.html");
+  await expect(page.locator("body")).toHaveClass(/is-teacher/);
+  await page.locator('#artist-list [data-action="edit"][data-id="muddy"]').click();
+  const vindu = page.locator("#modal-artist-skjema");
+  await expect(vindu).toHaveClass(/open/);
+  // Stegknappene telles fra 0: 3 er Lytteeksempler, 4 er Kilder og innsending.
+  await vindu.locator('[data-steg-knapp="3"]').click();
+  await expect(vindu.getByText("Sentral for artisten", { exact: true }).first()).toBeVisible();
+  await expect(vindu.getByText("Sentral for sjangeren", { exact: true }).first()).toBeVisible();
+  await expect(vindu.locator(".me-sjangersentral:checked")).toHaveCount(2);
+  await expect(vindu.locator(".me-sentral:checked")).toHaveCount(1);
+  await vindu.locator('[data-steg-knapp="0"]').click();
+  await vindu.locator('[data-felt="geography"]').fill("Chicago, Illinois");
+  await vindu.locator('[data-steg-knapp="4"]').click();
+  await vindu.locator("[data-as-send]").click();
+  const b = await ventPaa("artists", "muddy", (d) => d?.geography === "Chicago, Illinois");
+  expect(b.musicExamples.map((m) => [m.label, !!m.sentral, !!m.sjangersentral])).toEqual([
+    ["Hoochie Coochie Man", true, false], ["Mannish Boy", false, true], ["Rollin' Stone", false, true],
+  ]);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("studentene ser de sentrale lytteeksemplene på sjangerkortet, uten Velg sentrale (v7.28)", async ({ page }) => {
+  const feil = await forbered(page);
+  await skrivDok("artists", "muddy", { ...ARTISTER.muddy, musicExamples: MUDDY_EKS.map((m, i) => (i ? { ...m, sjangersentral: true } : m)) });
+  await apne(page, "/index.html?vis=sjanger:Electric%20blues");
+  const seksjon = page.locator('#modal-sjanger [data-sekt="sentrale"] .gx-sentrale');
+  await expect(seksjon.locator("li")).toHaveText(["Rollin' Stone (1950) · Muddy Waters", "Mannish Boy (1955) · Muddy Waters"]);
+  await expect(seksjon.getByRole("button", { name: "Velg sentrale" })).toHaveCount(0);
+  // Uten valgte står ingen seksjon for studentene.
+  await skrivDok("artists", "muddy", { ...ARTISTER.muddy, musicExamples: MUDDY_EKS });
+  await expect(page.locator("#modal-sjanger .gx-sentrale")).toHaveCount(0);
   expect(appFeil(feil)).toEqual([]);
 });

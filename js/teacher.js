@@ -26,6 +26,7 @@ import { renderPage } from "./utforsk/explore-innhold.js";
 import { lesVisFraUrl, provVisMaal } from "./utforsk/explore-apne.js";
 
 import { state, ctx, renderAll, refreshControls, openAdminModal, setContentCheck, guardTeacherAction, setupModals } from "./laerer/teacher-state.js";
+import { apneVelgSentrale } from "./laerer/sjanger-sentrale-velger.js";
 import { openDetail, addMainGenreCheckToggle, openOversikt, openMangler, oppdaterOversiktPlateselskaper, setupFilters, openNyArtist } from "./laerer/teacher-artists.js";
 import {
   openSingleDecadeModal,
@@ -189,6 +190,8 @@ function startAppInner() {
     // js/visning/pres-notater.js. Student-sidene setter aldri onNotat, så
     // knappen vises bare her.
     onNotat: (hva, id, navn) => redigerNotatForKort(hva, id, navn),
+    // «Velg sentrale» på sjangerkortet (v7.28): bare læreren velger.
+    onVelgSentrale: (label, navn) => apneVelgSentrale(label, navn),
     onStoryEdit: (genre) => openStoryEditor(genre),
     onPageEdit: (pageId) => openPageEditor(pageId),
     // «Nytt plateselskap» i oversikten (v7.12): læreren styrer lista selv.
@@ -325,6 +328,8 @@ function startAppInner() {
       oppdaterOversiktPlateselskaper();
       // Et åpent tiårsvindu (Musikk-fanen bygges av artistene).
       ctx.explore?.refreshDecadeView?.();
+      // Et åpent sjangerkort (de sentrale lytteeksemplene, v7.28).
+      ctx.explore?.artistsChanged?.();
       // En åpen kjøreplan-kladd med «laster …»-stopp (audit v5.42 funn 8).
       visningTikk();
       provVisMaal();

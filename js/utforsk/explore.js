@@ -85,6 +85,12 @@ export function genreDescsChanged() {
 // Kalles av sidene når content-snapshotet endres (import, redigering,
 // celleklikk): re-rendrer innholdsvisninger som står åpne, så endringen
 // slår gjennom uten å lukke/åpne modalen.
+// Et åpent sjangerkort følger artistene (v7.28): de sentrale lytteeksemplene
+// og artistlista på kortet er bygget av dem. Tegnes uten å heve kortet.
+export function artistsChanged() {
+  refreshSjangerInfo(sjangerOpts());
+}
+
 export function contentChanged() {
   // Varmenivåene legges igjen i heat-strip.js, der sjangerkortet (genealogy.js)
   // henter dem. Kortet bygges et lag UNDER app-laget og kan ikke lese state
@@ -398,6 +404,7 @@ export function initExplore(options) {
     onMainGenreClick,
     openSubgenreInfo,
     contentChanged,
+    artistsChanged,
     genreDescsChanged,
   };
 }

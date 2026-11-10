@@ -156,7 +156,9 @@ export function beregnGjennomgang({ planer = {}, gruppe = "", indeks = [], artis
       if (!v) continue;
       const e = videoer.get(v) || { prio: 0, sentral: false };
       e.prio = Math.max(e.prio, grad(a));
-      if (m.sentral === true) e.sentral = true;
+      // Sentral for artisten eller for sjangeren (v7.28): begge er ikke kontekst,
+      // så «Bare sentrale lytteeksempler» tar dem med.
+      if (m.sentral === true || m.sjangersentral === true) e.sentral = true;
       videoer.set(v, e);
       const av = artistVideoer.get(a.id) || [];
       if (!av.includes(v)) av.push(v);

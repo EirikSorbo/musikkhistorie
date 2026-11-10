@@ -17,10 +17,11 @@ import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { koblingSjekketOk } from "../felles/sjekket.js";
 import { renderRichText } from "../felles/rich-text.js";
 import { punkterHtml } from "../felles/punkter.js";
-import { escapeHtml, buildKilderList } from "../felles/util.js";
+import { escapeHtml, buildKilderList, safeUrl } from "../felles/util.js";
 import { resolveDesc, resolveDescAny, missingDesc, epokeFritekst } from "./genre-descriptions.js";
 import { modalOpen } from "../ui/ui-modal.js";
-import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml } from "../ui/ui-helpers.js";
+import { renderGenreEditBtn, sekt, wireRelated, metaMerkeHtml, musicExampleLabel } from "../ui/ui-helpers.js";
+import { sjangerSentrale } from "./sjanger-sentrale.js";
 import { artistsInGenre } from "../felles/limits.js";
 import { wireProposeFoot } from "../ui/ui-edit.js";
 import { heatRow, heatStripHtml, heatAxisHtml, getHeatData } from "./heat-strip.js";
@@ -87,6 +88,21 @@ function lyttHtml(lytt) {
   return `<div class="gx-lytt">
     <p class="gx-lytt-head">Hør etter</p>
     <ul>${lytt.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+  </div>`;
+}
+
+// Sentrale lytteeksempler for sjangeren (v7.28, js/sjangre/sjanger-sentrale.js):
+// lytteeksempler som allerede finnes på artistene, merket «Sentral for
+// sjangeren». Tittelen er en vanlig lytt-lenke (appens spiller tar den), og
+// artistnavnet åpner artistkortet. Læreren får «Velg sentrale», også når lista
+// er tom; studentene ser ingenting før noe er valgt.
+function sentraleHtml(par, { velg = false } = {}) {
+  if (!par.length && !velg) return "";
+  const rader = par.map(({ a, m }) =>
+    `<li><a class="lytt-lenke" href="${escapeHtml(safeUrl(m.url))}" target="_blank" rel="noopener">${escapeHtml(m.label || "Lytt")}</a>${escapeHtml(musicExampleLabel(m))} · <button type="button" class="gx-sentral-artist" data-related-id="${escapeHtml(String(a.id))}">${escapeHtml(a.name)}</button></li>`);
+  return `<div class="gx-lytt gx-sentrale">
+    <div class="gx-sentrale-hode"><p class="gx-lytt-head">Sentrale lytteeksempler</p>${velg ? `<button type="button" class="btn ghost small gx-velg-sentrale">Velg sentrale</button>` : ""}</div>
+    ${rader.length ? `<ul>${rader.join("")}</ul>` : `<p class="muted gx-sentrale-tom">Ingen er valgt ennå.</p>`}
   </div>`;
 }
 
@@ -158,7 +174,7 @@ export function refreshSjangerInfo(freshOpts) {
 // allerede åpen modal. Egen parameter, IKKE i opts: opts lagres i openSjanger
 // og ville smittet alle senere omtegninger.
 export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
-  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, harTidslinje, onShowGallery, onVisITre, onEdit, onPropose, hasPendingEdit, onMainGenreCheck, onNotat } = opts;
+  const { root = document, genreDescs = {}, artists = [], techItems = [], genres = [], onArtistClick, onTechClick, onMainGenreClick, onShowArtists, onShowPlaylist, onShowTimeline, harTidslinje, onShowGallery, onVisITre, onEdit, onPropose, hasPendingEdit, onMainGenreCheck, onNotat, onVelgSentrale } = opts;
   const map = Object.fromEntries(GENEALOGY.map((n) => [n.id, n]));
   const n = GENEALOGY.find((x) => x.l === label || x.f === label);
   if (!n) return false;
@@ -250,6 +266,7 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
     ${sekt("era", `<p class="gx-era">${escapeHtml(eraLine(resolved))}</p>`)}
     ${sekt("punkter", punkterHtml(resolved.punkter, lcSelv))}
     ${sekt("beskrivelse", `<div class="gx-desc rt">${descText ? renderRichText(descText, lcSelv) : `<span class="gx-missing">${missingDesc("main")}</span>`}</div>`)}
+    ${sekt("sentrale", n.g ? sentraleHtml(sjangerSentrale(artists, n.l), { velg: !!onVelgSentrale }) : "")}
     ${sekt("lytt", (onEdit || !SKJUL_I_STUDENTVISNING.horEtter) ? lyttHtml(resolved.lytt) : "")}
     ${sekt("relasjoner", relasjoner)}
     ${sekt("artister", artisterHtml)}
@@ -271,6 +288,7 @@ export function showSjangerInfo(label, opts = {}, { reopen = true } = {}) {
   if (bg) bg.addEventListener("click", () => onShowGallery({ label: n.l }));
   const btre = mBody.querySelector(".gx-tre-btn");
   if (btre) btre.addEventListener("click", () => onVisITre(n.l));
+  mBody.querySelector(".gx-velg-sentrale")?.addEventListener("click", () => onVelgSentrale(n.l, n.f || n.l));
   mBody.querySelectorAll(".gx-kobling-lenke").forEach((b) =>
     b.addEventListener("click", () => showEdgeInfo(b.dataset.koblingFra, b.dataset.koblingTil, opts)));
   // Rediger (lærer): n.l er doc-ID-en i genreDescriptions — samme ID som

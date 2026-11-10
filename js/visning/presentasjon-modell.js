@@ -35,6 +35,8 @@ export const FLATER = {
     { id: "era", navn: "Epoke" },
     { id: "punkter", navn: "Oppsummering i punkter" },
     { id: "beskrivelse", navn: "Beskrivelse" },
+    // v7.28: lytteeksemplene som er merket sentrale for sjangeren.
+    { id: "sentrale", navn: "Sentrale lytteeksempler" },
     { id: "lytt", navn: "Hør etter" },
     { id: "relasjoner", navn: "Slektskap (vokste ut av …)" },
     { id: "artister", navn: "Artister i sjangeren (navneliste)" },
@@ -82,9 +84,11 @@ export const NIVAA_SEKT = {
   },
   // Artistene i sjangeren (v5.89, brukerønske 2026-09-29) står som navneliste
   // til høyre fra nivå 2, også på nivå 3; punktene blir stående til venstre.
+  // De sentrale lytteeksemplene (v7.28) står fra nivå 1, som lytteeksemplene
+  // på artistkortet: musikken er poenget på alle nivåer.
   sjanger: {
-    1: ["stripe", "era"],
-    2: ["stripe", "era", "punkter", "beskrivelse", "relasjoner", "artister"],
+    1: ["stripe", "era", "sentrale"],
+    2: ["stripe", "era", "punkter", "beskrivelse", "sentrale", "relasjoner", "artister"],
   },
   tech: {
     1: ["bilde", "fakta"],
