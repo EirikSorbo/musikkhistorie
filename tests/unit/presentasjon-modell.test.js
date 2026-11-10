@@ -1268,3 +1268,12 @@ test("redigeringen: nivået bak en knapp, nummeret flytter, og angre etter slett
     assert.doesNotMatch(synlig, /[Bb]ygg(er|es)? på/, `${navn}: «bygg på» i teksten læreren ser`);
   }
 });
+
+test("redigeringen (v7.31): Legg til står over stopplista, og hintet har oversiktens rekkefølge", () => {
+  const v = lesJs("visning.js");
+  const sok = v.indexOf('id="pres-adm-sok"');
+  const lenke = v.indexOf('id="pres-adm-lenke"');
+  const stopp = v.indexOf('id="pres-adm-stopp"');
+  assert.ok(sok > 0 && lenke > sok && stopp > lenke, "søket, så lim-inn-feltet, så stoppene");
+  assert.match(v, /gruppert etter oversikter, sjangre, artister, lytteeksempler og så videre/);
+});

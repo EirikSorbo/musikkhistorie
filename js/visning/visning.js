@@ -979,8 +979,8 @@ function byggModal() {
           <datalist id="pres-adm-grupper"></datalist>
         </label>
       </div>
-      <div id="pres-adm-stopp" style="margin-top:10px"></div>
-      <p class="muted pres-adm-hint">Et oversiktskort over innholdet, gruppert etter artister, lytteeksempler, sjangre, tiår og så videre, legges automatisk først og sist i avspillingen. Dra radene for å endre rekkefølgen.</p>
+      <!-- Legg til står over stopplista (brukervalg 2026-11-10, v7.31): søket er
+           der læreren begynner, og en lang plan skjøv det langt ned. -->
       <div class="pres-adm-sok">
         <input type="search" id="pres-adm-sok" class="sok-felt" autocomplete="off" enterkeyhint="search"
           placeholder="Legg til stopp: søk etter artist, sjanger, tiår, innovasjon …" aria-label="Legg til stopp" />
@@ -990,6 +990,8 @@ function byggModal() {
         <input type="text" id="pres-adm-lenke" placeholder="Eller lim inn en «Kopier lenke»-adresse …" autocomplete="off" />
         <button type="button" id="pres-adm-legg" class="btn ghost small">Legg til stopp</button>
       </div>
+      <div id="pres-adm-stopp" style="margin-top:14px"></div>
+      <p class="muted pres-adm-hint">Et oversiktskort over innholdet, gruppert etter oversikter, sjangre, artister, lytteeksempler og så videre, legges automatisk først og sist i avspillingen. Dra radene for å endre rekkefølgen.</p>
       <div class="pres-adm-pam">
         <h3 class="vis-hode">Påminnelser</h3>
         <p class="muted pres-adm-hint">Dukker opp når denne planen spilles: et antall minutter etter at du startet den, eller på et klokkeslett. De vises bare på din skjerm, med mindre du krysser av for lerretet. Navn på artister og sjangre blir lenker. En påminnelse som bare gjelder én visning, legger du inn underveis med tasten R.</p>
