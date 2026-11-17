@@ -5,12 +5,12 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-124 filer i 11 mapper.
+126 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
 | `js/` | Sidene og oppsettet | 11 |
-| `js/utforsk/` | Utforsk | 21 |
+| `js/utforsk/` | Utforsk | 22 |
 | `js/sjangre/` | Sjangrene og slektstreet | 14 |
 | `js/visning/` | Visning | 20 |
 | `js/laerer/` | Lærersiden | 9 |
@@ -18,7 +18,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 16 |
 | `js/data/` | Data | 11 |
-| `js/felles/` | Felles hjelpere | 16 |
+| `js/felles/` | Felles hjelpere | 17 |
 | `js/vendor/` | Tredjepart | 1 |
 
 ## Reglene koden holder seg til
@@ -76,6 +76,7 @@ Det store bildet, tiårene, sjangrene, varmekartet, tidslinja, Lytt, Instrumente
 | `explore.js` | UTFORSK — ORKESTRATOR |
 | `heat-rows.js` | VARMEKART-RADER — aksen, radblokka og lærerens nivåvelger |
 | `metaoversikt-modell.js` | METASJANGER-OVERSIKTEN — ren modell (v5.94) |
+| `referanse-retting.js` | RETT KILDEN — blyanten på radene i Referanser (v7.35) |
 
 ## `js/sjangre/` Sjangrene og slektstreet
 
@@ -209,6 +210,7 @@ Små hjelpere og vokabular som flere deler av appen bruker: tekst og lenker, kil
 |---|---|
 | `feature-flags.js` | MIDLERTIDIGE BRYTERE — skjuler funksjoner i STUDENTVISNINGEN |
 | `guide-deler.js` | «SLIK BRUKER DU APPEN» I DELER (v6.95, brukervalg 2026-10-13) |
+| `kilde-retting.js` | RETTING AV KILDER FRA REFERANSER (v7.35) |
 | `kilder.js` | KILDER — vokabular, publikasjoner og aggregering |
 | `limits.js` | KONFIGURASJON, VOKABULAR OG TELLING |
 | `linkify.js` | LENKER I LØPENDE TEKST — artist-, sjanger- og innovasjonsnavn blir klikkbare |

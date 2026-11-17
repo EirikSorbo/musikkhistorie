@@ -223,6 +223,11 @@ function inputHtml(f, values) {
   return html + ">";
 }
 
+// Ett felt alene (v7.35): rettingen av kilder i Referanser setter feltene i et
+// skjema med synlige etiketter, men med de samme klassene, så collectRows
+// leser dem som en vanlig rad.
+export const feltHtml = (f, values = {}) => inputHtml(f, values);
+
 // Ren HTML for én rads innhold (inputs + fjern-knapp). Ingen DOM — testbar.
 export function rowInnerHtml(spec, values = {}) {
   // Tomt element med full bredde = linjeskift i en flex-rad med wrap. Eneste

@@ -1487,8 +1487,8 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .ref-rad a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
 .ref-rad a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .ref-merk { font-size: 0.72rem; color: var(--muted); }
-/* Veien videre fra en referanse: kortet den er brukt på, eller Rediger for de
-   frittstående. Liten og dempet, så den ikke konkurrerer med selve lenken. */
+/* Veien videre fra en referanse: kortet den er brukt på. Liten og dempet, så
+   den ikke konkurrerer med selve lenken. */
 .ref-kort {
   font-size: 0.72rem; line-height: 1.3; color: var(--muted);
   background: none; border: 1px solid var(--line-strong); border-radius: var(--radius-pill);
@@ -1496,6 +1496,26 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 }
 .ref-kort:hover { color: var(--accent); border-color: var(--accent); }
 .ref-opphav { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 6px 21px; }
+/* Blyanten (v7.35): læreren retter kilden overalt den står. Liten, i
+   samme høyde som knappen til kortet, og står midt i raden. */
+.ref-rad .ref-rett { display: inline-flex; align-items: center; gap: 4px; }
+.ref-rad .ref-rett svg { flex: none; }
+/* Vinduet som retter kilden: feltene med synlige etiketter i et rutenett,
+   tekst og lenke over hele bredden. */
+/* modal-narrow (320 px) står seinere i fila, derfor dobbel klasse her. */
+.modal.modal-narrow.kilde-retting { max-width: 520px; }
+.kr-bruk { margin: 0 0 12px; font-size: 0.84rem; color: var(--muted); line-height: 1.45; }
+.kilde-retting .kr-felter { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.kr-felt { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: var(--muted); }
+/* flex: none: radenes bredder («.source-row .source-text { flex: 4 1 220px }»)
+   ville blitt høyder her, så velgeren må være sterkere enn deres. */
+.kilde-retting .source-row .kr-felt > :is(input, select) { flex: none; width: 100%; height: auto; font-size: 0.9rem; }
+.kr-text, .kr-url { grid-column: 1 / -1; }
+.kr-knapper { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.kr-mellom { flex: 1; }
+@media (max-width: 460px) {
+  .kilde-retting .kr-felter { grid-template-columns: 1fr; }
+}
 /* Raden Referanser-lista sendte læreren til, uthevet til neste åpning. */
 .source-row.rad-uthevet { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-s); }
 

@@ -24,6 +24,7 @@ import { metaGroupHeadHtml, wireMetaAccordion } from "../ui/ui-metagruppe.js";
 import { openTechDetail } from "./explore-tech.js";
 import { openDecade } from "./explore-decade.js";
 import { openHistorier } from "./explore-innhold.js";
+import { kanRetteKilder, apneKildeRetting } from "./referanse-retting.js";
 
 export function openReferanser() {
   const modal = document.getElementById("modal-referanser");
@@ -94,6 +95,9 @@ function apneOpphav(o) {
   }
 }
 
+// Blyanten på radene (v7.35), i samme pille som knappen til kortet.
+const BLYANT_SVG = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg>`;
+
 const antallOrd = (n, ental, flertall) => `${n} ${n === 1 ? ental : flertall}`;
 
 // Radene wires med indeks i denne lista, satt ved hver render. Delegert klikk
@@ -126,9 +130,11 @@ function radHtml(rad, i, visSted) {
     vei = `<button type="button" class="ref-kort" data-ref-rad="${i}" data-ref-opphav="0">${escapeHtml(likt ? "Åpne kortet" : navn)}</button>`;
   } else if (rad.opphav.length > 1) {
     vei = `<button type="button" class="ref-kort" data-ref-rad="${i}" data-ref-liste="1">${antallOrd(rad.opphav.length, "kort", "kort")}</button>`;
-  } else if (opts.onReferanseEdit) {
-    // Frittstående referanse: ingen kort å åpne, men læreren skal kunne rette den.
-    vei = `<button type="button" class="ref-kort" data-ref-rad="${i}" data-ref-rediger="1">Rediger</button>`;
+  }
+  // Blyanten (v7.35): læreren retter eller sletter kilden overalt den står,
+  // også blant de frittstående referansene (som før hadde «Rediger» her).
+  if (kanRetteKilder()) {
+    vei += `<button type="button" class="ref-kort ref-rett" data-ref-rad="${i}" data-ref-rett="1" title="Rett eller slett kilden overalt den står" aria-label="Rett kilden ${escapeHtml(rad.tittel)}">${BLYANT_SVG}Rett</button>`;
   }
 
   let html = `<div class="ref-rad">${tittel}${merker}${bruk}${vei}</div>`;
@@ -148,7 +154,10 @@ function wireRader(body) {
     if (!knapp) return;
     const rad = radListe[Number(knapp.dataset.refRad)];
     if (!rad) return;
-    if (knapp.dataset.refRediger) { opts.onReferanseEdit(rad.url || rad.tittel); return; }
+    if (knapp.dataset.refRett) {
+      apneKildeRetting(rad, { etterLagring: () => renderReferanser({ bevar: true }) });
+      return;
+    }
     if (knapp.dataset.refListe) {
       const liste = body.querySelector(`[data-ref-opphavliste="${knapp.dataset.refRad}"]`);
       if (liste) liste.style.display = liste.style.display === "none" ? "flex" : "none";
@@ -158,9 +167,16 @@ function wireRader(body) {
   });
 }
 
-export function renderReferanser() {
+// `bevar` (v7.35): etter en retting tegnes lista på nytt med de samme
+// nettstedene åpne og samme rulling, så læreren står der hen var.
+export function renderReferanser({ bevar = false } = {}) {
   const body = document.getElementById("ref-body");
   if (!body) return;
+  const boksFoer = document.getElementById("modal-referanser")?.querySelector(".modal");
+  const apne = bevar ? [...body.querySelectorAll(".refp-group[data-ref-gruppe]")]
+    .filter((g) => g.querySelector(".refp-group-head")?.getAttribute("aria-expanded") === "true")
+    .map((g) => g.dataset.refGruppe) : [];
+  const rull = bevar && boksFoer ? boksFoer.scrollTop : 0;
   const s = getState();
   const data = samleKilder(alleKilder());
 
@@ -192,10 +208,11 @@ export function renderReferanser() {
 
     seksjon.grupper.forEach((g, gi) => {
       html += metaGroupHeadHtml({
-        prefix: "refp", meta: g.navn, gColor: seksjon.farge, open: false, groupIdx: gi, dot: false,
+        prefix: "refp", meta: g.navn, gColor: seksjon.farge, open: apne.includes(g.navn), groupIdx: gi, dot: false,
+        metaAttr: ` data-ref-gruppe="${escapeHtml(g.navn)}"`,
         count: antallOrd(g.antall, "artikkel", "artikler"),
       });
-      html += `<div class="refp-group-rows" style="display:none">`;
+      html += `<div class="refp-group-rows" style="display:${apne.includes(g.navn) ? "block" : "none"}">`;
       html += g.rader.map((r) => radHtml(r, radListe.push(r) - 1, !!g.samling)).join("");
       html += `</div></div>`;
     });
@@ -206,5 +223,5 @@ export function renderReferanser() {
   wireMetaAccordion(body, "refp");
   if (!body.dataset.wired) { wireRader(body); body.dataset.wired = "1"; }
   const boks = document.getElementById("modal-referanser").querySelector(".modal");
-  if (boks) boks.scrollTop = 0;
+  if (boks) boks.scrollTop = rull;
 }

@@ -6,7 +6,7 @@
 //  lages og slettes, siden de bor i lærerens private notater.
 // ============================================================================
 import { test, expect } from "@playwright/test";
-import { såFrø, lesSamling, skrivDok, INNHOLD, rydd } from "./frø.mjs";
+import { såFrø, lesSamling, lesDok, skrivDok, INNHOLD, ARTISTER, rydd } from "./frø.mjs";
 import { forbered, apne, loggInnSomLaerer, appFeil } from "./hjelp.mjs";
 
 test.beforeEach(async () => { await såFrø(); });
@@ -171,5 +171,51 @@ test("Om appen for læreren: alle tre også når de er skjult, og KI-erklæringe
   await expect(page.locator("#ki-erklaering-extra .tcr-check, #ki-erklaering-extra [data-sjekk]")).toHaveCount(0);
   await page.locator("#ki-erklaering-extra .tcr-edit").click();
   await expect(page.locator(".modal-backdrop.open").last()).toContainText("KI-erklæring");
+  expect(appFeil(feil)).toEqual([]);
+});
+
+// Retting av kilder fra Referanser (v7.35): blyanten retter eller sletter en
+// kilde på alle kortene den står.
+test("Referanser: læreren retter en kilde som står på to kort, og sletter den, uten å åpne kortene", async ({ page }) => {
+  const SNL = "https://snl.no/Muddy_Waters";
+  await skrivDok("artists", "otis", { ...ARTISTER.otis, kilder: [{ text: "Store norske leksikon.", url: SNL }] });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator(".nav-info").click();
+  await page.locator("#modal-info").getByRole("link", { name: "Åpne Referanser" }).click();
+  await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  await page.locator("#ref-body .refp-group-head").filter({ hasText: "Andre nettsteder" }).click();
+  const rad = page.locator("#ref-body .ref-rad").filter({ hasText: "Muddy Waters" });
+  await expect(rad).toContainText("2 kort");
+  await rad.locator(".ref-rett").click();
+  const vindu = page.locator("#modal-kilde-retting");
+  await expect(vindu).toHaveClass(/open/);
+  await expect(vindu.locator("#kr-bruk")).toHaveText("Brukt på 2 steder: Muddy Waters, Otis Redding. Endringen gjelder alle.");
+  await expect(vindu.locator(".source-text")).toHaveValue("Store norske leksikon");
+  await vindu.locator(".source-text").fill("Store norske leksikon: «Muddy Waters»");
+  await vindu.locator(".source-forfatter").fill("Kjetil Hansen");
+  await vindu.getByRole("button", { name: "Lagre overalt" }).click();
+  await expect(vindu).not.toHaveClass(/open/);
+  const kilderPaa = async (id) => (await lesDok("artists", id))?.kilder;
+  await expect.poll(() => kilderPaa("otis")).toEqual([{ text: "Store norske leksikon: «Muddy Waters»", forfatter: "Kjetil Hansen", url: SNL, kategori: "" }]);
+  expect((await kilderPaa("muddy"))[0]).toMatchObject({ text: "Store norske leksikon: «Muddy Waters»", forfatter: "Kjetil Hansen", url: SNL });
+  // Lista er tegnet på nytt med gruppa fortsatt åpen.
+  await expect(page.locator("#ref-body .ref-rad").filter({ hasText: "Kjetil Hansen" })).toBeVisible();
+  // Slett fra alle, med bekreftelse.
+  await page.locator("#ref-body .ref-rad").filter({ hasText: "Kjetil Hansen" }).locator(".ref-rett").click();
+  await vindu.getByRole("button", { name: "Slett fra alle" }).click();
+  await page.locator(".modal-backdrop.open .modal-melding, .modal-backdrop.open .modal-valg").last().getByRole("button", { name: "Slett", exact: true }).click();
+  await expect.poll(() => kilderPaa("otis")).toEqual([]);
+  expect(await kilderPaa("muddy")).toEqual([]);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("Referanser: studentene ser ingen blyant", async ({ page }) => {
+  const feil = await forbered(page);
+  await apne(page, "/index.html?vis=referanser");
+  await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  await expect(page.locator("#ref-body .refp-group-head").first()).toBeVisible();
+  expect(await page.locator("#ref-body .ref-rad").count()).toBeGreaterThan(0);
+  await expect(page.locator("#ref-body .ref-rett")).toHaveCount(0);
   expect(appFeil(feil)).toEqual([]);
 });

@@ -180,6 +180,18 @@ function leggOpphav(rad, opphav) {
   if (!rad.opphav.some((o) => opphavNokkel(o) === n)) rad.opphav.push(opphav);
 }
 
+// Hvilken rad i Referanser en kilde havner på: kategorien og nøkkelen (lenka,
+// eller teksten med små bokstaver når lenke mangler). Delt med retting av
+// kilder (v7.35, js/felles/kilde-retting.js), så «den samme kilden» betyr det
+// samme der som i lista. null for en tom kilde.
+export function kildeRadNokkel(k) {
+  if (!k || typeof k !== "object") return null;
+  const tekst = String(k.text || "").trim();
+  const url = safeUrl(k.url);
+  if (!tekst && !url) return null;
+  return { kategori: antattKategori(k) || UKATEGORISERT, nokkel: url || tekst.toLowerCase() };
+}
+
 // «Arne Forsgren, 2021» — forfatter og år slik de vises etter tittelen.
 const detaljFor = (k) => [k.forfatter, k.year].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
 
@@ -201,7 +213,7 @@ export function samleKilder(liste) {
     if (!tekst && !url) continue;
     totalt++;
 
-    const kategori = antattKategori(k) || UKATEGORISERT;
+    const { kategori, nokkel: radNokkel } = kildeRadNokkel(k);
     if (!katMap.has(kategori)) katMap.set(kategori, new Map());
     const grupper = katMap.get(kategori);
 
@@ -216,9 +228,13 @@ export function samleKilder(liste) {
     const g = grupper.get(nokkel);
     g.bruk++;
 
-    const radNokkel = url || tekst.toLowerCase();
     const rad = g.rader.get(radNokkel);
-    if (rad) { rad.bruk++; if (!rad.detalj) rad.detalj = detaljFor(k); leggOpphav(rad, k.opphav); }
+    if (rad) {
+      rad.bruk++;
+      if (!rad.detalj) rad.detalj = detaljFor(k);
+      leggOpphav(rad, k.opphav);
+      if (!k.opphav) rad.frittstaende = true;
+    }
     else g.rader.set(radNokkel, {
       // Utenfor Nettsteder er kildeteksten HELE referansen (boktittel,
       // episodenavn), så URL-slug-en skal aldri overstyre den. Under Nettsteder
@@ -231,6 +247,11 @@ export function samleKilder(liste) {
       bruk: 1,
       sted: vert ? navn : (url ? vertFor(url) : ""),
       opphav: k.opphav && k.opphav.id ? [k.opphav] : [],
+      // Identiteten til raden og om den også står blant de frittstående
+      // referansene (content/referanser, uten opphav). Brukes av rettingen.
+      kategori,
+      nokkel: radNokkel,
+      frittstaende: !k.opphav,
     });
   }
 

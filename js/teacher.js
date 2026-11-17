@@ -198,7 +198,6 @@ function startAppInner() {
     onNyttPlateselskap: () => nyttPlateselskap(),
     // Frittstående referanser har ikke noe kort å åpne fra Referanser-lista;
     // læreren får redigeringslista i stedet, med den valgte raden uthevet.
-    onReferanseEdit: (fokus) => openReferanseEditor(fokus),
     // Varmekart-redigering: celleklikk sender hele den nye raden hit. Vi FLETTER
     // den ene raden inn i det som ligger i Firestore (mergeVarmekartRows leser
     // fersk fra serveren først), så et klikk aldri kan slette de andre sjangrene
