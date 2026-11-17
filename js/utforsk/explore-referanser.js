@@ -114,7 +114,6 @@ function radHtml(rad, i, visSted) {
     rad.spraak,
     visSted && rad.sted ? rad.sted : "",
   ].filter(Boolean).map((m) => `<span class="ref-merk">${escapeHtml(m)}</span>`).join("");
-  const bruk = rad.bruk > 1 ? `<span class="ref-merk">×${rad.bruk}</span>` : "";
   const tittel = rad.url
     ? `<a href="${escapeHtml(rad.url)}" target="_blank" rel="noopener">${escapeHtml(rad.tittel)}</a>`
     : escapeHtml(rad.tittel);
@@ -134,10 +133,10 @@ function radHtml(rad, i, visSted) {
   // Blyanten (v7.35): læreren retter eller sletter kilden overalt den står,
   // også blant de frittstående referansene (som før hadde «Rediger» her).
   if (kanRetteKilder()) {
-    vei += `<button type="button" class="ref-kort ref-rett" data-ref-rad="${i}" data-ref-rett="1" title="Rett eller slett kilden overalt den står" aria-label="Rett kilden ${escapeHtml(rad.tittel)}">${BLYANT_SVG}Rett</button>`;
+    vei += `<button type="button" class="ref-kort ref-rett" data-ref-rad="${i}" data-ref-rett="1" title="Rett eller slett kilden overalt den står" aria-label="Rett kilden ${escapeHtml(rad.tittel)}">${BLYANT_SVG}</button>`;
   }
 
-  let html = `<div class="ref-rad">${tittel}${merker}${bruk}${vei}</div>`;
+  let html = `<div class="ref-rad">${tittel}${merker}${vei}</div>`;
   if (rad.opphav.length > 1) {
     html += `<div class="ref-opphav" data-ref-opphavliste="${i}" style="display:none">` +
       rad.opphav.map((o, j) =>

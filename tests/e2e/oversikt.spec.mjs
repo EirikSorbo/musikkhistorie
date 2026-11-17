@@ -187,6 +187,9 @@ test("Referanser: læreren retter en kilde som står på to kort, og sletter den
   await page.locator("#ref-body .refp-group-head").filter({ hasText: "Andre nettsteder" }).click();
   const rad = page.locator("#ref-body .ref-rad").filter({ hasText: "Muddy Waters" });
   await expect(rad).toContainText("2 kort");
+  // v7.36: antallet står bare i «2 kort», og blyanten har ingen tekst.
+  await expect(rad).not.toContainText("×");
+  await expect(rad.locator(".ref-rett")).toHaveText("");
   await rad.locator(".ref-rett").click();
   const vindu = page.locator("#modal-kilde-retting");
   await expect(vindu).toHaveClass(/open/);
