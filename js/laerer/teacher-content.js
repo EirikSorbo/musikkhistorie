@@ -995,7 +995,7 @@ export function setupStoryEditor() {
     else if (editorTarget.id === "rotter") ctx.explore.openRotter();
     else if (editorTarget.id === "appGuide") ctx.explore.openAppGuide();
     else if (editorTarget.id === "kiErklaering") ctx.explore.openKiErklaering();
-    else if (editorTarget.id === "laererHandbok") ctx.openLaererHandbok?.();
+    else if (editorTarget.id === "laererHandbok") ctx.explore.openLaererHandbok();
   };
 
   $("#se-save").addEventListener("click", async () => {

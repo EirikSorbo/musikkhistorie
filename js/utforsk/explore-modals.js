@@ -450,6 +450,21 @@ ${TECH_DETAIL_MODAL_HTML}
   </div>
 </div>
 
+<!-- Lærerhåndboken (v7.01, flyttet hit fra lærersidens Innstillinger i v7.42,
+     brukerbestilling 2026-11-17). Teksten bor i Firestore
+     (content/laererHandbok, markdown-light) og redigeres med Rediger på
+     lærersiden. Åpnes fra «Om appen», og bare for læreren (explore-apne.js). -->
+<div class="modal-backdrop" id="modal-laerer-handbok" data-vis="side:laererHandbok">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>Lærerhåndbok</h2>
+      <div id="lh-extra" class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="lh-body" class="story-body"></div>
+  </div>
+</div>
+
 <!-- Innholdssidene «Om historie» og «Røtter før 1910»: teksten bor i
      Firestore (content/omHistorie og content/rotter, markdown-light) og
      rendres ved hver åpning — ingen hardkodet tekst i koden. Foten er

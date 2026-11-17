@@ -108,15 +108,30 @@ test("Gi nytt navn på en undersjanger: artistene følger med", async ({ page })
   expect((await lesDok("artists", "muddy")).subGenre).not.toContain("Chicago blues");
 });
 
-test("import av en innholdsfil, og lærerhåndboken under Innstillinger", async ({ page }) => {
+// Lærerhåndboken står i «Om appen» (v7.42, før under Innstillinger).
+async function apneHandbok(page) {
+  await page.locator(".nav-info").click();
+  await page.locator("#modal-info .innst-rad").filter({ hasText: "Lærerhåndbok" }).getByRole("link", { name: "Åpne Lærerhåndbok" }).click();
+  await expect(page.locator("#modal-laerer-handbok")).toHaveClass(/open/);
+}
+
+test("import av en innholdsfil, og lærerhåndboken i Om appen", async ({ page }) => {
   await forbered(page, { rolle: null });
   await loggInnSomLaerer(page);
-  await page.locator('[data-open-modal="modal-settings"]').click();
-  await page.locator("#btn-laerer-handbok").click();
+  await apneHandbok(page);
   await expect(page.locator("#lh-body")).toContainText("Håndboken for læreren");
   // En tekst uten `## ` har ingen faner (v7.27).
   await expect(page.locator('#lh-body [role="tablist"]')).toHaveCount(0);
-  await page.locator("#modal-laerer-handbok .modal-close").click();
+  // Rediger i hodet, ingen Sjekk.
+  await expect(page.locator("#lh-extra .tcr-edit")).toBeVisible();
+  await expect(page.locator("#lh-extra .tcr-check, #lh-extra [data-sjekk]")).toHaveCount(0);
+  // ✕ lukker både håndboken og Om appen under den.
+  await page.locator("#modal-laerer-handbok .modal-close-all").click();
+  await expect(page.locator(".modal-backdrop.open")).toHaveCount(0);
+  // Innstillinger har ikke håndboken lenger.
+  await page.locator('[data-open-modal="modal-settings"]').click();
+  await expect(page.locator("#modal-settings")).toHaveClass(/open/);
+  await expect(page.locator("#modal-settings")).not.toContainText("Lærerhåndbok");
   const fil ={ pages: { omHistorie: { body: "Historie er tolkning av fortiden." } } };
   await page.locator("#input-import").setInputFiles({ name: "innhold.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(fil)) });
   await svar(page, "Importer");
@@ -126,8 +141,7 @@ test("import av en innholdsfil, og lærerhåndboken under Innstillinger", async 
 test("lærerhåndboken i faner: `## ` lager en fane, og den valgte står når teksten endres (v7.27)", async ({ page }) => {
   const feil = await forbered(page, { rolle: null });
   await loggInnSomLaerer(page);
-  await page.locator('[data-open-modal="modal-settings"]').click();
-  await page.locator("#btn-laerer-handbok").click();
+  await apneHandbok(page);
   await expect(page.locator("#lh-body")).toContainText("Håndboken for læreren");
   // Teksten endres mens håndboken står åpen: den tegnes på nytt, nå i faner.
   await skrivDok("content", "laererHandbok", {
@@ -167,8 +181,10 @@ test("lærerhåndboken i faner: `## ` lager en fane, og den valgte står når te
   await expect(panel).toContainText("Slik ser du hva som er gått gjennom.");
 
   // Lukket og åpnet igjen: håndboken åpner der du var.
-  await page.locator("#modal-laerer-handbok .modal-close").click();
-  await page.locator("#btn-laerer-handbok").click();
+  // ✕ lukker både håndboken og Om appen under den.
+  await page.locator("#modal-laerer-handbok .modal-close-all").click();
+  await expect(page.locator(".modal-backdrop.open")).toHaveCount(0);
+  await apneHandbok(page);
   await expect(faner.nth(2)).toHaveAttribute("aria-selected", "true");
 
   // Forsvinner fanen, velges den første.

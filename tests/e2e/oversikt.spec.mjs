@@ -95,7 +95,7 @@ test("slides: læreren lager en, den ligger i de private notatene, og slettes ig
 const infoKort = (page) => page.locator("#modal-info .innst-tittel");
 const aapne = (page, tittel) => page.locator("#modal-info .innst-rad").filter({ hasText: tittel }).getByRole("link", { name: `Åpne ${tittel}` });
 
-test("Om appen for studentene: tre kort, KI-erklæringen åpnes oppå vinduet, og bryterne skjuler guiden", async ({ page }) => {
+test("Om appen for studentene: tre kort uten lærerhåndboken, KI-erklæringen åpnes oppå vinduet, og bryterne skjuler guiden", async ({ page }) => {
   await skrivDok("content", "kiErklaering", { body: "Historieappen.no er utviklet med **Claude**.\n\n- **Ansvar.** Jeg har det fulle ansvaret.", updatedAt: new Date().toISOString() });
   const feil = await forbered(page);
   await apne(page, "/index.html");
@@ -141,6 +141,11 @@ test("Om appen for studentene: tre kort, KI-erklæringen åpnes oppå vinduet, o
   await aapne(page, "KI-erklæring").click();
   await expect(page).toHaveURL(/index\.html\?vis=side(%3A|:)kiErklaering/);
   await expect(page.locator("#modal-ki-erklaering")).toHaveClass(/open/);
+  // Lærerhåndboken (v7.42) er bare for læreren: en delt lenke åpner ingenting.
+  await apne(page, "/index.html?vis=side:laererHandbok");
+  await expect(page.locator("#dagens-artist")).not.toBeEmpty();
+  await expect(page.locator("#modal-laerer-handbok")).not.toHaveClass(/open/);
+  await expect(page.locator(".modal-backdrop.open")).toHaveCount(0);
   expect(appFeil(feil)).toEqual([]);
 });
 
@@ -154,7 +159,7 @@ test("Escape lukker Om appen på forslagsskjemaet", async ({ page }) => {
   expect(appFeil(feil)).toEqual([]);
 });
 
-test("Om appen for læreren: alle tre også når de er skjult, og KI-erklæringen uten tekst har Rediger", async ({ page }) => {
+test("Om appen for læreren: alle fire også når de er skjult, og KI-erklæringen uten tekst har Rediger", async ({ page }) => {
   await skrivDok("content", "synlighet", { ...INNHOLD.synlighet, hub: { ...INNHOLD.synlighet.hub, "sb-guide": true, "sb-referanser": true } });
   const feil = await forbered(page, { rolle: null });
   await loggInnSomLaerer(page);
@@ -162,7 +167,7 @@ test("Om appen for læreren: alle tre også når de er skjult, og KI-erklæringe
   const ikoner = await page.locator(".topbar .nav .nav-icon:visible").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
   expect(ikoner.slice(-2)).toEqual(["Om appen", "Innstillinger"]);
   await page.locator(".nav-info").click();
-  await expect(infoKort(page)).toHaveText(["Slik bruker du appen", "Referanser", "KI-erklæring"]);
+  await expect(infoKort(page)).toHaveText(["Slik bruker du appen", "Lærerhåndbok", "Referanser", "KI-erklæring"]);
   await aapne(page, "KI-erklæring").click();
   await expect(page.locator("#modal-ki-erklaering")).toHaveClass(/open/);
   await expect(page.locator("#ki-erklaering-body")).toContainText("Teksten er ikke lagt inn ennå");

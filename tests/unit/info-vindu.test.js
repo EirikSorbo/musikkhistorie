@@ -14,9 +14,9 @@ const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 const ider = (l) => l.map((v) => v.id);
 const KI = { kiErklaering: { body: "Historieappen.no er laget med Claude." } };
 
-test("valgene: guiden, referansene og KI-erklæringen, og alle er gyldige mål", () => {
-  assert.deepEqual(ider(INFO_VALG), ["guide", "referanser", "ki"]);
-  assert.deepEqual(INFO_VALG.map((v) => v.tekst), ["Slik bruker du appen", "Referanser", "KI-erklæring"]);
+test("valgene: guiden, lærerhåndboken, referansene og KI-erklæringen, og alle er gyldige mål", () => {
+  assert.deepEqual(ider(INFO_VALG), ["guide", "laererhandbok", "referanser", "ki"]);
+  assert.deepEqual(INFO_VALG.map((v) => v.tekst), ["Slik bruker du appen", "Lærerhåndbok", "Referanser", "KI-erklæring"]);
   for (const v of INFO_VALG) assert.ok(parseVisVerdi(v.vis), v.vis);
 });
 
@@ -32,9 +32,27 @@ test("studentene: bryterne styrer guiden og referansene, og KI-erklæringen vent
   assert.deepEqual(ider(synligeInfoValg({ skjulHub: alt, content: null })), ["guide", "referanser", "ki"]);
 });
 
-test("læreren ser alltid alle tre", () => {
+test("læreren ser alltid alle, også lærerhåndboken", () => {
   const skjult = { "sb-guide": true, "sb-referanser": true };
-  assert.deepEqual(ider(synligeInfoValg({ laerer: true, skjulHub: skjult, content: {} })), ["guide", "referanser", "ki"]);
+  assert.deepEqual(ider(synligeInfoValg({ laerer: true, skjulHub: skjult, content: {} })), ["guide", "laererhandbok", "referanser", "ki"]);
+});
+
+// v7.42 (brukerbestilling 2026-11-17): håndboken flyttet fra Innstillinger.
+test("lærerhåndboken står i «Om appen» bare for læreren, og en delt lenke åpner den ikke for andre", () => {
+  const alt = { "sb-guide": false, "sb-referanser": false };
+  assert.ok(!ider(synligeInfoValg({ skjulHub: alt, content: KI })).includes("laererhandbok"));
+  assert.ok(!ider(synligeInfoValg({ skjulHub: alt, content: null })).includes("laererhandbok"));
+  const v = INFO_VALG.find((x) => x.id === "laererhandbok");
+  assert.equal(v.vis, "side:laererHandbok");
+  assert.equal(v.farge, "--icon-l-handbok");
+  assert.match(lesJs("explore-modals.js"), /<div class="modal-backdrop" id="modal-laerer-handbok" data-vis="side:laererHandbok">\s*<div class="modal modal-innhold">/);
+  assert.match(lesJs("explore-modals.js"), /<div id="lh-extra" class="head-actions"><\/div>/);
+  assert.match(lesJs("explore-modals.js"), /<div id="lh-body" class="story-body"><\/div>/, "teksten kommer fra Firestore");
+  assert.match(lesJs("explore-apne.js"), /if \(apne\.id === "laererHandbok"\) return erLaerer\(\) \? openLaererHandbok\(\) : undefined;/);
+  assert.match(lesJs("explore-innhold.js"), /renderPage\("laererHandbok", "lh-body", "lh-extra"\);\n\s*modalOpen\(modal\);/);
+  assert.match(lesJs("explore.js"), /if \(isOpen\("modal-laerer-handbok"\)\) renderPage\("laererHandbok", "lh-body", "lh-extra"\);/, "tegnes på nytt når teksten endres");
+  assert.match(lesJs("explore.js"), /"modal-ki-erklaering", "modal-laerer-handbok",/);
+  assert.match(lesJs("gjennomgang-modell.js"), /IKKE_PENSUM_SIDER = new Set\(\["appGuide", "kiErklaering", "laererHandbok"\]\)/);
 });
 
 test("ikonet står rett før Innstillinger på alle sidene, også for studentene", () => {
@@ -51,7 +69,7 @@ test("ikonet står rett før Innstillinger på alle sidene, også for studentene
 });
 
 test("vinduet: ett kort per valg i Innstillingers stil, med Åpne som lenke til forsiden", () => {
-  const html = infoKortHtml(INFO_VALG[2]);
+  const html = infoKortHtml(INFO_VALG.find((v) => v.id === "ki"));
   assert.match(html, /<section class="innst-gruppe" data-info-kort="ki">/);
   assert.match(html, /<div class="innst-kort"><div class="innst-rad">/);
   assert.match(html, /<span class="innst-ikon" style="--farge:var\(--icon-ki\)" aria-hidden="true"><svg /);
@@ -77,7 +95,7 @@ test("KI-erklæringen: egen side med Rediger, uten Sjekk, ikke pensum, og ?vis=s
   assert.match(lesJs("explore.js"), /if \(isOpen\("modal-ki-erklaering"\)\) renderPage\("kiErklaering"/, "tegnes på nytt når teksten endres");
   assert.match(lesJs("teacher-content.js"), /kiErklaering: "KI-erklæring"/);
   assert.match(lesJs("teacher-content.js"), /editorTarget\.id === "kiErklaering"\) ctx\.explore\.openKiErklaering\(\);/);
-  assert.match(lesJs("gjennomgang-modell.js"), /IKKE_PENSUM_SIDER = new Set\(\["appGuide", "kiErklaering"\]\)/);
+  assert.match(lesJs("gjennomgang-modell.js"), /IKKE_PENSUM_SIDER = new Set\(\["appGuide", "kiErklaering", "laererHandbok"\]\)/);
 });
 
 test("Det store bildet: Referanser og Slik bruker du appen er borte fra huben", () => {

@@ -48,6 +48,15 @@ export function openKiErklaering() {
   modalOpen(modal);
 }
 
+// Lærerhåndboken (v7.01, i «Om appen» fra v7.42): samme mønster, men bare for
+// læreren (explore-apne.js slipper ikke andre inn).
+export function openLaererHandbok() {
+  const modal = document.getElementById("modal-laerer-handbok");
+  if (!modal) return;
+  renderPage("laererHandbok", "lh-body", "lh-extra");
+  modalOpen(modal);
+}
+
 // Sidene uten Sjekk-knapp: bruksveiledningen, lærerhåndboken og
 // KI-erklæringen. Ingen av dem er pensum.
 const USJEKKEDE_SIDER = ["appGuide", "laererHandbok", "kiErklaering"];

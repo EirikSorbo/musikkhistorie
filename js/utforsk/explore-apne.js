@@ -17,7 +17,7 @@ import { showSubsjangerInfo } from "../ui/ui.js";
 import { showEdgeInfo } from "../sjangre/genealogy.js";
 import { openTechDetail, openTeknologi } from "./explore-tech.js";
 import { openDecade } from "./explore-decade.js";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openKiErklaering, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openKiErklaering, openLaererHandbok, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js";
 import { openInstrumenter, openPodkaster } from "./explore-instrument.js";
 import { openVarmekart } from "./explore-varmekart.js";
 import { openSjangerperioder } from "./explore-sjangerperioder.js";
@@ -25,6 +25,7 @@ import { openTidslinje } from "./explore-tidslinje.js";
 import { openReferanser } from "./explore-referanser.js";
 import { isGenreModelReady, onGenreModelChanged } from "../sjangre/genre-model.js";
 import { parseVisVerdi } from "../felles/vis-lenke.js";
+import { erLaerer } from "../ui/info-vindu.js";
 import { ytWatchUrl, lytteeksempelNavn, normaliserPlaner } from "../visning/presentasjon-modell.js";
 import { apneYtSpiller } from "../ui/yt-spiller.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
@@ -83,6 +84,8 @@ export function apneMaal(apne) {
       if (apne.id === "rotter") return openRotter();
       if (apne.id === "omHistorie") return openOmHistorie();
       if (apne.id === "kiErklaering") return openKiErklaering();
+      // Lærerhåndboken (v7.42) er bare for læreren; en delt lenke gjør ingenting for andre.
+      if (apne.id === "laererHandbok") return erLaerer() ? openLaererHandbok() : undefined;
       return openAppGuide();
     case "instrument": return openInstrumenter(apne.id);
     case "varmekart": return openVarmekart(apne.id);

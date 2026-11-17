@@ -27,7 +27,7 @@ import { openLytt } from "./explore-lytt.js";
 import { openTime } from "./explore-timer.js";
 import { openReferanser, renderReferanser, antallKilder } from "./explore-referanser.js";
 import { openSubgenreList, openUndersjangre, openSubgenreInfo, tegnSjangre } from "./explore-sjanger.js";
-import { openStoreBildet, openAppGuide, openKiErklaering, openOmHistorie, openRotter, openHistorier, openSjangerhimmel, renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
+import { openStoreBildet, openAppGuide, openKiErklaering, openLaererHandbok, openOmHistorie, openRotter, openHistorier, openSjangerhimmel, renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
 import { openVisningssider, openArtistGalleri } from "./explore-visningssider.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
 import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js";
@@ -119,6 +119,7 @@ export function contentChanged() {
   }
   if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
   if (isOpen("modal-ki-erklaering")) renderPage("kiErklaering", "ki-erklaering-body", "ki-erklaering-extra");
+  if (isOpen("modal-laerer-handbok")) renderPage("laererHandbok", "lh-body", "lh-extra");
   // «Om appen» (v7.33): KI-erklæringen står for studentene først når teksten finnes.
   oppdaterInfoVindu();
   if (isOpen("modal-varmekart")) renderVarmekartBody();
@@ -151,7 +152,7 @@ function wireModals() {
    "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
    "modal-varmekart", "modal-vk-edit", "modal-sjangerperioder", "modal-tidslinje", "modal-referanser", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
-   "modal-store-bildet", "modal-app-guide", "modal-ki-erklaering", "modal-om-historie", "modal-rotter", "modal-historier",
+   "modal-store-bildet", "modal-app-guide", "modal-ki-erklaering", "modal-laerer-handbok", "modal-om-historie", "modal-rotter", "modal-historier",
    "modal-meta-oversikt", "modal-visningssider", "modal-galleri",
    "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt", "modal-time", "modal-slide",
    "modal-plateselskaper", "modal-plateselskap"].forEach((id) => setupModal(id));
@@ -397,6 +398,7 @@ export function initExplore(options) {
     openStoreBildet,
     openAppGuide,
     openKiErklaering,
+    openLaererHandbok,
     openOmHistorie,
     openRotter,
     openHistorier,

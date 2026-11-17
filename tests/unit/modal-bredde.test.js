@@ -23,12 +23,12 @@ function modalKlasser(src, id) {
 const INNHOLDSKORT = {
   "index.html": ["modal-artister", "modal-detail"],
   "tre.html": ["modal-artist-detail"],
-  "teacher.html": ["modal-detail", "modal-laerer-handbok"],
+  "teacher.html": ["modal-detail"],
   "js/utforsk/explore-modals.js": [
     "modal-teknologi", "modal-instrumenter", "modal-podkaster", "modal-instr-tech",
     "modal-decade-view", "modal-varmekart", "modal-sjangerperioder", "modal-sjangerhimmel",
     "modal-tidslinje", "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
-    "modal-store-bildet", "modal-referanser", "modal-app-guide", "modal-om-historie",
+    "modal-store-bildet", "modal-referanser", "modal-app-guide", "modal-laerer-handbok", "modal-om-historie",
     "modal-rotter", "modal-historier",
   ],
   "js/ui/ui-modal-fragments.js": ["modal-sjanger", "modal-artistliste", "modal-spilleliste", "modal-tech-detail"],

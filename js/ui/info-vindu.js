@@ -11,7 +11,11 @@
 //  Synligheten følger de samme bryterne som kortene hadde i huben (sb-guide og
 //  sb-referanser i SKJUL_I_HUBEN), så valgene som er lagret i
 //  content/synlighet, gjelder uendret. KI-erklæringen er for alle, men står
-//  ikke for studentene før teksten er lagt inn. Læreren ser alltid alle tre.
+//  ikke for studentene før teksten er lagt inn. Læreren ser alltid alle.
+//
+//  Lærerhåndboken (v7.42, brukerbestilling 2026-11-17) er flyttet hit fra
+//  Innstillinger på lærersiden. Den står bare for læreren (`laerer: true`),
+//  også på forsiden når læreren er logget inn.
 //
 //  Åpne er en lenke til forsiden med ?vis= (samme mål som søket og
 //  kjøreplanene). På sidene med utforsk-laget (forsiden, lærersiden og
@@ -36,6 +40,11 @@ export const INFO_VALG = [
     ikon: '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>',
   },
   {
+    id: "laererhandbok", tekst: "Lærerhåndbok", desc: "Hva du kan gjøre som lærer, og hvor du finner det.",
+    vis: "side:laererHandbok", laerer: true, farge: "--icon-l-handbok",
+    ikon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/><path d="M9 7h7"/>',
+  },
+  {
     id: "referanser", tekst: "Referanser", desc: "Kildene appen bygger på.",
     vis: "referanser", hub: "sb-referanser", farge: "--icon-referanser",
     ikon: '<path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/>',
@@ -53,6 +62,7 @@ export const INFO_VALG = [
 export function synligeInfoValg({ laerer = false, skjulHub = {}, content = null } = {}) {
   return INFO_VALG.filter((v) => {
     if (laerer) return true;
+    if (v.laerer) return false;
     if (v.hub && skjulHub[v.hub]) return false;
     if (v.side && content && !String(content[v.side]?.body || "").trim()) return false;
     return true;
@@ -72,7 +82,8 @@ export function infoKortHtml(v) {
 
 const MODAL_ID = "modal-info";
 
-const erLaerer = () => {
+// Læreren: lærersiden (is-teacher) eller innlogget lærer på de andre sidene.
+export const erLaerer = () => {
   const b = document.body.classList;
   return b.contains("is-teacher") || b.contains("laerer-okt");
 };

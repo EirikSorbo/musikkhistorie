@@ -1,7 +1,7 @@
 // ============================================================================
 //  LÆRERHÅNDBOKEN (v7.01, brukerønske 2026-10-14)
 // ----------------------------------------------------------------------------
-//  En håndbok for læreren under Innstillinger, sammen med import og eksport.
+//  En håndbok for læreren, i «Om appen» fra v7.42 (før under Innstillinger).
 //  Teksten bor i Firestore (content/laererHandbok) som de andre innholds-
 //  sidene: ingen tekst i koden, Rediger i hodet, med i eksporten. Den er bare
 //  for læreren: ingen Sjekk, ikke i «Bare sjekket innhold», ikke i heftet og
@@ -17,38 +17,21 @@ import { sideFaner, valgtFaneIndeks } from "../../js/felles/side-faner.js";
 
 const les = (f) => readFileSync(new URL(`../../${f}`, import.meta.url), "utf8");
 
-test("Innstillinger har Lærerhåndbok øverst, under Hjelp", () => {
+// v7.42 (brukerbestilling 2026-11-17): håndboken flyttet fra Innstillinger
+// til «Om appen» (tests/unit/info-vindu.test.js tester den nye plassen).
+test("håndboken er borte fra Innstillinger og fra teacher.html", () => {
   const html = les("teacher.html");
-  const innst = html.slice(html.indexOf('id="modal-settings"'), html.indexOf('id="modal-laerer-handbok"'));
-  const hjelp = innst.indexOf(">Hjelp</h3>");
-  assert.ok(hjelp > 0, "fant ikke Hjelp-gruppa i innstillingene");
-  assert.ok(hjelp < innst.indexOf(">Konto</h3>"), "Hjelp står først");
-  assert.ok(hjelp < innst.indexOf(">Import og eksport</h3>"));
-  assert.match(innst, /id="btn-laerer-handbok"/);
-});
-
-test("vinduet er et innholdskort uten tekst i markupen", () => {
-  const html = les("teacher.html");
-  assert.match(html, /<div class="modal-backdrop" id="modal-laerer-handbok">\s*<div class="modal modal-innhold">/);
-  assert.match(html, /<div id="lh-extra" class="head-actions"><\/div>/);
-  assert.match(html, /<div id="lh-body" class="story-body"><\/div>/, "teksten kommer fra Firestore, ikke fra koden");
-});
-
-test("teacher.js tegner content/laererHandbok og kobler knappen", () => {
+  assert.ok(!html.includes(">Hjelp</h3>"));
+  assert.ok(!html.includes("btn-laerer-handbok"));
+  assert.ok(!html.includes('id="modal-laerer-handbok"'), "vinduet bor i explore-modals.js");
   const js = les("js/teacher.js");
-  assert.match(js, /import \{ renderPage \} from "\.\/utforsk\/explore-innhold\.js";/);
-  assert.match(js, /renderPage\("laererHandbok", "lh-body", "lh-extra"\)/);
-  assert.match(js, /getElementById\("btn-laerer-handbok"\)\?\.addEventListener\("click", openLaererHandbok\)/);
-  assert.match(js, /openAdminModal\("modal-laerer-handbok"\)/);
-  assert.match(js, /ctx\.openLaererHandbok = openLaererHandbok;/);
-  // Et åpent vindu følger snapshotet (import eller lagring i en annen fane).
-  assert.match(js, /getElementById\("modal-laerer-handbok"\)\?\.classList\.contains\("open"\)\) tegnLaererHandbok\(\);/);
+  assert.ok(!/openLaererHandbok|tegnLaererHandbok|btn-laerer-handbok/.test(js));
 });
 
 test("editoren kjenner siden, og gjenåpner den etter lagring", () => {
   const src = les("js/laerer/teacher-content.js");
   assert.match(src, /laererHandbok: "Lærerhåndbok"/);
-  assert.match(src, /editorTarget\.id === "laererHandbok"\) ctx\.openLaererHandbok\?\.\(\)/);
+  assert.match(src, /editorTarget\.id === "laererHandbok"\) ctx\.explore\.openLaererHandbok\(\);/);
 });
 
 test("bare for læreren: ingen Sjekk, utenfor regelen, ikke i heftet, ikke på lerretet", () => {
