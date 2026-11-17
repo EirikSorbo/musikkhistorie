@@ -167,6 +167,7 @@ export function apneNyReferanse({ etterLagring } = {}) {
   settModus(m, true);
   document.getElementById("kr-bruk").textContent = "Referansen legges i Referanser uten å høre til et bestemt kort, og den står der alltid.";
   document.getElementById("kr-skjema").innerHTML = skjemaHtml({});
+  SOURCE_SPEC.kobleRad(document.querySelector("#kr-skjema .kr-felter"));
   msg("");
   aktiv = { ny: true, etterLagring };
   modalOpen(m);
@@ -180,6 +181,7 @@ export function apneKildeRetting(rad, { etterLagring } = {}) {
   const k = forsteKilde(getState(), rad);
   document.getElementById("kr-bruk").textContent = brukTekst(rad);
   document.getElementById("kr-skjema").innerHTML = skjemaHtml(k);
+  SOURCE_SPEC.kobleRad(document.querySelector("#kr-skjema .kr-felter"));
   msg("");
   aktiv = { rad, etterLagring, start: "" };
   aktiv.start = JSON.stringify(lest());

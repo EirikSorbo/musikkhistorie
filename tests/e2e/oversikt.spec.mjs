@@ -242,6 +242,20 @@ test("Referanser: læreren legger til en ny referanse fra lista", async ({ page 
   await expect.poll(async () => (await lesDok("content", "referanser"))?.kilder)
     .toEqual([{ text: "The Land Where the Blues Began", forfatter: "Alan Lomax", url: "", kategori: "Bøker" }]);
   await expect(page.locator("#ref-body .ref-rad").filter({ hasText: "The Land Where the Blues Began" })).toBeVisible();
+  // v7.41: antall episoder, bare for Dokumentarer, i parentes etter tittelen.
+  await page.locator("#ref-body").getByRole("button", { name: "Ny referanse" }).click();
+  await expect(vindu).toHaveClass(/open/);
+  await expect(vindu.locator(".source-episoder")).toBeHidden();
+  await vindu.locator(".source-text").fill("Jazz");
+  await vindu.locator(".source-forfatter").fill("Ken Burns");
+  await vindu.locator(".source-kat").selectOption("Dokumentarer");
+  await expect(vindu.locator(".source-episoder")).toBeVisible();
+  await vindu.locator(".source-episoder").fill("10");
+  await vindu.getByRole("button", { name: "Legg til" }).click();
+  await expect(vindu).not.toHaveClass(/open/);
+  await expect.poll(async () => (await lesDok("content", "referanser"))?.kilder?.[1])
+    .toEqual({ text: "Jazz", forfatter: "Ken Burns", url: "", kategori: "Dokumentarer", episoder: 10 });
+  await expect(page.locator("#ref-body .ref-rad").filter({ hasText: "Jazz" })).toContainText("Jazz (10 episoder)");
   expect(appFeil(feil)).toEqual([]);
 });
 

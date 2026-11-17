@@ -12,7 +12,7 @@ import { escapeHtml } from "../felles/util.js";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER, kategoriNavn } from "../felles/kilder.js";
+import { KILDE_KATEGORIER, kategoriNavn, EPISODEKATEGORI } from "../felles/kilder.js";
 // Starttiden (v5.88) bor i lenka; hjelperne er rene og deles med spilleren.
 import { ytMaal, parseTid, medStarttid, starttidTekst } from "../visning/presentasjon-modell.js";
 
@@ -148,7 +148,23 @@ export const SOURCE_SPEC = {
     { key: "kategori", cls: "source-kat", type: "select", ph: "Kategori …", label: "Kategori", title: "Hva slags kilde dette er. Styrer grupperingen i Referanser-kortet.", options: KILDE_KATEGORIER, always: true,
       // Gamle navn (Videoer, Tidsskrifter) vises og lagres med det nye (v7.39).
       verdi: (v) => (v.kategori == null ? "" : kategoriNavn(v.kategori)) },
+    // Antall episoder (v7.41, brukerbestilling 2026-11-17): skiller en film på
+    // 60 minutter fra en serie på 10 x 60. Bare for Dokumentarer: feltet står
+    // skjult for de andre kategoriene (data-kat på raden, styles.css), og
+    // ryddes bort ved lagring om kategorien er en annen.
+    { key: "episoder", cls: "source-episoder", type: "number", ph: "Episoder", label: "Episoder", title: "Antall episoder, for en dokumentarserie", min: 1, max: 999 },
   ],
+  // Raden vet hvilken kategori som er valgt, så episodefeltet kan vises.
+  kobleRad: (row) => {
+    const valg = row.querySelector(".source-kat");
+    const sett = () => { row.dataset.kat = valg?.value || ""; };
+    sett();
+    valg?.addEventListener("change", sett);
+  },
+  rydd: (o) => {
+    if (o.episoder != null && kategoriNavn(o.kategori) !== EPISODEKATEGORI) delete o.episoder;
+    return o;
+  },
 };
 
 // Normaliserer en LAGRET liste til NØYAKTIG formen collectRows leverer for
@@ -183,7 +199,7 @@ export function normalizeRows(spec, list) {
       if (f.always) ut[f.key] = v;
       else if (v) ut[f.key] = v;
     }
-    return ut;
+    return spec.rydd ? spec.rydd(ut) : ut;
   }).filter((o) => o[spec.keepKey]);
 }
 
@@ -220,7 +236,7 @@ function inputHtml(f, values) {
   const type = f.type === "number" ? "number" : (f.type === "url" ? "url" : "text");
   let html = `<input type="${type}" class="${f.cls}" placeholder="${escapeHtml(f.ph || "")}" value="${escapeHtml(String(v))}"`;
   if (f.label) html += ` aria-label="${escapeHtml(f.label)}"`;
-  if (f.type === "number") html += ` min="1800" max="2030"`;
+  if (f.type === "number") html += ` min="${f.min ?? 1800}" max="${f.max ?? 2030}"`;
   if (f.title) html += ` title="${escapeHtml(f.title)}"`;
   return html + ">";
 }
@@ -280,7 +296,7 @@ export function collectRows(wrapEl, spec) {
         out[f.key] = v;
       }
     }
-    return out;
+    return spec.rydd ? spec.rydd(out) : out;
   }).filter((o) => o[spec.keepKey]);
 }
 

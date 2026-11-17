@@ -59,6 +59,9 @@ export function normalizeArtist(a) {
         if (forf) rad.forfatter = forf;
         if (Number.isFinite(aar)) rad.year = aar;
         if (kat) rad.kategori = kat;
+        // Antall episoder for en dokumentarserie (v7.41).
+        const ep = parseInt(k.episoder, 10);
+        if (Number.isFinite(ep) && ep > 0) rad.episoder = ep;
         return rad;
       }).filter((k) => k.text);
   } else {

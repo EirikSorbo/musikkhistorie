@@ -201,7 +201,9 @@ function radHtml(rad, i, visSted) {
     vei += `<button type="button" class="ref-kort ref-rett" data-ref-rad="${i}" data-ref-rett="1" title="Rett eller slett kilden overalt den står" aria-label="Rett kilden ${escapeHtml(rad.tittel)}">${BLYANT_SVG}</button>`;
   }
 
-  let html = `<div class="ref-rad">${tittel}${merker}${vei}</div>`;
+  // Antall episoder i parentes rett etter tittelen (v7.41).
+  const episoder = rad.episoder ? ` <span class="ref-episoder">(${escapeHtml(rad.episoder)})</span>` : "";
+  let html = `<div class="ref-rad">${tittel}${episoder}${merker}${vei}</div>`;
   if (rad.opphav.length > 1) {
     html += `<div class="ref-opphav" data-ref-opphavliste="${i}" style="display:none">` +
       rad.opphav.map((o, j) =>

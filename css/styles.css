@@ -1517,6 +1517,10 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
    ville blitt høyder her, så velgeren må være sterkere enn deres. */
 .kilde-retting .source-row .kr-felt > :is(input, select) { flex: none; width: 100%; height: auto; font-size: 0.9rem; }
 .kr-text, .kr-url { grid-column: 1 / -1; }
+/* Antall episoder (v7.41) bare for Dokumentarer: raden får data-kat fra
+   kategorivalget (SOURCE_SPEC.kobleRad i row-editor.js). */
+.source-row:not([data-kat="Dokumentarer"]) :is(.source-episoder, .kr-episoder) { display: none; }
+.ref-episoder { font-size: 0.86rem; color: var(--muted); }
 .kr-knapper { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .kr-mellom { flex: 1; }
 @media (max-width: 460px) {
@@ -1540,6 +1544,7 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
 .source-row .source-year { flex: 0 0 84px; }
 .source-row .source-url { flex: 4 1 220px; }
 .source-row .source-kat { flex: 0 1 150px; }
+.source-row .source-episoder { flex: 0 0 96px; }
 /* Fjern-knappen skal ikke stå alene på en tredje linje. */
 .source-row .remove-source { flex: 0 0 auto; margin-left: auto; }
 .work-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -2800,7 +2805,8 @@ body.is-teacher #gate { display: none; }
   .source-row .source-forfatter,
   .source-row .source-year,
   .source-row .source-url,
-  .source-row .source-kat { flex: 1 1 auto; }
+  .source-row .source-kat,
+  .source-row .source-episoder { flex: 1 1 auto; }
   .source-row .remove-source { margin-left: 0; align-self: flex-end; }
   .work-row { flex-direction: column; }
   .work-row .work-year { flex: 1; }

@@ -7,7 +7,7 @@
 //  og under den de enkelte artiklene. Ren logikk uten DOM, så den kan
 //  enhetstestes; tegningen bor i explore-referanser.js.
 // ============================================================================
-import { safeUrl } from "./util.js";
+import { safeUrl, episodeTekst } from "./util.js";
 
 // Fast vokabular i koden, ikke i config — samme valg som INSTRUMENTS (v3.68).
 // Navnene er OGSÅ seksjonsoverskriftene i Referanser-kortet, derav
@@ -28,6 +28,10 @@ export const KILDE_KATEGORIER = [
 // det nye navnet (kategoriNavn), og lagringen skriver det.
 const KATEGORI_ALIAS = { Tidsskrifter: "Nettsteder", Videoer: "Dokumentarer" };
 export const kategoriNavn = (kategori) => KATEGORI_ALIAS[kategori] || kategori;
+
+// Kategorien som har antall episoder (v7.41). Teksten i parentes etter
+// tittelen bor i util.js (episodeTekst), som også kildelistene på kortene bruker.
+export const EPISODEKATEGORI = "Dokumentarer";
 
 // Kilder uten (gyldig) kategori forsvinner ikke stille: de samles her, nederst
 // i kortet, så det synes straks at noe må rettes. Fra v6.93 bare kilder uten
@@ -268,6 +272,7 @@ export function samleKilder(liste) {
     if (rad) {
       rad.bruk++;
       if (!rad.detalj) rad.detalj = detaljFor(k);
+      if (!rad.episoder) rad.episoder = episodeTekst(k);
       leggOpphav(rad, k.opphav);
       if (!k.opphav) rad.frittstaende = true;
     }
@@ -288,6 +293,8 @@ export function samleKilder(liste) {
       kategori,
       nokkel: radNokkel,
       frittstaende: !k.opphav,
+      // «10 episoder» for en dokumentarserie (v7.41), tomt ellers.
+      episoder: episodeTekst(k),
     });
   }
 

@@ -93,6 +93,14 @@ export function throttle(fn, ms = 400) {
   };
 }
 
+// «10 episoder» til parentesen etter tittelen på en dokumentarserie (v7.41).
+// Tomt når feltet mangler eller ikke er et positivt heltall.
+export function episodeTekst(k) {
+  const n = parseInt(k?.episoder, 10);
+  if (!Number.isFinite(n) || n < 1) return "";
+  return `${n} ${n === 1 ? "episode" : "episoder"}`;
+}
+
 // Strukturert kilde-liste (artist, sjanger, tiår, slektstre). Lagt her — uten
 // avhengigheter — så både genealogy og ui-helpers kan dele samme implementasjon.
 export function buildKilderList(kilder, label = "Kilder") {
@@ -104,9 +112,12 @@ export function buildKilderList(kilder, label = "Kilder") {
     // lenken peker på artikkelen, og opphavet henger etter i parentes.
     const detaljer = [k.forfatter, k.year].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
     const hale = detaljer ? ` <span class="kilde-detalj">(${escapeHtml(detaljer)})</span>` : "";
+    // Antall episoder i parentes rett etter tittelen (v7.41).
+    const ep = episodeTekst(k);
+    const episoder = ep ? ` <span class="kilde-episoder">(${ep})</span>` : "";
     return url
-      ? `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${text}</a>${hale}</li>`
-      : `<li>${text}${hale}</li>`;
+      ? `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${text}</a>${episoder}${hale}</li>`
+      : `<li>${text}${episoder}${hale}</li>`;
   }).join("");
   return `<div class="kilder"><strong>${escapeHtml(label)}:</strong><ul>${items}</ul></div>`;
 }
