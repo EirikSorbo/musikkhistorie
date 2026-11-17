@@ -100,3 +100,21 @@ export function stedNavn(sted) {
   if (sted.type === "edge") return `${sted.navn || sted.id} (kobling)`;
   return sted.navn || String(sted.id);
 }
+
+// Ny frittstående referanse fra Referanser (v7.38). Legges sist i
+// content/referanser.kilder. { ops } når den kan legges til, ellers { feil }:
+// "tom" (verken tekst eller lenke) eller "finnes" (samme kilde står allerede
+// blant de frittstående). merge erstatter lista, så hele lista sendes med:
+// kalleren må vite at innholdet er lest (contentLoaded), ellers ville lista
+// blitt bare den nye.
+export function nyReferanseEndring(state, ny) {
+  const n = kildeRadNokkel(ny);
+  if (!n) return { feil: "tom" };
+  const liste = Array.isArray(state?.content?.referanser?.kilder) ? state.content.referanser.kilder : [];
+  const finnes = liste.some((k) => {
+    const m = kildeRadNokkel(k);
+    return !!m && m.kategori === n.kategori && m.nokkel === n.nokkel;
+  });
+  if (finnes) return { feil: "finnes" };
+  return { ops: [{ type: "doc.merge", coll: "content", id: "referanser", data: { kilder: [...liste, { ...ny }] } }] };
+}

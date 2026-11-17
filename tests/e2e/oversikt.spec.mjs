@@ -216,13 +216,37 @@ test("Referanser: læreren retter en kilde som står på to kort, og sletter den
   expect(appFeil(feil)).toEqual([]);
 });
 
+// Ny referanse rett fra Referanser (v7.38).
+test("Referanser: læreren legger til en ny referanse fra lista", async ({ page }) => {
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await apne(page, "/teacher.html?vis=referanser");
+  await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  await page.locator("#ref-body").getByRole("button", { name: "Ny referanse" }).click();
+  const vindu = page.locator("#modal-kilde-retting");
+  await expect(vindu).toHaveClass(/open/);
+  await expect(vindu.locator("#kr-tittel")).toHaveText("Ny referanse");
+  await expect(vindu.getByRole("button", { name: "Slett fra alle" })).toBeHidden();
+  await vindu.locator(".source-text").fill("The Land Where the Blues Began");
+  await vindu.locator(".source-forfatter").fill("Alan Lomax");
+  await vindu.getByRole("button", { name: "Legg til" }).click();
+  await expect(vindu.locator("#kr-msg")).toContainText("Velg kategori");
+  await vindu.locator(".source-kat").selectOption("Bøker");
+  await vindu.getByRole("button", { name: "Legg til" }).click();
+  await expect(vindu).not.toHaveClass(/open/);
+  await expect.poll(async () => (await lesDok("content", "referanser"))?.kilder)
+    .toEqual([{ text: "The Land Where the Blues Began", forfatter: "Alan Lomax", url: "", kategori: "Bøker" }]);
+  await expect(page.locator("#ref-body .ref-rad").filter({ hasText: "The Land Where the Blues Began" })).toBeVisible();
+  expect(appFeil(feil)).toEqual([]);
+});
+
 test("Referanser: studentene ser ingen blyant, og bare kilder fra sjekket og synlig tekst", async ({ page }) => {
   const feil = await forbered(page);
   await apne(page, "/index.html?vis=referanser");
   await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
   await expect(page.locator("#ref-body .refp-group-head").first()).toBeVisible();
   expect(await page.locator("#ref-body .ref-rad").count()).toBeGreaterThan(0);
-  await expect(page.locator("#ref-body .ref-rett")).toHaveCount(0);
+  await expect(page.locator("#ref-body .ref-rett, #ref-body [data-ref-ny]")).toHaveCount(0);
   // v7.37: Muddy Waters er sjekket og synlig, Bessie Smith er ikke sjekket.
   await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(1);
   await expect(page.locator('#ref-body a[href*="britannica.com"]')).toHaveCount(0);

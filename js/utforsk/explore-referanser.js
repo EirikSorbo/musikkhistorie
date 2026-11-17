@@ -27,7 +27,7 @@ import { metaGroupHeadHtml, wireMetaAccordion } from "../ui/ui-metagruppe.js";
 import { openTechDetail } from "./explore-tech.js";
 import { openDecade } from "./explore-decade.js";
 import { openHistorier } from "./explore-innhold.js";
-import { kanRetteKilder, apneKildeRetting } from "./referanse-retting.js";
+import { kanRetteKilder, apneKildeRetting, apneNyReferanse } from "./referanse-retting.js";
 
 export function openReferanser() {
   const modal = document.getElementById("modal-referanser");
@@ -149,6 +149,11 @@ function apneOpphav(o) {
 // Blyanten på radene (v7.35), i samme pille som knappen til kortet.
 const BLYANT_SVG = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg>`;
 
+// «Ny referanse» øverst i lista (v7.38), for læreren på lærersiden.
+const PLUSS_SVG = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
+const nyKnapp = () => kanRetteKilder()
+  ? `<button type="button" class="btn small ref-ny" data-ref-ny>${PLUSS_SVG}Ny referanse</button>` : "";
+
 const antallOrd = (n, ental, flertall) => `${n} ${n === 1 ? ental : flertall}`;
 
 // Radene wires med indeks i denne lista, satt ved hver render. Delegert klikk
@@ -200,6 +205,10 @@ function radHtml(rad, i, visSted) {
 // Delegert klikkhåndtering for hele lista.
 function wireRader(body) {
   body.addEventListener("click", (e) => {
+    if (e.target.closest("[data-ref-ny]")) {
+      apneNyReferanse({ etterLagring: () => renderReferanser({ bevar: true }) });
+      return;
+    }
     const knapp = e.target.closest("[data-ref-rad]");
     if (!knapp) return;
     const rad = radListe[Number(knapp.dataset.refRad)];
@@ -233,16 +242,17 @@ export function renderReferanser({ bevar = false } = {}) {
   if (!data.totalt) {
     body.innerHTML = `<p class="gx-missing">${!s.artistsLoaded ? "Laster kilder …"
       : erLaererside() ? `Ingen kilder står her ennå. ${KRAV_TEKST}`
-      : "Ingen kilder er registrert ennå."}</p>`;
+      : "Ingen kilder er registrert ennå."}</p>${s.artistsLoaded ? nyKnapp() : ""}`;
+    if (!body.dataset.wired) { wireRader(body); body.dataset.wired = "1"; }
     return;
   }
 
   radListe = [];
-  let html = `<p class="muted" style="margin:0 0 6px;font-size:0.86rem">`;
+  let html = `<div class="ref-topp"><p class="muted" style="margin:0 0 6px;font-size:0.86rem">`;
   html += `${antallOrd(data.unike, "kilde", "kilder")} samlet fra artistkortene, tiårene, sjangrene, koblingene i slektstreet og innovasjonskortene.`;
   // Læreren får vite hvorfor en kilde kan mangle (v7.37).
   if (erLaererside()) html += ` ${KRAV_TEKST}`;
-  html += `</p>`;
+  html += `</p>${nyKnapp()}</div>`;
 
   // Seksjonene er overskrifter, ikke knapper: de står alltid åpne. Bare
   // nettstedene under «Nettsteder» har trekant, siden de kan romme hundrevis

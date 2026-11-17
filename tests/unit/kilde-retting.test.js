@@ -95,3 +95,17 @@ test("blyanten: bare for læreren på lærersiden, på hver rad, og lista behold
   assert.match(v, /await runMigrationPlan\(ops\);/, "én atomisk batch");
   assert.match(v, /farlig: true/, "slettingen spør med rød knapp");
 });
+
+// Ny referanse fra Referanser (v7.38): legges sist blant de frittstående.
+test("ny referanse: legges sist i content/referanser, men ikke to ganger", async () => {
+  const { nyReferanseEndring } = await import("../../js/felles/kilde-retting.js");
+  const ny = { text: "The Land Where the Blues Began", forfatter: "Alan Lomax", year: 1993, url: "", kategori: "Bøker" };
+  const { ops } = nyReferanseEndring(STATE, ny);
+  assert.deepEqual(ops, [{ type: "doc.merge", coll: "content", id: "referanser", data: { kilder: [BOK, ny] } }]);
+  assert.deepEqual(nyReferanseEndring(STATE, { ...BOK, text: "DEEP BLUES" }), { feil: "finnes" }, "samme tekst i samme kategori");
+  assert.deepEqual(nyReferanseEndring(STATE, { text: "", url: "" }), { feil: "tom" });
+  assert.equal(nyReferanseEndring({}, ny).ops[0].data.kilder.length, 1, "tom liste fra før");
+  const v = lesJs("referanse-retting.js");
+  assert.match(v, /if \(!s\.contentLoaded\)/, "lista sendes hel, så innholdet må være lest");
+  assert.match(lesJs("explore-referanser.js"), /const nyKnapp = \(\) => kanRetteKilder\(\)/, "knappen bare på lærersiden");
+});

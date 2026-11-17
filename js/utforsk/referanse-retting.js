@@ -13,7 +13,7 @@
 import { escapeHtml } from "../felles/util.js";
 import { SOURCE_SPEC, collectRows, normalizeSources, feltHtml } from "../ui/row-editor.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, bekreft } from "../ui/ui-modal.js";
-import { kildeSteder, kildeEndringer, forsteKilde, stedNavn } from "../felles/kilde-retting.js";
+import { kildeSteder, kildeEndringer, forsteKilde, stedNavn, nyReferanseEndring } from "../felles/kilde-retting.js";
 import { runMigrationPlan } from "../data/store.js";
 import { getState } from "../data/app-state.js";
 
@@ -26,7 +26,7 @@ export const kanRetteKilder = () => {
 };
 
 const MODAL_ID = "modal-kilde-retting";
-let aktiv = null;   // { rad, etterLagring, start } mens vinduet står åpent
+let aktiv = null;   // { rad, etterLagring, start } eller { ny: true, etterLagring } mens vinduet står åpent
 let lagrer = false;
 
 function byggModal() {
@@ -112,6 +112,7 @@ async function skriv(ny) {
 
 async function lagre() {
   if (!aktiv || lagrer) return;
+  if (aktiv.ny) { await leggTil(); return; }
   const ny = lest();
   if (!ny) { msg("Kildeteksten kan ikke være tom.", false); return; }
   if (JSON.stringify(ny) === aktiv.start) { modalClose(document.getElementById(MODAL_ID)); return; }
@@ -126,9 +127,56 @@ async function slett() {
   if (ja) await skriv(null);
 }
 
+// Samme vindu i to utgaver: retting av en rad, eller en ny referanse (v7.38).
+function settModus(m, ny) {
+  m.querySelector("#kr-tittel").textContent = ny ? "Ny referanse" : "Rett kilden";
+  m.querySelector("[data-kr-lagre]").textContent = ny ? "Legg til" : "Lagre overalt";
+  m.querySelector("[data-kr-slett]").style.display = ny ? "none" : "";
+}
+
+// Legger den nye referansen til blant de frittstående (content/referanser).
+async function leggTil() {
+  const ny = lest();
+  if (!ny) { msg("Skriv kildeteksten eller lenka.", false); return; }
+  if (!ny.kategori) { msg("Velg kategori før du legger til.", false); return; }
+  const s = getState();
+  // Lista sendes hel (merge erstatter den), så innholdet må være lest først.
+  if (!s.contentLoaded) { msg("Innholdet laster fortsatt. Vent et øyeblikk og prøv igjen.", false); return; }
+  const { ops, feil } = nyReferanseEndring(s, ny);
+  if (feil === "finnes") { msg("Denne kilden står allerede blant de frittstående referansene.", false); return; }
+  if (!ops) { msg("Skriv kildeteksten eller lenka.", false); return; }
+  sett(true);
+  msg("Lagrer …");
+  try {
+    await runMigrationPlan(ops);
+    const { etterLagring } = aktiv;
+    aktiv = null;
+    modalClose(document.getElementById(MODAL_ID));
+    etterLagring?.();
+  } catch (e) {
+    msg(`Ble ikke lagret (${e?.message || e}). Er du logget inn som lærer?`, false);
+  } finally {
+    sett(false);
+  }
+}
+
+// Åpner vinduet tomt for en ny referanse. Den hører ikke til noe kort og
+// står alltid i Referanser.
+export function apneNyReferanse({ etterLagring } = {}) {
+  const m = document.getElementById(MODAL_ID) || byggModal();
+  settModus(m, true);
+  document.getElementById("kr-bruk").textContent = "Referansen legges i Referanser uten å høre til et bestemt kort, og den står der alltid.";
+  document.getElementById("kr-skjema").innerHTML = skjemaHtml({});
+  msg("");
+  aktiv = { ny: true, etterLagring };
+  modalOpen(m);
+  m.querySelector(".source-text")?.focus();
+}
+
 // Åpner vinduet for én rad i Referanser. `etterLagring` tegner lista på nytt.
 export function apneKildeRetting(rad, { etterLagring } = {}) {
   const m = document.getElementById(MODAL_ID) || byggModal();
+  settModus(m, false);
   const k = forsteKilde(getState(), rad);
   document.getElementById("kr-bruk").textContent = brukTekst(rad);
   document.getElementById("kr-skjema").innerHTML = skjemaHtml(k);
