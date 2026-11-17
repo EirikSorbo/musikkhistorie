@@ -15,7 +15,7 @@ import { safeUrl } from "./util.js";
 export const KILDE_KATEGORIER = [
   "Bøker",
   "Podkaster",
-  "Videoer",
+  "Dokumentarer",
   "Nettsteder",
 ];
 
@@ -23,7 +23,11 @@ export const KILDE_KATEGORIER = [
 // «Forelesningsnotater» er BEVISST ikke med: de 62 MUR114-kildene bor på
 // slektstreets koblinger, som kortet uansett ikke viser. Dukker verdien opp,
 // havner den synlig under «Ukategorisert» i stedet for å bli gjettet feil.
-const KATEGORI_ALIAS = { Tidsskrifter: "Nettsteder" };
+// «Videoer» heter «Dokumentarer» fra v7.39 (brukervalg 2026-11-17). De lagrede
+// kildene beholder det gamle navnet til de lagres på nytt: kildefeltet viser
+// det nye navnet (kategoriNavn), og lagringen skriver det.
+const KATEGORI_ALIAS = { Tidsskrifter: "Nettsteder", Videoer: "Dokumentarer" };
+export const kategoriNavn = (kategori) => KATEGORI_ALIAS[kategori] || kategori;
 
 // Kilder uten (gyldig) kategori forsvinner ikke stille: de samles her, nederst
 // i kortet, så det synes straks at noe må rettes. Fra v6.93 bare kilder uten
@@ -45,7 +49,7 @@ export function antattKategori(k) {
   const url = safeUrl(k?.url);
   if (!url) return null;
   const vert = vertFor(url);
-  if (VIDEOVERTER.has(vert)) return "Videoer";
+  if (VIDEOVERTER.has(vert)) return "Dokumentarer";
   if (PODKASTVERTER.has(vert) || (vert === "open.spotify.com" && /\/(episode|show)\//.test(url))) return "Podkaster";
   return "Nettsteder";
 }
@@ -54,7 +58,7 @@ export function antattKategori(k) {
 const KATEGORI_FARGE = {
   Bøker: "#b45309",
   Podkaster: "#0891b2",
-  Videoer: "#dc2626",
+  Dokumentarer: "#dc2626",
   Nettsteder: "#1d4ed8",
   [UKATEGORISERT]: "#64748b",
 };
@@ -103,6 +107,10 @@ const MIN_EGEN_GRUPPE = 3;
 // Bare nettkildene grupperes på utgiver: en bok, en podkast eller en video er
 // én referanse, ikke «tre artikler fra youtube.com».
 const GRUPPERES = "Nettsteder";
+// Nettstedene er lagt inn av Claude, alt annet av læreren (brukeropplysning
+// 2026-11-17). Referanser viser dem i hver sin fane (v7.39).
+export const NETTSTEDER = GRUPPERES;
+export const erClaudeSeksjon = (seksjon) => seksjon?.navn === NETTSTEDER;
 
 export function vertFor(url) {
   try {

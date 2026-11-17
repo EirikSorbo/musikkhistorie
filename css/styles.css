@@ -280,7 +280,6 @@
   --icon-l-sjangertre: var(--icon-mono, var(--violet-600));
   --icon-l-podkast: var(--icon-mono, var(--pink-600));
   --icon-l-slides: var(--icon-mono, var(--teal-600));
-  --icon-l-referanse: var(--icon-mono, var(--blue-700));
   --icon-l-handbok: var(--icon-mono, var(--cyan-600));
   --icon-l-konto: var(--icon-mono, var(--green-600));
   --icon-l-eksport: var(--icon-mono, var(--blue-700));
@@ -1501,14 +1500,12 @@ div.kilder a[href]:hover { color: var(--text); text-decoration-color: currentCol
    0.72rem × 1.3 + 1 + 1), og står midt i raden. */
 .ref-rad .ref-rett { display: inline-flex; align-items: center; padding: 3px 8px; }
 .ref-rad .ref-rett svg { flex: none; }
-/* «Ny referanse» (v7.38): til høyre for ingressen, under den på smal skjerm. */
-.ref-topp { display: flex; align-items: flex-start; gap: 12px; }
-.ref-topp > p { flex: 1; }
-.ref-ny { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 5px; }
-@media (max-width: 560px) {
-  .ref-topp { flex-direction: column; gap: 4px; }
-  .ref-topp .ref-ny { margin-bottom: 8px; }
-}
+/* Fanene øverst i Referanser (v7.39), med «Ny referanse» (v7.38) til høyre
+   på samme linje. Streken under fanene går under hele raden. */
+.ref-topp { display: flex; align-items: flex-end; gap: 8px 12px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); margin: 4px 0 16px; }
+.ref-topp .ref-faner { border-bottom: none; margin: 0; }
+.ref-ny { flex: none; margin: 0 0 6px auto; display: inline-flex; align-items: center; gap: 5px; }
 /* Vinduet som retter kilden: feltene med synlige etiketter i et rutenett,
    tekst og lenke over hele bredden. */
 /* modal-narrow (320 px) står seinere i fila, derfor dobbel klasse her. */

@@ -54,7 +54,7 @@ test("slektstresiden og utskriftssiden laster uten feil", async ({ page }) => {
 test("læreren: flisene, Innstillinger og Visning åpner uten feil", async ({ page }) => {
   const feil = await forbered(page, { rolle: null });
   await loggInnSomLaerer(page);
-  for (const id of ["btn-t-inn-oversikt", "btn-t-inn-mangler", "btn-t-inn-sjangertre", "btn-t-inn-slides", "btn-t-inn-podkast", "btn-ny-referanse"]) {
+  for (const id of ["btn-t-inn-oversikt", "btn-t-inn-mangler", "btn-t-inn-sjangertre", "btn-t-inn-slides", "btn-t-inn-podkast"]) {
     await page.locator(`#${id}`).click();
     await expect(page.locator(".modal-backdrop.open").first()).toBeVisible();
     await page.keyboard.press("Escape");
@@ -174,6 +174,9 @@ test("Om appen for læreren: alle tre også når de er skjult, og KI-erklæringe
   expect(appFeil(feil)).toEqual([]);
 });
 
+// Nettstedene står i fanen «Claude sine referanser» (v7.39).
+const claudeFane = (page) => page.locator("#ref-body").getByRole("tab", { name: "Claude sine referanser" }).click();
+
 // Retting av kilder fra Referanser (v7.35): blyanten retter eller sletter en
 // kilde på alle kortene den står.
 test("Referanser: læreren retter en kilde som står på to kort, og sletter den, uten å åpne kortene", async ({ page }) => {
@@ -184,12 +187,14 @@ test("Referanser: læreren retter en kilde som står på to kort, og sletter den
   await page.locator(".nav-info").click();
   await page.locator("#modal-info").getByRole("link", { name: "Åpne Referanser" }).click();
   await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  await claudeFane(page);
   await page.locator("#ref-body .refp-group-head").filter({ hasText: "Andre nettsteder" }).click();
   const rad = page.locator("#ref-body .ref-rad").filter({ hasText: "Muddy Waters" });
   await expect(rad).toContainText("2 kort");
   // v7.37: Bessie Smith er ikke sjekket, så Britannica-kilden hennes står ikke.
   await expect(page.locator('#ref-body a[href*="britannica.com"]')).toHaveCount(0);
-  await expect(page.locator("#ref-body")).toContainText("minst én er sjekket");
+  // Ingen ingress over fanene (v7.39).
+  await expect(page.locator("#ref-body")).not.toContainText("kilder samlet fra");
   // v7.36: antallet står bare i «2 kort», og blyanten har ingen tekst.
   await expect(rad).not.toContainText("×");
   await expect(rad.locator(".ref-rett")).toHaveText("");
@@ -244,13 +249,20 @@ test("Referanser: studentene ser ingen blyant, og bare kilder fra sjekket og syn
   const feil = await forbered(page);
   await apne(page, "/index.html?vis=referanser");
   await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  // v7.39: to faner. Referanser først, med lærerens kilder; nettstedene i Claudes fane.
+  await expect(page.locator("#ref-body [role=tab][aria-selected=true]")).toHaveText("Referanser");
+  await expect(page.locator("#ref-body .ref-seksjon").filter({ hasText: "Nettsteder" })).toHaveCount(0);
+  await expect(page.locator("#ref-body .ref-seksjon").filter({ hasText: "Dokumentarer" })).toHaveCount(1);
+  await expect(page.locator("#ref-body .ref-seksjon").filter({ hasText: "Videoer" })).toHaveCount(0);
+  await claudeFane(page);
+  await expect(page.locator("#ref-body [role=tab][aria-selected=true]")).toHaveText("Claude sine referanser");
+  await expect(page.locator("#ref-body .ref-seksjon").filter({ hasText: "Bøker" })).toHaveCount(0);
   await expect(page.locator("#ref-body .refp-group-head").first()).toBeVisible();
   expect(await page.locator("#ref-body .ref-rad").count()).toBeGreaterThan(0);
   await expect(page.locator("#ref-body .ref-rett, #ref-body [data-ref-ny]")).toHaveCount(0);
   // v7.37: Muddy Waters er sjekket og synlig, Bessie Smith er ikke sjekket.
   await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(1);
   await expect(page.locator('#ref-body a[href*="britannica.com"]')).toHaveCount(0);
-  await expect(page.locator("#ref-body")).not.toContainText("minst én er sjekket");
   expect(appFeil(feil)).toEqual([]);
 });
 
@@ -261,13 +273,14 @@ test("Referanser: en skjult artist teller ikke som synlig, og blyanten står ikk
   await loggInnSomLaerer(page);
   await apne(page, "/teacher.html?vis=referanser");
   await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
-  await expect(page.locator("#ref-body")).toContainText("minst én er sjekket");
+  await expect(page.locator("#ref-body")).toContainText("Ingen kilder står her ennå");
   await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(0);
   // På forsiden er læreren innlogget, men ser studentenes utgave og ingen blyant.
   await skrivDok("artists", "muddy", ARTISTER.muddy);
   // Forsiden viser rollevalget uten valgt rolle; læreren har vært inne som student før.
   await page.evaluate(() => localStorage.setItem("pensum-role", "student"));
   await apne(page, "/index.html?vis=referanser");
+  await claudeFane(page);
   await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(1);
   await expect(page.locator("body")).toHaveClass(/laerer-okt/);
   await expect(page.locator("#ref-body .ref-rett")).toHaveCount(0);

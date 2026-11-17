@@ -116,7 +116,7 @@ test("seksjonene står i vokabularets rekkefølge, ukjent kategori havner sist",
     nett("SNL", "https://snl.no/A"),
   ]);
   assert.deepEqual(seksjoner.map((s) => s.navn), [...KILDE_KATEGORIER, UKATEGORISERT]);
-  assert.deepEqual(KILDE_KATEGORIER, ["Bøker", "Podkaster", "Videoer", "Nettsteder"]);
+  assert.deepEqual(KILDE_KATEGORIER, ["Bøker", "Podkaster", "Dokumentarer", "Nettsteder"]);
   const ukat = seksjoner.find((s) => s.navn === UKATEGORISERT);
   assert.equal(ukat.bruk, 2, "ukjent kategori og manglende kategori uten lenke skal synes");
 });
@@ -126,7 +126,7 @@ test("seksjonene står i vokabularets rekkefølge, ukjent kategori havner sist",
 test("en kilde med lenke og uten kategori regnes som nettsted, video eller podkast", () => {
   assert.equal(antattKategori({ text: "SNL", url: "https://snl.no/Bebop", kategori: "" }), "Nettsteder");
   assert.equal(antattKategori({ text: "Wikipedia", url: "https://en.wikipedia.org/wiki/Moog" }), "Nettsteder");
-  assert.equal(antattKategori({ text: "x", url: "https://www.youtube.com/watch?v=1" }), "Videoer");
+  assert.equal(antattKategori({ text: "x", url: "https://www.youtube.com/watch?v=1" }), "Dokumentarer");
   assert.equal(antattKategori({ text: "x", url: "https://open.spotify.com/episode/abc" }), "Podkaster");
   assert.equal(antattKategori({ text: "x", url: "https://open.spotify.com/track/abc" }), "Nettsteder");
   assert.equal(antattKategori({ text: "x", url: "https://snl.no/A", kategori: "Bøker" }), "Bøker", "lagret kategori vinner");
@@ -147,7 +147,7 @@ test("bøker, videoer og podkaster er flate lister der teksten ER referansen", (
   assert.deepEqual(boker.rader.map((r) => [r.tittel, r.bruk]), [["Ted Gioia: The History of Jazz", 2]]);
 
   // Slug-en skal ALDRI overstyre en forfattet tittel her.
-  const video = seksjoner.find((s) => s.navn === "Videoer");
+  const video = seksjoner.find((s) => s.navn === "Dokumentarer");
   assert.deepEqual(video.rader.map((r) => r.tittel), ["Jazzeventyret (NRK)"]);
   assert.equal(video.rader[0].url, "https://tv.nrk.no/serie/jazzeventyret");
   assert.equal(seksjoner.find((s) => s.navn === "Podkaster").rader.length, 1);
@@ -156,7 +156,7 @@ test("bøker, videoer og podkaster er flate lister der teksten ER referansen", (
 test("tomme seksjoner finnes, men uten rader", () => {
   const { seksjoner } = samleKilder([nett("SNL", "https://snl.no/A")]);
   const tomme = seksjoner.filter((s) => !s.unike).map((s) => s.navn);
-  assert.deepEqual(tomme, ["Bøker", "Podkaster", "Videoer"]);
+  assert.deepEqual(tomme, ["Bøker", "Podkaster", "Dokumentarer"]);
 });
 
 test("søppel og tomme kilder droppes uten å velte aggregeringen", () => {
@@ -164,4 +164,17 @@ test("søppel og tomme kilder droppes uten å velte aggregeringen", () => {
   assert.equal(totalt, 0);
   assert.equal(seksjoner.every((s) => !s.unike), true);
   assert.equal(samleKilder(undefined).totalt, 0);
+});
+
+// «Videoer» heter «Dokumentarer» fra v7.39: gamle kilder vises under det nye
+// navnet, og kildefeltet fylles med det, så en ny lagring skriver det.
+test("Videoer er Dokumentarer, også for kildene som er lagret med det gamle navnet", async () => {
+  const { kategoriNavn } = await import("../../js/felles/kilder.js");
+  assert.equal(kategoriNavn("Videoer"), "Dokumentarer");
+  assert.equal(kategoriNavn("Bøker"), "Bøker");
+  assert.equal(antattKategori({ text: "x", kategori: "Videoer" }), "Dokumentarer");
+  const { SOURCE_SPEC } = await import("../../js/ui/row-editor.js");
+  const felt = SOURCE_SPEC.fields.find((f) => f.key === "kategori");
+  assert.equal(felt.verdi({ kategori: "Videoer" }), "Dokumentarer");
+  assert.equal(felt.verdi({}), "");
 });

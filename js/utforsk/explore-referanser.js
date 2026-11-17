@@ -5,17 +5,17 @@
 //  ligger i minnet (artister, tiår, sjangre, koblinger, innovasjonskort) og
 //  regnes om ved hver åpning, så listen aldri kan bli utdatert. I tillegg kan
 //  læreren legge inn frittstående referanser som ikke hører til noe kort
-//  (content/referanser, «Ny referanse» på lærersiden) — de blandes inn i samme
-//  liste. Slektstreets koblingskilder er MED siden v4.65: alle sider abonnerer
+//  (content/referanser, «Ny referanse» øverst i lista) — de blandes inn i samme
+//  liste. Fra v7.39 står nettstedene (lagt inn av Claude) i en egen fane. Slektstreets koblingskilder er MED siden v4.65: alle sider abonnerer
 //  på edgeDescriptions gjennom shared-data.js (v4.44), så de ligger allerede i
 //  minnet uten én ekstra lesing. (De var holdt utenfor fra før v4.44, da
 //  samlingen kostet ekstra lesinger — det premisset er dødt.)
 //  Grupperingen (kategori → hovedkilde → artikkel) kommer fra kilder.js.
 // ============================================================================
-import { modalOpen } from "../ui/ui-modal.js";
+import { modalOpen, kobleFanePiler } from "../ui/ui-modal.js";
 import { escapeHtml } from "../felles/util.js";
 import { isVisible, erSkjult } from "../felles/limits.js";
-import { samleKilder, kildeUtvalg } from "../felles/kilder.js";
+import { samleKilder, kildeUtvalg, erClaudeSeksjon } from "../felles/kilder.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { sjekkene } from "../felles/sjekket.js";
 import { har, sjangerSjekket } from "../data/sjekket-filter.js";
@@ -49,7 +49,6 @@ export function openReferanser() {
 // Det studentene ser: aktive artister som ikke er skjult; alle tiår og
 // sjangerkort; sjangerhistoriene (meta) og koblingstekstene bare når bryterne
 // metasjangerhistorier og koblingsbeskrivelser er av; aktive innovasjonskort.
-const KRAV_TEKST = "En kilde står her når minst én tekst som bruker den, er synlig for studentene, og minst én er sjekket.";
 const erLaererside = () => typeof document !== "undefined" && document.body.classList.contains("is-teacher");
 
 function alleKilder() {
@@ -154,6 +153,16 @@ const PLUSS_SVG = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" s
 const nyKnapp = () => kanRetteKilder()
   ? `<button type="button" class="btn small ref-ny" data-ref-ny>${PLUSS_SVG}Ny referanse</button>` : "";
 
+// To faner (v7.39, brukerbestilling 2026-11-17): læreren har lagt inn bøkene,
+// podkastene, videoene og resten, Claude har lagt inn nettstedene. Valget
+// huskes mens siden står åpen.
+const FANER = [
+  { id: "egne", navn: "Referanser" },
+  { id: "claude", navn: "Claude sine referanser" },
+];
+let valgtFane = "egne";
+const iFane = (seksjon, fane) => erClaudeSeksjon(seksjon) === (fane === "claude");
+
 const antallOrd = (n, ental, flertall) => `${n} ${n === 1 ? ental : flertall}`;
 
 // Radene wires med indeks i denne lista, satt ved hver render. Delegert klikk
@@ -205,6 +214,14 @@ function radHtml(rad, i, visSted) {
 // Delegert klikkhåndtering for hele lista.
 function wireRader(body) {
   body.addEventListener("click", (e) => {
+    const fane = e.target.closest("[data-ref-fane]");
+    if (fane) {
+      if (fane.dataset.refFane === valgtFane) return;
+      valgtFane = fane.dataset.refFane;
+      renderReferanser();
+      body.querySelector(`[data-ref-fane="${valgtFane}"]`)?.focus({ preventScroll: true });
+      return;
+    }
     if (e.target.closest("[data-ref-ny]")) {
       apneNyReferanse({ etterLagring: () => renderReferanser({ bevar: true }) });
       return;
@@ -241,23 +258,25 @@ export function renderReferanser({ bevar = false } = {}) {
 
   if (!data.totalt) {
     body.innerHTML = `<p class="gx-missing">${!s.artistsLoaded ? "Laster kilder …"
-      : erLaererside() ? `Ingen kilder står her ennå. ${KRAV_TEKST}`
-      : "Ingen kilder er registrert ennå."}</p>${s.artistsLoaded ? nyKnapp() : ""}`;
+      : "Ingen kilder står her ennå."}</p>${s.artistsLoaded ? nyKnapp() : ""}`;
     if (!body.dataset.wired) { wireRader(body); body.dataset.wired = "1"; }
     return;
   }
 
   radListe = [];
-  let html = `<div class="ref-topp"><p class="muted" style="margin:0 0 6px;font-size:0.86rem">`;
-  html += `${antallOrd(data.unike, "kilde", "kilder")} samlet fra artistkortene, tiårene, sjangrene, koblingene i slektstreet og innovasjonskortene.`;
-  // Læreren får vite hvorfor en kilde kan mangle (v7.37).
-  if (erLaererside()) html += ` ${KRAV_TEKST}`;
-  html += `</p>${nyKnapp()}</div>`;
+  const seksjoner = data.seksjoner.filter((sk) => iFane(sk, valgtFane));
+  // Ingen ingress (brukervalg 2026-11-17): fanene står øverst, med «Ny
+  // referanse» til høyre for læreren.
+  let html = `<div class="ref-topp"><div class="dv-faner ref-faner" role="tablist" aria-label="Referanser">${FANER.map((f) => {
+    const valgt = f.id === valgtFane;
+    return `<button type="button" class="dv-fane${valgt ? " active" : ""}" role="tab" id="ref-fane-${f.id}" aria-controls="ref-fanepanel" aria-selected="${valgt}" tabindex="${valgt ? 0 : -1}" data-ref-fane="${f.id}" data-tekst="${escapeHtml(f.navn)}">${escapeHtml(f.navn)}</button>`;
+  }).join("")}</div>${nyKnapp()}</div>`;
+  html += `<div id="ref-fanepanel" role="tabpanel" aria-labelledby="ref-fane-${valgtFane}">`;
 
   // Seksjonene er overskrifter, ikke knapper: de står alltid åpne. Bare
   // nettstedene under «Nettsteder» har trekant, siden de kan romme hundrevis
   // av artikler hver.
-  for (const seksjon of data.seksjoner) {
+  for (const seksjon of seksjoner) {
     html += `<h3 class="ref-seksjon" style="--ref-farge:${seksjon.farge}">`;
     html += `${escapeHtml(seksjon.navn)}<span class="ref-antall">${
       seksjon.unike ? antallOrd(seksjon.unike, "referanse", "referanser") : "ingen ennå"}</span></h3>`;
@@ -280,8 +299,10 @@ export function renderReferanser({ bevar = false } = {}) {
       html += `</div></div>`;
     });
   }
+  html += `</div>`;
 
   body.innerHTML = html;
+  kobleFanePiler(body.querySelector(".ref-faner"));
   // Kun ett akkordeon-nivå igjen: nettstedene. Seksjonene er overskrifter.
   wireMetaAccordion(body, "refp");
   if (!body.dataset.wired) { wireRader(body); body.dataset.wired = "1"; }

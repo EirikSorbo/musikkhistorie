@@ -60,3 +60,25 @@ test("Referanser merker hvert sted og bruker utvalget; blyanten bare på lærers
   // Lærersiden får sjekkene inn i sjekket.js, ellers ville lista vært tom der.
   assert.match(lesJs("teacher.js"), /brukSjekker\(checks\)/);
 });
+
+// To faner (v7.39): nettstedene er lagt inn av Claude, alt annet av læreren.
+test("faner: Nettsteder er Claudes fane, de andre kategoriene lærerens", async () => {
+  const { erClaudeSeksjon } = await import("../../js/felles/kilder.js");
+  const data = samleKilder([
+    { text: "SNL", url: SNL, opphav: null },
+    { text: "Deep Blues", kategori: "Bøker", opphav: null },
+    { text: "Uten lenke og kategori", opphav: null },
+  ]);
+  const claude = data.seksjoner.filter(erClaudeSeksjon).map((s) => s.navn);
+  const egne = data.seksjoner.filter((s) => !erClaudeSeksjon(s)).map((s) => s.navn);
+  assert.deepEqual(claude, ["Nettsteder"]);
+  assert.ok(egne.includes("Bøker") && egne.includes("Ukategorisert"));
+  const ref = lesJs("explore-referanser.js");
+  assert.match(ref, /\{ id: "egne", navn: "Referanser" \}/);
+  assert.match(ref, /\{ id: "claude", navn: "Claude sine referanser" \}/);
+  assert.match(ref, /role="tablist"/);
+  // Flisen og den gamle listeeditoren er borte fra lærersiden.
+  const { readFileSync } = await import("node:fs");
+  const html = readFileSync(new URL("../../teacher.html", import.meta.url), "utf8");
+  assert.ok(!html.includes("btn-ny-referanse") && !html.includes("modal-referanse-edit"));
+});

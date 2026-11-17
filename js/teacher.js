@@ -43,8 +43,6 @@ import {
   openStoryEditor,
   openPageEditor,
   setupStoryEditor,
-  openReferanseEditor,
-  setupReferanseEditor,
   openTechEditor,
   refreshTechAdmin,
   nyttPlateselskap,
@@ -176,7 +174,6 @@ function startAppInner() {
   setupSubgenreSingleSave();
   setupEdgeSingleSave();
   setupStoryEditor();
-  setupReferanseEditor();
   // Formatlinja over alle tekstfelter merket med data-format (beskrivelser,
   // tiårstekster, koblingstekster). Historie-editoren har sin egen i HTML-en.
   setupFormatBars();
@@ -283,11 +280,6 @@ function startAppInner() {
   // etter lagring, som de andre innholdssidene.
   document.getElementById("btn-laerer-handbok")?.addEventListener("click", openLaererHandbok);
   ctx.openLaererHandbok = openLaererHandbok;
-
-  // Frittstående referanser: står ved siden av «Ny artist», siden begge legger
-  // til noe som ikke finnes fra før.
-  const btnNyRef = document.getElementById("btn-ny-referanse");
-  if (btnNyRef) btnNyRef.addEventListener("click", openReferanseEditor);
 
   // Skrivebordet (arbeidsflyt-innboksen øverst) tegnes på nytt ved hvert
   // snapshot som påvirker tallene: forslag inn/ut, kort sjekket, innhold skrevet.

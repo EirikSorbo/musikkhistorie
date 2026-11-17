@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { state, ctx, openAdminModal, closeAdminModal, lukkEtter, avbrytLukkEtter, setContentCheck, guardTeacherAction } from "./teacher-state.js";
-import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, oppdaterSide, saveReferanser, addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts, runMigrationPlan } from "../data/store.js";
+import { saveDecadeDesc, saveGenreDescLevel, saveEdgeDesc, saveStoryBody, clearStory, savePage, deletePage, oppdaterSide,  addTech, updateTech, deleteTech, addPodcast, updatePodcast, deletePodcast, reorderPodcasts, runMigrationPlan } from "../data/store.js";
 import { planSubRename } from "../sjangre/genre-migrate.js";
 import { flyttPodkast } from "../felles/podkast-rekkefolge.js";
 import { resolveMainDesc } from "../sjangre/genealogy.js";
@@ -747,22 +747,7 @@ export function setupPodkastAdmin() {
   });
 }
 
-// ----------------------------------------------------------------------------
-//  Frittstående referanser (content/referanser)
-// ----------------------------------------------------------------------------
-//  Kilder pensumet bygger på uten å høre til et bestemt kort: en bok, en
-//  podkastserie, en dokumentar. Én liste, samme rad-editor som kildene på
-//  kortene. Kategorien er PÅKREVD her — den bestemmer hvilken seksjon i
-//  Referanser-kortet referansen havner i, og uten den ville den havnet under
-//  «Ukategorisert» uten at læreren skjønte hvorfor.
-
-function referanseRader() {
-  return normalizeSources(state.content?.referanser?.kilder);
-}
-
-// `fokus` = url-en (eller teksten) til raden som skal utheves — sendes fra
-// Rediger-knappen i Referanser-lista, så læreren slipper å lete i lista.
-// Begge innholdseditorene lagrer med setDoc UTEN merge. Åpnes de før
+// Innholdseditorene lagrer med setDoc UTEN merge. Åpnes de før
 // content-snapshotet har landet, fylles skjemaet fra en tom state, og en
 // lagring ERSTATTER dokumentet med det tomme skjemaet. pageFor kan dessuten
 // ikke skille «laster» fra «finnes ikke», så statuslinja lyver også.
@@ -771,55 +756,6 @@ function innholdKlart() {
   if (state.contentLoaded) return true;
   melding("Innholdet laster fortsatt. Vent et øyeblikk og prøv igjen, ellers kan du komme til å overskrive tekst som ikke har rukket å vises.");
   return false;
-}
-
-export function openReferanseEditor(fokus) {
-  if (!innholdKlart()) return;
-  const wrap = $("#ref-edit-rows");
-  if (!wrap) return;
-  buildRows(wrap, SOURCE_SPEC, referanseRader());
-  const msg = $("#ref-edit-msg");
-  msg.textContent = "";
-  msg.className = "form-msg ok";
-  openAdminModal("modal-referanse-edit");
-
-  if (!fokus) return;
-  for (const rad of wrap.querySelectorAll(".source-row")) {
-    const url = rad.querySelector(".source-url")?.value.trim();
-    const tekst = rad.querySelector(".source-text")?.value.trim();
-    if (url !== fokus && tekst !== fokus) continue;
-    rad.classList.add("rad-uthevet");
-    rad.scrollIntoView({ block: "center" });
-    rad.querySelector(".source-text")?.focus();
-    break;
-  }
-}
-
-export function setupReferanseEditor() {
-  const addBtn = $("#ref-edit-add");
-  if (!addBtn) return;
-  addBtn.addEventListener("click", () => addRow($("#ref-edit-rows"), SOURCE_SPEC, {}));
-
-  $("#ref-edit-save").addEventListener("click", async () => {
-    const msg = $("#ref-edit-msg");
-    const kilder = collectRows($("#ref-edit-rows"), SOURCE_SPEC);
-    const utenKategori = kilder.filter((k) => !k.kategori);
-    if (utenKategori.length) {
-      msg.textContent = `Velg kategori for ${utenKategori.length === 1 ? "referansen" : "alle referansene"} før du lagrer.`;
-      msg.className = "form-msg error";
-      return;
-    }
-    msg.textContent = "Lagrer …";
-    msg.className = "form-msg ok";
-    try {
-      await saveReferanser(kilder);
-      closeAdminModal("modal-referanse-edit");
-    } catch (err) {
-      console.error("Referanse-lagring feilet:", err);
-      msg.textContent = "Feil: " + err.message;
-      msg.className = "form-msg error";
-    }
-  });
 }
 
 // ----------------------------------------------------------------------------

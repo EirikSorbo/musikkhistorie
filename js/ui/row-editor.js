@@ -12,7 +12,7 @@ import { escapeHtml } from "../felles/util.js";
 // Kategori-vokabularet er en fast konstant uten data-avhengigheter (til
 // forskjell fra sjangerlista, som må sendes inn), så det kan importeres rett
 // hit uten at row-editor blir avhengig av app-tilstand.
-import { KILDE_KATEGORIER } from "../felles/kilder.js";
+import { KILDE_KATEGORIER, kategoriNavn } from "../felles/kilder.js";
 // Starttiden (v5.88) bor i lenka; hjelperne er rene og deles med spilleren.
 import { ytMaal, parseTid, medStarttid, starttidTekst } from "../visning/presentasjon-modell.js";
 
@@ -145,7 +145,9 @@ export const SOURCE_SPEC = {
     // Kategorien styrer hvor kilden havner i Referanser-kortet. Uten valg
     // regnes en kilde med lenke som nettsted (antattKategori i kilder.js, v6.93),
     // og en uten lenke havner under «Ukategorisert».
-    { key: "kategori", cls: "source-kat", type: "select", ph: "Kategori …", label: "Kategori", title: "Hva slags kilde dette er. Styrer grupperingen i Referanser-kortet.", options: KILDE_KATEGORIER, always: true },
+    { key: "kategori", cls: "source-kat", type: "select", ph: "Kategori …", label: "Kategori", title: "Hva slags kilde dette er. Styrer grupperingen i Referanser-kortet.", options: KILDE_KATEGORIER, always: true,
+      // Gamle navn (Videoer, Tidsskrifter) vises og lagres med det nye (v7.39).
+      verdi: (v) => (v.kategori == null ? "" : kategoriNavn(v.kategori)) },
   ],
 };
 
