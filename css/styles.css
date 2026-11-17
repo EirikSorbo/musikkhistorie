@@ -4751,6 +4751,14 @@ body.presentasjon .meta-merke { display: none; }
 .desk-sjekket { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .desk-sjekket .desk-synlighet-rad { font-weight: 600; }
 .desk-sjekket .desk-synlighet-hint { margin: 2px 0 0 26px; }
+/* Studentversjonen (v7.46, samlepakken): statuslinja nederst i panelet, og et
+   varsel i overskriften når den ikke er oppdatert. */
+.desk-pakke { display: flex; align-items: flex-start; gap: 8px 14px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.82rem; }
+.desk-pakke p { flex: 1 1 22rem; margin: 0; }
+.desk-pakke-status { font-weight: 600; }
+.desk-pakke .muted { display: block; margin-top: 2px; }
+.desk-pakke-feil .desk-pakke-status { color: var(--danger-text); }
+.desk-pakke-merke { margin-left: 10px; font-weight: 500; font-size: 0.8rem; color: var(--danger-text); }
 .desk-sjekket-liste { list-style: none; margin: 8px 0 2px 26px; padding: 0; columns: 2 16rem; column-gap: 28px; font-size: 0.84rem; }
 .desk-sjekket-liste li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; break-inside: avoid; }
 .desk-sjekket-liste li span:last-child { color: var(--warn-text); font-variant-numeric: tabular-nums; white-space: nowrap; }

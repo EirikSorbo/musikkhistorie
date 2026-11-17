@@ -29,6 +29,7 @@ import { deleteTimeforslag, savePage } from "../data/store.js";
 import { synlighetVerdier } from "../felles/feature-flags.js";
 import { guideTitler } from "../felles/guide-deler.js";
 import { askChoice, melding, modalOpen, bekreft } from "../ui/ui-modal.js";
+import { pakkeStatus, byggStudentpakkeNaa } from "../data/studentpakke.js";
 
 const ICON = {
   artist: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
@@ -257,6 +258,7 @@ export function renderDesk(el) {
     if (syn && syn.matches("input")) return endreSynlighet(syn.dataset.synlig, syn.checked, syn);
     const guideDel = hit("[data-guide-del]");
     if (guideDel && guideDel.matches("input")) return endreGuideDel(guideDel.dataset.guideDel, guideDel.checked, guideDel);
+    if (hit("[data-pakke-bygg]")) return byggStudentpakkeNaa();
     const regel = hit("[data-synlig-sjekket]");
     if (regel && regel.matches("input")) return endreSjekketRegel(regel.checked, regel);
 
@@ -359,7 +361,7 @@ function synlighetHtml() {
   const v = synlighetVerdier(state.content?.synlighet);
   // Åpen/lukket overlever omtegningen (hvert innholds-snapshot tegner på nytt).
   return `<details class="desk-synlighet"${openPanels.has("synlighet") ? " open" : ""}>
-    <summary>Synlig for studentene</summary>
+    <summary>Synlig for studentene${pakkeMerke(pakkeStatus())}</summary>
     <p class="muted desk-synlighet-hint">Avhuket er synlig for studentene. Du ser alltid alt selv.</p>
     <div class="desk-synlighet-liste">${SYNLIGHET_RADER.map((r) => {
       const rad = `<label class="desk-synlighet-rad">
@@ -368,7 +370,66 @@ function synlighetHtml() {
       return r.id === "guide" ? `<div class="desk-guide-gruppe">${rad}${guideDelerHtml(v)}</div>` : rad;
     }).join("")}</div>
     ${sjekketRegelHtml(v)}
+    ${studentpakkeHtml(pakkeStatus())}
   </details>`;
+}
+
+// ---- Studentversjonen (v7.46, js/data/studentpakke.js) ----
+// Samlepakken byggeren lager av innholdet. Statuslinja nederst i panelet sier
+// om den stemmer med det du ser, og et varsel i overskriften sier fra når den
+// ikke er oppdatert, også med panelet lukket.
+
+const tall = (n, des = 0) => n.toLocaleString("nb-NO", { maximumFractionDigits: des });
+
+function storrelse(bytes) {
+  return bytes >= 1e6 ? `${tall(bytes / 1e6, 1)} MB` : `${tall(Math.max(1, Math.round(bytes / 1000)))} kB`;
+}
+
+function tidspunkt(iso) {
+  const d = new Date(iso || "");
+  if (Number.isNaN(d.getTime())) return "";
+  const kl = d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
+  return d.toDateString() === new Date().toDateString()
+    ? `kl. ${kl}` : `${d.toLocaleDateString("nb-NO", { day: "numeric", month: "short" })} kl. ${kl}`;
+}
+
+function oppramsing(liste) {
+  return liste.length > 1 ? `${liste.slice(0, -1).join(", ")} og ${liste[liste.length - 1]}` : liste.join("");
+}
+
+function pakkeTekst(st) {
+  switch (st.tilstand) {
+    case "oppdatert":
+      return `Studentversjonen er oppdatert. Bygget ${tidspunkt(st.bygget)}, ${st.deler} deler, ${storrelse(st.bytes)}.`;
+    case "bygger": return "Studentversjonen lagres …";
+    case "venter": return `Studentversjonen venter på ${oppramsing(st.venter || [])} fra databasen …`;
+    case "feil": return `Studentversjonen er ikke oppdatert. ${st.melding || ""}`;
+    default: return "Studentversjonen bygges når du er logget inn.";
+  }
+}
+
+function studentpakkeHtml(st) {
+  return `<div class="desk-pakke${st.tilstand === "feil" ? " desk-pakke-feil" : ""}" id="desk-pakke">
+    <p><span class="desk-pakke-status">${escapeHtml(pakkeTekst(st))}</span>
+      <span class="muted">En samlet kopi av innholdet, som studentene etter hvert skal lese i stedet for samlingene, så appen bruker langt færre lesinger i databasen. Studentene bruker den ikke ennå.</span></p>
+    <button type="button" class="btn ghost small" data-pakke-bygg>Bygg på nytt</button>
+  </div>`;
+}
+
+const pakkeMerke = (st) => (st.tilstand === "feil"
+  ? '<span class="desk-pakke-merke">Studentversjonen er ikke oppdatert</span>' : "");
+
+// Statusen endres uten at resten av Skrivebordet tegnes på nytt.
+if (typeof document !== "undefined") {
+  document.addEventListener("pensum:studentpakke", (e) => {
+    const el = document.getElementById("desk-pakke");
+    if (el) el.outerHTML = studentpakkeHtml(e.detail);
+    const sum = document.querySelector(".desk-synlighet > summary");
+    if (sum) {
+      sum.querySelector(".desk-pakke-merke")?.remove();
+      sum.insertAdjacentHTML("beforeend", pakkeMerke(e.detail));
+    }
+  });
 }
 
 // Delene av «Slik bruker du appen» (v6.95, js/felles/guide-deler.js): én

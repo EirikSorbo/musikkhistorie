@@ -43,5 +43,7 @@ test("like eller manglende tall: flyttingen virker likevel", () => {
 test("en ny episode får høyeste tall + 1 og havner øverst; listene sorteres i store", () => {
   const kilde = (f) => readFileSync(new URL(`../../js/${f}`, import.meta.url), "utf8");
   assert.match(kilde("laerer/teacher-content.js"), /order: Math\.max\(0, \.\.\.state\.podcasts\.map\(\(p\) => p\.order \|\| 0\)\) \+ 1/);
-  assert.match(kilde("data/store.js"), /callback\(sorterPodkaster\(snapshot\.docs/);
+  // Fra v7.46 skjer sorteringen i dok-objekter.js, som store.js bruker.
+  assert.match(kilde("data/store.js"), /callback\(podkasterFraDok\(dokListe\(snapshot\)\)\);/);
+  assert.match(kilde("data/dok-objekter.js"), /export const podkasterFraDok = \(docs\) => sorterPodkaster\(/);
 });

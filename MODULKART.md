@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-126 filer i 11 mapper.
+129 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -17,7 +17,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
 | `js/ui/` | Byggeklosser for skjermen | 16 |
-| `js/data/` | Data | 11 |
+| `js/data/` | Data | 14 |
 | `js/felles/` | Felles hjelpere | 17 |
 | `js/vendor/` | Tredjepart | 1 |
 
@@ -195,12 +195,15 @@ Firestore (store.js er den eneste fila som snakker med databasen), den delte dat
 | `artist-cache.js` | ARTIST-CACHE — delt localStorage-lag for artistlista |
 | `artist-normalize.js` | ARTIST-NORMALISERING — ren datalogikk, uten Firebase-avhengigheter |
 | `artist-schema.js` | ARTIST-SKJEMA — én sannhetskilde for artistfeltene |
+| `dok-objekter.js` | FRA FIRESTORE-DOKUMENTER TIL APPENS OBJEKTER (v7.46, samlepakken fase 0) |
 | `emulator.js` | EMULATORBRYTEREN — appen mot Firebase-emulatoren i nettlesertestene (v7.13) |
 | `import-format.js` | IMPORT-FORMAT — ren parselogikk for JSON-filene |
 | `shared-data.js` | DELT DATAROT — alle sider abonnerer på de delte samlingene herfra |
 | `shared.js` | DELTE HJELPERE — brukes av alle sider |
 | `sjekket-filter.js` | SJEKKET-FILTRENE — studentenes utgave av de delte samlingene (v6.89) |
 | `store.js` | DATALAG — Firebase Firestore |
+| `studentpakke-modell.js` | SAMLEPAKKEN TIL STUDENTENE: MODELLEN (v7.46, plan av 2026-11-17) |
+| `studentpakke.js` | SAMLEPAKKEN TIL STUDENTENE: BYGGEREN (v7.46, fase 1 i planen av 2026-11-17) |
 
 ## `js/felles/` Felles hjelpere
 

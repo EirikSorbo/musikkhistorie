@@ -107,6 +107,18 @@ export async function lesSamling(samling) {
   return ut;
 }
 
+// Som lesSamling, men med innholdet for seg: [{ id, data }], slik
+// studentpakke-modell.js tar det (v7.46).
+export async function lesRaa(samling) {
+  const e = await miljo();
+  let ut = [];
+  await e.withSecurityRulesDisabled(async (ctx) => {
+    const s = await ctx.firestore().collection(samling).get();
+    ut = s.docs.map((d) => ({ id: d.id, data: d.data() }));
+  });
+  return ut;
+}
+
 export async function rydd() {
   if (env) await env.cleanup();
   env = null;

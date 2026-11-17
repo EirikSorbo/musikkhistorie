@@ -49,7 +49,10 @@ import { normalizeArtist, buildArtistDoc, resubmitArtistFields } from "./artist-
 import { RETUR_FELTER } from "./artist-schema.js";
 import { genererReturKode, normaliserReturKode, merkHarSendtInn } from "../felles/util.js";
 import { PROPOSABLE_KEYS } from "../forslag/proposal-fields.js";
-import { sorterPodkaster } from "../felles/podkast-rekkefolge.js";
+import {
+  dokListe, artisterFraDok, tiarFraDok, sjangerbeskrivelserFraDok, koblingerFraDok,
+  podkasterFraDok, innovasjonerFraDok, innholdFraDok, sjekkerFraDok,
+} from "./dok-objekter.js";
 import { mergeHeatRows } from "./import-format.js";
 import { BATCH_MAX, DECADES, INSTRUMENT_TIMELINE_GROUPS, instrumentPageId } from "../felles/limits.js";
 
@@ -229,8 +232,7 @@ function onSubscribeError(what) {
 // Lytter på alle artister. Kaller callback hver gang noe endres.
 export function subscribeArtists(callback) {
   return onSnapshot(artistsCol, (snapshot) => {
-    const artists = snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
-    callback(artists);
+    callback(artisterFraDok(dokListe(snapshot)));
   }, onSubscribeError("artister"));
 }
 
@@ -242,8 +244,7 @@ export function subscribeArtists(callback) {
 // så hvert kall koster en full samlingslesing. Derfor er den en sjelden
 // reserve, ikke en hovedvei.
 export async function fetchArtists() {
-  const snapshot = await getDocs(artistsCol);
-  return snapshot.docs.map((d) => normalizeArtist({ id: d.id, ...d.data() }));
+  return artisterFraDok(dokListe(await getDocs(artistsCol)));
 }
 
 // Konfig-abonnementet er fjernet (v3.68): instrument-vokabularet — det siste
@@ -396,25 +397,19 @@ export async function deleteAllArtists() {
 
 export function subscribeDecades(callback) {
   return onSnapshot(decadesCol, (snapshot) => {
-    const decades = {};
-    snapshot.docs.forEach((d) => { decades[d.id] = { id: d.id, ...d.data() }; });
-    callback(decades);
+    callback(tiarFraDok(dokListe(snapshot)));
   }, onSubscribeError("tiårsbeskrivelser"));
 }
 
 export function subscribeGenreDescs(callback) {
   return onSnapshot(genreDescsCol, (snapshot) => {
-    const m = {};
-    snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
-    callback(m);
+    callback(sjangerbeskrivelserFraDok(dokListe(snapshot)));
   }, onSubscribeError("sjangerbeskrivelser"));
 }
 
 export function subscribeEdgeDescs(callback) {
   return onSnapshot(edgeDescsCol, (snapshot) => {
-    const m = {};
-    snapshot.docs.forEach((d) => { m[d.id] = { id: d.id, ...d.data() }; });
-    callback(m);
+    callback(koblingerFraDok(dokListe(snapshot)));
   }, onSubscribeError("koblingsbeskrivelser"));
 }
 
@@ -429,7 +424,7 @@ export async function saveEdgeDesc(edgeId, data) {
 export function subscribePodcasts(callback) {
   return onSnapshot(podcastsCol, (snapshot) => {
     // Nyeste øverst, og lærerens egen rekkefølge (v6.48, podkast-rekkefolge.js).
-    callback(sorterPodkaster(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))));
+    callback(podkasterFraDok(dokListe(snapshot)));
   }, onSubscribeError("podkaster"));
 }
 
@@ -506,9 +501,7 @@ export async function reorderPodcasts(endringer) {
 
 export function subscribeTech(callback) {
   return onSnapshot(techCol, (snapshot) => {
-    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    items.sort((a, b) => (a.adoptedYear || 0) - (b.adoptedYear || 0));
-    callback(items);
+    callback(innovasjonerFraDok(dokListe(snapshot)));
   }, onSubscribeError("tech"));
 }
 
@@ -644,9 +637,7 @@ export async function clearStory(genreId) {
 
 export function subscribeContent(callback) {
   return onSnapshot(contentCol, (snapshot) => {
-    const content = {};
-    snapshot.docs.forEach((d) => { content[d.id] = d.data(); });
-    callback(content);
+    callback(innholdFraDok(dokListe(snapshot)));
   }, onSubscribeError("innhold"));
 }
 
@@ -1055,11 +1046,49 @@ export async function approveTech(techId) {
   return updateDoc(doc(db, "tech", techId), { status: "active", ...ryddReturfelter() });
 }
 
+// ----------------------------------------------------------------------------
+//  SAMLEPAKKEN TIL STUDENTENE (v7.46, js/data/studentpakke.js)
+//  Rådataene i kildene, pakken i config og skrivingen av den. Lytterne tar med
+//  metadata-endringer, så byggeren ser når dataene er ferske fra serveren (ikke
+//  fra den lokale kopien) og ingen lagringer venter. Samme spørring som de
+//  andre lytterne på samlingen, så Firestore deler målet og lesingene.
+// ----------------------------------------------------------------------------
+
+const ferskt = (s) => !s.metadata.fromCache && !s.metadata.hasPendingWrites;
+
+// callback({ docs, fersk, endret }). dokId gir ett dokument (config/teacherChecks).
+export function lyttRaa(samling, dokId, callback, onError) {
+  const valg = { includeMetadataChanges: true };
+  if (dokId) {
+    return onSnapshot(doc(db, samling, dokId), valg, (s) => callback({
+      docs: s.exists() ? [{ id: s.id, data: s.data() }] : [], fersk: ferskt(s), endret: true,
+    }), onError);
+  }
+  return onSnapshot(collection(db, samling), valg, (s) => callback({
+    docs: dokListe(s), fersk: ferskt(s), endret: s.docChanges().length > 0,
+  }), onError);
+}
+
+// Pakken slik den ligger i config (manifestet og delene).
+export function lyttStudentpakke(callback, onError) {
+  return onSnapshot(query(collection(db, "config"), where("studentpakke", "==", true)),
+    { includeMetadataChanges: true },
+    (s) => callback({ docs: dokListe(s), fersk: ferskt(s) }), onError);
+}
+
+// Alt i én batch, så studentene aldri ser en halvferdig pakke.
+export async function skrivStudentpakke({ sett = [], slett = [] }) {
+  const batch = writeBatch(db);
+  for (const { id, data } of sett) batch.set(doc(db, "config", id), data);
+  for (const id of slett) batch.delete(doc(db, "config", id));
+  await batch.commit();
+}
+
 const teacherChecksRef = doc(db, "config", "teacherChecks");
 
 export function subscribeTeacherChecks(callback) {
   return onSnapshot(teacherChecksRef, (snap) => {
-    callback(snap.exists() ? snap.data() : { genres: [], subgenres: [] });
+    callback(sjekkerFraDok(snap.exists() ? snap.data() : null));
   }, onSubscribeError("teacherChecks"));
 }
 

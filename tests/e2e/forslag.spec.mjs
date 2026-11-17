@@ -24,8 +24,17 @@ async function ventPaa(fn, tid = 10000) {
   throw new Error("Ventet forgjeves");
 }
 
+// Lærervinduene lukkes etter hver test (v7.46). Før levde de videre gjennom
+// resten av testene, og fra v7.46 bygger en åpen lærerside studentversjonen
+// (js/data/studentpakke.js) i emulatoren mens andre tester kjører.
+const laererVinduer = [];
+test.afterEach(async () => {
+  while (laererVinduer.length) await laererVinduer.pop().close();
+});
+
 async function laererSide(browser) {
   const ctx = await browser.newContext();
+  laererVinduer.push(ctx);
   const side = await ctx.newPage();
   await forbered(side, { rolle: null });
   await loggInnSomLaerer(side);

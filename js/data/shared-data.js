@@ -48,6 +48,7 @@ import { applyGenealogyDoc } from "../sjangre/genre-model.js";
 import { brukSynlighet } from "../felles/feature-flags.js";
 import { sjekketRegelAktiv, sjekkene, brukSjekker, settSjekketLaerer } from "../felles/sjekket.js";
 import { filtrerGenreDescs, filtrerEdgeDescs, filtrerTech, filtrerDecades, filtrerContent } from "./sjekket-filter.js";
+import { startStudentpakke } from "./studentpakke.js";
 
 // Feltene hver side må ha i sin `state` for at de delte komponentene skal
 // virke. Spres inn i sidens eget state-objekt ved oppstart, så ingen side kan
@@ -97,6 +98,10 @@ export function subscribeSharedData(state, hooks = {}) {
     laererside = false,
   } = hooks;
   if (laererside) settSjekketLaerer(true);
+  // Samlepakken til studentene (v7.46, js/data/studentpakke.js): bygges i
+  // lærerens nettleser på alle sidene som kommer hit. For alle andre gjør
+  // den ingenting.
+  startStudentpakke();
 
   // Rådataene fra Firestore. state får studentenes utgave av dem (utled).
   const raa = { genreDescs: {}, edgeDescs: {}, techItems: [], content: {}, decadeDescs: {} };
