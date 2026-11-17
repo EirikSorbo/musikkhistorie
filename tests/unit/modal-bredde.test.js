@@ -65,8 +65,8 @@ test("rammen og tekstgrensen, og presentasjonen holdes utenfor tekstgrensen", ()
   const css = les("css/styles.css");
   assert.match(css, /\.modal\.modal-innhold \{ max-width: clamp\(860px, 90vw, 1000px\); \}/,
     "1000 px, aldri over 90 % av skjermen, aldri under 860 px (da fyller kortet vinduet som før)");
-  assert.match(css, /body:not\(\.presentasjon\) \.modal\.modal-innhold :is\(p, \.rt, \.info-text\) \{ max-width: 68ch; \}/,
-    "lesbar linjelengde i appen; presentasjonen har sine egne 80ch");
+  assert.match(css, /body:not\(\.presentasjon\) \.modal\.modal-innhold :is\(p, \.rt, \.info-text, \.story-body > ul, \.story-body > ol\) \{ max-width: 68ch; \}/,
+    "lesbar linjelengde i appen; presentasjonen har sine egne 80ch. Punktlistene i innholdssidene følger avsnittene (v7.42)");
 });
 
 // v5.94: metasjanger-oversikten ble lagt i markupen uten å bli registrert, og

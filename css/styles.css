@@ -1888,8 +1888,11 @@ body:not(.presentasjon) .modal.modal-innhold {
    rundt 85 tegn med Inter, omtrent det beskrivelsene hadde i 640 px-kortet
    (de står under bildet, i full bredde). Tidslinjer, varmekart, lister og
    rutenett bruker hele bredden. .info-text er tiårstekstene. Presentasjonen
-   har sine egne regler (80ch, lerretets bildeoppsett) og holdes utenfor. */
-body:not(.presentasjon) .modal.modal-innhold :is(p, .rt, .info-text) { max-width: 68ch; }
+   har sine egne regler (80ch, lerretets bildeoppsett) og holdes utenfor.
+   Punktlistene i innholdssidene (.story-body) får samme bredde som avsnittene
+   rundt, ellers ble et innledende avsnitt en smal spalte over brede punkter
+   (v7.42, KI-erklæringen). */
+body:not(.presentasjon) .modal.modal-innhold :is(p, .rt, .info-text, .story-body > ul, .story-body > ol) { max-width: 68ch; }
 /* Større bilde på artist- og innovasjonskortet når kortet har plass til det.
    På innovasjonskortet står bildet i margen ved siden av den avgrensede
    teksten. På mobil står bildet over teksten med dagens størrelse (se
