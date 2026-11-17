@@ -40,7 +40,7 @@ export const INFO_VALG = [
     ikon: '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>',
   },
   {
-    id: "laererhandbok", tekst: "Lærerhåndbok", desc: "Hva du kan gjøre som lærer, og hvor du finner det.",
+    id: "laererhandbok", tekst: "Lærerhåndbok", desc: "Hva du kan gjøre som lærer.",
     vis: "side:laererHandbok", laerer: true, farge: "--icon-l-handbok",
     ikon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/><path d="M9 7h7"/>',
   },
