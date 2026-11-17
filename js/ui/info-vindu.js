@@ -50,7 +50,7 @@ export const INFO_VALG = [
     ikon: '<path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/>',
   },
   {
-    id: "ki", tekst: "KI-erklæring", desc: "Hvordan appen er laget med KI, og hvem som har ansvaret for innholdet.",
+    id: "ki", tekst: "KI-erklæring", desc: "Hvordan KI er brukt i arbeidet med historieappen.",
     vis: "side:kiErklaering", side: "kiErklaering", farge: "--icon-ki",
     ikon: '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 10h4v4h-4z"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
   },

@@ -73,7 +73,7 @@ test("vinduet: ett kort per valg i Innstillingers stil, med Åpne som lenke til 
   assert.match(html, /<section class="innst-gruppe" data-info-kort="ki">/);
   assert.match(html, /<div class="innst-kort"><div class="innst-rad">/);
   assert.match(html, /<span class="innst-ikon" style="--farge:var\(--icon-ki\)" aria-hidden="true"><svg /);
-  assert.match(html, /<span class="innst-tittel">KI-erklæring<\/span><span class="innst-desc">Hvordan appen er laget med KI, og hvem som har ansvaret for innholdet\.<\/span>/);
+  assert.match(html, /<span class="innst-tittel">KI-erklæring<\/span><span class="innst-desc">Hvordan KI er brukt i arbeidet med historieappen\.<\/span>/);
   assert.match(html, /<a class="btn ghost small" href="index\.html\?vis=side%3AkiErklaering" data-info-vis="side:kiErklaering" aria-label="Åpne KI-erklæring">Åpne<\/a>/);
   for (const v of INFO_VALG) assert.ok(v.desc && v.ikon && v.farge, v.id);
   const m = lesJs("info-vindu.js");
