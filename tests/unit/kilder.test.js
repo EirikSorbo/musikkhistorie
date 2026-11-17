@@ -116,7 +116,7 @@ test("seksjonene står i vokabularets rekkefølge, ukjent kategori havner sist",
     nett("SNL", "https://snl.no/A"),
   ]);
   assert.deepEqual(seksjoner.map((s) => s.navn), [...KILDE_KATEGORIER, UKATEGORISERT]);
-  assert.deepEqual(KILDE_KATEGORIER, ["Bøker", "Podkaster", "Dokumentarer", "Nettsteder"]);
+  assert.deepEqual(KILDE_KATEGORIER, ["Bøker", "Dokumentarer", "Podkaster", "Nettsteder"]);
   const ukat = seksjoner.find((s) => s.navn === UKATEGORISERT);
   assert.equal(ukat.bruk, 2, "ukjent kategori og manglende kategori uten lenke skal synes");
 });
@@ -156,7 +156,7 @@ test("bøker, videoer og podkaster er flate lister der teksten ER referansen", (
 test("tomme seksjoner finnes, men uten rader", () => {
   const { seksjoner } = samleKilder([nett("SNL", "https://snl.no/A")]);
   const tomme = seksjoner.filter((s) => !s.unike).map((s) => s.navn);
-  assert.deepEqual(tomme, ["Bøker", "Podkaster", "Dokumentarer"]);
+  assert.deepEqual(tomme, ["Bøker", "Dokumentarer", "Podkaster"]);
 });
 
 test("søppel og tomme kilder droppes uten å velte aggregeringen", () => {

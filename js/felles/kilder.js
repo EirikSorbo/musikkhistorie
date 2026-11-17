@@ -14,8 +14,8 @@ import { safeUrl } from "./util.js";
 // flertallsform, og rekkefølgen her er rekkefølgen seksjonene vises i.
 export const KILDE_KATEGORIER = [
   "Bøker",
-  "Podkaster",
   "Dokumentarer",
+  "Podkaster",
   "Nettsteder",
 ];
 
