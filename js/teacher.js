@@ -18,6 +18,7 @@ import {
   signOutTeacher,
 } from "./data/store.js";
 import { subscribeSharedData } from "./data/shared-data.js";
+import { brukSjekker } from "./felles/sjekket.js";
 import { onGenreModelChanged } from "./sjangre/genre-model.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
@@ -376,6 +377,10 @@ function startAppInner() {
   });
   subscribeTeacherChecks((checks) => {
     state.teacherChecks = checks; state.teacherChecksLoaded = true; refreshDesk();
+    // Referanser velger radene etter sjekkene (v7.37). sjekket.js får dem her,
+    // siden datalaget ikke abonnerer på lærersiden; regelen er av for læreren.
+    // brukSjekker sender «pensum:sjekker», og Referanser tegnes på nytt.
+    brukSjekker(checks);
     // Avhukingen på plateselskapskortene teller i Oversikten (v6.37).
     oppdaterOversiktPlateselskaper();
   });

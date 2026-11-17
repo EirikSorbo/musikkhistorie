@@ -15,7 +15,7 @@ import { GENEALOGY } from "../sjangre/genre-model.js";
 import { plateselskapIdForSide } from "../felles/plateselskaper.js";
 
 const lik = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
-const har = (liste, navn) => Array.isArray(liste) && liste.some((x) => lik(x, navn));
+export const har = (liste, navn) => Array.isArray(liste) && liste.some((x) => lik(x, navn));
 
 // Innholdet i et nivå (meta/main/sub). Årstallene, epoken og «usikre» er
 // struktur og blir stående.
@@ -28,7 +28,7 @@ function utenTekst(nivaa) {
 
 // Sjekken for treets sjangre lagres med nodens etikett (l), mens beskrivelsen
 // kan ligge under det fulle navnet (f). Begge leder til samme node.
-function sjangerSjekket(navn, sjekker) {
+export function sjangerSjekket(navn, sjekker) {
   if (har(sjekker.genres, navn)) return true;
   const node = GENEALOGY.find((n) => lik(n.l, navn) || lik(n.f, navn));
   return !!node && har(sjekker.genres, node.l);

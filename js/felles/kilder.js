@@ -192,6 +192,34 @@ export function kildeRadNokkel(k) {
   return { kategori: antattKategori(k) || UKATEGORISERT, nokkel: url || tekst.toLowerCase() };
 }
 
+// Hvilke kilder Referanser tar med (v7.37, brukerbestilling 2026-11-17). En
+// rad vises bare når to krav er oppfylt: minst ett av stedene den er brukt, er
+// synlig for studentene (opphav.synlig), og minst ett er sjekket av læreren
+// (opphav.sjekket). Det trenger ikke være samme sted. De frittstående
+// referansene (uten opphav) er lagt inn i Referanser med vilje og vises
+// alltid. Hele raden avgjøres samlet, så alle kildene på en rad som vises,
+// blir med (også dem på skjulte eller usjekkede kort): rettingen fra
+// lærersiden skal nå alle stedene kilden står.
+export function kildeUtvalg(liste) {
+  const radId = (k) => { const n = kildeRadNokkel(k); return n ? `${n.kategori}\n${n.nokkel}` : null; };
+  const status = new Map();
+  for (const k of Array.isArray(liste) ? liste : []) {
+    const id = radId(k);
+    if (!id) continue;
+    const st = status.get(id) || { fri: false, synlig: false, sjekket: false };
+    if (!k.opphav) st.fri = true;
+    else {
+      if (k.opphav.synlig) st.synlig = true;
+      if (k.opphav.sjekket) st.sjekket = true;
+    }
+    status.set(id, st);
+  }
+  return (Array.isArray(liste) ? liste : []).filter((k) => {
+    const st = status.get(radId(k));
+    return !!st && (st.fri || (st.synlig && st.sjekket));
+  });
+}
+
 // «Arne Forsgren, 2021» — forfatter og år slik de vises etter tittelen.
 const detaljFor = (k) => [k.forfatter, k.year].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
 

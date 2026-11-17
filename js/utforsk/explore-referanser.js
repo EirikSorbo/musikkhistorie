@@ -14,8 +14,11 @@
 // ============================================================================
 import { modalOpen } from "../ui/ui-modal.js";
 import { escapeHtml } from "../felles/util.js";
-import { isVisible } from "../felles/limits.js";
-import { samleKilder } from "../felles/kilder.js";
+import { isVisible, erSkjult } from "../felles/limits.js";
+import { samleKilder, kildeUtvalg } from "../felles/kilder.js";
+import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
+import { sjekkene } from "../felles/sjekket.js";
+import { har, sjangerSjekket } from "../data/sjekket-filter.js";
 import { genreNodeById, edgeExists } from "../sjangre/genre-model.js";
 import { showEdgeInfo } from "../sjangre/genealogy.js";
 import { onMainGenreClick, sjangerOpts } from "./explore-context.js";
@@ -33,22 +36,67 @@ export function openReferanser() {
   modalOpen(modal);
 }
 
-// Alle kilder fra de fire stedene de faktisk registreres. Sjangerbeskrivelsene
-// har ett dokument per sjangernavn med egne felt per nivå (meta/main/sub), og
-// hvert nivå har sine egne kilder.
+// Kildene fra alle kortene. Sjangerbeskrivelsene har ett dokument per
+// sjangernavn med egne felt per nivå (meta/main/sub), og hvert nivå har sine
+// egne kilder.
+//
+// Kildene fra alle kortene, med hvor de står (opphav). Hvert sted har to
+// merker til utvalget i kildeUtvalg (v7.37): `synlig` (studentene kan se
+// teksten, uten hensyn til sjekkene) og `sjekket` (læreren har sjekket
+// teksten, config/teacherChecks). `apnes` sier om denne brukeren får åpne
+// kortet fra lista: på lærersiden alle, ellers bare det studentene ser.
+//
+// Det studentene ser: aktive artister som ikke er skjult; alle tiår og
+// sjangerkort; sjangerhistoriene (meta) og koblingstekstene bare når bryterne
+// metasjangerhistorier og koblingsbeskrivelser er av; aktive innovasjonskort.
+const KRAV_TEKST = "En kilde står her når minst én tekst som bruker den, er synlig for studentene, og minst én er sjekket.";
+const erLaererside = () => typeof document !== "undefined" && document.body.classList.contains("is-teacher");
+
 function alleKilder() {
   const s = getState();
+  const sj = sjekkene();
+  const skjul = SKJUL_I_STUDENTVISNING;
+  const laererside = erLaererside();
   const ut = [];
   // Hver kilde bærer med seg hvilket kort den kom fra, så listen kan åpne det.
-  const legg = (arr, opphav) => { if (Array.isArray(arr)) for (const k of arr) if (k) ut.push({ ...k, opphav }); };
+  const legg = (arr, opphav) => {
+    if (!Array.isArray(arr)) return;
+    if (opphav && opphav.apnes === undefined) opphav.apnes = laererside || opphav.synlig;
+    for (const k of arr) if (k) ut.push({ ...k, opphav });
+  };
 
-  for (const a of (s.artists || []).filter(isVisible)) legg(a.kilder, { type: "artist", id: a.id, navn: a.name });
-  for (const [id, d] of Object.entries(s.decadeDescs || {})) legg(d && d.kilder, { type: "decade", id, navn: `${id}-tallet` });
+  for (const a of (s.artists || []).filter((x) => x.status === "active")) {
+    legg(a.kilder, {
+      type: "artist", id: a.id, navn: a.name,
+      synlig: !erSkjult(a), sjekket: a.teacherChecked === true,
+      // Med «Bare sjekket innhold» på ser ikke studentene usjekkede artister.
+      apnes: laererside || isVisible(a),
+    });
+  }
+  for (const [id, d] of Object.entries(s.decadeDescs || {})) {
+    // Kildene er felles for de to tekstene på tiåret.
+    legg(d && d.kilder, {
+      type: "decade", id, navn: `${id}-tallet`,
+      synlig: true, sjekket: har(sj.decades, id) || har(sj.decadesTech, id),
+    });
+  }
   for (const [navn, g] of Object.entries(s.genreDescs || {})) {
     if (!g) continue;
-    for (const niva of ["meta", "main", "sub"]) legg(g[niva] && g[niva].kilder, { type: "genre", id: navn, navn, niva });
+    const sjekk = { main: sjangerSjekket(navn, sj), sub: har(sj.subgenres, navn), meta: har(sj.metaGenres, navn) };
+    for (const niva of ["meta", "main", "sub"]) {
+      legg(g[niva] && g[niva].kilder, {
+        type: "genre", id: navn, navn, niva,
+        synlig: niva === "meta" ? !skjul.metasjangerhistorier : true, sjekket: sjekk[niva],
+      });
+    }
   }
-  for (const t of s.techItems || []) legg(t && t.kilder, { type: "tech", id: t.id, navn: t.name });
+  for (const t of s.techItems || []) {
+    if (!t) continue;
+    legg(t.kilder, {
+      type: "tech", id: t.id, navn: t.name,
+      synlig: (t.status || "active") === "active", sjekket: (sj.tech || []).includes(t.id),
+    });
+  }
   // Koblingene i slektstreet (edgeDescriptions, doc-ID «fra__til») — bl.a.
   // forelesningsnotatene bor her. Navnet vises som «Blues → R&B».
   for (const [key, e] of Object.entries(s.edgeDescs || {})) {
@@ -58,12 +106,15 @@ function alleKilder() {
     if (!edgeExists(key)) continue;
     const [fra, til] = String(key).split("__");
     const navn = `${genreNodeById(fra)?.l || fra} → ${genreNodeById(til)?.l || til}`;
-    legg(e.kilder, { type: "edge", id: key, navn });
+    legg(e.kilder, { type: "edge", id: key, navn, synlig: !skjul.koblingsbeskrivelser, sjekket: har(sj.edges, key) });
   }
   // Frittstående referanser: bor i content-samlingen, som allerede lastes, og
   // har med vilje INGEN opphav — de hører ikke til noe kort.
   legg(s.content && s.content.referanser && s.content.referanser.kilder, null);
-  return ut;
+  // Utvalget avgjøres av alle stedene. Deretter tas stedene brukeren ikke får
+  // åpne, ut av lista (studentene får ingen knapp til et skjult kort).
+  const utvalg = kildeUtvalg(ut);
+  return laererside ? utvalg : utvalg.filter((k) => !k.opphav || k.opphav.apnes);
 }
 
 // Antall kilder, samme tall som ingressen i Referanser viser. Brukes av
@@ -180,15 +231,18 @@ export function renderReferanser({ bevar = false } = {}) {
   const data = samleKilder(alleKilder());
 
   if (!data.totalt) {
-    body.innerHTML = `<p class="gx-missing">${s.artistsLoaded
-      ? "Ingen kilder er registrert ennå."
-      : "Laster kilder …"}</p>`;
+    body.innerHTML = `<p class="gx-missing">${!s.artistsLoaded ? "Laster kilder …"
+      : erLaererside() ? `Ingen kilder står her ennå. ${KRAV_TEKST}`
+      : "Ingen kilder er registrert ennå."}</p>`;
     return;
   }
 
   radListe = [];
   let html = `<p class="muted" style="margin:0 0 6px;font-size:0.86rem">`;
-  html += `${antallOrd(data.unike, "kilde", "kilder")} samlet fra artistkortene, tiårene, sjangrene, koblingene i slektstreet og innovasjonskortene.</p>`;
+  html += `${antallOrd(data.unike, "kilde", "kilder")} samlet fra artistkortene, tiårene, sjangrene, koblingene i slektstreet og innovasjonskortene.`;
+  // Læreren får vite hvorfor en kilde kan mangle (v7.37).
+  if (erLaererside()) html += ` ${KRAV_TEKST}`;
+  html += `</p>`;
 
   // Seksjonene er overskrifter, ikke knapper: de står alltid åpne. Bare
   // nettstedene under «Nettsteder» har trekant, siden de kan romme hundrevis

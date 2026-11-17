@@ -85,13 +85,13 @@ test("skjemaet fylles med den første kilden, og stedene får lesbare navn", () 
   assert.equal(stedNavn({ type: "artist", id: "x", navn: "Muddy Waters" }), "Muddy Waters");
 });
 
-test("blyanten: bare for læreren, på hver rad, og lista beholder plassen etter lagring", () => {
+test("blyanten: bare for læreren på lærersiden, på hver rad, og lista beholder plassen etter lagring", () => {
   const r = lesJs("explore-referanser.js");
   assert.match(r, /if \(kanRetteKilder\(\)\) \{\s*vei \+= `<button type="button" class="ref-kort ref-rett"/);
   assert.match(r, /apneKildeRetting\(rad, \{ etterLagring: \(\) => renderReferanser\(\{ bevar: true \}\) \}\);/);
   assert.ok(!r.includes("onReferanseEdit"), "den gamle Rediger-knappen for de frittstående er erstattet");
   const v = lesJs("referanse-retting.js");
-  assert.match(v, /b\.contains\("is-teacher"\) \|\| b\.contains\("laerer-okt"\)/);
+  assert.match(v, /document\.body\.classList\.contains\("is-teacher"\)/, "bare lærersiden (v7.37)");
   assert.match(v, /await runMigrationPlan\(ops\);/, "én atomisk batch");
   assert.match(v, /farlig: true/, "slettingen spør med rød knapp");
 });

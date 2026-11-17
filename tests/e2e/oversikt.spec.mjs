@@ -187,6 +187,9 @@ test("Referanser: læreren retter en kilde som står på to kort, og sletter den
   await page.locator("#ref-body .refp-group-head").filter({ hasText: "Andre nettsteder" }).click();
   const rad = page.locator("#ref-body .ref-rad").filter({ hasText: "Muddy Waters" });
   await expect(rad).toContainText("2 kort");
+  // v7.37: Bessie Smith er ikke sjekket, så Britannica-kilden hennes står ikke.
+  await expect(page.locator('#ref-body a[href*="britannica.com"]')).toHaveCount(0);
+  await expect(page.locator("#ref-body")).toContainText("minst én er sjekket");
   // v7.36: antallet står bare i «2 kort», og blyanten har ingen tekst.
   await expect(rad).not.toContainText("×");
   await expect(rad.locator(".ref-rett")).toHaveText("");
@@ -213,12 +216,36 @@ test("Referanser: læreren retter en kilde som står på to kort, og sletter den
   expect(appFeil(feil)).toEqual([]);
 });
 
-test("Referanser: studentene ser ingen blyant", async ({ page }) => {
+test("Referanser: studentene ser ingen blyant, og bare kilder fra sjekket og synlig tekst", async ({ page }) => {
   const feil = await forbered(page);
   await apne(page, "/index.html?vis=referanser");
   await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
   await expect(page.locator("#ref-body .refp-group-head").first()).toBeVisible();
   expect(await page.locator("#ref-body .ref-rad").count()).toBeGreaterThan(0);
+  await expect(page.locator("#ref-body .ref-rett")).toHaveCount(0);
+  // v7.37: Muddy Waters er sjekket og synlig, Bessie Smith er ikke sjekket.
+  await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(1);
+  await expect(page.locator('#ref-body a[href*="britannica.com"]')).toHaveCount(0);
+  await expect(page.locator("#ref-body")).not.toContainText("minst én er sjekket");
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("Referanser: en skjult artist teller ikke som synlig, og blyanten står ikke på forsiden", async ({ page }) => {
+  // Sjekket, men skjult for studentene: kilden står ikke, heller ikke for læreren.
+  await skrivDok("artists", "muddy", { ...ARTISTER.muddy, hidden: true });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await apne(page, "/teacher.html?vis=referanser");
+  await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  await expect(page.locator("#ref-body")).toContainText("minst én er sjekket");
+  await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(0);
+  // På forsiden er læreren innlogget, men ser studentenes utgave og ingen blyant.
+  await skrivDok("artists", "muddy", ARTISTER.muddy);
+  // Forsiden viser rollevalget uten valgt rolle; læreren har vært inne som student før.
+  await page.evaluate(() => localStorage.setItem("pensum-role", "student"));
+  await apne(page, "/index.html?vis=referanser");
+  await expect(page.locator('#ref-body a[href="https://snl.no/Muddy_Waters"]')).toHaveCount(1);
+  await expect(page.locator("body")).toHaveClass(/laerer-okt/);
   await expect(page.locator("#ref-body .ref-rett")).toHaveCount(0);
   expect(appFeil(feil)).toEqual([]);
 });

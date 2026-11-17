@@ -87,4 +87,7 @@ export function brukSjekker(doc) {
   const endret = JSON.stringify(ny) !== JSON.stringify(sjekker);
   sjekker = ny;
   if (endret && sjekketRegelAktiv()) varsle();
+  // Referanser (v7.37) velger kildene etter sjekkene også når regelen er av,
+  // så den får sitt eget signal ved hver endring.
+  if (endret && typeof document !== "undefined") document.dispatchEvent(new CustomEvent("pensum:sjekker"));
 }

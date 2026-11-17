@@ -90,6 +90,8 @@ export function genreDescsChanged() {
 // og artistlista på kortet er bygget av dem. Tegnes uten å heve kortet.
 export function artistsChanged() {
   refreshSjangerInfo(sjangerOpts());
+  // Referanser (v7.37): skjuler eller sjekker læreren en artist, endres utvalget.
+  if (document.getElementById("modal-referanser")?.classList.contains("open")) renderReferanser({ bevar: true });
 }
 
 export function contentChanged() {
@@ -130,7 +132,7 @@ export function contentChanged() {
   if (isOpen("modal-sjangerperioder")) renderSjangerperioderBody();
   // Frittstående referanser bor i content: lagrer læreren en ny, skal kortet
   // vise den med én gang, ikke ved neste åpning.
-  if (isOpen("modal-referanser")) renderReferanser();
+  if (isOpen("modal-referanser")) renderReferanser({ bevar: true });
   // Plateselskapene (v6.37): teksten, faktaene og kildene bor i content.
   renderPlateselskaper();
 }
@@ -244,6 +246,12 @@ function wireModals() {
   const oppdaterHistorieKnapp = () =>
     document.querySelectorAll("[data-sj-historier]").forEach((b) => { b.hidden = !visHistorier(); });
   document.addEventListener("pensum:synlighet", oppdaterHistorieKnapp);
+  // Referanser (v7.37) velger radene etter bryterne og sjekkene.
+  const tegnReferanserPaaNytt = () => {
+    if (document.getElementById("modal-referanser")?.classList.contains("open")) renderReferanser({ bevar: true });
+  };
+  document.addEventListener("pensum:synlighet", tegnReferanserPaaNytt);
+  document.addEventListener("pensum:sjekker", tegnReferanserPaaNytt);
 
   // «Det store bildet»-hub: mål-modalene åpnes OPPÅ huben (modaler stables),
   // så ← i undermodalen går naturlig tilbake hit. Slektstreet bor på egen side

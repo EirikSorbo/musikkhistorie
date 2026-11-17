@@ -7,9 +7,8 @@
 //  js/felles/kilde-retting.js; her er vinduet og lagringen.
 //
 //  Vinduet bygges første gang det trengs, på alle sidene med Referanser.
-//  Blyanten vises bare for en innlogget lærer (body.is-teacher på lærersiden,
-//  body.laerer-okt ellers), og reglene i Firestore lar uansett bare læreren
-//  skrive. Alle skrivingene går i én atomisk batch (runMigrationPlan).
+//  Blyanten vises bare for læreren på lærersiden (body.is-teacher, fra
+//  v7.37), og reglene i Firestore lar uansett bare læreren skrive. Alle skrivingene går i én atomisk batch (runMigrationPlan).
 // ============================================================================
 import { escapeHtml } from "../felles/util.js";
 import { SOURCE_SPEC, collectRows, normalizeSources, feltHtml } from "../ui/row-editor.js";
@@ -18,10 +17,12 @@ import { kildeSteder, kildeEndringer, forsteKilde, stedNavn } from "../felles/ki
 import { runMigrationPlan } from "../data/store.js";
 import { getState } from "../data/app-state.js";
 
+// Bare på lærersiden (v7.37): der er alle kortene lastet, også de usjekkede.
+// På forsiden ser også læreren studentenes utgave, og en retting derfra ville
+// ikke nådd kildene på kortene som er tatt ut.
 export const kanRetteKilder = () => {
   if (typeof document === "undefined") return false;
-  const b = document.body.classList;
-  return b.contains("is-teacher") || b.contains("laerer-okt");
+  return document.body.classList.contains("is-teacher");
 };
 
 const MODAL_ID = "modal-kilde-retting";
