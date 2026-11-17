@@ -15,7 +15,7 @@ import { escapeHtml } from "./felles/util.js";
 import { pageFor } from "./felles/story-format.js";
 import { CONFIGURED, $, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
 import { initUtskriftValg } from "./utskrift/utskrift-utvalg.js";
-import { initInfoMeny } from "./ui/info-meny.js";
+import { initInfoVindu } from "./ui/info-vindu.js";
 import { bekreft } from "./ui/ui-modal.js";
 import { lagArtistSkjema } from "./ui/artist-skjema.js";
 
@@ -211,8 +211,9 @@ function init() {
   } catch (e) { /* navn-fra-timen: uten URL-støtte står feltet tomt */ }
   // Merket på skriverikonet (v5.56); siden har ingen kort å ta med herfra.
   initUtskriftValg();
-  // Info-menyen (v7.33): siden har ikke kortene, så valgene går til forsiden.
-  initInfoMeny();
+  // «Om appen» (v7.33): siden har ikke kortene, så Åpne går til forsiden.
+  // Siden har heller ingen Escape for vinduene, så vinduet tar med sin egen.
+  initInfoVindu({ escape: true });
   $("#skjema-lukk")?.addEventListener("click", lukkSkjemaet);
 
   if (!CONFIGURED) {

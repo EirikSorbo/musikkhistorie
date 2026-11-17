@@ -374,7 +374,7 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-desc">Selskapene bak lyden</span>
       </button>
       <!-- Referanser og «Slik bruker du appen» sto her til v7.33. De ligger nå i
-           info-menyen øverst til høyre (js/ui/info-meny.js), sammen med
+           «Om appen» i toppmenyen (js/ui/info-vindu.js), sammen med
            KI-erklæringen. -->
     </div>
   </div>
@@ -423,7 +423,7 @@ ${TECH_DETAIL_MODAL_HTML}
 <!-- Slik bruker du appen: en kort bruksveiledning for studentene. Teksten bor i
      Firestore (content/appGuide, markdown-light) og redigeres via samme
      Rediger-knapp som Om historie/Røtter — ingen hardkodet tekst i koden.
-     Åpnes fra info-menyen øverst til høyre (v7.33). -->
+     Åpnes fra «Om appen» i toppmenyen (v7.33). -->
 <div class="modal-backdrop" id="modal-app-guide" data-vis="side:guide">
   <div class="modal modal-innhold">
     <div class="modal-head">
@@ -438,7 +438,7 @@ ${TECH_DETAIL_MODAL_HTML}
 <!-- KI-erklæringen (v7.33, brukerbestilling 2026-11-17): hvordan appen er laget
      med KI og hvem som har ansvaret. Teksten bor i Firestore
      (content/kiErklaering, markdown-light) og redigeres med Rediger, som de
-     andre innholdssidene. Åpnes fra info-menyen øverst til høyre. -->
+     andre innholdssidene. Åpnes fra «Om appen» i toppmenyen. -->
 <div class="modal-backdrop" id="modal-ki-erklaering" data-vis="side:kiErklaering">
   <div class="modal modal-innhold">
     <div class="modal-head">

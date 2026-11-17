@@ -169,7 +169,7 @@ Artistkortene og listene, modalene og meldingsboksene, tidslinjene, teknologikor
 | `artist-skjema.js` | ARTISTSKJEMAET I FEM STEG — ett skjema overalt (v6.96) |
 | `artist-strip.js` | ARTIST-STRIPE — artistens aktive periode som en liten tidslinje på kortet |
 | `format-bar.js` | FORMATLINJE — knappene over tekstfeltene |
-| `info-meny.js` | INFO-MENYEN — «i» ytterst til høyre i toppmenyen (v7.33) |
+| `info-vindu.js` | OM APPEN — informasjonsikonet i toppmenyen (v7.33, vindu fra v7.34) |
 | `row-editor.js` | RAD-EDITOR — gjenbrukbare add/collect for verk, musikkeksempler og kilder |
 | `ui-dashboard.js` | UI — OVERSIKT (lærer) |
 | `ui-edit.js` | UI — ENDRINGSFORSLAG (diff-hjelpere) |

@@ -1,10 +1,12 @@
-// Info-menyen (v7.33, brukerbestilling 2026-11-17): «i» ytterst til høyre i
-// toppmenyen med «Slik bruker du appen», Referanser og KI-erklæringen. De to
-// første lå før i «Det store bildet» og følger de samme bryterne.
+// «Om appen» (v7.33, brukerbestilling 2026-11-17): «i» i toppmenyen med «Slik
+// bruker du appen», Referanser og KI-erklæringen. De to første lå før i «Det
+// store bildet» og følger de samme bryterne. Fra v7.34 (brukerbestilling
+// 2026-11-17) er det et vindu med tre kort i Innstillingers stil, og ikonet står
+// rett før Innstillinger.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { INFO_VALG, synligeInfoValg } from "../../js/ui/info-meny.js";
+import { INFO_VALG, synligeInfoValg, infoKortHtml } from "../../js/ui/info-vindu.js";
 import { parseVisVerdi } from "../../js/felles/vis-lenke.js";
 import { lesJs } from "../helpers/js-filer.js";
 
@@ -35,22 +37,37 @@ test("læreren ser alltid alle tre", () => {
   assert.deepEqual(ider(synligeInfoValg({ laerer: true, skjulHub: skjult, content: {} })), ["guide", "referanser", "ki"]);
 });
 
-test("ikonet står ytterst til høyre i toppmenyen på alle sidene, også for studentene", () => {
+test("ikonet står rett før Innstillinger på alle sidene, også for studentene", () => {
   for (const f of ["index.html", "teacher.html", "tre.html", "student.html", "utskrift.html"]) {
     const s = les(f);
     const nav = s.slice(s.indexOf('<nav class="nav">'), s.indexOf("</nav>"));
-    assert.match(nav, /<span class="nav-info-wrap"><button type="button" class="nav-icon nav-info" data-info aria-haspopup="menu" aria-expanded="false" title="Om appen" aria-label="Om appen">/, f);
-    assert.ok(nav.trimEnd().endsWith("</button></span>"), `${f}: info-ikonet er det siste i menyen`);
+    const titler = [...nav.matchAll(/title="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(titler.slice(-2), ["Om appen", "Innstillinger"], `${f}: Innstillinger er ytterst til høyre`);
+    assert.match(nav, /<button type="button" class="nav-icon nav-info" data-info aria-haspopup="dialog" title="Om appen" aria-label="Om appen">/, f);
   }
   const css = les("css/styles.css");
   assert.match(css, /body\.role-student \.nav \.nav-icon\.nav-info \{ display: inline-flex; \}/);
+  assert.match(css, /--icon-ki: var\(--icon-mono, /);
+});
+
+test("vinduet: ett kort per valg i Innstillingers stil, med Åpne som lenke til forsiden", () => {
+  const html = infoKortHtml(INFO_VALG[2]);
+  assert.match(html, /<section class="innst-gruppe" data-info-kort="ki">/);
+  assert.match(html, /<div class="innst-kort"><div class="innst-rad">/);
+  assert.match(html, /<span class="innst-ikon" style="--farge:var\(--icon-ki\)" aria-hidden="true"><svg /);
+  assert.match(html, /<span class="innst-tittel">KI-erklæring<\/span><span class="innst-desc">Hvordan appen er laget med KI, og hvem som har ansvaret for innholdet\.<\/span>/);
+  assert.match(html, /<a class="btn ghost small" href="index\.html\?vis=side%3AkiErklaering" data-info-vis="side:kiErklaering" aria-label="Åpne KI-erklæring">Åpne<\/a>/);
+  for (const v of INFO_VALG) assert.ok(v.desc && v.ikon && v.farge, v.id);
+  const m = lesJs("info-vindu.js");
+  assert.match(m, /<div class="modal modal-narrow modal-innstillinger" role="dialog" aria-labelledby="info-tittel">/, "samme vindu som Innstillinger");
+  assert.match(m, /<h2 id="info-tittel">Om appen<\/h2>/);
 });
 
 test("koblingen: utforsk-sidene åpner der man står, de andre går til forsiden", () => {
-  assert.match(lesJs("explore.js"), /initInfoMeny\(\{ apne: apneMaal \}\);/);
-  for (const f of ["student.js", "utskrift.js"]) assert.match(lesJs(f), /^\s*initInfoMeny\(\);/m, f);
-  const m = lesJs("info-meny.js");
-  assert.match(m, /href="index\.html\?vis=\$\{encodeURIComponent\(v\.vis\)\}"/, "lenka virker uten åpneren");
+  assert.match(lesJs("explore.js"), /initInfoVindu\(\{ apne: apneMaal \}\);/);
+  assert.match(lesJs("student.js"), /^\s*initInfoVindu\(\{ escape: true \}\);/m, "skjemasiden har ingen egen Escape");
+  assert.match(lesJs("utskrift.js"), /^\s*initInfoVindu\(\);/m);
+  assert.match(lesJs("explore.js"), /^\s*oppdaterInfoVindu\(\);/m, "tegnes på nytt når innholdet lander");
 });
 
 test("KI-erklæringen: egen side med Rediger, uten Sjekk, ikke pensum, og ?vis=side:kiErklaering åpner den", () => {

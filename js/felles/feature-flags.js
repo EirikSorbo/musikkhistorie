@@ -94,8 +94,8 @@ export const SKJUL_I_HUBEN = {
   "sb-varmekart":   false,
   "sb-sjangerperioder": false,
   "sb-himmel":      true,
-  // Referanser og «Slik bruker du appen» ligger i info-menyen øverst til høyre
-  // fra v7.33 (js/ui/info-meny.js), ikke i huben. Nøklene er de samme, så
+  // Referanser og «Slik bruker du appen» ligger i «Om appen» i toppmenyen fra
+  // v7.33 (js/ui/info-vindu.js), ikke i huben. Nøklene er de samme, så
   // bryterne som er lagret i content/synlighet, gjelder fortsatt.
   "sb-referanser":  true,
   "sb-guide":       true,

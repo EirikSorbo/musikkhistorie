@@ -24,7 +24,7 @@
 import { sharedStateDefaults, subscribeSharedData } from "./data/shared-data.js";
 import { CONFIGURED, showSetupBanner, wireFirestoreErrorBanner } from "./data/shared.js";
 import { onAuthChange, savePlan } from "./data/store.js";
-import { initInfoMeny } from "./ui/info-meny.js";
+import { initInfoVindu } from "./ui/info-vindu.js";
 import { TEACHER_EMAILS } from "./firebase-config.js";
 import { SKJUL_I_STUDENTVISNING, SKJUL_I_HUBEN, synlighetGrunn } from "./felles/feature-flags.js";
 import { settSjekketLaerer } from "./felles/sjekket.js";
@@ -1099,8 +1099,8 @@ function koble() {
 }
 
 function init() {
-  // Info-menyen (v7.33): siden har ikke kortene, så valgene går til forsiden.
-  initInfoMeny();
+  // «Om appen» (v7.33): siden har ikke kortene, så Åpne går til forsiden.
+  initInfoVindu();
   // MIDLERTIDIG (js/felles/feature-flags.js, utskrift): skjult for studentrollen
   // inntil videre. Siden abonnerer da ikke på noe (null lesinger), og sier
   // hvorfor den er tom i stedet for å vise et halvt panel.

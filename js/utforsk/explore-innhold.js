@@ -40,7 +40,7 @@ export function openAppGuide() {
 }
 
 // KI-erklæringen (v7.33): samme mønster som bruksveiledningen, og åpnes fra
-// info-menyen øverst til høyre (js/ui/info-meny.js).
+// «Om appen» i toppmenyen (js/ui/info-vindu.js).
 export function openKiErklaering() {
   const modal = document.getElementById("modal-ki-erklaering");
   if (!modal) return;

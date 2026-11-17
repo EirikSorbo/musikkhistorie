@@ -34,7 +34,7 @@ import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-i
 import { openPlateselskap, openPlateselskaper, renderPlateselskaper } from "./explore-plateselskap.js";
 import { openSok, wireSok } from "./explore-search.js";
 import { apneMaal } from "./explore-apne.js";
-import { initInfoMeny, oppdaterInfoMeny } from "../ui/info-meny.js";
+import { initInfoVindu, oppdaterInfoVindu } from "../ui/info-vindu.js";
 import { erPresentasjon } from "../visning/presentasjon.js";
 import { sjekketRegelAktiv } from "../felles/sjekket.js";
 import { storyOrderSynlig, pageFor } from "../felles/story-format.js";
@@ -117,8 +117,8 @@ export function contentChanged() {
   }
   if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
   if (isOpen("modal-ki-erklaering")) renderPage("kiErklaering", "ki-erklaering-body", "ki-erklaering-extra");
-  // Info-menyen (v7.33): KI-erklæringen står for studentene først når teksten finnes.
-  oppdaterInfoMeny();
+  // «Om appen» (v7.33): KI-erklæringen står for studentene først når teksten finnes.
+  oppdaterInfoVindu();
   if (isOpen("modal-varmekart")) renderVarmekartBody();
   // Historien (v5.34, audit-funn 8): varmestripene over fortellingen leser
   // samme heat-data som varmekartet, og lærerens celleklikk skal synes der
@@ -157,8 +157,9 @@ function wireModals() {
   // Søkefeltet i Utforsk-kortet står i sidenes egen markup med faste ID-er, så
   // forsiden og lærersiden får søket av samme kode uten å wire noe selv.
   wireSok();
-  // Info-menyen øverst til høyre (v7.33): her åpnes valgene der man står.
-  initInfoMeny({ apne: apneMaal });
+  // «Om appen» i toppmenyen (v7.33, vindu fra v7.34): her åpnes kortene oppå
+  // vinduet, og ← fører tilbake til det.
+  initInfoVindu({ apne: apneMaal });
 
   // Kategori- og instrumentlenkene på innovasjonskortene (techFactsLines).
   // Delegert på document fordi kortene rendres tre steder — Teknologi-lista,
