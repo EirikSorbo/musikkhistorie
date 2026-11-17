@@ -373,16 +373,9 @@ ${TECH_DETAIL_MODAL_HTML}
         <span class="dash-title">Plateselskaper</span>
         <span class="dash-desc">Selskapene bak lyden</span>
       </button>
-      <button class="dash-card" id="sb-referanser">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-referanser)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2H7a2 2 0 01-2-2z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h6"/></svg>
-        <span class="dash-title">Referanser</span>
-        <span class="dash-desc">Kildene appen bygger på</span>
-      </button>
-      <button class="dash-card" id="sb-guide">
-        <svg class="dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="--ikon:var(--icon-guide)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-        <span class="dash-title">Slik bruker du appen</span>
-        <span class="dash-desc">Kort om funksjonene og tanken bak</span>
-      </button>
+      <!-- Referanser og «Slik bruker du appen» sto her til v7.33. De ligger nå i
+           info-menyen øverst til høyre (js/ui/info-meny.js), sammen med
+           KI-erklæringen. -->
     </div>
   </div>
 </div>
@@ -430,7 +423,7 @@ ${TECH_DETAIL_MODAL_HTML}
 <!-- Slik bruker du appen: en kort bruksveiledning for studentene. Teksten bor i
      Firestore (content/appGuide, markdown-light) og redigeres via samme
      Rediger-knapp som Om historie/Røtter — ingen hardkodet tekst i koden.
-     Åpnes som siste kort i «Det store bildet». -->
+     Åpnes fra info-menyen øverst til høyre (v7.33). -->
 <div class="modal-backdrop" id="modal-app-guide" data-vis="side:guide">
   <div class="modal modal-innhold">
     <div class="modal-head">
@@ -439,6 +432,21 @@ ${TECH_DETAIL_MODAL_HTML}
       <button class="modal-close btn ghost small">✕</button>
     </div>
     <div id="app-guide-body" class="story-body"></div>
+  </div>
+</div>
+
+<!-- KI-erklæringen (v7.33, brukerbestilling 2026-11-17): hvordan appen er laget
+     med KI og hvem som har ansvaret. Teksten bor i Firestore
+     (content/kiErklaering, markdown-light) og redigeres med Rediger, som de
+     andre innholdssidene. Åpnes fra info-menyen øverst til høyre. -->
+<div class="modal-backdrop" id="modal-ki-erklaering" data-vis="side:kiErklaering">
+  <div class="modal modal-innhold">
+    <div class="modal-head">
+      <h2>KI-erklæring</h2>
+      <div id="ki-erklaering-extra" class="head-actions"></div>
+      <button class="modal-close btn ghost small">✕</button>
+    </div>
+    <div id="ki-erklaering-body" class="story-body"></div>
   </div>
 </div>
 

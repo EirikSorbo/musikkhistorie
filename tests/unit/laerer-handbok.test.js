@@ -52,7 +52,7 @@ test("editoren kjenner siden, og gjenåpner den etter lagring", () => {
 });
 
 test("bare for læreren: ingen Sjekk, utenfor regelen, ikke i heftet, ikke på lerretet", () => {
-  assert.match(les("js/utforsk/explore-innhold.js"), /const USJEKKEDE_SIDER = \["appGuide", "laererHandbok"\];/);
+  assert.match(les("js/utforsk/explore-innhold.js"), /const USJEKKEDE_SIDER = \["appGuide", "laererHandbok", "kiErklaering"\];/);
   assert.equal(sideSjekk("laererHandbok"), null);
   assert.ok(!("laererHandbok" in SIDER_I_HEFTET));
   assert.ok(LERRET_PRIVAT.has("modal-laerer-handbok"));

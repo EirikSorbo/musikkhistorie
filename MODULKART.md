@@ -5,7 +5,7 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-123 filer i 11 mapper.
+124 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
@@ -16,7 +16,7 @@ stopper et kart som ikke stemmer med filene.
 | `js/laerer/` | Lærersiden | 9 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
-| `js/ui/` | Byggeklosser for skjermen | 15 |
+| `js/ui/` | Byggeklosser for skjermen | 16 |
 | `js/data/` | Data | 11 |
 | `js/felles/` | Felles hjelpere | 16 |
 | `js/vendor/` | Tredjepart | 1 |
@@ -169,6 +169,7 @@ Artistkortene og listene, modalene og meldingsboksene, tidslinjene, teknologikor
 | `artist-skjema.js` | ARTISTSKJEMAET I FEM STEG — ett skjema overalt (v6.96) |
 | `artist-strip.js` | ARTIST-STRIPE — artistens aktive periode som en liten tidslinje på kortet |
 | `format-bar.js` | FORMATLINJE — knappene over tekstfeltene |
+| `info-meny.js` | INFO-MENYEN — «i» ytterst til høyre i toppmenyen (v7.33) |
 | `row-editor.js` | RAD-EDITOR — gjenbrukbare add/collect for verk, musikkeksempler og kilder |
 | `ui-dashboard.js` | UI — OVERSIKT (lærer) |
 | `ui-edit.js` | UI — ENDRINGSFORSLAG (diff-hjelpere) |

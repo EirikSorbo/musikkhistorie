@@ -39,8 +39,18 @@ export function openAppGuide() {
   modalOpen(modal);
 }
 
-// Sidene uten Sjekk-knapp: bruksveiledningen og lærerhåndboken.
-const USJEKKEDE_SIDER = ["appGuide", "laererHandbok"];
+// KI-erklæringen (v7.33): samme mønster som bruksveiledningen, og åpnes fra
+// info-menyen øverst til høyre (js/ui/info-meny.js).
+export function openKiErklaering() {
+  const modal = document.getElementById("modal-ki-erklaering");
+  if (!modal) return;
+  renderPage("kiErklaering", "ki-erklaering-body", "ki-erklaering-extra");
+  modalOpen(modal);
+}
+
+// Sidene uten Sjekk-knapp: bruksveiledningen, lærerhåndboken og
+// KI-erklæringen. Ingen av dem er pensum.
+const USJEKKEDE_SIDER = ["appGuide", "laererHandbok", "kiErklaering"];
 
 // Innholdssidene «Om historie» (omHistorie) og «Røtter før 1910» (rotter):
 // teksten bor i Firestore (content/<id>.body, markdown-light) og rendres ved

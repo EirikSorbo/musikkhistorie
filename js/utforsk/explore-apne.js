@@ -17,7 +17,7 @@ import { showSubsjangerInfo } from "../ui/ui.js";
 import { showEdgeInfo } from "../sjangre/genealogy.js";
 import { openTechDetail, openTeknologi } from "./explore-tech.js";
 import { openDecade } from "./explore-decade.js";
-import { openRotter, openOmHistorie, openHistorier, openAppGuide, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js";
+import { openRotter, openOmHistorie, openHistorier, openAppGuide, openKiErklaering, openStoreBildet, openSjangerhimmel } from "./explore-innhold.js";
 import { openInstrumenter, openPodkaster } from "./explore-instrument.js";
 import { openVarmekart } from "./explore-varmekart.js";
 import { openSjangerperioder } from "./explore-sjangerperioder.js";
@@ -82,6 +82,7 @@ export function apneMaal(apne) {
     case "side":
       if (apne.id === "rotter") return openRotter();
       if (apne.id === "omHistorie") return openOmHistorie();
+      if (apne.id === "kiErklaering") return openKiErklaering();
       return openAppGuide();
     case "instrument": return openInstrumenter(apne.id);
     case "varmekart": return openVarmekart(apne.id);

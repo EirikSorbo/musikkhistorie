@@ -31,8 +31,8 @@ export const GJ_TYPER = [
   "artist", "lytteeksempel", "sjanger", "rot", "undersjanger", "oversikt", "historie",
   "samfunn", "teknologi", "tech", "hendelse", "plateselskap", "instrument", "kobling", "side", "slide",
 ];
-// Innholdssider som ikke er pensum: bruksveiledningen.
-const IKKE_PENSUM_SIDER = new Set(["appGuide"]);
+// Innholdssider som ikke er pensum: bruksveiledningen og KI-erklæringen.
+const IKKE_PENSUM_SIDER = new Set(["appGuide", "kiErklaering"]);
 
 const nyest = (p) => String(p?.laget || "");
 

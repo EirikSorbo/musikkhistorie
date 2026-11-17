@@ -6,7 +6,7 @@
 //  lages og slettes, siden de bor i lærerens private notater.
 // ============================================================================
 import { test, expect } from "@playwright/test";
-import { såFrø, lesSamling, rydd } from "./frø.mjs";
+import { såFrø, lesSamling, skrivDok, INNHOLD, rydd } from "./frø.mjs";
 import { forbered, apne, loggInnSomLaerer, appFeil } from "./hjelp.mjs";
 
 test.beforeEach(async () => { await såFrø(); });
@@ -87,5 +87,78 @@ test("slides: læreren lager en, den ligger i de private notatene, og slettes ig
   await slett.click();
   await page.locator(".modal-backdrop.open .modal-valg").last().getByRole("button", { name: "Slett", exact: true }).click();
   await expect.poll(async () => (await lesSamling("notater")).length).toBe(0);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+// Info-menyen (v7.33): «i» ytterst til høyre med «Slik bruker du appen»,
+// Referanser og KI-erklæringen. De to første lå før i Det store bildet.
+const infoValg = (page) => page.locator(".nav-info-meny .vis-meny-valg");
+
+test("info-menyen for studentene: tre valg, KI-erklæringen åpnes, og bryterne skjuler guiden", async ({ page }) => {
+  await skrivDok("content", "kiErklaering", { body: "Historieappen.no er utviklet med **Claude**.\n\n- **Ansvar.** Jeg har det fulle ansvaret.", updatedAt: new Date().toISOString() });
+  const feil = await forbered(page);
+  await apne(page, "/index.html");
+  await expect(page.locator("#dagens-artist")).not.toBeEmpty();
+  const ikon = page.locator(".nav-info");
+  await expect(ikon).toBeVisible();
+  await ikon.click();
+  await expect(ikon).toHaveAttribute("aria-expanded", "true");
+  await expect(infoValg(page)).toHaveText(["Slik bruker du appen", "Referanser", "KI-erklæring"]);
+  await expect(infoValg(page).first()).toBeFocused();
+  // Escape lukker menyen og gir fokuset tilbake til ikonet.
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".nav-info-meny")).toHaveCount(0);
+  await expect(ikon).toBeFocused();
+  // KI-erklæringen åpnes der man står, med teksten fra databasen.
+  await ikon.click();
+  await infoValg(page).filter({ hasText: "KI-erklæring" }).click();
+  await expect(page.locator("#modal-ki-erklaering")).toHaveClass(/open/);
+  await expect(page.locator("#ki-erklaering-body strong").first()).toHaveText("Claude");
+  await expect(page.locator("#ki-erklaering-extra button")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  // Referanser og guiden åpner også, og huben har dem ikke lenger.
+  await ikon.click();
+  await infoValg(page).filter({ hasText: "Referanser" }).click();
+  await expect(page.locator("#modal-referanser")).toHaveClass(/open/);
+  await page.keyboard.press("Escape");
+  await ikon.click();
+  await infoValg(page).filter({ hasText: "Slik bruker du appen" }).click();
+  await expect(page.locator("#modal-app-guide")).toHaveClass(/open/);
+  await page.keyboard.press("Escape");
+  await page.locator("#btn-store-bildet").click();
+  await expect(page.locator("#modal-store-bildet")).toHaveClass(/open/);
+  await expect(page.locator("#modal-store-bildet #sb-guide, #modal-store-bildet #sb-referanser")).toHaveCount(0);
+  await lukkAlle(page);
+  // Læreren skjuler guiden: valget forsvinner fra menyen uten sidelast.
+  await skrivDok("content", "synlighet", { ...INNHOLD.synlighet, hub: { ...INNHOLD.synlighet.hub, "sb-guide": true } });
+  await expect.poll(async () => {
+    await ikon.click();
+    const t = await infoValg(page).allTextContents();
+    await page.keyboard.press("Escape");
+    return t;
+  }).toEqual(["Referanser", "KI-erklæring"]);
+  // Forslagsskjemaet har ikke kortene: valget går til forsiden og åpner der.
+  await apne(page, "/student.html");
+  await page.locator(".nav-info").click();
+  await infoValg(page).filter({ hasText: "KI-erklæring" }).click();
+  await expect(page).toHaveURL(/index\.html\?vis=side%3AkiErklaering|index\.html\?vis=side:kiErklaering/);
+  await expect(page.locator("#modal-ki-erklaering")).toHaveClass(/open/);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("info-menyen for læreren: alle tre også når de er skjult, og KI-erklæringen uten tekst har Rediger", async ({ page }) => {
+  await skrivDok("content", "synlighet", { ...INNHOLD.synlighet, hub: { ...INNHOLD.synlighet.hub, "sb-guide": true, "sb-referanser": true } });
+  const feil = await forbered(page, { rolle: null });
+  await loggInnSomLaerer(page);
+  await page.locator(".nav-info").click();
+  await expect(infoValg(page)).toHaveText(["Slik bruker du appen", "Referanser", "KI-erklæring"]);
+  await infoValg(page).filter({ hasText: "KI-erklæring" }).click();
+  await expect(page.locator("#modal-ki-erklaering")).toHaveClass(/open/);
+  await expect(page.locator("#ki-erklaering-body")).toContainText("Teksten er ikke lagt inn ennå");
+  // Rediger (ikonknappen) åpner editoren for siden, og ingen Sjekk-knapp.
+  await expect(page.locator("#ki-erklaering-extra .tcr-edit")).toBeVisible();
+  await expect(page.locator("#ki-erklaering-extra .tcr-check, #ki-erklaering-extra [data-sjekk]")).toHaveCount(0);
+  await page.locator("#ki-erklaering-extra .tcr-edit").click();
+  await expect(page.locator(".modal-backdrop.open").last()).toContainText("KI-erklæring");
   expect(appFeil(feil)).toEqual([]);
 });

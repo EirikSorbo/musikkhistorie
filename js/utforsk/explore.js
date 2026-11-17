@@ -27,13 +27,14 @@ import { openLytt } from "./explore-lytt.js";
 import { openTime } from "./explore-timer.js";
 import { openReferanser, renderReferanser, antallKilder } from "./explore-referanser.js";
 import { openSubgenreList, openUndersjangre, openSubgenreInfo, tegnSjangre } from "./explore-sjanger.js";
-import { openStoreBildet, openAppGuide, openOmHistorie, openRotter, openHistorier, openSjangerhimmel, renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
+import { openStoreBildet, openAppGuide, openKiErklaering, openOmHistorie, openRotter, openHistorier, openSjangerhimmel, renderPage, renderRotterChips, refreshHistorie } from "./explore-innhold.js";
 import { openVisningssider, openArtistGalleri } from "./explore-visningssider.js";
 import { openMetaOversikt } from "./explore-metaoversikt.js";
 import { openInstrumenter, openPodkaster, renderInstrumenter } from "./explore-instrument.js";
 import { openPlateselskap, openPlateselskaper, renderPlateselskaper } from "./explore-plateselskap.js";
 import { openSok, wireSok } from "./explore-search.js";
 import { apneMaal } from "./explore-apne.js";
+import { initInfoMeny, oppdaterInfoMeny } from "../ui/info-meny.js";
 import { erPresentasjon } from "../visning/presentasjon.js";
 import { sjekketRegelAktiv } from "../felles/sjekket.js";
 import { storyOrderSynlig, pageFor } from "../felles/story-format.js";
@@ -115,6 +116,9 @@ export function contentChanged() {
     renderRotterChips();
   }
   if (isOpen("modal-app-guide")) renderPage("appGuide", "app-guide-body", "app-guide-extra");
+  if (isOpen("modal-ki-erklaering")) renderPage("kiErklaering", "ki-erklaering-body", "ki-erklaering-extra");
+  // Info-menyen (v7.33): KI-erklæringen står for studentene først når teksten finnes.
+  oppdaterInfoMeny();
   if (isOpen("modal-varmekart")) renderVarmekartBody();
   // Historien (v5.34, audit-funn 8): varmestripene over fortellingen leser
   // samme heat-data som varmekartet, og lærerens celleklikk skal synes der
@@ -145,7 +149,7 @@ function wireModals() {
    "modal-subgenre-list", "modal-undersjangre", "modal-subgenre-info",
    "modal-varmekart", "modal-vk-edit", "modal-sjangerperioder", "modal-tidslinje", "modal-referanser", "modal-sjangerhimmel",
    "modal-artistliste", "modal-spilleliste", "modal-sjanger", "modal-tech-detail",
-   "modal-store-bildet", "modal-app-guide", "modal-om-historie", "modal-rotter", "modal-historier",
+   "modal-store-bildet", "modal-app-guide", "modal-ki-erklaering", "modal-om-historie", "modal-rotter", "modal-historier",
    "modal-meta-oversikt", "modal-visningssider", "modal-galleri",
    "modal-instr-tech", "modal-podkaster", "modal-sok", "modal-lytt", "modal-time", "modal-slide",
    "modal-plateselskaper", "modal-plateselskap"].forEach((id) => setupModal(id));
@@ -153,6 +157,8 @@ function wireModals() {
   // Søkefeltet i Utforsk-kortet står i sidenes egen markup med faste ID-er, så
   // forsiden og lærersiden får søket av samme kode uten å wire noe selv.
   wireSok();
+  // Info-menyen øverst til høyre (v7.33): her åpnes valgene der man står.
+  initInfoMeny({ apne: apneMaal });
 
   // Kategori- og instrumentlenkene på innovasjonskortene (techFactsLines).
   // Delegert på document fordi kortene rendres tre steder — Teknologi-lista,
@@ -264,9 +270,7 @@ function wireModals() {
     paaKort("sb-varmekart", () => openVarmekart());
     paaKort("sb-sjangerperioder", openSjangerperioder);
     paaKort("sb-himmel", openSjangerhimmel);
-    paaKort("sb-referanser", openReferanser);
     paaKort("sb-plateselskaper", openPlateselskaper);
-    paaKort("sb-guide", openAppGuide);
 
     // Kortene studentene ikke skal se (feature-flags.js, SKJUL_I_HUBEN).
     // FJERNES fra griden, ikke display:none: den er en :has()-basert
@@ -383,6 +387,7 @@ export function initExplore(options) {
     openTidslinje,
     openStoreBildet,
     openAppGuide,
+    openKiErklaering,
     openOmHistorie,
     openRotter,
     openHistorier,

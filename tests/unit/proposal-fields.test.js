@@ -273,8 +273,14 @@ test("SKJUL_I_HUBEN stemmer med kortene i «Det store bildet»", async () => {
   const ider = [...markup.slice(fra, til).matchAll(/id="(sb-[a-z-]+)"/g)].map((m) => m[1]);
   assert.ok(ider.length >= 10, `fant bare ${ider.length} hub-kort`);
 
-  assert.deepEqual([...Object.keys(SKJUL_I_HUBEN)].sort(), [...ider].sort(),
-    "hvert kort skal ha nøyaktig ett flagg, og hvert flagg peke på et kort");
+  // Referanser og «Slik bruker du appen» ligger i info-menyen fra v7.33, men
+  // har fortsatt hver sin bryter med den gamle nøkkelen (js/ui/info-meny.js).
+  const { INFO_VALG } = await import("../../js/ui/info-meny.js");
+  const infoNokler = INFO_VALG.map((v) => v.hub).filter(Boolean);
+  assert.deepEqual(infoNokler.sort(), ["sb-guide", "sb-referanser"]);
+  for (const k of infoNokler) assert.ok(!ider.includes(k), `${k} står ikke lenger i huben`);
+  assert.deepEqual([...Object.keys(SKJUL_I_HUBEN)].sort(), [...ider, ...infoNokler].sort(),
+    "hvert kort og hvert valg i info-menyen skal ha nøyaktig ett flagg, og hvert flagg peke på et av dem");
 
   // Brukervalg 2026-09-10: de tre visualiseringene, og fra v5.20 sjanger-
   // perioder som fjerde synlige kort.
