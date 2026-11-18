@@ -25,24 +25,24 @@ import "./feature-flags.js";
 // Anbefalt antall (brukerens «3–5 punkter»). Editoren varsler utenfor
 // spennet, men lagrer likevel: et kort under arbeid kan ha to.
 export const PUNKT_ANBEFALT = { min: 3, maks: 5 };
-// Harde tak: flere enn seks er ikke en oppsummering, og et punkt over 200
-// tegn er ikke kort. Det som går over, kuttes ved lagring (og varsles før).
-export const PUNKT_MAKS_ANTALL = 6;
+// Antallet har ikke noe tak (v7.47, brukervalg 2026-11-18: «ingen grunn til å
+// ha begrensninger der»). Fram til da kuttet lagringen alt etter det sjette
+// punktet. Lengden har fortsatt et tak: et punkt over 200 tegn er ikke kort,
+// og det som går over, kuttes ved lagring (og varsles før).
 export const PUNKT_MAKS_TEGN = 200;
 
 // Punkttegn læreren kan ha limt inn foran teksten («- », «• », «* », «1. »).
 const PUNKTTEGN = /^\s*(?:[-–•*·]|\d{1,2}[.)])\s+/;
 
 // Vasker en liste fra data (Firestore, import): bare tekster, trimmet, uten
-// tomme, høyst PUNKT_MAKS_ANTALL, hver høyst PUNKT_MAKS_TEGN tegn. Alt annet
-// (en streng, et map, null) gir tom liste.
+// tomme, hver høyst PUNKT_MAKS_TEGN tegn. Alt annet (en streng, et map, null)
+// gir tom liste.
 export function normaliserPunkter(raa) {
   if (!Array.isArray(raa)) return [];
   return raa
     .filter((p) => typeof p === "string")
     .map((p) => p.replace(PUNKTTEGN, "").trim())
     .filter(Boolean)
-    .slice(0, PUNKT_MAKS_ANTALL)
     .map((p) => p.slice(0, PUNKT_MAKS_TEGN));
 }
 
@@ -61,9 +61,7 @@ export function punktVarsel(tekst) {
   const linjer = String(tekst ?? "").split("\n").map((l) => l.replace(PUNKTTEGN, "").trim()).filter(Boolean);
   if (!linjer.length) return null;
   const deler = [];
-  if (linjer.length > PUNKT_MAKS_ANTALL) {
-    deler.push(`${linjer.length} punkter: bare de første ${PUNKT_MAKS_ANTALL} lagres.`);
-  } else if (linjer.length < PUNKT_ANBEFALT.min || linjer.length > PUNKT_ANBEFALT.maks) {
+  if (linjer.length < PUNKT_ANBEFALT.min || linjer.length > PUNKT_ANBEFALT.maks) {
     deler.push(`${linjer.length} ${linjer.length === 1 ? "punkt" : "punkter"}. ${PUNKT_ANBEFALT.min}–${PUNKT_ANBEFALT.maks} anbefales.`);
   }
   const lange = linjer.filter((l) => l.length > PUNKT_MAKS_TEGN).length;

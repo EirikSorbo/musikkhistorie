@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_ANTALL, PUNKT_MAKS_TEGN } from "../../js/felles/punkter.js";
+import { normaliserPunkter, lesPunkter, punkterTilTekst, punktVarsel, punkterHtml, PUNKT_MAKS_TEGN } from "../../js/felles/punkter.js";
 import { normalizeArtist, buildArtistDoc } from "../../js/data/artist-normalize.js";
 import { PROPOSABLE_KEYS } from "../../js/forslag/proposal-fields.js";
 import { ARTIST_EXPORT_FIELDS, ARTIST_COMPARE_FIELDS, ARTIST_LABELS } from "../../js/data/artist-schema.js";
@@ -27,9 +27,10 @@ test("normaliserPunkter: bare tekster, trimmet, uten punkttegn og tomme linjer",
   assert.deepEqual(normaliserPunkter(["*Kind of Blue* ble en milepæl"]), ["*Kind of Blue* ble en milepæl"]);
 });
 
-test("normaliserPunkter: harde tak på antall og lengde", () => {
+test("normaliserPunkter: ingen grense på antallet (v7.47), men på lengden", () => {
   const mange = Array.from({ length: 9 }, (_, i) => `Punkt ${i + 1}`);
-  assert.equal(normaliserPunkter(mange).length, PUNKT_MAKS_ANTALL);
+  assert.deepEqual(normaliserPunkter(mange), mange);
+  assert.deepEqual(lesPunkter(mange.join("\n")), mange);
   const langt = "x".repeat(PUNKT_MAKS_TEGN + 50);
   assert.equal(normaliserPunkter([langt])[0].length, PUNKT_MAKS_TEGN);
 });
@@ -51,7 +52,9 @@ test("punktVarsel: tomt og 3–5 er i orden, ellers en forklaring", () => {
   assert.match(punktVarsel("a"), /1 punkt\. 3–5 anbefales/);
   assert.match(punktVarsel("a\nb"), /2 punkter\. 3–5 anbefales/);
   assert.match(punktVarsel("a\nb\nc\nd\ne\nf"), /6 punkter\. 3–5 anbefales/);
-  assert.match(punktVarsel("1\n2\n3\n4\n5\n6\n7"), /bare de første 6 lagres/);
+  // Ingen grense på antallet (v7.47): sju og åtte punkter er bare over anbefalingen.
+  assert.match(punktVarsel("1\n2\n3\n4\n5\n6\n7"), /7 punkter\. 3–5 anbefales/);
+  assert.equal(/lagres/.test(punktVarsel("1\n2\n3\n4\n5\n6\n7\n8")), false);
   assert.match(punktVarsel(`a\nb\n${"x".repeat(PUNKT_MAKS_TEGN + 1)}`), /Ett punkt er over 200 tegn/);
   for (const v of [punktVarsel("a"), punktVarsel("1\n2\n3\n4\n5\n6\n7")]) {
     assert.equal(v.includes(" — "), false, "ingen tankestrek i apptekst");
