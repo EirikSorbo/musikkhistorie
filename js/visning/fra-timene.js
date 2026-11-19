@@ -34,7 +34,7 @@ function byggModal() {
       <h2 id="ft-tittel">Fra timene</h2>
       <button class="modal-close btn ghost small">✕</button>
     </div>
-    <p class="ft-ingress">Gå gjennom en time i samme rekkefølge som læreren viste den.</p>
+    <p class="ft-ingress">Her finner du presentasjonene fra timene.</p>
     <div class="fra-timene-liste" id="ft-liste"></div>
   </div>
 </div>`;
