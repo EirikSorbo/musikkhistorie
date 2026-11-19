@@ -5,14 +5,14 @@ Kartet lages av `tools/modulkart.js` og skal ikke redigeres for hånd: endre inn
 i fila og kjør `./bump.sh` (eller `node tools/modulkart.js`). Pre-push-kroken og GitHub
 stopper et kart som ikke stemmer med filene.
 
-129 filer i 11 mapper.
+130 filer i 11 mapper.
 
 | Mappe | Innhold | Filer |
 |---|---|---|
 | `js/` | Sidene og oppsettet | 11 |
 | `js/utforsk/` | Utforsk | 22 |
 | `js/sjangre/` | Sjangrene og slektstreet | 14 |
-| `js/visning/` | Visning | 20 |
+| `js/visning/` | Visning | 21 |
 | `js/laerer/` | Lærersiden | 9 |
 | `js/forslag/` | Endringsforslag | 3 |
 | `js/utskrift/` | Utskrift | 2 |
@@ -105,6 +105,7 @@ Presentasjonsvisningen på lerretet, kjøreplanene og Visning-vinduet bak presen
 
 | Fil | Hva den gjør |
 |---|---|
+| `fra-timene.js` | FRA TIMENE FOR STUDENTENE (v7.49, brukerbestilling 2026-11-19) |
 | `gjennomgang-modell.js` | GRUPPENE OG DET SOM ER GÅTT GJENNOM (v7.15), den rene delen |
 | `gjennomgang.js` | GÅTT GJENNOM — oversikten for en gruppe av planer (v7.15) |
 | `lagre-time.js` | LAGRE SOM TIME (v7.15) |

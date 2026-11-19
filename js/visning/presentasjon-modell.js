@@ -1250,10 +1250,10 @@ export function raskPaminnelse({ type, min, kl, naar: tid, tekst, lerret } = {},
 
 // ----------------------------------------------------------------------------
 //  Gjennomgang for studentene (v7.48, brukerbestilling 2026-11-19): en delt
-//  time kan blas gjennom i visningen, fra «Gå gjennom timen» i timevinduet
-//  (explore-timer.js). Lenka merker visningen som gjennomgang, og da er
-//  lærerens verktøy borte, også når læreren selv bruker den for å se det
-//  studentene ser. Avslutt går tilbake til timevinduet.
+//  time kan blas gjennom i visningen. Fra v7.49 startes den fra kortet bak
+//  Visning-ikonet (js/visning/fra-timene.js). Lenka merker visningen som
+//  gjennomgang, og da er lærerens verktøy borte, også når læreren selv bruker
+//  den for å se det studentene ser. Avslutt går tilbake til kortet.
 // ----------------------------------------------------------------------------
 
 export const GJENNOMGANG_PARAM = "gjennomgang";
@@ -1262,9 +1262,8 @@ export function gjennomgangLenke(planId) {
   return `index.html?presentasjon=${encodeURIComponent(planId)}&${GJENNOMGANG_PARAM}=1`;
 }
 
-export function tilbakeTilTimen(planId) {
-  return planId ? `index.html?vis=${encodeURIComponent(`time:${planId}`)}` : "index.html";
-}
+// Veien tilbake: forsiden med kortet bak Visning-ikonet åpent (?visning=1).
+export const GJENNOMGANG_TILBAKE = "index.html?visning=1";
 
 // Kan planen spilles i denne visningen? Samme regel som timevinduet
 // (timeTilgjengelig, v6.23 Fable F6): læreren spiller alle planene, alle

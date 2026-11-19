@@ -1,10 +1,11 @@
 // ============================================================================
-//  GJENNOMGANG FOR STUDENTENE (v7.48), i emulatoren
+//  GJENNOMGANG FOR STUDENTENE (v7.48, inngangen flyttet i v7.49), i emulatoren
 // ----------------------------------------------------------------------------
-//  «Gå gjennom timen» i timevinduet starter visningen med timen som
-//  kjøreplan, uten lærerens verktøy: ingen lerretknapp, ingen fullskjerm av
-//  seg selv, slidene hoppes over, og Avslutt går tilbake til timen. Bare
-//  delte timer kan spilles av andre enn læreren (planTilgang).
+//  Visning-ikonet øverst til høyre åpner for studentene et kort med de delte
+//  timene. En time starter visningen med timen som kjøreplan, uten lærerens
+//  verktøy: ingen lerretknapp, ingen fullskjerm av seg selv, slidene hoppes
+//  over, og Avslutt går tilbake til kortet. Bare delte timer kan spilles av
+//  andre enn læreren (planTilgang).
 // ============================================================================
 import { test, expect } from "@playwright/test";
 import { såFrø, skrivDok, rydd, INNHOLD } from "./frø.mjs";
@@ -28,15 +29,27 @@ test.afterAll(async () => { await rydd(); });
 
 const teller = (page) => page.locator("#pres-teller");
 
-test("studenten går gjennom en delt time: i rekkefølge, uten slidene og lærerens verktøy, og tilbake til timen", async ({ page }) => {
+test("studenten går gjennom en delt time fra Visning-ikonet: i rekkefølge, uten slidene og lærerens verktøy, og tilbake til kortet", async ({ page }) => {
   const feil = await forbered(page);
+  // Timevinduet har ikke lenger knappen (v7.49).
   await apne(page, "/index.html?vis=time:t1");
-  const vindu = page.locator("#modal-time");
-  await expect(vindu).toHaveClass(/open/);
-  const knapp = vindu.locator("[data-tm-gjennomgang]");
-  await expect(knapp).toHaveText("Gå gjennom timen");
-  await expect(knapp).not.toHaveAttribute("target", /.+/);
-  await knapp.click();
+  await expect(page.locator("#modal-time")).toHaveClass(/open/);
+  await expect(page.locator("#modal-time [data-tm-gjennomgang]")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  const ikon = page.locator(".nav [data-visning]");
+  await expect(ikon).toBeVisible();
+  await expect(ikon).toHaveAttribute("title", "Fra timene");
+  await ikon.click();
+  const kort = page.locator("#modal-fra-timene");
+  await expect(kort).toHaveClass(/open/);
+  await expect(page.locator("#modal-visning.open")).toHaveCount(0);
+  // Bare den delte timen, og antallet uten sliden.
+  await expect(kort.locator(".sj-rad")).toHaveCount(1);
+  await expect(kort.locator(".sj-rad")).toContainText("Bluestimen");
+  await expect(kort.locator(".sj-rad")).toContainText("3 kort");
+  await expect(kort).not.toContainText("Privat plan");
+  await kort.locator(".sj-rad").click();
 
   await expect(page).toHaveURL(/presentasjon=t1/);
   await expect(page).toHaveURL(/gjennomgang=1/);
@@ -70,11 +83,20 @@ test("studenten går gjennom en delt time: i rekkefølge, uten slidene og lærer
   await expect(page.locator("body")).toHaveClass(/pres-gjennomgang/);
   await expect(teller(page)).toHaveText("1/3");
 
-  // Avslutt: ingen «Lagre som time», rett tilbake til timevinduet.
+  // Avslutt: ingen «Lagre som time», rett tilbake til kortet med timene.
   await page.keyboard.press("x");
-  await expect(page).toHaveURL(/vis=time(%3A|:)t1/);
+  await expect(page.locator("#modal-fra-timene")).toHaveClass(/open/);
   await expect(page.locator("body")).not.toHaveClass(/presentasjon/);
-  await expect(page.locator("#modal-time")).toHaveClass(/open/);
+  await expect(page).not.toHaveURL(/visning=1/);
+  expect(appFeil(feil)).toEqual([]);
+});
+
+test("med «Fra timene» av ser ikke studenten Visning-ikonet", async ({ page }) => {
+  await skrivDok("content", "synlighet", { ...INNHOLD.synlighet, student: { ...INNHOLD.synlighet.student, fraTimene: true } });
+  const feil = await forbered(page);
+  await apne(page, "/index.html");
+  await expect(page.locator(".nav .nav-sok")).toBeVisible();
+  await expect(page.locator(".nav [data-visning]")).toBeHidden();
   expect(appFeil(feil)).toEqual([]);
 });
 
@@ -92,16 +114,17 @@ test("en plan som ikke er delt, spilles ikke for studenten", async ({ page }) =>
 test("læreren: planen som ikke er delt, spilles, og en gjennomgang er studentenes utgave", async ({ page }) => {
   const feil = await forbered(page, { rolle: "teacher" });
   await loggInnSomLaerer(page);
+  // Lærerens Visning-ikon åpner fortsatt lærerens eget vindu.
+  await apne(page, "/index.html");
+  await page.locator(".nav [data-visning]").click();
+  await expect(page.locator("#modal-visning")).toHaveClass(/open/);
+  await expect(page.locator("#modal-fra-timene.open")).toHaveCount(0);
+
   await apne(page, "/index.html?presentasjon=p2");
   await expect(teller(page)).toHaveText("Oversikt");
   await expect(page.locator("#pres-lerret")).toHaveCount(1);
   await page.locator("#pres-neste").click();
   await expect(page.locator("#modal-detail")).toContainText("Otis Redding");
-
-  // Fra lærersiden åpnes gjennomgangen i en ny fane.
-  await apne(page, "/teacher.html?vis=time:t1");
-  await expect(page.locator("#modal-time")).toHaveClass(/open/);
-  await expect(page.locator("#modal-time [data-tm-gjennomgang]")).toHaveAttribute("target", "_blank");
 
   // Gjennomgangen: lærerens verktøy er borte, og Avslutt spør ikke om timen.
   await apne(page, "/index.html?presentasjon=t1&gjennomgang=1");
@@ -112,7 +135,7 @@ test("læreren: planen som ikke er delt, spilles, og en gjennomgang er studenten
   await page.locator("#pres-neste").click();
   await expect(teller(page)).toHaveText("2/3");
   await page.keyboard.press("x");
-  await expect(page).toHaveURL(/vis=time(%3A|:)t1/);
+  await expect(page.locator("#modal-visning")).toHaveClass(/open/);
   await expect(page.locator(".modal-backdrop.open .modal-valg")).toHaveCount(0);
   // En vanlig avspilling etterpå er lærerens igjen.
   await apne(page, "/index.html?presentasjon=t1");

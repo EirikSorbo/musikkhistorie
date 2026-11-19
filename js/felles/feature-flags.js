@@ -60,7 +60,8 @@ export const SKJUL_I_STUDENTVISNING = {
   horEtter:             true,
   utskrift:             true,
   merking:              true,
-  // «Fra timene» (v6.10, U1): timene læreren deler, på forsiden og i Lytt.
+  // «Fra timene» (v6.10, U1): timene læreren deler, på forsiden og i Lytt,
+  // og fra v7.49 Visning-ikonet for studentrollen (html.skjul-fra-timene).
   // Skjult til læreren slår det på (brukervalg 2026-10-03).
   fraTimene:            true,
   // «Bare sjekket innhold» (v6.89): true = det usjekkede er skjult.
@@ -150,6 +151,8 @@ function brukKlasser() {
   if (typeof document === "undefined") return;
   document.documentElement.classList.toggle("skjul-punkter", grunn.punkter);
   document.documentElement.classList.toggle("skjul-utskrift", SKJUL_I_STUDENTVISNING.utskrift);
+  // Visning-ikonet for studentrollen (v7.49) står bare når «Fra timene» er på.
+  document.documentElement.classList.toggle("skjul-fra-timene", SKJUL_I_STUDENTVISNING.fraTimene);
 }
 
 function brukPaaObjektene() {

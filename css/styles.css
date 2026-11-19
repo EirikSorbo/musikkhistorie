@@ -4479,6 +4479,10 @@ body.role-student .nav .nav-icon.nav-hjem { display: inline-flex; }
 /* «Om appen» (v7.33, js/ui/info-vindu.js): «i» rett før Innstillinger, for
    alle. Vinduet bruker Innstillingers kort (.innst-*). */
 body.role-student .nav .nav-icon.nav-info { display: inline-flex; }
+/* «Fra timene» (v7.49, js/visning/fra-timene.js): Visning-ikonet er
+   studentenes inngang til timene læreren har delt, når bryteren er på. */
+body.role-student .nav .nav-icon[data-visning] { display: inline-flex; }
+html.skjul-fra-timene body.role-student .nav .nav-icon[data-visning] { display: none; }
 /* MIDLERTIDIG (js/feature-flags.js, utskrift): hele funksjonen er skjult for
    studentrollen inntil videre. Læreren (ingen role-student) ser alt. */
 html.skjul-utskrift body.role-student :is(.nav-icon.nav-utskrift, .utskrift-ta-med, .kort-utskrift, #btn-utskrift-liste, [data-pres-utskrift]) { display: none !important; }
@@ -4742,6 +4746,11 @@ body.presentasjon .meta-merke { display: none; }
 /* «Fra timene» på forsiden (U1). */
 .fra-timene-liste { display: flex; flex-direction: column; }
 .fra-timene-liste .sj-rad { padding: 6px 4px; }
+/* Kortet bak Visning-ikonet for studentene (v7.49). Radene er lenker. */
+.modal.modal-fra-timene { max-width: 560px; }
+.ft-ingress { margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted); }
+.modal-fra-timene a.sj-rad { text-decoration: none; }
+.ft-tom { margin: 0; font-size: 0.9rem; }
 /* «Synlig for studentene» på Skrivebordet (U4). */
 .desk-synlighet { margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius-xl); padding: 10px 14px; background: var(--surface); }
 .desk-synlighet > summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }

@@ -12,16 +12,16 @@
 //
 //  Timen åpnes som en oversikt: kortene gruppert som på kjøreplanens
 //  oversiktskort (planOversikt, testet), hvert kort åpnes oppå, og alle
-//  lytteeksemplene fra timen kan spilles som én spilleliste. «Gå gjennom
-//  timen» (v7.48) starter visningen med timen som kjøreplan, i rekkefølgen
-//  den ble vist, uten lærerens verktøy (gjennomgangLenke).
+//  lytteeksemplene fra timen kan spilles som én spilleliste. Gjennomgangen i
+//  visningen (v7.48) startes fra Visning-ikonet øverst til høyre
+//  (js/visning/fra-timene.js, v7.49), ikke herfra lenger.
 // ============================================================================
 import { openEksemplerSpilleliste } from "../ui/ui.js";
 import { escapeHtml } from "../felles/util.js";
 import { modalOpen } from "../ui/ui-modal.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
-import { normaliserPlaner, planOversikt, delteTimer, ytMaal, gjennomgangLenke } from "../visning/presentasjon-modell.js";
+import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "../visning/presentasjon-modell.js";
 import { parseVisVerdi } from "../felles/vis-lenke.js";
 import { erSlideVis } from "../visning/slides-modell.js";
 import { opts, getState } from "../data/app-state.js";
@@ -97,10 +97,7 @@ export function openTime(planId) {
   });
   const par = timeEksempler(plan, s.artists);
   const antall = antallKort(plan);
-  // Fra lærersiden åpnes gjennomgangen i en ny fane, så lærersiden står.
-  const nyFane = opts?.onStoryEdit ? ' target="_blank" rel="noopener"' : "";
   const knapper = [
-    antall ? `<a class="btn primary small" data-tm-gjennomgang href="${escapeHtml(gjennomgangLenke(planId))}"${nyFane}>Gå gjennom timen</a>` : "",
     par.length ? `<button type="button" class="btn ghost small" data-tm-spill>Spill lytteeksemplene fra timen (${par.length})</button>` : "",
   ].filter(Boolean);
   const body = document.getElementById("tm-body");
@@ -116,14 +113,19 @@ export function openTime(planId) {
 
 // Kortene studentene ser i en time. Slides (v7.06) er lærerens private sider:
 // oversikten hopper over dem (planOversikt), og tallet skal stemme med den.
-const antallKort = (plan) => (plan.stopp || []).filter((st) => !erSlideVis(st.vis)).length;
+export const antallKort = (plan) => (plan.stopp || []).filter((st) => !erSlideVis(st.vis)).length;
 
-// Radene for forsiden og Lytt: nyeste time først.
-export function fraTimeneRaderHtml(timer) {
-  return timer.map((t) => `<button type="button" class="sj-rad" data-time-id="${escapeHtml(t.id)}">
-    <span class="sj-rad-navn">${escapeHtml(t.tittel)}${t.dato ? `<span class="sj-rad-aar">${escapeHtml(datoTekst(t.dato))}</span>` : ""}</span>
-    <span class="sj-rad-aar">${antallKort(t)} kort</span>
-  </button>`).join("");
+// Radene for forsiden og Lytt: nyeste time først. Med `lenke` blir hver rad
+// en lenke dit (gjennomgangen fra Visning-ikonet, v7.49), ellers en knapp som
+// åpner timevinduet.
+export function fraTimeneRaderHtml(timer, { lenke = null } = {}) {
+  return timer.map((t) => {
+    const innhold = `<span class="sj-rad-navn">${escapeHtml(t.tittel)}${t.dato ? `<span class="sj-rad-aar">${escapeHtml(datoTekst(t.dato))}</span>` : ""}</span>
+    <span class="sj-rad-aar">${antallKort(t)} kort</span>`;
+    return lenke
+      ? `<a class="sj-rad" href="${escapeHtml(lenke(t))}" data-time-id="${escapeHtml(t.id)}">${innhold}</a>`
+      : `<button type="button" class="sj-rad" data-time-id="${escapeHtml(t.id)}">${innhold}</button>`;
+  }).join("");
 }
 
 // Lytt får en bolk «Fra timene» (spillelista fra hver time) når de er synlige.

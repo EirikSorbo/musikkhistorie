@@ -58,6 +58,7 @@ import { startSlides } from "./slides.js";
 import { lagreSomTime } from "./lagre-time.js";
 import { grupperPlaner, gruppeNavn, planTelling, referanseFor } from "./gjennomgang-modell.js";
 import { apneGjennomgang, gjennomgangTikk } from "./gjennomgang.js";
+import { apneFraTimene, fraTimeneTikk, erStudentRolle } from "./fra-timene.js";
 import { startKopivakt, ulagrede, kopierLastet, vedKopiEndring, slettKopi } from "./visningskopi.js";
 import { erFersk, kopiDato } from "./visningskopi-modell.js";
 
@@ -987,6 +988,8 @@ function byggModal() {
 
 // Åpner vinduet med lista (aldri midt i en gammel kladd).
 export function apneVisning() {
+  // Studentene (v7.49): ikonet åpner timene læreren har delt, til gjennomgang.
+  if (!erLaerer && erStudentRolle()) { apneFraTimene(); return; }
   const m = document.getElementById(MODAL_ID) || byggModal();
   lukkKladd();
   const sokFelt = document.getElementById("pres-adm-sok");
@@ -1005,6 +1008,7 @@ export function visningTikk() {
   // plan), uansett om vinduet står åpent.
   oppdaterAktiv();
   gjennomgangTikk();
+  fraTimeneTikk();
   sporOmKopier();
   const m = document.getElementById(MODAL_ID);
   if (!m?.classList.contains("open")) return;
@@ -1020,6 +1024,8 @@ export function visningTikk() {
 // ?visning=1 (fra skjemasiden, eller et bokmerke) åpner det ved lasting.
 export function initVisning() {
   document.querySelectorAll("[data-visning]").forEach((a) => {
+    // For studentene er ikonet inngangen til timene (v7.49).
+    if (erStudentRolle()) { a.title = "Fra timene"; a.setAttribute("aria-label", "Fra timene"); }
     a.addEventListener("click", (e) => {
       e.preventDefault();
       apneVisning();

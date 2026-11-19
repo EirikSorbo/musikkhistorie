@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform, gjennomgangLenke, tilbakeTilTimen, planTilgang, nesteUtenSlide, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform, gjennomgangLenke, GJENNOMGANG_TILBAKE, planTilgang, nesteUtenSlide, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -1279,13 +1279,11 @@ test("redigeringen (v7.31): Legg til står over stopplista, og hintet har oversi
 
 // Gjennomgang for studentene (v7.48): lenkene og regelen for hvem som får
 // spille en plan i visningen.
-test("gjennomgangLenke og tilbakeTilTimen: visningen merket som gjennomgang, og veien tilbake til timen", () => {
+test("gjennomgangLenke og GJENNOMGANG_TILBAKE: visningen merket som gjennomgang, og veien tilbake til kortet med timene", () => {
   assert.equal(gjennomgangLenke("t1"), "index.html?presentasjon=t1&gjennomgang=1");
   assert.equal(gjennomgangLenke("a b/c"), "index.html?presentasjon=a%20b%2Fc&gjennomgang=1");
   assert.equal(new URLSearchParams(gjennomgangLenke("x").split("?")[1]).get(GJENNOMGANG_PARAM), "1");
-  assert.equal(tilbakeTilTimen("t1"), "index.html?vis=time%3At1");
-  assert.equal(new URLSearchParams(tilbakeTilTimen("t1").split("?")[1]).get("vis"), "time:t1");
-  assert.equal(tilbakeTilTimen(null), "index.html");
+  assert.equal(GJENNOMGANG_TILBAKE, "index.html?visning=1");
 });
 
 test("planTilgang: læreren spiller alle planene, studentene bare delte timer med «Fra timene» på", () => {

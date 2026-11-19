@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST, planTilgang, nesteUtenSlide, tilbakeTilTimen, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST, planTilgang, nesteUtenSlide, GJENNOMGANG_TILBAKE, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -1188,8 +1188,8 @@ export async function avsluttPresentasjon() {
   if (erLaerer && okt) {
     await Promise.race([slettKopi(okt).catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
   }
-  // En gjennomgang (v7.48) avsluttes tilbake i timevinduet den ble startet fra.
-  const tilbake = gjennomgang ? tilbakeTilTimen(pid) : "index.html";
+  // En gjennomgang avsluttes tilbake i kortet med timene (v7.49).
+  const tilbake = gjennomgang ? GJENNOMGANG_TILBAKE : "index.html";
   lerretSlutt();
   for (const k of Object.values(LAGRING)) { try { sessionStorage.removeItem(k); } catch (e) {} }
   sistLogget = null;
