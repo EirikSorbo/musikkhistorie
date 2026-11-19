@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform, gjennomgangLenke, tilbakeTilTimen, planTilgang, nesteUtenSlide, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -395,7 +395,7 @@ test("avspilleren bruker de virtuelle posisjonene, og planene starter på oversi
   const spiller = kilde("presentasjon.js");
   assert.match(spiller, /const p = planPosisjon\(i, plan\.stopp\.length\);/);
   assert.match(spiller, /if \(p\.oversikt\) visOversikt\(\);/);
-  assert.match(spiller, /teller\.textContent = plan \? tellerTekst\(stoppIdx, plan\.stopp\.length\) : "…";/);
+  assert.match(spiller, /teller\.textContent = utenSlides\(\) \? tellerUtenSlides\(stoppIdx, plan\.stopp, erSlideVis\) : tellerTekst\(stoppIdx, plan\.stopp\.length\);/);
   assert.doesNotMatch(kilde("visning.js"), /presentasjon=\$\{[^}]*\}&stopp=1/,
     "startlenka skal ikke hoppe over oversiktskortet");
   // Navnene i oversikten kommer fra listene, som kan lande etter planen.
@@ -456,7 +456,7 @@ test("«Legg til her»: knappen kun for lærerøkter, lagring på ferske planer,
   const spiller = kilde("presentasjon.js");
   assert.match(spiller, /knapp\.hidden = !\(erLaerer && plan\);/, "skjult uten lærerøkt og plan");
   // v5.96: lærerøkta styrer også Visning-kortet i huben (oppdaterHubKort).
-  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaerer = erLaererBruker\(user\); oppdaterLeggTil\(\); oppdaterHubKort\(\); notaterEndret\(\); paminnelserAuthEndret\(\); sikkerhetskopier\(\); \}\);/);
+  assert.match(spiller, /onAuthChange\(\(user\) => \{ erLaererKonto = erLaererBruker\(user\); erLaerer = erLaererKonto && !gjennomgang; oppdaterLeggTil\(\); oppdaterHubKort\(\); notaterEndret\(\); paminnelserAuthEndret\(\); sikkerhetskopier\(\); \}\);/);
   assert.match(spiller, /const indeks = innsettingsIndeks\(stoppIdx, plan\.stopp\.length\);/);
   assert.match(spiller, /const stopp = \{ vis, nivaa \};/, "stoppet lagres med detaljnivået som vises");
   assert.match(spiller, /plan = await settInnStopp\(planId, indeks, stopp\);/);
@@ -807,7 +807,7 @@ test("kjøreplanene er flyttet fra lærerens Oversikt inn i vinduet", () => {
 
 test("fri visning etter en kjøreplan starter uten den gamle planen", () => {
   const spiller = kilde("presentasjon.js");
-  assert.match(spiller, /\} else \{\n(\s*\/\/[^\n]*\n)*\s*for \(const k of \[LAGRING\.plan, LAGRING\.stopp\]\) \{ try \{ sessionStorage\.removeItem\(k\); \} catch \(e\) \{\} \}/);
+  assert.match(spiller, /\} else \{\n(\s*\/\/[^\n]*\n)*\s*for \(const k of \[LAGRING\.plan, LAGRING\.stopp, LAGRING\.gjennomgang\]\) \{ try \{ sessionStorage\.removeItem\(k\); \} catch \(e\) \{\} \}/);
   assert.match(spiller, /export function aktivPlanId\(\)/);
   assert.match(spiller, /export (async )?function avsluttPresentasjon\(\)/);   // async fra v6.10 («Lagre som time»)
 });
@@ -1112,7 +1112,7 @@ test("lerretet viser treet i en ramme på forsiden og åpnes alltid på forsiden
   assert.match(l, /if \(sideNavn\(\) === "index" && d\.side === "tre"\) \{\n\s*visTreRamme\(true\);/);
   assert.match(l, /if \(innebygd\) return;\n\s*\/\/ Forsiden viser treet i rammen/, "rammen bytter aldri side selv");
   assert.match(l, /folgere\.delete\(String\(d\.id \|\| "\?"\)\);/, "rammen kan si farvel uten å koble fra lerretet");
-  assert.match(kilde("presentasjon.js"), /if \(!\(erLerret && lerretInnebygd\(\)\)\) fullskjermVedForsteHandling\(\);/);
+  assert.match(kilde("presentasjon.js"), /if \(!\(erLerret && lerretInnebygd\(\)\) && !gjennomgang\) fullskjermVedForsteHandling\(\);/);
   const css = readFileSync(new URL("../../css/styles.css", import.meta.url), "utf8");
   assert.match(css, /#lerret-tre \{ position: fixed; inset: 0;/);
 });
@@ -1275,4 +1275,57 @@ test("redigeringen (v7.31): Legg til står over stopplista, og hintet har oversi
   const stopp = v.indexOf('id="pres-adm-stopp"');
   assert.ok(sok > 0 && stopp > sok, "søket, så stoppene");
   assert.match(v, /gruppert etter oversikter, sjangre, artister, lytteeksempler og så videre/);
+});
+
+// Gjennomgang for studentene (v7.48): lenkene og regelen for hvem som får
+// spille en plan i visningen.
+test("gjennomgangLenke og tilbakeTilTimen: visningen merket som gjennomgang, og veien tilbake til timen", () => {
+  assert.equal(gjennomgangLenke("t1"), "index.html?presentasjon=t1&gjennomgang=1");
+  assert.equal(gjennomgangLenke("a b/c"), "index.html?presentasjon=a%20b%2Fc&gjennomgang=1");
+  assert.equal(new URLSearchParams(gjennomgangLenke("x").split("?")[1]).get(GJENNOMGANG_PARAM), "1");
+  assert.equal(tilbakeTilTimen("t1"), "index.html?vis=time%3At1");
+  assert.equal(new URLSearchParams(tilbakeTilTimen("t1").split("?")[1]).get("vis"), "time:t1");
+  assert.equal(tilbakeTilTimen(null), "index.html");
+});
+
+test("planTilgang: læreren spiller alle planene, studentene bare delte timer med «Fra timene» på", () => {
+  const delt = { delt: true, stopp: [] };
+  const privat = { stopp: [] };
+  assert.equal(planTilgang(privat, { laerer: true }), "ja");
+  assert.equal(planTilgang(delt, { fraTimene: true }), "ja");
+  assert.equal(planTilgang(delt, { fraTimene: false }), "nei", "bryteren er av");
+  assert.equal(planTilgang(privat, { fraTimene: true }), "nei", "ikke delt");
+  assert.equal(planTilgang({ delt: "true" }, { fraTimene: true }), "nei", "bare true teller");
+  assert.equal(planTilgang(undefined, { laerer: true }), "nei", "finnes ikke");
+  // Innloggingen er ikke avklart: en delt time spilles med en gang, en
+  // privat plan venter, for det kan være læreren som har åpnet den.
+  assert.equal(planTilgang(delt, { authAvklart: false, fraTimene: true }), "ja");
+  assert.equal(planTilgang(privat, { authAvklart: false, fraTimene: true }), "vent");
+  assert.equal(planTilgang(privat, { authAvklart: true, fraTimene: true }), "nei");
+});
+
+test("nesteUtenSlide: hopper over slidene, -1 når det ikke er flere stopp", () => {
+  const stopp = [{ vis: "artist:a" }, { vis: "slide:s1" }, { vis: "slide:s2" }, { vis: "tiår:1950" }];
+  const erSlide = (v) => String(v || "").startsWith("slide:");
+  assert.equal(nesteUtenSlide(stopp, 0, erSlide), 0);
+  assert.equal(nesteUtenSlide(stopp, 1, erSlide), 3);
+  assert.equal(nesteUtenSlide(stopp, 4, erSlide), -1);
+  assert.equal(nesteUtenSlide([{ vis: "slide:x" }], 0, erSlide), -1);
+  assert.equal(nesteUtenSlide(null, 0, erSlide), -1);
+});
+
+test("tellerUtenSlides og antallStopp: slidene telles ikke når de hoppes over", () => {
+  const stopp = [{ vis: "artist:a" }, { vis: "slide:sabc123" }, { vis: "tiår:1950" }, { vis: "artist:b" }];
+  const erSlide = (v) => String(v || "").startsWith("slide:");
+  assert.equal(tellerUtenSlides(0, stopp, erSlide), "Oversikt");
+  assert.equal(tellerUtenSlides(1, stopp, erSlide), "1/3");
+  assert.equal(tellerUtenSlides(3, stopp, erSlide), "2/3");
+  assert.equal(tellerUtenSlides(4, stopp, erSlide), "3/3");
+  assert.equal(tellerUtenSlides(5, stopp, erSlide), "Oppsummering");
+  // Uten slider er det samme tekst som før.
+  const uten = stopp.filter((s) => !erSlide(s.vis));
+  for (let i = 0; i <= uten.length + 1; i++) assert.equal(tellerUtenSlides(i, uten, erSlide), tellerTekst(i, uten.length));
+  assert.equal(antallStopp(stopp, true, erSlide), 3);
+  assert.equal(antallStopp(stopp, false, erSlide), 4);
+  assert.equal(antallStopp(null, true, erSlide), 0);
 });

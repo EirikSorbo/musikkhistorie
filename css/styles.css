@@ -3645,6 +3645,8 @@ body.presentasjon :is(.mo-artister, .mo-eksempler) {
   padding-left: 1.4rem;
 }
 .mo-tall { margin: 0 0 1.2rem; font-size: 0.85rem; color: var(--muted); }
+/* Knappene i timevinduet (v7.48): «Gå gjennom timen» og spillelista. */
+.tm-knapper { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 1.2rem; }
 .mo-head {
   margin: 0 0 0.6rem; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: 0.1em; color: var(--mo-mork);
@@ -4090,6 +4092,18 @@ body.presentasjon.pres-meny-skjult #pres-bar { display: none; }
 .pres-knapp:disabled:hover { border-color: var(--line); background: var(--surface); }
 .pres-nivaa { display: inline-flex; gap: 4px; padding-right: 4px; border-right: 1px solid var(--line); }
 .pres-avslutt { font-size: 0.85em; }
+/* Smal skjerm (v7.48, gjennomgangen for studentene på telefonen): linja står
+   over hele bredden nederst og kan brytes. «neste: …», tekststørrelsen og
+   fullskjermen tar plassen blaingen trenger, og iPhone har ingen fullskjerm. */
+@media (max-width: 600px) {
+  #pres-bar { left: 8px; right: 8px; bottom: 8px; flex-wrap: wrap; justify-content: center; border-radius: var(--radius-xl); }
+  #pres-bar :is(#pres-neste-tekst, #pres-skala, #pres-full) { display: none; }
+  /* Kortet øverst på skjermen, ikke midt på, med plass til linja i to rader
+     under, og spaltene på artist- og sjangerkortet under hverandre. */
+  body.presentasjon .modal-backdrop { align-items: flex-start; padding: 8px 8px 120px; }
+  body.presentasjon .modal-backdrop:where(:not(#modal-sok)) > .modal:where(:not(.modal-narrow, .modal-valg, .modal-hjelp, .modal-verktoy)) { padding: 1rem 1.1rem 1.4rem; }
+  body.presentasjon :is(.pres-artist-spalter, .pres-sjanger-spalter) { grid-template-columns: minmax(0, 1fr); gap: 1.2rem 0; }
+}
 
 /* Tannhjul-panelet: over verktøylinja, venstrestilt tekst. */
 #pres-panel {

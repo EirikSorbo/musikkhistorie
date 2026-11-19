@@ -28,8 +28,8 @@
 //  js/visning/pres-notater.js viser notatene (P) bare i lærerens vindu.
 // ============================================================================
 
-import { SKJUL_I_HUBEN, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST } from "./presentasjon-modell.js";
+import { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING, settSynlighetOverstyrt } from "../felles/feature-flags.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST, planTilgang, nesteUtenSlide, tilbakeTilTimen, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -93,6 +93,9 @@ const LAGRING = {
   // er vist, skrives til lærerens notater underveis (js/visning/visningskopi.js).
   okt: "pensumPresOkt",
   oktStart: "pensumPresOktStart",
+  // Gjennomgang for studentene (v7.48): visningen ble startet fra «Gå gjennom
+  // timen», og lærerens verktøy er borte. Følger visningen over sidebytter.
+  gjennomgang: "pensumPresGjennomgang",
 };
 
 // «Sist spilt» per plan (v5.75, localStorage pensum-plan-spilt) er fjernet
@@ -130,6 +133,12 @@ export function erPresentasjon() {
       // bærer posisjonen fra da sida ble forlatt (audit v5.42 funn 12).
       const tilbakeISammePlan = erTilbakeNavigering() && les(LAGRING.plan) === param;
       skriv(LAGRING.plan, param);
+      // Gjennomgang (v7.48): bare når lenka sier det. En vanlig avspilling i
+      // samme fane etterpå er lærerens igjen.
+      let gj = false;
+      try { gj = new URLSearchParams(window.location.search).get(GJENNOMGANG_PARAM) === "1"; } catch (e) {}
+      if (gj) skriv(LAGRING.gjennomgang, "1");
+      else { try { sessionStorage.removeItem(LAGRING.gjennomgang); } catch (e) {} }
       if (!tilbakeISammePlan) {
         let s = 0;
         let medStopp = false;
@@ -144,7 +153,7 @@ export function erPresentasjon() {
       // Fri visning (?presentasjon eller =1) er uten kjøreplan (v5.41): en
       // plan fra tidligere i økta lå ellers igjen i sessionStorage og ble
       // spilt videre.
-      for (const k of [LAGRING.plan, LAGRING.stopp]) { try { sessionStorage.removeItem(k); } catch (e) {} }
+      for (const k of [LAGRING.plan, LAGRING.stopp, LAGRING.gjennomgang]) { try { sessionStorage.removeItem(k); } catch (e) {} }
     }
   }
   return aktiv;
@@ -284,7 +293,8 @@ let stoppIdx = 0;
 function oppdaterTeller() {
   const teller = document.getElementById("pres-teller");
   if (!teller) return;
-  teller.textContent = plan ? tellerTekst(stoppIdx, plan.stopp.length) : "…";
+  if (!plan) { teller.textContent = "…"; oppdaterNeste(); return; }
+  teller.textContent = utenSlides() ? tellerUtenSlides(stoppIdx, plan.stopp, erSlideVis) : tellerTekst(stoppIdx, plan.stopp.length);
   oppdaterNeste();
 }
 
@@ -299,10 +309,12 @@ function oppdaterNeste() {
   if (!plan || !plan.stopp.length) { el.hidden = true; return; }
   const p = planPosisjon(stoppIdx, plan.stopp.length);
   let tekst = "";
-  if (p.oversikt === "start") tekst = stoppEtikett(plan.stopp[0]).navn;
-  else if (p.oversikt === "slutt") tekst = "";
-  else if (p.stopp + 1 < plan.stopp.length) tekst = stoppEtikett(plan.stopp[p.stopp + 1]).navn;
-  else tekst = "Oppsummering";
+  const neste = (fra) => (utenSlides() ? nesteUtenSlide(plan.stopp, fra, erSlideVis) : fra < plan.stopp.length ? fra : -1);
+  if (p.oversikt === "slutt") tekst = "";
+  else {
+    const j = neste(p.oversikt === "start" ? 0 : p.stopp + 1);
+    tekst = j >= 0 ? stoppEtikett(plan.stopp[j]).navn : "Oppsummering";
+  }
   el.hidden = !tekst;
   el.textContent = tekst ? `neste: ${tekst}` : "";
   el.title = tekst ? `Neste stopp: ${tekst}` : "";
@@ -337,6 +349,10 @@ function forhaandslast(i) {
 // slide-stopp hoppes stille over (samme retning som de gikk). authAvklart hindrer
 // at læreren selv hoppes over de første sekundene, før innloggingen er kjent.
 let authAvklart = false;
+// Slidene er lærerens private sider: studentene hopper over dem, og i en
+// gjennomgang (v7.48) gjør alle det, uten å vente på innloggingen.
+const utenSlides = () => gjennomgang || (authAvklart && !erLaerer);
+
 const stoppEtikettErSlide = (pos) => {
   const p = planPosisjon(pos, plan.stopp.length);
   return !p.oversikt && erSlideVis(plan.stopp[p.stopp]?.vis);
@@ -344,7 +360,7 @@ const stoppEtikettErSlide = (pos) => {
 
 function gaTilStopp(i) {
   if (!plan || !plan.stopp.length) return;
-  if (authAvklart && !erLaerer && stoppEtikettErSlide(i)) { gaTilStopp(i + (i >= stoppIdx ? 1 : -1)); return; }
+  if (utenSlides() && stoppEtikettErSlide(i)) { gaTilStopp(i + (i >= stoppIdx ? 1 : -1)); return; }
   const p = planPosisjon(i, plan.stopp.length);
 
   // Lukk alt først (lyd stoppes, et kort som nekter, avbryter byttet).
@@ -495,6 +511,7 @@ function lagrePosisjon() {
     const u = new URL(window.location.href);
     u.searchParams.set("presentasjon", planId);
     u.searchParams.set("stopp", String(stoppIdx));
+    if (gjennomgang) u.searchParams.set(GJENNOMGANG_PARAM, "1");
     u.searchParams.delete("vis");   // et gammelt dyplenke-mål skal ikke gjenåpnes ved reload
     window.history.replaceState(null, "", u);
   } catch (e) {}
@@ -511,6 +528,12 @@ function lagrePosisjon() {
 // ----------------------------------------------------------------------------
 
 let erLaerer = false;
+// Læreren er innlogget, også i en gjennomgang (v7.48). erLaerer over er da
+// false, så visningen er studentenes, men regelen for hvilke planer som kan
+// spilles (planTilgang), gjelder kontoen.
+let erLaererKonto = false;
+// Visningen ble startet fra «Gå gjennom timen» (v7.48): studentenes utgave.
+let gjennomgang = false;
 let lagrer = false;
 
 // Målet til det øverste åpne kortet, eller null. Søket og oversiktskortet
@@ -641,7 +664,7 @@ function tegnOversikt() {
   const gjennom = [...besokt].filter((i) => i >= 0 && i < plan.stopp.length && i !== naa).length;
   m.querySelector("#pres-ov-tittel").textContent = plan.tittel;
   m.querySelector("#pres-ov-merke").textContent =
-    `${slutt ? "Oppsummering" : "Oversikt"} · ${plan.stopp.length} stopp${gjennom ? ` · ${gjennom} gått gjennom` : ""}`;
+    `${slutt ? "Oppsummering" : "Oversikt"} · ${antallStopp(plan.stopp, utenSlides(), erSlideVis)} stopp${gjennom ? ` · ${gjennom} gått gjennom` : ""}`;
   // «Spill alle lytteeksemplene» (v5.75) når planen har minst to.
   const ider = lytteeksemplerIPlanen();
   const verktoy = m.querySelector("#pres-ov-verktoy");
@@ -696,6 +719,22 @@ export function presPlanTikk() {
   const s = getState();
   const planer = normaliserPlaner(s.content?.presentasjoner?.planer);
   if (planer[planId]) {
+    // Bare læreren spiller planene som ikke er delt (v7.48, planTilgang).
+    const tilgang = planTilgang(planer[planId], {
+      laerer: erLaererKonto,
+      authAvklart,
+      fraTimene: !SKJUL_I_STUDENTVISNING.fraTimene,
+    });
+    if (tilgang === "vent") return;
+    if (tilgang === "nei") {
+      const teller = document.getElementById("pres-teller");
+      if (teller && teller.textContent !== "ikke delt") {
+        teller.textContent = "ikke delt";
+        teller.title = "Timen er ikke delt med studentene";
+        visVarsel("Denne timen er ikke delt med studentene.");
+      }
+      return;
+    }
     plan = planer[planId];
     oppdaterLeggTil();
     if (!plan.stopp.length) {
@@ -969,7 +1008,7 @@ function byggBar() {
     </span>
     <button type="button" class="pres-knapp" id="pres-skala" title="Større tekst (A)">A</button>
     <button type="button" class="pres-knapp" id="pres-full" title="Fullskjerm (F)">${IKON.full}</button>
-    <button type="button" class="pres-knapp" id="pres-lerret" title="Åpne lerret på annen skjerm" aria-label="Åpne lerret på annen skjerm">${IKON.skjerm}</button>
+    ${gjennomgang ? "" : `<button type="button" class="pres-knapp" id="pres-lerret" title="Åpne lerret på annen skjerm" aria-label="Åpne lerret på annen skjerm">${IKON.skjerm}</button>`}
     <button type="button" class="pres-knapp" id="pres-tannhjul" title="Innstillinger (,)" aria-label="Innstillinger">${IKON.tannhjul}</button>
     <span class="pres-klokke" id="pres-klokke" hidden aria-label="Klokka"></span>
     <button type="button" class="pres-knapp pres-avslutt" id="pres-avslutt" title="Avslutt visningen (X)">Avslutt</button>
@@ -1149,11 +1188,13 @@ export async function avsluttPresentasjon() {
   if (erLaerer && okt) {
     await Promise.race([slettKopi(okt).catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
   }
+  // En gjennomgang (v7.48) avsluttes tilbake i timevinduet den ble startet fra.
+  const tilbake = gjennomgang ? tilbakeTilTimen(pid) : "index.html";
   lerretSlutt();
   for (const k of Object.values(LAGRING)) { try { sessionStorage.removeItem(k); } catch (e) {} }
   sistLogget = null;
   // Full sidelast: nullstiller også flaggmutasjonene fra QA-bryteren.
-  window.location.href = "index.html";
+  window.location.href = tilbake;
 }
 
 // Øverste åpne modal som er en merket flate — det er den tannhjul-panelets
@@ -1211,8 +1252,8 @@ function tegnPanel(panel) {
       <button type="button" class="btn ghost small" id="pres-nullstill">Nullstill unntak</button>
       <hr class="pres-skille">`
     : `<p class="pres-panel-hode">Åpne et kort for å velge seksjoner.</p>`}
-    <label class="pres-valg pres-qa"><input type="checkbox" id="pres-qa" ${qaPaa() ? "checked" : ""}>
-      Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort, usjekket innhold)</label>
+    ${gjennomgang ? "" : `<label class="pres-valg pres-qa"><input type="checkbox" id="pres-qa" ${qaPaa() ? "checked" : ""}>
+      Vis innhold som er skjult for studentene (sjangerhistorier, koblingstekster, «Hør etter», viktighetsgrad, alle hubkort, usjekket innhold)</label>`}
     <label class="pres-valg"><input type="checkbox" id="pres-klokke-valg" ${klokkePaa() ? "checked" : ""}> Vis klokka i verktøylinja</label>
     ${paminnelserStartet() ? `<button type="button" class="btn ghost small" id="pres-ny-pam" title="Ny påminnelse i denne visningen (R)">Ny påminnelse …</button>` : ""}
     ${kanHuske() ? `<hr class="pres-skille">
@@ -1501,6 +1542,8 @@ export function initPresentasjon() {
   // Kjøreplanen (fase 4): id og posisjon fra sessionStorage — erPresentasjon
   // har alt skrevet URL-parametrene dit, og et sidebytte bærer dem videre.
   planId = erLerret ? null : les(LAGRING.plan) || null;
+  gjennomgang = !!planId && les(LAGRING.gjennomgang) === "1";
+  document.body.classList.toggle("pres-gjennomgang", gjennomgang);
   stoppIdx = Math.max(0, Number(les(LAGRING.stopp)) || 0);
   hoppOverSlektstre = erTilbakeNavigering();
   // Tilbake fra nettleserens hurtigbuffer (bfcache): stoppet i minnet er det
@@ -1525,10 +1568,12 @@ export function initPresentasjon() {
   brukSkala(skalaTrinn);   // etter byggBar: knappen skal vise trinnet
   settKlokke(klokkePaa());
   settMenySkjult(les(LAGRING.menySkjult) === "1");
-  blankFaneOgVindu();
+  // En gjennomgang (v7.48) er en vanlig fane for studenten: ikonet står, og
+  // fullskjerm bare når studenten selv ber om den (F eller knappen).
+  if (!gjennomgang) blankFaneOgVindu();
   // Slektstre-rammen på lerretet (v6.52) har ingen egen fullskjerm: forsiden
   // rundt den eier den.
-  if (!(erLerret && lerretInnebygd())) fullskjermVedForsteHandling();
+  if (!(erLerret && lerretInnebygd()) && !gjennomgang) fullskjermVedForsteHandling();
   // Et stopp som ikke finnes lenger, sies fra om på lerretet (v5.75).
   setVisMaalFeilProvider((maal) => {
     const etikett = stoppEtikett({ vis: [maal.hva, maal.id, maal.modus, maal.ekstra].filter((x) => x != null && x !== "").join(":") });
@@ -1538,11 +1583,13 @@ export function initPresentasjon() {
   // timen» (L) er bare for læreren. «Legg til her» bruker samme flagg.
   // Slidene (v7.06, lærerens private sider) hentes når en lærer er innlogget, også på lerretet.
   startSlides();
-  onAuthChange((user) => { erLaerer = erLaererBruker(user); oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); paminnelserAuthEndret(); sikkerhetskopier(); });
+  onAuthChange((user) => { erLaererKonto = erLaererBruker(user); erLaerer = erLaererKonto && !gjennomgang; oppdaterLeggTil(); oppdaterHubKort(); notaterEndret(); paminnelserAuthEndret(); sikkerhetskopier(); });
   // Står en student på et slide-stopp (omlasting midt i en delt time), går det videre.
   onAuthChange(() => {
     authAvklart = true;
     if (!erLaerer && plan && stoppEtikettErSlide(stoppIdx)) gaTilStopp(stoppIdx + 1);
+    // En plan som ventet på innloggingen (planTilgang «vent»), prøves nå.
+    if (!plan) presPlanTikk();
   });
   if (planId) {
     const planUi = document.getElementById("pres-plan");
@@ -1556,7 +1603,9 @@ export function initPresentasjon() {
       }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "style", "data-vis"] });
     }
   }
-  if (qaPaa()) settQA(true); else oppdaterHubKort();
+  // QA-bryteren gjelder aldri i en gjennomgang (v7.48), heller ikke når den
+  // står på fra en tidligere visning på samme maskin.
+  if (qaPaa() && !gjennomgang) settQA(true); else oppdaterHubKort();
   observerModaler();
   // Sidehistorikken (v5.95): fra sessionStorage, så den følger visningen over
   // sidebytter; tre.html melder slektstreet som side. Kortenes mål følges med

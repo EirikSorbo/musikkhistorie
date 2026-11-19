@@ -12,14 +12,16 @@
 //
 //  Timen åpnes som en oversikt: kortene gruppert som på kjøreplanens
 //  oversiktskort (planOversikt, testet), hvert kort åpnes oppå, og alle
-//  lytteeksemplene fra timen kan spilles som én spilleliste.
+//  lytteeksemplene fra timen kan spilles som én spilleliste. «Gå gjennom
+//  timen» (v7.48) starter visningen med timen som kjøreplan, i rekkefølgen
+//  den ble vist, uten lærerens verktøy (gjennomgangLenke).
 // ============================================================================
 import { openEksemplerSpilleliste } from "../ui/ui.js";
 import { escapeHtml } from "../felles/util.js";
 import { modalOpen } from "../ui/ui-modal.js";
 import { SKJUL_I_STUDENTVISNING } from "../felles/feature-flags.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
-import { normaliserPlaner, planOversikt, delteTimer, ytMaal } from "../visning/presentasjon-modell.js";
+import { normaliserPlaner, planOversikt, delteTimer, ytMaal, gjennomgangLenke } from "../visning/presentasjon-modell.js";
 import { parseVisVerdi } from "../felles/vis-lenke.js";
 import { erSlideVis } from "../visning/slides-modell.js";
 import { opts, getState } from "../data/app-state.js";
@@ -94,9 +96,16 @@ export function openTime(planId) {
     nodeNavn: (id) => GENEALOGY.find((n) => n.id === id)?.l,
   });
   const par = timeEksempler(plan, s.artists);
+  const antall = antallKort(plan);
+  // Fra lærersiden åpnes gjennomgangen i en ny fane, så lærersiden står.
+  const nyFane = opts?.onStoryEdit ? ' target="_blank" rel="noopener"' : "";
+  const knapper = [
+    antall ? `<a class="btn primary small" data-tm-gjennomgang href="${escapeHtml(gjennomgangLenke(planId))}"${nyFane}>Gå gjennom timen</a>` : "",
+    par.length ? `<button type="button" class="btn ghost small" data-tm-spill>Spill lytteeksemplene fra timen (${par.length})</button>` : "",
+  ].filter(Boolean);
   const body = document.getElementById("tm-body");
-  body.innerHTML = `<p class="mo-tall">${escapeHtml([datoTekst(plan.dato), `${antallKort(plan)} kort`].filter(Boolean).join(" · "))}</p>`
-    + (par.length ? `<p><button type="button" class="btn ghost small" data-tm-spill>Spill lytteeksemplene fra timen (${par.length})</button></p>` : "")
+  body.innerHTML = `<p class="mo-tall">${escapeHtml([datoTekst(plan.dato), `${antall} kort`].filter(Boolean).join(" · "))}</p>`
+    + (knapper.length ? `<p class="tm-knapper">${knapper.join("")}</p>` : "")
     + `<div class="sj-familier">${grupper.map((g) => `<section class="sj-familie"><div class="sj-fam-hode"><h3 class="sj-fam-navn">${escapeHtml(g.navn)}</h3><span class="sj-fam-tall">${g.punkter.length}</span></div>
         ${g.punkter.map((p) => `<button type="button" class="sj-rad" data-tm-vis="${escapeHtml(plan.stopp[p.stopp]?.vis || "")}"><span class="sj-rad-navn">${escapeHtml(p.tekst)}${p.detalj ? `<span class="sj-rad-aar">${escapeHtml(p.detalj)}</span>` : ""}</span></button>`).join("")}
       </section>`).join("")}</div>`;

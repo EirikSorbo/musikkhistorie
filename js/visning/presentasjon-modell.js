@@ -1247,3 +1247,62 @@ export function raskPaminnelse({ type, min, kl, naar: tid, tekst, lerret } = {},
   }
   return { p: { id: `r${naaMs.toString(36)}`, type: "naar", naar, tekst: t, lerret: !!lerret } };
 }
+
+// ----------------------------------------------------------------------------
+//  Gjennomgang for studentene (v7.48, brukerbestilling 2026-11-19): en delt
+//  time kan blas gjennom i visningen, fra «Gå gjennom timen» i timevinduet
+//  (explore-timer.js). Lenka merker visningen som gjennomgang, og da er
+//  lærerens verktøy borte, også når læreren selv bruker den for å se det
+//  studentene ser. Avslutt går tilbake til timevinduet.
+// ----------------------------------------------------------------------------
+
+export const GJENNOMGANG_PARAM = "gjennomgang";
+
+export function gjennomgangLenke(planId) {
+  return `index.html?presentasjon=${encodeURIComponent(planId)}&${GJENNOMGANG_PARAM}=1`;
+}
+
+export function tilbakeTilTimen(planId) {
+  return planId ? `index.html?vis=${encodeURIComponent(`time:${planId}`)}` : "index.html";
+}
+
+// Kan planen spilles i denne visningen? Samme regel som timevinduet
+// (timeTilgjengelig, v6.23 Fable F6): læreren spiller alle planene, alle
+// andre bare en delt time, og bare med «Fra timene» på. Før v7.48 spilte
+// ?presentasjon=<id> hvilken som helst plan. «vent» så lenge innloggingen
+// ikke er avklart: planen kan være lærerens egen.
+export function planTilgang(plan, { laerer = false, authAvklart = true, fraTimene = false } = {}) {
+  if (!plan) return "nei";
+  if (laerer) return "ja";
+  if (plan.delt === true && fraTimene) return "ja";
+  return authAvklart ? "nei" : "vent";
+}
+
+// Neste stopp som ikke er en slide (lærerens private sider), fra plassen
+// `fra` i planen, eller -1. For «neste: …» ved telleren når slidene hoppes over.
+export function nesteUtenSlide(stopp, fra, erSlide) {
+  const liste = Array.isArray(stopp) ? stopp : [];
+  for (let i = Math.max(0, fra); i < liste.length; i++) {
+    if (!erSlide(liste[i]?.vis)) return i;
+  }
+  return -1;
+}
+
+// Telleren når slidene hoppes over (v7.48): plassen blant stoppene som ikke
+// er slides, og antallet av dem, så studenten ser «1/3» og ikke «1/4».
+export function tellerUtenSlides(i, stopp, erSlide) {
+  const liste = Array.isArray(stopp) ? stopp : [];
+  const p = planPosisjon(i, liste.length);
+  if (p.oversikt === "start") return "Oversikt";
+  if (p.oversikt === "slutt") return "Oppsummering";
+  const ekte = (s) => !erSlide(s?.vis);
+  const antall = liste.filter(ekte).length;
+  const nr = liste.slice(0, p.stopp + 1).filter(ekte).length;
+  return `${Math.max(nr, 1)}/${antall}`;
+}
+
+// Antallet stopp i overskriften på oversikten, uten slidene når de hoppes over.
+export function antallStopp(stopp, utenSlides, erSlide) {
+  const liste = Array.isArray(stopp) ? stopp : [];
+  return utenSlides ? liste.filter((s) => !erSlide(s?.vis)).length : liste.length;
+}
