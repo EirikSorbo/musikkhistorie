@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { metaRader } from "../../js/ui/ui-helpers.js";
-import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform, gjennomgangLenke, GJENNOMGANG_TILBAKE, planTilgang, nesteUtenSlide, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "../../js/visning/presentasjon-modell.js";
+import { FLATER, NIVAA_SEKT, erSynlig, faktaSynlig, artistPlassering, sjangerPlassering, ytMaal, ytEmbedUrl, ytWatchUrl, medStarttid, starttidTekst, parseTid, formatTid, normaliserPlaner, klampStopp, nyPlanId, planPosisjon, tellerTekst, planOversikt, oversiktStatus, lytteeksempelNavn, OVERSIKT_KATEGORIER, innsettingsIndeks, medStoppSattInn, presTast, samleTast, PRES_TASTER, historikkBesok, historikkSteg, historikkTilbake, erPlanVideo, normaliserHistorikk, TOM_HISTORIKK, HISTORIKK_MAKS, YT_TONING_MS, toningsSteg, notatNokkel, lerretAvstem, lerretTast, ytFolg, LERRET_PRIVAT, treUtsnitt, treTransform, gjennomgangLenke, GJENNOMGANG_TILBAKE, planTilgang, nesteUtenSlide, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "../../js/visning/presentasjon-modell.js";
 import { lesJs } from "../helpers/js-filer.js";
 
 // Brukerens visningsregler 2026-09-17 (v5.29). Låst her fordi de er
@@ -941,9 +941,38 @@ test("historikkBesok og historikkSteg: som nettleserens tilbake og fram", () => 
   assert.equal(lang.liste[0], "artist:5");
 });
 
+test("erPlanVideo og historikkBesok: lytteeksemplene som er stopp i planen, er sider (v7.49)", () => {
+  const stopp = [{ vis: "artist:x" }, { vis: "yt:6CSiU0j_lFA::70" }, { vis: "yt:Cny3XX2-2Mc:RDCny3XX2-2Mc:260" }, { vis: "artist:y" }];
+  assert.equal(erPlanVideo("yt:6CSiU0j_lFA::70", stopp), true);
+  assert.equal(erPlanVideo("yt:6CSiU0j_lFA::71", stopp), false, "annen starttid er ikke stoppet");
+  assert.equal(erPlanVideo("yt:annen", stopp), false, "et lytteeksempel spilt oppå et kort");
+  assert.equal(erPlanVideo("artist:x", stopp), false, "bare lytteeksempler");
+  assert.equal(erPlanVideo("yt:6CSiU0j_lFA::70", null), false, "uten plan");
+  // Gjennom planen: X, video A, video B, Y. Tilbake fra Y: B, A, X.
+  let h = TOM_HISTORIKK;
+  for (const s of stopp) h = historikkBesok(h, s.vis, { planStopp: stopp });
+  assert.deepEqual(h.liste, stopp.map((s) => s.vis));
+  assert.equal(historikkBesok(h, "yt:annen", { planStopp: stopp }), h, "ikke et stopp: ingen side");
+  assert.equal(historikkBesok(TOM_HISTORIKK, "yt:6CSiU0j_lFA::70"), TOM_HISTORIKK, "uten plan: ingen side, som før");
+  const s1 = historikkSteg(h, -1);
+  assert.equal(s1.vis, "yt:Cny3XX2-2Mc:RDCny3XX2-2Mc:260");
+  assert.equal(historikkSteg(s1.h, -1).vis, "yt:6CSiU0j_lFA::70");
+});
+
+test("historikkTilbake: ← fra et lytteeksempel oppå kortet går til kortet, ikke til siden før (v7.49)", () => {
+  const h = { liste: ["artist:a", "artist:b"], idx: 1 };
+  assert.deepEqual(historikkTilbake(h, "yt:abcdefghijk"), { h, vis: "artist:b" }, "videoen oppå B: tilbake til B");
+  assert.deepEqual(historikkTilbake(h, "artist:b"), { h: { liste: h.liste, idx: 0 }, vis: "artist:a" }, "på B: ett steg tilbake");
+  assert.deepEqual(historikkTilbake(h, null), { h: { liste: h.liste, idx: 0 }, vis: "artist:a" }, "ingenting øverst (oversikten, søket): ett steg tilbake");
+  const v = { liste: ["artist:a", "yt:abcdefghijk::70"], idx: 1 };
+  assert.equal(historikkTilbake(v, "yt:abcdefghijk::95").vis, "artist:a", "samme video med ny starttid er samme side");
+  assert.equal(historikkTilbake(TOM_HISTORIKK, "yt:abcdefghijk"), null, "tom historikk");
+});
+
 test("normaliserHistorikk: tåler tull fra sessionStorage", () => {
   assert.deepEqual(normaliserHistorikk(null), { liste: [], idx: -1 });
-  assert.deepEqual(normaliserHistorikk({ liste: ["artist:a", "", 7, "yt:x", "sjanger:B"], idx: 9 }), { liste: ["artist:a", "sjanger:B"], idx: 1 });
+  // Lytteeksemplene i lista er kjøreplanens stopp (v7.49) og står seg over en omlasting.
+  assert.deepEqual(normaliserHistorikk({ liste: ["artist:a", "", 7, "yt:", "yt:x::70", "sjanger:B"], idx: 9 }), { liste: ["artist:a", "yt:x::70", "sjanger:B"], idx: 2 });
   assert.deepEqual(normaliserHistorikk({ liste: ["artist:a"], idx: "x" }), { liste: ["artist:a"], idx: 0 });
 });
 
@@ -990,7 +1019,8 @@ test("spilleren toner inn og ut, og lukkingen venter ikke på uttoningen", () =>
 // og til forrige og neste stopp når det ikke finnes noen side i den retningen.
 test("pilene faller tilbake på stoppene, og komma og X er koblet", () => {
   const pres = kilde("presentasjon.js");
-  assert.match(pres, /case "sideTilbake": return gaISideHistorikk\(-1\) \|\| gaTilStopp\(stoppIdx - 1\);/);
+  // Fra oppsummeringen går ← rett til siste stopp (v7.49).
+  assert.match(pres, /case "sideTilbake": return erPaaOppsummeringen\(\) \? gaTilStopp\(stoppIdx - 1\) : gaISideHistorikk\(-1\) \|\| gaTilStopp\(stoppIdx - 1\);/);
   assert.match(pres, /case "sideFram": return gaISideHistorikk\(1\) \|\| gaTilStopp\(stoppIdx \+ 1\);/);
   assert.match(pres, /if \(!steg\) return false;\n\s*if \(!lukkAlleKort\(\)\) return true;/, "et kort som nekter å lukkes, hopper ikke til neste stopp");
   assert.match(pres, /case "innstillinger": return vekslPanel\(\);/);

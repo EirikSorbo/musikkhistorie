@@ -29,7 +29,7 @@
 // ============================================================================
 
 import { SKJUL_I_HUBEN, SKJUL_I_STUDENTVISNING, settSynlighetOverstyrt } from "../felles/feature-flags.js";
-import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, historikkBesok, historikkSteg, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST, planTilgang, nesteUtenSlide, GJENNOMGANG_TILBAKE, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "./presentasjon-modell.js";
+import { FLATER, NIVAA_NAVN, erSynlig, faktaSynlig, normaliserPlaner, planPosisjon, tellerTekst, planOversikt, innsettingsIndeks, medStoppSattInn, presTast, PRES_TASTER, ytWatchUrl, erHistorikkSide, erPlanVideo, historikkBesok, historikkSteg, historikkTilbake, normaliserHistorikk, TOM_HISTORIKK, timeStopp, oversiktStatus, FRI_PLAN, raskPaminnelse, PAMINNELSE_PRESET_MIN, foerHeleTimen, HEL_TIME_TEKST, planTilgang, nesteUtenSlide, GJENNOMGANG_TILBAKE, GJENNOMGANG_PARAM, tellerUtenSlides, antallStopp } from "./presentasjon-modell.js";
 import { erSkrivefelt, erTomtLinjefelt, parseVisVerdi } from "../felles/vis-lenke.js";
 import { modalOpen, modalClose, setupModal, initModalHeaders, topOpenModal, askChoice, melding } from "../ui/ui-modal.js";
 import { GENEALOGY } from "../sjangre/genre-model.js";
@@ -471,12 +471,13 @@ export function aktivOkt() {
 
 function registrerSide(vis = toppMaal()) {
   loggTime(vis);
-  if (!erHistorikkSide(vis)) return;
+  // Lytteeksemplene som er stopp i kjøreplanen, er sider (v7.49).
+  if (!erHistorikkSide(vis) && !erPlanVideo(vis, plan?.stopp)) return;
   if (ventMaal) {
     if (vis === ventMaal) { ventMaal = null; return; }
     ventMaal = null;
   }
-  const ny = historikkBesok(historikk, vis);
+  const ny = historikkBesok(historikk, vis, { planStopp: plan?.stopp });
   if (ny === historikk) return;
   historikk = ny;
   lagreHistorikk();
@@ -485,7 +486,9 @@ function registrerSide(vis = toppMaal()) {
 // Sann når tasten er brukt (også når et kort nektet å lukkes), usann når det
 // ikke finnes noen side i den retningen; da går pila til neste stopp.
 function gaISideHistorikk(retning) {
-  const steg = historikkSteg(historikk, retning);
+  // ← fra et lytteeksempel spilt oppå et kort går til kortet (v7.49). Mens et
+  // mål ennå åpnes, går ← bare videre bakover.
+  const steg = retning < 0 && !ventMaal ? historikkTilbake(historikk, toppMaal()) : historikkSteg(historikk, retning);
   if (!steg) return false;
   if (!lukkAlleKort()) return true;
   historikk = steg.h;
@@ -540,6 +543,10 @@ let lagrer = false;
 // har ingen data-vis: står søket øverst, er man ikke ferdig med å velge.
 function toppMaal() {
   return topOpenModal()?.dataset.vis || null;
+}
+
+function erPaaOppsummeringen() {
+  return !!plan && planPosisjon(stoppIdx, plan.stopp.length).oversikt === "slutt";
 }
 
 function naavaerendeStoppVis() {
@@ -787,7 +794,9 @@ function wireTaster() {
       case "meny": return settMenySkjult(!document.body.classList.contains("pres-meny-skjult"));
       // Ingen side å gå til (først eller sist i historikken): forrige eller
       // neste stopp i kjøreplanen i stedet (v6.49).
-      case "sideTilbake": return gaISideHistorikk(-1) || gaTilStopp(stoppIdx - 1);
+      // Fra oppsummeringen går ← til siste stopp (v7.49): før gikk den til
+      // siden før det siste stoppet, og et lytteeksempel sist ble hoppet over.
+      case "sideTilbake": return erPaaOppsummeringen() ? gaTilStopp(stoppIdx - 1) : gaISideHistorikk(-1) || gaTilStopp(stoppIdx - 1);
       case "sideFram": return gaISideHistorikk(1) || gaTilStopp(stoppIdx + 1);
       case "innstillinger": return vekslPanel();
       case "notater": return erLerret ? undefined : vekslNotater();

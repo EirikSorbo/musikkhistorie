@@ -787,12 +787,23 @@ export function erHistorikkSide(vis) {
   return typeof vis === "string" && vis !== "" && !vis.startsWith("yt:");
 }
 
+// Et lytteeksempel som er et eget stopp i kjøreplanen, er likevel en side
+// (v7.49, brukerønske 2026-11-19): da spilles det igjen når læreren går
+// tilbake med ← fra kortet etter. Før ble det hoppet over, og ← fra videoen
+// gikk to kort tilbake. Et lytteeksempel spilt oppå et kort er fortsatt ingen side.
+const erYtVis = (vis) => typeof vis === "string" && /^yt:[^:]/.test(vis);
+export function erPlanVideo(vis, planStopp) {
+  return erYtVis(vis) && Array.isArray(planStopp) && planStopp.some((s) => s?.vis === vis);
+}
+
 // En side vises. Samme side som nå: ingenting. Siden rett bak eller rett
 // foran (← på kortet lukker det øverste og viser det under, eller kortet
 // åpnes igjen): flytt dit og behold resten. Ellers: ny side, og det som lå
 // foran forkastes, som i nettleseren.
-export function historikkBesok(h, vis) {
-  if (!erHistorikkSide(vis)) return h;
+// `planStopp`: stoppene i kjøreplanen som spilles. Et lytteeksempel som er et
+// av dem, er en side (erPlanVideo).
+export function historikkBesok(h, vis, { planStopp = null } = {}) {
+  if (!erHistorikkSide(vis) && !erPlanVideo(vis, planStopp)) return h;
   const { liste, idx } = h || TOM_HISTORIKK;
   if (liste[idx] === vis) return h;
   if (idx > 0 && liste[idx - 1] === vis) return { liste, idx: idx - 1 };
@@ -810,9 +821,24 @@ export function historikkSteg(h, retning) {
   return { h: { liste, idx: ny }, vis: liste[ny] };
 }
 
+// ← (v7.49): står noe øverst som ikke er siden historikken står på, for
+// eksempel et lytteeksempel spilt oppå kortet, går ← til den siden i stedet
+// for til siden før den (da ble kortet under videoen hoppet over). Samme
+// video med en annen starttid er samme side. Uten noe øverst (oversikten,
+// søket): ett steg tilbake som før.
+const ytId = (vis) => (erYtVis(vis) ? vis.split(":")[1] : null);
+const sammeSide = (a, b) => a === b || (!!ytId(a) && ytId(a) === ytId(b));
+export function historikkTilbake(h, vist) {
+  const { liste, idx } = h || TOM_HISTORIKK;
+  const her = liste[idx];
+  if (typeof vist === "string" && vist !== "" && her && !sammeSide(vist, her)) return { h: { liste, idx }, vis: her };
+  return historikkSteg(h, -1);
+}
+
 // Lest tilbake fra sessionStorage: alt som ikke ser riktig ut, blir tomt.
 export function normaliserHistorikk(raa) {
-  const liste = Array.isArray(raa?.liste) ? raa.liste.filter(erHistorikkSide).slice(-HISTORIKK_MAKS) : [];
+  // Lytteeksemplene i lista er stopp i en kjøreplan (bare de registreres).
+  const liste = Array.isArray(raa?.liste) ? raa.liste.filter((v) => erHistorikkSide(v) || erYtVis(v)).slice(-HISTORIKK_MAKS) : [];
   const idx = Number.isInteger(raa?.idx) ? Math.min(Math.max(raa.idx, -1), liste.length - 1) : liste.length - 1;
   return { liste, idx: liste.length ? Math.max(idx, 0) : -1 };
 }
