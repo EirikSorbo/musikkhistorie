@@ -6,15 +6,17 @@
 //  studentene» på (Visning-vinduet). En time er en plan i
 //  content/presentasjoner med dato og delt: true.
 //
-//  Studentene ser timene på forsiden og som en bolk i Lytt, men først når
-//  bryteren «Fra timene» er slått på (feature-flags.js, Skrivebordet). Ingen
-//  grense på antall kort (brukerkrav 2026-10-03).
+//  Studentene ser timene bak Visning-ikonet øverst til høyre
+//  (js/visning/fra-timene.js) og som en bolk i Lytt, men først når bryteren
+//  «Fra timene» er slått på (feature-flags.js, Skrivebordet). Lista på
+//  forsiden er tatt bort (v7.52, brukerbestilling 2026-11-19): timene skal
+//  bare stå bak ikonet. Ingen grense på antall kort (brukerkrav 2026-10-03).
 //
 //  Timen åpnes som en oversikt: kortene gruppert som på kjøreplanens
 //  oversiktskort (planOversikt, testet), hvert kort åpnes oppå, og alle
-//  lytteeksemplene fra timen kan spilles som én spilleliste. Gjennomgangen i
-//  visningen (v7.48) startes fra Visning-ikonet øverst til høyre
-//  (js/visning/fra-timene.js, v7.49), ikke herfra lenger.
+//  lytteeksemplene fra timen kan spilles som én spilleliste. Timevinduet nås
+//  med en ?vis=time:-lenke. Gjennomgangen i visningen (v7.48) startes fra
+//  Visning-ikonet (v7.49), ikke herfra.
 // ============================================================================
 import { openEksemplerSpilleliste } from "../ui/ui.js";
 import { escapeHtml } from "../felles/util.js";
@@ -115,17 +117,13 @@ export function openTime(planId) {
 // oversikten hopper over dem (planOversikt), og tallet skal stemme med den.
 export const antallKort = (plan) => (plan.stopp || []).filter((st) => !erSlideVis(st.vis)).length;
 
-// Radene for forsiden og Lytt: nyeste time først. Med `lenke` blir hver rad
-// en lenke dit (gjennomgangen fra Visning-ikonet, v7.49), ellers en knapp som
-// åpner timevinduet.
-export function fraTimeneRaderHtml(timer, { lenke = null } = {}) {
-  return timer.map((t) => {
-    const innhold = `<span class="sj-rad-navn">${escapeHtml(t.tittel)}${t.dato ? `<span class="sj-rad-aar">${escapeHtml(datoTekst(t.dato))}</span>` : ""}</span>
-    <span class="sj-rad-aar">${antallKort(t)} kort</span>`;
-    return lenke
-      ? `<a class="sj-rad" href="${escapeHtml(lenke(t))}" data-time-id="${escapeHtml(t.id)}">${innhold}</a>`
-      : `<button type="button" class="sj-rad" data-time-id="${escapeHtml(t.id)}">${innhold}</button>`;
-  }).join("");
+// Radene i kortet bak Visning-ikonet (v7.49), nyeste time først. Hver rad
+// er en lenke til `lenke(time)`, gjennomgangen av timen.
+export function fraTimeneRaderHtml(timer, lenke) {
+  return timer.map((t) => `<a class="sj-rad" href="${escapeHtml(lenke(t))}" data-time-id="${escapeHtml(t.id)}">
+    <span class="sj-rad-navn">${escapeHtml(t.tittel)}${t.dato ? `<span class="sj-rad-aar">${escapeHtml(datoTekst(t.dato))}</span>` : ""}</span>
+    <span class="sj-rad-aar">${antallKort(t)} kort</span>
+  </a>`).join("");
 }
 
 // Lytt får en bolk «Fra timene» (spillelista fra hver time) når de er synlige.

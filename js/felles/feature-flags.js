@@ -60,8 +60,9 @@ export const SKJUL_I_STUDENTVISNING = {
   horEtter:             true,
   utskrift:             true,
   merking:              true,
-  // «Fra timene» (v6.10, U1): timene læreren deler, på forsiden og i Lytt,
-  // og fra v7.49 Visning-ikonet for studentrollen (html.skjul-fra-timene).
+  // «Fra timene» (v6.10, U1): timene læreren deler, bak Visning-ikonet for
+  // studentrollen (v7.49, html.skjul-fra-timene) og i Lytt. Lista på
+  // forsiden er tatt bort i v7.52.
   // Skjult til læreren slår det på (brukervalg 2026-10-03).
   fraTimene:            true,
   // «Bare sjekket innhold» (v6.89): true = det usjekkede er skjult.

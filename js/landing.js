@@ -24,7 +24,6 @@ import { initPlanMeny } from "./visning/plan-meny.js";
 import { initPlanInnsamling, samleTikk } from "./visning/plan-innsamling.js";
 import { initYtSpiller } from "./ui/yt-spiller.js";
 import { initVisning, visningTikk } from "./visning/visning.js";
-import { fraTimeneSynlig, delteTimerNaa, fraTimeneRaderHtml } from "./utforsk/explore-timer.js";
 import { initUtskriftValg, leggTil as leggTilUtskrift, TIL_UTSKRIFT_SVG, UTSKRIFT_HAKE_SVG } from "./utskrift/utskrift-utvalg.js";
 import { aktivtNivaa, settNivaa, vedNivaaEndring, initViktighetsMerke } from "./ui/viktighet.js";
 import { askChoice, melding, modalOpen, modalCloseTop, setupModal } from "./ui/ui-modal.js";
@@ -134,17 +133,6 @@ function openDetail(artist) {
   modalOpen(detailModal);
 }
 
-// «Fra timene» på forsiden (v6.10, U1): de delte timene, nyeste først.
-// Skjult til bryteren er på, og når ingen timer er delt.
-function renderFraTimene() {
-  const seksjon = document.getElementById("fra-timene-section");
-  const liste = document.getElementById("fra-timene-liste");
-  if (!seksjon || !liste || !explore) return;
-  const timer = fraTimeneSynlig() ? delteTimerNaa() : [];
-  seksjon.hidden = !timer.length;
-  liste.innerHTML = fraTimeneRaderHtml(timer);
-}
-
 function setupProposeButtons() {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-propose-type]");
@@ -195,10 +183,6 @@ function setupExplore() {
   // Tiår (v6.07, S1) åpner tiårsvinduet der man slapp; Lytt (U7) spillelistene.
   document.getElementById("btn-tiar")?.addEventListener("click", () => explore.openDecadeList());
   document.getElementById("btn-lytt")?.addEventListener("click", () => explore.openLytt());
-  document.getElementById("fra-timene-liste")?.addEventListener("click", (e) => {
-    const rad = e.target.closest("[data-time-id]");
-    if (rad) explore.openTime(rad.dataset.timeId);
-  });
   const btnGenres = document.getElementById("btn-genres");
   if (btnGenres) btnGenres.addEventListener("click", explore.openSubgenreList);
   const btnInstrumenter = document.getElementById("btn-instrumenter");
@@ -224,12 +208,12 @@ function setupExplore() {
   const oppdaterPrioBar = () => { if (prioBar) prioBar.style.display = SKJUL_I_STUDENTVISNING.viktighetsgrad ? "none" : ""; };
   oppdaterPrioBar();
   // Bryterne kan endres mens siden står åpen (v6.10, U4): filteret, kortene
-  // (prioritetsmerket, merkeknappen) og «Fra timene» følger med.
+  // (prioritetsmerket, merkeknappen) følger med. «Fra timene» står bak
+  // Visning-ikonet fra v7.52 (js/visning/fra-timene.js), ikke på forsiden.
   document.addEventListener("pensum:synlighet", () => {
     oppdaterPrioBar();
     // (Viktighetsnivået og merket i toppfeltet følger bryteren selv, js/ui/viktighet.js.)
     renderArtistViewsIfVisible();
-    renderFraTimene();
     renderDagensSection();
   });
 
@@ -819,7 +803,7 @@ function init() {
     // Innholdssidene og varmekartet: re-render åpne visninger ved endring.
     // Instrumentsammendragene bor i content, så en åpen Instrumenter-fane
     // tegnes på nytt her også.
-    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); samleTikk(); visningTikk(); renderFraTimene(); },
+    onContent: () => { explore?.contentChanged?.(); explore?.renderInstrumenter?.(); provVisMaal(); presPlanTikk(); samleTikk(); visningTikk(); },
     // Tiårstekstene: en ?vis=tiår-lenke venter på at de har landet, og et
     // åpent tiårsvindu skal vise den ferske teksten.
     onDecades: () => { explore?.refreshDecadeView?.(); provVisMaal(); },

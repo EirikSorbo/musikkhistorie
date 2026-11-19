@@ -4743,10 +4743,10 @@ body.presentasjon .meta-merke { display: none; }
    Strukturgjennomgangen 3.10, runde 5 (v6.10)
    =========================================================================== */
 /* «Del med studentene» per plan i Visning-vinduet (U1). */
-/* «Fra timene» på forsiden (U1). */
+/* «Fra timene»: kortet bak Visning-ikonet for studentene (v7.49; lista på
+   forsiden er borte fra v7.52). Radene er lenker. */
 .fra-timene-liste { display: flex; flex-direction: column; }
 .fra-timene-liste .sj-rad { padding: 6px 4px; }
-/* Kortet bak Visning-ikonet for studentene (v7.49). Radene er lenker. */
 .modal.modal-fra-timene { max-width: 560px; }
 .ft-ingress { margin: 0 0 1rem; font-size: 0.9rem; color: var(--muted); }
 .modal-fra-timene a.sj-rad { text-decoration: none; }

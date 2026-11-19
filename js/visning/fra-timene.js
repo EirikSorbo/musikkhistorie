@@ -5,11 +5,12 @@
 //  (v7.48), på samme sted som lærerens Visning. Ikonet åpner et kort med
 //  timene læreren har delt, og en time åpnes som visning uten lærerens
 //  verktøy (gjennomgangLenke). Avslutt i visningen fører tilbake hit. I v7.48
-//  lå «Gå gjennom timen» i timevinduet under «Fra timene» på forsiden.
+//  lå «Gå gjennom timen» i timevinduet under «Fra timene» på forsiden. Fra
+//  v7.52 står timene bare her: lista på forsiden er tatt bort.
 //
 //  Kortet åpnes av apneVisning (visning.js) for studentrollen. Ikonet vises
 //  for studentene bare når bryteren «Fra timene» er på (html.skjul-fra-timene,
-//  feature-flags.js), og kortet viser timene på samme vilkår som forsiden.
+//  feature-flags.js), og kortet viser timene på samme vilkår (fraTimeneSynlig).
 // ============================================================================
 
 import { modalOpen, setupModal, initModalHeaders } from "../ui/ui-modal.js";
@@ -51,7 +52,7 @@ function tegn() {
   // Slidene er lærerens: en time med bare slides har ingenting å gå gjennom.
   const timer = fraTimeneSynlig() ? delteTimerNaa().filter((t) => antallKort(t) > 0) : [];
   const html = timer.length
-    ? fraTimeneRaderHtml(timer, { lenke: (t) => gjennomgangLenke(t.id) })
+    ? fraTimeneRaderHtml(timer, (t) => gjennomgangLenke(t.id))
     : `<p class="muted ft-tom">${getState().contentLoaded ? "Ingen timer er delt ennå." : "Henter timene …"}</p>`;
   if (el.innerHTML !== html) el.innerHTML = html;
 }

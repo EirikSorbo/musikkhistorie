@@ -39,6 +39,9 @@ test("studenten går gjennom en delt time fra Visning-ikonet: i rekkefølge, ute
 
   const ikon = page.locator(".nav [data-visning]");
   await expect(ikon).toBeVisible();
+  // Timene står bare bak ikonet, ikke på forsiden (v7.52).
+  await expect(page.locator("#fra-timene-section")).toHaveCount(0);
+  await expect(page.locator("main")).not.toContainText("Bluestimen");
   await expect(ikon).toHaveAttribute("title", "Fra timene");
   await ikon.click();
   const kort = page.locator("#modal-fra-timene");
